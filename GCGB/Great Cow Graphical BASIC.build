@@ -1,0 +1,234 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project name="Great Cow Graphical BASIC" default="build">
+  <description>SharpDevelop generated NAnt 0.84 build file.</description>
+  <!--Set debug property if not set-->
+  <ifnot propertyexists="debug">
+    <property name="debug" value="false" />
+  </ifnot>
+  <!--The 'init' target.  Creates folders needed for the build.-->
+  <target name="init" depends="init.debug, init.release" />
+  <!--The 'clean' target.  Removes compiled output.-->
+  <target name="clean" depends="clean.debug, clean.release" />
+  <!--The 'gacreferences' target.-->
+  <target name="gacreferences" depends="gacreferences.debug, gacreferences.release" />
+  <!--The 'build' target.-->
+  <target name="build" depends="build.debug, build.release" />
+  <!--The 'test' target.-->
+  <target name="test" depends="test.debug, test.release" />
+  <!--Set up various properties that will be referred to in the various nant targets.-->
+  <!--The output directory.-->
+  <property name="outputdir.debug" value=".\bin\Debug">
+  </property>
+  <!--The name of the assembly.-->
+  <property name="assembly.debug" value="Great Cow Graphical BASIC">
+  </property>
+  <!--The output file's extension.-->
+  <property name="extension.debug" value="exe">
+  </property>
+  <!--The initialisation target.-->
+  <target name="init.debug" if="${debug}">
+    <mkdir dir="${outputdir.debug}" />
+  </target>
+  <!--The 'clean' target.  Here we delete the built output files and extra files which are not directly specified in 
+		      the .prjx file (e.g. ".pdb", ".xml").-->
+  <target name="clean.debug" if="${debug}">
+    <delete>
+      <fileset>
+        <includes name="${outputdir.debug}\${assembly.debug}.${extension.debug}" />
+        <includes name="${outputdir.debug}\${assembly.debug}.pdb" />
+        <includes name="${outputdir.debug}\${assembly.debug}.xml" />
+        <includes name="${outputdir.debug}\*.config" />
+      </fileset>
+    </delete>
+  </target>
+  <!--The 'build' target.-->
+  <target name="build.debug" depends="init.debug, gacreferences.debug" if="${debug}">
+    <!--Compiles the code -->
+    <vbc target="winexe" output="${outputdir.debug}\${assembly.debug}.${extension.debug}" debug="True" define="" optionexplicit="True" optionstrict="False" win32icon=".\LargeCowIcon.ico" rootnamespace="" imports="" warnaserror="False">
+      <sources>
+        <includes name=".\MainForm.vb" />
+        <includes name=".\AssemblyInfo.vb" />
+        <includes name=".\About.vb" />
+        <includes name=".\FileIO.vb" />
+        <includes name=".\ProgramWindow.vb" />
+        <includes name=".\String.vb" />
+        <includes name=".\ChipSettings.vb" />
+        <includes name=".\DefineWindow.vb" />
+        <includes name=".\LowLevel.vb" />
+        <includes name=".\SubNameDialog.vb" />
+        <includes name=".\LibraryWindow.vb" />
+        <includes name=".\TableWindow.vb" />
+        <includes name=".\Preferences.vb" />
+        <includes name=".\Variables.vb" />
+        <includes name=".\EditVar.vb" />
+        <includes name=".\ProgSummary.vb" />
+        <includes name=".\ParamEditor.vb" />
+        <includes name=".\TableDataEdit.vb" />
+        <includes name=".\TableNameInput.vb" />
+        <includes name=".\RegisterWindow.vb" />
+        <includes name=".\ChipDiagram.vb" />
+        <includes name=".\GCBCommand.vb" />
+      </sources>
+      <references>
+        <!--Standard .Net references since using a vbc.rsp does not seem to work-->
+        <includes name="Accessibility.dll" />
+        <includes name="Microsoft.Vsa.dll" />
+        <includes name="System.Configuration.Install.dll" />
+        <includes name="System.Data.dll" />
+        <includes name="System.Design.dll" />
+        <includes name="System.DirectoryServices.dll" />
+        <includes name="System.dll" />
+        <includes name="System.Drawing.Design.dll" />
+        <includes name="System.Drawing.dll" />
+        <includes name="System.EnterpriseServices.dll" />
+        <includes name="System.Management.dll" />
+        <includes name="System.Messaging.dll" />
+        <includes name="System.Runtime.Remoting.dll" />
+        <includes name="System.Runtime.Serialization.Formatters.Soap.dll" />
+        <includes name="System.Security.dll" />
+        <includes name="System.ServiceProcess.dll" />
+        <includes name="System.Web.dll" />
+        <includes name="System.Web.Mobile.dll" />
+        <includes name="System.Web.RegularExpressions.dll" />
+        <includes name="System.Web.Services.dll" />
+        <includes name="System.Windows.Forms.Dll" />
+        <includes name="System.XML.dll" />
+      </references>
+      <resources>
+        <includes name=".\Great_Cow_Graphical_BASIC.MainForm.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.AboutForm.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ProgramWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ChipSettings.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.DefineWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.SubNameDialog.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.TableWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.Preferences.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.Variables.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.EditVar.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ProgSummary.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ParamWizard.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.TableDataEdit.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.TableNameInput.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.LibraryWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.RegisterWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ParamEditor.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ChipDiagram.resources" />
+      </resources>
+    </vbc>
+    <!--Copy app.config file to output folder and rename it appropriately -->
+  </target>
+  <!--The test target.  Only supports Nunit 2.1 -->
+  <target name="test.debug" depends="build.debug" if="${debug}">
+  </target>
+  <!--Generates a property for each Gac reference.  The property name is set to the name of the assembly-->
+  <target name="gacreferences.debug" if="${debug}">
+  </target>
+  <!--Set up various properties that will be referred to in the various nant targets.-->
+  <!--The output directory.-->
+  <property name="outputdir.release" value=".\bin\Release">
+  </property>
+  <!--The name of the assembly.-->
+  <property name="assembly.release" value="Great Cow Graphical BASIC">
+  </property>
+  <!--The output file's extension.-->
+  <property name="extension.release" value="exe">
+  </property>
+  <!--The initialisation target.-->
+  <target name="init.release" unless="${debug}">
+    <mkdir dir="${outputdir.release}" />
+  </target>
+  <!--The 'clean' target.  Here we delete the built output files and extra files which are not directly specified in 
+		      the .prjx file (e.g. ".pdb", ".xml").-->
+  <target name="clean.release" unless="${debug}">
+    <delete>
+      <fileset>
+        <includes name="${outputdir.release}\${assembly.release}.${extension.release}" />
+        <includes name="${outputdir.release}\${assembly.release}.pdb" />
+        <includes name="${outputdir.release}\${assembly.release}.xml" />
+        <includes name="${outputdir.release}\*.config" />
+      </fileset>
+    </delete>
+  </target>
+  <!--The 'build' target.-->
+  <target name="build.release" depends="init.release, gacreferences.release" unless="${debug}">
+    <!--Compiles the code -->
+    <vbc target="winexe" output="${outputdir.release}\${assembly.release}.${extension.release}" debug="False" define="" optionexplicit="True" optionstrict="False" win32icon=".\LargeCowIcon.ico" rootnamespace="" imports="" warnaserror="False">
+      <sources>
+        <includes name=".\MainForm.vb" />
+        <includes name=".\AssemblyInfo.vb" />
+        <includes name=".\About.vb" />
+        <includes name=".\FileIO.vb" />
+        <includes name=".\ProgramWindow.vb" />
+        <includes name=".\String.vb" />
+        <includes name=".\ChipSettings.vb" />
+        <includes name=".\DefineWindow.vb" />
+        <includes name=".\LowLevel.vb" />
+        <includes name=".\SubNameDialog.vb" />
+        <includes name=".\LibraryWindow.vb" />
+        <includes name=".\TableWindow.vb" />
+        <includes name=".\Preferences.vb" />
+        <includes name=".\Variables.vb" />
+        <includes name=".\EditVar.vb" />
+        <includes name=".\ProgSummary.vb" />
+        <includes name=".\ParamEditor.vb" />
+        <includes name=".\TableDataEdit.vb" />
+        <includes name=".\TableNameInput.vb" />
+        <includes name=".\RegisterWindow.vb" />
+        <includes name=".\ChipDiagram.vb" />
+        <includes name=".\GCBCommand.vb" />
+      </sources>
+      <references>
+        <!--Standard .Net references since using a vbc.rsp does not seem to work-->
+        <includes name="Accessibility.dll" />
+        <includes name="Microsoft.Vsa.dll" />
+        <includes name="System.Configuration.Install.dll" />
+        <includes name="System.Data.dll" />
+        <includes name="System.Design.dll" />
+        <includes name="System.DirectoryServices.dll" />
+        <includes name="System.dll" />
+        <includes name="System.Drawing.Design.dll" />
+        <includes name="System.Drawing.dll" />
+        <includes name="System.EnterpriseServices.dll" />
+        <includes name="System.Management.dll" />
+        <includes name="System.Messaging.dll" />
+        <includes name="System.Runtime.Remoting.dll" />
+        <includes name="System.Runtime.Serialization.Formatters.Soap.dll" />
+        <includes name="System.Security.dll" />
+        <includes name="System.ServiceProcess.dll" />
+        <includes name="System.Web.dll" />
+        <includes name="System.Web.Mobile.dll" />
+        <includes name="System.Web.RegularExpressions.dll" />
+        <includes name="System.Web.Services.dll" />
+        <includes name="System.Windows.Forms.Dll" />
+        <includes name="System.XML.dll" />
+      </references>
+      <resources>
+        <includes name=".\Great_Cow_Graphical_BASIC.MainForm.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.AboutForm.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ProgramWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ChipSettings.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.DefineWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.SubNameDialog.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.TableWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.Preferences.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.Variables.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.EditVar.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ProgSummary.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ParamWizard.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.TableDataEdit.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.TableNameInput.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.LibraryWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.RegisterWindow.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ParamEditor.resources" />
+        <includes name=".\Great_Cow_Graphical_BASIC.ChipDiagram.resources" />
+      </resources>
+    </vbc>
+    <!--Copy app.config file to output folder and rename it appropriately -->
+  </target>
+  <!--The test target.  Only supports Nunit 2.1 -->
+  <target name="test.release" depends="build.release" unless="${debug}">
+  </target>
+  <!--Generates a property for each Gac reference.  The property name is set to the name of the assembly-->
+  <target name="gacreferences.release" unless="${debug}">
+  </target>
+</project>
