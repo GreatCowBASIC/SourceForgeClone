@@ -1,0 +1,68 @@
+;Chip Settings
+#chip 16F1825,32
+#config OSC=INTOSC,  MCLRE_OFF, PLLEN_OFF
+
+
+#include "D:\Others\GCB@Syn\GreatCowBasic\include\outputserial.h"
+#include "D:\MicroChip\Projects\Great Cow Basic\Gas Meter Mark II\input.gcb"
+
+#INCLUDE "D:\Others\GCB@Syn\GreatCowBasic\include\24LCXXXX.h"
+#include "D:\Others\GCB@Syn\GreatCowBasic\include\DS1307.h"
+#include "D:\Others\GCB@Syn\GreatCowBasic\include\utils.h"
+
+
+
+ #define I2C_MODE Master
+ #define I2C_DATA PORTC.5
+ #define I2C_CLOCK PORTC.4
+ #define I2C_DISABLE_INTERRUPTS ON
+' #define IC2CLOCKSTRETCHING ON
+
+' turn on the RS232 and terminal port.
+#define ANSITERMINAL
+
+    #ifdef ANSITERMINAL
+        ' THIS CONFIG OF THE SERIAL PORT WORKS WITH max232 THEN TO PC
+        #define SendAHigh Set PORTC.3 OfF
+        #define SendALow Set PORTC.3 ON
+        Dir PORTC.3 Out
+        #define SerSendDelayms 10
+        'Set up serial connection
+        InitSer 1, r9600, 1+128, 8, 1, none, INVERT
+        wait SerSendDelayms ms
+
+
+        ' THIS CONFIG OF THE SERIAL PORT WORKS direct to AXE133
+        #define SendBHigh Set PORTC.0 ON
+        #define SendBLow Set PORTC.0 OFF
+        Dir PORTC.0 Out
+        #define SerSendDelayms 10
+        'Set up serial connection
+        InitSer 2, r4800, 1, 8, 1, none, INVERT
+        wait SerSendDelayms ms
+
+    #endif
+
+
+
+
+    Dim display_str as string
+    Dim tmp as Byte
+
+    Dim currenthourint as Word
+    Dim currenthourdec as Byte
+  
+    currenthourint = 0
+    currenthourdec = 0
+
+    #ifdef ANSITERMINAL
+      wait 1 s
+      ANSIERASECREEN_SW
+      ANSI_SW ( 0,0)
+
+      PrintString 1 , display_str
+      SerPrint 1,  display_str
+      CRLF
+    #endif
+
+End
