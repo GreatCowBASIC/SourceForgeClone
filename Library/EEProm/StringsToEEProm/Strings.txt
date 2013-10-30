@@ -1,0 +1,55 @@
+01,Gas Meter Mark II v0.03
+02,Up      ,
+03,Pressed ,
+04,Down    ,
+05,Released,
+06,Button 1 is , This includes the space at the end of the string
+07,Time :,
+08,Button 2 is , This includes the space at the end of the string
+09,Used :,
+10,Meter:,
+11,Date :,
+12,Restarts:,
+13,Since   :,
+14,Set Clock?,
+15,Set Date?,
+16,Set Meter?,
+17,Set Hour Count?,
+18,Reset Hour Count?,
+19,Reset ICU Count?,
+20,Yes[1] No [2],
+21,Confirm,
+22,Error #
+100,X               ,
+101, X              ,
+102,  X             ,
+103,   X            ,
+104,    X           ,
+105,     X          ,
+106,      X         ,
+107,       X        ,
+108,        X       ,
+109,         X      ,
+110,          X     ,
+111,           X    ,
+113,            X   ,
+114,             X  ,
+115,              X ,
+116,               X,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
