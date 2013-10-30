@@ -1,0 +1,32 @@
+sub PrintString ( in ul_addr as Byte, out eepromstring as string )
+
+    dim eepromlocation as word
+    eepromlocation = 1
+    ' get max number of strings
+     eeprom_rd_byte( EEPROM_DEVICE_1, eepromlocation , maxeepromstrings )
+     eepromlocation++
+
+     for sysloop1 =  1 to maxeepromstrings
+
+         eeprom_rd_byte( EEPROM_DEVICE_1, eepromlocation , stringnumber )
+         eepromlocation++
+         stringnumber = stringnumber * 1
+
+         eeprom_rd_byte( EEPROM_DEVICE_1, eepromlocation , stringlength )
+         eepromlocation++
+
+         thisstringlocation = eepromlocation
+         ' have we located the correct string?
+         if stringnumber = ul_addr then
+            eepromstring(0) = stringlength
+            for sysloop2 = 1 to stringlength
+                eeprom_rd_byte( EEPROM_DEVICE_1, thisstringlocation , instring )
+                thisstringlocation++
+                eepromstring(sysloop2) = instring
+            next
+            exit Sub
+         end if
+         eepromlocation = eepromlocation + stringlength
+     next
+     eepromstring = "Undefined String"
+End sub
