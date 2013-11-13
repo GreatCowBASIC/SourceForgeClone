@@ -1,8 +1,13 @@
+# Revised to support UOKU check 11/11/13
 BEGIN {
 # store store = " Store Data" for EEPROM within PC
 # store = " Store Data"
 # store = "" is you are going to store in External EEPROM
+#Array[0]="Max Records";
 Array[0]="Max Records";
+# Entry = 01,01,17,Gas Meter Mark II v0.04
+Array[1]="00,00,4,UOKU";
+
 FS=","
 charcount=1
 _ord_init()
@@ -11,8 +16,10 @@ _ord_init()
          gsub($0,"\n","")
          if ( trim($0) != "" && length(trim($0)) > 0 ) {
             numofrecords = length(Array)
+
 	  Array[numofrecords ] = sprintf("%02X",numofrecords)","sprintf("%02X",$1)","sprintf("%02X",length($2))","$2;
 #            Array[numofrecords ] = sprintf("%02X",numofrecords)","sprintf("%02X",$1)","sprintf("%02X",length(trim($2)))","trim($2);
+
          }
 }
 END {
@@ -36,7 +43,10 @@ END {
                }
                else {
                     # calc the length of the next string to be processed
-                    stringl = sprintf ("0x%s\n",substr(Array[ptr],7,2))
+                    split(Array[ptr], vals, ",")
+                    #printf "\t*"vals[4]"*\t"
+                    stringl = sprintf ("0x%s\n",vals[3])
+                    #print "stringl = "stringl"\t"
                     stringl= strtonum ( stringl )
 
                      # output new/another table header as the will be 250 chars MAX
@@ -51,17 +61,21 @@ END {
 
 
 
-                     # outout the string index and then the string length
-                    printf ("0x%s ' Index number\n", substr(Array[ptr],1,2) )
-                    printf ("0x%s ' Length\n", substr(Array[ptr],7,2) )
+                     # output the string index and then the string length
+                     # get first FS to ensure we get the number
+
+
+
+                    # printf ("fsindex = %s\t", vals[2])
+                    printf ("0x%s ' Index number\n", vals[2] )
+                    printf ("0x%s ' Length\n", vals[3] )
                     charcount = charcount + 2
                     totalcharcount = totalcharcount + 2
 
                     for (loopx=0;loopx < stringl ; loopx++) {
-                         #printf ("0x%s\n", ord(substr(Array[ptr],10+loopx,1) ) )
-                         #printf ("0x%s\n", ord( "A") )
 
-                         printf ("0x%02X' %s\n", ord(substr(Array[ptr],10+loopx,1)), substr(Array[ptr],10+loopx,1)  )
+                         #printf ("0x%02X' %s\n", ord(substr(Array[ptr],10+loopx,1)), substr(Array[ptr],10+loopx,1)  )
+                         printf ("0x%02X' %s\n", ord(substr(vals[4],loopx+1,1)), substr(vals[4],loopx+1,1)  )
                          charcount++
                          totalcharcount++
                     }
@@ -91,21 +105,23 @@ END {
           printf "dim cc as word\n"
           printf "dim eepromaddress as word\n"
           printf "eepromaddress = 0 \n"
-
+          printf ("ReadTable StringDataSource1, Numberofstrings\n")
+          startpointer = 0
           for ( loopx = 1;loopx <= tablecount; loopx++) {
               # output GCB code
               printf ("table%sexists = 0\n",loopx)
               printf ("ReadTable StringDataSource%s, 0, table%sexists\n",loopx ,loopx )
               printf ("if table%sexists <> 0 then\n",loopx)
               printf ("\tReadTable StringDataSource%s, 0, tablelength\n",loopx)
-              printf ("\tfor cc = 0 to tablelength\n")
-              printf ("\t\tReadTable StringDataSource%s, cc, char\n",loopx)
-              printf ("\t\teeprom_wr_byte( EEPROM_DEVICE_1, eepromaddress, char)\n")
+              printf ("\tfor cc = %s to tablelength\n",startpointer)
+              printf ("\t\tReadTable StringDataSource%s, cc, charz\n",loopx)
+              printf ("\t\teeprom_wr_byte( EEPROM_DEVICE_1, eepromaddress, charz)\n")
               printf "\t\teepromaddress++\n"
               printf ("\tnext\n")
               printf ("end if\n")
+              startpointer = 1
           }
-              printf ("\n\nEND\n")
+              printf ("\n\n'END\n")
               printf "'Number of chars in all tables = "totalcharcount-1"\n"
 
 

@@ -1,0 +1,68 @@
+  ' change the processor
+  #chip 16F1937, 32
+  #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
+  #include "D:\Others\GCB@Syn\GreatCowBasic\include\outputserial.h"
+
+
+  ' Define I2C settings - CHANGE PORTS
+ #define I2C_MODE Master
+ #define I2C_DATA PORTC.4
+ #define I2C_CLOCK PORTC.3
+ #define I2C_DISABLE_INTERRUPTS ON
+' #define IC2CLOCKSTRETCHING ON
+
+
+  ' THIS CONFIG OF THE SERIAL PORT WORKS WITH max232 THEN TO PC
+  #define SendAHigh Set PORTa.5 Off
+  #define SendALow Set PORTa.5 On
+  Dir PORTa.5 Out
+  #define SerSendDelayms 5
+  'Set up serial connection
+  InitSer 1, r9600, 1+128, 8, 1, none, invert
+  wait SerSendDelayms ms
+  sersend 1,0x55
+
+  ANSIERASECREEN_SW
+  ANSI_SW ( 0,0)
+  SerPrint 1,  "Started: "
+  wait SerSendDelayms ms
+  SerPrint 1,  "Searching I2C address space: v0.83"
+  sersend 1, ( 10)
+  sersend 1, ( 13)
+
+
+
+
+
+  dim deviceID as byte
+
+      for deviceID = 0 to 255
+        I2CStart
+        I2CSend ( deviceID )
+        i2cstop
+
+        if I2CSendState = ACK  then
+           SerPrint 1,  "__"
+          SerPrint 1,  "ID : 0x"
+          SerPrint 1,  hex(deviceID)
+          SerPrint 1,  " (d"
+          SerPrint 1,  Str(deviceID)
+          SerPrint 1,  ") - "
+          SerSend  1, 9
+          SerPrint 1,  "I2C Port ": Sersend 1, I2CSendState:
+          SerSend  1, 9
+          testid = deviceID | 1
+          select case testid
+                 case 161
+                      SerPrint 1,  "EEPROM_DEVICE"
+                 case 209
+                      SerPrint 1,  "DS1307 RTC"
+                 case 65
+                      SerPrint 1,  "MCP23008 Serial Expander"
+          end select
+          sersend 1, ( 10):sersend 1, ( 13)
+        end if
+      next
+      SerPrint 1,  "End of Device Search": sersend 1, ( 10):sersend 1, ( 13)
+  END
+
