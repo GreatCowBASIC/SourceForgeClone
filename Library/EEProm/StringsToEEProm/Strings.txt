@@ -1,4 +1,4 @@
-01,Gas Meter Mark II v0.03
+01,Gas Meter Mark II v0.04
 02,Up      ,
 03,Pressed ,
 04,Down    ,
@@ -9,17 +9,28 @@
 09,Used :,
 10,Meter:,
 11,Date :,
-12,Restarts:,
+12,PIC Restarts:,
 13,Since   :,
-14,Set Clock?,
-15,Set Date?,
-16,Set Meter?,
-17,Set Hour Count?,
-18,Reset Hour Count?,
-19,Reset ICU Count?,
-20,Yes[1] No [2],
+14,Set Clock?       ,
+15,Set Date?        ,
+16,Set Meter?       ,
+17,Set Hour Count?  ,
+18,Zero Hour Count?,
+19,Zero Pic Count? ,
+20,Yes[1] No[2] ,
 21,Confirm,
 22,Error #
+23,Button 3 is , This includes the space at the end of the string
+24,Inc[1] Set[2]  ,
+25,Up[1] Down[2]  ,
+26,Dec[1] Set[2]  ,
+27,Inc[1] Set[2]  ,
+28,Meter Monitor    ,
+29,Microchip @v0.04 ,
+30,Set Baseline? ,
+31,Bline:,
+32,24LC16B Test     ,
+99,                ,
 100,X               ,
 101, X              ,
 102,  X             ,
@@ -32,10 +43,12 @@
 109,         X      ,
 110,          X     ,
 111,           X    ,
-113,            X   ,
-114,             X  ,
-115,              X ,
-116,               X,
+112,            X   ,
+113,             X  ,
+114,              X ,
+115,               X,
+255,END/STOPPED, End of the String File
+
 
 
 
