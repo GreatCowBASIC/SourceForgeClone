@@ -1,0 +1,19 @@
+#include <eracer.h>
+
+DataCount = 0
+Set green on
+set red on
+Stop
+
+Main:
+ wait until button pressed
+ wait until button released
+ set tl_led on
+ Wait 1 ms
+ set tl_led off
+ EPWrite (DataCount, ReadAD (Analog_LDR_Left)) 
+ DataCount = DataCount + 1
+ EPWrite (DataCount, ReadAD (Analog_LDR_Right))
+ DataCount = DataCount + 1
+ EPWrite (DataCount, 0xAA)
+goto Main
