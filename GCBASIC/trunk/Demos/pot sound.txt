@@ -1,0 +1,24 @@
+#include "mytest.h"
+
+#define SoundOut PORTD.3
+
+dir PORTA.0 in
+DIR PORTD.3 OUT
+
+dim Temp as word
+
+Main:
+' Tone 20000, 60000
+
+ ControlOld = Control
+ Control = ReadAD(AN0) 
+ 
+ if Control <> ControlOld then
+  Temp = Control * 10
+  CLS
+  LCDWord Temp
+  PRINT " Hz"
+ end if
+
+ Tone Temp, 200
+goto Main

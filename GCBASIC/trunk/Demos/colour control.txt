@@ -1,0 +1,70 @@
+#chip 16F877A, 20
+#mem 368
+
+'LCD connection settings
+#define LCD_IO 8
+#define LCD_DATA_PORT PORTC
+#define LCD_RS PORTD.0 
+#define LCD_RW PORTD.1
+#define LCD_Enable PORTD.2
+
+'LED pins
+#define Red PORTB.2
+#define Green PORTB.1
+#define Blue PORTB.0
+
+'LED port directions
+dir Red out
+dir green out
+dir blue out
+
+'Calculation Variable
+Dim CalcTemp As Word
+
+'Intro message
+'      1234567890123456
+PRINT "Tri-colour LED:"
+locate 1,1
+PRINT "A GCBASIC Demo"
+Wait 2 sec
+
+Main:
+ Hue = ReadAD(AN0)
+ If Hue < 20 Then Hue = 20
+ If Hue > 240 Then Hue = 240
+ Hue = Hue - 20
+ RInt = 0
+ GInt = 0
+ BInt = 0
+ If Hue < 220 And Hue > 150 Then 
+  CalcTemp = ((220 - Hue) * 171) / 100
+  BInt = CalcTemp
+  CalcTemp = ((Hue - 150) * 286) / 100
+  RInt = CalcTemp
+ End If
+ If Hue < 150 And Hue > 120 Then
+  GInt = (150 - Hue) * 4
+  BInt = (Hue - 120) * 4
+ End If
+ If Hue < 120 Then
+  CalcTemp = ((120 - Hue) * 167)/100
+  RInt = CalcTemp
+  GInt = Hue
+ End If
+ ShowColour(RInt,GInt,BInt)
+goto Main
+
+sub ShowColour(RL, GL, BL)
+ RLTemp = RL+RL
+ FlashRate = ReadAD(AN0)
+ for PulseLoop = 1 to FlashRate
+  set red on
+  set green on
+  set blue on
+  for Level = 1 to 200
+   if Level > RLTemp then set red off
+   if Level > GL then set green off
+   if Level > BL then set blue off
+  next
+ next
+end sub

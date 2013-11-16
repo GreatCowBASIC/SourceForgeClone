@@ -1,0 +1,16 @@
+'Demo program to count from 0 to 9 on an LED display.
+
+#chip 16F877A, 20
+#config HS_OSC, WDT_OFF, LVP_OFF
+
+#define DisplayPortA PORTC
+
+Temp = 0
+dir C 0
+
+Main:
+ DisplayValue 1, Temp
+ Wait 1 s
+ Temp = Temp + 1
+ if Temp > 9 then Temp = 0
+goto Main
