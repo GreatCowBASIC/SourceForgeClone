@@ -5,3 +5,5 @@ Jan 4th 2014
 3.	Timer.h does not support tmr 4 and tmr 6
 4.	Replacement I2C code with the newer routines (Oct 2013 code.
 5.        Add two functions to String.h ASC and CHR
+6.        Error REPEAT when handling WORD variables
+
