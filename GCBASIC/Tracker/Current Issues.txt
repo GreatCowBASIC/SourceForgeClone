@@ -1,9 +1,38 @@
-Jan 4th 2014
+Jan 4th 2014 @ 12:23
 
 1.	Handling of LONGs in the context of IF/ENDIF.
-2.	Handling of STR and HEX is incorrect when spaces exists in command line.
-3.	Timer.h does not support tmr 4 and tmr 6
-4.	Replacement I2C code with the newer routines (Oct 2013 code.
-5.	Add two functions to String.h ASC and CHR
-6.	Error REPEAT when handling WORD variables
+          See https://sourceforge.net/p/gcbasic/discussion/596084/thread/b6a97f96/#d632 and the emails from Anobium.
 
+2.	Handling of STR and HEX is incorrect when spaces exists in command line.
+          No forum record.  Processing is incorrect when leaving a space between command the the left brace. STR ( is bad news...
+
+3.	Timer.h does not support tmr 6
+          By way of an example the current timer.h files does not support 16F1936 set of timers.
+
+4.	Replacement I2C code with the newer routines (Oct 2013 code.
+          We could replace... how much additional testing is required?
+          See https://sourceforge.net/p/gcbasic/discussion/629990/thread/1a3accc6/#b94b
+
+5.	Add two functions to String.h ASC and CHR
+          These are two simple functions we could add.  New users may not be able to figure out the relationship between arrays and strings in GCB.  These may make things simpler.
+
+6.	Error REPEAT when handling WORD variables
+          See https://sourceforge.net/p/gcbasic/discussion/596084/thread/9655ed39/#979c
+
+7.        Compiles code when GCB should not....
+          See https://sourceforge.net/p/gcbasic/discussion/596084/thread/8e9538e2/
+
+8.        Integer handling error.  Logic and Functions
+          See https://sourceforge.net/p/gcbasic/discussion/596084/thread/1e7392ec/
+
+9.        Compiles code when GCB should not.... Maths and Braces
+          See https://sourceforge.net/p/gcbasic/discussion/596084/thread/1c8b1c2d/#e9c3
+
+10.       Enhancement Request.  OPTION EXPLICIT... essentially means that all variables MUST be defined.
+          See https://sourceforge.net/p/gcbasic/discussion/579125/thread/6d8581e3/#831d
+
+11.       Enhancement Request.  Enumerate objects.
+          See https://sourceforge.net/p/gcbasic/discussion/579125/thread/3b1c3b94/
+
+11.       Enhancement Request.  USB Support.
+          https://sourceforge.net/p/gcbasic/discussion/579125/thread/559c7723/#e307
