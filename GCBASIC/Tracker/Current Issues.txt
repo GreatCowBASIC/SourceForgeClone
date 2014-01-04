@@ -1,0 +1,7 @@
+Jan 4th 2014
+
+1.	Handling of LONGs in the context of IF/ENDIF.
+2.	Handling of STR and HEX is incorrect when spaces exists in command line.
+3.	Timer.h does not support tmr 4 and tmr 6
+4.	Replacement I2C code with the newer routines (Oct 2013 code.
+5.        Add two functions to String.h ASC and CHR
