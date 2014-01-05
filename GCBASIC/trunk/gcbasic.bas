@@ -1,5 +1,5 @@
 '	GCBASIC - A BASIC Compiler for microcontrollers
-'	Copyright (C) 2006 - 2013 Hugh Considine
+'	Copyright (C) 2006 - 2014 Hugh Considine
 '
 '	This program is free software; you can redistribute it and/or modify
 '	it under the terms of the GNU General Public License as published by
@@ -559,7 +559,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 6/10/2013"
+Version = "0.9 6/1/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2656,6 +2656,7 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 	'Compile DIMs again, in case any come through from macros
 	CompileDim (CompSub)
 	
+	'Compile various commands
 	CompileFor (CompSub)
 	ProcessArrays (CompSub)
 	AddSysVarBits (CompSub)
@@ -2669,6 +2670,8 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 	CompileRotate (CompSub)
 	CompileRepeat (CompSub)
 	CompileSelect (CompSub)
+	'Compile If statements and variable assignments last
+	'This allows other commands to generate IFs and assignments rather than having to produce assembly
 	CompileIF (CompSub)
 	CompileVars (CompSub)
 	CompileExitSub (CompSub)
@@ -5611,7 +5614,7 @@ END SUB
 SUB CompileRepeat (CompSub As SubType Pointer)
 	
 	Dim As String InLine, Origin, Temp, RepCount, NewOrigin, RepValType
-	Dim As Integer RVN, RL, RepWord, EV, FE, FS, RepNone, CheckZero
+	Dim As Integer RVN, RL, EV, FE, FS, RepNone, CheckZero, CurrByte, RepCountVal
 	Dim As LinkedListElement Pointer CurrLine, EndLoc, FindEnd
 	
 	'Was RVN = 0
@@ -5643,23 +5646,14 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 			Next
 			
 			'Get parameter
-			'Note 10/8/2010 - what on earth was I thinking when I wrote this?
-			'Replace InLine, "(", " "
-			'Replace InLine, ")", " "
-			'RepCount = Trim(Mid(InLine, INSTR(InLine, " ") + 1))
-			
 			RepCount = Trim(Mid(InLine, 7))
 			If RepCount = "" Then
 				LogError Message("RepeatMissingCount"), Origin
 			End If
 			
-			RepWord = 0
-			'IF Not IsConst(RepCount) THEN
-			'	IF IsWord(RepCount, GetSubID(Origin)) THEN RepWord = -1
-			'END IF
-			'IF MakeDec(RepCount) > 255 THEN RepWord = -1
 			RepValType = TypeOfValue(RepCount, CompSub) 
-			If RepValType = "WORD" Or RepValType = "INTEGER" Then RepWord = -1
+			'If told to repeat once, counter should be byte rather than bit
+			If RepValType = "BIT" Then RepValType = "BYTE"
 			
 			RepNone = 0
 			CheckZero = -1
@@ -5676,11 +5670,7 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 			If RepNone = 0 Then
 				RPLC += 1
 				RVN += 1
-				If RepWord THEN
-					AddVar "SysRepeatTemp" + Str(RVN), "WORD", 1, CompSub, "REAL", Origin
-				Else
-					AddVar "SysRepeatTemp" + Str(RVN), "BYTE", 1, CompSub, "REAL", Origin
-				End If
+				AddVar "SysRepeatTemp" + Str(RVN), RepValType, 1, CompSub, "REAL", Origin
 			End If
 			
 			'Pseudo code:
@@ -5693,29 +5683,54 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 			'Starting code
 			If RepNone = 0 Then
 				CurrLine = LinkedListDelete(CurrLine)
-				If RepWord Then
-					CurrLine = LinkedListInsert(CurrLine, "SysRepeatTemp" + Str(RVN) + "=" + RepCount + "+256" + NewOrigin)
-				Else
-					CurrLine = LinkedListInsert(CurrLine, "[byte]SysRepeatTemp" + Str(RVN) + "=" + RepCount + NewOrigin)
-				End If
 				
-				'Check for zero, don't enter loop if 0 found
-				If CheckZero Then
-					If ModePIC And Not RepWord And ChipFamily <> 16 Then
-						'Can't use this on 18F, movff is used for copy, which doesn't set Z
-						CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
-					Else
-						If RepWord Then
-							CurrLine = LinkedListInsertList(CurrLine, CompileConditions("SysRepeatTemp" + Str(RVN) + "<1", "TRUE", NewOrigin))
+				'Need to increment all outer loop counts by 1 to ensure that they repeat the correct number of times
+				'If inner loop is 0, it will loop 256 times
+				'Need to decrement next outer loop in this situation
+				
+				If IsConst(RepCount) And InStr(RepCount, "@") = 0 Then
+					'Increment counters as needed
+					RepCountVal = MakeDec(RepCount)
+					For CurrByte = 1 To GetTypeSize(RepValType) - 1
+						RepCountVal += (2 ^ (8 * CurrByte))
+					Next
+					'Decrement again to take into account 0 = 256
+					For CurrByte = 0 To GetTypeSize(RepValType) - 1
+						If (RepCountVal And 255 * 2 ^ (8 * CurrByte)) = 0 Then
+							RepCountVal -= (2 ^ (8 * (CurrByte + 1)))
+						End If
+					Next
+					RepCount = Str(RepCountVal)
+					CurrLine = LinkedListInsert(CurrLine, "[" + RepValType + "]SysRepeatTemp" + Str(RVN) + "=" + RepCount + NewOrigin)
+				Else
+					CurrLine = LinkedListInsert(CurrLine, "[" + RepValType + "]SysRepeatTemp" + Str(RVN) + "=" + RepCount + NewOrigin)
+					
+					'Check for zero, don't enter loop if 0 found
+					If CheckZero Then
+						If ModePIC And RepValType = "BYTE" And ChipFamily <> 16 Then
+							'Can't use this on 18F, movff is used for copy, which doesn't set Z
+							CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
 						Else
-							CurrLine = LinkedListInsertList(CurrLine, CompileConditions("[byte]SysRepeatTemp" + Str(RVN) + "=0", "TRUE", NewOrigin))
+							If RepValType <> "BYTE" Then
+								CurrLine = LinkedListInsertList(CurrLine, CompileConditions("[" + RepValType + "]SysRepeatTemp" + Str(RVN) + "<1", "TRUE", NewOrigin))
+							Else
+								CurrLine = LinkedListInsertList(CurrLine, CompileConditions("[byte]SysRepeatTemp" + Str(RVN) + "=0", "TRUE", NewOrigin))
+							End If
+						End If
+						If ModePIC Then
+							CurrLine = LinkedListInsert(CurrLine, " goto SysRepeatLoopEnd" + Str(RPLC))
+						ElseIf ModeAVR Then
+							CurrLine = LinkedListInsert(CurrLine, " jmp SysRepeatLoopEnd" + Str(RPLC))
 						End If
 					End If
-					If ModePIC Then
-						CurrLine = LinkedListInsert(CurrLine, " goto SysRepeatLoopEnd" + Str(RPLC))
-					ElseIf ModeAVR Then
-						CurrLine = LinkedListInsert(CurrLine, " jmp SysRepeatLoopEnd" + Str(RPLC))
-					End If
+					
+					'If byte is not zero, increment next byte
+					For CurrByte = 0 To GetTypeSize(RepValType) - 2
+						'Can use IF and assignments here, Repeat compiled before If
+						CurrLine = LinkedListInsert(CurrLine, "IF [byte]" + GetByte("SysRepeatTemp" + Str(RVN), CurrByte) + " ~ 0 THEN" + NewOrigin)
+						CurrLine = LinkedListInsert(CurrLine, GetByte("SysRepeatTemp" + Str(RVN), CurrByte + 1) + "=" + GetByte("SysRepeatTemp" + Str(RVN), CurrByte + 1) + "+1" + NewOrigin)
+						CurrLine = LinkedListInsert(CurrLine, "END IF" + NewOrigin)
+					Next
 				End If
 				
 				CurrLine = LinkedListInsert(CurrLine, "SysRepeatLoop" + Str(RPLC) + LabelEnd)
@@ -5744,33 +5759,24 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 			Else
 				EndLoc = LinkedListDelete(EndLoc)
 				If ModePIC Then
-					EndLoc = LinkedListInsert(EndLoc, " decfsz SysRepeatTemp" + Str(RVN) + ",F")
-					EndLoc = LinkedListInsert(EndLoc, " goto SysRepeatLoop" + Str(RPLC))
-					If RepWord THEN
-						EndLoc = LinkedListInsert(EndLoc, " decfsz SysRepeatTemp" + Str(RVN) + "_H,F")
+					For CurrByte = 0 To GetTypeSize(RepValType) - 1
+						EndLoc = LinkedListInsert(EndLoc, " decfsz " + GetByte("SysRepeatTemp" + Str(RVN), CurrByte) + ",F")
 						EndLoc = LinkedListInsert(EndLoc, " goto SysRepeatLoop" + Str(RPLC))
-					END If
+					Next
 					
 				ElseIf ModeAVR Then
 					Dim As String RegName
 					Dim As LinkedListElement Pointer CopyToReg
 					CopyToReg = LinkedListCreate
-					If RepWord Then
-						RegName = PutInRegister(CopyToReg, "[word]SysRepeatTemp" + Str(RVN), "WORD", Origin)
-					Else
-						RegName = PutInRegister(CopyToReg, "[byte]SysRepeatTemp" + Str(RVN), "", Origin)
-					End If
+					RegName = PutInRegister(CopyToReg, "[" + RepValType + "]SysRepeatTemp" + Str(RVN), RepValType, Origin)
 					EndLoc = LinkedListInsertList(EndLoc, CopyToReg)
-					EndLoc = LinkedListInsert(EndLoc, " dec " + GetByte(RegName, 0))
-					EndLoc = LinkedListInsertList(EndLoc, CompileVarSet("[byte]" + GetByte(RegName, 0), "[byte]SysRepeatTemp" + Str(RVN), Origin))
-					EndLoc = LinkedListInsert(EndLoc, " breq PC + 2")
-					EndLoc = LinkedListInsert(EndLoc, " rjmp SysRepeatLoop" + Str(RPLC))
-					If RepWord Then
-						EndLoc = LinkedListInsert(EndLoc, " dec " + GetByte(RegName, 1))
-						EndLoc = LinkedListInsertList(EndLoc, CompileVarSet("[byte]" + GetByte(RegName, 1), "[byte]SysRepeatTemp" + Str(RVN) + "_H", Origin))
+					
+					For CurrByte = 0 To GetTypeSize(RepValType) - 1
+						EndLoc = LinkedListInsert(EndLoc, " dec " + GetByte(RegName, CurrByte))
+						EndLoc = LinkedListInsertList(EndLoc, CompileVarSet("[byte]" + GetByte(RegName, CurrByte), "[byte]" + GetByte("SysRepeatTemp" + Str(RVN), CurrByte), Origin))
 						EndLoc = LinkedListInsert(EndLoc, " breq PC + 2")
 						EndLoc = LinkedListInsert(EndLoc, " rjmp SysRepeatLoop" + Str(RPLC))
-					End If
+					Next
 					FreeCalcVar RegName
 				End If
 				EndLoc = LinkedListInsert(EndLoc, "SysRepeatLoopEnd" + Str(RPLC) + LabelEnd)
@@ -5778,8 +5784,8 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 			
 		End IF
 		
-		IF ModePIC And (INSTR(InLine, " decfsz SysRepeatTemp") <> 0 AND INSTR(InLine, "_H") = 0) Then RVN = RVN - 1
-		If ModeAVR And (INSTR(InLine, " sts SysRepeatTemp") <> 0 AND INSTR(InLine, "_H") = 0) Then RVN = RVN - 1
+		IF ModePIC And (INSTR(InLine, " decfsz SysRepeatTemp") <> 0 AND INSTR(InLine, "_H") = 0 AND INSTR(InLine, "_U") = 0 AND INSTR(InLine, "_E") = 0) Then RVN = RVN - 1
+		If ModeAVR And (INSTR(InLine, " sts SysRepeatTemp") <> 0 AND INSTR(InLine, "_H") = 0 AND INSTR(InLine, "_U") = 0 AND INSTR(InLine, "_E") = 0) Then RVN = RVN - 1
 		
 		NextRepeat:
 		CurrLine = CurrLine->Next
@@ -7787,8 +7793,13 @@ SUB CompileVars (CompSub As SubType Pointer)
 			If IsCalc(SourceData) Then
 				
 				'Add var
-				AddVar DestVar, "BYTE", 1, Subroutine(DestSub), "REAL", Origin
-				VarType = TypeOfVar(DestVar, Subroutine(DestSub))
+				If InStr(DestVar, "[") = 0 Then
+					AddVar DestVar, "BYTE", 1, Subroutine(DestSub), "REAL", Origin
+					VarType = TypeOfVar(DestVar, Subroutine(DestSub))
+				Else
+					VarType = Mid(DestVar, InStr(DestVar, "[") + 1)
+					VarType = Left(VarType, InStr(VarType, "]") - 1)
+				End If
 				
 				'Compile calculation
 				FreeCalcVar ""
@@ -7818,7 +7829,7 @@ SUB CompileVars (CompSub As SubType Pointer)
 						Loop
 						'Change destination of last operation
 						Temp = FindLine->Prev->Value
-						IF WholeINSTR(Temp, DestVar) = 2 AND INSTR(Temp, "wf") <> 0 And INSTR(Temp, " movwf ") = 0 THEN
+						IF WholeINSTR(Temp, DelType(DestVar)) = 2 AND INSTR(Temp, "wf") <> 0 And INSTR(Temp, " movwf ") = 0 THEN
 							FindLine = LinkedListDelete(FindLine)
 							Replace FindLine->Value, ",W", ",F"
 						END If
