@@ -1,6 +1,6 @@
 '	GCBASIC - A BASIC Compiler for microcontrollers
 '	 Preprocessor
-'	Copyright (C) 2006 - 2012 Hugh Considine
+'	Copyright (C) 2006 - 2014 Hugh Considine
 '
 '	This program is free software; you can redistribute it and/or modify
 '	it under the terms of the GNU General Public License as published by
