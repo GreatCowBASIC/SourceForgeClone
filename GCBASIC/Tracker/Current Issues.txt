@@ -3,6 +3,22 @@ Jan 4th 2014 @ 12:23
 1.	Handling of LONGs in the context of IF/ENDIF.
           See https://sourceforge.net/p/gcbasic/discussion/596084/thread/b6a97f96/#d632 and the emails from Anobium.
 
+          Added 6th Jan 2014.
+                Example of a long issue in a large program if Motorspeed is anything but a byte variable this code does not operate as expected.
+                    'PWM sub
+                    'This will be called when Timer 2 overflows
+                    Dim MotorSpeed as  long
+                    MotorSpeed = 0
+                    Sub PWMHandler
+                        If [long]MotorSpeed > PWMCounter Then
+                            Set MOTOR On
+                    '    Else
+                            Set MOTOR Off
+                        End If
+                        PWMCounter += 1
+                        If PWMCounter = 100 Then PWMCounter = 0
+                    End Sub
+
 2.	Handling of STR and HEX is incorrect when spaces exists in command line.
           No forum record.  Processing is incorrect when leaving a space between command the the left brace. STR ( is bad news...
 
