@@ -30,7 +30,7 @@ Jan 4th 2014 @ 12:23
           See https://sourceforge.net/p/gcbasic/discussion/629990/thread/1a3accc6/#b94b
 
 5.	Add two functions to String.h ASC and CHR
-          These are two simple functions we could add.  New users may not be able to figure out the relationship between arrays and strings in GCB.  These may make things simpler.
+          These are two simple functions we could add.  New users may not be able to figure out the relationship between arrays and strings in GCB.  Adding these new methods may make things simpler.
 
 6.	Error REPEAT when handling WORD variables
           See https://sourceforge.net/p/gcbasic/discussion/596084/thread/9655ed39/#979c
@@ -52,3 +52,4 @@ Jan 4th 2014 @ 12:23
 
 11.       Enhancement Request.  USB Support.
           https://sourceforge.net/p/gcbasic/discussion/579125/thread/559c7723/#e307
+
