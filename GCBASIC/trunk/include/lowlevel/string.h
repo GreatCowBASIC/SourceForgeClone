@@ -26,7 +26,7 @@
 ' 15/2/2011: First working versions of LCase, UCase, Str
 ' 18/2/2011: Added Val function
 ' 13/2/2013: Added Left, Right, Mid functions
-' New functions  added Jan 2014
+' New functions  added Jan 2014 by 2014 Evan R Venn
 ' a built-in function, asc(), which takes a character and returns the numeric value for that character in the machine's character set. If the string passed to asc() has more than one character, only the first one is used.
 ' The inverse of this function is chr() (from the function of the same name in Pascal), which takes a number and returns the corresponding character. Both functions are written very nicely in GCB.
 
@@ -242,7 +242,8 @@ Function RTrim (SysInString3 as string) As String
   SysCharRT = 0
   For SysTempRT = SysCharRTCount to 1 step -1
 
-      if Asc(Mid (SysInString3, SysTempRT , 1)) <> 32 then
+      ' was Asc(Mid (SysInString3, SysTempRT , 1))
+      if SysInString3(SysTempRT) <> 32 then
          SysCharRT = SysTempRT
          goto FoundNonSpaceChar2
       end if
