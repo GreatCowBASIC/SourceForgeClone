@@ -358,7 +358,7 @@ End Function
 
 ' Return a binary number
 
-Function ByteToBin (In ByteNum as Byte, ) as String * 8
+Function ByteToBin (In ByteNum as Byte ) as String * 8
   ByteToBin = ""
   Repeat 8
       If ByteNum.7 = 1 Then
@@ -370,7 +370,7 @@ Function ByteToBin (In ByteNum as Byte, ) as String * 8
   End Repeat
 End Function
 
-Function WordToBin (In WordNum as Word, ) as String * 16
+Function WordToBin (In WordNum as Word ) as String * 16
   WordToBin = ""
   Repeat 16
       If WordNum.15 = 1 Then
