@@ -331,14 +331,15 @@ End Function
 
 
 Function Asc (in SysInStringA(), optional Syschar = 1) As Byte
-
+  Asc = 0
   'Get length of string, don't try _asc ing if it's empty
   SysCharCount = SysInStringA(0)
   If SysCharCount = 0 Then Exit Function
+
   if Syschar > SysCharCount Then Exit Function
 
   'Get first char of string, only first character is of interest, Syschar if provided
-  asc = SysInStringA( Syschar )
+  Asc = SysInStringA( Syschar )
 
 End Function
 
@@ -354,3 +355,31 @@ Function Chr (SysChar ) As String
   Chr(1) = SysChar
 
 End Function
+
+' Return a binary number
+
+Function ByteToBin (In ByteNum as Byte, ) as String * 8
+  ByteToBin = ""
+  Repeat 8
+      If ByteNum.7 = 1 Then
+         ByteToBin = ByteToBin +"1"
+      Else
+         ByteToBin = ByteToBin +"0"
+      End If
+      Rotate ByteNum Left
+  End Repeat
+End Function
+
+Function WordToBin (In WordNum as Word, ) as String * 16
+  WordToBin = ""
+  Repeat 16
+      If WordNum.15 = 1 Then
+         WordToBin = WordToBin +"1"
+      Else
+         WordToBin = WordToBin +"0"
+      End If
+      Rotate WordNum Left
+  End Repeat
+End Function
+
+
