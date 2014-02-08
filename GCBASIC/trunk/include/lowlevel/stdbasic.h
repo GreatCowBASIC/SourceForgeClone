@@ -25,6 +25,7 @@
 'Changes:
 ' 17/6/2009: AVR support added
 ' 10/2/2013: Indirect call added
+' 08/02/2013: added to new functions _dectobcd and _bcdtodec
 
 'Misc settings
 
@@ -213,3 +214,15 @@ Function Swap4(Swap4In)
 		swap Swap4
 	#endif
 End Function
+
+' Dec to BCD
+Function DecToBcd_GCB( SysCalcTempA as byte ) as Byte
+         DecToBcd_GCB = (SysCalcTempA/10)*16+SysCalcTempA%10
+End Function
+
+
+' BDC to Dec
+Function BcdToDec_GCB( SysCalcTempA as byte ) as byte
+         BcdToDec_GCB = (SysCalcTempA/16)*10+SysCalcTempA%16
+End Function
+
