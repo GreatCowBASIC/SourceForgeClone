@@ -46,6 +46,14 @@ Type ProgLineMeta
 	
 End Type
 
+Type SourceFileType
+	FileName As String
+	InitSub As String
+	InitSubUsed As Integer
+	
+	OptionExplicit As Integer
+End Type
+
 Type VariableType
 	Name As String
 	Type As String
@@ -457,14 +465,14 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 
 'Initialise
 'Misc Vars
-DIM SHARED As Integer APC, ICC, DFC, FVLC, FRLC, FALC, SBC, SLC, IFC, WSC, FLC, DLC, SSC, SASC, POC
+DIM SHARED As Integer APC, DFC, FVLC, FRLC, FALC, SBC, SLC, IFC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
 Dim Shared As Integer ChipPins
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, SVC, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
-DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC
+DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
@@ -483,7 +491,8 @@ Dim Shared Subroutine(10000) As SubType Pointer: SBC = 0
 
 'Processing Arrays
 DIM SHARED gcDEF(1000, 1 TO 3) As String: DFC = 0
-Dim SHARED gcINC(100, 1 TO 2) As String: ICC = 0
+'Dim SHARED gcINC(100, 1 TO 2) As String: ICC = 0
+Dim Shared SourceFile(100) As SourceFileType: SourceFiles = 0
 DIM SHARED TempData(300) As String
 DIM SHARED CheckTemp(300) As String
 Dim SHARED SysVars(1000) As SysVarType
@@ -559,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 6/1/2014"
+Version = "0.9 17/2/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1293,17 +1302,17 @@ Sub AddMainInitCode
 	Else
 		CurrLine = LinkedListInsert(CurrLine, " call INITSYS")
 	End If
-	FOR CurrInc = 1 TO ICC
-		Temp = Trim(gcINC(CurrInc, 2))
-		If Temp <> "" And Left(Temp, 1) <> ";" Then
-			SubLoc = LocationOfSub(Temp, "")
-			'If SubLoc <> 0 Then Subroutine(SubLoc)->FirstPage = -1
-			If ModeAVR Then
-				CurrLine = LinkedListInsert(CurrLine, " rcall " + Temp)
-			Else
-				CurrLine = LinkedListInsert(CurrLine, " call " + Temp)
+	FOR CurrInc = 1 TO SourceFiles
+		With SourceFile(CurrInc)
+			If .InitSub <> "" And .InitSubUsed Then
+				SubLoc = LocationOfSub(.InitSub, "")
+				If ModeAVR Then
+					CurrLine = LinkedListInsert(CurrLine, " rcall " + .InitSub)
+				Else
+					CurrLine = LinkedListInsert(CurrLine, " call " + .InitSub)
+				End If
 			End If
-		End If
+		End With
 	Next
 	
 	'Enable interrupts
@@ -2569,7 +2578,6 @@ End Sub
 Sub CompileProgram
 	
 	Dim As Integer CurrSub, CompileMore, IntLoc, CurrInc, SubLoc
-	Dim As String Temp
 	
 	'Check every sub in program, compile those that need to be compiled
 	'Need to check again once a sub has been compiled, because that sub may
@@ -2610,18 +2618,19 @@ Sub CompileProgram
 		Next
 		
 		'Check for required initialisation subs
-		FOR CurrInc = 1 TO ICC
-			Temp = Trim(gcINC(CurrInc, 2))
-			If Temp <> "" And Left(Temp, 1) <> ";" Then
-				SubLoc = LocationOfSub(Temp, "")
-				If SubLoc <> 0 Then
-					Subroutine(SubLoc)->FirstPage = -1
-					If Not Subroutine(SubLoc)->Required Then
-						Subroutine(SubLoc)->Required = -1
-						CompileMore = -1
+		FOR CurrInc = 1 TO SourceFiles
+			With SourceFile(CurrInc)
+				If .InitSub <> "" And .InitSubUsed Then
+					SubLoc = LocationOfSub(.InitSub, "")
+					If SubLoc <> 0 Then
+						Subroutine(SubLoc)->FirstPage = -1
+						If Not Subroutine(SubLoc)->Required Then
+							Subroutine(SubLoc)->Required = -1
+							CompileMore = -1
+						End If
 					End If
 				End If
-			End If
+			End With
 		Next
 		
 	Loop While CompileMore
@@ -6611,7 +6620,8 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 			'Mark sub as required
 			.Called->Required = -1
 			'Mark file sub came from as used
-			Replace gcINC(.Called->SourceFile, 2), ";", ""
+			'Replace gcINC(.Called->SourceFile, 2), ";", ""
+			SourceFile(.Called->SourceFile).InitSubUsed = -1
 			
 		End If
 		
@@ -6649,8 +6659,8 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 			Temp = VAL(Mid(CurrLine->Value, INSTR(UCase(CurrLine->Value), ";STARTUP") + 8))
 			TempData = ";STARTUP" + Str(Temp)
 			Replace CurrLine->Value, TempData, ""
-			Replace gcINC(Temp, 2), ";", ""
-			RequestSub(0, Trim(gcINC(Temp, 2), Any "; "))
+			SourceFile(Temp).InitSubUsed = -1
+			RequestSub(0, SourceFile(Temp).InitSub)
 		Loop
 		
 		For PD = 1 to 10
@@ -13044,7 +13054,7 @@ SUB WriteErrorLog
 				
 			Else
 				'Trim filename of path
-				Fi = gcINC(F, 1)
+				Fi = SourceFile(F).FileName
 				FOR T = LEN(Fi) to 1 step -1
 					IF Mid(Fi, T, 1) = "\" THEN Fi = Mid(Fi, T + 1): Exit For
 				NEXT
