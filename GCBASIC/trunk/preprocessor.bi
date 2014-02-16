@@ -423,20 +423,20 @@ SUB PreProcessor
 	
 	'Find required files
 	IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("FindSource")
-	ICC = 1: gcINC(1, 1) = ShortName(FI)
+	SourceFiles = 1: SourceFile(1).FileName = ShortName(FI)
 	T = 1
 	
 	'FindIncludeFiles:
 	Do
 		T2 = T
-		ICCO = ICC
-		FOR T = T2 TO ICC
+		ICCO = SourceFiles
+		FOR T = T2 TO SourceFiles
 			
-			IF VBS = 1 THEN PRINT SPC(10); gcINC(T, 1);
-			IF Dir(gcINC(T, 1)) = "" THEN
+			IF VBS = 1 THEN PRINT SPC(10); SourceFile(T).FileName;
+			IF Dir(SourceFile(T).FileName) = "" THEN
 				IF VBS = 0 THEN 
 					Temp = Message("NoFile")
-					Replace Temp, FI, gcINC(T, 1)
+					Replace Temp, FI, SourceFile(T).FileName
 					PRINT Temp
 				Else
 					PRINT ": " + Message("NotFound")   
@@ -444,7 +444,7 @@ SUB PreProcessor
 			
 			Else
 				IF VBS = 1 THEN PRINT ": " + Message("found")
-				OPEN gcINC(T, 1) FOR INPUT AS #1
+				OPEN SourceFile(T).FileName For INPUT AS #1
 				DO WHILE NOT EOF(1)
 					LINE INPUT #1, Temp
 					Temp = Trim(Temp)
@@ -461,8 +461,8 @@ SUB PreProcessor
 						Temp = ShortName(Temp)
 						'Check to see if include file already in list
 						CE = 0
-						FOR PD = 1 TO ICC
-							IF UCase(gcINC(PD, 1)) = UCase(Temp) THEN CE = 1: EXIT FOR
+						FOR PD = 1 TO SourceFiles
+							IF UCase(SourceFile(PD).FileName) = UCase(Temp) THEN CE = 1: EXIT FOR
 						Next
 						
 						'If not, add it
@@ -471,8 +471,8 @@ SUB PreProcessor
 							'May need to convert
 							Temp = TranslateFile(Temp)
 							
-							ICC += 1
-							gcINC(ICC, 1) = Temp
+							SourceFiles += 1
+							SourceFile(SourceFiles).FileName = Temp
 						End If
 					END IF
 				LOOP
@@ -481,8 +481,8 @@ SUB PreProcessor
 			END IF
 		NEXT
 	'IF ICCO < ICC THEN GOTO FindIncludeFiles
-	Loop While ICCO < ICC
-	ICCO = ICC
+	Loop While ICCO < SourceFiles
+	ICCO = SourceFiles
 	
 	'Add standard include files to list
 	#IFDEF __FB_LINUX__
@@ -501,12 +501,12 @@ SUB PreProcessor
 				DataSource = ID + "\INCLUDE\LOWLEVEL\" + DataSource
 			#ENDIF
 			CE = 0
-			FOR PD = 1 TO ICC
-				IF UCase(gcINC(PD, 1)) = UCase(DataSource) THEN CE = 1: EXIT FOR
+			FOR PD = 1 TO SourceFiles
+				IF UCase(SourceFile(PD).FileName) = UCase(DataSource) THEN CE = 1: EXIT FOR
 			NEXT
 			IF CE = 0 THEN
-				ICC = ICC + 1
-				gcINC(ICC, 1) = DataSource
+				SourceFiles += 1
+				SourceFile(SourceFiles).FileName = DataSource
 				Temp = Dir(DataSource)
 				IF Temp <> "" THEN Temp = ": " + Message("found")
 				IF Temp = "" THEN Temp = ": " + Message("NotFound")
@@ -525,9 +525,9 @@ SUB PreProcessor
 	IF VBS = 1 THEN PRINT SPC(5); Message("LoadSource");
 	PercOld = 0
 	CurrPerc = 0.5
-	PercAdd = 1 / ICC * 100
-	FOR RF = 1 TO ICC
-		If OPEN(gcINC(RF, 1) FOR INPUT AS #1) <> 0 Then Goto LoadNextFile
+	PercAdd = 1 / SourceFiles * 100
+	FOR RF = 1 TO SourceFiles
+		If OPEN(SourceFile(RF).FileName FOR INPUT AS #1) <> 0 Then Goto LoadNextFile
 		
 		S = 0
 		LC = 0
@@ -924,14 +924,24 @@ SUB PreProcessor
 				
 				If Left(DataSource, 1) = "#" Then
 					'Automatic initialisation preparation
-					IF Left(DataSource, 8) = "#STARTUP" THEN gcINC(RF, 2) = ";" + Trim(Mid(DataSource, 9)): GOTO LoadNextLine
+					IF Left(DataSource, 8) = "#STARTUP" THEN SourceFile(RF).InitSub = Trim(Mid(DataSource, 9)): GOTO LoadNextLine
 					IF Left(DataSource, 7) = "#DEFINE" THEN DataSource = DataSource + "':" + Str(RF)
 					
-					If Left(DataSource, 8) = "#DEFINE " THEN ForceMain = 1
+					IF Left(DataSource, 8) = "#OPTION " Then
+						DataSource = Trim(Mid(DataSource, 8))
+						If DataSource = "EXPLICIT" Then
+							SourceFile(RF).OptionExplicit = -1
+						Else
+							IF gcOPTION <> "" THEN DataSource = "," + DataSource
+							gcOPTION = gcOPTION + DataSource
+						End If
+						GoTo LoadNextLine
+					End If
+					
+					If Left(DataSource, 8) = "#DEFINE " Then ForceMain = 1
 					IF Left(DataSource, 5) = "#OSC " THEN ForceMain = 1
 					IF Left(DataSource, 8) = "#CONFIG " THEN ForceMain = 1
-					IF Left(DataSource, 8) = "#OPTION " THEN ForceMain = 1
-					IF Left(DataSource, 5) = "#MEM " THEN ForceMain = 1 'Not used
+					If Left(DataSource, 5) = "#MEM " THEN ForceMain = 1 'Not used
 					IF Left(DataSource, 5) = "#RAM " THEN ForceMain = 1 'Not used
 					IF Left(DataSource, 5) = "#INT " THEN ForceMain = 1 'Not used
 					IF Left(DataSource, 6) = "#CHIP " THEN ForceMain = 1
@@ -1144,12 +1154,7 @@ LoadNextFile:
 				IF CONFIG <> "" THEN Temp = "," + Temp
 				CONFIG = CONFIG + Temp
 			
-			ElseIF Left(Temp, 7) = "#OPTION" THEN
-				Temp = Trim(Mid(Temp, 8))
-				IF gcOPTION <> "" THEN Temp = "," + Temp
-				gcOPTION = gcOPTION + Temp
-				
-			END IF
+			End IF
 			
 		END IF
 		

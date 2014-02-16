@@ -23,6 +23,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	
 	Dim As String VarName, VarType, VarPointer, Origin, Temp, VarAlias, ConstName
 	Dim As Integer VarSize, CL, TempSize, PD, VarSearchStart, T, VarFixedSize
+	Dim As Integer CurrFile
 	Dim As VariableType Pointer VarFound
 	Dim As SubType Pointer VarSub, MainSub
 	
@@ -33,6 +34,12 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Origin = OriginIn
 	VarSub = VarSubIn
 	MainSub = Subroutine(0)
+	'Find file that variable was added in
+	If InStr(Origin, "F") <> 0 Then
+		CurrFile = Val(Mid(Origin, InStr(Origin, "F") + 1))
+	Else
+		CurrFile = 0
+	End If
 	
 	'Do this to prevent null pointer access
 	If VarSub = 0 Then
@@ -67,11 +74,6 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		Temp = Left(Temp, InStr(Temp, "]"))
 		Replace VarName, Temp, ""
 		VarType = Mid(Temp, 2, Len(Temp) - 2)
-	End If
-	
-	'Implicit declaration
-	If Not ExplicitDeclaration Then
-		'Do something here later!
 	End If
 	
 	'Special treatment for strings
@@ -224,6 +226,16 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	
 	'If variable not found, make a new one
 	If VarFound = 0 Then
+		'Implicit declaration
+		If Not ExplicitDeclaration Then
+			'If explicit declaration required, generate error
+			If SourceFile(CurrFile).OptionExplicit Then
+				Temp = Message("UndeclaredVar")
+				Replace Temp, "%var%", VarName
+				LogError Temp, Origin
+			End If
+		End If
+		
 		'Is variable name used for an SFR bit (this will cause confusion)
 		For PD = 1 To SVBC
 			If VarName = SysVarBits(PD).Name Then
