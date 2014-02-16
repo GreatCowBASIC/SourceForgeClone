@@ -151,6 +151,13 @@ macro Pulseout (Pin, Time)
 	Set Pin Off
 end macro
 
+'PulseOutInv (inverted PulseOut)
+macro PulseOutInv (Pin, Time)
+	Set Pin Off
+	Wait Time
+	Set Pin On
+end macro
+
 'PulseIn
 macro PulseIn (Pin, Variable, Units)
 	Variable = 0
