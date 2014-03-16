@@ -31,6 +31,7 @@
 ' 2/6/2013: Added In directive to HSerPrint(string)
 ' 10/7/2013: Added USART_TX_BLOCKING option, fixes for chips with 2 modules
 ' 29/9/2013: Fixes for ATmega32u4
+' 16/2/2104: Fixed HERPRINT Long Bug
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -49,15 +50,15 @@
 
 'Some wrappers for compatibility with Contributors USART routines
 #define HserPrintByte HSerPrint
-Sub HserPrintByteCRLF(In PrintValue) 
+Sub HserPrintByteCRLF(In PrintValue)
 	HSerPrint(PrintValue)
 	HSerPrintCRLF
 End Sub
-Sub HserPrintCRLF 
+Sub HserPrintCRLF
 	HSerSend(13)
 	Wait USART_DELAY
 	HSerSend(10)
-End Sub 
+End Sub
 
 'Script to calculate baud rate generator values
 'Also sets constants to check if byte received
@@ -363,7 +364,7 @@ Sub HSerPrint (In SerPrintVal As Word)
 	
 	OutValueTemp = 0
 	
-	If SerPrintVal >= 10000 then 
+	If SerPrintVal >= 10000 then
 		OutValueTemp = SerPrintVal / 10000 [word]
 		SerPrintVal = SysCalcTempX
 		HSerSend(OutValueTemp + 48)
@@ -380,7 +381,7 @@ Sub HSerPrint (In SerPrintVal As Word)
 		Goto HSerPrintWord100
 	End If
 
-	If SerPrintVal >= 100 then 
+	If SerPrintVal >= 100 then
 	HSerPrintWord100:
 		OutValueTemp = SerPrintVal / 100 [word]
 		SerPrintVal = SysCalcTempX
@@ -431,7 +432,10 @@ Sub HSerPrint (In SerPrintValInt As Integer)
 End Sub
 
 Sub HSerPrint (In SerPrintVal As Long)
-	Dim SysCalcTempX As Long
+              ' Updated 16th Feb 2014.  Incorrect variable defined
+              ' Changed to SysCalcTempA
+
+	Dim SysCalcTempA As Long
 	Dim SysPrintBuffer(10)
 	SysPrintBuffLen = 0
 	
