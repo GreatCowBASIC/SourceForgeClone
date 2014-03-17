@@ -1,0 +1,11 @@
+Great Cow BASIC Contributors:
+
+Hugh Considine (Main developer)
+Stefano Bonomi (Two-wire LCD routines)
+Geordie Millar (Swap and Swap4 subroutines)
+Finn Stokes (8-bit multiply and divide routines)
+
+This GCBASIC installer includes the latest gputils installer as of 17/9/2006. For more information on gputils, or to check that you have the latest version, please visit http://gputils.sourceforge.net/
+
+Please check http://gcbasic.sourceforge.net/ for updates from time to time, or if you need assistance.
+
