@@ -1,0 +1,7 @@
+Thank you for installing Great Cow BASIC!
+
+To compile a file, drag and drop it onto compile.bat. If compilation is successful, a .asm and .hex file will be produced. Download the .hex to your PIC, and you're set to go!
+
+If you don't have an application to download the file, then we suggest you try the excellent IC-Prog program (http://www.ic-prog.com) and JDM programmer (http://www.jdm.homepage.dk/newpics.htm). More information on using Great Cow BASIC and these utilities is available at http://gcbasic.sourceforge.net/starting.html.
+
+Users of Windows 95/98/Me will need to restart to ensure that gputils is installed correctly.
