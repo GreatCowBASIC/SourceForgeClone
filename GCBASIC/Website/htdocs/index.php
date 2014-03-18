@@ -85,8 +85,13 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;"><br>
-14/2/2014<br>
+<td><span style="font-weight: bold;"><br>18/3/2014<br></span>Revised the&nbsp;Great Cow Graphical Online Help, see&nbsp;<a href="help/">Online Help</a>. &nbsp;We will keep this online version up to date, so let us have your recommendation and changes.<br><br>We
+have also move a lot of the information and source code into
+SourceForge. &nbsp;You can obtain source files and helper files from
+the code repository. &nbsp;Please becareful as you use these file -
+some may work with your version of GCB some may not. &nbsp;Please
+ensure you backup you system prior to using these files.<br>
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"><br><br>14/2/2014<br>
 </span>A
 new update for Great Cow Graphical BASIC website. &nbsp;A release
 is in
