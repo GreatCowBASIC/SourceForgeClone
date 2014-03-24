@@ -1,5 +1,5 @@
 '    Liquid Crystal Display routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2012 Hugh Considine, Stefano Bonomi
+'    Copyright (C) 2006 - 2014 Hugh Considine, Stefano Bonomi, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@
 ' 4 and 8 bit routines	Hugh Considine
 ' 2 bit routines	Stefano Bonomi
 ' Testing		Stefano Adami
+' Revised 4 bit routines    Evan Venn
 
 #startup InitLCD
 
@@ -55,6 +56,8 @@
 'Misc Settings
 #define LCD_Write_Delay 8 10us
 #define FLASH 2
+#define LCDOFF 3
+#define FLASHON 4
 '#define LCD_NO_RW
 'Lines for bar graph
 #define LCD_BAR_EMPTY b'00010001'
@@ -94,6 +97,15 @@ Sub CLS
 	
 	'Move to start of visible DDRAM
 	LCDWriteByte(0x80)
+	Wait 10 10us
+End Sub
+
+
+Sub LCDHOME
+	SET LCD_RS OFF
+	
+	'Return CURSOR to home
+          LCDWriteByte (b'00000001')
 	Wait 10 10us
 End Sub
 
@@ -140,7 +152,7 @@ Sub Print (In LCDValue As Word)
 	Set LCD_RS On
 	LCDValueTemp = 0
 	
-	If LCDValue >= 10000 then 
+	If LCDValue >= 10000 then
 		LCDValueTemp = LCDValue / 10000 [word]
 		LCDValue = SysCalcTempX
 		LCDWriteByte(LCDValueTemp + 48)
@@ -280,7 +292,7 @@ sub LCDNormalWriteByte(In LCDByte)
 	#ENDIF
 	
 	#IFDEF LCD_IO 2
-		LCD2_NIBBLEOUT Swap4(LCDByte)  	'Swap byte; Most significant NIBBLE sent first 
+		LCD2_NIBBLEOUT Swap4(LCDByte)  	'Swap byte; Most significant NIBBLE sent first
 		LCD2_NIBBLEOUT LCDByte			'Less Significant NIBBLE output
 	#ENDIF
 	
@@ -299,12 +311,12 @@ sub LCDNormalWriteByte(In LCDByte)
 		if LCDByte.7 ON THEN SET LCD_DB7 ON
 		if LCDByte.6 ON THEN SET LCD_DB6 ON
 		if LCDByte.5 ON THEN SET LCD_DB5 ON
-		if LCDByte.4 ON THEN SET LCD_DB4 ON		 
+		if LCDByte.4 ON THEN SET LCD_DB4 ON		
 		
 		'Pulse enable pin
 		Wait 5 10us
 		PULSEOUT LCD_Enable, 5 10us
-		Wait 5 10us		 
+		Wait 5 10us		
 		
 		'Write lower nibble to output pins
 		set LCD_DB4 OFF
@@ -314,12 +326,12 @@ sub LCDNormalWriteByte(In LCDByte)
 		if LCDByte.3 ON THEN SET LCD_DB7 ON
 		if LCDByte.2 ON THEN SET LCD_DB6 ON
 		if LCDByte.1 ON THEN SET LCD_DB5 ON
-		if LCDByte.0 ON THEN SET LCD_DB4 ON		  
+		if LCDByte.0 ON THEN SET LCD_DB4 ON		
 		
 		'Pulse enable pin
 		Wait 5 10us
 		PULSEOUT LCD_Enable, 5 10us
-		Wait 5 10us		 
+		Wait 5 10us		
 		
 		'Set data pins low again
 		SET LCD_DB7 OFF
@@ -350,7 +362,7 @@ SUB LCD2_NIBBLEOUT (In LCD2BYTE)
  SET LCD_CB OFF
 
  'Clear Shift Register With six 0s prior to loading
- FOR LCDTemp = 1 TO 6   
+ FOR LCDTemp = 1 TO 6
   SET LCD_CB ON  ' STROBE
   SET LCD_CB OFF ' ======
  NEXT
@@ -372,7 +384,7 @@ SUB LCD2_NIBBLEOUT (In LCD2BYTE)
  NEXT
 
 SET LCD_DB ON				' Last pulse for Nibble output. Not for Shift register
-WAIT 1 MS				' Put E pin on LCD to one through an AND operation 
+WAIT 1 MS				' Put E pin on LCD to one through an AND operation
 SET LCD_DB OFF				' with the first bit outputted (E)
 
 END SUB
@@ -469,9 +481,31 @@ sub InitLCD
 		SET LCD_RS OFF
 	#ENDIF
 	#IFDEF LCD_IO 8
-		LCDWriteByte(b'00111000') 
+		LCDWriteByte(b'00111000')
 	#ENDIF
 	#IFDEF LCD_IO 4
+
+
+          ' revised LCDINIT Evan Venn March 2014
+		DIR LCD_DB4 OUT
+		DIR LCD_DB5 OUT
+		DIR LCD_DB6 OUT
+		DIR LCD_DB7 OUT
+		set LCD_RS OFF
+		#IFNDEF LCD_NO_RW
+			set LCD_RW OFF
+		#ENDIF
+		set LCD_DB4 ON
+		set LCD_DB5 ON
+		set LCD_DB6 OFF
+		set LCD_DB7 OFF
+                    Repeat 3
+                      PulseOut LCD_Enable, 2 ms
+                      Wait 5 ms
+                    end repeat
+		
+
+
 		DIR LCD_DB4 OUT
 		DIR LCD_DB5 OUT
 		DIR LCD_DB6 OUT
@@ -487,7 +521,7 @@ sub InitLCD
 		Wait 5 10us
 		PulseOut LCD_Enable, 5 10us
 		Wait 5 ms
-		
+
 		LCDWriteByte(b'00101000')
 		wait 25 10us
 	#ENDIF
@@ -507,14 +541,19 @@ sub InitLCD
 end sub
 
 sub LCDCursor(In LCDCRSR)
-	'Can be ON, FLASH or OFF
-	Set LCD_RW OFF
+                 ' Revised Evan Venn March 2014
+	'Can be ON, FLASH or OFF, FLASHON, LCDOFF
+	Set LCD_RS OFF
 	LCDTemp = 12 '0 or 12
-	If LCDCRSR = ON Then LCDTemp = 14 '2 or 12
-	If LCDCRSR = FLASH Then LCDTemp = 15 '3 or 12
+          If LCDCRSR = OFF Then LCDTemp = 12
+	If LCDCRSR = LCDOFF Then LCDTemp = 8
+          If LCDCRSR = ON Then LCDTemp = 14 '2 or 12
+	If LCDCRSR = FLASH Then LCDTemp = 13 '3 or 12
+          If LCDCRSR = FLASHON Then LCDTemp = 15
 	'If LCDCRSR = OFF Then LCDTemp = 0 or 12
 	LCDWriteByte(LCDTemp) '(LCDTemp or 12)
 	Wait 5 10us
+
 end sub
 
 'Create a custom character in CGRAM
@@ -592,3 +631,14 @@ Sub LCDCreateGraph(In LCDCharLoc, In LCDValue)
 	#ENDIF
 	
 End Sub
+
+
+' Sub to print a number of spaces - upto 40
+sub LCDSpace(in LCDValue)
+	set LCD_RS on
+	if LCDValue > 40 then LCDValue = 40
+	do until LCDValue = 0
+		LCDWriteByte(32)
+		LCDValue --
+	loop
+end sub
