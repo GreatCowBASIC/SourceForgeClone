@@ -1,5 +1,5 @@
 '    7 Segment LED/LCD display routines for Great Cow BASIC
-'    Copyright (C) 2006-2009 Hugh Considine
+'    Copyright (C) 2006-2014 Hugh Considine & Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,10 @@
 
 'Changes:
 ' 16/6/2009: New connection modes, and now uses data tables to store codes
+' 29/3/2014: Updated by Evan R. Venn.  There is an incorrect calculation in the method DisplayChar. The method of displaying a numeric character was incorrect.
+'            Corrected and updated the header file.
+'            Also extended the DisplayValue to support 0x0 to 0xF. It was 0x0 to 0x9. Also added an example to an update to the help file.
+
 
 'When using DisplayPortx constants, the following setup is assumed:
 '	PIC Pin		Display Segment
@@ -49,7 +53,7 @@
 'Using DisplayPortx constants will give more efficient code, but is harder to
 'arrange for. When using DISP_SEG_x constants, it is assumed that if multiple
 'displays are used, they will all be connected to the same port (ie, seg A on
-'display 1 connects to the same pin as seg A on display 2. DisplayPortx and 
+'display 1 connects to the same pin as seg A on display 2. DisplayPortx and
 'DISP_SEG_x constants should not both be set, as this will cause strange
 'display results.
 
@@ -125,7 +129,7 @@ Sub InitSevenSeg
 	
 End Sub
 
-'Numbers for display
+'Numbers for display - support 0x00 to 0x0F
 Table SevenSegDispDigit
 	63 '0
 	6
@@ -137,6 +141,12 @@ Table SevenSegDispDigit
 	7
 	127
 	111 '9
+          0x77
+          0x7c
+          0x39
+          0x5e
+          0x79
+          0x71
 End Table
 
 'Letters for display
@@ -189,7 +199,7 @@ Sub DisplayChar(In DispPort, In DispChar)
 	If DispChar = 32 Then DispTemp = 0: Goto ShowChar
 	'Numbers
 	If DispChar >= 48 And DispChar <= 57 Then
-		ReadTable SevenSegDispDigit, DispChar - 48, DispTemp
+		ReadTable SevenSegDispDigit, DispChar - 47, DispTemp
 		Goto ShowChar
 	End If
 	If DispChar < 65 Then Exit Sub
