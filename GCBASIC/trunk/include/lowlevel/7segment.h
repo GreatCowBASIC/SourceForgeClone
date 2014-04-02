@@ -1,5 +1,5 @@
 '    7 Segment LED/LCD display routines for Great Cow BASIC
-'    Copyright (C) 2006-2014 Hugh Considine & Evan R. Venn
+'    Copyright (C) 2006-2014 Hugh Considine, Evan R. Venn and Kent Shafer
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@
 ' 29/3/2014: Updated by Evan R. Venn.  There is an incorrect calculation in the method DisplayChar. The method of displaying a numeric character was incorrect.
 '            Corrected and updated the header file.
 '            Also extended the DisplayValue to support 0x0 to 0xF. It was 0x0 to 0x9. Also added an example to an update to the help file.
-
+; 1/4/2014:  Added two new defines, #define 7Seg_CommonAnode, and #define 7Seg_HighSide to support common anode devices and high side drivers
 
 'When using DisplayPortx constants, the following setup is assumed:
 '	PIC Pin		Display Segment
@@ -217,22 +217,35 @@ End Sub
 
 'Display the value on the seven segment display
 Macro DisplaySevenSeg
-	
 	'Individual segment code
 	#ifdef DISP_SEG_A
-		
-		'Clear current display
-		Set DISP_SEG_A Off
-		Set DISP_SEG_B Off
-		Set DISP_SEG_C Off
-		Set DISP_SEG_D Off
-		Set DISP_SEG_E Off
-		Set DISP_SEG_F Off
-		Set DISP_SEG_G Off
-		#ifdef DISP_SEG_DOT
-			Set DISP_SEG_DOT Off
+		#ifdef 7Seg_CommonAnode
+			'Clear current display
+			Set DISP_SEG_A On
+			Set DISP_SEG_B On
+			Set DISP_SEG_C On
+			Set DISP_SEG_D On
+			Set DISP_SEG_E On
+			Set DISP_SEG_F On
+			Set DISP_SEG_G On
+			#ifdef DISP_SEG_DOT
+				Set DISP_SEG_DOT On
+			#endif
 		#endif
-		
+		#ifndef 7Seg_CommonAnode
+			'Clear current display
+			Set DISP_SEG_A Off
+			Set DISP_SEG_B Off
+			Set DISP_SEG_C Off
+			Set DISP_SEG_D Off
+			Set DISP_SEG_E Off
+			Set DISP_SEG_F Off
+			Set DISP_SEG_G Off
+			#ifdef DISP_SEG_DOT
+				Set DISP_SEG_DOT Off
+			#endif
+		#endif
+	
 		'Select new display
 		'Commands to select
 		#ifdef DispSelectA
@@ -247,67 +260,133 @@ Macro DisplaySevenSeg
 		#ifdef DispSelectD
 		If DispPort = 4 Then DispSelectD
 		#endif
-		
-		'Pins to select
-		'Turn all off
-		#ifdef DISP_SEL_1
-			Set DISP_SEL_1 Off
+		#ifdef 7Seg_HighSide	'pnp/pfet highside driver
+			'Pins to select
+			'Turn all off
+			#ifdef DISP_SEL_1
+				Set DISP_SEL_1 On
+			#endif
+			#ifdef DISP_SEL_2
+				Set DISP_SEL_2 On
+			#endif
+			#ifdef DISP_SEL_3
+				Set DISP_SEL_3 On
+			#endif
+			#ifdef DISP_SEL_4
+				Set DISP_SEL_4 On
+			#endif
+			'Turn appropriate pin back on
+			#ifdef DISP_SEL_1
+				If DispPort = 1 Then Set DISP_SEL_1 Off
+			#endif
+			#ifdef DISP_SEL_2
+				If DispPort = 2 Then Set DISP_SEL_2 Off
+			#endif
+			#ifdef DISP_SEL_3
+				If DispPort = 3 Then Set DISP_SEL_3 Off
+			#endif
+			#ifdef DISP_SEL_4
+				If DispPort = 4 Then Set DISP_SEL_4 Off
+			#endif
 		#endif
-		#ifdef DISP_SEL_2
-			Set DISP_SEL_2 Off
+
+		#ifndef 7Seg_HighSide	'CommonCathode or npn/nfet high side CommonAnode		
+			'Pins to select
+			'Turn all off
+			#ifdef DISP_SEL_1
+				Set DISP_SEL_1 Off
+			#endif
+			#ifdef DISP_SEL_2
+				Set DISP_SEL_2 Off
+			#endif
+			#ifdef DISP_SEL_3
+				Set DISP_SEL_3 Off
+			#endif
+			#ifdef DISP_SEL_4
+				Set DISP_SEL_4 Off
+			#endif
+			'Turn appropriate pin back on
+			#ifdef DISP_SEL_1
+				If DispPort = 1 Then Set DISP_SEL_1 On
+			#endif
+			#ifdef DISP_SEL_2
+				If DispPort = 2 Then Set DISP_SEL_2 On
+			#endif
+			#ifdef DISP_SEL_3
+				If DispPort = 3 Then Set DISP_SEL_3 On
+			#endif
+			#ifdef DISP_SEL_4
+				If DispPort = 4 Then Set DISP_SEL_4 On
+			#endif
 		#endif
-		#ifdef DISP_SEL_3
-			Set DISP_SEL_3 Off
+		#ifdef 7Seg_CommonAnode
+		'If CommonAnode = 255 Then
+			'Show number on new display
+			If DispTemp.0 = On Then DISP_SEG_A = Off
+			If DispTemp.1 = On Then DISP_SEG_B = Off
+			If DispTemp.2 = On Then DISP_SEG_C = Off
+			If DispTemp.3 = On Then DISP_SEG_D = Off
+			If DispTemp.4 = On Then DISP_SEG_E = Off
+			If DispTemp.5 = On Then DISP_SEG_F = Off
+			If DispTemp.6 = On Then DISP_SEG_G = Off
+			#ifdef DISP_SEG_DOT
+				If DispTemp.7 = On Then DISP_SEG_DOT = Off
+			#endif
 		#endif
-		#ifdef DISP_SEL_4
-			Set DISP_SEL_4 Off
+		#ifndef 7Seg_CommonAnode
+		'Else		
+			'Show number on new display
+			If DispTemp.0 = On Then DISP_SEG_A = On
+			If DispTemp.1 = On Then DISP_SEG_B = On
+			If DispTemp.2 = On Then DISP_SEG_C = On
+			If DispTemp.3 = On Then DISP_SEG_D = On
+			If DispTemp.4 = On Then DISP_SEG_E = On
+			If DispTemp.5 = On Then DISP_SEG_F = On
+			If DispTemp.6 = On Then DISP_SEG_G = On
+			#ifdef DISP_SEG_DOT
+				If DispTemp.7 = On Then DISP_SEG_DOT = On
+			#endif
 		#endif
-		'Turn appropriate pin back on
-		#ifdef DISP_SEL_1
-			If DispPort = 1 Then Set DISP_SEL_1 On
-		#endif
-		#ifdef DISP_SEL_2
-			If DispPort = 2 Then Set DISP_SEL_2 On
-		#endif
-		#ifdef DISP_SEL_3
-			If DispPort = 3 Then Set DISP_SEL_3 On
-		#endif
-		#ifdef DISP_SEL_4
-			If DispPort = 4 Then Set DISP_SEL_4 On
-		#endif
-		
-		'Show number on new display
-		If DispTemp.0 = On Then DISP_SEG_A = On
-		If DispTemp.1 = On Then DISP_SEG_B = On
-		If DispTemp.2 = On Then DISP_SEG_C = On
-		If DispTemp.3 = On Then DISP_SEG_D = On
-		If DispTemp.4 = On Then DISP_SEG_E = On
-		If DispTemp.5 = On Then DISP_SEG_F = On
-		If DispTemp.6 = On Then DISP_SEG_G = On
-		#ifdef DISP_SEG_DOT
-			If DispTemp.7 = On Then DISP_SEG_DOT = On
-		#endif
-		
+		'end if		
 	#endif
 	
 	'Whole port code
 	#ifndef DISP_SEG_A
-		
-		'Pins to select
-		'Turn all off
-		#ifdef DISP_SEL_1
-			Set DISP_SEL_1 Off
+		#ifdef 7Seg_CommonAnode
+			DispTemp = NOT DispTemp
 		#endif
-		#ifdef DISP_SEL_2
-			Set DISP_SEL_2 Off
+		#ifdef 7Seg_HighSide	'pnp/pfet highside driver
+			'Pins to select
+			'Turn all off
+			#ifdef DISP_SEL_1
+				Set DISP_SEL_1 On
+			#endif
+			#ifdef DISP_SEL_2
+				Set DISP_SEL_2 On
+			#endif
+			#ifdef DISP_SEL_3
+				Set DISP_SEL_3 On
+			#endif
+			#ifdef DISP_SEL_4
+				Set DISP_SEL_4 On
+			#endif
 		#endif
-		#ifdef DISP_SEL_3
-			Set DISP_SEL_3 Off
-		#endif
-		#ifdef DISP_SEL_4
-			Set DISP_SEL_4 Off
-		#endif
-		
+		#ifndef 7Seg_HighSide	'CommonCathode or npn/nfet high side CommonAnode	
+			'Pins to select
+			'Turn all off
+			#ifdef DISP_SEL_1
+				Set DISP_SEL_1 Off
+			#endif
+			#ifdef DISP_SEL_2
+				Set DISP_SEL_2 Off
+			#endif
+			#ifdef DISP_SEL_3
+				Set DISP_SEL_3 Off
+			#endif
+			#ifdef DISP_SEL_4
+				Set DISP_SEL_4 Off
+			#endif
+		#endif		
 		#ifdef DisplayPortA
 			#ifdef OneOf(DisplayPortB, DisplayPortC, DisplayPortD)
 				If DispPort = 1 Then
@@ -315,8 +394,15 @@ Macro DisplaySevenSeg
 				#ifdef DispSelectA
 					DispSelectA
 				#endif
-				#ifdef DISP_SEL_1
-					Set DISP_SEL_1 On
+				#ifdef 7Seg_HighSide	'pnp/pfet highside driver
+					#ifdef DISP_SEL_1
+						Set DISP_SEL_1 Off
+					#endif
+				#endif
+				#ifndef 7Seg_HighSide	'CommonCathode or npn/nfet high side CommonAnode
+					#ifdef DISP_SEL_1
+						Set DISP_SEL_1 On
+					#endif
 				#endif
 				DisplayPortA = DispTemp
 			#ifdef OneOf(DisplayPortB, DisplayPortC, DisplayPortD)
@@ -328,8 +414,15 @@ Macro DisplaySevenSeg
 				#ifdef DispSelectB
 					DispSelectB
 				#endif
-				#ifdef DISP_SEL_2
-					Set DISP_SEL_2 On
+				#ifdef 7Seg_HighSide	'pnp/pfet highside driver
+					#ifdef DISP_SEL_2
+						Set DISP_SEL_2 Off
+					#endif
+				#endif
+				#ifndef 7Seg_HighSide	'CommonCathode or npn/nfet high side CommonAnode
+					#ifdef DISP_SEL_2
+						Set DISP_SEL_2 On
+					#endif
 				#endif
 				DisplayPortB = DispTemp
 			End If
@@ -339,8 +432,15 @@ Macro DisplaySevenSeg
 				#ifdef DispSelectC
 					DispSelectC
 				#endif
-				#ifdef DISP_SEL_3
-					Set DISP_SEL_3 On
+				#ifdef 7Seg_HighSide	'pnp/pfet highside driver
+					#ifdef DISP_SEL_3
+						Set DISP_SEL_3 Off
+					#endif
+				#endif
+				#ifndef 7Seg_HighSide	'CommonCathode or npn/nfet high side CommonAnode
+					#ifdef DISP_SEL_3
+						Set DISP_SEL_3 On
+					#endif
 				#endif
 				DisplayPortC = DispTemp
 			End If
@@ -350,8 +450,15 @@ Macro DisplaySevenSeg
 				#ifdef DispSelectD
 					DispSelectD
 				#endif
-				#ifdef DISP_SEL_4
-					Set DISP_SEL_4 On
+				#ifdef 7Seg_HighSide	'pnp/pfet highside driver
+					#ifdef DISP_SEL_4
+						Set DISP_SEL_4 Off
+					#endif
+				#endif
+				#ifndef 7Seg_HighSide	'CommonCathode or npn/nfet high side CommonAnode
+					#ifdef DISP_SEL_4
+						Set DISP_SEL_4 On
+					#endif
 				#endif
 				DisplayPortD = DispTemp
 			End If
