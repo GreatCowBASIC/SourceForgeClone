@@ -6,18 +6,18 @@
 <table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
   <tr>
     <td align="left" >
-      <div align="left" ><font face="Arial"  size="4" ><span style="font-size:14pt" >LCD Overview</span></font><font color="#010101" ></font></div>
+      <div align="left" ><font face="Arial"  color="#010101"  size="4" ><span style="font-size:14pt" >LCD Overview</span></font><font color="#010101" ></font></div>
 
     </td>
     <td align="right" >
       <font face="Arial"  size="2" >
-        <a href="box.htm">Previous</a>&nbsp;&nbsp;<a href="print.htm">Next</a>
+        <a href="box.htm">Previous</a>&nbsp;&nbsp;<a href="cls.htm">Next</a>
       </font>
     </td>
   </tr></table>
 <hr><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Introduction:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The routines in this section allow GCBASIC programs to interact with 
 alphanumeric Liquid Crystal Displays based on the HD44780 IC. This 
-covers most 16 x 2 and similar displays.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These routines allow the displays to be connected to the 
+covers most 16 x 2 and similar displays.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >For higher clock speeds see the section below regarding LAT support.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These routines allow the displays to be connected to the 
 microcontroller in many different ways:</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><table border="1"  width="553"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
     <tr>
     <td align="center"  valign="top"  width="141"  style="border: solid #010101 1px;" >
@@ -63,7 +63,7 @@ microcontroller in many different ways:</span></font><font color="#010101" ></fo
     must all be connected to the same I/O port, in 
     sequential order. For example, DB0 to PORTB.0, DB1 
     to PORTB.1 and so on, with DB7 going to PORTB.7.</span></font><font color="#010101" ></font></div>
-    </td></tr></table><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Using 0-bit mode:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To use 0-bit connection mode, a subroutine to write a byte to the LCD 
+    </td></tr></table><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Using 0-bit mode:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To use 0-bit connection mode, a subroutine to write a byte to the LCD 
 must be provided. Optionally, another subroutine to read a byte from 
 the LCD can also be given. If there is no way to read from the LCD, 
 then the LCD_NO_RW constant must be set.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >In 0-bit mode, the LCD_RS constant will be set automatically to a 
@@ -72,14 +72,14 @@ Locate) will set it, and the code responsible for writing to the LCD
 should read it and then set the RS pin on the LCD appropriately.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This code is an example of how to use 0-bit mode. It sends messages 
 to another microcontroller, which has been programmed to read the 
 messages and toggle the pins of an LCD appropriately:</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_IO 0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCDWriteByte MySendToLCD</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_NO_RW</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >Sub MySendToLCD(In MyLCDByte)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;'Uses I2C</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;'Sends an address byte (128)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;'Then a control byte, where bit 4 is the state of the RS 
-pin</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;'Then a data byte, which is sent to the LCD data pins.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;ControlByte = 0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;If LCD_RS = On Then </span></font><font face="Courier New" ><span style="font-size:10pt" >ControlByte</span></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >.4 = On</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CStart</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CSend 128</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CSend </span></font><font face="Courier New" ><span style="font-size:10pt" >ControlByte</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CSend </span></font><font face="Courier New" ><span style="font-size:10pt" >MyLCDByte</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CStop</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;'Need to allow time for receiver of message to update LCD</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;Wait 5 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >End Sub</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >If the LCD was to be read, then LCDReadByte would be set to the 
+pin</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;'Then a data byte, which is sent to the LCD data pins.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;ControlByte = 0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;If LCD_RS = On Then ControlByte.4 = On</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CStart</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CSend 128</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CSend ControlByte</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CSend MyLCDByte</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;I2CStop</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;'Need to allow time for receiver of message to update LCD</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;Wait 5 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >End Sub</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >If the LCD was to be read, then LCDReadByte would be set to the 
 name of a function that reads the LCD and returns the data byte from 
-the LCD.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Relevant Constants:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >(Note: this section does not apply in 0 bit mode)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These constants are used to control settings for the Liquid Crystal 
+the LCD.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Relevant Constants:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >(Note: this section does not apply in 0 bit mode)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These constants are used to control settings for the Liquid Crystal 
 Display routines included with GCBASIC. To set them, place a line in 
 the main program file that uses #define to assign a value to the 
 particular constant.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Some constants are used required for 4 and 8-bit modes, some are 
-required for 4-bit mode, and some are used by 8-bit mode. When 
-using 2-bit mode only three constants must be set - all others can be 
+required for 4-bit mode, and some are used by 8-bit mode. When using 
+2-bit mode only three constants must be set - all others can be 
 ignored. Check the &quot;Modes&quot; column to determine if you must set a 
 constant.</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><table border="1"  width="768"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
     <tr>
@@ -203,6 +203,19 @@ constant.</span></font><font color="#010101" ></font></div><div align="left" ><f
     </td></tr>
     <tr>
     <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB4</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
@@ -260,9 +273,283 @@ constant.</span></font><font color="#010101" ></font></div><div align="left" ><f
     </td>
     <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_LAT</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Drives the port with LATx 
+    support.&nbsp;&nbsp; Resolves 
+    issues with faster Mhz 
+    and the Microchip 
+    read/write/modify feature. 
+    See example below.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Optional</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4, 8 only</span></font><font color="#010101" ></font></div>
     </td></tr></table><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >*The R/W pin can be disabled by setting the LCD_NO_RW constant. If 
 this is done, there is no need for the R/W to be connected to the chip, 
 and no need for the LCD_RW constant to be set. Ensure that the R/W 
-line on the LCD is connected to ground if not used!</span></font><font color="#010101" ></font></div>
+line on the LCD is connected to ground if not used!</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Using 4 or 8 bit mode with LCD_LAT:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >When using&nbsp; 4 or 8 bit connection modethe optional command will use 
+the LATx driver approach.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >You MUST define the following constants.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><table border="1"  width="768"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Constant Name</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Default Value</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Modes</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_IO</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The I/O 4 or 8.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >8</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4, 8</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  height="112"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>LCD_LAT</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  height="112"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Drives the port with LATx 
+    support.&nbsp;&nbsp; Resolves 
+    issues with faster Mhz 
+    and the Microchip 
+    read/write/modify feature. 
+    See example below.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  height="112"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  height="112"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4, 8 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_RS</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the output pin 
+    that is connected to 
+    Register Select on the 
+    LCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >N/A - <b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4, 8</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_RW</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the output pin 
+    that is connected to 
+    Read/Write on the LCD. 
+    The R/W pin can be 
+    disabled*.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >N/A - <b><i>Must be set 
+    </i></b><i>(unless R/W is disabled)</i></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4, 8</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_Enable</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the output pin 
+    that is connected to 
+    Read/Write on the LCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >N/A - <b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4, 8</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DATA_PORT</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output port used to 
+    interface with LCD data 
+    bus MUST be defined as 
+    LATx</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >8 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB4</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 4 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as LATx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB5</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 5 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as LATx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB6</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 6 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as LATx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB7</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 7 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as LATx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >_LCD_DB4</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 4 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as PORTx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >_LCD_DB5</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 5 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as PORTx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >_LCD_DB6</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 6 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as PORTx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >_LCD_DB7</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 7 of the 
+    LCD data bus <b>MUST </b>be 
+    defined as PORTx.x</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4 only</span></font><font color="#010101" ></font></div>
+    </td></tr></table><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><p style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The command for LATX support is&nbsp; <b>#define LCD_LAT.</b>&nbsp;&nbsp; You define 
+your port(s) as LATx but for DIRection support your also need to define 
+the PORTx also.&nbsp;&nbsp; Why? LCD.h support multiple use of the port so port 
+switching was supported.</span></font><font color="#010101" ></font><br><p style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >An example of setting up the new LCD_LAT driver.</span></font><font color="#010101" ></font><br><p style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font><br><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > 'LCD connection settings</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_IO 4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_NO_RW</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >' New Command</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define <b>LCD_LAT</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_DB4 LATB.4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_DB5 LATB.5</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_DB6 LATB.6</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_DB7 LATB.7</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_RS LATA.7</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define LCD_Enable LATA.6 </span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > ' Port drivers for legacy support of LAT, note the 
+underscore!&nbsp; You define all ports otherwise you will get a 
+compiler error.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define _LCD_DB4 PORTB.4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define _LCD_DB5 PORTB.5</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define _LCD_DB6 PORTB.6</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define _LCD_DB7 PORTB.7</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #define _LCD_RS PORTA.7</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:16mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > #DEFINE _LCD_Enable PORTA.6</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div>
 
 </html>
