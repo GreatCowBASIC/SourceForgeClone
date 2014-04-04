@@ -41,8 +41,8 @@ GCBASIC</a><br>
 <a href="http://sourceforge.net/forum/?group_id=169286">Link
 to&nbsp;Forum</a><br>
 <br>
-<a href="download.html">Download</a><br>
-<a href="update.html">Latest GCBASIC Build</a><br>
+<a href="download.html">Downloads</a><br>
+<a href="update.html">Development News </a><br>
 <br>
 <a href="chips.html">Chips Supported</a><br>
 <a href="hardware.html">Hardware Drivers</a></td>
@@ -74,7 +74,7 @@ Page</a><br>
 <table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
 <tbody>
 <tr>
-<td>Open Source BASIC programming tools for Microchip
+<td>Welcome to the homepage of the Great Cow Basic Open Source BASIC programming tools for Microchip
 PIC and Atmel AVR microcontrollers</td>
 </tr>
 <tr>
