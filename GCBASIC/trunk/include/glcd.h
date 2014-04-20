@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2013 Hugh Considine
+'    Copyright (C) 2012 - 2014 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -16,11 +16,13 @@
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 'Notes:
-' Supports KS0108 and ST7735 controllers.
+' Supports KS0108, ST7735 and ST7920 controllers.
 
-'Changes:
+'Changes
 ' 14/10/2012: First version (KS0108 only)
 ' 29/9/2013: Added ST7735 code (and colour support)
+' 14/4/2014: Added ST7920 Support
+' 14/4/2014: Fixed KS0108 GLCDCLS CS1/CS2 line set correctly.
 
 'Initialisation routine
 #startup InitGLCD
@@ -57,10 +59,26 @@
 #define GLCD_TYPE GLCD_TYPE_KS0108
 #define GLCD_WIDTH 128
 #define GLCD_HEIGHT 160
+#define GLCDFontWidth 6
+
+' More define to support the ST7920
+#define GLCD_ROW 	(GLCD_HEIGHT/1)
+#define GLCD_COLS 	(GLCD_WIDTH/16)
+#define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
+
+' 4.4v = 25, 5.0v 20 - You may need to adjust
+#define ST7920ReadDelay 20
+
+' if ChipMHz = 4 then 10
+' if ChipMHz = 8 then 2
+' if ChipMHz = 16 then 2
+' if ChipMHz = 32 then 2
+#define ST7920WriteDelay 2
 
 'GLCD types
 #define GLCD_TYPE_KS0108 1
 #define GLCD_TYPE_ST7735 2
+#define GLCD_TYPE_ST7920 3
 
 'Pin mappings for ST7735
 #define ST7735_DC GLCD_DC
@@ -82,10 +100,37 @@
 Dim GLCDBackground As Word
 Dim GLCDForeground As Word
 
+
+
 'Subs
 '''Clears the GLCD screen
 Sub GLCDCLS
-	
+
+          #if GLCD_TYPE = GLCD_TYPE_ST7920
+
+              if GLCD_TYPE_ST7920_GRAPHICS_MODE  = true then
+                 Old_GLCD_TYPE_ST7920_GRAPHICS_MODE = true
+                 ST7920GLCDDisableGraphics
+              end if
+              'Clear screen
+              SET GLCD_RS OFF
+	    ST7920WriteByte(0x01)
+              wait 80 ms
+
+              'Move to start of visible DDRAM
+               SET GLCD_RS OFF
+	    ST7920WriteByte(0x80)
+              wait 80 us
+              if Old_GLCD_TYPE_ST7920_GRAPHICS_MODE  = true then
+                 GLCD_TYPE_ST7920_GRAPHICS_MODE = true
+'                 ST7920GLCDEnableGraphics
+                  ST7920WriteCommand(0x36)'
+                  GLCD_TYPE_ST7920_GRAPHICS_MODE  = true
+              end if
+
+          #endif
+
+
 	#if GLCD_TYPE = GLCD_TYPE_KS0108
 		For CurrPage = 0 to 7
 			'Set page
@@ -104,6 +149,8 @@ Sub GLCDCLS
 				GLCDWriteByte 0
 			Next
 		Next
+                    Set GLCD_CS1 OFF
+                    Set GLCD_CS2 Off
 	#endif
 	
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
@@ -120,14 +167,54 @@ End Sub
 '''@param PrintLocX X coordinate for message
 '''@param PrintLocY Y coordinate for message
 '''@param PrintData Message to display
-Sub GLCDPrint(In PrintLocX, In PrintLocY, PrintData As String)
-	PrintLen = PrintData(0)
+Sub GLCDPrint(In PrintLocX, In PrintLocY, in LCDPrintData as string )
+
+          PrintLen = LCDPrintData(0)
 	If PrintLen = 0 Then Exit Sub
+
+          #IF GLCD_TYPE = GLCD_TYPE_ST7920
+                ' Is the device in GRAPHICS mode?
+                if GLCD_TYPE_ST7920_GRAPHICS_MODE = false then
+'                   ST7920Locate PrintLocX, PrintLocY
+                   ' see SUB ST7920Locate, repeated here to reduce stack
+                   	select case  PrintLocY
+                         case 0
+                              col = PrintLocX OR 0x80
+
+                         case 1
+                              col = PrintLocX OR 0x90
+
+                         case 2
+                              col = PrintLocX OR 0x88
+
+                         case 3
+                              col = PrintLocX OR 0x98
+
+                         case else
+                              col = PrintLocX OR 0x80
+                      end select
+'                      ST7920WriteCommand ( col)
+                       SET GLCD_RS OFF
+	             ST7920WriteByte( col )
+
+                else
+                   GLCDDrawChar PrintLocX, PrintLocY, LCDPrintData
+                   exit sub
+                end if
+
+                Set GLCD_RS On
+                'Write Data
+                For SysLCDPrintTemp = 1 To PrintLen
+                     ST7920WriteByte ( LCDPrintData(SysLCDPrintTemp) )
+                Next
+                Exit Sub
+          #endif
+
+
 	GLCDPrintLoc = PrintLocX
-	
 	'Write Data
 	For SysPrintTemp = 1 To PrintLen
-		GLCDDrawChar GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp)
+		GLCDDrawChar GLCDPrintLoc, PrintLocY, LCDPrintData(SysPrintTemp)
 		GLCDPrintLoc += 6
 	Next
 End Sub
@@ -152,19 +239,39 @@ Sub GLCDPrint(In PrintLocX, In PrintLocY, In LCDValue As Long)
 	GLCDPrintLoc = PrintLocX
 	For SysPrintTemp = SysPrintBuffLen To 1 Step -1
 		GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48
-		GLCDPrintLoc += 6
+		GLCDPrintLoc += GLCDFontWidth
 	Next
 	
 End Sub
 
+
+
+' overloaded for ST7920 GLCD
+Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour = GLCDForeground )
+    for xchar = 1 to Chars(0)
+      TargetCharCol = StringLocX + (1+(xchar*GLCDFontWidth)-GLCDFontWidth)
+      GLCDDrawChar TargetCharCol , CharLocY , Chars(xchar), LineColour
+    next
+end sub
+
 '''Draws a character at the specified location
 '''@hide
-Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode)
-	
+Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour = GLCDForeground )
+
+
 	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
 	CharCode -= 15
+
+	'invert colors if required
+
+          if LineColour <> GLCDForeground and GLCD_TYPE <> GLCD_TYPE_ST7735 then
+            'Inverted Colours
+            GLCDBackground = 1
+            GLCDForeground = 0
+          end if
+
 	
-	'Need to read characters from CharColn (n = 0:7) tables
+          'Need to read characters from CharColn (n = 0:7) tables
 	'(First 3, ie 0:2 are blank, so can ignore)
 	For CurrCharCol = 1 to 5
 		Select Case CurrCharCol
@@ -183,6 +290,9 @@ Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode)
 			Rotate CurrCharVal Right
 		Next
 	Next
+          'Colours
+          GLCDBackground = 0
+          GLCDForeground = 1
 End Sub
 
 '''Draws a box on the GLCD screen
@@ -236,6 +346,16 @@ Sub FilledBox(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour
 		LineY2 = GLCDTemp
 	End If
 	
+          #if GLCD_TYPE = GLCD_TYPE_ST7920
+		'Draw lines going across
+		For DrawLine = LineX1 To LineX2
+			For GLCDTemp = LineY1 To LineY2
+				PSet DrawLine, GLCDTemp, LineColour
+			Next
+		Next
+	#endif
+
+
 	#if GLCD_TYPE = GLCD_TYPE_KS0108
 		'Draw lines going across
 		For DrawLine = LineX1 To LineX2
@@ -265,6 +385,22 @@ End Sub
 '''@param LineY2 Ending Y point of line
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GLCDForeground)
+
+
+      #if GLCD_TYPE = GLCD_TYPE_ST7920
+
+          If LineX1 <> LineX2 Then
+             ST7920LineH LineX1 , LineY1 , (LineX2 - LineX1)
+             exit sub
+          end if
+          If Line1Y1 <> LineY2 Then
+             ST7920LineV LineX1 , LineY1 , (LineY2 - LineY1)
+             exit sub
+          end if
+
+      #endif
+
+
 	'Draw a line using Bresenham's algorithm and calls to PSet
 	Dim LineErr, LineErr2 As Integer
 	
@@ -315,6 +451,78 @@ End Sub
 '''@param GLCDY Y coordinate of pixel
 '''@param GLCDColour State of pixel (0 = erase, 1 = display)
 Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
+
+	#if GLCD_TYPE = GLCD_TYPE_ST7920
+
+		'Set pixel at X, Y on LCD to State
+		'X is 0 to 127
+		'Y is 0 to 63
+		'Origin in top left
+		dim GLCDDataTempWord as word
+                    dim GLCDChangeWord as word
+		'Select horizontal address, we address in unit of 16 pixels
+                    ' One xUnit equals 16 pixels
+                    ' addresses are b15, b14, b13, ..... to b0.  With B15 left justified.
+
+                    ' calculate the xUnit as a word, therefore 16 bits.
+                    xUnit = GLCDX/16
+
+                    ' get the word data of the xUnit and yposition
+                    dim SysCalcPositionY as byte
+                    dim SysCalcPositionX as byte
+                    if GLCDY < 32 then
+                        ' Y Axis
+	              SysCalcPositionY = 0x80 OR GLCDY
+                        ' X Axis
+                        SysCalcPositionX = 0x80 OR xUnit
+                    else
+                        ' Y Axis
+                        SysCalcPositionY = 0x80 OR (GLCDY-32)
+                        ' X Axis
+                        SysCalcPositionX = 0x88 OR xUnit
+                    end if
+
+                    SET GLCD_RS OFF
+                    ST7920WriteByte( SysCalcPositionY )
+                    ST7920WriteByte( SysCalcPositionX )
+
+                    ' read data
+                    GLCDDataTempWord = ST7920GLCDReadByte
+                    GLCDDataTempWord = ST7920GLCDReadByte
+                    GLCDDataTempWord  = (GLCDDataTempWord*256) + ST7920GLCDReadByte
+
+		'Select which bit we are to set/clear per pixel
+                    GLCDBitNo = 15 - (GLCDX And 15)
+
+                    If GLCDColour.0 = 0 Then
+                              GLCDChangeWord = 65534
+                              Set C On
+                    Else
+                              GLCDChangeWord = 1
+                              Set C Off
+                    End If
+
+		Repeat GLCDBitNo
+			Rotate GLCDChangeWord LEFT
+		End Repeat
+		If GLCDColour.0 = 0 Then
+			GLCDDataTempWord =  GLCDDataTempWord  And GLCDChangeWord
+		Else
+			GLCDDataTempWord =  GLCDDataTempWord  Or  GLCDChangeWord
+		End If
+		
+                    ' Locate again for the write operation
+                     SET GLCD_RS OFF
+                     ST7920WriteByte( SysCalcPositionY )
+                     ST7920WriteByte( SysCalcPositionX )
+
+                     hbyte= GLCDDataTempWord / 256
+                     SET GLCD_RS ON
+                     ST7920WriteByte(hbyte)
+                     ST7920WriteByte( GLCDDataTempWord & 0x00FF )	
+	#endif
+
+
 	#if GLCD_TYPE = GLCD_TYPE_KS0108
 		'Set pixel at X, Y on LCD to State
 		'X is 0 to 127
@@ -324,7 +532,7 @@ Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 		'Select screen half
 		If GLCDX.6 = Off Then Set GLCD_CS2 On
 		If GLCDX.6 = On Then Set GLCD_CS1 On: GLCDX -= 64
-		
+
 		'Select page
 		CurrPage = GLCDY / 8
 		Set GLCD_RS Off
@@ -377,6 +585,493 @@ Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 	#endif
 End Sub
 
+Sub ST7920WriteCommand ( In GLCDByte )
+	SET GLCD_RS OFF
+	ST7920WriteByte(GLCDByte)
+
+end sub
+
+Sub ST7920WriteData( In GLCDByte as byte )
+	SET GLCD_RS ON
+	ST7920WriteByte(GLCDByte)
+
+end sub
+
+'  DESCRIPTIONS:
+'  Enables Graphics Mode on the GLCD.
+'  Make sure the screen is void of text before using this function.
+'*******************************************************************************/
+sub ST7920GLCDEnableGraphics
+
+'	ST7920WriteCommand(0x30)'		
+'	ST7920WriteCommand(0x34)'			// Switch to extended instruction mode.	
+	ST7920WriteCommand(0x36)'
+          '// Enable graphics mode.
+          GLCD_TYPE_ST7920_GRAPHICS_MODE  = true
+
+end sub
+
+
+'  DESCRIPTIONS:
+'  Disable Graphics Mode on the GLCD and return to text mode.
+'*******************************************************************************/
+
+sub ST7920GLCDDisableGraphics
+
+'	ST7920WriteByte(0x30)'		
+'         ST7920WriteByte(0x34)'			// Switch to extended instruction mode.
+	ST7920WriteCommand(0x30)'			// Graphics and extended instruction mode turned off.
+          GLCD_TYPE_ST7920_GRAPHICS_MODE  = false
+
+end sub
+
+
+Sub ST7920Locate( In PrintLocX , In PrintLocY )
+
+' DESCRIPTIONS:
+' Place a character to the GLCD controller on the specified row and column.
+' Due to the design of the ST7920 controller (to accomodate Mandarin and Cyrillic), you must place the text on the column
+' according to the numbers above the diagram below:
+'
+' |--0--|--1--|--2--|...	  ...|--7--|
+' +--+--+--+--+--+---------------------+
+' |H |e |l |l |o |  ...                | <- row 0 (address 0x80)
+' +--+--+--+--+--+---------------------+
+' |T |h |i |s |  |i ...				   | <- row 1 (address 0x90)
+' +--+--+--+--+--+---------------------+
+' |' |' |' |' |' |' ...				   | <- row 2 (address 0x88)
+' +--+--+--+--+--+---------------------+
+' |- |- |- |- |- |- ...				   | <- row 3 (address 0x98)
+' +--+--+--+--+--+---------------------+
+'
+' Example:
+' Writing 'a' onto the 1st column, and 1st row:
+' |--0--|--1--|--2--|...	  ...|--7--|
+' +--+--+--+--+--+---------------------+
+' |  |  |  |  |  |  ...                | <- row 0 (address 0x80)
+' +--+--+--+--+--+---------------------+
+' |  |  |a |  |  |  ...				   | <- row 1 (address 0x90)
+' +--+--+--+--+--+---------------------+
+' |  |  |  |  |  |  ...				   | <- row 2 (address 0x88)
+' +--+--+--+--+--+---------------------+
+' |  |  |  |  |  |  ...				   | <- row 3 (address 0x98)
+' +--+--+--+--+--+---------------------+
+
+
+
+	select case  PrintLocY
+               case 0
+                    col = PrintLocX OR 0x80
+
+               case 1
+                    col = PrintLocX OR 0x90
+
+               case 2
+                    col = PrintLocX OR 0x88
+
+               case 3
+                    col = PrintLocX OR 0x98
+
+               case else
+                    col = PrintLocX OR 0x80
+            end select
+
+            ST7920WriteCommand ( col)
+
+
+
+end sub
+
+Sub ST7920WriteByte( In GLCDByte )
+
+	#IFNDEF GLCD_NO_RW
+		#IFDEF GLCD_IO 4,8
+			wait until GLCDReady
+			set GLCD_RW OFF 'Write mode
+		#ENDIF
+	#ENDIF
+	
+	#IFDEF GLCD_IO 8
+		'Set data port to output, and write a value to it
+                    #IFNDEF GLCD_LAT
+                        DIR GLCD_DATA_PORT OUT
+                        GLCD_DATA_PORT = GLCDByte
+                        ' retry on failure
+                        if    GLCD_DATA_PORT <> GLCDByte then GLCD_DATA_PORT = GLCDByte
+                        set GLCD_Enable on
+                        GLCDTimeDelay
+                        set GLCD_Enable off
+                        GLCDTimeDelay
+		#ENDIF
+
+                    #IFDEF GLCD_LAT
+                        DIR _GLCD_DATA_PORT OUT
+                        latd = GLCDByte
+                        ' retry on failure
+                        if latd <> GLCDByte then latd = GLCDByte
+                        set GLCD_Enable on
+                        GLCDTimeDelay
+                        set GLCD_Enable off
+                        GLCDTimeDelay
+		#ENDIF
+	#ENDIF
+	
+end sub
+
+
+
+' Tile LCD screen with two datas in Graphic Mode
+sub ST7920gTile( fst, snd)
+
+
+         for yy = 0 to ( GLCD_HEIGHT - 1 )
+             ST7920gLocate(0, yy)
+             for xx = 0 to ( GLCD_COLS -1 )
+                 ST7920WriteData( fst )'SendByte(iDat, fst)
+                 ST7920WriteData( snd )'SendByte(iDat, snd)
+             next
+
+         next
+end sub
+
+
+' Tile screen with one data
+' accepts a byte!
+sub ST7920Tile( tData as word)
+
+    ST7920GLCDEnableCharacterMode
+    for ii  = 0 to GLCD_ROW
+      ST7920Locate(0 , ii)
+      for kk  = 0 to GLCD_COLS
+          ST7920WriteData ( tData )
+          ST7920WriteData ( tData )
+      next
+    next
+end sub
+
+' Tile screen with a Chinese Symbol
+' Writes 2 bytes of data into DDRAM to display one 16x16 font.
+' A140H~D75FH are BIG5 code, A1A0H~F7FFH are GB code.
+' accepts a WORD!
+
+sub ST7920cTile( Hanzi as word )
+
+    ST7920GLCDEnableCharacterMode
+    for ii  = 0 to GLCD_ROW
+      ST7920Locate(0 , ii)
+      for kk  = 0 to GLCD_COLS
+              ST7920WriteData( Hanzi_H )
+              ST7920WriteData( Hanzi & 0x00FF )
+      next
+    next
+
+end sub
+
+' Set Icon ON/OFF
+sub ST7920SetIcon( Addr, dByte)
+
+    ST7920GLCDEnableGraphics
+    ST7920WriteCommand ( 0x40 + Addr ) 'Set ICON Address
+    ST7920WriteData ( dByte ) ' Set ICON Data
+
+end sub
+
+
+' Display Standard Testing Graphics
+sub ST7920GraphicTest
+
+    for kk  = 0 to 3
+        ReadTable graphicstestdata, (kk*2)+1, char1
+        ReadTable graphicstestdata, (kk*2)+2, char2
+
+        ST7920gTile( char1  , char2 )
+        wait 200  ms
+        ST7920GLCDClearGraphics
+
+    next
+
+    for kk  = 4 to 7
+        for ii = 0 to 64 step 2
+            ReadTable graphicstestdata, (kk*2)+1, char1
+            ReadTable graphicstestdata, (kk*2)+2, char2
+            ST7920LineHs(0, ii, GLCD_COLS - 1 , char1 )
+            ST7920LineHs(0, ii + 1,  GLCD_COLS - 1, char2 )
+
+        next
+        wait 1  s
+    next
+
+    ST7920GLCDClearGraphics
+end sub
+
+
+
+' Draw a Horizontal Line with special style
+sub ST7920LineHs( X0, Y0, xUnits, Style)
+    ST7920gLocate(X0, Y0)
+    for i  = 0 to xUnits
+        ST7920WriteData ( Style )
+        ST7920WriteData ( Style )
+   next
+end Sub
+
+table graphicstestdata Store Data
+0xFF 'All
+0xFF
+0x00 'None
+0x00
+0xAA 'Vertical 1
+0xAA
+0x55 'Vertical 2
+0x55
+0xFF 'Horizontal 1
+0x00
+0x00 'Horizontal 2
+0xFF
+0xAA 'Stars 1
+0x55
+0x55 'Stars 2
+0xAA
+end table
+
+
+
+sub ST7920gLocate( xUnitLocate, GLCDY )
+
+   ' 1xUnit = 16 dots, 1yBit = 1 dot
+
+    if GLCDY < 32 then
+              ' Y Axis
+              ST7920WriteCommand(0x80 OR GLCDY)
+              ' X Axis
+              ST7920WriteCommand(0x80 OR xUnitLocate )
+    else
+              ' Y Axis
+              ST7920WriteCommand(0x80 OR (GLCDY-32))
+              ' X Axis
+              ST7920WriteCommand(0x88 OR xUnitLocate )
+    end if
+
+end sub
+
+
+'  DESCRIPTIONS:
+'  Clear the screen by filling the screen with zero bytes.
+'  Enable Graphics Mode
+'  before calling this function.
+' *******************************************************************************/
+sub ST7920GLCDClearGraphics
+	' This function performs similar to the FillScreenGraphic but
+	' only zeros are sent into the screen instead of data from an array.
+
+	for PrintLocY = 0 to 63
+		if PrintLocY < 32 then
+			ST7920WriteCommand(0x80 OR PrintLocY)
+    		          ST7920WriteCommand(0x80)
+		else
+			ST7920WriteCommand(0x80 OR (PrintLocY-32))
+    		          ST7920WriteCommand(0x88)
+		end if
+		for PrintLocX = 0 to 7
+			ST7920WriteData(0x00)
+			ST7920WriteData(0x00)
+	          next          	
+	next
+
+end sub
+
+function ST7920gReaddata ( in xUnit, in yBit ) as word
+
+    ST7920gLocate(xUnit, yBit)
+    ' Read a word from the display device, read is the Dummy read.
+    ST7920gReaddata = ST7920GLCDReadByte
+
+    ' Now read the two bytes to make up the word we are looking for
+    ST7920gReaddata = ST7920GLCDReadByte
+
+    ST7920gReaddata  = (ST7920gReaddata*256)+ST7920GLCDReadByte
+
+end Sub
+
+sub ST7920lineh( in X0, in Y0, in xDots, Optional In GLCDColour As Word = GLCDForeground )
+
+    if xDots = 0 then exit sub
+
+    dim OldData as word
+    dim NewData as word
+    dim GLCDChangeWord as word
+    OldData = 0
+    NewData = 0
+
+    for ii = 0 to xDots
+        xUnit = (ii + X0)/16
+
+                 ' set location
+                  dim SysCalcPositionY as byte
+                  dim SysCalcPositionX as byte
+                  if Y0 < 32 then
+                      ' Y Axis
+                      SysCalcPositionY = 0x80 OR Y0
+                      ' X Axis
+                      SysCalcPositionX = 0x80 OR xUnit
+                  else
+                      ' Y Axis
+                      SysCalcPositionY = 0x80 OR (Y0-32)
+                      ' X Axis
+                      SysCalcPositionX = 0x88 OR xUnit
+                  end if
+
+                  SET GLCD_RS OFF
+                  ST7920WriteByte( SysCalcPositionY )
+                  ST7920WriteByte( SysCalcPositionX )
+
+                  ' read data dummy byte, then read the two bytes
+                  OldData = ST7920GLCDReadByte
+                  OldData = ST7920GLCDReadByte
+
+                  OldData  = (OldData*256) + ST7920GLCDReadByte
+
+		'Select which bit we are to set/clear per pixel
+                    GLCDBitNo = 15 - ( (X0 + ii ) And 15)
+
+                    If GLCDColour.0 = 0 Then
+                              GLCDChangeWord = 65534
+                              Set C On
+                    Else
+                              GLCDChangeWord = 1
+                              Set C Off
+                    End If
+
+		Repeat GLCDBitNo
+			Rotate GLCDChangeWord LEFT
+		End Repeat
+		If GLCDColour.0 = 0 Then
+			NewData =  OldData  And GLCDChangeWord
+		Else
+			NewData =  OldData  Or  GLCDChangeWord
+		End If
+
+                 ' set location
+                    SET GLCD_RS OFF
+                    ST7920WriteByte( SysCalcPositionY )
+                    ST7920WriteByte( SysCalcPositionX )
+
+                    hbyte= NewData / 256
+                    SET GLCD_RS ON
+                    ST7920WriteByte(hbyte)
+                    ST7920WriteByte( NewData & 0x00FF )	
+
+   next
+end Sub
+
+sub ST7920linev( in X0, in Y0, in yBits, Optional In GLCDColour As Word = GLCDForeground )
+
+    if yBits = 0 then exit sub
+
+    xUnit = X0/16
+    dim OldData as word
+    dim NewData as word
+    dim GLCDChangeWord as word
+    OldData = 0
+    NewData = 0
+
+    for ii = 0 to  yBits
+
+        yPixel = Y0 + ii
+       ' set location
+        dim SysCalcPositionY as byte
+        dim SysCalcPositionX as byte
+        if yPixel < 32 then
+            ' Y Axis
+            SysCalcPositionY = 0x80 OR yPixel
+            ' X Axis
+            SysCalcPositionX = 0x80 OR xUnit
+        else
+            ' Y Axis
+            SysCalcPositionY = 0x80 OR (yPixel-32)
+            ' X Axis
+            SysCalcPositionX = 0x88 OR xUnit
+        end if
+
+        SET GLCD_RS OFF
+        ST7920WriteByte( SysCalcPositionY )
+        ST7920WriteByte( SysCalcPositionX )
+
+        ' read data dummy byte, then read the two bytes
+        OldData = ST7920GLCDReadByte
+        OldData = ST7920GLCDReadByte
+        OldData  = (OldData*256) + ST7920GLCDReadByte
+
+        'Select which bit we are to set/clear per pixel
+        GLCDBitNo = 15 - ( (X0 ) And 15)
+
+        If GLCDColour.0 = 0 Then
+                  GLCDChangeWord = 65534
+                  Set C On
+        Else
+                  GLCDChangeWord = 1
+                  Set C Off
+        End If
+
+        Repeat GLCDBitNo
+                  Rotate GLCDChangeWord LEFT
+        End Repeat
+        If GLCDColour.0 = 0 Then
+                  NewData =  OldData  And GLCDChangeWord
+        Else
+                  NewData =  OldData  Or  GLCDChangeWord
+        End If
+
+     ' set location
+        SET GLCD_RS OFF
+        ST7920WriteByte( SysCalcPositionY )
+        ST7920WriteByte( SysCalcPositionX )
+
+        hbyte= NewData / 256
+        SET GLCD_RS ON
+        ST7920WriteByte(hbyte)
+        ST7920WriteByte( NewData & 0x00FF )
+    next
+end sub
+
+
+'''Read byte from LCD
+'''@hide
+Function ST7920GLCDReadByte
+	
+	#IFNDEF GLCD_NO_RW
+		#IFDEF GLCD_IO 4,8
+			wait until GLCDReady
+			set GLCD_RW OFF 'Write mode
+		#ENDIF
+	#ENDIF
+
+	'Set data pin directions
+          #IFNDEF GLCD_LAT
+            Dir GLCD_DATA_PORT In	
+          #endif
+
+          #IFDEF GLCD_LAT
+            Dir _GLCD_DATA_PORT In	
+          #endif
+	
+          set GLCD_RW ON
+          Set GLCD_RS ON
+	Set GLCD_ENABLE On
+          Wait ST7920ReadDelay us
+
+
+          'Get input data
+          #IFNDEF GLCD_LAT
+	        ST7920GLCDReadByte = GLCD_DATA_PORT
+          #ENDIF
+          #IFDEF GLCD_LAT
+	       ST7920GLCDReadByte = _GLCD_DATA_PORT
+          #ENDIF
+          Set GLCD_ENABLE Off
+End Function
+
+
 '''Write byte to LCD
 '''@hide
 Sub GLCDWriteByte (In LCDByte)
@@ -399,14 +1094,26 @@ Sub GLCDWriteByte (In LCDByte)
 	Set GLCD_RW Off
 	
 	'Set data pin directions
-	Dir GLCD_DB7 Out
-	Dir GLCD_DB6 Out
-	Dir GLCD_DB5 Out
-	Dir GLCD_DB4 Out
-	Dir GLCD_DB3 Out
-	Dir GLCD_DB2 Out
-	Dir GLCD_DB1 Out
-	Dir GLCD_DB0 Out
+          #IFNDEF GLCD_LAT
+              DIR GLCD_DB0 OUT
+              DIR GLCD_DB1 OUT
+              DIR GLCD_DB2 OUT
+              DIR GLCD_DB3 OUT
+              DIR GLCD_DB4 OUT
+              DIR GLCD_DB5 OUT
+              DIR GLCD_DB6 OUT
+              DIR GLCD_DB7 OUT
+          #ENDIF
+          #IFDEF GLCD_LAT
+              DIR _GLCD_DB0 OUT
+              DIR _GLCD_DB1 OUT
+              DIR _GLCD_DB2 OUT
+              DIR _GLCD_DB3 OUT
+              DIR _GLCD_DB4 OUT
+              DIR _GLCD_DB5 OUT
+              DIR _GLCD_DB6 OUT
+              DIR _GLCD_DB7 OUT
+	#ENDIF
 	
 	'Set output data
 	GLCD_DB7 = LCDByte.7
@@ -531,48 +1238,239 @@ Sub ST7735SetGammaCorrection
 	Next
 End Sub
 
-'Numbers taken from Arduino_LCD.cpp
-Table ST7735GammaCorrection
-	'For CMCTRP1 (command E0)
-	0xE0
-	0x28
-	0x24
-	0x22
-	0x31
-	0x2b
-	0x0e
-	0x53
-	0xa5
-	0x42
-	0x16
-	0x18
-	0x12
-	0x1a
-	0x14
-	0x03
 
-    'For GMCTRN1 (command E1)
-    0xE1
-	0x17
-	0x1b
-	0x1d
-	0x0e
-	0x14
-	0x11
-	0x2c
-	0xa5
-	0x3d
-	0x09
-	0x27
-	0x2d
-	0x25
-	0x2b
-	0x3c
-End Table
+function GLCDReady
 
-'''Reset GLCD
-'''@hide
+         #IF GLCD_TYPE = GLCD_TYPE_ST7920
+
+              #IFDEF GLCD_NO_RW
+                        ' Wait 10 ms
+
+                        GLCDReady = TRUE
+                        set GLCD_RW OFF 'Write mode
+                        exit function
+              #ENDIF
+    	
+              #IFNDEF GLCD_NO_RW
+
+                        #IFDEF GLCD_IO 4,8
+
+                                  GLCDReady = FALSE
+                                  GLCD_RSTemp = GLCD_RS
+    			
+                                '  SET GLCD_RW ON
+                                '  SET GLCD_RS OFF
+
+                                  SET GLCD_RW ON
+                                  SET GLCD_RS OFF
+                                  'Wait 1 us
+                             '     set GLCD_DB7 off
+                                  set latd.7 off
+                             '     SET GLCD_Enable ON
+                                  SET GLCD_Enable ON
+                                  'wait 2 us
+
+                                  #IFDEF GLCD_IO 8
+    				
+                                            #IFNDEF GLCD_LAT
+                                                   dir GLCD_DATA_PORT.7 IN
+                                                   'SE7T GLCD_Enable ON
+                                                   GLCDTimeDelay
+                                                   if GLCD_DATA_PORT.7 =  OFF THEN
+                                                     GLCDReady = TRUE
+                                                     dir GLCD_DATA_PORT.7 OUT
+                                                     SET GLCD_Enable OFF
+                                                     GLCD_RS = GLCD_RSTemp
+                                                     exit sub
+                                                   end if
+                                            #ENDIF
+                                            #IFDEF GLCD_LAT
+                                                   dir _GLCD_DATA_PORT.7 IN
+                                                   'SE7T GLCD_Enable ON
+                                                   GLCDTimeDelay
+                                                   if _GLCD_DATA_PORT.7 =  OFF THEN
+                                                     GLCDReady = TRUE
+                                                     dir _GLCD_DATA_PORT.7 OUT
+                                                     SET GLCD_Enable OFF
+                                                     GLCD_RS = GLCD_RSTemp
+                                                     exit sub
+                                                   end if
+                                            #ENDIF
+
+                                  #ENDIF
+                                  SET GLCD_Enable OFF
+                                  GLCDTimeDelay
+                                  GLCD_RS = GLCD_RSTemp
+                        #ENDIF
+              #ENDIF
+         #endif
+
+end function
+
+
+
+
 Sub InitGLCD
+
+      #if GLCD_TYPE = GLCD_TYPE_ST7920
+
+          #IFDEF GLCD_IO 4,8
+
+                    #IFNDEF GLCD_LAT
+                           DIR GLCD_RS OUT
+                           Dir GLCD_RESET Out
+		#ENDIF
+                    #IFDEF GLCD_LAT
+                           DIR _GLCD_RS OUT
+                           Dir _GLCD_RESET Out
+		#ENDIF
+
+		#IFNDEF GLCD_NO_RW
+                              #IFNDEF GLCD_LAT
+                                     DIR GLCD_RW OUT
+                              #ENDIF
+                              #IFDEF GLCD_LAT
+                                     DIR _GLCD_RW OUT
+                              #ENDIF
+		#ENDIF
+
+
+                    #IFNDEF GLCD_LAT
+                           DIR GLCD_Enable OUT
+                          'Reset
+                          Set GLCD_RESET Off
+                          set GLCD_RESET off
+                          Wait 1 s
+                          Set GLCD_RESET On
+                          Wait 50 ms
+                          Set GLCD_RESET On
+		#ENDIF
+                    #IFDEF GLCD_LAT
+                           DIR _GLCD_Enable OUT
+                           'Reset
+                           Set GLCD_RESET Off
+                           Wait 1 ms
+                           Set GLCD_RESET On
+                           Wait 50 ms
+		#ENDIF
+
+		
+		wait 10 ms
+		Wait until GLCDReady
+
+		'Set data bus width
+		SET GLCD_RS OFF
+	#ENDIF ' GLCD_IO 4,8
+
+	#IFDEF GLCD_IO 8
+                    SET GLCD_RS OFF
+                    SET GLCD_RW OFF
+                    SET GLCD_ENABLE OFF
+
+                    wait 200 ms
+		ST7920WriteCommand(0x56)
+                    wait 1 ms
+                    ST7920WriteCommand(0x56)
+                    wait 1 ms
+                    ST7920WriteByte(0x36
+		wait 5 10us
+                    ST7920WriteByte(0x0c)
+		wait 5 10us
+                    ST7920WriteByte(0x06)
+		wait 5 10us
+	#ENDIF
+
+	#IFDEF GLCD_IO 4
+		'Set pins to output
+                    #IFNDEF GLCD_LAT
+                        DIR GLCD_DB4 OUT
+                        DIR GLCD_DB5 OUT
+                        DIR GLCD_DB6 OUT
+                        DIR GLCD_DB7 OUT
+		#ENDIF
+                    #IFDEF GLCD_LAT
+                        DIR _GLCD_DB4 OUT
+                        DIR _GLCD_DB5 OUT
+                        DIR _GLCD_DB6 OUT
+                        DIR _GLCD_DB7 OUT
+		#ENDIF
+
+		set GLCD_RS OFF
+		#IFNDEF GLCD_NO_RW
+			set GLCD_RW OFF
+		#ENDIF
+
+                    wait 15 ms
+                    '0011
+		set GLCD_DB4 ON
+		set GLCD_DB5 ON
+		set GLCD_DB6 OFF
+		set GLCD_DB7 OFF
+                    Repeat 3
+                      PULSEOUT GLCD_Enable, 5 10us
+                      Wait 5 ms
+		  #IFNDEF GLCD_NO_RW
+			set GLCD_RW OFF
+                      #ENDIF
+                    end repeat
+		Wait 5 ms
+
+
+                    'function set
+		set GLCD_DB4 OFF
+		set GLCD_DB5 ON
+		set GLCD_DB6 OFF
+		set GLCD_DB7 OFF
+		PULSEOUT GLCD_Enable, 5 10us
+		Wait 5 ms
+
+                    'function set
+		set GLCD_DB4 OFF
+		set GLCD_DB5 OFF
+		set GLCD_DB6 OFF
+		set GLCD_DB7 OFF
+		PULSEOUT GLCD_Enable, 5 10us
+		Wait 5 ms
+
+		set GLCD_DB4 OFF
+		set GLCD_DB5 OFF
+		set GLCD_DB6 OFF
+		set GLCD_DB7 ON
+
+		PULSEOUT GLCD_Enable, 5 10us
+		Wait 5 ms
+
+		ST7920WriteByte(b'10000000')
+		wait 5 10us
+
+		ST7920WriteByte(b'00010000')
+		wait 5 ms
+
+		ST7920WriteByte(b'011000000')
+		wait 5 10us
+	#ENDIF    'GLCD_TYPE = GLCD_TYPE_ST7920
+
+
+	#IFDEF GLCD_IO 4,8
+
+		'Set Cursor movement
+		SET GLCD_RS OFF
+		ST7920WriteCommand(b'00000110')
+		wait 5 10us
+		'Turn off cursor
+		ST7920WriteCommand(b'00001100')
+		wait 5 10us
+		
+		'Clear screen
+                    GLCD_TYPE_ST7920_GRAPHICS_MODE = false
+		GLCDCLS
+	#ENDIF
+          'Colours
+          GLCDBackground = 0
+          GLCDForeground = 1
+      #ENDIF
+
+
 	'Setup code for KS0108 controllers
 	#if GLCD_TYPE = GLCD_TYPE_KS0108
 		'Set pin directions
@@ -661,10 +1559,57 @@ Sub InitGLCD
 		GLCDForeground = 0
 	#endif
 	
+
+
+
+
 	'Clear screen
 	GLCDCLS
 	
 End Sub
+
+
+'Numbers taken from Arduino_LCD.cpp
+Table ST7735GammaCorrection
+	'For CMCTRP1 (command E0)
+	0xE0
+	0x28
+	0x24
+	0x22
+	0x31
+	0x2b
+	0x0e
+	0x53
+	0xa5
+	0x42
+	0x16
+	0x18
+	0x12
+	0x1a
+	0x14
+	0x03
+
+    'For GMCTRN1 (command E1)
+    0xE1
+	0x17
+	0x1b
+	0x1d
+	0x0e
+	0x14
+	0x11
+	0x2c
+	0xa5
+	0x3d
+	0x09
+	0x27
+	0x2d
+	0x25
+	0x2b
+	0x3c
+End Table
+
+'''Reset GLCD
+'''@hide
 
 'Character bitmaps for print routines
 Table GLCDCharCol3
@@ -1241,4 +2186,9 @@ Table GLCDCharCol7
 16
 120
 End Table
+
+sub GLCDTimeDelay
+      wait ST7920WriteDelay us
+end sub
+
 
