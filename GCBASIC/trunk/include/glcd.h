@@ -23,6 +23,7 @@
 ' 29/9/2013: Added ST7735 code (and colour support)
 ' 14/4/2014: Added ST7920 Support
 ' 14/4/2014: Fixed KS0108 GLCDCLS CS1/CS2 line set correctly.
+' 22/2/2014: Fixed calc method in ST7920 routine
 
 'Initialisation routine
 #startup InitGLCD
@@ -334,6 +335,7 @@ End Sub
 '''@param LineY2 Bottom right corner Y location
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
+
 	'Make sure that starting point (1) is always less than end point (2)
 	If LineX1 > LineX2 Then
 		GLCDTemp = LineX1
@@ -390,11 +392,13 @@ Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GL
       #if GLCD_TYPE = GLCD_TYPE_ST7920
 
           If LineX1 <> LineX2 Then
-             ST7920LineH LineX1 , LineY1 , (LineX2 - LineX1)
+             tempsys = LineX2 - LineX1
+             ST7920LineH LineX1 , LineY1 , tempsys , LineColour
              exit sub
           end if
           If Line1Y1 <> LineY2 Then
-             ST7920LineV LineX1 , LineY1 , (LineY2 - LineY1)
+             tempsys = LineY2 - LineY1
+             ST7920LineV LineX1 , LineY1 , tempsys , LineColour
              exit sub
           end if
 
