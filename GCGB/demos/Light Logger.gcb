@@ -1,0 +1,30 @@
+;Chip Settings
+#chip 16F819,0
+
+;Variables
+Dim DataCount As byte
+Dim LastReading As byte
+
+'Light logging program
+'Reads a sensor attached to AN0 (PORTA.0)
+'Then logs its values to the chip's EEPROM memory
+'The readings can be read back using your programmer
+'Set the reading counter to 0
+DataCount = 0
+
+'Main loop
+Do Forever
+
+	'Take a reading
+	LastReading = ReadAD(AN0)
+
+	'Store it
+	EPWrite DataCount, LastReading
+
+	'Add to the reading count
+	DataCount = DataCount + 1
+
+	'Wait a minute before taking the next reading
+	Wait 1 m
+Loop
+

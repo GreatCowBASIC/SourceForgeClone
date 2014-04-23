@@ -1,0 +1,34 @@
+;Chip Settings
+#chip 16F88
+
+;Variables
+Dim PulseTime As byte
+
+'Servo motor demo using PIC 16F88 (Use Hardware Settings to choose a different chip)
+'Attach a servo motor to pin PORTB.0 - this program will make it sweep back and forth
+'Main loop
+Do Forever
+
+	'Rotate servo
+	'(Gradually change pulse length from 650 to 2250 us)
+	For PulseTime = 65 to 225
+
+		'Send the right length pulse
+		PulseOut PORTB.0, PulseTime 10us
+
+		'After sending pulse, wait a bit before sending the next one
+		Wait 6 ms
+	Next
+
+	'Then rotate it back
+	'(Gradually change pulse length from 2250 to 650 us)
+	For PulseTime = 225 to 65
+
+		'Send the right length pulse
+		PulseOut PORTB.0, PulseTime 10us
+
+		'After sending pulse, wait a bit before sending the next one
+		Wait 6 ms
+	Next
+Loop
+

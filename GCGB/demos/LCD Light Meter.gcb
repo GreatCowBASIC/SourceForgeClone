@@ -1,0 +1,40 @@
+;Chip Settings
+#chip 16F877A
+
+;Defines (Constants)
+#define LCD_IO 4
+#define LCD_RS PORTD.0
+#define LCD_RW PORTD.1
+#define LCD_Enable PORTD.2
+#define LCD_DB4 PORTD.4
+#define LCD_DB5 PORTD.5
+#define LCD_DB6 PORTD.6
+#define LCD_DB7 PORTD.7
+
+;Variables
+Dim LightLevel As byte
+
+'Light Meter demo
+'Reads from a light sensor attached to AN0 and displays the value on an LCD
+'The LCD is set up using Program > Hardware Settings
+'An introductory message
+Print "Light Meter:"
+Locate 1, 2
+Print "A GCBASIC Demo"
+Wait 2 s
+
+'Main loop
+Do Forever
+
+	'Take a measurement and store in the LightLevel variable
+	LightLevel = ReadAD(AN0)
+
+	'Display measurement
+	CLS
+	Print "Light Level: "
+	Print LightLevel
+
+	'Delay to avoid flickering of screen (LCD is hard to read if changed often)
+	Wait 100 ms
+Loop
+
