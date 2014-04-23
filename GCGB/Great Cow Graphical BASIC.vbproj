@@ -1,0 +1,317 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" xmlns:Conversion="urn:Conversion">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D06B9681-3631-4AF4-ACAE-2AD798A73E98}</ProjectGuid>
+    <RootNamespace>Great_Cow_Graphical_BASIC</RootNamespace>
+    <AssemblyName>Great Cow Graphical BASIC</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <ApplicationIcon>.\LargeCowIcon.ico</ApplicationIcon>
+    <WarningLevel>4</WarningLevel>
+    <StartupObject />
+    <NoStdLib />
+    <NoConfig />
+    <RunPostBuildEvent>OnSuccessfulBuild</RunPostBuildEvent>
+    <PreBuildEvent />
+    <PostBuildEvent />
+    <SourceAnalysisOverrideSettingsFile>C:\Users\Hugh\AppData\Roaming\ICSharpCode/SharpDevelop3.0\Settings.SourceAnalysis</SourceAnalysisOverrideSettingsFile>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionStrict>Off</OptionStrict>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionInfer>Off</OptionInfer>
+    <StartWorkingDirectory>C:\Final\Great Cow Graphical BASIC\</StartWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>True</Optimize>
+    <AllowUnsafeBlocks />
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <OutputPath>bin\Debug\</OutputPath>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugType>Full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>True</Optimize>
+    <AllowUnsafeBlocks />
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <OutputPath>bin\Release\</OutputPath>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <BaseAddress>4194304</BaseAddress>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <StartAction>Project</StartAction>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CaptionedComboBox.Designer.vb">
+      <DependentUpon>CaptionedComboBox.vb</DependentUpon>
+    </Compile>
+    <Compile Include="CaptionedComboBox.vb" />
+    <Compile Include="CompReportViewer.Designer.vb">
+      <DependentUpon>CompReportViewer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="CompReportViewer.vb" />
+    <Compile Include="MainForm.vb" />
+    <Compile Include="AssemblyInfo.vb" />
+    <Compile Include="About.vb" />
+    <Compile Include="FileIO.vb" />
+    <Compile Include="Preferences.vb" />
+    <Compile Include="ProgramWindow.vb" />
+    <Compile Include="ChipSettings.vb" />
+    <Compile Include="DefineWindow.vb" />
+    <Compile Include="LowLevel.vb" />
+    <Compile Include="SubNameDialog.vb" />
+    <Compile Include="LibraryWindow.vb" />
+    <Compile Include="TableWindow.vb" />
+    <Compile Include="PreferencesWindow.vb" />
+    <Compile Include="TypeChooserTest.Designer.vb">
+      <DependentUpon>TypeChooserTest.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TypeChooserTest.vb" />
+    <Compile Include="Variables.vb" />
+    <Compile Include="EditVar.vb" />
+    <Compile Include="ProgSummary.vb" />
+    <Compile Include="TableDataEdit.vb" />
+    <Compile Include="TableNameInput.vb" />
+    <Compile Include="ChipDiagram.vb" />
+    <Compile Include="DataClasses.vb" />
+    <Compile Include="SubParamEditor.vb" />
+    <Compile Include="ProgrammerEditor.vb" />
+    <Compile Include="GCBProgram.vb" />
+    <Compile Include="ErrorListBox.vb" />
+    <Compile Include="ParamEditBox.vb" />
+    <Compile Include="InterruptWindow.vb" />
+    <Compile Include="FileConverter.vb" />
+    <Compile Include="GCBCommand.vb" />
+    <Compile Include="IconDisplay.vb" />
+    <Compile Include="GuiEditorPanel.vb" />
+    <Compile Include="EditorPanel.vb" />
+    <Compile Include="ProgramContainer.vb" />
+    <Compile Include="TextEditorPanel.vb" />
+    <Compile Include="PECondition.vb" />
+    <Compile Include="PEVariable.vb" />
+    <Compile Include="PELiteral.vb" />
+    <Compile Include="PEFunction.vb" />
+    <Compile Include="PEBit.vb" />
+    <Compile Include="PEArrayElement.vb" />
+    <Compile Include="ParameterEditor.vb" />
+    <Compile Include="PEChooseSource.vb" />
+    <Compile Include="CaptionedListBox.vb" />
+    <Compile Include="LiteralConverter.vb" />
+    <Compile Include="PEString.vb" />
+    <Compile Include="Translator.vb" />
+    <Compile Include="PEChipPin.vb" />
+    <Compile Include="PEStandardFunction.vb" />
+    <Compile Include="ChipInfo.vb" />
+    <Compile Include="PECalculation.vb" />
+    <Compile Include="GCBSubroutine.vb" />
+    <Compile Include="AdvancedSettings.vb" />
+    <Compile Include="VariableList.vb" />
+    <Compile Include="VariableConflict.vb" />
+    <Compile Include="CustomHardwareSettings.vb" />
+    <Compile Include="HardwareSettingEditor.vb" />
+    <Compile Include="WelcomePanel.vb" />
+    <Compile Include="HardwareSettings.vb" />
+    <EmbeddedResource Include="CaptionedComboBox.resx">
+      <DependentUpon>CaptionedComboBox.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CompReportViewer.resx">
+      <DependentUpon>CompReportViewer.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resources">
+      <DependentUpon>MainForm.vb</DependentUpon>
+      <LogicalName>Great_Cow_Graphical_BASIC.MainForm.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AboutForm.resources">
+      <DependentUpon>About.vb</DependentUpon>
+      <LogicalName>Great_Cow_Graphical_BASIC.AboutForm.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgramWindow.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.ProgramWindow.resources</LogicalName>
+      <DependentUpon>ProgramWindow.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ChipSettings.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.ChipSettings.resources</LogicalName>
+      <DependentUpon>ChipSettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DefineWindow.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.DefineWindow.resources</LogicalName>
+      <DependentUpon>DefineWindow.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SubNameDialog.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.SubNameDialog.resources</LogicalName>
+      <DependentUpon>SubNameDialog.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TableWindow.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.TableWindow.resources</LogicalName>
+      <DependentUpon>TableWindow.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PreferencesWindow.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.Preferences.resources</LogicalName>
+      <DependentUpon>PreferencesWindow.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TypeChooserTest.resx">
+      <DependentUpon>TypeChooserTest.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Variables.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.Variables.resources</LogicalName>
+      <DependentUpon>Variables.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditVar.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.EditVar.resources</LogicalName>
+      <DependentUpon>EditVar.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgSummary.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.ProgSummary.resources</LogicalName>
+      <DependentUpon>ProgSummary.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TableDataEdit.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.TableDataEdit.resources</LogicalName>
+      <DependentUpon>TableDataEdit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TableNameInput.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.TableNameInput.resources</LogicalName>
+      <DependentUpon>TableNameInput.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LibraryWindow.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.LibraryWindow.resources</LogicalName>
+      <DependentUpon>LibraryWindow.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ChipDiagram.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.ChipDiagram.resources</LogicalName>
+      <DependentUpon>ChipDiagram.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SubParamEditor.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.SubParamEditor.resources</LogicalName>
+      <DependentUpon>SubParamEditor.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgrammerEditor.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.ProgrammerEditor.resources</LogicalName>
+      <DependentUpon>ProgrammerEditor.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ErrorListBox.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.ErrorListBox.resources</LogicalName>
+      <DependentUpon>ErrorListBox.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ParamEditBox.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.ParamEditBox.resources</LogicalName>
+      <DependentUpon>ParamEditBox.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InterruptWindow.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.InterruptWindow.resources</LogicalName>
+      <DependentUpon>InterruptWindow.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IconDisplay.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.IconDisplay.resources</LogicalName>
+      <DependentUpon>IconDisplay.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GuiEditorPanel.resources">
+      <DependentUpon>GuiEditorPanel.vb</DependentUpon>
+      <LogicalName>Great_Cow_Graphical_BASIC.GuiEditorPanel.resources</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TextEditorPanel.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.TextEditorPanel.resources</LogicalName>
+      <DependentUpon>TextEditorPanel.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ParameterEditor.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.ParameterEditor.resources</LogicalName>
+      <DependentUpon>ParameterEditor.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEChooseSource.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEChooseSource.resources</LogicalName>
+      <DependentUpon>PEChooseSource.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CaptionedListBox.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.CaptionedListBox.resources</LogicalName>
+      <DependentUpon>CaptionedListBox.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PECondition.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PECondition.resources</LogicalName>
+      <DependentUpon>PECondition.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PELiteral.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PELiteral.resources</LogicalName>
+      <DependentUpon>PELiteral.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LiteralConverter.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.LiteralConverter.resources</LogicalName>
+      <DependentUpon>LiteralConverter.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEString.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEString.resources</LogicalName>
+      <DependentUpon>PEString.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEVariable.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEVariable.resources</LogicalName>
+      <DependentUpon>PEVariable.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEChipPin.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEChipPin.resources</LogicalName>
+      <DependentUpon>PEChipPin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEStandardFunction.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEStandardFunction.resources</LogicalName>
+      <DependentUpon>PEStandardFunction.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PECalculation.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PECalculation.resources</LogicalName>
+      <DependentUpon>PECalculation.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEFunction.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEFunction.resources</LogicalName>
+      <DependentUpon>PEFunction.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AdvancedSettings.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.AdvancedSettings.resources</LogicalName>
+      <DependentUpon>AdvancedSettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEArrayElement.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEArrayElement.resources</LogicalName>
+      <DependentUpon>PEArrayElement.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PEBit.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.PEBit.resources</LogicalName>
+      <DependentUpon>PEBit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VariableConflict.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.VariableConflict.resources</LogicalName>
+      <DependentUpon>VariableConflict.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CustomHardwareSettings.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.CustomHardwareSettings.resources</LogicalName>
+      <DependentUpon>CustomHardwareSettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HardwareSettingEditor.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.HardwareSettingEditor.resources</LogicalName>
+      <DependentUpon>HardwareSettingEditor.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WelcomePanel.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.WelcomePanel.resources</LogicalName>
+      <DependentUpon>WelcomePanel.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HardwareSettings.resources">
+      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.HardwareSettings.resources</LogicalName>
+      <DependentUpon>HardwareSettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <None Include="Great Cow Graphical BASIC.build" />
+    <Content Include="Great Cow Graphical BASIC.cd" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.Targets" />
+</Project>
