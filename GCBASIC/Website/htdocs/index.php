@@ -85,9 +85,15 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;"><br></span><span style="font-weight: bold;">30/3/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
+<td><span style="font-weight: bold;">25/4/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
 &nbsp;We will keep this online version up to date, so let us have your
-recommendation and changes. &nbsp;New information added, please send
+recommendation and changes. New information added, please see
+the Change Section for more details.<br><br><span style="font-weight: bold;">25/4/2014<br><span style="font-weight: bold;"><span style="font-weight: bold;"></span></span></span>A
+new release of the HOT RELEASE version of Great Cow Basic. &nbsp;This
+includes GLCD fixes, new GLCD hardware more Maths functionality and
+more example code in the Help File.<br><br><span style="font-weight: bold;">30/3/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
+&nbsp;We will keep this online version up to date, so let us have your
+recommendation and changes. &nbsp;New information added, please see
 the Change Section for more details.<br><span style="font-weight: bold;"><br>18/3/2014<br></span>Revised the&nbsp;Great Cow Online Help, see&nbsp;<a href="help/">Online Help</a>. &nbsp;We will keep this online version up to date, so let us have your recommendation and changes.<br><br>We
 have also move a lot of the information and source code into
 SourceForge. &nbsp;You can obtain source files and helper files from
