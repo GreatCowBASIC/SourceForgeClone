@@ -85,7 +85,7 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">25/4/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
+<td><span style="font-weight: bold;">26/4/2014<br></span>Updated supported hardware list.&nbsp; See here <a href="hardware.html">Hardware Drivers</a>. This is not intended to be the comprehensive list of the supported hardware &#8211; please search the <a href="http://sourceforge.net/forum/?group_id=169286" target="_blank">forum</a> for the most up to date list of supported hardware. <br><br><span style="font-weight: bold;">25/4/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
 &nbsp;We will keep this online version up to date, so let us have your
 recommendation and changes. New information added, please see
 the Change Section for more details.<br><br><span style="font-weight: bold;">25/4/2014<br><span style="font-weight: bold;"><span style="font-weight: bold;"></span></span></span>A
