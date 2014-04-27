@@ -267,6 +267,7 @@ Public Class AsmProgram
 		Dim BestLine, CurrLine As AsmLine
 		Dim BestDiff, CurrDiff As Integer
 		
+		BestDiff = Integer.MaxValue
 		BestLine = Nothing
 		For Each CurrLine In Lines
 			If CurrLine.LineType = AsmLine.LineTypes.INST Then
