@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 17/2/2014"
+Version = "0.9 27/4/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -820,13 +820,18 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 								VarInBank = SysVars(FindVar).Name
 							End If
 							
-						'Other PIC code: assume always need bank selection
+						'Other PIC code: assume always need bank selection (unless dealing with STATUS, PCL, FSR or INDF)
 						Else
-							Bank = SysVars(FindVar).Location And BankMask
-							VarInBank = SysVars(FindVar).Name
-						
+							Select Case UCase(SysVars(FindVar).Name)
+								Case "STATUS", "PCL", "FSR", "INDF", "PCLATH", "INTCON"
+									Bank = -1
+								Case Else
+									Bank = SysVars(FindVar).Location And BankMask
+									VarInBank = SysVars(FindVar).Name
+							End Select
+							
 						End If
-						Exit For
+						GoTo RequiredBankFound
 					End If
 				Next
 				
@@ -846,6 +851,7 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 					End With
 				Next
 				
+				RequiredBankFound:
 			End If
 		End If
 		
@@ -997,7 +1003,8 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 	Loop
 	
 	'Print prev/next
-	/' If CompSub->Name = "Interrupt" Then
+	/'
+	If UCase(CompSub->Name) = "READAD" Then
 		CurrLine = CompSub->CodeStart->Next
 		Color 15
 		Do While CurrLine <> 0
@@ -3548,8 +3555,11 @@ FUNCTION CompileCalcMult (OutList As CodeSection Pointer, V1 As String, Act As S
 		ElseIf Act = "%" Then
 			If ModePIC Then
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Answer)
-				CurrLine = LinkedListInsert(CurrLine, " btfsc " + V1 + ",0")
+				ILC += 1
+				CurrLine = LinkedListInsert(CurrLine, " btfss " + V1 + ",0")
+				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " incf " + Answer + ",F")
+				CurrLine = LinkedListInsert(CurrLIne, "ENDIF" + Str(ILC))
 				AV = Answer
 			ElseIf ModeAVR Then
 				CurrLine = LinkedListInsert(CurrLine, " andi " + R1 + ",1")
@@ -7392,8 +7402,11 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 				SourceTemp = FixBit(Source, Origin): If INSTR(SourceTemp, ".") <> 0 Then Replace SourceTemp, ".", ","
 				
 				CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
-				CurrLine = LinkedListInsert(CurrLine, " btfsc " + SourceTemp)
+				ILC += 1
+				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
+				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 				
 			ElseIf ModeAVR Then
 				
@@ -7438,8 +7451,11 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 			If ModePIC Then
 				CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
 				CurrLine = LinkedListInsert(CurrLine, " movf " + Source + ",F")
-				CurrLine = LinkedListInsert(CurrLine, " btfss STATUS,Z")
+				ILC += 1
+				CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
+				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 			ElseIf ModeAVR Then
 				
 			End If
@@ -7496,9 +7512,12 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 			SourceTemp = FixBit(Source, Origin): If INSTR(SourceTemp, ".") <> 0 Then Replace SourceTemp, ".", ","
 			
 			If ModePIC Then
+				ILC += 1
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest)
-				CurrLine = LinkedListInsert(CurrLine, " btfsc " + SourceTemp)
+				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
+				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " incf " + Dest + ",F")
+				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 			ElseIf ModeAVR Then
 				If IsRegister(Dest) Then
 					CurrLine = LinkedListInsert(CurrLine, " clr " + Dest)
@@ -7547,10 +7566,13 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 			SourceTemp = FixBit(Source, Origin): If INSTR(SourceTemp, ".") <> 0 Then Replace SourceTemp, ".", ","
 			
 			If ModePIC Then
+				ILC += 1
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest)
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest + "_H")
-				CurrLine = LinkedListInsert(CurrLine, " btfsc " + SourceTemp)
+				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
+				CurrLine = LinkedListInsert(CurrLine, " goto " + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " incf " + Dest + ",F")
+				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 			ElseIf ModeAVR Then
 				If IsRegister(Dest) Then
 					CurrLine = LinkedListInsert(CurrLine, " clr " + Dest)
@@ -7600,12 +7622,15 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 			SourceTemp = FixBit(Source, Origin): If INSTR(SourceTemp, ".") <> 0 Then Replace SourceTemp, ".", ","
 			
 			If ModePIC Then
+				ILC += 1
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest)
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest + "_H")
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest + "_U")
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest + "_E")
-				CurrLine = LinkedListInsert(CurrLine, " btfsc " + SourceTemp)
+				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
+				CurrLine = LinkedListInsert(CurrLine, " goto " + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " incf " + Dest + ",F")
+				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 			ElseIf ModeAVR Then
 				If IsRegister(Dest) Then
 					CurrLine = LinkedListInsert(CurrLine, " clr " + Dest)

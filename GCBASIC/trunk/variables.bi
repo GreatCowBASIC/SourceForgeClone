@@ -848,6 +848,7 @@ SUB AllocateRAM
 				For ED = CD TO FVLC
 					FinalVarList(ED).Name = FinalVarList(ED + 1).Name
 					FinalVarList(ED).Value = FinalVarList(ED + 1).Value
+					FinalVarList(ED).IsArray = FinalVarList(ED + 1).IsArray
 				Next
 				FVLC -= 1
 			End If
