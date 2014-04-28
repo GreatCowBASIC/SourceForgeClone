@@ -517,7 +517,7 @@ Dim Shared AsmSymbolList As LinkedListElement Pointer
 Dim Shared ToAsmSymbol(500, 1 To 2) As String: ToAsmSymbols = 0
 DIM SHARED FinalVarList(8000) As VariableListElement: FVLC = 0
 DIM Shared FinalRegList(100) As VariableListElement: FRLC = 0
-DIM Shared FinalAliasList(200) As VariableListElement: FALC = 0
+DIM Shared FinalAliasList(8000) As VariableListElement: FALC = 0
 DIM SHARED PreserveCode(20000) As String: PCC = 0
 Dim Shared CalcVars(100) As CalcVar: TCVC = 0
 Dim Shared As String AllSysSubs, UsedSysSubs
@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 27/4/2014"
+Version = "0.9 28/4/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
