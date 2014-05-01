@@ -1478,6 +1478,7 @@ sub SysCompEqual
 	#IFDEF AVR
 		clr SysByteTempX
 		cpse SysByteTempA, SysByteTempB
+		return
 		com SysByteTempX
 	#ENDIF
 end sub
