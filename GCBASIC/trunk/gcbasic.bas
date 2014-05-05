@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 28/4/2014"
+Version = "0.9 5/5/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -8120,7 +8120,8 @@ Function CompileWholeArray (InLine As String, Origin As String) As LinkedListEle
 				CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(StringTemp(PD), "POSTINC0", Origin))
 			End If
 		ElseIf ModeAVR Then
-			
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(StringTemp(PD), "SysValueCopy", Origin))
+			CurrLine = LinkedListInsert(CurrLine, " st X+, SysValueCopy")
 		End If
 	Next
 	
