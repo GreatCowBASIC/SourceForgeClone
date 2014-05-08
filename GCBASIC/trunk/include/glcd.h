@@ -23,7 +23,12 @@
 ' 29/9/2013: Added ST7735 code (and colour support)
 ' 14/4/2014: Added ST7920 Support
 ' 14/4/2014: Fixed KS0108 GLCDCLS CS1/CS2 line set correctly.
-' 22/2/2014: Fixed calc method in ST7920 routine
+' 22/4/2014: Fixed calc method in ST7920 routine
+' 22/4/2014: Revised OLD_GLCD_TYPE_ST7920_GRAPHICS_MODE variable name
+' 05/5/2014: Revised Line, and added Circle and FilledCircle
+' 05/5/2014: Revised KS0108 read sub... timing was incorrect
+' 05/5/2014: Revised GLCD to ensure the screen is cleared properly
+' 08/5/2014: Revised to comply with documentation requirements
 
 'Initialisation routine
 #startup InitGLCD
@@ -54,6 +59,13 @@
 '''@hardware GLCD_TYPE GLCD_TYPE_ST7735; Data Out (LCD In); GLCD_DO; IO_Pin
 '''@hardware GLCD_TYPE GLCD_TYPE_ST7735; Clock; GLCD_SCK; IO_Pin
 
+'Parallel lines (ST7920 only)
+'''@hardware GLCD_TYPE GLCD_TYPE_ST7920; Data Port; GLCD_DATA_PORT; IO_Port
+'Control lines (ST7920 only)
+'''@hardware GLCD_TYPE GLCD_TYPE_ST7920; Register Select; GLCD_RS; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_ST7920; Read/Write; GLCD_RW; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_ST7920; Enable; GLCD_ENABLE; IO_Pin
+
 '''@hardware All; Reset; GLCD_RESET; IO_Pin
 
 'Constants that might need to be set
@@ -62,18 +74,20 @@
 #define GLCD_HEIGHT 160
 #define GLCDFontWidth 6
 
-' More define to support the ST7920
+' Circle edge overdraw protection
+' #define GLCD_PROTECTOVERRUN
+
+' Constants that might need to be set to support the ST7920
 #define GLCD_ROW 	(GLCD_HEIGHT/1)
 #define GLCD_COLS 	(GLCD_WIDTH/16)
-#define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
 
+' A few constants that might need to be set to support the ST7920
 ' 4.4v = 25, 5.0v 20 - You may need to adjust
 #define ST7920ReadDelay 20
-
-' if ChipMHz = 4 then 10
-' if ChipMHz = 8 then 2
-' if ChipMHz = 16 then 2
-' if ChipMHz = 32 then 2
+  ' if ChipMHz = 4 then 10
+  ' if ChipMHz = 8 then 2
+  ' if ChipMHz = 16 then 2
+  ' if ChipMHz = 32 then 2
 #define ST7920WriteDelay 2
 
 'GLCD types
@@ -97,6 +111,10 @@
 #define ST7735Select Set ST7735_CS Off
 #define ST7735Deselect Set ST7735_CS On
 
+' Do not remove.
+#define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
+
+
 'Foreground and background colours
 Dim GLCDBackground As Word
 Dim GLCDForeground As Word
@@ -108,9 +126,8 @@ Dim GLCDForeground As Word
 Sub GLCDCLS
 
           #if GLCD_TYPE = GLCD_TYPE_ST7920
-
               if GLCD_TYPE_ST7920_GRAPHICS_MODE  = true then
-                 Old_GLCD_TYPE_ST7920_GRAPHICS_MODE = true
+                 Old_ST7920_GRAPHICS_MODE = true
                  ST7920GLCDDisableGraphics
               end if
               'Clear screen
@@ -122,9 +139,8 @@ Sub GLCDCLS
                SET GLCD_RS OFF
 	    ST7920WriteByte(0x80)
               wait 80 us
-              if Old_GLCD_TYPE_ST7920_GRAPHICS_MODE  = true then
+              if Old_ST7920_GRAPHICS_MODE  = true then
                  GLCD_TYPE_ST7920_GRAPHICS_MODE = true
-'                 ST7920GLCDEnableGraphics
                   ST7920WriteCommand(0x36)'
                   GLCD_TYPE_ST7920_GRAPHICS_MODE  = true
               end if
@@ -133,23 +149,34 @@ Sub GLCDCLS
 
 
 	#if GLCD_TYPE = GLCD_TYPE_KS0108
-		For CurrPage = 0 to 7
-			'Set page
-			Set GLCD_RS Off
-			Set GLCD_CS1 On
-			Set GLCD_CS2 On
-			GLCDWriteByte b'10111000' Or CurrPage
-			
-			'Clear columns
-			For CurrCol = 0 to 63
-				'Select column
-				Set GLCD_RS Off
-				GLCDWriteByte 64 Or CurrCol
-				'Clear
-				Set GLCD_RS On
-				GLCDWriteByte 0
-			Next
-		Next
+		' fix for  not clearing screen
+                    Set GLCD_CS1 On
+                    Set GLCD_CS2 Off
+                    for GLCD_Count = 1 to 2
+
+                        For CurrPage = 0 to 7
+                                  'Set page
+                                  Set GLCD_RS Off
+
+                                  GLCDWriteByte b'10111000' Or CurrPage
+    			
+                                  'Clear columns
+                                  For CurrCol = 0 to 63
+                                            'Select column
+                                            Set GLCD_RS Off
+                                            GLCDWriteByte 64 Or CurrCol
+                                            'Clear
+                                            Set GLCD_RS On
+                                            GLCDWriteByte 0
+                                  Next
+                        Next
+
+                    Set GLCD_CS1 Off
+                    Set GLCD_CS2 On
+                    next
+
+
+
                     Set GLCD_CS1 OFF
                     Set GLCD_CS2 Off
 	#endif
@@ -247,7 +274,11 @@ End Sub
 
 
 
-' overloaded for ST7920 GLCD
+'''Draws a string at the specified location on the ST7920 GLCD
+'''@param StringLocX X coordinate for message
+'''@param CharLocY Y coordinate for message
+'''@param Chars String to display
+'''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour = GLCDForeground )
     for xchar = 1 to Chars(0)
       TargetCharCol = StringLocX + (1+(xchar*GLCDFontWidth)-GLCDFontWidth)
@@ -255,8 +286,11 @@ Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In 
     next
 end sub
 
-'''Draws a character at the specified location
-'''@hide
+'''Draws a character at the specified location on the ST7920 GLCD
+'''@param StringLocX X coordinate for message
+'''@param CharLocY Y coordinate for message
+'''@param Chars String to display
+'''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour = GLCDForeground )
 
 
@@ -380,6 +414,85 @@ Sub FilledBox(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour
 	#endif
 End Sub
 
+
+'''Draws a circle on the GLCD screen
+'''@param Xoffset X point of circle
+'''@param Yoffset Y point of circle
+'''@param xradius radius of circle
+'''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
+'''@param yordinate (optional) rounding
+sub Circle ( in xoffset, in yoffset, in xradius as integer, Optional In LineColour = GLCDForeground , Optional In yordinate = 0 as integer)
+
+
+    dim  radiusErr as Integer
+    radiusErr = -(xradius/2)
+    Do While xradius >=  yordinate
+       Pset ((xoffset + xradius), (yoffset + yordinate), LineColour)
+       Pset ((xoffset + yordinate), (yoffset + xradius), LineColour)
+       Pset ((xoffset - xradius), (yoffset + yordinate), LineColour)
+       Pset ((xoffset - yordinate), (yoffset + xradius), LineColour)
+       Pset ((xoffset - xradius), (yoffset - yordinate), LineColour)
+       Pset ((xoffset - yordinate), (yoffset - xradius), LineColour)
+       Pset ((xoffset + xradius), (yoffset - yordinate), LineColour)
+       Pset ((xoffset + yordinate), (yoffset - xradius), LineColour)
+       yordinate ++
+       If radiusErr < 0 Then
+          radiusErr = radiusErr + 2 * yordinate + 1
+       else
+          xradius --
+          radiusErr = radiusErr + 2 * (yordinate - xradius + 1)
+       end if
+    Loop
+
+end sub
+
+
+'''Fills a circle on the GLCD screen
+'''@param Xoffset X point of circle
+'''@param Yoffset Y point of circle
+'''@param xradius radius of circle
+'''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
+sub FilledCircle( in xoffset, in yoffset, in xradius, Optional In LineColour = GLCDForeground)
+
+    'Circle fill Code is merely a modification of the midpoint
+    ' circle algorithem which is an adaption of Bresenham's line algorithm
+    ' http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+    ' http://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+
+dim ff, ddF_x, ddF_y as integer
+ff = 1 - xradius
+ddF_x = 1
+ddF_y = -2 * xradius
+FillCircleXX = 0
+FillCircleYY = xradius
+
+	' Fill in the center between the two halves
+          y2 = yoffset+xradius
+          y1 = yoffset-xradius
+	Line( xoffset, y1 , xoffset, y2, LineColour)
+
+	do while (FillCircleXX < FillCircleYY)
+             if ff >= 0 then
+                FillCircleYY--
+                ddF_y += 2
+                ff += ddF_y
+             end if
+	   FillCircleXX++
+	   ddF_x += 2
+	   ff += ddF_x
+             ' Now draw vertical lines between the points on the circle rather than
+             ' draw the points of the circle. This draws lines between the
+             ' perimeter points on the upper and lower quadrants of the 2 halves of the circle.
+
+	   Line(xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour);
+	   Line(xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour);
+	   Line(xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour);
+	   Line(xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour);
+  	loop
+end sub
+
+
+
 '''Draws a line on the GLCD screen
 '''@param LineX1 Starting X point of line
 '''@param LineY1 Starting Y point of line
@@ -388,22 +501,101 @@ End Sub
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GLCDForeground)
 
-
       #if GLCD_TYPE = GLCD_TYPE_ST7920
 
           If LineX1 <> LineX2 Then
-             tempsys = LineX2 - LineX1
-             ST7920LineH LineX1 , LineY1 , tempsys , LineColour
-             exit sub
+             if LineY1 = LineY2 then
+               tempsys = LineX2 - LineX1
+               ST7920LineH LineX1 , LineY1 , tempsys , LineColour
+               exit sub
+             end if
           end if
           If Line1Y1 <> LineY2 Then
-             tempsys = LineY2 - LineY1
-             ST7920LineV LineX1 , LineY1 , tempsys , LineColour
-             exit sub
+              if LineX1 = LineX2 then
+                 tempsys = LineY2 - LineY1
+                 ST7920LineV LineX1 , LineY1 , tempsys , LineColour
+                 exit sub
+              end if
           end if
 
       #endif
+      ' New line drawing code. May 2014, Evan Venn
 
+      dim LineStepX as integer
+      dim LineStepY as integer
+      dim LineDiffX, LineDiffY as integer
+      dim LineDiffX_x2, LineDiffY_x2 as integer
+      dim LineErr as integer
+
+      LineDiffX = 0
+      LineDiffY = 0
+      LineStepX = 0
+      LineStepY = 0
+      LineDiffX_x2 = 0
+      LineDiffY_x2 = 0
+      LineErr = 0
+
+
+      LineDiffX =  LineX2 -   LineX1
+      LineDiffY =  LineY2 -   LineY1
+
+      if (LineDiffX > 0) then
+              LineStepX = 1
+      else
+              LineStepX = -1
+      end if
+
+      if (LineDiffY > 0) then
+          LineStepY = 1
+       else
+          LineStepY = -1
+      end if
+
+      LineDiffX = LineStepX * LineDiffX
+      LineDiffY = LineStepY * LineDiffY
+
+      LineDiffX_x2 = LineDiffX*2
+      LineDiffY_x2 = LineDiffY*2
+          	
+      if ( LineDiffX >= LineDiffY) then
+
+          LineErr = LineDiffY_x2 - LineDiffX
+
+          while (   LineX1 <>  LineX2 )
+
+              PSet (   LineX1,   LineY1, LineColour )
+
+                LineX1 += LineStepX
+              if ( LineErr < 0) then
+                  LineErr += LineDiffY_x2
+              else
+                  LineErr += LineDiffY_x2 - LineDiffX_x2
+                    LineY1 += LineStepY
+              end if
+          loop
+
+          PSet (   LineX1,   LineY1, LineColour )
+      else
+
+          LineErr = LineDiffX_x2 - LineDiffY
+          while (   LineY1 <>  LineY2)
+              PSet (   LineX1,   LineY1, LineColour )
+                LineY1 += LineStepY
+              if ( LineErr < 0) then
+                  LineErr += LineDiffX_x2
+               else
+                  LineErr += LineDiffX_x2 - LineDiffY_x2
+                    LineX1 += LineStepX
+              end if
+          loop
+          PSet (   LineX1,   LineY1, LineColour )
+
+      end if
+
+      ' Exit at end of this newer routine
+      exit sub
+
+      ' old code replaced in May 2014.  If you have issues remove the new code
 
 	'Draw a line using Bresenham's algorithm and calls to PSet
 	Dim LineErr, LineErr2 As Integer
@@ -455,6 +647,11 @@ End Sub
 '''@param GLCDY Y coordinate of pixel
 '''@param GLCDColour State of pixel (0 = erase, 1 = display)
 Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
+
+            #ifdef GLCD_PROTECTOVERRUN
+                   if GLCDY => GLCD_HEIGHT then exit sub
+                   if GLCDX => GLCD_WIDTH then exit sub
+            #endif
 
 	#if GLCD_TYPE = GLCD_TYPE_ST7920
 
@@ -589,12 +786,16 @@ Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 	#endif
 End Sub
 
+'''Write a command then the byte
+'''@hide
 Sub ST7920WriteCommand ( In GLCDByte )
 	SET GLCD_RS OFF
 	ST7920WriteByte(GLCDByte)
 
 end sub
 
+'''Write some date then the byte
+'''@hide
 Sub ST7920WriteData( In GLCDByte as byte )
 	SET GLCD_RS ON
 	ST7920WriteByte(GLCDByte)
@@ -605,6 +806,8 @@ end sub
 '  Enables Graphics Mode on the GLCD.
 '  Make sure the screen is void of text before using this function.
 '*******************************************************************************/
+'''Enables Graphics Mode on the ST7920 GLCD.
+'''  Make sure the screen is void of text before using this function.
 sub ST7920GLCDEnableGraphics
 
 '	ST7920WriteCommand(0x30)'		
@@ -616,10 +819,7 @@ sub ST7920GLCDEnableGraphics
 end sub
 
 
-'  DESCRIPTIONS:
-'  Disable Graphics Mode on the GLCD and return to text mode.
-'*******************************************************************************/
-
+'''  Disable Graphics Mode on the ST9720 GLCD and return to text mode.
 sub ST7920GLCDDisableGraphics
 
 '	ST7920WriteByte(0x30)'		
@@ -629,7 +829,9 @@ sub ST7920GLCDDisableGraphics
 
 end sub
 
-
+'''Locates the cursor on the GLCD screen
+'''@param PrintLocX X column
+'''@param PrintLocY Y row
 Sub ST7920Locate( In PrintLocX , In PrintLocY )
 
 ' DESCRIPTIONS:
@@ -686,6 +888,8 @@ Sub ST7920Locate( In PrintLocX , In PrintLocY )
 
 end sub
 
+'''Write the byte
+'''@hide
 Sub ST7920WriteByte( In GLCDByte )
 
 	#IFNDEF GLCD_NO_RW
@@ -723,8 +927,8 @@ Sub ST7920WriteByte( In GLCDByte )
 end sub
 
 
-
-' Tile LCD screen with two datas in Graphic Mode
+'''Tile LCD screen with two datas in Graphic Mode
+'''@hide
 sub ST7920gTile( fst, snd)
 
 
@@ -738,14 +942,13 @@ sub ST7920gTile( fst, snd)
          next
 end sub
 
-
-' Tile screen with one data
-' accepts a byte!
+'''Tile screen with one data accepts a byte!
+'''@hide
 sub ST7920Tile( tData as word)
 
     ST7920GLCDEnableCharacterMode
-    for ii  = 0 to GLCD_ROW
-      ST7920Locate(0 , ii)
+    for GLCD_Count  = 0 to GLCD_ROW
+      ST7920Locate(0 , GLCD_Count)
       for kk  = 0 to GLCD_COLS
           ST7920WriteData ( tData )
           ST7920WriteData ( tData )
@@ -753,16 +956,17 @@ sub ST7920Tile( tData as word)
     next
 end sub
 
-' Tile screen with a Chinese Symbol
-' Writes 2 bytes of data into DDRAM to display one 16x16 font.
-' A140H~D75FH are BIG5 code, A1A0H~F7FFH are GB code.
-' accepts a WORD!
-
+''' Tile screen with a Chinese Symbol
+''' Writes 2 bytes of data into DDRAM to display one 16x16 font.
+''' A140H~D75FH are BIG5 code, A1A0H~F7FFH are GB code.
+''' accepts a WORD!
+''' Tile screen with one data accepts a byte!
+'''@hide
 sub ST7920cTile( Hanzi as word )
 
     ST7920GLCDEnableCharacterMode
-    for ii  = 0 to GLCD_ROW
-      ST7920Locate(0 , ii)
+    for GLCD_Count  = 0 to GLCD_ROW
+      ST7920Locate(0 , GLCD_Count)
       for kk  = 0 to GLCD_COLS
               ST7920WriteData( Hanzi_H )
               ST7920WriteData( Hanzi & 0x00FF )
@@ -771,7 +975,8 @@ sub ST7920cTile( Hanzi as word )
 
 end sub
 
-' Set Icon ON/OFF
+'''Set Icon ON/OFF
+'''@hide
 sub ST7920SetIcon( Addr, dByte)
 
     ST7920GLCDEnableGraphics
@@ -781,7 +986,8 @@ sub ST7920SetIcon( Addr, dByte)
 end sub
 
 
-' Display Standard Testing Graphics
+''' Display Standard Testing Graphics
+'''@hide
 sub ST7920GraphicTest
 
     for kk  = 0 to 3
@@ -795,11 +1001,11 @@ sub ST7920GraphicTest
     next
 
     for kk  = 4 to 7
-        for ii = 0 to 64 step 2
+        for GLCD_Count = 0 to 64 step 2
             ReadTable graphicstestdata, (kk*2)+1, char1
             ReadTable graphicstestdata, (kk*2)+2, char2
-            ST7920LineHs(0, ii, GLCD_COLS - 1 , char1 )
-            ST7920LineHs(0, ii + 1,  GLCD_COLS - 1, char2 )
+            ST7920LineHs(0, GLCD_Count, GLCD_COLS - 1 , char1 )
+            ST7920LineHs(0, GLCD_Count + 1,  GLCD_COLS - 1, char2 )
 
         next
         wait 1  s
@@ -810,10 +1016,11 @@ end sub
 
 
 
-' Draw a Horizontal Line with special style
+''' Draw a Horizontal Line with special style
+'''@hide
 sub ST7920LineHs( X0, Y0, xUnits, Style)
     ST7920gLocate(X0, Y0)
-    for i  = 0 to xUnits
+    for GLCD_Count_2  = 0 to xUnits
         ST7920WriteData ( Style )
         ST7920WriteData ( Style )
    next
@@ -838,8 +1045,8 @@ table graphicstestdata Store Data
 0xAA
 end table
 
-
-
+'''Locate the cursor on the display
+'''@param xUnitLocate GLCDY
 sub ST7920gLocate( xUnitLocate, GLCDY )
 
    ' 1xUnit = 16 dots, 1yBit = 1 dot
@@ -859,14 +1066,18 @@ sub ST7920gLocate( xUnitLocate, GLCDY )
 end sub
 
 
-'  DESCRIPTIONS:
-'  Clear the screen by filling the screen with zero bytes.
-'  Enable Graphics Mode
-'  before calling this function.
-' *******************************************************************************/
+'''Clear the screen by filling the screen with zero bytes.
+'''Enable Graphics Mode
+'''before calling this function.
+'''@param No parameters
 sub ST7920GLCDClearGraphics
 	' This function performs similar to the FillScreenGraphic but
 	' only zeros are sent into the screen instead of data from an array.
+
+          #if GLCD_TYPE <> GLCD_TYPE_ST7920
+              GLCDCLS
+              exit sub
+          #endif
 
 	for PrintLocY = 0 to 63
 		if PrintLocY < 32 then
@@ -884,6 +1095,7 @@ sub ST7920GLCDClearGraphics
 
 end sub
 
+'''@hide
 function ST7920gReaddata ( in xUnit, in yBit ) as word
 
     ST7920gLocate(xUnit, yBit)
@@ -897,6 +1109,11 @@ function ST7920gReaddata ( in xUnit, in yBit ) as word
 
 end Sub
 
+'''Draws a horizontal line on the GLCD screen
+'''@param X0 Starting X point of line
+'''@param Y0 Starting Y point of line
+'''@param xDots number of pixels
+'''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 sub ST7920lineh( in X0, in Y0, in xDots, Optional In GLCDColour As Word = GLCDForeground )
 
     if xDots = 0 then exit sub
@@ -907,8 +1124,8 @@ sub ST7920lineh( in X0, in Y0, in xDots, Optional In GLCDColour As Word = GLCDFo
     OldData = 0
     NewData = 0
 
-    for ii = 0 to xDots
-        xUnit = (ii + X0)/16
+    for GLCD_Count = 0 to xDots
+        xUnit = (GLCD_Count + X0)/16
 
                  ' set location
                   dim SysCalcPositionY as byte
@@ -936,7 +1153,7 @@ sub ST7920lineh( in X0, in Y0, in xDots, Optional In GLCDColour As Word = GLCDFo
                   OldData  = (OldData*256) + ST7920GLCDReadByte
 
 		'Select which bit we are to set/clear per pixel
-                    GLCDBitNo = 15 - ( (X0 + ii ) And 15)
+                    GLCDBitNo = 15 - ( (X0 + GLCD_Count ) And 15)
 
                     If GLCDColour.0 = 0 Then
                               GLCDChangeWord = 65534
@@ -968,6 +1185,11 @@ sub ST7920lineh( in X0, in Y0, in xDots, Optional In GLCDColour As Word = GLCDFo
    next
 end Sub
 
+'''Draws a vertical line on the GLCD screen
+'''@param X0 Starting X point of line
+'''@param Y0 Starting Y point of line
+'''@param xBits number of pixels
+'''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 sub ST7920linev( in X0, in Y0, in yBits, Optional In GLCDColour As Word = GLCDForeground )
 
     if yBits = 0 then exit sub
@@ -979,9 +1201,9 @@ sub ST7920linev( in X0, in Y0, in yBits, Optional In GLCDColour As Word = GLCDFo
     OldData = 0
     NewData = 0
 
-    for ii = 0 to  yBits
+    for GLCD_Count = 0 to  yBits
 
-        yPixel = Y0 + ii
+        yPixel = Y0 + GLCD_Count
        ' set location
         dim SysCalcPositionY as byte
         dim SysCalcPositionX as byte
@@ -1157,10 +1379,8 @@ Function GLCDReadByte
 	'Read
 	Set GLCD_ENABLE On
 	Wait 2 us
-	Set GLCD_ENABLE Off
-	Wait 2 us
-	
 	'Get input data
+          ' corrected 7/05/2014
 	GLCDReadByte.7 = GLCD_DB7
 	GLCDReadByte.6 = GLCD_DB6
 	GLCDReadByte.5 = GLCD_DB5
@@ -1169,6 +1389,9 @@ Function GLCDReadByte
 	GLCDReadByte.2 = GLCD_DB2
 	GLCDReadByte.1 = GLCD_DB1
 	GLCDReadByte.0 = GLCD_DB0
+
+	Set GLCD_ENABLE Off
+	Wait 2 us
 	
 End Function
 
@@ -1242,7 +1465,7 @@ Sub ST7735SetGammaCorrection
 	Next
 End Sub
 
-
+'''@hide
 function GLCDReady
 
          #IF GLCD_TYPE = GLCD_TYPE_ST7920
@@ -1313,7 +1536,7 @@ end function
 
 
 
-
+'''Initialise the GLCD device
 Sub InitGLCD
 
       #if GLCD_TYPE = GLCD_TYPE_ST7920
