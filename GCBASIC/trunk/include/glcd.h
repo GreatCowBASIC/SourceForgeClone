@@ -29,6 +29,7 @@
 ' 05/5/2014: Revised KS0108 read sub... timing was incorrect
 ' 05/5/2014: Revised GLCD to ensure the screen is cleared properly
 ' 08/5/2014: Revised to comply with documentation requirements
+' 09/5/2014: Remove more silly variable names. No functional changes
 
 'Initialisation routine
 #startup InitGLCD
@@ -809,24 +810,24 @@ end sub
 '''Enables Graphics Mode on the ST7920 GLCD.
 '''  Make sure the screen is void of text before using this function.
 sub ST7920GLCDEnableGraphics
-
+    #if GLCD_TYPE = GLCD_TYPE_ST7920
 '	ST7920WriteCommand(0x30)'		
 '	ST7920WriteCommand(0x34)'			// Switch to extended instruction mode.	
 	ST7920WriteCommand(0x36)'
           '// Enable graphics mode.
           GLCD_TYPE_ST7920_GRAPHICS_MODE  = true
-
+     #endif
 end sub
 
 
 '''  Disable Graphics Mode on the ST9720 GLCD and return to text mode.
 sub ST7920GLCDDisableGraphics
-
+    #if GLCD_TYPE = GLCD_TYPE_ST7920
 '	ST7920WriteByte(0x30)'		
 '         ST7920WriteByte(0x34)'			// Switch to extended instruction mode.
 	ST7920WriteCommand(0x30)'			// Graphics and extended instruction mode turned off.
           GLCD_TYPE_ST7920_GRAPHICS_MODE  = false
-
+     #endif
 end sub
 
 '''Locates the cursor on the GLCD screen
@@ -932,9 +933,9 @@ end sub
 sub ST7920gTile( fst, snd)
 
 
-         for yy = 0 to ( GLCD_HEIGHT - 1 )
-             ST7920gLocate(0, yy)
-             for xx = 0 to ( GLCD_COLS -1 )
+         for GLCD_Count = 0 to ( GLCD_HEIGHT - 1 )
+             ST7920gLocate(0, GLCD_Count)
+             for GLCD_Count_2 = 0 to ( GLCD_COLS -1 )
                  ST7920WriteData( fst )'SendByte(iDat, fst)
                  ST7920WriteData( snd )'SendByte(iDat, snd)
              next
@@ -949,7 +950,7 @@ sub ST7920Tile( tData as word)
     ST7920GLCDEnableCharacterMode
     for GLCD_Count  = 0 to GLCD_ROW
       ST7920Locate(0 , GLCD_Count)
-      for kk  = 0 to GLCD_COLS
+      for GLCD_Count_2  = 0 to GLCD_COLS
           ST7920WriteData ( tData )
           ST7920WriteData ( tData )
       next
@@ -967,7 +968,7 @@ sub ST7920cTile( Hanzi as word )
     ST7920GLCDEnableCharacterMode
     for GLCD_Count  = 0 to GLCD_ROW
       ST7920Locate(0 , GLCD_Count)
-      for kk  = 0 to GLCD_COLS
+      for GLCD_Count_2  = 0 to GLCD_COLS
               ST7920WriteData( Hanzi_H )
               ST7920WriteData( Hanzi & 0x00FF )
       next
@@ -990,9 +991,9 @@ end sub
 '''@hide
 sub ST7920GraphicTest
 
-    for kk  = 0 to 3
-        ReadTable graphicstestdata, (kk*2)+1, char1
-        ReadTable graphicstestdata, (kk*2)+2, char2
+    for GLCD_Count_2  = 0 to 3
+        ReadTable graphicstestdata, (GLCD_Count_2*2)+1, char1
+        ReadTable graphicstestdata, (GLCD_Count_2*2)+2, char2
 
         ST7920gTile( char1  , char2 )
         wait 200  ms
@@ -1000,13 +1001,12 @@ sub ST7920GraphicTest
 
     next
 
-    for kk  = 4 to 7
+    for GLCD_Count_2  = 4 to 7
         for GLCD_Count = 0 to 64 step 2
-            ReadTable graphicstestdata, (kk*2)+1, char1
-            ReadTable graphicstestdata, (kk*2)+2, char2
+            ReadTable graphicstestdata, (GLCD_Count_2*2)+1, char1
+            ReadTable graphicstestdata, (GLCD_Count_2*2)+2, char2
             ST7920LineHs(0, GLCD_Count, GLCD_COLS - 1 , char1 )
             ST7920LineHs(0, GLCD_Count + 1,  GLCD_COLS - 1, char2 )
-
         next
         wait 1  s
     next
