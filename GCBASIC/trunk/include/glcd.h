@@ -30,6 +30,8 @@
 ' 05/5/2014: Revised GLCD to ensure the screen is cleared properly
 ' 08/5/2014: Revised to comply with documentation requirements
 ' 09/5/2014: Remove more silly variable names. No functional changes
+' 09/5/2014: Fixed circle and line to ensure cross device compatibility
+
 
 'Initialisation routine
 #startup InitGLCD
@@ -114,6 +116,8 @@
 
 ' Do not remove.
 #define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
+dim GLCD_yordinate as integer
+GLCD_yordinate = 0
 
 
 'Foreground and background colours
@@ -128,6 +132,7 @@ Sub GLCDCLS
 
           #if GLCD_TYPE = GLCD_TYPE_ST7920
               if GLCD_TYPE_ST7920_GRAPHICS_MODE  = true then
+                 ST7920GLCDClearGraphics
                  Old_ST7920_GRAPHICS_MODE = true
                  ST7920GLCDDisableGraphics
               end if
@@ -422,7 +427,7 @@ End Sub
 '''@param xradius radius of circle
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 '''@param yordinate (optional) rounding
-sub Circle ( in xoffset, in yoffset, in xradius as integer, Optional In LineColour = GLCDForeground , Optional In yordinate = 0 as integer)
+sub Circle ( in xoffset, in yoffset, in xradius as integer, Optional In LineColour = GLCDForeground , Optional In yordinate = GLCD_yordinate)
 
 
     dim  radiusErr as Integer
@@ -502,24 +507,25 @@ end sub
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GLCDForeground)
 
-      #if GLCD_TYPE = GLCD_TYPE_ST7920
-
-          If LineX1 <> LineX2 Then
-             if LineY1 = LineY2 then
-               tempsys = LineX2 - LineX1
-               ST7920LineH LineX1 , LineY1 , tempsys , LineColour
-               exit sub
-             end if
-          end if
-          If Line1Y1 <> LineY2 Then
-              if LineX1 = LineX2 then
-                 tempsys = LineY2 - LineY1
-                 ST7920LineV LineX1 , LineY1 , tempsys , LineColour
-                 exit sub
-              end if
-          end if
-
-      #endif
+'   replaced by new line drawing code
+'      #if GLCD_TYPE = GLCD_TYPE_ST7920
+'
+'          If LineX1 <> LineX2 Then
+'             if LineY1 = LineY2 then
+'               tempsys = LineX2 - LineX1
+'               ST7920LineH LineX1 , LineY1 , tempsys , LineColour
+'               exit sub
+'             end if
+'          end if
+'          If Line1Y1 <> LineY2 Then
+'              if LineX1 = LineX2 then
+'                 tempsys = LineY2 - LineY1
+'                 ST7920LineV LineX1 , LineY1 , tempsys , LineColour
+'                 exit sub
+'              end if
+'          end if
+'
+'      #endif
       ' New line drawing code. May 2014, Evan Venn
 
       dim LineStepX as integer
