@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 5/5/2014"
+Version = "0.9 10/5/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -4118,7 +4118,11 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 				
 				'Compare
 				If R2Literal Then
-					CurrLine = LinkedListInsert(CurrLine, " cpi " + R1 + "," + R2)
+					If Val(R2) = 0 And (OP = "=" Or OP = "~") Then
+						CurrLine = LinkedListInsert(CurrLine, " tst " + R1)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cpi " + R1 + "," + R2)
+					End If
 				Else
 					CurrLine = LinkedListInsert(CurrLine, " cp " + R1 + "," + R2)
 				End If
