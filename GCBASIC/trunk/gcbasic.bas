@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 10/5/2014"
+Version = "0.9 11/5/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2415,7 +2415,7 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Int
 		
 		ElseIf ModeAVR Then
 			'Data embedding directives
-			If Left(CurrLineVal, 4) = ".DB " THEN
+			If UCase(Left(Trim(CurrLineVal), 4)) = ".DB " THEN
 				'Print "Data: "; CurrLineVal;
 				ROMData = Trim(Mid(CurrLineVal, 4))
 				InstSize = 0
@@ -2427,6 +2427,10 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Int
 				IF ROMData <> "" Then
 					InstSize += 1
 				End If
+				'Will be zero padded if odd length
+				If InstSize Mod 2 = 1 Then InstSize += 1
+				'Two bytes are packed in each location
+				InstSize = InstSize \ 2
 				
 				'Print " Size:"; InstSize
 			End If
@@ -11207,157 +11211,173 @@ Sub OptimiseCalls
 	Dim As String JumpTarget, ProperCmd, CheckTarget, NextLine, TempLoc
 	Dim As Integer IsRelative, UseRelative, IsJump, LineSize, CurrLinePos
 	Dim As Integer JumpSize, IsFirstLine
+	Dim As Integer CallChanged, ProgramScans
 	
-	'Get list of labels and locations in program
-	CurrLine = CompilerOutput->CodeList->Next
-	CurrLinePos = 0
-	LabelList = LinkedListCreate
-	LabelListPos = LabelList
-	Do While CurrLine <> 0
-		
-		LineSize = CalcLineSize(CurrLine->Value, 1)
-		If LineSize = 0 Then
-			If ModeAVR Then
-				If Right(CurrLine->Value, 1) = LabelEnd Then
-					LabelListPos = LinkedListInsert(LabelListPos, UCase(Left(CurrLine->Value, Len(CurrLine->Value) - 1)))
-					LabelListPos->NumVal = CurrLinePos
+	ProgramScans = 0
+	Do
+		'Get list of labels and locations in program
+		CallChanged = 0
+		ProgramScans += 1
+		CurrLine = CompilerOutput->CodeList->Next
+		CurrLinePos = 0
+		LabelList = LinkedListCreate
+		LabelListPos = LabelList
+		Do While CurrLine <> 0
+			
+			LineSize = CalcLineSize(CurrLine->Value, 1)
+			If LineSize = 0 Then
+				If ModeAVR Then
+					If Right(CurrLine->Value, 1) = LabelEnd Then
+						LabelListPos = LinkedListInsert(LabelListPos, UCase(Left(CurrLine->Value, Len(CurrLine->Value) - 1)))
+						LabelListPos->NumVal = CurrLinePos
+					End If
+				ElseIf ChipFamily = 16 Then
+					If CurrLine->Value <> "" And Left(CurrLine->Value, 1) <> ";" And Left(CurrLine->Value, 1) <> " " And Left(CurrLine->Value, 9) <> "PRESERVE " Then
+						LabelListPos = LinkedListInsert(LabelListPos, UCase(CurrLine->Value))
+						LabelListPos->NumVal = CurrLinePos
+					End If
 				End If
-			ElseIf ChipFamily = 16 Then
-				If CurrLine->Value <> "" And Left(CurrLine->Value, 1) <> ";" And Left(CurrLine->Value, 1) <> " " And Left(CurrLine->Value, 9) <> "PRESERVE " Then
-					LabelListPos = LinkedListInsert(LabelListPos, UCase(CurrLine->Value))
-					LabelListPos->NumVal = CurrLinePos
+				If Left(CurrLine->Value, 5) = ".ORG " Then
+					CurrLinePos = MakeDec(Trim(Mid(CurrLine->Value, 5))) 
 				End If
-			End If
-		Else
-			CurrLinePos += LineSize
-		End If
-		
-		CurrLine = CurrLine->Next
-	Loop
-	
-	'Check program, make changes where needed
-	CurrLine = CompilerOutput->CodeList->Next
-	CurrLinePos = 0
-	Do While CurrLine <> 0
-		
-		'Get current position
-		If CurrLinePos = 0 Then
-			IsFirstLine = -1
-		End If
-		CurrLinePos += CalcLineSize(CurrLine->Value, 1)
-		
-		'Check to see if command is call or goto
-		IsJump = 0
-		If ModeAVR Then
-			If Left(CurrLine->Value, 7) = " rcall " Or Left(CurrLine->Value, 6) = " call " Then
-				IsJump = 1
-			ElseIf Left(CurrLine->Value, 6) = " rjmp " Or Left(CurrLine->Value, 5) = " jmp " Then
-				IsJump = 2
-			End If
-		ElseIf ChipFamily = 16 Then
-			If Left(CurrLine->Value, 7) = " rcall " Or Left(CurrLine->Value, 6) = " call " Then
-				IsJump = 1
-			ElseIf Left(CurrLine->Value, 6) = " goto " Or Left(CurrLine->Value, 5) = " bra " Then
-				IsJump = 2
-			End If
-		End If
-		
-		If IsJump <> 0 Then
-			'Get jump target
-			JumpTarget = Trim(CurrLine->Value)
-			JumpTarget = Mid(JumpTarget, InStr(JumpTarget, " ") + 1)
-			If InStr(JumpTarget, ";") <> 0 Then JumpTarget = Trim(Left(JumpTarget, InStr(JumpTarget, ";") - 1))
-			'Check if relative
-			IsRelative = 0
-			If ModeAVR Then
-				If Left(CurrLine->Value, 2) = " r" Then IsRelative = -1
-			ElseIf ChipFamily = 16 Then
-				If Left(CurrLine->Value, 2) = " r" Or Left(CurrLine->Value, 2) = " b" Then IsRelative = -1
+			Else
+				CurrLinePos += LineSize
 			End If
 			
-			'If chip has 8192 or less bytes program memory, use r* exclusively
-			'Otherwise, alter as needed
-			If (ModeAVR And ChipProg <= 8192) Or (ChipFamily = 16 And ChipProg < 2048) Then
-				UseRelative = -1
-			Else
-				UseRelative = 0
+			CurrLine = CurrLine->Next
+		Loop
+		
+		'Check program, make changes where needed
+		CurrLine = CompilerOutput->CodeList->Next
+		CurrLinePos = 0
+		Do While CurrLine <> 0
+			
+			'Get current position
+			If CurrLinePos = 0 Then
+				IsFirstLine = -1
+			End If
+			If Left(CurrLine->Value, 5) = ".ORG " Then
+				CurrLinePos = MakeDec(Trim(Mid(CurrLine->Value, 5))) 
+			End If
+			'Print Hex(CurrLinePos), CurrLine->Value
+			
+			'Check to see if command is call or goto
+			IsJump = 0
+			If ModeAVR Then
+				If Left(CurrLine->Value, 7) = " rcall " Or Left(CurrLine->Value, 6) = " call " Then
+					IsJump = 1
+				ElseIf Left(CurrLine->Value, 6) = " rjmp " Or Left(CurrLine->Value, 5) = " jmp " Then
+					IsJump = 2
+				End If
+			ElseIf ChipFamily = 16 Then
+				If Left(CurrLine->Value, 7) = " rcall " Or Left(CurrLine->Value, 6) = " call " Then
+					IsJump = 1
+				ElseIf Left(CurrLine->Value, 6) = " goto " Or Left(CurrLine->Value, 5) = " bra " Then
+					IsJump = 2
+				End If
+			End If
+			
+			If IsJump <> 0 Then
+				'Get jump target
+				JumpTarget = Trim(CurrLine->Value)
+				JumpTarget = Mid(JumpTarget, InStr(JumpTarget, " ") + 1)
+				If InStr(JumpTarget, ";") <> 0 Then JumpTarget = Trim(Left(JumpTarget, InStr(JumpTarget, ";") - 1))
+				'Check if relative
+				IsRelative = 0
+				If ModeAVR Then
+					If Left(CurrLine->Value, 2) = " r" Then IsRelative = -1
+				ElseIf ChipFamily = 16 Then
+					If Left(CurrLine->Value, 2) = " r" Or Left(CurrLine->Value, 2) = " b" Then IsRelative = -1
+				End If
 				
-				'Get label
-				CheckTarget = Trim(UCase(JumpTarget))
-				'Search 2048 words either way from current location
-				'If label found, then can use relative mode
-				If CheckTarget = "$" Then
+				'If chip has 8192 or less bytes program memory, use r* exclusively
+				'Otherwise, alter as needed
+				If (ModeAVR And ChipProg <= 8192) Or (ChipFamily = 16 And ChipProg < 2048) Then
 					UseRelative = -1
-					
-				ElseIf ModeAVR And WholeInstr(CheckTarget, "PC") = 2 Then
-					TempLoc = CheckTarget
-					WholeReplace TempLoc, "PC", "0"
-					Calculate TempLoc
-					If Abs(Val(TempLoc)) < 2048 Then
-						'Print "Using relative for "; CheckTarget
-						UseRelative = -1
-					End If 
-					
-				'For bootloader compatibility, treat first line as non-relative on all
-				'PIC 18F chips.
-				ElseIf IsFirstLine And ModePIC Then
+				Else
 					UseRelative = 0
 					
-				Else
-					LabelListPos = LabelList->Next
-					Do While LabelListPos <> 0
-						If LabelListPos->Value = CheckTarget Then
-							JumpSize = Abs(LabelListPos->NumVal - CurrLinePos)
-							If (ModeAVR And JumpSize < 2048) Or (ChipFamily = 16 And JumpSize < 1024) Then
-								UseRelative = -1
+					'Get label
+					CheckTarget = Trim(UCase(JumpTarget))
+					'Search 2048 words either way from current location
+					'If label found, then can use relative mode
+					If CheckTarget = "$" Then
+						UseRelative = -1
+						
+					ElseIf ModeAVR And WholeInstr(CheckTarget, "PC") = 2 Then
+						TempLoc = CheckTarget
+						WholeReplace TempLoc, "PC", "0"
+						Calculate TempLoc
+						If Abs(Val(TempLoc)) < 2048 Then
+							'Print "Using relative for "; CheckTarget
+							UseRelative = -1
+						End If 
+						
+					'For bootloader compatibility, treat first line as non-relative on all
+					'PIC 18F chips.
+					ElseIf IsFirstLine And ModePIC Then
+						UseRelative = 0
+						
+					Else
+						LabelListPos = LabelList->Next
+						Do While LabelListPos <> 0
+							If LabelListPos->Value = CheckTarget Then
+								JumpSize = Abs(LabelListPos->NumVal - CurrLinePos)
+								'Print CurrLine->Value, CurrLinePos, JumpSize
+								If (ModeAVR And JumpSize < 2048) Or (ChipFamily = 16 And JumpSize < 1024) Then
+									UseRelative = -1
+								End If
+								Exit Do
 							End If
-							Exit Do
+							LabelListPos = LabelListPos->Next
+						Loop
+					End If
+					
+				End If
+				
+				'If using relative when shouldn't or not when should, change line
+				If IsRelative <> UseRelative Then
+					CallChanged = -1
+					If ModeAVR Then
+						If UseRelative Then
+							ProperCmd = " r"
+						Else
+							ProperCmd = " "
 						End If
-						LabelListPos = LabelListPos->Next
-					Loop
+						If IsJump = 1 Then
+							ProperCmd += "call "
+						Else
+							ProperCmd += "jmp "
+						End If
+					
+					ElseIf ChipFamily = 16 Then
+						If UseRelative Then
+							If IsJump = 1 Then
+								ProperCmd = " rcall "
+							Else
+								ProperCmd = " bra "
+							End If
+						Else
+							If IsJump = 1 Then
+								ProperCmd = " call "
+							Else
+								ProperCmd = " goto "
+							End If
+						End If
+					End If
+					CurrLine->Value = ProperCmd + JumpTarget
 				End If
 				
 			End If
 			
-			'If using relative when shouldn't or not when should, change line
-			If IsRelative <> UseRelative Then
-				If ModeAVR Then
-					If UseRelative Then
-						ProperCmd = " r"
-					Else
-						ProperCmd = " "
-					End If
-					If IsJump = 1 Then
-						ProperCmd += "call "
-					Else
-						ProperCmd += "jmp "
-					End If
-				
-				ElseIf ChipFamily = 16 Then
-					If UseRelative Then
-						If IsJump = 1 Then
-							ProperCmd = " rcall "
-						Else
-							ProperCmd = " bra "
-						End If
-					Else
-						If IsJump = 1 Then
-							ProperCmd = " call "
-						Else
-							ProperCmd = " goto "
-						End If
-					End If
-				End If
-				CurrLine->Value = ProperCmd + JumpTarget
-			End If
-			
-		End If
+			CurrLinePos += CalcLineSize(CurrLine->Value, 1)
+			CurrLine = CurrLine->Next
+			IsFirstLine = 0
+		Loop
 		
-		CurrLine = CurrLine->Next
-		IsFirstLine = 0
-	Loop
-	
-	DeAllocate LabelList
+		DeAllocate LabelList
+	Loop While CallChanged
+	'Print "Optimised calls in "; ProgramScans; " attempts"
 	
 End Sub
 
