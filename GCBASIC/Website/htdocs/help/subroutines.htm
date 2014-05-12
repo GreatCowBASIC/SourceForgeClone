@@ -71,9 +71,9 @@ are subroutines, so you should always allow for 2 or 3 subroutine calls
 more than your program has.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial" ><span style="font-size:12pt" >AVR microcontrollers have no fixed limit on how many subroutines can be 
 called at a time, but if too many are called then some variables on the 
 chip may be corrupted. To check if there are too many subroutines, work 
-out the most that will be called at once, then multiply that number by 2 and 
-create an array of that size. If an out of memory error message comes up, 
-there are too many calls.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial" ><span style="font-size:12pt" >Another feature of subroutines is that they are able to accept parameters. 
+out the most that will be called at once, then multiply that number by 2 
+and create an array of that size. If an out of memory error message comes 
+up, there are too many calls.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial" ><span style="font-size:12pt" >Another feature of subroutines is that they are able to accept parameters. 
 These are values that are passed from the main program to the 
 subroutine when it is called, and then passed back when the subroutine 
 ends.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial" ><span style="font-size:12pt" ><b>Using Subroutines</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial" ><span style="font-size:12pt" >To call a subroutine is very simple - all that is needed is the name of the 
