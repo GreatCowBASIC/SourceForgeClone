@@ -31,6 +31,7 @@
 ' 08/5/2014: Revised to comply with documentation requirements
 ' 09/5/2014: Remove more silly variable names. No functional changes
 ' 09/5/2014: Fixed circle and line to ensure cross device compatibility
+' 11/5/2014: Revided to expose old line drawing routines
 
 
 'Initialisation routine
@@ -117,6 +118,7 @@
 ' Do not remove.
 #define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
 dim GLCD_yordinate as integer
+' initialise variable
 GLCD_yordinate = 0
 
 
@@ -507,7 +509,8 @@ end sub
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GLCDForeground)
 
-'   replaced by new line drawing code
+'   replaced by new line drawing code May 2014
+
 '      #if GLCD_TYPE = GLCD_TYPE_ST7920
 '
 '          If LineX1 <> LineX2 Then
@@ -533,6 +536,8 @@ Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GL
       dim LineDiffX, LineDiffY as integer
       dim LineDiffX_x2, LineDiffY_x2 as integer
       dim LineErr as integer
+
+
 
       LineDiffX = 0
       LineDiffY = 0
@@ -568,16 +573,15 @@ Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GL
 
           LineErr = LineDiffY_x2 - LineDiffX
 
-          while (   LineX1 <>  LineX2 )
+          do while (   LineX1 <>  LineX2 )
 
               PSet (   LineX1,   LineY1, LineColour )
-
-                LineX1 += LineStepX
+              LineX1 += LineStepX
               if ( LineErr < 0) then
                   LineErr += LineDiffY_x2
               else
-                  LineErr += LineDiffY_x2 - LineDiffX_x2
-                    LineY1 += LineStepY
+                  LineErr += ( LineDiffY_x2 - LineDiffX_x2 )
+                  LineY1 += LineStepY
               end if
           loop
 
@@ -585,24 +589,29 @@ Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GL
       else
 
           LineErr = LineDiffX_x2 - LineDiffY
-          while (   LineY1 <>  LineY2)
+          do while (   LineY1 <>  LineY2)
               PSet (   LineX1,   LineY1, LineColour )
-                LineY1 += LineStepY
+              LineY1 += LineStepY
               if ( LineErr < 0) then
                   LineErr += LineDiffX_x2
                else
-                  LineErr += LineDiffX_x2 - LineDiffY_x2
-                    LineX1 += LineStepX
+                  LineErr += ( LineDiffX_x2 - LineDiffY_x2 )
+                  LineX1 += LineStepX
               end if
           loop
           PSet (   LineX1,   LineY1, LineColour )
 
       end if
 
-      ' Exit at end of this newer routine
-      exit sub
 
-      ' old code replaced in May 2014.  If you have issues remove the new code
+
+end sub
+
+'''@hide
+sub old_Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GLCDForeground)
+
+      ' This old code replaced in May 2014.  Use if you have issues with the new code
+
 
 	'Draw a line using Bresenham's algorithm and calls to PSet
 	Dim LineErr, LineErr2 As Integer
@@ -768,6 +777,7 @@ Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 		Repeat GLCDBitNo
 			Rotate GLCDChange Left
 		End Repeat
+
 		If GLCDColour.0 = 0 Then
 			GLCDDataTemp = GLCDDataTemp And GLCDChange
 		Else
@@ -1395,7 +1405,6 @@ Function GLCDReadByte
 	GLCDReadByte.2 = GLCD_DB2
 	GLCDReadByte.1 = GLCD_DB1
 	GLCDReadByte.0 = GLCD_DB0
-
 	Set GLCD_ENABLE Off
 	Wait 2 us
 	
@@ -1727,7 +1736,7 @@ Sub InitGLCD
 		'Set on
 		Set GLCD_RS Off
 		GLCDWriteByte 63
-		
+
 		'Set Z to 0
 		GLCDWriteByte 192
 		
@@ -1843,7 +1852,6 @@ End Table
 
 '''Reset GLCD
 '''@hide
-
 'Character bitmaps for print routines
 Table GLCDCharCol3
 0
