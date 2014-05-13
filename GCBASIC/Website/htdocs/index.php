@@ -85,7 +85,9 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">11/5/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
+<td><span style="font-weight: bold;">13/5/2014<br></span>Another revision, a correction, to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
+&nbsp; New information added, please see
+the Change Section for more details. &nbsp; Hot Release updated to contain the latest Help File.<br><br><span style="font-weight: bold;">11/5/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
 &nbsp; New information added, please see
 the Change Section for more details. <br><br>We
 also released a HOT RELEASE for Great Cow Basic today. &nbsp;This
