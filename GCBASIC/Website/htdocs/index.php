@@ -85,7 +85,13 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">13/5/2014<br></span>Another revision, a correction, to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
+<td><span style="font-weight: bold;">26/5/2014<br></span>A new version
+of the&nbsp;GCB@Syn&nbsp; IDE for Great Cow Basic. &nbsp;This IDE is
+maintained by Frank
+Steinberg and this release now contains the Hot Release dated
+13/05/2014. &nbsp;This contains all the latest drivers, Help File etc.
+&nbsp;This is a great way to get a complete download of Great Cow
+Basic. &nbsp;See <a href="download.html">here</a>, or for a direct link select this link <a title="Click to download GCB@Syn.zip" class="name" href="http://sourceforge.net/projects/gcbasic/files/IDE/GCB%40Syn/GCB%40Syn.zip/download">GCB@Syn.zip</a>.<br><span style="font-weight: bold;"><br>13/5/2014<br></span>Another revision, a correction, to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
 &nbsp; New information added, please see
 the Change Section for more details. &nbsp; Hot Release updated to contain the latest Help File.<br><br><span style="font-weight: bold;">11/5/2014<br></span>Another revision to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
 &nbsp; New information added, please see
