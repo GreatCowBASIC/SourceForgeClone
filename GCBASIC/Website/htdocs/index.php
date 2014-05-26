@@ -88,7 +88,7 @@ News:</span></td>
 <td><span style="font-weight: bold;">26/5/2014<br></span>A new version
 of the&nbsp;GCB@Syn&nbsp; IDE for Great Cow Basic. &nbsp;This IDE is
 maintained by Frank
-Steinberg and this release now contains the Hot Release dated
+Steinberg and this release now contains the release dated
 13/05/2014. &nbsp;This contains all the latest drivers, Help File etc.
 &nbsp;This is a great way to get a complete download of Great Cow
 Basic. &nbsp;See <a href="download.html">here</a>, or for a direct link select this link <a title="Click to download GCB@Syn.zip" class="name" href="http://sourceforge.net/projects/gcbasic/files/IDE/GCB%40Syn/GCB%40Syn.zip/download">GCB@Syn.zip</a>.<br><span style="font-weight: bold;"><br>13/5/2014<br></span>Another revision, a correction, to the&nbsp;Great Cow&nbsp;Online Help, see&nbsp;<a href="help/">Online Help</a>.
