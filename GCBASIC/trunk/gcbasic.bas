@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 11/5/2014"
+Version = "0.9 16/6/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7578,7 +7578,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest)
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest + "_H")
 				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
-				CurrLine = LinkedListInsert(CurrLine, " goto " + Str(ILC))
+				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " incf " + Dest + ",F")
 				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 			ElseIf ModeAVR Then
@@ -7636,7 +7636,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest + "_U")
 				CurrLine = LinkedListInsert(CurrLine, " clrf " + Dest + "_E")
 				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
-				CurrLine = LinkedListInsert(CurrLine, " goto " + Str(ILC))
+				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " incf " + Dest + ",F")
 				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 			ElseIf ModeAVR Then
