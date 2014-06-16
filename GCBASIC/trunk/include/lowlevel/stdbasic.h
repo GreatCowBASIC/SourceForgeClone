@@ -159,6 +159,16 @@ macro PulseOutInv (Pin, Time)
 	Set Pin On
 end macro
 
+'PulseInInv
+macro PulseInInv (Pin, Variable, Units)
+	Variable = 0
+	Do While Pin = Off
+		Wait 1 Units
+		Variable += 1
+		If Variable = 0 Then Exit Do
+	Loop
+end macro
+
 'PulseIn
 macro PulseIn (Pin, Variable, Units)
 	Variable = 0
