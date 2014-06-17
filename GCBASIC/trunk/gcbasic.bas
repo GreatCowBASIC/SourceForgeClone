@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 16/6/2014"
+Version = "0.9 17/6/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1801,7 +1801,7 @@ Sub AddSysVarBits (CompSub As SubType Pointer)
 	Do While CurrLine <> 0
 		
 		TempData = CurrLine->Value
-		IF INSTR(TempData, ".") <> 0 THEN GOTO AddNextLineBits
+		IF INSTR(TempData, ".") <> 0 And InStr(TempData, "=") = 0 Then GOTO AddNextLineBits
 		IF Left(TempData, 1) = " " THEN GOTO AddNextLineBits
 		
 		'Only use for some commands
@@ -1819,11 +1819,14 @@ Sub AddSysVarBits (CompSub As SubType Pointer)
 		FOR SV = 1 TO SVBC
 			BitName = SysVarBits(SV).Name
 			IF WholeINSTR(UCase(TempData), UCase(BitName)) = 2 THEN
-				'PRINT DataSource
-				IF UCase(BitName) <> "DIR" AND Left(TempData, 4) <> "DIR " THEN
-					Replace CurrLine->Value, BitName, SysVarBits(SV).Parent + "." + BitName
-					GOTO AddNextLineBits
-				END IF
+				If Instr(UCase(TempData), "." + UCase(BitName)) = 0 Then
+					'Print "Found bit " + BitName + " in " + CurrLine->Value
+					'PRINT DataSource
+					IF UCase(BitName) <> "DIR" AND Left(TempData, 4) <> "DIR " THEN
+						Replace CurrLine->Value, BitName, SysVarBits(SV).Parent + "." + BitName
+						GOTO AddNextLineBits
+					END If
+				End If
 			END IF
 		NEXT
 		
@@ -4804,7 +4807,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 	
 	Dim As String InLine, Origin, Temp, ErrorOrigin
 	Dim As String LoopVar, StartValue, EndValue, StepValue, LoopVarType
-	Dim As Integer FL, CD
+	Dim As Integer FL, CD, StepIntVar
 	Dim As LinkedListElement Pointer CurrLine, FindLoop, LoopLoc
 	
 	CurrLine = CompSub->CodeStart->Next
@@ -4830,9 +4833,14 @@ SUB CompileFor (CompSub As SubType Pointer)
 			StartValue = Left(StartValue, INSTR(StartValue, Chr(30)) - 1)
 			EndValue = Mid(InLine, INSTR(InLine, Chr(30)) + 1)
 			StepValue = "1"
+			StepIntVar = 0
 			IF INSTR(InLine, Chr(31)) <> 0 THEN
 				EndValue = Left(EndValue, INSTR(EndValue, Chr(31)) - 1)
 				StepValue = Mid(InLine, INSTR(InLine, Chr(31)) + 1)
+				If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) = "INTEGER" Then
+					StepIntVar = -1
+					'Print "Found Integer step variable:" + StepValue
+				EndIf
 			END IF
 			'Print "For variable:"; LoopVar; " start:"; StartValue; " end:"; EndValue; " step:"; StepValue
 			
@@ -4846,7 +4854,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 			End If
 			
 			'Negate step value if necessary
-			IF VAL(EndValue) < VAL(StartValue) AND IsConst(EndValue) AND IsConst(StartValue) AND INSTR(StepValue, "-") = 0 THEN StepValue = "-" + StepValue
+			IF VAL(EndValue) < VAL(StartValue) AND IsConst(EndValue) AND IsConst(StartValue) AND (InStr(StepValue, "-") = 0 And Not StepIntVar) THEN StepValue = "-" + StepValue
 			
 			FLC = FLC + 1
 			FL = 1
@@ -4879,15 +4887,42 @@ SUB CompileFor (CompSub As SubType Pointer)
 			'Starting code
 			CurrLine->Value = LoopVar + "=" + StartValue + "-" + StepValue + Origin + "[ao]"
 			
+			'If StartValue or EndValue are variables, need to check values at runtime to see if loop should run
 			If Not IsConst(EndValue) Or Not IsConst(StartValue) Then
-				If INSTR(StepValue, "-") = 0 THEN
-					CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " > " + EndValue + " THEN" + Origin)
-				Else
+				'If Step is an integer variable, need to check +/- first
+				If StepIntVar Then
+					CurrLine = LinkedListInsert(CurrLine, "IF " + StepValue + ".15 = 1 THEN" + Origin)
 					CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " < " + EndValue + " THEN" + Origin)
+					IF ModePIC Then
+						CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
+					ElseIf ModeAVR Then
+						CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
+					End If
+					CurrLine = LinkedListInsert(CurrLine, "END IF")
+					CurrLine = LinkedListInsert(CurrLine, "ELSE" + Origin)
+					CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " > " + EndValue + " THEN" + Origin)
+					IF ModePIC Then
+						CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
+					ElseIf ModeAVR Then
+						CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
+					End If
+					CurrLine = LinkedListInsert(CurrLine, "END IF")
+					CurrLine = LinkedListInsert(CurrLine, "END IF")
+				'Step is a constant, check appropriately
+				Else
+					If INSTR(StepValue, "-") = 0 THEN
+						CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " > " + EndValue + " THEN" + Origin)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " < " + EndValue + " THEN" + Origin)
+					End If
+					IF ModePIC Then
+						CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
+					ElseIf ModeAVR Then
+						CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
+					End If
+					CurrLine = LinkedListInsert(CurrLine, "END IF")
 				End If
-				IF ModePIC Then CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
-				IF ModeAVR Then CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
-				CurrLine = LinkedListInsert(CurrLine, "END IF")
+				
 			End If
 			CurrLine = LinkedListInsert(CurrLine, "SysForLoop" + Str(FLC) + LabelEnd)
 			CurrLine = LinkedListInsert(CurrLine, LoopVar + "=" + LoopVar + "+" + StepValue + Origin)
@@ -4929,17 +4964,37 @@ SUB CompileFor (CompSub As SubType Pointer)
 			
 			Else
 				LoopLoc = LinkedListDelete(LoopLoc)
-				If INSTR(StepValue, "-") = 0 THEN
-					LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " < " + EndValue + " THEN" + Origin)
-				Else
+				If StepIntVar Then
+					LoopLoc = LinkedListInsert(LoopLoc, "IF " + StepValue + ".15 = 1 THEN" + Origin)
 					LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " > " + EndValue + " THEN" + Origin)
+					IF ModePIC Then
+						LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+					ElseIf ModeAVR Then
+						LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+					End If
+					LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+					LoopLoc = LinkedListInsert(LoopLoc, "ELSE" + Origin)
+					LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " < " + EndValue + " THEN" + Origin)
+					IF ModePIC Then
+						LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+					ElseIf ModeAVR Then
+						LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+					End If
+					LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+					LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+				Else
+					If INSTR(StepValue, "-") = 0 THEN
+						LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " < " + EndValue + " THEN" + Origin)
+					Else
+						LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " > " + EndValue + " THEN" + Origin)
+					End If
+					IF ModePIC Then
+						LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+					ElseIf ModeAVR Then
+						LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+					End If
+					LoopLoc = LinkedListInsert(LoopLoc, "END IF" + Str(FLC) + LabelEnd)
 				End If
-				IF ModePIC Then
-					LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
-				ElseIf ModeAVR Then
-					LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
-				End If
-				LoopLoc = LinkedListInsert(LoopLoc, "END IF" + Str(FLC) + LabelEnd)
 				
 				LoopLoc = LinkedListInsert(LoopLoc, "SysForLoopEnd" + Str(FLC) + LabelEnd)
 			End IF
@@ -6802,7 +6857,6 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				End If
 				
 				'Prepare sub call
-				'ExtractParameters(NewSubCall, ReplaceFnNames(FunctionName) + " " + ReplaceFnNames(FunctionParams), Origin)
 				ExtractParameters(NewSubCall, FunctionName + " " + FunctionParams, Origin)
 				With NewSubCall
 					.Called = Subroutine(CurrSub)
@@ -7439,6 +7493,11 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 					CurrLine = LinkedListInsert(CurrLine, " cbi " + DestVarName + "," + DestVarBit)
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
 					CurrLine = LinkedListInsert(CurrLine, " sbi " + DestVarName + "," + DestVarBit)
+					
+				ElseIf LCase(DestVarName) = "sreg" Then
+					CurrLine = LinkedListInsert(CurrLine, " cl" + LCase(Left(DestVarBit, 1)))
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
+					CurrLine = LinkedListInsert(CurrLine, " se" + LCase(Left(DestVarBit, 1)))
 					
 				Else
 					CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + DestVarName)
@@ -8382,14 +8441,14 @@ Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Ori
 			.CallSig = SubSig
 		End With
 		
-	Else
-		With NewSubCall
-			.Params = 0
-			.CallSig = ""
-		End With
+		Exit Sub
 	End If
-	NoSubParams:
 	
+	NoSubParams:
+	With NewSubCall
+		.Params = 0
+		.CallSig = ""
+	End With
 End Sub
 
 Sub FinalOptimise
