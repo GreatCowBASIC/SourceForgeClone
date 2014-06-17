@@ -32,7 +32,7 @@
 ' 09/5/2014: Remove more silly variable names. No functional changes
 ' 09/5/2014: Fixed circle and line to ensure cross device compatibility
 ' 11/5/2014: Revided to expose old line drawing routines
-
+' 17/6/2014: Revised to correct error in KS0108 PSET routine.
 
 'Initialisation routine
 #startup InitGLCD
@@ -747,8 +747,8 @@ Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 		'Origin in top left
 		
 		'Select screen half
-		If GLCDX.6 = Off Then Set GLCD_CS2 On
-		If GLCDX.6 = On Then Set GLCD_CS1 On: GLCDX -= 64
+		If GLCDX.6 = Off Then Set GLCD_CS2 On:Set GLCD_CS1 off
+		If GLCDX.6 = On Then Set GLCD_CS1 On: GLCDX -= 64: Set GLCD_CS2 off
 
 		'Select page
 		CurrPage = GLCDY / 8
