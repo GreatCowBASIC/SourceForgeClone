@@ -1440,6 +1440,8 @@ End Function
 
 Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
 	
+	'Print "Finding match for " + SubSigIn + " and " + CallSigIn
+	
 	Dim As Integer OutScore
 	Dim As String SubSig, CallSig
 	Dim As String CurrSub, CurrCall
