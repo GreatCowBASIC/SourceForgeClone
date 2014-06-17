@@ -56,7 +56,7 @@ Imports System.Threading
 		Public Const MaxTableElements As Integer = 255
 		
 		'Version constants
-		Public Const ProgVersion As String = "1.0 30/9/2013"
+		Public Const ProgVersion As String = "1.0 17/6/2014"
 		Public Const FileVersion As String = "20100130"
 		Public Const ShortVersion As String = "Version 1.0"
 		
@@ -1962,13 +1962,14 @@ Imports System.Threading
 			
 			If GetCurrentContainer Is Nothing Then Exit Sub
 			
-			'Do compile, and open .asm if successful
-			If Compile(0,, True) Then
-				Dim ViewASMCode As New System.Diagnostics.Process
-				ViewASMCode.StartInfo.FileName = "notepad.exe"
-				ViewASMCode.StartInfo.Arguments = GetCurrentProgram.FindGeneratedFile(".asm")
-				ViewASMCode.Start()
-			End If
+			'Do compile
+			Compile(0,, True)
+				
+			'Open .asm
+			Dim ViewASMCode As New System.Diagnostics.Process
+			ViewASMCode.StartInfo.FileName = "notepad.exe"
+			ViewASMCode.StartInfo.Arguments = GetCurrentProgram.FindGeneratedFile(".asm")
+			ViewASMCode.Start()
 			
 		End Sub
 		
