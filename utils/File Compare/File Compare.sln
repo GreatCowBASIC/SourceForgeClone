@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+# SharpDevelop 3.2.1.6466
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "File Compare", "File Compare.vbproj", "{B3F77F0B-0006-47C1-94BA-BE8A2627F563}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B3F77F0B-0006-47C1-94BA-BE8A2627F563}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3F77F0B-0006-47C1-94BA-BE8A2627F563}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3F77F0B-0006-47C1-94BA-BE8A2627F563}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3F77F0B-0006-47C1-94BA-BE8A2627F563}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+EndGlobal
