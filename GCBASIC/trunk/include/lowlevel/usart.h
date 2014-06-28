@@ -32,6 +32,7 @@
 ' 10/7/2013: Added USART_TX_BLOCKING option, fixes for chips with 2 modules
 ' 29/9/2013: Fixes for ATmega32u4
 ' 16/2/2104: Fixed HERPRINT Long Bug
+' 28/6/2014: Changed HSerPrintCRLF to have a parameter... you can have lots of CRLF's
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -52,12 +53,16 @@
 #define HserPrintByte HSerPrint
 Sub HserPrintByteCRLF(In PrintValue)
 	HSerPrint(PrintValue)
-	HSerPrintCRLF
+	HSerSend(13)
+          HSerSend(10)
 End Sub
-Sub HserPrintCRLF
+
+Sub HserPrintCRLF  ( Optional in HSerPrintCRLFCount = 1 )
+    repeat HSerPrintCRLFCount
 	HSerSend(13)
 	Wait USART_DELAY
 	HSerSend(10)
+    end Repeat
 End Sub
 
 'Script to calculate baud rate generator values
