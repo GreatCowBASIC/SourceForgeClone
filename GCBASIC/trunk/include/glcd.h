@@ -33,6 +33,7 @@
 ' 09/5/2014: Fixed circle and line to ensure cross device compatibility
 ' 11/5/2014: Revided to expose old line drawing routines
 ' 17/6/2014: Revised to correct error in KS0108 PSET routine.
+' 28/6/2104: Revised GLCDDrawString.  Xpos was always 1 extra pixel to right.
 
 'Initialisation routine
 #startup InitGLCD
@@ -125,8 +126,6 @@ GLCD_yordinate = 0
 'Foreground and background colours
 Dim GLCDBackground As Word
 Dim GLCDForeground As Word
-
-
 
 'Subs
 '''Clears the GLCD screen
@@ -289,7 +288,9 @@ End Sub
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour = GLCDForeground )
     for xchar = 1 to Chars(0)
-      TargetCharCol = StringLocX + (1+(xchar*GLCDFontWidth)-GLCDFontWidth)
+      ' June 2014
+      ' Corrected error X calcaluation. It was adding an Extra 1!
+      TargetCharCol = StringLocX + ((xchar*GLCDFontWidth)-GLCDFontWidth)
       GLCDDrawChar TargetCharCol , CharLocY , Chars(xchar), LineColour
     next
 end sub
