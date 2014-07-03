@@ -38,7 +38,7 @@ GCBASIC</a><br>
 <a href="examples.html">Example Programs</a><br>
 <br>
 <a href="usingforum.html">Making Forum posts</a><br>
-<a href="http://sourceforge.net/forum/?group_id=169286">Link
+<a href="https://sourceforge.net/p/gcbasic/discussion/?source=navbar">Link
 to&nbsp;Forum</a><br>
 <br>
 <a href="download.html">Downloads</a><br>
@@ -85,7 +85,11 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">26/5/2014<br></span>A new version
+<td><span style="font-weight: bold;">3/7/2014 &nbsp;</span>New&nbsp; support for&nbsp;
+EEPROMs and improved&nbsp; I2Csupport&nbsp; via the MSSP hardware module.&nbsp; The
+new include EEPROM.H generalise with parameters to allow connection to
+multiple EEPROMs simultaneously and the revised HI2C.H file improves
+the I2C support by use of the MSSP module.<br><br>The new EPPROM.H file<br>&#8226;removes unneeded or redundant code<br>&#8226;greatly condensed the array write command in particular<br>&#8226;renamed page commands to reflect they are actually array/string commands<br>&#8226;reduced local variables to only two bytes<br>&#8226;commented the code throughout to make improvements easier<br>&#8226;eliminated reliance on the "Utils.h" include file<br>&#8226;renamed parameters to be consistent, but still not clash with user program variables<br><br>Great job&nbsp; - Thomas Henry and Anobium<span style="font-weight: bold;"><br><span style="font-weight: bold;"><span style="font-weight: bold;"></span></span><br><br>26/5/2014<br></span>A new version
 of the&nbsp;GCB@Syn&nbsp; IDE for Great Cow Basic. &nbsp;This IDE is
 maintained by Frank
 Steinberg and this release now contains the release dated
@@ -182,9 +186,8 @@ contact <a href="mailto:w_cholmondeley@removethis.users.sourceforge.net">Hugh
 Considine</a> if you have any queries regarding this page.</small><br>
 </div>
 <div style="text-align: center; font-family: Arial; background-color: white;"><small>
-Page Count <?php include "counter.php"; ?></small>
+Page Count <php title="include &quot;counter.php&quot;; " xmlns="http://disruptive-innovations.com/zoo/nvu"><img src="chrome://editor/content/images/tag-PHP.gif"><?php include "counter.php"; ?></php></small>
 <br>
 <small>This site is freely hosted by SourceForge.net</small><br>
 <small>
-<a href="http://sourceforge.net/"><img style="border: 0px solid ; width: 88px; height: 31px;" alt="SourceForge.net Logo" src="http://sflogo.sourceforge.net/sflogo.php?group_id=169286&amp;type=1"></a></small></div>
-</body></html>
+<a href="http://sourceforge.net/"><img style="border: 0px solid ; width: 88px; height: 31px;" alt="SourceForge.net Logo" src="http://sflogo.sourceforge.net/sflogo.php?group_id=169286&amp;type=1"></a></small></div></body></html>
