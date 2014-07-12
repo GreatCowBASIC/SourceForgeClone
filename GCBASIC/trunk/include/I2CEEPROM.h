@@ -1,7 +1,7 @@
 ;I2C EEPROM Include File
 ;Thomas Henry                 --- 5/29/2014
 ;Evan R.  Venn Revised        --- 6/28/2014 - Correct parameter    eeprom_rd _array to IN
-;Evan R.  Venn Revised        --- 7/3/2014 - Added Hardware I2C Support
+;Evan R.  Venn Revised        --- 7/3/2014 - Added Hardware I2C Support and correct NACK error
 '    added references to function to add wr_string and rd_string
 '    eeprom_wr_array
 '    eeprom_wr_string
@@ -64,7 +64,7 @@
 sub eeprom_wr_byte (in eepDev as byte, in eepAddr as word, in eepromVal as byte)
   ;write a single byte to an address
 
-  if HI2CCurrentMode <> 0 then
+  #ifdef HI2C_DATA
       do
         HI2CReStart                              ;generate a start signal
         HI2CSend(eepDev)                       ;inidcate a write
@@ -73,22 +73,24 @@ sub eeprom_wr_byte (in eepDev as byte, in eepAddr as word, in eepromVal as byte)
       HI2CSend(eepAddr)
       HI2CSend(eepromVal)                    ;then the value
       HI2CStop
-  else
+  #endif
+
+  #ifdef I2C_DATA
       I2CStart                              ;generate a start signal
       I2CSend(eepDev)                       ;indicate a write
       I2CSend(eepAddr_H)                    ;send address as two bytes
       I2CSend(eepAddr)
       I2CSend(eepromVal)                    ;then the value
       I2CStop
-      I2CAckPoll(eepDev)                    ;confirm it has taken
-  end if
+      I2CAckPoll(eepDev)		    ;confirm operation has completed 	
+  #endif
 end sub
 
 ;-----
 
 sub eeprom_rd_byte(in eepDev as byte, in eepAddr as word, out eepromVal as byte )
   ;read a single byte from an address
-  if HI2CCurrentMode <> 0 then
+  #ifdef HI2C_DATA
       do
         HI2CReStart                              ;generate a start signal
         HI2CSend(eepDev)                       ;inidcate a write
@@ -97,25 +99,29 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as word, out eepromVal as byte 
       HI2CSend(eepAddr)
       HI2CReStart
       HI2CSend(eepDev + 1)                   ;set the read flag
-      HI2CReceive(eepromVal)           ;read one byte and conclude
+      HI2CReceive(eepromVal, NACK)           ;read one byte and conclude
       HI2CStop
-  else
+  #endif
+
+  #ifdef I2C_DATA
       I2CStart                              ;generate a start signal
       I2CSend(eepDev)                       ;inidcate a write
       I2CSend(eepAddr_H)                    ;send address as two bytes
       I2CSend(eepAddr)
-      I2CStart
+      I2CReStart
       I2CSend(eepDev + 1)                   ;set the read flag
       I2CReceive(eepromVal, NACK)           ;read one byte and conclude
       I2CStop
-  end if
+  #endif
 end sub
 
 ;-----
 #define eeprom_wr_string eeprom_wr_array
 sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as word, in eepArray() as byte, in eepLen as byte)
   ;write array/string to EEPROM, starting at specified address
-  if HI2CCurrentMode <> 0 then
+
+  #ifdef HI2C_DATA
+
       do
         HI2CReStart                              ;generate a start signal
         HI2CSend(eepDev)                       ;inidcate a write
@@ -138,8 +144,10 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
       next i
 
       HI2CStop                               ;could be redundant in one
+  #endif
 
-  else
+  #ifdef I2C_DATA
+
       I2CStart                              ;generate a start signal
       I2CSend(eepDev)                       ;indicate the device
       I2CSend(eepAddr_H)                    ;and the start address
@@ -151,23 +159,23 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
         if (eepAddr mod eepPageSize) = 0 then ;end of page
           I2CStop                           ;so, lock in place
           I2CAckPoll(eepDev)                ;wait for buffer write
-          I2CStart                          ;generate a start signal
+          I2CReStart                        ;generate a start signal
           I2CSend(eepDev)                   ;indicate a write
           I2CSend(eepAddr_H)                ;send next page address
           I2CSend(eepAddr)
         end if
       next i
 
-      I2CStop                               ;could be redundant in one
-      I2CAckPoll(eepDev)                    ;case, but shouldn't hurt.
-  end if
+      I2CStop                               
+      I2CAckPoll(eepDev)                    ;wait for buffer write	
+  #endif
 end sub
 
 ;-----
 #define eeprom_rd_string eeprom_rd_array
 sub eeprom_rd_array(in eepDev as byte, in eepAddr as word, out eepArray() as byte, in eepLen as byte)
   ;Read an entire array/string from EEPROM
-    if HI2CCurrentMode <> 0 then
+    #ifdef HI2C_DATA
         do
           HI2CReStart                              ;generate a start signal
           HI2CSend(eepDev)                       ;inidcate a write
@@ -188,12 +196,14 @@ sub eeprom_rd_array(in eepDev as byte, in eepAddr as word, out eepArray() as byt
           eep_i++                             ;get set for next
         loop
         HI2CStop
-    else
+    #endif
+
+    #ifdef I2C_DATA
         I2CStart                              ;generate a start signal
         I2CSend(eepDev)                       ;send address of start
         I2CSend(eepAddr_H)                    ;as two bytes
         I2CSend(eepAddr)
-        I2CStart
+        I2CReStart
         I2CSend(eepDev + 1)                   ;indicate a read
 
         eep_i = 0                             ;loop consecutively
@@ -207,5 +217,7 @@ sub eeprom_rd_array(in eepDev as byte, in eepAddr as word, out eepArray() as byt
           eep_i++                             ;get set for next
         loop
         I2CStop
-    end if
+    #endif
 end sub
+
+
