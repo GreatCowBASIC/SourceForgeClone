@@ -3,6 +3,7 @@
 ;Evan R.  Venn Revised        --- 6/28/2014 - Correct parameter    eeprom_rd _array to IN
 ;Evan R.  Venn Revised        --- 7/3/2014 - Added Hardware I2C Support.  This simply detects your configuration variable I2C_DATA or HI2C_DATA
 ;Evan R.  Venn Revised        --- 7/12/2014 - Added Support for Byte address EEPROMs
+'Evan R.  Venn Revised        --- 7/13/2014  - Resolved issue with byte address.  Needed to add systemp to calculate next page, else, compile error.
 
 '    added references to function to add wr_string and rd_string
 '    eeprom_wr_array
@@ -146,7 +147,7 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as word, out eepromVal as byte 
   #endif
 end sub
 
-;------ Byte support for larger memory devices
+;------ Byte support for smller memory devices
 sub eeprom_rd_byte(in eepDev as byte, in eepAddr as byte, out eepromVal as byte )
   ;read a single byte from an address
   #ifdef HI2C_DATA
@@ -189,7 +190,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
       for eep_i = 1 to eepLen
         HI2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        if (eepAddr mod eepPageSize) = 0 then ;end of page
+        systemp = eepAddr mod eepPageSizeb  ; calculate next page
+        if systemp = 0 then ;end of page
           HI2CStop                           ;so, lock in place
           do
             HI2CReStart                              ;generate a start signal
@@ -213,7 +215,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
       for eep_i = 1 to eepLen
         I2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        if (eepAddr mod eepPageSize) = 0 then ;end of page
+        systemp = eepAddr mod eepPageSizeb  ; calculate next page
+        if systemp = 0 then ;end of page
           I2CStop                           ;so, lock in place
           I2CAckPoll(eepDev)                ;wait for buffer write
           I2CReStart                          ;generate a start signal
@@ -228,8 +231,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
   #endif
 end sub
 
-;------ Byte support for larger memory devices
-sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byte, in eepArray() as byte, in eepLen as byte)
+;------ Byte support for smaller memory devices
+sub eeprom_wr_array(in eepDev as byte, in eepPageSizeb as byte, in eepAddr as byte, in eepArray() as byte, in eepLen as byte)
   ;write array/string to EEPROM, starting at specified address
 
   #ifdef HI2C_DATA
@@ -238,12 +241,13 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
         HI2CReStart                              ;generate a start signal
         HI2CSend(eepDev)                       ;inidcate a write
       loop While HI2CAckPollState
-      HI2CSend(eepAddr)                      ;as two bytes
+      HI2CSend(eepAddr)                      ;as one byte
 
       for eep_i = 1 to eepLen
         HI2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        if (eepAddr mod eepPageSize) = 0 then ;end of page
+        systemp = eepAddr mod eepPageSizeb
+        if systemp  = 0 then                    ;end of page
           HI2CStop                           ;so, lock in place
           do
             HI2CReStart                              ;generate a start signal
@@ -265,7 +269,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
       for eep_i = 1 to eepLen
         I2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        if (eepAddr mod eepPageSize) = 0 then ;end of page
+        systemp = eepAddr mod eepPageSizeb  ; calculate next page
+        if systemp = 0 then ;end of page
           I2CStop                           ;so, lock in place
           I2CAckPoll(eepDev)                ;wait for buffer write
           I2CReStart                          ;generate a start signal
