@@ -106,6 +106,16 @@ Imports System.Collections.Generic
 				Exit Sub
 			End If
 			
+			'If no pins, show error
+			If CurrentChip.PinCount = 0 Then
+				Dim errMsg As String = "No chip diagram can be shown due to an error in the chip data (pins = 0)"
+				
+				errMsg = LowLevel.SplitToFit(errMsg, labelFont, g, Me.Size.Width - 8)
+				Dim labelSize As SizeF = g.MeasureString(errMsg, labelFont)
+				g.DrawString(errMsg, labelFont, labelBrush, (Me.Size.Width - labelSize.Width) / 2, (Me.Size.Height - labelSize.Height) / 2)
+				Exit Sub
+			End If
+			
 			'Make sure control is big enough
 			If Me.Size.Width < pinNameWidth * 2 + 40 Or Me.Size.Height < 40 Then
 				Dim errMsg As String = "Not enough space"
