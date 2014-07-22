@@ -333,7 +333,7 @@ SUB AssembleProgram
 	Dim As Integer RP1, DWC, RSC, DWIC, SS, CS, RepeatBanksel, B, FB, RepeatPagesel
 	Dim As Integer PRC, KeepReplacing, AW, PB, FP, PVT, TBT, HT, PV
 	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, CHA, DataBlockSize
-	Dim As Long CL, OA, FRA
+	Dim As LongInt CL, OA, FRA
 	Dim As Integer CurrCmd
 	
 	Dim As Single CurrPerc, PercAdd, PercOld
