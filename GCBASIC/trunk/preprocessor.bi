@@ -1033,14 +1033,30 @@ SUB PreProcessor
 					
 					With DataTable(DataTables) 
 						
-						'Check that data can be stored in table, upgrade table if it can't
-						'Print .Type, DataSource, TypeOfValue(DataSource, 0)
-						If CastOrder(TypeOfValue(DataSource, 0)) > CastOrder(.Type) Then
-							.Type = TypeOfValue(DataSource, 0)
-						End If
+						'Split line at commas
+						Temp = DataSource
+						T = -1
+						Do While T
+							If InStr(Temp, ",") <> 0 Then
+								Value = RTrim(Left(Temp, InStr(Temp, ",") - 1))
+								Temp = LTrim(Mid(Temp, InStr(Temp, ",") + 1))
+							Else
+								Value = Temp
+								T = 0
+							End If
+							
+							'Check that data can be stored in table, upgrade table if it can't
+							'Print .Type, DataSource, TypeOfValue(DataSource, 0)
+							If CastOrder(TypeOfValue(Value, 0)) > CastOrder(.Type) Then
+								.Type = TypeOfValue(Value, 0)
+							End If
+							
+							.Items += 1
+							.Item(.Items) = MakeDec(Value)
+							
+						Loop
 						
-						.Items += 1
-						.Item(.Items) = MakeDec(DataSource)
+						
 					End With
 				
 				'Not in data table, not in sub or forced to main, so store in main
