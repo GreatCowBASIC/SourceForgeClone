@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 22/7/2014"
+Version = "0.9 23/7/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3037,14 +3037,13 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 			
 			'Add W to V1, store - C already added, or 18F and no C
 			If (ChipFamily <> 15 And ChipFamily <> 16) Or Not CheckCarry Then
-				If V1 <> AV Or IsConst(V1) Then
-					IF Act = "+" THEN CurrLine = LinkedListInsert(CurrLine, " addwf " + CurrV1 + ",W")
-					IF Act = "-" Then
-						If IsConst(CurrV1) Then
-							CurrLine = LinkedListInsert(CurrLine, " sublw " + CurrV1)
-						Else
-							CurrLine = LinkedListInsert(CurrLine, " subwf " + CurrV1 + ",W")
-						End If
+				If V1 <> AV Or IsConst(CurrV1) Then
+					If IsConst(CurrV1) Then
+						If Act = "+" And CurrV1 <> "0" Then CurrLine = LinkedListInsert(CurrLine, " addlw " + CurrV1)
+						If Act = "-" Then CurrLine = LinkedListInsert(CurrLine, " sublw " + CurrV1)
+					Else
+						If Act = "+" Then CurrLine = LinkedListInsert(CurrLine, " addwf " + CurrV1 + ",W")
+						If Act = "-" Then CurrLine = LinkedListInsert(CurrLine, " subwf " + CurrV1 + ",W")
 					End If
 					CurrLine = LinkedListInsert(CurrLine, " movwf " + GetByte(AV, CurrVarByte))
 				Else
