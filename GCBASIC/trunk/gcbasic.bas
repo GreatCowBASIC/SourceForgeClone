@@ -568,7 +568,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 23/7/2014"
+Version = "0.9 25/7/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -14210,6 +14210,7 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
 
 
 

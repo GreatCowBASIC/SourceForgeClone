@@ -297,12 +297,12 @@ ENDEXPONENT:
 
 	'Find Division and Multiplication
 	DIVMULT:
-	IF INSTR(SUM, "/") = 0 AND INSTR(SUM, "*") = 0 AND INSTR(SUM, "x") = 0 THEN GOTO ENDDIVMULT
+	IF INSTR(SUM, "/") = 0 AND INSTR(SUM, "*") = 0 THEN GOTO ENDDIVMULT
 	FD = 0
 	FINDDIV:
 	FD = FD + 1
 	Temp = Mid(SUM, FD, 1)
-	IF Temp <> "/" AND Temp <> "*" AND Temp <> "x" THEN GOTO FINDDIV
+	IF Temp <> "/" AND Temp <> "*" THEN GOTO FINDDIV
 	Act = Temp: AP = FD
 	
 	FOR FS = AP - 1 TO 1 STEP -1
@@ -386,7 +386,7 @@ IF INSTR(N2S, "#") <> 0 THEN N2S = Left(N2S, INSTR(N2S, "#") - 1)
 
 N2 = VAL(N2S)
 OS = N1S + Act + N2S
-DO WHILE INSTR(OS, " ") <> 0
+Do WHILE INSTR(OS, " ") <> 0
 	Replace OS, " ", ""
 LOOP
 
