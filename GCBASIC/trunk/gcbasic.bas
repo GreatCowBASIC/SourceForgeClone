@@ -491,7 +491,6 @@ Dim Shared Subroutine(10000) As SubType Pointer: SBC = 0
 
 'Processing Arrays
 DIM SHARED gcDEF(1000, 1 TO 3) As String: DFC = 0
-'Dim SHARED gcINC(100, 1 TO 2) As String: ICC = 0
 Dim Shared SourceFile(100) As SourceFileType: SourceFiles = 0
 DIM SHARED TempData(300) As String
 DIM SHARED CheckTemp(300) As String
@@ -568,7 +567,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 25/7/2014"
+Version = "0.9 3/8/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2801,6 +2800,9 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 	DestType = TypeOfVar(Answer, Subroutine(DestSub))
 	CalcType = DestType
 	
+	'Remove cast from output var
+	Answer = DelType(Answer)
+	
 	'Get output var
 	AV = Answer
 	'Print "Calculating " + AV + " = " + V1 + " " + Act + " " + V2
@@ -3156,6 +3158,9 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 	V1 = DelType(V1): V2 = DelType(V2)
 	V1O = V1: V2O = V2
 	
+	'Remove cast from output var
+	Answer = DelType(Answer)
+	
 	'Generate asm code for sum
 	
 	'Special shortcut code for bit test
@@ -3277,6 +3282,9 @@ FUNCTION CompileCalcLogic (OutList As CodeSection Pointer, V1 As String, Act As 
 	V2Type = TypeOfValue(V2, Subroutine(SourceSub))
 	DestType = TypeOfVar(Answer, Subroutine(DestSub))
 	CalcType = DestType
+	
+	'Remove cast from output var
+	Answer = DelType(Answer)
 	
 	'Check types
 	If V1Type = "SINGLE" Or V1Type = "STRING" Then
@@ -3479,6 +3487,9 @@ FUNCTION CompileCalcMult (OutList As CodeSection Pointer, V1 As String, Act As S
 	V1 = DelType(V1): V2 = DelType(V2)
 	V1O = V1: V2O = V2
 	
+	'Remove cast from output var
+	Answer = DelType(Answer)
+	
 	'Get output var
 	If DestType = CalcType Then
 		AV = Answer
@@ -3636,6 +3647,9 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 	DestType = TypeOfVar(Answer, Subroutine(DestSub))
 	CalcType = DestType
 	V2 = DelType(V2)
+	
+	'Remove cast from output var
+	Answer = DelType(Answer)
 	
 	'If op is negate, return an integer
 	If Act = "-" And CastOrder(CalcType) < CastOrder("INTEGER") Then CalcType = "INTEGER"
@@ -5647,10 +5661,10 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 			  					Else
 									If LargeTable Then
 										AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(TableLoc, "[word]SysStringA", Origin))
+										CurrLine = LinkedListInsert(CurrLine, "[word]SysStringA=" + TableLoc)
 									Else
 										AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(TableLoc, "[byte]SysStringA", Origin))
+										CurrLine = LinkedListInsert(CurrLine, "[byte]SysStringA=" + TableLoc)
 									End If
 									
 					  				CurrLine = LinkedListInsert(CurrLine, " call " + GetByte(TableName, CurrTableByte - 1))
@@ -5680,13 +5694,12 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 			  						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("0", "[BYTE]" + GetByte(OutVar, CurrTableByte - 1), Origin))
 			  					Else
 					  				AddVar("SysByteTempX", "BYTE", 1, CompSub, "REAL", Origin)
-					  				'CurrLine = LinkedListInsert(CurrLine, "SysValueCopy=" + TableLoc)
-			  						If LargeTable Then
+					  				If LargeTable Then
 										AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(TableLoc, "[word]SysStringA", Origin))
+										CurrLine = LinkedListInsert(CurrLine, "[word]SysStringA=" + TableLoc)
 									Else
 										AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(TableLoc, "[byte]SysStringA", Origin))
+										CurrLine = LinkedListInsert(CurrLine, "[byte]SysStringA=" + TableLoc)
 									End If
 					  				CurrLine = LinkedListInsert(CurrLine, " call " + GetByte(TableName, CurrTableByte - 1))
 					  				CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("SysByteTempX", "[BYTE]" + GetByte(OutVar, CurrTableByte - 1), Origin))
