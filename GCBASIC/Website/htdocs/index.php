@@ -85,7 +85,9 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">3/7/2014 &nbsp;</span>New&nbsp; support for&nbsp;
+<td><span style="font-weight: bold;">11/8/2014</span> Word of Great Cow
+Basic is getting out there. &nbsp;Hobby Components have now listed GCB as a
+development solution with a nice supporting guide. &nbsp;See <a href="http://forum.hobbycomponents.com/viewtopic.php?f=59&amp;t=1688">this link</a> for the&nbsp;Great Cow Basic Development Environment Quick Start Guide. <br><br><span style="font-weight: bold;">3/7/2014 &nbsp;</span>New&nbsp; support for&nbsp;
 EEPROMs and improved&nbsp; I2Csupport&nbsp; via the MSSP hardware module.&nbsp; The
 new include EEPROM.H generalise with parameters to allow connection to
 multiple EEPROMs simultaneously and the revised HI2C.H file improves
