@@ -922,14 +922,6 @@ SUB AssembleProgram
 				TempData(CD) = Str(ConfigMask(CD))
 			NEXT
 			
-			'Add default settings where needed
-			FOR CD = 1 TO DCOC
-				ConfName = Left(DefCONFIG(CD), INSTR(DefCONFIG(CD), "=") - 1)
-				If WholeINSTR(OutConfig(1), ConfName) <> 2 THEN
-					OutConfig(1) = OutConfig(1) + ", " + DefCONFIG(CD)
-				END IF
-			NEXT
-			
 			'Split up OutConfig(1), store in CheckTemp()
 			DataSource = OutConfig(1)
 			T = 0
@@ -942,6 +934,24 @@ SUB AssembleProgram
 				T += 1
 				CheckTemp(T) = DataSource
 			END IF
+			
+			'Add default settings where needed
+			'Check every default setting
+			FOR CD = 1 TO DCOC
+				ConfName = Left(DefCONFIG(CD), INSTR(DefCONFIG(CD), "=") - 1)
+				'Is setting overriden anywhere?
+				For PD = 1 to T
+					If ConfigNameMatch(CheckTemp(PD), ConfName) Then
+						'Yes, setting overridden
+						GoTo ApplyNextDefault
+					End If
+				Next
+				
+				'Add default, since it is not overridden
+				T += 1
+				CheckTemp(T) = DefConfig(CD)
+				ApplyNextDefault:
+			Next
 			
 			'Process values
 			FOR PD = 1 to T

@@ -121,6 +121,12 @@ Sub PrepareBuiltIn
 	End If
 	If ModeZ8 Then DFC = DFC + 1: gcDEF(DFC, 1) = "Z8": gcDEF(DFC, 2) = ""
 	
+	'Constant to give chip name as string
+	SSC = SSC + 1
+	StringStore(SSC).Value = ChipName
+	StringStore(SSC).Used = 0
+	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPNAMESTR": gcDEF(DFC, 2) = ";STRING" + Str(SSC) + ";"
+	
 	'Constants to provide information on RAM banks
 	Dim As String TempData
 	Dim As Integer Range, Min, Max
