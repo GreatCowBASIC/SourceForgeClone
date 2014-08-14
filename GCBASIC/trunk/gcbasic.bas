@@ -9821,12 +9821,13 @@ Sub GetEqConfig
 		CurrLoc = LinkedListInsert(CurrLoc, "INTRC")
 		CurrLoc = LinkedListInsert(CurrLoc, "INTIO")
 		
-		'BODEN/BOREN/BOD
+		'BODEN/BOREN/BOD/BOR
 		CurrLoc = LinkedListCreate
 		EqSettingsLoc = LinkedListInsert(EqSettingsLoc, CurrLoc)
 		CurrLoc = LinkedListInsert(CurrLoc, "BODEN")
 		CurrLoc = LinkedListInsert(CurrLoc, "BOREN")
 		CurrLoc = LinkedListInsert(CurrLoc, "BOD")
+		CurrLoc = LinkedListInsert(CurrLoc, "BOR")
 		
 		'WDT/WDTEN
 		CurrLoc = LinkedListCreate
@@ -9840,6 +9841,12 @@ Sub GetEqConfig
 		EqSettingsLoc = LinkedListInsert(EqSettingsLoc, CurrLoc)
 		CurrLoc = LinkedListInsert(CurrLoc, "PWRT")
 		CurrLoc = LinkedListInsert(CurrLoc, "PWRTE")
+		
+		'CCP1/CCPMX
+		CurrLoc = LinkedListCreate
+		EqSettingsLoc = LinkedListInsert(EqSettingsLoc, CurrLoc)
+		CurrLoc = LinkedListInsert(CurrLoc, "CCP1")
+		CurrLoc = LinkedListInsert(CurrLoc, "CCPMX")
 		
 	End If
 	
