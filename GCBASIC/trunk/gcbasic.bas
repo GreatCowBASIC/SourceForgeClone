@@ -5859,8 +5859,15 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 			EndLoc = 0
 			FindEnd = CurrLine->Next
 			Do While FindEnd <> 0
-				IF Left(FindEnd->Value, 7) = "REPEAT " THEN RL += 1
-				IF Left(FindEnd->Value, 10) = "END REPEAT" THEN RL -= 1
+				IF Left(FindEnd->Value, 7) = "REPEAT " Then
+					RL += 1
+				ElseIf Left(FindEnd->Value, 10) = "END REPEAT" Then
+					RL -= 1
+				ElseIf Left(FindEnd->Value, 11) = "EXIT REPEAT" AND RL = 1 Then
+					IF ModePIC Then FindEnd->Value = " goto SysRepeatLoopEnd" + Str(RPLC)
+					IF ModeAVR Then FindEnd->Value = " rjmp SysRepeatLoopEnd" + Str(RPLC)
+				End If
+				
 				IF RL = 0 THEN EndLoc = FindEnd: Exit Do
 				FindEnd = FindEnd->Next
 			Loop
