@@ -567,7 +567,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 14/8/2014"
+Version = "0.9 16/8/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3506,9 +3506,15 @@ FUNCTION CompileCalcMult (OutList As CodeSection Pointer, V1 As String, Act As S
 		GOTO MultDivAnswer
 	END IF
 	
+	'If multiply, make sure V2 is the constant
+	If Act = "*" And IsConst(V1) And (Not IsConst(V2)) Then
+		Swap V1, V2
+		Swap V1O, V2O
+		Swap V1Type, V2Type
+	End If
+	
 	'Simplifications
-	If Act = "*" And (V1 = "0" Or V2 = "0") Then AV = "0": Goto MultDivAnswer
-	If Act = "*" And V1 = "1" Then AV = V2: Goto MultDivAnswer
+	If Act = "*" And V2 = "0" Then AV = "0": Goto MultDivAnswer
 	If (Act = "*" OR Act = "/") And V2 = "1" Then AV = V1: Goto MultDivAnswer
 	If (Act = "/" Or Act = "%") And V1 = "0" Then AV = "0": Goto MultDivAnswer
 	
@@ -8005,7 +8011,7 @@ SUB CompileVars (CompSub As SubType Pointer)
 						Loop
 						'Change destination of last operation
 						Temp = FindLine->Prev->Value
-						IF WholeINSTR(Temp, DelType(DestVar)) = 2 AND INSTR(Temp, "wf") <> 0 And INSTR(Temp, " movwf ") = 0 THEN
+						IF WholeINSTR(Temp, DelType(DestVar)) = 2 AND INSTR(Temp, "wf") <> 0 And INSTR(Temp, " movwf ") = 0 And INSTR(Temp, " mulwf ") = 0 Then
 							FindLine = LinkedListDelete(FindLine)
 							Replace FindLine->Value, ",W", ",F"
 						END If
