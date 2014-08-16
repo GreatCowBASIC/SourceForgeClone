@@ -34,6 +34,8 @@
 ' 11/5/2014: Revided to expose old line drawing routines
 ' 17/6/2014: Revised to correct error in KS0108 PSET routine.
 ' 28/6/2104: Revised GLCDDrawString.  Xpos was always 1 extra pixel to right.
+' 14/8/2104: Removed GLCDTimeDelay to improve timing and a tidy up.
+
 
 'Initialisation routine
 #startup InitGLCD
@@ -119,8 +121,7 @@
 ' Do not remove.
 #define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
 dim GLCD_yordinate as integer
-' initialise variable
-GLCD_yordinate = 0
+
 
 
 'Foreground and background colours
@@ -130,6 +131,8 @@ Dim GLCDForeground As Word
 'Subs
 '''Clears the GLCD screen
 Sub GLCDCLS
+          ' initialise variable
+          GLCD_yordinate = 0
 
           #if GLCD_TYPE = GLCD_TYPE_ST7920
               if GLCD_TYPE_ST7920_GRAPHICS_MODE  = true then
@@ -233,7 +236,7 @@ Sub GLCDPrint(In PrintLocX, In PrintLocY, in LCDPrintData as string )
 	             ST7920WriteByte( col )
 
                 else
-                   GLCDDrawChar PrintLocX, PrintLocY, LCDPrintData
+                   GLCDDrawString PrintLocX, PrintLocY, LCDPrintData
                    exit sub
                 end if
 
@@ -925,9 +928,9 @@ Sub ST7920WriteByte( In GLCDByte )
                         ' retry on failure
                         if    GLCD_DATA_PORT <> GLCDByte then GLCD_DATA_PORT = GLCDByte
                         set GLCD_Enable on
-                        GLCDTimeDelay
+                        wait ST7920WriteDelay us
                         set GLCD_Enable off
-                        GLCDTimeDelay
+                        wait ST7920WriteDelay us
 		#ENDIF
 
                     #IFDEF GLCD_LAT
@@ -936,9 +939,9 @@ Sub ST7920WriteByte( In GLCDByte )
                         ' retry on failure
                         if latd <> GLCDByte then latd = GLCDByte
                         set GLCD_Enable on
-                        GLCDTimeDelay
+                        wait ST7920WriteDelay us
                         set GLCD_Enable off
-                        GLCDTimeDelay
+                        wait ST7920WriteDelay us
 		#ENDIF
 	#ENDIF
 	
@@ -1303,7 +1306,6 @@ Function ST7920GLCDReadByte
 	Set GLCD_ENABLE On
           Wait ST7920ReadDelay us
 
-
           'Get input data
           #IFNDEF GLCD_LAT
 	        ST7920GLCDReadByte = GLCD_DATA_PORT
@@ -1501,24 +1503,18 @@ function GLCDReady
                                   GLCDReady = FALSE
                                   GLCD_RSTemp = GLCD_RS
     			
-                                '  SET GLCD_RW ON
-                                '  SET GLCD_RS OFF
-
                                   SET GLCD_RW ON
                                   SET GLCD_RS OFF
-                                  'Wait 1 us
-                             '     set GLCD_DB7 off
-                                  set latd.7 off
-                             '     SET GLCD_Enable ON
+                                  set GLCD_DATA_PORT.7 off
+
                                   SET GLCD_Enable ON
-                                  'wait 2 us
 
                                   #IFDEF GLCD_IO 8
     				
                                             #IFNDEF GLCD_LAT
                                                    dir GLCD_DATA_PORT.7 IN
-                                                   'SE7T GLCD_Enable ON
-                                                   GLCDTimeDelay
+
+                                                   wait ST7920WriteDelay us
                                                    if GLCD_DATA_PORT.7 =  OFF THEN
                                                      GLCDReady = TRUE
                                                      dir GLCD_DATA_PORT.7 OUT
@@ -1529,8 +1525,7 @@ function GLCDReady
                                             #ENDIF
                                             #IFDEF GLCD_LAT
                                                    dir _GLCD_DATA_PORT.7 IN
-                                                   'SE7T GLCD_Enable ON
-                                                   GLCDTimeDelay
+                                                   wait ST7920WriteDelay us
                                                    if _GLCD_DATA_PORT.7 =  OFF THEN
                                                      GLCDReady = TRUE
                                                      dir _GLCD_DATA_PORT.7 OUT
@@ -1542,7 +1537,8 @@ function GLCDReady
 
                                   #ENDIF
                                   SET GLCD_Enable OFF
-                                  GLCDTimeDelay
+                                  wait ST7920WriteDelay us
+                                  wait ST7920WriteDelay us
                                   GLCD_RS = GLCD_RSTemp
                         #ENDIF
               #ENDIF
@@ -2428,9 +2424,5 @@ Table GLCDCharCol7
 16
 120
 End Table
-
-sub GLCDTimeDelay
-      wait ST7920WriteDelay us
-end sub
 
 
