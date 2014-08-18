@@ -4,6 +4,7 @@
 ;Evan R.  Venn Revised        --- 7/3/2014 - Added Hardware I2C Support.  This simply detects your configuration variable I2C_DATA or HI2C_DATA
 ;Evan R.  Venn Revised        --- 7/12/2014 - Added Support for Byte address EEPROMs
 'Evan R.  Venn Revised        --- 7/13/2014  - Resolved issue with byte address.  Needed to add systemp to calculate next page, else, compile error.
+'Evan R.  Venn Revised        --- 8/16/2014  - Removed ACK/NACK definitions.  They need to defined once!
 
 '    added references to function to add wr_string and rd_string
 '    eeprom_wr_array
@@ -60,9 +61,6 @@
 ;the Eeprom and not let array/strings run off the end.
 
 ;----- Subroutines
-
-#define ACK       0x00
-#define NACK      0x80
 
 ;------ Word support for larger memory devices
 sub eeprom_wr_byte (in eepDev as byte, in eepAddr as word, in eepromVal as byte)
