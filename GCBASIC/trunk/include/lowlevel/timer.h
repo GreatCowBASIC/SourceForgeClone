@@ -24,6 +24,7 @@
 
 'Changes:
 ' 10/7/2009: Added AVR support
+' 24/8/2014: Added SetTimer subroutine
 
 'Subroutines:
 ' InitTimer0 (Source, Prescaler)
@@ -273,6 +274,69 @@ Sub ClearTimer (In TMRNumber)
 			If TMRNumber = 5 Then
 				TCNT5H = 0
 				TCNT5L = 0
+			End If
+		#endif
+	#endif
+End Sub
+
+Sub SetTimer (In TMRNumber, In TMRValue As Word)
+	#ifdef PIC
+		If TMRNumber = 0 Then
+			TMR0 = TMRValue
+		End If
+		#ifdef Var(T1CON)
+			If TMRNumber = 1 then
+				TMR1L = 0
+				TMR1H = TMRValue_H
+				TMR1L = TMRValue
+			End If
+		#endif
+		#ifdef Var(T2CON)
+			If TMRNumber = 2 Then
+				TMR2 = TMRValue
+			End If
+		#endif
+		#ifdef Var(T3CON)
+			If TMRNumber = 3 then
+				TMR3L = 0
+				TMR3H = TMRValue_H
+				TMR3L = TMRValue
+			End If
+		#endif
+	#endif
+	#ifdef AVR
+		#ifdef Var(TCNT0)
+			If TMRNumber = 0 Then
+				TCNT0 = TMRValue
+			End If
+		#endif
+		#ifdef Var(TCNT1L)
+			If TMRNumber = 1 Then
+				TCNT1H = TMRValue_H
+				TCNT1L = TMRValue
+			End If
+		#endif
+		#ifdef Var(TCNT2)
+			If TMRNumber = 2 Then
+				TCNT2 = TMRValue
+			End If
+		#endif
+		#ifdef Var(TCNT3L)
+			If TMRNumber = 3 Then
+				TCNT3H = TMRValue_H
+				TCNT3L = TMRValue
+			End If
+		#endif
+		#ifdef Var(TCNT4L)
+			If TMRNumber = 4 Then
+				TCNT4H = TMRValue_H
+				TCNT4L = TMRValue
+			End If
+		#endif
+		#ifdef Var(TCNT5L)
+			If TMRNumber = 5 Then
+				TCNT5H = TMRValue_H
+				TCNT5L = TMRValue
 			End If
 		#endif
 	#endif
