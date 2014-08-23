@@ -896,6 +896,8 @@ SUB PreProcessor
 						.Origin = ";?F" + Str(RF) + "L" + Str(LC) + "S0" + "I" + Str(LCS) + "?"
 						.StoreLoc = 0
 						.Type = "BYTE"
+						.RawItems = LinkedListCreate
+						.CurrItem = .RawItems
 						For T = 2 To LineTokens
 							'Get store location
 							If LineToken(T) = "STORE" Then
@@ -1036,33 +1038,8 @@ SUB PreProcessor
 				'We're in a data table, so add line to it
 				ElseIf S = 2 THEN
 					If INSTR(DataSource, ";") <> 0 Then DataSource = Trim(Left(DataSource, INSTR(DataSource, ";") - 1))
-					
 					With DataTable(DataTables) 
-						
-						'Split line at commas
-						Temp = DataSource
-						T = -1
-						Do While T
-							If InStr(Temp, ",") <> 0 Then
-								Value = RTrim(Left(Temp, InStr(Temp, ",") - 1))
-								Temp = LTrim(Mid(Temp, InStr(Temp, ",") + 1))
-							Else
-								Value = Temp
-								T = 0
-							End If
-							
-							'Check that data can be stored in table, upgrade table if it can't
-							'Print .Type, DataSource, TypeOfValue(DataSource, 0)
-							If CastOrder(TypeOfValue(Value, 0)) > CastOrder(.Type) Then
-								.Type = TypeOfValue(Value, 0)
-							End If
-							
-							.Items += 1
-							.Item(.Items) = MakeDec(Value)
-							
-						Loop
-						
-						
+						.CurrItem = LinkedListInsert(.CurrItem, DataSource)						
 					End With
 				
 				'Not in data table, not in sub or forced to main, so store in main
@@ -1144,6 +1121,13 @@ LoadNextFile:
 					Calculate Value
 					Value = Trim(Value)
 				END IF
+				
+				'Convert all non-decimal values to decimal
+				If InStr(Value, "0X") <> 0 Or InStr(Value, "B'") <> 0 Then
+					If IsConst(Value) Then
+						Value = Str(MakeDec(Value))
+					End If
+				End If
 				
 				'Check to see if define exists
 				T = 0
@@ -1234,7 +1218,61 @@ LoadNextFile:
 	ReplaceConstants
 	IF VBS = 1 THEN PRINT
 	
+	'Replace constants and calculations in tables with actual values
+	ReadTableValues
+	
 End SUB
+
+Sub ReadTableValues
+	
+	Dim As Integer CurrTable, T
+	Dim As String Temp, Value
+	Dim As LinkedListElement Pointer CurrLine
+	
+	'Search each table
+	For CurrTable = 1 To DataTables
+		With DataTable(CurrTable)
+			
+			'Parse raw values
+			CurrLine = .RawItems->Next
+			Do While CurrLine <> 0
+				
+				'Split line at commas
+				Temp = CurrLine->Value
+				T = -1
+				Do While T
+					If InStr(Temp, ",") <> 0 Then
+						Value = RTrim(Left(Temp, InStr(Temp, ",") - 1))
+						Temp = LTrim(Mid(Temp, InStr(Temp, ",") + 1))
+					Else
+						Value = Temp
+						T = 0
+					End If
+					
+					'Are constants or calculations present?
+					Value = ReplaceConstantsLine(Value, 0)
+					If IsCalc(Value) Then
+						Calculate(Value)
+					End If
+					
+					'Check that data can be stored in table, upgrade table if it can't
+					'Print .Type, DataSource, TypeOfValue(DataSource, 0)
+					If CastOrder(TypeOfValue(Value, 0)) > CastOrder(.Type) Then
+						.Type = TypeOfValue(Value, 0)
+					End If
+					
+					.Items += 1
+					.Item(.Items) = MakeDec(Value)
+					
+				Loop
+				
+				CurrLine = CurrLine -> Next
+			Loop
+			
+		End With
+	Next
+	
+End Sub
 
 SUB RemIfDefs
 	'Remove IFDEFs for which the condition is false

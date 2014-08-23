@@ -141,6 +141,10 @@ Type DataTableType
 	Origin As String
 	StoreLoc As Integer '0 = Flash, 1 = Data EEPROM
 	Used As Integer
+	
+	RawItems As LinkedListElement Pointer
+	CurrItem As LinkedListElement Pointer
+	
 	Items As Integer
 	Item(10000) As Integer
 End Type
@@ -421,6 +425,7 @@ Declare Sub MakeSFR (UserVar As String, SFRAddress As Integer)
 Declare Function CheckSysVarDef(ConditionIn As String) As String
 DECLARE SUB PrepareBuiltIn ()
 DECLARE SUB PreProcessor ()
+Declare Sub ReadTableValues
 DECLARE SUB RemIfDefs ()
 DECLARE SUB ReplaceConstants ()
 Declare Function ReplaceConstantsLine (DataSourceIn As String, IncludeStartup As Integer) As String
@@ -567,7 +572,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 16/8/2014"
+Version = "0.9 17/8/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
