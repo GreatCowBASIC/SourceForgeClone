@@ -1,5 +1,7 @@
 '    Hardware I2C routines for Great Cow BASIC
 '    Copyright (C) 2010 Hugh Considine
+'    Copyright (C) 2014 Evan R. Venn
+
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -65,7 +67,9 @@
 
 'Baud rate in KHz (Change to desired frequency)
 #define HI2C_BAUD_RATE 100
-
+#define NAK             FALSE
+#define NACK            FALSE     'permit alternative spelling
+#define ACK             TRUE
 
 #script
 	HI2C_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) - 1
@@ -125,20 +129,21 @@ Sub HI2CSetAddress(In I2CAddress)
 	#ifdef PIC
 		'Slave mode only
 		If HI2CCurrentMode <= 10 Then
-			SSPADD = I2CAddress
+                      SSPADD = I2CAddress
 		End If
 	#endif
 End Sub
 
 Sub HI2CStart
 
+
 	'Master mode
 	If HI2CCurrentMode > 10 Then
 		#ifdef PIC
-			#ifdef Var(SSPCON2)
-                                        Set SSPCON2.SEN On
-                                        HI2CWaitMSSP
-			#endif
+		  #ifdef Var(SSPCON2)
+                        Set SSPCON2.SEN On
+                        HI2CWaitMSSP
+		  #endif
 		#endif
 		
 	'Slave mode
@@ -165,14 +170,19 @@ Sub HI2CReStart
 	
 End Sub
 
+
+
+
 Sub HI2CStop
 
 	'Master mode
 	If HI2CCurrentMode > 10 Then
 		#ifdef PIC
 			#ifdef Var(SSPCON2)
-				Set SSPCON2.PEN On
-                                        HI2CWaitMSSP
+                                     ' set SSPIE OFF; disable SSP interrupt, tested by Anobium but not implemented.
+                                     wait while R_NOT_W = 1   'wait for completion of activities
+                                     Set SSPCON2.PEN On
+                                     HI2CWaitMSSP
 			#endif
 		#endif
 		
@@ -225,7 +235,7 @@ Function HI2CStopped
 End Function
 
 Sub HI2CSend(In I2CByte)
-	
+
 	#ifdef PIC
 		#ifndef Var(SSPCON1)
 			#ifdef Var(SSPCON)
@@ -281,7 +291,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = NACK )
                                 RCEN = 1
 			'Slave mode
 			Else
-				' Error!! SET SSPSTAT.R ON
+			  SET SSPSTAT.R_NOT_W ON
 			End If
 		#endif
 
@@ -290,7 +300,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = NACK )
 		SET SSPCON1.SSPOV Off
 		
 		'Wait for receive
-		Wait Until SSPSTAT.BF = 1 AND SSPIF = 1
+		Wait Until SSPSTAT.BF = 1' AND SSPIF = 1
 
 		I2CByte = SSPBUF
                     SSPIF = 0
@@ -300,13 +310,13 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = NACK )
                     HI2CWaitMSSP
 
 		'Disable receive (master mode)
-		#ifdef SSPCON2
+		#ifdef Var(SSPCON2)
 			'Master mode
 			If HI2CCurrentMode > 10 Then
 				Set SSPCON2.RCEN Off
 			'Slave mode
 			Else
-				SET SSPSTAT.R Off
+			  SET SSPSTAT.R_NOT_W Off
 			End If
 		#endif
 	#endif
@@ -324,71 +334,3 @@ sub HI2CWaitMSSP
 end sub
 
 
-
-Sub HI2CHandlerSlave
-	'Handle I2C interrupt
-	'SSPIF doesn't trigger for stop condition, only start!
-	
-	'If buffer full flag set, read
-	
-	Do While HI2CHasData
-		HI2CReceive DataIn
-		
-		'Sending code
-		If HI2CBufferSize = 0 Then
-			LastI2CWasRead = False
-			'Detect read address
-			If DataIn = 129 Then
-				LastI2CWasRead = True
-				HI2CSend OutKey		
-				Exit Sub
-			End If
-		End If
-		
-		If HI2CBufferSize < 10 Then HI2CBuffer(HI2CBufferSize) = DataIn
-		HI2CBufferSize += 1
-	Loop
-	
-End Sub
-
-
-Sub ProcessHI2CSlave
-	
-	If HI2CStopped Then
-		IntOff
-		If LastI2CWasRead Then HI2CBufferSize = 0
-		
-		If HI2CBufferSize <> 0 Then
-			OldHI2CBufferSize = BufferSize
-			HI2CBufferSize = 0
-		End If
-		IntOn
-	End If
-	
-	If OldHI2CBufferSize <> 0 Then
-		
-		CmdControl = HI2CBuffer(1)
-		
-                    ' This example sends data to the LCD
-
-'		Set backlight
-'		If CmdControl.6 = On Then
-'			Set BACKLIGHT On
-'		Else
-'			Set BACKLIGHT Off
-'		End If
-'		
-'		Set R/S bit
-'		LCD_RS = CmdControl.4
-'		Send bytes to LCD
-'		LCDDataBytes = CmdControl And 0x0F
-'		If LCDDataBytes > 0 Then
-'			For CurrSendByte = 1 To LCDDataBytes
-'				LCDWriteByte HI2CBuffer(LCDDataBytes + 1)
-'			Next
-'		End If	
-'                    	
-		OldHI2CBufferSize = 0
-	End If
-	
-End Sub

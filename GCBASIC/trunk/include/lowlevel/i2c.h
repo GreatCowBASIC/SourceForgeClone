@@ -1,22 +1,21 @@
 '    Software I2C routines for the GCBASIC compiler
-'    Copyright (C) 2009 Hugh Considine
+'    Copyright (C) 2009, 2013, 2014 Hugh Considine, Evan R. Venn, Thomas Henry
 
-'    This library is free software; you can redistribute it and/or
+'    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
-'    License as published by the Free Software Foundation; either
+'    License as published by the Free Software Foundation' either
 '    version 2.1 of the License, or (at your option) any later version.
 
 '    This library is distributed in the hope that it will be useful,
-'    but WITHOUT ANY WARRANTY; without even the implied warranty of
+'    but WITHOUT ANY WARRANTY' without even the implied warranty of
 '    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 '    Lesser General Public License for more details.
 
 '    You should have received a copy of the GNU Lesser General Public
-'    License along with this library; if not, write to the Free Software
+'    License along with this library' if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
-'    Updated Evan R Venn - Oct 2013, thanks go to Microchip and then Application Note AN1488
-'    Beta v0.89
+'    Updated Evan R Venn - Oct 2013, thanks go to Microchip and then Application Note AN1488 @ Beta v0.90
 '
 '     0.81 - Initial release
 '     0.82 - Improved ACKPOLL handling
@@ -28,175 +27,243 @@
 '     0.87 - Added new sub I2CSlaveDeviceReceive to handle slave correctly.  I2CSlaveDeviceReceive thisI2CSlavedevice, readDeviceAddress, TRU
 '     0.88 - Revised timings and ensured the DATA line goes low at end of process.	
 '     0.89 - Revised I2CAckPollState = I2CSendState
+'     0.90 - Revised to remove the BUGS!!!!!
+'     I2c-alt.h - Revised and documented by Thomas Henry, July 17, 2014
+'     0.92 - Revised and merged 0.91 and I2C-alt.h
+'     0.93 - Revised to remove use of Constants where they should have been variables and the reverse case.
+'	   - Eliminated parameter on I2CSend as this was causing backward compatibility issues
+'	   - This is a megerd version of the alternate version of the software I2C routines by
+'          - Thomas Henry, July 17, 2014. 
+'          - ACK/NAK logic for Slave multibyte reception
+'          - therefore multiple Slaves are permitted on the bus
+'	   - eliminated need for a separate addressed slave read command,
+'	   - reduced the command set to make I2C more understandable
+'	   - made the basic commands more intuitive for beginners
+'	   - eliminated redundant code while speeding up the loops
+'	   - a single error flag (I2CAck or I2CSendState) checks many error conditions
+'	   - more extensive documentation
+'	   - eliminated redundancies and unneeded global variables
+'	   - accounted for parameter corruption throughout
+
+'	   - With the default constants, communication can be as high as 75 kHz.
+
+'	   - Command Set (parameters I2CAck and I2C_Dev_OK are optional):
+
+'	   -   I2CStart() and I2CStop() are the usual commands used to start
+'	   -   and stop I2C communications. I2CAckPoll() is used to sense
+'	   -   whether the Slave device is alive and ready to respond. It
+'	   -   is also useful for waiting until an Eeprom has completed its
+'	   -   write cycle. The optional parameter I2C_Dev_OK reports whether
+'	   -   the device responded or timed out.
+
+'	   -   The two high-level commands are I2CReceive() and I2CSend().
+'	   -   Either of these may be used in either Master or Slave mode.
+'	   -   For emphasis, this means that the following combinations
+'	   -   are valid:
+
+'	   -   Master receives from the Slave
+'	   -   Slave receives from the Master
+'	   -   Master sends to the Slave
+'	   -   Slave sends to the Master
+
+'	   -   Additionally, a fair amount of error detection is worked in
+'	   -   which can detect certain problems, typically with the SCL
+'	   -   (clock) line. By using the error flag (a parameter called
+'	   -   I2CAck) it is possible to have the Master or Slave retry the
+'	   -   communication in case of errors. The parameter I2CAck is
+'	   -   optional, and may be ignored in many situations. Note, too,
+'	   -   that clock stretching is implemented which gives the Slave
+'	   -   a chance to get caught up when needed. This is invisible to
+'	   -   the programmer/user.
+
+'	   -   Interrupts are always disabled during I2C communication.
+'	   -   since it makes no sense to permit interruptions in a
+'	   -   synchronous environment.
+
+'	   -   The purpose of the parameter I2CByte in these two commands is
+'	   -   obvious--it is the byte which is received or transmitted.
+'	   -   On the other hand, the second parameter, I2CAck, can be used
+'	   -   in a couple different ways to monitor for error conditions,
+'	   -   among other things. Here are the details for the two commands.
+
+'	   -   *** I2CReceive(out I2CByte, in/out I2CAck)
+
+'	   -   MASTER FROM SLAVE:
+'	   -   In Master mode, if your program sets I2CAck to TRUE before
+'	   -   calling I2CReceive(), then the Master will send an ACK to
+'	   -   the Slave after receiving its byte. If FALSE then the Master
+'	   -   will send a NAK to the slave after receiving its byte
+'	   -   ACK and NAK are aliases for TRUE and FALSE, respectively.
+
+'	   -   SLAVE FROM MASTER:
+'	   -   In Slave mode, upon exit from I2CReceive(), the Slave will
+'	   -   set I2CAck to TRUE if things went well, or FALSE if a timeout
+'	   -   occurred (supposing you had requested timeouts be used).
+
+'	   -   *** I2CSend(in I2CByte )
+
+'	   -   MASTER TO SLAVE:
+'	   -   In Master mode, I2CAck is returned to indicate whether an
+'	   -   ACK or a NAK was received from the Slave after transmission.
+'	   -   ACK means all is okay, while NAK means something went wrong.
+
+'	   -   SLAVE TO MASTER:
+'	   -   In slave mode, I2CAck is returned to indicate whether an ACK
+'	   -   or a NAK was received from the Master after transmission.
+'	   -   ACK means all is okay, while NAK means something went wrong.
+
+'	   -   Please note: for many programs, you simply won't need the
+'	   -   error detection and can ignore the value of the I2CAck parameter.
+
+'             --- Constants
+
+'Constants with no defaults which must be set in the calling program
+'#define I2C_DATA                 'port line for SDA
+'#define I2C_CLOCK                'port line for SCL
+'#define I2C_USE_TIMEOUT          'if defined, the Slave gives the Master
+                                  '256 chances to respond before giving up
 
 
-'Notes:
-'
+'Constants with defaults which may be changed in the calling program
+'With these values, I2C clock maxes out at approximately 75 kHz.
+#define I2C_MODE Master           'default to Master mode
+#define I2C_BIT_DELAY   2 us      'width of data bit on SDA
+#define I2C_CLOCK_DELAY 1 us      'width of clock pulse on SCL
+#define I2C_END_DELAY   1 us      'interval between clock pulses
 
-'Initialisation routine
-#startup InitI2C
+'Constants whose values shouldn't be changed
 
-'Constants (can change to suit application)
-'#define I2C_BIT_DELAY 2 us
-'#define I2C_CLOCK_DELAY 1 us
-'#define I2C_END_DELAY 1 us
-#define I2C_MODE Master
-'
-#define I2C_BIT_DELAY 20 us
-#define I2C_CLOCK_DELAY 10 us
-#define I2C_END_DELAY 10 us
+#define I2C_DATA_HIGH   dir I2C_DATA in
+#define I2C_DATA_LOW    dir I2C_DATA out: set I2C_DATA OFF
+#define I2C_CLOCK_HIGH  dir I2C_CLOCK in
+#define I2C_CLOCK_LOW   dir I2C_CLOCK out:set I2C_CLOCK OFF
 
-'Uncomment to enable:
-'#define I2C_USE_TIMEOUT
+#define NAK             FALSE
+#define NACK            FALSE     'permit alternative spelling
+#define ACK             TRUE
 
-'Constants (shouldn't change)
-#define I2C_DATA_HIGH Dir I2C_DATA In
-#define I2C_DATA_LOW Dir I2C_DATA Out: Set I2C_DATA Off
-#define I2C_CLOCK_HIGH Set I2C_CLOCK On
-#define I2C_CLOCK_LOW  Set I2C_CLOCK Off
+'             --- Variables
 
-#define I2CStopped I2COldState
-
-#define ACK       0x00
-#define NACK      0x80
-#define I2CReturnState as byte
-'Subs
-Sub InitI2C
-	'Initialisation routine
-	'Release data and clock lines
-	 #if I2C_MODE = Master
-              I2C_DATA_HIGH
-              Dir I2C_CLOCK Out
-	    I2C_CLOCK_HIGH
-	#endif
-	'Set old state flag (slave mode)
-	#if I2C_MODE = Slave
-                       Dir I2C_CLOCK in
-	             I2COldState = 255
-	#endif
-	
-End Sub
+dim I2COldState, I2CState, I2CMatch, I2CTemp as byte
+dim I2CCount alias I2CState
 
 
+#define I2CSendState I2CAckPollState 'retained I2CSendState for backwards compatibility
 
-#define ACK       0x00
-#define NACK      0x80
+'             --- Subroutines
 
+#startup InitI2C                  'automatically call in main program
 
-sub I2CSTART
+sub InitI2C()
+  I2C_DATA_HIGH                   'release SDA (open drain floats high)
+  I2C_CLOCK_HIGH                  'release SCL (open drain floats high)
+  I2CMatch = FALSE                'address doesn't match (Slave mode)
 
-        #if I2C_MODE = Master
-                  'Disable interrupts. Make sure to call I2CStop to re-enable
-                  'Optional INTOFF - Remove if required
-                  #IFNDEF I2C_DISABLE_INTERRUPTS
-                      IntOff
-	        #endif
-                  'For start, ensure SDA & SCL are high
-                  I2C_DATA_HIGH
-                  I2C_CLOCK_HIGH
-                  I2C_DATA_LOW
-                  Wait I2C_BIT_DELAY
-                  I2C_CLOCK_LOW
-                  Wait I2C_END_DELAY
-        #endif
-
-        ' same as v1 code
-        #if I2C_MODE = Slave
-                  I2CState = 255
-                  Do
-                            I2COldState = I2CState
-                            If I2C_CLOCK = 1 Then
-                                      'State 0, CK 1, DA 1
-                                      If I2C_DATA = 1 Then
-                                                I2CState = 0
-                                      'State 1, CK 1, DA 0
-                                      Else
-                                                'Start happens when data drops while clock high, so:
-                                                'start occurs on transition from CK 1 DA 1 (state 0) to CK 1 DA 0 (state 1)
-                                                If I2COldState = 0 Then
-                                                          Goto I2CStartReceived
-                                                End If
-                                                I2CState = 1
-                                      End If
-                            Else
-                                      'State 2 when CK 0
-                                      I2CState = 2
-                            End If
-			
-                  Loop
-		
-                  I2CStartReceived:
-
-		
-                  'Disable interrupts
-                  IntOff
-        #endif
-
+  #if I2C_MODE = Slave            'previous State unknown to begin with
+    I2COldState = 255             'so use this to detect an I2C Start
+  #endif
 end sub
 
+'             ---
 
-Sub I2CSTOP
+sub I2CStart()
+  #if I2C_MODE = Master           'send a Start in Master mode
+    #IFNDEF I2C_DISABLE_INTERRUPTS
+        intOff                        'don't interrupt now we've started
+    #endif
+    I2C_DATA_HIGH                 'SDA and SCL idle high
+    I2C_CLOCK_HIGH
+    wait I2C_END_DELAY            'let settle a while
 
-	'In master mode, send stop
-	#if I2C_MODE = Master
-                  'For stop, need to raise data while clock high
-                  I2C_CLOCK_LOW
-                  I2C_DATA_LOW
-                  Wait I2C_CLOCK_DELAY
-                  I2C_CLOCK_HIGH
-                  'Dir I2C_DATA Out
-                  I2C_DATA_HIGH
-                  Wait I2C_CLOCK_DELAY
-                  I2C_CLOCK_LOW
-                  'Have finished transfer, can re-enable interrupts
-                  'Optional
-                   #IFNDEF I2C_DISABLE_INTERRUPTS
-                           IntOn
-                   #endif
-                   I2C_DATA_LOW
-'                   Dir I2C_CLOCK in
-'                   Dir I2C_DATA in
-	#endif
+    I2C_DATA_LOW                  'then, SDA low while SCL still high
+    wait I2C_CLOCK_DELAY          'for this amount of time
 
-	'In slave mode, just need to re-enable interrupt
-	#if I2C_MODE = Slave
-	    'Have finished transfer, can re-enable interrupts
-              'Optional
-               #IFNDEF I2C_DISABLE_INTERRUPTS
-                       IntOn
-               #endif
-	#endif
-end Sub
+    I2C_CLOCK_LOW                 'end with SCL low, ready to clock
+  #endif
 
-Sub I2CRESET
+  #if I2C_MODE = Slave            'wait for a Start in Slave mode
+    'State 255 is a dummy, indicating previous state not known yet
+    'State 0 is SCL = 1 and SDA = 1
+    'State 1 is SCL = 1 and SDA = 0
+    'State 2 is SCL = 0 and SDA = don't care
+    'Start occurs only on transition from State 0 to State 1
+
+    I2CState = 255                'always begin in dummy state
+    do                            'loop until state goes from 0 to 1
+      I2COldState = I2CState      'save current state for next time
+      if I2C_CLOCK = 1 then       'it's either State 0 or 1
+        if I2C_DATA = 1 then      'State 0 is SCL=1 and SDA=1
+          I2CState = 0
+        else                      'otherwise update to State 1
+          if I2COldState = 0 then
+            exit do               'exit if State changed from 0 to 1
+          end if
+          I2CState = 1            'State 1 is SCL=1 and SDA=0
+        end if
+      else
+        I2CState = 2              'State 2 is anything else
+      end if
+    loop
+
+    #IFNDEF I2C_DISABLE_INTERRUPTS
+        intOff                        'don't interrupt now we've started
+    #endif
+
+  #endif
+end sub
+
+'             ---
+
+sub I2CStop()
+  #if I2C_MODE = Master           'send a Stop in Master mode
+    I2C_CLOCK_LOW                 'begin with SCL=0 and SDA=0
+    I2C_DATA_LOW
+    wait I2C_END_DELAY            'let ports settle
+
+    I2C_CLOCK_HIGH                'make SCL=1 first
+    wait I2C_CLOCK_DELAY          'hold for normal clock width time
+
+    I2C_DATA_HIGH                 'then make SDA=1 afterwards
+    wait I2C_END_DELAY            'hold for normal between-time
+    'back idling with SCL=1 and SDA=1 at this point
+
+
+    #IFNDEF I2C_DISABLE_INTERRUPTS
+        intOn                         'done, so re-enable interrupts
+    #endif
+
+  #endif
+
+  #if I2C_MODE = Slave            'in Slave mode we are
+    I2CMatch = FALSE              'no longer addressing this device
+    #IFNDEF I2C_DISABLE_INTERRUPTS
+        intOn                     'so re-enable interrupts
+    #endif
+  #endif
+end sub
+
+' Resets the I2C bus.  See http://www.analog.com/static/imported-files/application_notes/54305147357414AN686_0.pdf
+Sub I2CReset
        ' added 0.84
+       I2CAckPollState = false
        I2CSTART
-       repeat 10
-        I2CSEND ( 0xFF )
+       repeat 9
+              I2CSEND ( 0 )    ' send nine zero's
+              if I2C_DATA = 1 then
+                 I2CAckPollState = true    ' line has gone high. The line is reset now leave
+                 exit repeat
+              end if
        end Repeat
-       I2CSTART
+I2CResetFin:
        I2CSTOP
-end Sub
-
-
-Sub I2CRESTART
-' added 0.84
-
-        I2C_CLOCK_LOW
-        Wait I2C_BIT_DELAY
-
-        I2C_DATA_HIGH
-        Wait I2C_BIT_DELAY
-
-        I2C_CLOCK_HIGH
-        Wait I2C_END_DELAY
-
-        I2C_DATA_LOW
-        Wait I2C_BIT_DELAY
 
 end Sub
 
 
+' Restarts the bus
+Sub I2CRestart
+    I2CStart
+end Sub
 
 
 Function I2CStartOccurred
@@ -233,381 +300,258 @@ Function I2CStartOccurred
 	
 End Function
 
+'             ---
+sub I2CSend(in I2CByte )
 
+  #if I2C_MODE = Master           'send byte from Master to Slave
+    I2C_CLOCK_LOW                 'begin with SCL=0
+    wait I2C_END_DELAY            'let port settle
 
+    repeat 8                      '8 data bits
+      if I2CByte.7 = ON then      'put most significant bit on SDA line
+        I2C_DATA_HIGH
+      else
+        I2C_DATA_LOW
+      end if
 
+      rotate I2CByte left         'shift in bit for the next time
 
+      I2C_CLOCK_HIGH              'now clock it in
+      wait while I2C_CLOCK = OFF  'permit clock stretching here
+      wait I2C_CLOCK_DELAY        'clock pulse width given here
+      I2C_CLOCK_LOW               'done clocking that bit
+      wait I2C_END_DELAY          'time between clock pulses
+    end repeat                    'then do next bit
 
-'//....................................................................
-'// Writes a byte to the I2C bus
-'//....................................................................
-sub I2CSend( in i2cbyte as byte, Optional I2CGETACK = TRUE  )
+    wait I2C_BIT_DELAY            'pad timing just a little
 
-        #if I2C_MODE = Master
-             l_ack = 0x00
-             For I2CCurrByte = 0 to 7
-                             ' code expanded to remove stack
+    I2C_DATA_HIGH                 'idle SDA to let Slave respond
+    wait I2C_END_DELAY            'let SDA port line settle
 
-                                  I2C_CLOCK_LOW
-                                  '' Dir I2C_DATA Out
-                                  I2C_DATA_LOW
-                                  If i2cbyte.7 = On Then
-                                            Set I2C_DATA ON
-                                  Else
-                                            Set I2C_DATA Off
-                                  End If
-                                  Wait I2C_CLOCK_DELAY
-                                  I2C_CLOCK_HIGH
-                                  Wait I2C_CLOCK_DELAY
-                                  I2C_CLOCK_LOW
+    I2C_CLOCK_HIGH                'clock for the ACK/NAK bit
+    wait while I2C_CLOCK = OFF    'permit clock stretching here
 
-                        Rotate I2CByte Left
-              Next
-'              CODE EXPANDED
+                                  'restored 'I2CSendState' variable for backwards compatibility
+    if I2C_DATA then              'read 9th bit in from Slave
+      I2CAck = FALSE              'return a NAK to the program
+      I2CSendState =  FALSE        'state of target device with respect. Retained for backwards compatibility
+    else
+      I2CAck = TRUE               'else, return an ACK to the program
+      I2CSendState =  TRUE        'state of target device with respect. Retained for backwards compatibility
+    end if
 
-              I2C_CLOCK_LOW
-              I2C_DATA_LOW
-              Dir I2C_DATA In
-              I2C_CLOCK_HIGH
-              ' Clock stretching - this is the ONLY CHange from the baseline code
-               #IFDEF IC2CLOCKSTRETCHING
-                      Wait While I2C_CLOCK = Off
-               #ENDIF
-               I2CSendState = I2C_DATA
-               Wait I2C_CLOCK_DELAY
-               I2C_CLOCK_LOW
+    I2C_CLOCK_LOW                 'may be more bytes to clock out
+    wait I2C_END_DELAY            'so keep idling both
+    I2C_DATA_LOW                  'SCL and SDA low
+    wait I2C_BIT_DELAY            'wait the usual bit length
 
-        #Endif
+  #endif
 
-        #if I2C_MODE = Slave
+  #if I2C_MODE = Slave            'send a byte from Slave to Master
+    #ifndef I2C_USE_TIMEOUT       'never give up on the Master
+      wait until I2C_CLOCK = OFF  'and just keep waiting for response
+    #endif
 
-                  'Wait for clock to drop
-                  #ifndef I2C_USE_TIMEOUT
-                            Wait Until I2C_CLOCK = Off
-                  #endif
-                  #ifdef I2C_USE_TIMEOUT
-                            I2CState = 0
-                            Do Until I2C_CLOCK = Off
-                                      I2CState += 1
-                                      If I2CState = 0 Then
-                                                I2CStopped = True
-                                                Exit Sub
-                                      End If
-                            Loop
-                  #endif
-		
-                  'Get data line
-                  I2C_DATA_LOW
-                  'Write bits
-'                  I2CByte = 0
-                  For I2CCurrByte = 1 To 8
-                            'Clock will be low
-			
-                            'Write bit
-                            If I2CByte.7 = On Then
-                                      I2C_DATA_HIGH
-                            Else
-                                      I2C_DATA_LOW
-                            End If
-                            Rotate I2CByte Left
-			
-                            'Wait for clock pulse
-                            'Wait for clock to rise
-                             Wait Until I2C_CLOCK = On
-                            'Wait for clock to drop (end of bit)
-                            #ifndef I2C_USE_TIMEOUT
-                                      Wait Until I2C_CLOCK = Off
-                            #endif
-                            #ifdef I2C_USE_TIMEOUT
-                                      I2CState = 0
-                                      Do Until I2C_CLOCK = Off
-                                                I2CState += 1
-                                                If I2CState = 0 Then
-                                                          I2CStopped = True
-                                                          Exit Sub
-                                                End If
-                                      Loop
-                            #endif
-                  Next
-                  'Release data line ... erv changed from hugh's code
-                  I2C_DATA_HIGH
+    #ifdef I2C_USE_TIMEOUT        'else give Master 256 chances to act
+      I2CCount = 0                'prime the timing loop
+      do until I2C_CLOCK = OFF    'hang around until SCL goes low
+        I2CCount++                'bump while waiting
+        if I2CCount = 0 then      'all the way round the horn, so
+          I2CAck = FALSE          'flag as an error
+          exit sub                'give up and exit entire subroutine
+        end if
+      loop                        'else, try again
+    #endif
 
-		
-                  'Read Ack
-                  I2CStopped = FALSE
-'                  If I2CGetAck Then
-			
-                            'Wait for clock to go high
-                            Wait Until I2C_CLOCK = On
+    I2C_DATA_LOW                  'begin with SDA=0 as a baseline
 
-                            'Read ack
-                            If I2C_DATA = On Then
-                                      'If data on, have received NACK
-                                      I2CStopped = TRUE
-                            End If
-                            'Wait for clock to go low
-                            #ifndef I2C_USE_TIMEOUT
+    repeat 8                      '8 data bits
+      if I2CByte.7 = ON then      'put most significant bit on SDA line
+        I2C_DATA_HIGH
+      else
+        I2C_DATA_LOW
+      end if
 
-                                      Wait Until I2C_CLOCK = Off
+      rotate I2CByte
+      wait until I2C_CLOCK = ON   'wait for SCL=1
 
-                            #endif
-                            #ifdef I2C_USE_TIMEOUT
-                                      I2CState = 0
-                                      Do Until I2C_CLOCK = Off
-                                                I2CState += 1
-                                                If I2CState = 0 Then
-                                                          Exit Do
-                                                End If
-                                      Loop
-                            #endif
-'                  End If
+      #ifndef I2C_USE_TIMEOUT     'never give up on the Master
+        wait until I2C_CLOCK = OFF
+      #endif
 
-        #endif
+      #ifdef I2C_USE_TIMEOUT      'if using timeout option, then
+        I2CCount = 0              'wait until clock goes low
+        do until I2C_CLOCK = OFF
+          I2CCount += 1           'give SCL another chance to go low
+          if I2CCount = 0 then    'else, used up our 256 chances
+            I2CAck = FALSE        'so indicate an error
+            exit sub              'bail out, we're giving up
+          end if
+        loop
+      #endif
+    end repeat                    'all 8 bits sent now
 
-End Sub
+    I2C_DATA_HIGH                 'idle the SDA line again
 
-'//....................................................................
-'// Reads a byte from the I2C bus
-Sub I2CReceive ( Out I2CByte, Optional In I2CGetAck = ACK )
+    wait until I2C_CLOCK = ON     'wait for the 9th bit
 
-        #if I2C_MODE = Master
-            'Need to generate clock while checking input
-            I2C_CLOCK_LOW
-            'Setting data high will make data pin input
-            I2C_DATA_HIGH
-    		
-            I2CByte = 0
-            For I2CCurrByte = 1 To 8
-                      Wait I2C_END_DELAY
-                      I2C_CLOCK_HIGH
-    			
-                      'Clock stretching
-                      Wait While I2C_CLOCK = Off
-    			
-                      Wait I2C_END_DELAY
-                      Rotate I2CByte Left
-                      Set I2CByte.0 Off
-                      If I2C_DATA = On Then
-                                Set I2CByte.0 On
-                      End If
-                      Wait I2C_END_DELAY
-    			
-                      I2C_CLOCK_LOW
-                      Wait I2C_END_DELAY
-    			
-            Next
-'             code below expand to remove stack
+    if I2C_DATA then              'read 9th bit in from Master
+      I2CAck = FALSE              'return a NAK to program
+    else
+      I2CAck = TRUE               'else, return ACK if all okay
+    end if
 
-              ' ACK / NACK routine
-            I2C_CLOCK_LOW
-            '' Dir I2C_DATA Out
-            I2C_DATA_LOW
-            If I2CGetAck.7 = On Then
-                      Set I2C_DATA ON
-            Else
-                      Set I2C_DATA Off
-            End If
-            Wait I2C_BIT_DELAY
-            I2C_CLOCK_HIGH
-            Wait I2C_CLOCK_DELAY
-            I2C_CLOCK_LOW
+    #ifndef I2C_USE_TIMEOUT       'never give up on the Master
+      wait until I2C_CLOCK = OFF  'let SCL go low
+    #endif
 
-        #endif
+    #ifdef I2C_USE_TIMEOUT        'if using timeouts
+      I2CCount = 0                'give SCL 256 chances to go low
+      do until I2C_CLOCK = OFF
+        I2CCount++                'give it another chance
+        if I2CCount = 0 then      'after this, give up altogether
+          I2CAck = FALSE          'flag it as a problem
+          exit sub
+        end if
+      loop
+    #endif
+  #endif
+end sub
 
-        'Slave mode
-        #if I2C_MODE = Slave
+'             ---
 
-                  'Assumes that start has just been received, so CK and DA high
-  		
-                  'Wait for clock to drop
-                  #ifndef I2C_USE_TIMEOUT
-                            Wait Until I2C_CLOCK = Off
-                  #endif
+sub I2CReceive (out I2CByte, optional I2CAck = ACK)
+  #if I2C_MODE = Master           'receive byte from Slave to Master
+    I2C_CLOCK_LOW                 'SCL begins low
+    I2C_DATA_HIGH                 'this makes SDA an input now
 
-                  #ifdef I2C_USE_TIMEOUT
-                            I2CState = 0
-                            Do Until I2C_CLOCK = Off
-                                      I2CState += 1
-                                      If I2CState = 0 Then
-                                                I2CStopped = True
-                                                Exit Sub
-                                      End If
-                            Loop
-                  #endif
+    I2CByte = 0                   'received byte built up here
+    repeat 8                      'fetch the 8 bits
+      wait I2C_END_DELAY          'let port lines settle down
+      I2C_CLOCK_HIGH              'send a clock pulse
 
-                  'Read bits
-                  I2CByte = 0
+      wait while I2C_CLOCK = OFF  'permit clock stretching
+      rotate I2CByte left         'make room for next bit
 
-                  For I2CCurrByte = 1 To 8
-  			
+      set I2CByte.0 OFF           'assume it's a zero
+      if I2C_DATA = ON then       'else, it's a one
+        set I2CByte.0 ON
+      end if
 
-                             'Wait for clock to rise
-                            Wait Until I2C_CLOCK = On 			
+      wait I2C_CLOCK_DELAY        'clock high this amount of time
+      I2C_CLOCK_LOW               'SCL now low
+      wait I2C_END_DELAY          'time before next clock pulse
+    end repeat
 
-                              'Get bit from data pin
-                              Rotate I2CByte Left
-                              Set I2CByte.0 Off
-                              If I2C_DATA = On Then
-                                        Set I2CByte.0 On
-                              End If
+    if I2CAck then
+      I2C_DATA_LOW                'SDA=0 means ACK
+    else
+      I2C_DATA_HIGH               'SDA=1 means NAK
+    end if
 
-                            'Wait for clock to drop (end of bit)
-                            #ifndef I2C_USE_TIMEOUT
-                                      Wait Until I2C_CLOCK = Off
-                            #endif
-                            #ifdef I2C_USE_TIMEOUT
-                                      I2CState = 0
-                                      Do Until I2C_CLOCK = Off
-                                                I2CState += 1
-                                                If I2CState = 0 Then
-                                                          I2CStopped = True
-                                                          Exit Sub
-                                                End If
-                                      Loop
-                            #endif
+    wait I2C_END_DELAY            'either way, let it settle
+    I2C_CLOCK_HIGH                'then clock it out
 
-                  Next
+    wait while I2C_CLOCK = OFF    'permit clock stretching
+    wait I2C_CLOCK_DELAY          'keep high long enough
+    I2C_CLOCK_LOW                 'then SCL goes low again
+    wait I2C_END_DELAY            'and settles before proceeding
+  #endif
 
+  #if I2C_MODE = Slave            'receive byte from Master to Slave
+    I2CAck = TRUE                 'assume success to begin with
+    #ifndef I2C_USE_TIMEOUT       'never give up on the Master
+      wait until I2C_CLOCK = OFF  'SCL must start low
+    #endif
 
+    #ifdef I2C_USE_TIMEOUT        'if using timeout option, then
+      I2CCount = 0                'give 256 chances for SCL to go low
+      do until I2C_CLOCK = OFF
+        I2CCount++                'give SCL another chance to go low
+        if I2CCount = 0 then
+          goto I2C_Failed         'else give up after 256 tries
+        end if
+      loop
+    #endif
 
+    I2CByte = 0                   'received byte built up here
+    repeat 8                      'fetch the 8 bits
+      wait until I2C_CLOCK = ON   'wait for SCL to go high
+      rotate I2CByte left         'make room for the next bit
 
+      set I2CByte.0 OFF           'assume it's a zero
+      if I2C_DATA = ON then       'else, SDA is a one
+        set I2CByte.0 ON
+      end if
 
-                  'Send Ack
-                  If I2CGetAck Then		
-                            'Send ack by pulling data down for 1 clock pulse
+      #ifndef I2C_USE_TIMEOUT     'never give up on the Master
+        Wait Until I2C_CLOCK = OFF
+      #endif
 
-                            I2C_DATA_LOW
+      #ifdef I2C_USE_TIMEOUT      'if using timeout option, then
+        I2CCount = 0              'give 256 chances for SCL to go low
+        do until I2C_CLOCK = OFF
+          I2CCount++              'give SCL another chance to go low
+          if I2CCount = 0 then
+            goto I2C_Failed       'else give up after 256 tries
+          end if
+        loop
+      #endif
+    end repeat
 
-                            Wait Until I2C_CLOCK = On
+    if I2CByte = I2C_ADDRESS then 'wake up the slave now
+      I2CMatch = TRUE             'valid until Stop or failure
+    end if
 
-                            #ifndef I2C_USE_TIMEOUT
-                                      Wait Until I2C_CLOCK = Off
-                            #endif
-                            #ifdef I2C_USE_TIMEOUT
-                                      I2CState = 0
-                                      Do Until I2C_CLOCK = Off
-                                                I2CState += 1
-                                                If I2CState = 0 Then
-                                                          Exit Do
-                                                End If
-                                      Loop
-                            #endif
-                            I2C_DATA_HIGH
-                  End If
-  		
-                  I2CStopped = FALSE
-  		
-        #endif
-End sub
+    if I2CMatch then              'only ACK if msg is for this device
+      I2C_DATA_LOW                'sending SDA=0 means ACK
+      wait until I2C_CLOCK = ON   'then Master clocks it in
 
+      #ifndef I2C_USE_TIMEOUT     'never give up on the Master
+        wait until I2C_CLOCK = OFF
+      #endif
 
-'// Reads a byte from the I2C bus, and ONLY ACK when it is the correct address
-Sub I2CSlaveDeviceReceive ( In thisDevice as Byte , Out I2CByte, Optional In I2CGetAck = ACK )
+      #ifdef I2C_USE_TIMEOUT      'if using timeout option, then
+        I2CCount = 0              'give 256 chances for SCL to go low
+        do until I2C_CLOCK = OFF  'else, used up our chances
+          I2CCount++
+          if I2CCount = 0 then
+            goto I2C_Failed       'else give up after 256 tries
+          end if
+        loop
+      #endif
+    end if
+    goto I2C_Okay                 'everything worked, so exit
 
+  I2C_Failed:
+    I2CAck = FALSE                'signal communication failed
+    I2CMatch = FALSE              'no longer addressing this device
+  I2C_Okay:                       'I2CAck is still TRUE at this point
+    I2C_DATA_HIGH                 'either way, raise SDA again
+  #endif
+end sub
 
-        'Slave mode only
-        #if I2C_MODE = Slave
+'             ---
 
-                  'Assumes that start has just been received, so CK and DA high
-  		
-                  'Wait for clock to drop
-                  #ifndef I2C_USE_TIMEOUT
-                            Wait Until I2C_CLOCK = Off
-                  #endif
+sub I2CAckPoll(in I2CByte, optional I2C_Dev_OK = TRUE)
+  'I2CByte contains base device number to check on (R/W bit clear).
+  'Check if device is ready or give up after 25 milliseconds
+  'of retries. Each retry consumes about 100 microseconds
 
-                  #ifdef I2C_USE_TIMEOUT
-                            I2CState = 0
-                            Do Until I2C_CLOCK = Off
-                                      I2CState += 1
-                                      If I2CState = 0 Then
-                                                I2CStopped = True
-                                                Exit Sub
-                                      End If
-                            Loop
-                  #endif
+  I2CTemp = I2CByte               'use a copy to avoid interaction
+  I2C_Dev_OK = FALSE              'assume no acknowledgment at outset
 
-                  'Read bits
-                  I2CByte = 0
+  for I2CCount = 0 to 255
+    I2CStart                      'attempt to set up a write
+    I2CSend(I2CTemp, I2C_Dev_OK)  'to this device
+    I2CStop                       'release the bus
+    if I2C_Dev_OK then            'device acknowledged with ACK
+      exit for                    'exit means device is alive
+    end if
 
-                  For I2CCurrByte = 1 To 8
-  			
+    wait 10 10us                  'just wait a moment to stop pounding against device
+  next I2CCount                   'else try again
+  I2CAckPollState = I2C_Dev_OK    'set state.  Used to understand if the device responded in IC2 discover process
+end sub
 
-                             'Wait for clock to rise
-                            Wait Until I2C_CLOCK = On 			
-
-                              'Get bit from data pin
-                              Rotate I2CByte Left
-                              Set I2CByte.0 Off
-                              If I2C_DATA = On Then
-                                        Set I2CByte.0 On
-                              End If
-
-                            'Wait for clock to drop (end of bit)
-                            #ifndef I2C_USE_TIMEOUT
-                                      Wait Until I2C_CLOCK = Off
-                            #endif
-                            #ifdef I2C_USE_TIMEOUT
-                                      I2CState = 0
-                                      Do Until I2C_CLOCK = Off
-                                                I2CState += 1
-                                                If I2CState = 0 Then
-                                                          I2CStopped = True
-                                                          Exit Sub
-                                                End If
-                                      Loop
-                            #endif
-
-                  Next
-
-
-                  if thisDevice = I2CByte then
-
-                      'Send Ack
-                      If I2CGetAck Then		
-                                'Send ack by pulling data down for 1 clock pulse
-
-                                I2C_DATA_LOW
-
-                                Wait Until I2C_CLOCK = On
-
-                                #ifndef I2C_USE_TIMEOUT
-                                          Wait Until I2C_CLOCK = Off
-                                #endif
-                                #ifdef I2C_USE_TIMEOUT
-                                          I2CState = 0
-                                          Do Until I2C_CLOCK = Off
-                                                    I2CState += 1
-                                                    If I2CState = 0 Then
-                                                              Exit Do
-                                                    End If
-                                          Loop
-                                #endif
-                                I2C_DATA_HIGH
-                      End If
-                  End if  		
-                  I2CStopped = FALSE
-  		
-        #endif
-End sub
-
-
-'.............................................................................
-'          Polls the bus for ACK from device
-'.............................................................................
-Sub I2CACKPOLL ( ack_addr )
-
-    I2CSendState = 0
-    l_attempts = 0
-    Do While  I2CSendState = ACK and l_attempts < 63
-       I2CStart
-       I2CSend( ack_addr )
-       wait 5 ms
-       l_attempts++
-
-    Loop
-    I2CSTOP
-
-
-    I2CAckPollState = I2CSendState
-end Sub
 

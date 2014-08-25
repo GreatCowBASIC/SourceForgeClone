@@ -1,19 +1,32 @@
+'    Software I2C routines for the GCBASIC compiler
+'    Copyright (C) 2010 Hugh Considine
+'    Copyright (C) 2013 Evan R. Venn
+'    Copyright (C) 2014 Evan R. Venn
+'    Copyright (C) 2014 Thomas Henry
+'    This library is free software' you can redistribute it and/or
+'    modify it under the terms of the GNU Lesser General Public
+'    License as published by the Free Software Foundation' either
+'    version 2.1 of the License, or (at your option) any later version.
+
+'    This library is distributed in the hope that it will be useful,
+'    but WITHOUT ANY WARRANTY' without even the implied warranty of
+'    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+'    Lesser General Public License for more details.
+
+'    You should have received a copy of the GNU Lesser General Public
+'    License along with this library' if not, write to the Free Software
+'    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+'
+'    Updated Evan R Venn - Oct 2013, thanks go to Microchip and then Application Note AN1488
+'    Beta v0.90
+'
 '
 '    Created Evan R Venn - Oct 2013
 '    Beta v0.80
 '
 '    0.80    Test release
-
-' Library for a Ramtron I2C FRAM serial memory
-' write_fram(a,d);  Write the int8 d to the address a         ////
-' //d = read_fram(a);  Read the int8 d from the address a       ////
-' //multi_write_fram(a,char *d,size);//can cross chip boundry ////
-' //multi_read_fram(a,char *d,size);//can cross chip boundry  ////
-' //The main program may define
-' // 2^15=32768 address space.  2^3=8   3 bits for 8 chips      ////
-' // For a total of 18 bits
-
-
+'    1.00    Released
+'    A library for a Ramtron I2C FRAM serial memory
 
 '	Device	Page			Device
 '	1	0	0x00000	0x0FFFF	A0
@@ -28,15 +41,14 @@
 
 
 
-'YOU TO HAVE A DEVICE CALLED "FRAM_DEVICE_1"!!
+'  YOU TO HAVE A DEVICE CALLED "FRAM_DEVICE_1"!!
 #define FRAM_DEVICE_1           0xAC
-
 
 #define FRAM_CHIPS   1
 ' 4 chips 0,1,2,3
 #define FRAM_PAGE_SIZE    0x10000
 #script
-'        FRAM_MAX_ADDRESS = (FRAM_PAGE_SIZE*FRAM_CHIPS)-1
+	' FRAM_MAX_ADDRESS = (FRAM_PAGE_SIZE*FRAM_CHIPS)-1
 #endscript
 ' this is the TOTAL of all FRAM Devices
 #DEFINE FRAM_MAX_ADDRESS = 0x20000
@@ -65,23 +77,14 @@ Sub fram_wr_byte ( in addr as long , In data_out)
       target_address = target_address  | FRAM_DEVICE_1
       target_address = target_address & 0xFE
 
-'      crlf
-'      SerPrint 1, "wr_byte) Target Address = "
-'      SerPrint 1, hex(target_address )
-'      crlf
 
       'send WRITE command
         I2CSEND( target_address )
 
-'      SerPrint 1, "Address = "
-'      SerPrint 1, hex(addr_H )
-'      SerPrint 1, hex([byte]addr)
-'      crlf
-
        addrh = uf_shift ( addr, 8, >> )
        addrl = addr & 0xff
       'address MSB
-      'comment the next line if a Low-Density (<=2kB) device is used
+
         I2CSEND(addrh)
       'address LSB
         I2CSEND(addrl)
@@ -110,11 +113,6 @@ Sub fram_rd_byte( In addr as Long , Out ul_returnedbyte )
       target_address = target_address  | FRAM_DEVICE_1
       target_address = target_address & 0xFE
 
-'      crlf
-'      SerPrint 1, "rd_byte) Target Address = "
-'      SerPrint 1, hex(target_address )
-'      crlf
-
       ' send WRITE command
       I2CSEND( target_address )
 
@@ -127,18 +125,10 @@ Sub fram_rd_byte( In addr as Long , Out ul_returnedbyte )
       'address LSB
         I2CSEND(addrl)
 
-        ' generate Start COndition
-      I2CSTART
-' faster to reuse the address above and add 1
-'      target_address = uf_shift_long ( addr, 15, >> )
-'      target_address = target_address  | FRAM_DEVICE_1
-'      target_address = target_address | 0x01
+        ' generate reStart COndition
+      I2CRESTART
 
        target_address = target_address | 0x01
-'      crlf
-'      SerPrint 1, "3) Target Address = "
-'      SerPrint 1, hex(target_address )
-'      crlf
 
       ' send READ command
       I2CSEND( target_address  )
@@ -162,15 +152,12 @@ Sub fram_rd_deviceID( IN fram_device, out deviceID_1, out deviceID_2, out device
       Dim deviceID_3 As Byte Alias  target_address_H
 
       ' send WRITE command
-      I2CSEND( fram_device , ACK)
-      I2CStart
-      I2CSend ( 0xF9 , ACK)
-      I2CRECEIVE ( deviceID_1  , ACK )
-      I2CRECEIVE ( deviceID_2  , ACK )
-      I2CRECEIVE ( deviceID_3  , NACK )
-
-
-
+      I2CSEND( fram_device )
+      I2CReStart
+      I2CSend ( 0xF9 )
+      I2CRECEIVE ( deviceID_1 )
+      I2CRECEIVE ( deviceID_2 )
+      I2CRECEIVE ( deviceID_3 )
       I2CSTOP
 
 
@@ -183,17 +170,14 @@ Sub fram_sleep( in fram_device   )
       I2CSTART
       I2CSend ( 0xF8 )
 
-      ' ((0xA0|(int8)(address>>14))&0xFE);//&0xFE forces to write
-      ' use target address to return the values to the calling
-
       Dim deviceID_1 As Byte Alias  target_address_E
       Dim deviceID_2 As Byte Alias  target_address_U
       Dim deviceID_3 As Byte Alias  target_address_H
 
       ' send WRITE command
-      I2CSEND( fram_device , ACK)
+      I2CSEND( fram_device )
       I2CStart
-      I2CSend ( 0x86 , ACK)
+      I2CSend ( 0x86  )
       I2CSTOP
 
 End Function
@@ -208,16 +192,6 @@ end sub
 '.............................................................................
 sub fram_wr_page( In addr as Long, ul_data() as Byte, datalength as byte )
 
-
-'        crlf
-'        SerPrint 1, "fram_wr_page"
-'        crlf
-'        SerSend 1,9
-'        SerPrint 1, "Addr = 0x"
-'        SerPrint 1, hex( addr_E )
-'        SerPrint 1, hex( addr_U )
-'        SerPrint 1, hex( addr_H )
-'        SerPrint 1, hex( addr )
 
       ul_i = 0
       ul_j = 1
@@ -237,12 +211,6 @@ sub fram_wr_page( In addr as Long, ul_data() as Byte, datalength as byte )
       addrh = uf_shift ( ( addr & 0xffff) , 8, >> )
       addrl = ( addr & 0xffff)  & 0xff
 
-
-'        SerSend  1, 9
-'        SerPrint 1, "Addr = 0x"
-'        SerPrint 1, hex( addrh )
-'        SerPrint 1, hex( addrl )
-'        crlf
 
       'address MSB
       I2CSEND(addrh)
@@ -376,16 +344,6 @@ End Sub
 '.............................................................................
 sub fram_rd_page( addr as long,  out ul_data() as Byte, datalength as Byte )
 
-'          crlf
-'          SerPrint 1, "fram_rd_page"
-'          crlf
-'          sersend  1, 9
-'          SerPrint 1, "Addr = 0x"
-'          SerPrint 1, hex( addr_E )
-'          SerPrint 1, hex( addr_U )
-'          SerPrint 1, hex( addr_H )
-'          SerPrint 1, hex( addr )
-			
         dim ul_loopx as Word
         ' generate Start COndition
         I2CSTART
@@ -397,20 +355,9 @@ sub fram_rd_page( addr as long,  out ul_data() as Byte, datalength as Byte )
 
         ' send WRITE command
         I2CSend ( target_address )
-'          crlf
-'          SerSend  1, 9
-'          SerPrint 1, "Target = "
-'          SerPrint 1, hex( target_address )
-'          crlf
 
         addrh = uf_shift ( ( addr & 0xffff) , 8, >> )
         addrl = ( addr & 0xffff)  & 0xff
-
-'          SerSend  1, 9
-'          SerPrint 1, "Addr = 0x"
-'          SerPrint 1, hex( addrh )
-'          SerPrint 1, hex( addrl )
-'          crlf
 
         'address MSB
         'comment the next line if a Low-Density (<=2kB) device is used
@@ -466,42 +413,11 @@ Sub fram_next_page( addr as Long )
 
         ' send Start condition
         I2CSTART
-'                crlf
-'                SerPrint 1, "fram_next_page"
-'                crlf
-'                SerSend  1, 9
-'                SerPrint 1, "start addr = 0x"
-'                SerPrint 1, hex( addr_E )
-'                SerPrint 1, hex( addr_U )
-'                SerPrint 1, hex( addr_H )
-'                SerPrint 1, hex( addr )
-'            ' ((0xA0|(int8)(address>>14))&0xFE);//&0xFE forces to write
 
         target_address = uf_shift_long ( addr, 15, >> )
-'              crlf
-'              SerPrint 1, "target_address >> 0x"
-'              SerPrint 1, hex( target_address_E )
-'              SerPrint 1, hex( target_address_U )
-'              SerPrint 1, hex( target_address_H )
-'              SerPrint 1, hex( target_address )
-
 
         target_address = target_address  | FRAM_DEVICE_1
         target_address = target_address & 0xFE
-
-'                crlf
-'                SerPrint 1, "Adress Pointer = "
-'                SerPrint 1, hex( addr_E )
-'                SerPrint 1, hex( addr_U )
-'                SerPrint 1, hex( addr_H )
-'                SerPrint 1, hex( addr )
-
-
-'                  crlf
-'                  SerSend  1, 9
-'                  SerPrint 1, "New Target Device/Page = "
-'                  SerPrint 1, hex( target_address )
-'                  crlf
 
         ' send WRITE command
         I2CSend ( target_address )
@@ -509,12 +425,6 @@ Sub fram_next_page( addr as Long )
         'comment the next line if a Low-Density (<=2kB) device is used
         addrh = uf_shift ( ( addr & 0xffff) , 8, >> )
         addrl = ( addr & 0xffff)  & 0xff
-
-'                  SerSend  1, 9
-'                  SerPrint 1, "Addr = 0x"
-'                  SerPrint 1, hex( addrh )
-'                  SerPrint 1, hex( addrl )
-'                  crlf
 
         'address MSB
         'comment the next line if a Low-Density (<=2kB) device is used
