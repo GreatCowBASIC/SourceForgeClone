@@ -792,13 +792,13 @@ sub LCDSpace(in LCDValue)
           loop
 end sub
 
-sub LCD_ON
+sub LCDOn
    set LCD_RS OFF
     lcdwritebyte (b'00001100')
     wait 5 ms
 end Sub
 
-sub LCD_OFF
+sub LCDOn
     set LCD_RS OFF
     lcdwritebyte (b'00001000')
     wait 5 ms  'intentional delay for better effect. Not necessary
