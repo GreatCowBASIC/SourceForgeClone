@@ -85,7 +85,31 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">11/8/2014</span> Word of Great Cow
+<td><span style="font-weight: bold;">25/8/2014</span> Just posted a revised set of support files for I2C as follows<br>
+
+<ul><li><!--[if !supportLists]--><span style="font-family: Symbol;"><span style=""><span style="font-family: &quot;Times New Roman&quot;; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;"></span></span></span><!--[endif]-->A revised <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/I2CEEPROM.h">EPPROM.H</a> file. &nbsp;Now supports
+writing/reading bytes, strings and array to I2C Serial EEPROM devices.<o:p></o:p></li><li><!--[if !supportLists]--><span style="font-family: Symbol;"><span style=""><span style="font-family: &quot;Times New Roman&quot;; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;"></span></span></span><!--[endif]-->A new <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/DS18B20.h">DS18DS20.H</a> file. &nbsp;Supports three
+different ways of reading temperature from these inexpensive devices<o:p></o:p></li><li><!--[if !supportLists]--><span style="font-family: Symbol;"><span style=""><span style="font-family: &quot;Times New Roman&quot;; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">
+</span></span></span><!--[endif]-->A revised <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/lowlevel/i2c.h">I2C.H </a>header file.<span style="">&nbsp; </span>Supports Master mode and Slave mode with vastly
+improved documentation <span style="">&nbsp;</span>in this header
+file.<o:p></o:p></li><li><!--[if !supportLists]--><span style="font-family: Symbol;"><span style=""><span style="font-family: &quot;Times New Roman&quot;; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">
+</span></span></span><!--[endif]-->A revised <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/FRAM.h">FRAM.H </a>EEPROM header file.<span style="">&nbsp; </span>Support for this blinding fast I2C Serial EEPROM
+devices.<o:p></o:p></li><li><!--[if !supportLists]--><span style="font-family: Symbol;"><span style=""><span style="font-family: &quot;Times New Roman&quot;; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;"></span></span></span><!--[endif]-->A revised <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/lowlevel/lcd.h">LCD.H </a>file.<span style="">&nbsp;&nbsp; </span>Much improved in terms of speed &#8211; this is a
+must have include file.<span style="">&nbsp; </span>New commands
+also &#8211; LCD_ON &amp; LCD_OFF<o:p></o:p></li></ul>
+
+
+
+
+
+
+
+
+
+Thanks go to Thomas Henry, William Roth, Rikki White, Kent
+Schafer, Hugh (of course!) and Evan Venn.<span style="">&nbsp;
+</span>If I have forgotten to attribute this good work to anyone, please let me
+know!<br><span style="font-weight: bold;"><br>11/8/2014</span> Word of Great Cow
 Basic is getting out there. &nbsp;Hobby Components have now listed GCB as a
 development solution with a nice supporting guide. &nbsp;See <a href="http://forum.hobbycomponents.com/viewtopic.php?f=59&amp;t=1688">this link</a> for the&nbsp;Great Cow Basic Development Environment Quick Start Guide. <br><br><span style="font-weight: bold;">3/7/2014 &nbsp;</span>New&nbsp; support for&nbsp;
 EEPROMs and improved&nbsp; I2Csupport&nbsp; via the MSSP hardware module.&nbsp; The
