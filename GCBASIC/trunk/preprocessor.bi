@@ -1091,7 +1091,7 @@ LoadNextFile:
 		
 		IF Left(Temp, 1) = "#" AND INSTR(Temp, "IFDEF") = 0 AND INSTR(Temp, "IFNDEF") = 0 _
 			                    AND InStr(Temp, "ENDIF") = 0 And Left(Temp, 4) <> "#IF " _
-			                    AND InStr(Temp, "SCRIPT") = 0 AND INSTR(Temp, "ENDSCRIPT") = 0 THEN
+			                    AND InStr(Temp, "#SCRIPT") = 0 AND INSTR(Temp, "ENDSCRIPT") = 0 THEN
 			CurrPos = LinkedListDelete(CurrPos)
 			
 			IF Left(Temp, 7) = "#DEFINE" THEN
@@ -1762,3 +1762,4 @@ SUB RunScripts
 	Loop
 	
 END SUB
+
