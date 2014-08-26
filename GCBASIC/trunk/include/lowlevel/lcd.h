@@ -798,7 +798,7 @@ sub LCDOn
     wait 5 ms
 end Sub
 
-sub LCDOn
+sub LCDOff
     set LCD_RS OFF
     lcdwritebyte (b'00001000')
     wait 5 ms  'intentional delay for better effect. Not necessary
