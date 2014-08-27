@@ -27,25 +27,29 @@
 ' 2 bit routines    Stefano Bonomi
 ' Testing           Stefano Adami
 ' Revised 4 bit routines    Evan Venn
-' adapted to support LAT port support for fast devices
-
+' and adapted to support LAT port support for fast devices
+' Revised to improve performance and improved functionality William Roth
 '*************************************************************************
 '*************************************************************************
-'06-08-2014
-'This file (lcd_alt.h) is based upon LCD.H, modified to improve
-' performance in 8 bit and 4 bit modes.
+'08-17-2014
+' Modified for speed improvement in 4 and 8 bit modes.
 '
-'  1. All changes were made to subroutine  LCDnormal_write_byte
+'  1. MOdified sub LCDNormalWriteByte.
+'     A. Changed enable pulse duration duration to 2 us
+'     B. Added DEFINE  LCD_SPEED
+'         1. LCD_SPEED FAST
+'         2. LCD_SPEED MEDIUM
+'         3. LCD_SPEED SLOW
+'     C. The speed is improved from about 5,000 chars per second to
+'         apppoximately 20,000 CPS (FAST), 15,000 CPS (MEDUIM) and
+'         10,000 CPS (SLOW).
+'     D.  IF LCD_SPEED is not defined, the speed defaults to SLOW
 '
-'  2. The speed is improved from about 5,000 chars per second to either
-'     10,000 to 20,000 chars per second depending upon a new define in
-'     the main program.
+'  2. Created separate code sections for 4-Bit & 8-bit initalization
 '
-'  3. The new default character rate is 20K chars per seconds.
-'     To slow the speed down to 10K chars per second, add the following
-'     in  the main program:   #define LCD_SLOW
+'  3. Added comments to some code sections
 '
-'  4. Initial testing was done using a PIC16F690 and a PIC16F1829 (LAT)
+'  4. Added sub routines for LCD_OFF and LCD_ON
 '
 '   William Roth
 '**********************************************************************
@@ -147,148 +151,138 @@ end sub
 
 sub InitLCD
 
-          #IFDEF LCD_IO 2
-                    SET LCD_DB OFF
-                    SET LCD_CB OFF
-                    DIR LCD_DB OUT
-                    DIR LCD_CB OUT
-                    WAIT 35 MS
-                    SET LCD_RS OFF
-                    LCD2_NIBBLEOUT 0X03
-                    Wait 5 ms
-                    LCD2_NIBBLEOUT 0X03
-                    WAIT 1 MS
-                    LCD2_NIBBLEOUT 0X03
-                    WAIT 1 MS
-                    LCD2_NIBBLEOUT 0X02
-                    WAIT 1 MS
-                    LCDWriteByte 0x28
-                    WAIT 1 MS
-                    LCDWriteByte 0x08
-                    WAIT 1 MS
-                    LCDWriteByte 0x01
-                    WAIT 5 MS
-                    LCDWriteByte 0x06
-                    WAIT 1 MS
-                    LCDWriteByte 0x0C
-                    WAIT 1 MS
+     #IFDEF LCD_IO 2
+          SET LCD_DB OFF
+          SET LCD_CB OFF
+          DIR LCD_DB OUT
+          DIR LCD_CB OUT
+          WAIT 35 MS
+          SET LCD_RS OFF
+          LCD2_NIBBLEOUT 0X03
+          Wait 5 ms
+          LCD2_NIBBLEOUT 0X03
+          WAIT 1 MS
+          LCD2_NIBBLEOUT 0X03
+          WAIT 1 MS
+          LCD2_NIBBLEOUT 0X02
+          WAIT 1 MS
+          LCDWriteByte 0x28
+          WAIT 1 MS
+          LCDWriteByte 0x08
+          WAIT 1 MS
+          LCDWriteByte 0x01
+          WAIT 5 MS
+          LCDWriteByte 0x06
+          WAIT 1 MS
+          LCDWriteByte 0x0C
+          WAIT 1 MS
+     #ENDIF
+
+
+     'Initialization routines based upon code examples
+     'in HD44780 datasheet
+
+     'Configure RS,Enable & RW pin directions
+     #IFDEF LCD_IO 4,8
+
+         #IFNDEF LCD_LAT
+              DIR LCD_RS OUT
+              DIR LCD_Enable OUT
+         #ENDIF
+
+         #IFDEF LCD_LAT
+              DIR _LCD_RS OUT
+              DIR _LCD_Enable OUT
+         #ENDIF
+
+         #IFNDEF LCD_NO_RW      'RW enabled
+              #IFNDEF LCD_LAT
+                  DIR LCD_RW OUT
+              #ENDIF
+              #IFDEF LCD_LAT
+                 DIR _LCD_RW OUT
+              #ENDIF
+         #ENDIF
+
+         wait 10 ms
+         Wait until LCDReady
+               SET LCD_RS OFF
           #ENDIF
 
-          #IFDEF LCD_IO 4,8
-
-                    #IFNDEF LCD_LAT
-                           DIR LCD_RS OUT
-                    #ENDIF
-                    #IFDEF LCD_LAT
-                           DIR _LCD_RS OUT
-                    #ENDIF
-
-                    #IFNDEF LCD_NO_RW
-                              #IFNDEF LCD_LAT
-                                     DIR LCD_RW OUT
-                              #ENDIF
-                              #IFDEF LCD_LAT
-                                     DIR _LCD_RW OUT
-                              #ENDIF
-                    #ENDIF
-
-
-                    #IFNDEF LCD_LAT
-                           DIR LCD_Enable OUT
-                    #ENDIF
-                    #IFDEF LCD_LAT
-                           DIR _LCD_Enable OUT
-                    #ENDIF
-
-
-                    wait 10 ms
-                    Wait until LCDReady
-
-                    'Set data bus width
-                    SET LCD_RS OFF
-          #ENDIF
+          '**********************************
+          '8-bit "Initialization
+         '**********************************
           #IFDEF LCD_IO 8
-                    wait 15 ms    ' added ERV 16082014
-                    LCDWriteByte(b'00111000')
-                    wait 5 ms    ' added ERV 16082014
-                    LCDWriteByte(b'00111000')
-                    wait 11  10us    ' added ERV 16082014
-                    LCDWriteByte(b'00111000')
+               'wakeup
+               LCDWriteByte 0x30
+               wait 5 ms
+               repeat 3
+                   LCDWriteByte 0x30
+                   wait 200 us
+               end repeat
 
-
+               LCDWriteByte 0x38     '2 line mode
+               LCDWriteByte 0x06     'Cursor movement
+               LCDWriteByte 0x0C     'Entry mode
+               CLS   'Clear screen
           #ENDIF
-          #IFDEF LCD_IO 4
 
+          '***********************************
+          '4-bit initialization routine
+          '***********************************
+          #IFDEF LCD_IO 4
           ' revised LCDINIT Evan Venn March 2014
           ' modified by William Roth  July 2104
-                    'Set pins to output
-                    #IFNDEF LCD_LAT
-                        DIR LCD_DB4 OUT
-                        DIR LCD_DB5 OUT
-                        DIR LCD_DB6 OUT
-                        DIR LCD_DB7 OUT
-                    #ENDIF
-                    #IFDEF LCD_LAT
-                        DIR _LCD_DB4 OUT
-                        DIR _LCD_DB5 OUT
-                        DIR _LCD_DB6 OUT
-                        DIR _LCD_DB7 OUT
-                    #ENDIF
 
-                    set LCD_RS OFF
-                    #IFNDEF LCD_NO_RW
-                              set LCD_RW OFF
-                    #ENDIF
+                'Set pins to output
+                #IFNDEF LCD_LAT
+                     DIR LCD_DB4 OUT
+                     DIR LCD_DB5 OUT
+                     DIR LCD_DB6 OUT
+                     DIR LCD_DB7 OUT
+                #ENDIF
+                #IFDEF LCD_LAT
+                    DIR _LCD_DB4 OUT
+                    DIR _LCD_DB5 OUT
+                    DIR _LCD_DB6 OUT
+                    DIR _LCD_DB7 OUT
+                #ENDIF
 
-                    wait 15 ms
-                    '0011
-                    set LCD_DB4 ON
-                    set LCD_DB5 ON
-                    set LCD_DB6 OFF
-                    set LCD_DB7 OFF
-                    wait 2 us
+                #IFNDEF LCD_NO_RW
+                     set LCD_RW OFF
+                #ENDIF
+
+                wait 15 ms
+
+                'Wakeup 0x30
+                set LCD_DB4 ON
+                set LCD_DB5 ON
+                set LCD_DB6 OFF
+                set LCD_DB7 OFF
+                wait 2 us
+                PULSEOUT LCD_Enable, 2 us
+                wait 5 ms
+
+                Repeat 3   'three more times
                     PULSEOUT LCD_Enable, 2 us
-                    wait 5 ms
-                    Repeat 3
-                      PULSEOUT LCD_Enable, 2 us
-                      Wait 40 us
-                      #IFNDEF LCD_NO_RW
-                              set LCD_RW OFF
-                      #ENDIF
-                    end repeat
-                    Wait 5 ms
+                    Wait 200 us
+                end repeat
+                Wait 5 ms
 
+               'Set 4 bit mode    (0x20)
+                set LCD_DB4 OFF
+                set LCD_DB5 ON
+                set LCD_DB6 OFF
+                set LCD_DB7 OFF
+                wait 2 us
+                PULSEOUT LCD_Enable, 2 us
+                Wait 50 us
+                '===== now in 4 bit mode =====
 
-'function set       set 4 bit mode   0x20
-                    set LCD_DB4 OFF
-                    set LCD_DB5 ON
-                    set LCD_DB6 OFF
-                    set LCD_DB7 OFF
-                    wait 2 us
-                    PULSEOUT LCD_Enable, 2 us
-                    Wait 50 us
-
-      '================== now in 4 bit mode =================
-
-                    LCDWriteByte(b'011000000') 0x28
-                    wait 50 us
-                    LCDWriteByte(b'00000001') 0x01 clear
-                     wait 4 ms
-
-
-          #ENDIF
-          #IFDEF LCD_IO 4,8
-
-                    'Set Cursor movement
-                    SET LCD_RS OFF
-                    LCDWriteByte(b'00000110')
-                    wait 5 10us
-                    'Turn off cursor
-                    LCDWriteByte(b'00001100')
-                    wait 5 10us
-
-                    'Clear screen
-                    CLS
+                LCDWriteByte 0x28    '(b'011000000') 0x28  set 2 line mode
+                LCDWriteByte 0x06    '(b'00000110')  'Set Cursor movement
+                LCDWriteByte 0x0C    '(b'00001100')  'Turn off cursor
+                CLS  'Clear the display
           #ENDIF
 end sub
 
@@ -479,132 +473,128 @@ end function
 
 sub LCDNormalWriteByte(In LCDByte)
 
-' *****    This sub modified by William Roth *****
+' *****    This subroutine  modified by William Roth *****
+'Reduced enable pulse to 2 us
+'Added define for LCD_SPEED Slow , Medium , fast
 
-'Reduced enable pulse to 1 us
-'Added conditional delay for for LCD_SLOW
+     #IFNDEF LCD_NO_RW
+          #IFDEF LCD_IO 4,8
+               wait until LCDReady
+               set LCD_RW OFF 'Write mode
+          #ENDIF
+     #ENDIF
 
-          #IFNDEF LCD_NO_RW
-                    #IFDEF LCD_IO 4,8
-                              wait until LCDReady
-                              set LCD_RW OFF 'Write mode
-                    #ENDIF
+     #IFDEF LCD_IO 2
+          LCD2_NIBBLEOUT Swap4(LCDByte)     'Swap byte; Most significant NIBBLE sent first
+          LCD2_NIBBLEOUT LCDByte            'Less Significant NIBBLE output
+     #ENDIF
+
+     #IFDEF LCD_IO 4  'Using 4 bit mode
+
+         'Set pins to output
+          #IFNDEF LCD_LAT
+              DIR LCD_DB4 OUT
+              DIR LCD_DB5 OUT
+              DIR LCD_DB6 OUT
+              DIR LCD_DB7 OUT
           #ENDIF
 
-          #IFDEF LCD_IO 2
-                    LCD2_NIBBLEOUT Swap4(LCDByte)           'Swap byte; Most significant NIBBLE sent first
-                    LCD2_NIBBLEOUT LCDByte                  'Less Significant NIBBLE output
+          #IFDEF LCD_LAT
+              DIR _LCD_DB4 OUT
+              DIR _LCD_DB5 OUT
+              DIR _LCD_DB6 OUT
+              DIR _LCD_DB7 OUT
           #ENDIF
 
-          #IFDEF LCD_IO 4
-                    'Set pins to output
-                    #IFNDEF LCD_LAT
-                        DIR LCD_DB4 OUT
-                        DIR LCD_DB5 OUT
-                        DIR LCD_DB6 OUT
-                        DIR LCD_DB7 OUT
-                    #ENDIF
-                    #IFDEF LCD_LAT
-                        DIR _LCD_DB4 OUT
-                        DIR _LCD_DB5 OUT
-                        DIR _LCD_DB6 OUT
-                        DIR _LCD_DB7 OUT
-                    #ENDIF
+          'Write upper nibble to output pins
+           set LCD_DB4 OFF
+           set LCD_DB5 OFF
+           set LCD_DB6 OFF
+           set LCD_DB7 OFF
+           if LCDByte.7 ON THEN SET LCD_DB7 ON
+           if LCDByte.6 ON THEN SET LCD_DB6 ON
+           if LCDByte.5 ON THEN SET LCD_DB5 ON
+           if LCDByte.4 ON THEN SET LCD_DB4 ON
+           wait 1 us
+           pulseout LCD_enable, 2 us
+           Wait 2 us
 
+           'All data pins low
+           set LCD_DB4 OFF
+           set LCD_DB5 OFF
+           set LCD_DB6 OFF
+           set LCD_DB7 OFF
 
-                    'Write upper nibble to output pins
-                    set LCD_DB4 OFF
-                    set LCD_DB5 OFF
-                    set LCD_DB6 OFF
-                    set LCD_DB7 OFF
-                    if LCDByte.7 ON THEN SET LCD_DB7 ON
-                    if LCDByte.6 ON THEN SET LCD_DB6 ON
-                    if LCDByte.5 ON THEN SET LCD_DB5 ON
-                    if LCDByte.4 ON THEN SET LCD_DB4 ON
-                    wait 1 us
-                  '************************************
-                        pulseout LCD_enable, 2 us
-                        Wait 2 us
-                  '************************************
+          'Write lower nibble to output pins
+           if LCDByte.3 ON THEN SET LCD_DB7 ON
+           if LCDByte.2 ON THEN SET LCD_DB6 ON
+           if LCDByte.1 ON THEN SET LCD_DB5 ON
+           if LCDByte.0 ON THEN SET LCD_DB4 ON
+           wait 1 us
+           pulseout LCD_enable, 2 us
+           wait 2 us
 
-                    'Write lower nybble to output pins
-                    set LCD_DB4 OFF
-                    set LCD_DB5 OFF
-                    set LCD_DB6 OFF
-                    set LCD_DB7 OFF
-                    if LCDByte.3 ON THEN SET LCD_DB7 ON
-                    if LCDByte.2 ON THEN SET LCD_DB6 ON
-                    if LCDByte.1 ON THEN SET LCD_DB5 ON
-                    if LCDByte.0 ON THEN SET LCD_DB4 ON
-                    wait 1 us
-                    'Pulse enable pin
-                 '*********************************
-                       pulseout LCD_enable, 2 us
-                       wait 2 us
-                 '***********************************
+          'Set data pins low again
+           SET LCD_DB7 OFF
+           SET LCD_DB6 OFF
+           SET LCD_DB5 OFF
+           SET LCD_DB4 OFF
 
-                    'Set data pins low again
-                    SET LCD_DB7 OFF
-                    SET LCD_DB6 OFF
-                    SET LCD_DB5 OFF
-                    SET LCD_DB4 OFF
-              '*******************************************
+           'character delay settings
+           #IFDEF LCD_SPEED FAST   'Charcter rate  ~20K
+                wait 32  us
+           #ENDIF
 
-               '
-                    #IFDEF LCD_SPEED FAST
-                        wait 30  us
-                    #ENDIF
+           #IFDEF LCD_SPEED MEDIUM  'Character Rate ~15K
+                wait 50 us
+           #ENDIF
 
-                    #IFDEF LCD_SPEED MEDIUM
-                        wait 50 us
-                    #ENDIF
+           #IFDEF LCD_SPEED SLOW   'Character Rate  ~10K
+                wait 80 us
+           #ENDIF
 
-                    #IFDEF LCD_SPEED SLOW  'Charcter rate = 20K
-                        wait 80 us      'character delay time
-                    #ENDIF
+           #IFNDEF LCD_Speed  ' Default to slow
+                wait 80 us
+           #ENDIF
 
-                    #IFNDEF LCD_Speed  ' default to slow
-                       wait 80 us
-                    #ENDIF
-               '*********************************************
+      #ENDIF
 
-          #ENDIF
+      #IFDEF LCD_IO 8   'Using 8 bit mode
 
-          #IFDEF LCD_IO 8
-                    'Set data port to output, and write a value to it
-                    #IFNDEF LCD_LAT
-                            DIR LCD_DATA_PORT out
-                    #ENDIF
-                    #IFDEF LCD_LAT
-                           DIR _LCD_DATA_PORT out
-                    #ENDIF
-                    LCD_DATA_PORT = LCDByte
+           'Set data port to output, and write a value to it
+           #IFNDEF LCD_LAT
+                DIR LCD_DATA_PORT out
+           #ENDIF
 
-               '********Added / Changed *************************
+           #IFDEF LCD_LAT
+                DIR _LCD_DATA_PORT out
+           #ENDIF
 
-                     wait 2 us
-                     pulseout LCD_enable, 2 us
-                     Wait 2  us
-                     LCD_DATA_PORT = 0
+           'write the data
+            LCD_DATA_PORT = LCDByte
+            wait 2 us
+            pulseout LCD_enable, 2 us
+            Wait 2  us
+           LCD_DATA_PORT = 0  'Set all data pins low
 
-                    #IFDEF LCD_Speed FAST   'Char Rate ~20K
-                       wait 30 us
-                    #ENDIF
+           'character delay settings
+           #IFDEF LCD_Speed FAST   'Char Rate ~20K
+                wait 32 us
+           #ENDIF
 
-                    #IFDEF LCD_SPEED MEDIUM  'Char Rate ~15K
-                        wait 50 us
-                    #ENDIF
+           #IFDEF LCD_SPEED MEDIUM  'Char Rate ~15K
+                wait 50 us
+           #ENDIF
 
-                    #IFDEF LCD_SPEED SLOW  ' Char Rate ~ 10K
-                        wait 80 us
-                    #ENDIF
+           #IFDEF LCD_SPEED SLOW  ' Char Rate ~10K
+                wait 80 us
+           #ENDIF
 
-                    #IFNDEF LCD_SPEED
-                       wait 80 us
-                    #ENDIF
-                 '*********************************
+           #IFNDEF LCD_SPEED ' default to slow
+                wait 80 us
+           #ENDIF
 
-          #ENDIF
+      #ENDIF
 
 end sub
 
@@ -792,12 +782,14 @@ sub LCDSpace(in LCDValue)
           loop
 end sub
 
+#DEFINE LCD_ON LCDOn
 sub LCDOn
    set LCD_RS OFF
     lcdwritebyte (b'00001100')
     wait 5 ms
 end Sub
 
+#DEFINE LCD_OFF LCDOff
 sub LCDOff
     set LCD_RS OFF
     lcdwritebyte (b'00001000')
