@@ -1,411 +1,366 @@
+'    Software I2C routines for the GCBASIC compiler
+'    Copyright (C) 2013 Evan R. Venn
+'    Copyright (C) 2014 Thomas Henry
+'    Copyright (C) 2014 Evan R. Venn
+'
+'    This library is free software' you can redistribute it and/or
+'    modify it under the terms of the GNU Lesser General Public
+'    License as published by the Free Software Foundation' either
+'    version 2.1 of the License, or (at your option) any later version.
+'
+'    This library is distributed in the hope that it will be useful,
+'    but WITHOUT ANY WARRANTY' without even the implied warranty of
+'    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+'    Lesser General Public License for more details.
+'
+'    You should have received a copy of the GNU Lesser General Public
+'    License along with this library' if not, write to the Free Software
+'    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
 '    Created Evan R Venn - Oct 2013
-'    Beta v0.81
-'    Beta v0.82 - completed routines, all tested
-'    Beta v0.83 - correct NACK in Enab_Osc
-'    0.84 corrected errors in ENABLE and DISABLE clock routines
-
- ' This is the address of the generic DS1307
- #define DS1307_AddrWrite 0xD0
- #define DS1307_AddrRead 0xD1
-
-
-
-
-
-' Examples #1
-'DS1307_Dis_Osc
-'DS1307_Enab_Osc
-'DS1307_ResetClock
-'DS1307_SetClock ( 10, 0, 0 , 7, 5, 10, 13 )
-'DS1307_SetTime ( 23, 59, 57 )
-'DS1307_SetDate ( 5, 10, 13 )
-'DS1307_ReadTime( Hour , Min , Sec)
-
-
-
-
-' 0x71 in the Hours register would make it 11 PM
-' 0x51 in the Hours register would make it 11 AM
+'    Revised Evan R Venn - Beta v0.81
+'    Revised Evan R Venn - Beta v0.82 - completed routines, all tested
+'    Revised Evan R Venn - Beta v0.83 - correct NACK in Enab_Osc
+'    Revised Evan R Venn - Beta 0.84 corrected errors in ENABLE and DISABLE clock routines
+'    Revised Evan R Venn - Oct 2013, thanks go to Microchip and then Application Note AN1488 @ Beta v0.90
+'    Revised Thomas Henry, May 25, 2014
+'    edited for consistency and commented code
+'    removed several redundancies
+'    combined DS1307_Enab_Osc and DS1307_Dis_Osc
+'    combined DS1307_Set12HourMode and DS1307_Set24HourMode
+'    combined DS1307_SQWEnable and DS1307_SQWDisable
+'    made parameters private so not to conflict with user's variables,
+'    reused parameters where reasonable to save memory.
+'    amplified hour-mode to work under all conditions
+'    added a.m./p.m. flag (DS_A_P).
+'    renamed read and writer commands to indicate generality
+'    Revised Thomas Henry, May 26, 2014
+'    added DOW to DS1307_ReadDate and DS1307_SetDate
+'    added DS1307_ReadHourMode
+'    tweaked the comments and external documentation
 '
-' More detail:
-' 0x51 = %0101 0001 <-- 1's position of hour
-'        ||||_________ 10's position of hour. 10+1 = 11 O-clock
-'        |||__________ 1 = PM, 0 = AM (in 12-hour mode)
-'        ||___________ 1 = 12-hour mode, 0 = 24-hour mode
-'        |____________ ignore this bit
-'
-' Set time & date to  11:59:00, Day 2, Date:Month:Year 30:08:2007
+'    10 bytes are used as input and output parameters. They are:
+'    DS_Value, DS_Addr, DS_Hour, DS_Min, DS_Sec, DS_A_P, DS_Date, DS_Month, DS_Year and DS_DOW.
 
-' Examples #2
-'DS1307_SetTime ( 0x51, 59, 57 )
-'DS1307_ReadTime( Hour , Min , Sec)
-'DS1307_SQWEnable ( 1 )
+'    Quick Command Reference:
 
+'    DS1307_Enable(flag)
+     'DS1307_ResetClock
+'    DS1307_SetClock(hour, minute, second, DOW, date, month, year)
+'    DS1307_SetTime(hour, minute, second)
+'    DS1307_SetDate(DOW, date, month, year)
+'    DS1307_ReadClock(hour, minute, second, a.m.|p.m., DOW, date, month, year)
+'    DS1307_ReadTime(hour, minute, second, a.m.|p.m.)
+'    DS1307_ReadDate(DOW, date, month, year)
+'    DS1307_SetHourMode(12|24)
+'    DS1307_ReadHourMode(12|24)
+'    DS1307_SetSQW(rate)
+'    DS1307_Write(address, value)
+'    DS1307_Read(address, value)
 
-' DS1307_Enab_Osc
-' DS1307_Dis_Osc
-' DS1307_ResetClock
-' DS1307_SetClock ( 10, 0, 0 , 7, 5, 10, 13 )
-' DS1307_SetTime ( 23, 59, 57 )
-' DS1307_SetDate ( 5, 10, 13 )
-' DS1307_ReadClock (out Hour , out Min , out Sec , out DayOfWeek , out CDate , out CMonth , out CYear)
-' DS1307_ReadTime( Hour , Min , Sec)
-' DS1307_ReadDate ( out CDate , out CMonth , out CYear)
+;See the subroutine definitions below for full details on each.
 
+;----- Constants
 
-' DS1307_SQWEnable (Optional RateSelect as Byte = 1 )
- ' Enables The SQW/OUT pin of chip
- ' If RateSelect=1 then the outpout Frequency is 1Hz
- ' If RateSelect=4 then the outpout Frequency is 4.096KHz
- ' If RateSelect=8 then the outpout Frequency is 8.192KHz
- ' If RateSelect=32 then the outpout Frequency is 32.768KHz
+ ' These are the addresses of the generic DS1307 Real-Time Clock
+ #define DS_AddrWrite 0xD0
+ #define DS_AddrRead  0xD1
 
-' DS1307_SQDisable
+;-----
 
-' DS1307_WriteReg ( DS1307Reg, DS1307Value )
-' DS1307_ReadRam  ( DS1307Reg, DS1307Value )
+function DecToBcd(in DS_Value) as byte
+  ;Convert pure decimal number to binary coded decimal
+  DecToBcd=(DS_Value/10)*16+DS_Value%10
+end function
 
+;-----
 
+function BcdToDec(in DS_Value) as byte
+  ;Convert binary coded decimal to pure decimal
+  BcdToDec=(DS_Value/16)*10+DS_Value%16
+end function
 
+;-----
 
+sub DS1307_Enable(in DS_Value)
+  ;Enables clock if DS_Value = TRUE, disables if DS_Value = FALSE
+   I2CStart
+   I2CSend(DS_AddrWrite)
+   I2CSend(0)                     ;indicate register 0
+   I2CStart
+   I2CSend(DS_AddrRead)
+   I2CReceive(DS_Sec, NACK)       ;get the current seconds
+   if DS_Value then
+    set DS_Sec.7 off              ;CH bit = 0 enables
+   else
+    set DS_Sec.7 on               ;CH bit = 1 disables
+   end if
+   I2CStart
+   I2CSend(DS_AddrWrite)
+   I2CSend(0)                     ;indicate register 0
+   I2CSend(DS_Sec)                ;now send updated value
+   I2CStop
+end sub
 
+;-----
 
+sub DS1307_ResetClock
+  ;Reset clock to 00:00:00 01 01/01/00.
+  ;Also sets 24-hour mode and enables the clock.
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(0)                      ;begin with address 0
+  I2CSend(0)                      ;then set the seven
+  I2CSend(0)                      ;consecutive locations
+  I2CSend(0)
+  I2CSend(1)
+  I2CSend(1)
+  I2CSend(1)
+  I2CSend(0)
+  I2CStop
+end sub
 
+;-----
 
+sub DS1307_SetClock(in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date, in DS_Month, in DS_Year)
+  ;Set entire clock: hours, minutes, seconds, day of week, date, month, year
+  ;Also sets 24-hour mode and enables the clock.
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(0)                      ;begin with address 0
+  I2CSend(DecToBcd(DS_Sec))       ;then set the seven
+  I2CSend(DecToBcd(DS_Min))       ;consecutive values
+  I2CSend(DecToBcd(DS_Hour)
+  I2CSend(DecToBcd(DS_DOW))
+  I2CSend(DecToBcd(DS_Date))
+  I2CSend(DecToBcd(DS_Month))
+  I2CSend(DecToBcd(DS_Year))
+  I2CStop
+end sub
 
+;-----
 
+sub DS1307_SetTime(in DS_Hour, in DS_Min, in DS_Sec)
+  ;Set time only: hours, minutes, seconds.
+  ;Also sets 24-hour mode and enables the clock.
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(0)                      ;begin with address 0
+  I2CSend(DecToBcd(DS_Sec))       ;then set the three
+  I2CSend(DecToBcd(DS_Min))       ;consecutive values
+  I2CSend(DecToBcd(DS_Hour))
+  I2CStop
+end sub
 
+;-----
 
-
-
-
-
-
-;Variables
- Dim Sec As byte
- Dim Min As byte
- Dim Hour As byte
- Dim DayOfWeek as byte
- Dim CDate as byte
- Dim CMonth as byte
- Dim CYear as Byte
- Dim va as byte
- va=0
- Sec=0
- Min=0
- Hour=0
- CDate=0
- CMonth=0
- CYear=0
-
-
-
-
- 'Clear Bit 7 of 00h register. Oscillator is enabled, clock start
- 'On first application of power to the device the time and date registers
- 'are typically reset to 01/01/00 01 00:00:00 (MM/DD/YY DOW HH:MM:SS).
- 'The CH bit in the seconds register will be set to a 1
- Sub DS1307_Enab_Osc
-
-     I2CSTART
-     I2CSEND ( DS1307_AddrWrite )
-     I2CSEND ( 0 )
-     I2CSTART
-     I2CSEND ( DS1307_AddrRead )
-     I2CReceive ( sec, NACK )
-     Sec=BcdToDec( Sec )
-     Sec=  Sec & 127
-     I2CSTART
-     I2CSEND ( DS1307_AddrWrite )
-     I2CSEND ( 0 )
-     I2CSEND ( DecToBcd(sec) )
-     I2CStop
-
-
+sub DS1307_SetDate(in DS_DOW, DS_Date, in DS_Month, in DS_Year)
+  ;Set date only: day of week, date, month, year
+  ;There is no error detection for out-of-range dates.
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(3)                      ;begin with address 3
+  I2CSend(DecToBcd(DS_DOW))       ;then set the four
+  I2CSend(DecToBcd(DS_Date))      ;consecutive values
+  I2CSend(DecToBcd(DS_Month))
+  I2CSend(DecToBcd(DS_Year))
+  I2CStop
  end sub
 
-'Set Bit 7 of 00h register. Oscillator is disabled, clock stop
- Sub DS1307_Dis_Osc
+;-----
 
-     I2CSTART
-     I2CSEND ( DS1307_AddrWrite )
-     I2CSEND ( 0 )
-     I2CSTART
-     I2CSEND ( DS1307_AddrRead )
-     I2CReceive ( sec , NACK)
-     Sec= BcdToDec(Sec)
-     Sec = Sec | 128
-     I2CSTART
-     I2CSEND ( DS1307_AddrWrite )
-     I2CSEND ( 0 )
-     I2CSEND ( DecToBcd(sec) )
-     I2CStop
+sub DS1307_ReadClock(out DS_Hour, out DS_Min, out DS_Sec, out DS_A_P, out DS_DOW, out DS_Date, out DS_Month, out DS_Year)
+;Read entire clock: hours, minutes, seconds, a.m. or p.m., day of week, date, month, year
+;DS_A_P = 0 means a.m. DS_A_P = 1 means p.m.
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(0)                      ;begin with address 0
+  I2CStop
+  I2CStart
+  I2CSend(DS_AddrRead)
+  I2CReceive(DS_Sec)              ;get seconds
+  DS_Sec = BcdToDec(DS_Sec & 127) ;strip off CH bit
 
+  I2CReceive(DS_Min)              ;get minutes
+  DS_Min = BcdToDec(DS_Min)       ;bit 7 is always 0
 
- End sub
+  I2CReceive(DS_Hour)             ;get hours
+  if DS_Hour.6 then               ;12-hour mode
+    DS_A_P = DS_Hour.5            ;a.m. or p.m.
+    DS_Hour = BcdToDec(DS_Hour & 31)
+  else
+    DS_Hour = BcdToDec(DS_Hour)   ;24-hour mode
+    DS_A_P = (DS_Hour > 11)       ;a.m. or p.m.
+  end if
 
-' Resets the clock to 00:00:00 01 01/01/00
- Sub DS1307_ResetClock
-     I2CSTART
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( 0 )
-     I2CSEND( 0 )
-     I2CSEND( 0 )
-     I2CSEND( 0 )
-     I2CSEND( 1 )
-     I2CSEND( 1 )
-     I2CSEND( 1 )
-     I2CSEND( 0 )
-     I2CStop
+  I2CReceive(DS_DOW)              ;get day of week
+  DS_DOW = BcdToDec(DS_DOW)
 
+  I2CReceive(DS_Date)             ;get date
+  DS_Date = BcdToDec(DS_Date)
+
+  I2CReceive(DS_Month)            ;get month
+  DS_Month = BcdToDec(DS_Month)
+
+  I2CReceive(DS_Year, NACK)       ;get year
+  DS_Year = BcdToDec(DS_Year)
+  I2CStop
  end sub
 
-'Self explained
- Sub DS1307_SetClock (In Hour , In Min , In Sec , In DayOfWeek , In CDate , in CMonth , in CYear)
+;-----
 
-     I2CSTART
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( 0 )
-     I2CSEND( DecToBcd(Sec) )
-     I2CSEND( DecToBcd(Min) )
-     I2CSEND( DecToBcd(Hour )
-     I2CSEND( DecToBcd(DayOfWeek) )
-     I2CSEND( DecToBcd(CDate) )
-     I2CSEND( DecToBcd(CMonth) )
-     I2CSEND( DecToBcd(CYear) )
-     I2CStop
+sub DS1307_ReadTime(out DS_Hour, out DS_Min, out DS_Sec, out DS_A_P)
+  ;Read time only: hours, minutes, seconds, a.m. or p.m.
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(0)                      ;begin with address 0
+  I2CStart
+  I2CSend(DS_AddrRead)
+  I2CReceive(DS_Sec)              ;get the seconds
+  DS_Sec = BcdToDec(DS_Sec & 127) ;strip off CH bit
 
+  I2CReceive(DS_Min)              ;get the minutes
+  DS_Min = BcdToDec(DS_Min)
 
- End sub
+  I2CReceive(DS_Hour, NACK)       ;get the hours
+  if DS_Hour.6 then               ;12-hour mode
+    DS_A_P = DS_Hour.5            ;a.m. or p.m.
+    DS_Hour = BcdToDec(DS_Hour & 31)
+  else
+    DS_Hour = BcdToDec(DS_Hour)   ;24-hour mode
+    DS_A_P = (DS_Hour > 11)       ;a.m. or p.m.
+  end if
+  I2CStop
+end sub
 
-'Self explained
- Sub DS1307_SetTime (in Hour as byte , in Min as byte ,  l_Sec as byte)
+;-----
 
-     I2CSTART
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( 0 )
-     I2CSEND( DecToBcd(l_Sec) )
-     I2CSEND( DecToBcd(Min) )
-     I2CSEND( DecToBcd(Hour) )
-     I2CStop
+sub DS1307_ReadDate(out DS_DOW, out DS_Date, out DS_Month, out DS_Year)
+;Get date only: day of week, date, month, year
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(3)                      ;begin with address 3
+  I2CStart
+  I2CSend(DS_AddrRead)
+  I2CReceive(DS_DOW)              ;get day of week
+  DS_Date = BcdToDec(DS_DOW)
+  I2CReceive(DS_Date)             ;get date
+  DS_Date = BcdToDec(DS_Date)
+  I2CReceive(DS_Month)            ;get month
+  DS_Month = BcdToDec(DS_Month)
+  I2CReceive(DS_Year, NACK)       ;get year
+  DS_Year = BcdToDec(DS_Year)
+  I2CStop
+end sub
 
- End Sub
+;-----
 
-'Self explained
- Sub DS1307_SetDate (In CDate , in CMonth , in CYear)
+sub DS1307_SetHourMode(in DS_A_P)
+  ;Set hour mode. 12 = 12-hour, all else = 24-hour
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(2)                      ;located in address 2
+  I2CStart
+  I2CSend(DS_AddrRead)
+  I2CReceive(DS_Hour, NACK)       ;get current hours and mode
+  if DS_A_P = 12 then             ;change to 12-hour mode
+    if !DS_Hour.6 then            ;only if in 24-hour mode
+      DS_Hour = BcdToDec(DS_Hour) ;read current hour
+      if DS_Hour > 12 then        ;it's a p.m.
+        DS_Hour -= 12             ;reduce to 12-hour mode
+        DS_Hour = DecToBcd(DS_Hour) ;convert to BCD
+        set DS_Hour.5 on          ;indicate p.m.
+      else
+        DS_Hour = DecToBcd(DS_Hour)
+      end if
+      set DS_Hour.6 on            ;indicate 12-hour mode now
+    end if
+  else                            ;change to 24-hour mode
+    if DS_Hour.6 then             ;only if in 12-hour mode
+      DS_A_P = DS_Hour & 32       ;save am/pm flag
+      DS_Hour = BcdToDec(DS_Hour & 31)  ;strip it out
+      if DS_A_P then              ;p.m. time
+        DS_Hour += 12             ;convert to 24-hour format
+      end if
+      DS_Hour = DecToBcd(DS_Hour) ;top 2 bits are 0
+    end if
+  end if
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(2)
+  I2CSend(DS_Hour)                ;send hours and flag back again
+  I2CStop
+end sub
 
-     I2CSTART
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( 4 )
-     I2CSEND( DecToBcd(CDate) )
-     I2CSEND( DecToBcd(CMonth) )
-     I2CSEND( DecToBcd(CYear) )
-     I2CStop
+;-----
 
- End Sub
+sub DS1307_ReadHourMode(out DS_A_P)
+  ;Return the current hour mode, 12 or 24
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(2)                      ;go to address 2
+  I2CStart
+  I2CSend(DS_AddrRead)
+  I2CReceive(DS_A_P, NACK)        ;get entire hour byte
+  I2CStop
 
-'Self explained
- Sub DS1307_ReadClock (out Hour , out Min , out Sec , out DayOfWeek , out CDate , out CMonth , out CYear)
+  if DS_A_P.6 then                ;read the mode bit
+    DS_A_P = 12                   ;and translate
+  else
+    DS_A_P = 24
+  end if
+end sub
 
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( 0 )
-     I2CStop
-     I2CStart
-     I2CSEND( DS1307_AddrRead )
-     I2CReceive ( Sec )
-     Sec=BcdToDec(Sec & 127)
-     I2CReceive ( Min )
-     Min=BcdToDec(Min & 127)
-     I2CReceive ( Hour )
+;-----
 
-     if Hour.6 then
-     		Hour=BcdToDec(Hour &31)
-     Else
-     		Hour=BcdToDec(Hour & 63)
-     End if
+sub DS1307_SetSQW(in DS_Value)
+  ;Set square wave output pin mode
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  I2CSend(7)                      ;location is address 7
+  select case DS_Value
+     case 0                       ;0 = disable completely
+          I2CSend(0)
+     case 4                       ;4 = 4.096kHz
+          I2CSend(17)
+     case 8                       ;8 = 8.192kHz
+          I2CSend(18)
+     case 32                      ;32 = 32.768kHz
+          I2CSend(19)
+     case else                    ;anything else defaults to 1 Hz
+          I2CSend(16)
+  end select
+  I2CStop
+end sub
 
-     I2CReceive ( DayOfWeek )
-     DayOfWeek=BcdToDec(DayOfWeek & 7)
-     I2CReceive ( CDate )
-     CDate=BcdToDec(CDate & 63)
-     I2CReceive ( CMonth )
-     CMonth=BcdToDec(CMonth & 31)
-     I2CReceive ( CYear , NACK )
-     CYear=BcdToDec(CYear)
-     I2CStop
- End Sub
+;-----
 
-'Self explained
- Sub DS1307_ReadTime (Out Hour , Out Min , Out Sec)
+sub DS1307_Write(in DS_Addr, in DS_Value)
+  ;Write to the internal RAM. Use addresses 0x08 to 0x3F only,
+  ;else there will be wraparound to the register space of
+  ;0x00 to 0x07. This is especially important when doing
+  ;multibyte writes. But note that this subroutine could
+  ;also be used to write to clock registers 0 though 7 if
+  ;that's really what you want, for low level access.
+  I2CStart
+  I2CSend(DS_AddrWrite)           ;indicate write mode
+  I2CSend(DS_Addr)                ;send address
+  I2CSend(DS_Value)               ;send value
+  I2CStop
+end sub
 
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( 0 )
-     I2CStart
-     I2CSEND( DS1307_AddrRead )
-     I2CReceive ( Sec )
-     Sec=BcdToDec(Sec & 127)
-     I2CReceive ( Min )
-     Min=BcdToDec(Min & 127)
-     I2CReceive ( Hour , NACK )
+;-----
 
-     if Hour.6 then
-     		Hour=BcdToDec(Hour &31)
-     Else
-     		Hour=BcdToDec(Hour & 63)
-     End if
-     I2CStop
-
-
- End sub
-
-'Self explained
- Sub DS1307_ReadDate ( out CDate , out CMonth , out CYear)
-
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( 4 )
-     I2CStart
-     I2CSEND( DS1307_AddrRead )
-     I2CReceive ( CDate )
-     CDate=BcdToDec(CDate & 63)
-     I2CReceive ( CMonth )
-     CMonth=BcdToDec(CMonth & 31)
-     I2CReceive ( CYear , NACK )
-     CYear=BcdToDec(CYear)
-     I2CStop
-
- end sub
-
- 'Set Bit 6 of 02h register. The DS1307 run in 12-hour mode
- 'The hours value must be re-entered whenever the 12/24-hour mode bit is changed.
- Sub DS1307_Set12HourMode
-
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSend ( 2 )
-     I2CStart
-     I2CSEND( DS1307_AddrRead )
-     I2CReceive ( Hour , NACK )
-     Hour.6=1
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSend ( 2 )
-     I2CSend ( Hour )
-     I2CStop
-
- End sub
-
- 'Clear Bit 6 of 02h register. The DS1307 run in 24-hour mode
- 'The hours value must be re-entered whenever the 12/24-hour mode bit is changed.
- Sub DS1307_Set24HourMode
-
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSend ( 2 )
-     I2CStart
-     I2CSEND( DS1307_AddrRead )
-     I2CReceive ( Hour, NACK )
-     Hour.6=0
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSend ( 2 )
-     I2CSend ( Hour )
-     I2CStop
-
- End sub
-
- ' Enables The SQW/OUT pin of chip
- ' If RateSelect=1 then the outpout Frequency is 1Hz
- ' If RateSelect=4 then the outpout Frequency is 4.096KHz
- ' If RateSelect=8 then the outpout Frequency is 8.192KHz
- ' If RateSelect=32 then the outpout Frequency is 32.768KHz
- Sub DS1307_SQWEnable (Optional RateSelect as Byte = 1 )
-
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSend ( 7 )
-     Select case RateSelect
-         Case 0
-              I2CSend ( 0 )
-         Case 1
-              I2CSend ( 16 )
-         Case 4
-              I2CSend ( 17 )
-         Case 8
-              I2CSend ( 18 )
-         Case 32
-              I2CSend ( 19 )
-         case else
-              I2CSend ( 16 )
-     End Select
-     I2CStop
-
- End sub
-
- 'Disable the SQW/OUT pin of chip (pin=off)
- Sub DS1307_SQDisable
-
-     I2CStart
-     I2CSEND( DS1307_AddrWrite )
-     I2CSend ( 7 )
-     I2CSend ( 0 )
-     I2CStop
-
- End Sub
-
-
-' 56 bytes of NV SRAM from 0x08 to 0x3f
-' 56-Byte, Battery-Backed, General-Purpose RAM with Unlimited Writes
-'The RTC registers are located in address locations 00h to 07h. The RAM registers are located in address locations 08h to 3Fh. During a multibyte access, when the address pointer reaches 3Fh, the end of RAM space, it wraps around to location 00h, the beginning of the clock space.
-
- Sub DS1307_WriteRam (  in l_DS1307Reg, in l_DS1307Value)
-
-      I2CStart
-      I2CSEND( DS1307_AddrWrite )
-      I2CSend ( l_DS1307Reg )
-      I2CSend ( l_DS1307Value )
-      I2CStop
-
- End Sub
-
-
-
-Sub DS1307_ReadRam ( in DS1307Reg, Out l_DS1307Value )
-
-      I2CStart
-      I2CSEND( DS1307_AddrWrite )
-      I2CSend ( DS1307Reg )
-
-      I2CStart
-      I2CSEND( DS1307_AddrRead )
-      I2CReceive ( l_DS1307Value, NACK )
-      I2CStop
-
-End Sub
-
- 'The contents of the time and calendar registers are in the BCD format.
- Function DecToBcd(va) as Byte
- 		DecToBcd=(va/10)*16+va%10
- End Function
-
- Function BcdToDec(va) as byte
- 		BcdToDec=(va/16)*10+va%16
- End Function
-
-
-
- Sub DS1307_WriteReg (DS1307Reg, DS1307Value)
-
-     I2CSTART
-     I2CSEND( DS1307_AddrWrite )
-     I2CSEND( DS1307Reg )
-     I2CSEND( DS1307Value )
-     I2CStop
-
- End Sub
+sub DS1307_Read(in DS_Addr, out DS_Value)
+  ;Read from the internal RAM. See the notes, above.
+  I2CStart
+  I2CSend(DS_AddrWrite)           ;indicate write mode
+  I2CSend(DS_Addr)                ;send the address
+  I2CStart
+  I2CSend(DS_AddrRead)            ;then read mode
+  I2CReceive(DS_Value, NACK)      ;and get value
+  I2CStop
+end sub
 
 
 
