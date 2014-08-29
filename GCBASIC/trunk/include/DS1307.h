@@ -1,4 +1,4 @@
-'    Software I2C routines for the GCBASIC compiler
+'    Software DS1307 routines for the GCBASIC compiler
 '    Copyright (C) 2013 Evan R. Venn
 '    Copyright (C) 2014 Thomas Henry
 '    Copyright (C) 2014 Evan R. Venn
