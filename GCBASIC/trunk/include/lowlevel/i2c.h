@@ -31,9 +31,10 @@
 '     I2c-alt.h - Revised and documented by Thomas Henry, July 17, 2014
 '     0.92 - Revised and merged 0.91 and I2C-alt.h
 '     0.93 - Revised to remove use of Constants where they should have been variables and the reverse case.
+'     0.94 - Revised to Move variable defintion to prevent variable defintion when not required
 '	   - Eliminated parameter on I2CSend as this was causing backward compatibility issues
 '	   - This is a megerd version of the alternate version of the software I2C routines by
-'          - Thomas Henry, July 17, 2014. 
+'          - Thomas Henry, July 17, 2014.
 '          - ACK/NAK logic for Slave multibyte reception
 '          - therefore multiple Slaves are permitted on the bus
 '	   - eliminated need for a separate addressed slave read command,
@@ -144,8 +145,7 @@
 
 '             --- Variables
 
-dim I2COldState, I2CState, I2CMatch, I2CTemp as byte
-dim I2CCount alias I2CState
+
 
 
 #define I2CSendState I2CAckPollState 'retained I2CSendState for backwards compatibility
@@ -155,6 +155,10 @@ dim I2CCount alias I2CState
 #startup InitI2C                  'automatically call in main program
 
 sub InitI2C()
+
+  ' Moved to prevent variable defintion when not required
+  dim I2COldState, I2CState, I2CMatch, I2CTemp as byte
+  dim I2CCount alias I2CState
   I2C_DATA_HIGH                   'release SDA (open drain floats high)
   I2C_CLOCK_HIGH                  'release SCL (open drain floats high)
   I2CMatch = FALSE                'address doesn't match (Slave mode)
