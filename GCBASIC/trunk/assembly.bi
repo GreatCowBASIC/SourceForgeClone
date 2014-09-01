@@ -1327,6 +1327,8 @@ Sub BuildAsmSymbolTable
 				IF ROMData <> "" Then
 					DWIC += 1: CheckTemp(DWIC) = ROMData
 				End If
+				'Pad with 0
+				CheckTemp(DWIC + 1) = "0"
 				
 				NewData = ""
 				

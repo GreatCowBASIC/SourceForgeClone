@@ -572,7 +572,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 25/8/2014"
+Version = "0.9 1/9/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5630,12 +5630,16 @@ SUB CompileReadTable (CompSub As SubType Pointer)
   			'Table found, continue compile
   			Else
 	  			'Get size of data in table
-	  			TableBytes = GetTypeSize(DataTable(TableID).Type)
-	  			OutBytes = GetTypeSize(TypeOfVar(OutVar, CompSub))
 	  			LargeTable = 0
 	  			If DataTable(TableID).Items > 255 Then
 	  				LargeTable = -1
+	  				'Upgrade type of table if necessary due to size
+	  				If CastOrder(DataTable(TableID).Type) < CastOrder("WORD") Then
+	  					DataTable(TableID).Type = "WORD"
+	  				End If
 	  			End If
+	  			TableBytes = GetTypeSize(DataTable(TableID).Type)
+	  			OutBytes = GetTypeSize(TypeOfVar(OutVar, CompSub))
 	  			
 	  			'Remove input line
 	  			CurrLine = LinkedListDelete(CurrLine)
@@ -7039,6 +7043,7 @@ End Sub
 Sub CompileTables
 	Dim As String Temp, Source, Table, ThisItem
 	Dim As Integer PD, SP, CurrTableByte, StringTablesUsed, LargeTable
+	Dim As Integer LastNonZeroElement, CurrElement
 	
 	Dim As LinkedListElement Pointer CurrLine
 	Dim As SubType Pointer TableSub
@@ -7161,6 +7166,15 @@ Sub CompileTables
 			 		TableSub->Required = -1
 	  				TableSub->NoReturn = -1
 	  				
+	  				'Find last element in table that is non-zero
+	  				LastNonZeroElement = 0
+	  				For CurrElement = DataTable(PD).Items To 0 Step -1
+	  					If (DataTable(PD).Item(CurrElement) And 255 * 256 ^ CurrTableByte) <> 0 Then
+	  						LastNonZeroElement = CurrElement
+	  						Exit For
+	  					End If
+	  				Next
+	  				
 					If ModePIC Then
 		   				If LargeTable Then
 		   					AddVar "SysStringA", "WORD", 1, Subroutine(0), "REAL", ""
@@ -7176,74 +7190,93 @@ Sub CompileTables
 							
 							'Check item number, return 0 if number is too big
 							If LargeTable Then
-								CurrLine = LinkedListInsertList(CurrLine, CompileConditions("SYSSTRINGA<" + Str(DataTable(PD).Items + 1), "FALSE", ""))	
+								CurrLine = LinkedListInsertList(CurrLine, CompileConditions("SYSSTRINGA<" + Str(LastNonZeroElement + 1), "FALSE", ""))	
 							Else
-								CurrLine = LinkedListInsert(CurrLine, " movlw " + Str(DataTable(PD).Items + 1))
+								CurrLine = LinkedListInsert(CurrLine, " movlw " + Str(LastNonZeroElement + 1))
 								CurrLine = LinkedListInsert(CurrLine, " subwf SysStringA, W")
 								CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
 							End If
 							CurrLine = LinkedListInsert(CurrLine, " retlw 0")
 							'Retrieve item
-							CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
-							CurrLine = LinkedListInsert(CurrLine, " addlw low (1 + " + Table + ")")
-							CurrLine = LinkedListInsert(CurrLine, " movwf SysStringA")
-							CurrLine = LinkedListInsert(CurrLine, " movlw high " + Table)
-							CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
-							CurrLine = LinkedListInsert(CurrLine, " addlw 1")
-							If LargeTable Then
-								CurrLine = LinkedListInsert(CurrLine, " addwf SysStringA_H, W")
+							If LastNonZeroElement > 0 Then
+								CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
+								CurrLine = LinkedListInsert(CurrLine, " addlw low (1 + " + Table + ")")
+								CurrLine = LinkedListInsert(CurrLine, " movwf SysStringA")
+								CurrLine = LinkedListInsert(CurrLine, " movlw high " + Table)
+								CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
+								CurrLine = LinkedListInsert(CurrLine, " addlw 1")
+								If LargeTable Then
+									CurrLine = LinkedListInsert(CurrLine, " addwf SysStringA_H, W")
+								End If
+								CurrLine = LinkedListInsert(CurrLine, " movwf PCLATH")
+								CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
+								CurrLine = LinkedListInsert(CurrLine, Table)
+								CurrLine = LinkedListInsert(CurrLine, " movwf PCL")
 							End If
-							CurrLine = LinkedListInsert(CurrLine, " movwf PCLATH")
-							CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
-							CurrLine = LinkedListInsert(CurrLine, Table)
-							CurrLine = LinkedListInsert(CurrLine, " movwf PCL")
 								
 		   				ElseIf ChipFamily = 16 Then
 							If LargeTable Then
-								CurrLine = LinkedListInsertList(CurrLine, CompileConditions("SYSSTRINGA<" + Str(DataTable(PD).Items + 1), "FALSE", ""))
+								CurrLine = LinkedListInsertList(CurrLine, CompileConditions("SYSSTRINGA<" + Str(LastNonZeroElement + 1), "FALSE", ""))
 							Else
-								CurrLine = LinkedListInsert(CurrLine, " movlw " + Str(DataTable(PD).Items + 1))
+								CurrLine = LinkedListInsert(CurrLine, " movlw " + Str(LastNonZeroElement + 1))
 								CurrLine = LinkedListInsert(CurrLine, " cpfslt SysStringA")
 							End If
 							CurrLine = LinkedListInsert(CurrLine, " retlw 0")
 							
-							CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
-							CurrLine = LinkedListInsert(CurrLine, " addlw low " + Table)
-							CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRL")
-							CurrLine = LinkedListInsert(CurrLine, " movlw high " + Table)
-							CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
-							CurrLine = LinkedListInsert(CurrLine, " addlw 1")
-							If LargeTable Then
-								CurrLine = LinkedListInsert(CurrLine, " addwf SysStringA_H, W") 
-							End If
-							CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRH")
-							CurrLine = LinkedListInsert(CurrLine, " tblrd*")
-							CurrLine = LinkedListInsert(CurrLine, " movf TABLAT, W")
-							CurrLine = LinkedListInsert(CurrLine, " return")
-							CurrLine = LinkedListInsert(CurrLine, Table)
-							Temp = ""
-							FOR SP = 0 TO DataTable(PD).Items
-								ThisItem = GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte)
-								If Len(Temp) + Len(ThisItem) >= 79 And Temp <> "" And (SP Mod 2) = 0 Then
-									CurrLine = LinkedListInsert(CurrLine, " db " + Temp)
-									Temp = ThisItem
-								Else
-									If Temp = "" Then
+							If LastNonZeroElement > 0 Then
+								CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
+								CurrLine = LinkedListInsert(CurrLine, " addlw low " + Table)
+								CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRL")
+								CurrLine = LinkedListInsert(CurrLine, " movlw high " + Table)
+								CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
+								CurrLine = LinkedListInsert(CurrLine, " addlw 1")
+								If LargeTable Then
+									CurrLine = LinkedListInsert(CurrLine, " addwf SysStringA_H, W") 
+								End If
+								CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRH")
+								CurrLine = LinkedListInsert(CurrLine, " tblrd*")
+								CurrLine = LinkedListInsert(CurrLine, " movf TABLAT, W")
+								CurrLine = LinkedListInsert(CurrLine, " return")
+								CurrLine = LinkedListInsert(CurrLine, Table)
+								Temp = ""
+								FOR SP = 0 TO LastNonZeroElement
+									ThisItem = GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte)
+									If Len(Temp) + Len(ThisItem) >= 79 And Temp <> "" And (SP Mod 2) = 0 Then
+										CurrLine = LinkedListInsert(CurrLine, " db " + Temp)
 										Temp = ThisItem
 									Else
-										Temp = Temp + "," + ThisItem
+										If Temp = "" Then
+											Temp = ThisItem
+										Else
+											Temp = Temp + "," + ThisItem
+										End If
 									End If
-								End If
-							NEXT
-							If Temp <> "" Then CurrLine = LinkedListInsert(CurrLine, " db " + Temp)
+								NEXT
+								If Temp <> "" Then CurrLine = LinkedListInsert(CurrLine, " db " + Temp)
+							Else
+								CurrLine = LinkedListInsert(CurrLine, "retlw " + GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte))
+							End If
 		   				END IF
 		   				If ChipFamily <> 16 Then
-							FOR SP = 0 TO DataTable(PD).Items
+							FOR SP = 0 TO LastNonZeroElement
 			 					CurrLine = LinkedListInsert(CurrLine, " retlw " + GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte))
 							NEXT
 		   				END If
 		   				
 					ElseIf ModeAVR Then
+						'Check requested location
+						If LargeTable Then
+							CurrLine = LinkedListInsertList(CurrLine, CompileConditions("SYSSTRINGA<" + Str(LastNonZeroElement + 1), "FALSE", ""))
+							'If SysStringA < max size, then SysByteTempX = 255, and this instruction is skipped
+							'If it's the same, then SysByteTempX = 0, and this instruction is executed
+							CurrLine = LinkedListInsert(CurrLine, " ret")
+						Else
+							CurrLine = LinkedListInsert(CurrLine, " cpi SysStringA, " + Str(LastNonZeroElement + 1))
+							CurrLine = LinkedListInsert(CurrLine, " brlo PC + 3")
+							CurrLine = LinkedListInsert(CurrLine, " clr SysByteTempX")
+							CurrLine = LinkedListInsert(CurrLine, " ret")
+						End If
+						
 						'4/1/2010: added << 2 to ldi
 						CurrLine = LinkedListInsert(CurrLine, " ldi SysReadA, low(" + Table + "<<1)")
 						CurrLine = LinkedListInsert(CurrLine, " ldi SysReadA_H, high(" + Table + "<<1)")
@@ -7261,7 +7294,7 @@ Sub CompileTables
 						CurrLine = LinkedListInsert(CurrLine, Table + ":")
 						Temp = ""
 						
-						FOR SP = 0 TO DataTable(PD).Items
+						FOR SP = 0 TO LastNonZeroElement
 							ThisItem = GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte)
 							If Len(Temp) + Len(ThisItem) >= 79 And Temp <> "" And (SP Mod 2) = 0 Then
 								CurrLine = LinkedListInsert(CurrLine, " .DB " + Temp)
