@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega16U2
-'Generated 19/7/2011
+'Generated 19/7/2014
 'Format last revised: 23/9/2007
 
 [ChipData]
@@ -10,7 +10,7 @@ RAM=512
 I/O=23
 ADC=0
 MaxMHz=16
-Pins=28
+Pins=0
 Family=130
 ConfigWords=0
 GPR=32
@@ -776,6 +776,31 @@ PINC0,PINC,0
 
 [FreeRAM]
 100:300
+
+[Pins-PinsOnly]
+1,PB7(IO)
+2,PB6(IO)
+3,PB5(IO)
+4,PB4(IO)
+5,PB3(IO)
+6,PB2(IO)
+7,PB1(IO)
+8,PB0(IO)
+9,PD7(IO)
+10,PD6(IO)
+11,PD5(IO)
+12,PD4(IO)
+13,PD3(IO)
+14,PD2(IO)
+15,PD1(IO)
+16,PD0(IO)
+17,PC7(IO)
+18,PC6(IO)
+19,PC5(IO)
+20,PC4(IO)
+21,PC2(IO)
+22,PC1(IO)
+23,PC0(IO)
 
 [ConfigOps]
 NoConfig-PRG
