@@ -572,7 +572,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 1/9/2014"
+Version = "0.9 8/9/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2595,11 +2595,12 @@ End Sub
 
 Sub CompileProgram
 	
-	Dim As Integer CurrSub, CompileMore, IntLoc, CurrInc, SubLoc
+	Dim As Integer CurrSub, CompileMore, IntLoc, CurrInc, SubLoc, TablesCompiled
 	
 	'Check every sub in program, compile those that need to be compiled
 	'Need to check again once a sub has been compiled, because that sub may
 	'require other subs
+	TablesCompiled = 0
 	
 	'Request initialisation routine
 	RequestSub(0, "InitSys")
@@ -2651,10 +2652,16 @@ Sub CompileProgram
 			End With
 		Next
 		
+		'On last loop through, compile tables and then force one more loop
+		If Not CompileMore And Not TablesCompiled Then
+			'Compile data/string tables
+			CompileTables
+			TablesCompiled = -1
+			
+			CompileMore = -1
+		End If
+		
 	Loop While CompileMore
-	
-	'Compile data/string tables
-	CompileTables
 	
 	'Add context save/restore and int handlers to Interrupt
 	AddInterruptCode
@@ -7144,15 +7151,15 @@ Sub CompileTables
 				DataTable(PD).StoreLoc = 0
 			End If
 			
-			'Is this a large data table?
-			LargeTable = 0
-			If DataTable(PD).Items > 255 Then
-				LargeTable = -1
-			End If
-			
 			If DataTable(PD).Used And DataTable(PD).StoreLoc = 0 THEN
 				If VBS = 1 Then Print Spc(10); DataTable(PD).Name
 				DataTable(PD).Item(0) = DataTable(PD).Items
+  				
+  				'Is this a large data table?
+				LargeTable = 0
+				If DataTable(PD).Items > 255 Then
+					LargeTable = -1
+				End If
   				
   				'Create sub for data tables
   				'Need to create a table for each byte in data
@@ -8609,7 +8616,7 @@ Sub FindAssembly (CompSub As SubType Pointer)
 			T = IsASM(CurrLine->Value)
 			If T <> 0 AND Left(CurrLine->Value, 1) <> " " THEN
 				Temp = Trim(ASMCommands(T).Syntax)
-				IF INSTR(Temp, " ") <> 0 THEN Temp = Trim(Left(Temp, INSTR(Temp, " ") - 1))
+				IF InStr(Temp, " ") <> 0 THEN Temp = Trim(Left(Temp, INSTR(Temp, " ") - 1))
 				
 				'Record calls
 				If T = CallPos Or T = RCallPos Then
