@@ -572,7 +572,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 8/9/2014"
+Version = "0.9 10/9/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6753,7 +6753,6 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 			'Mark sub as required
 			.Called->Required = -1
 			'Mark file sub came from as used
-			'Replace gcINC(.Called->SourceFile, 2), ";", ""
 			SourceFile(.Called->SourceFile).InitSubUsed = -1
 			
 		End If
@@ -6954,35 +6953,6 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 					TempLine = BeforeFn + CHR(31) + Str(CurrSub) + CHR(31) + AfterFn
 				End If
 				
-				'Add destination to origin
-				/'
-				IF INSTR(TempLine, ";?F") <> 0 THEN
-					Dim As String TLeft, TRight, TOrigin, TempStr, TSub
-					
-					TLeft = LEFT(TempLine, INSTR(TempLine, ";?") + 1)
-					TempStr = MID(TempLine, INSTR(TempLine, "?") + 1)
-					TOrigin = LEFT(TempStr, INSTR(TempStr, "?") - 1)
-					TRight = MID(TempStr, INSTR(TempStr, "?"))
-					
-					F = VAL(Mid(TOrigin, INSTR(TOrigin, "F") + 1))
-					L = VAL(Mid(TOrigin, INSTR(TOrigin, "L") + 1))
-					'S = VAL(Mid(TOrigin, INSTR(TOrigin, "S") + 1))
-					TSub = Mid(TOrigin, INSTR(TOrigin, "S") + 1)
-					If InStr(TSub, "D") <> 0 Then
-						TSub = Left(TSub, InStr(TSub, "D") - 1)
-					End If
-					S = Val(TSub)
-					
-					'Was D = PD
-					D = CurrSub
-					'12/4/2008: Should this be used for the new code or not?
-					'SL = LocationOfSub(TempLine)
-					'IF SL <> 0 THEN S = SL
-					
-					TempLine = TLeft + "F" + STR(F) + "L" + STR(L) + "S" + STR(D) + "D" + STR(S) + TRight
-				END IF
-				'/
-				
 				'Write back code
 				'Print DS, BeforeFn, FunctionName, FunctionParams, AfterFn
 				If Subroutine(CurrSub)->IsFunction Then
@@ -7005,14 +6975,9 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 					LinkedListInsert(CurrLine, TempLine)
 				End If
 				
-				'Code commented out 13/4/2009
 				'Need to check line again, in case of nested functions
-				'If Subroutine(CurrSub)->IsMacro Then
-					CurrLine = LineBeforeCall
-					GoTo NextLineFunctions
-				'End If
-				''Continue searching line
-				'GOTO FindFunctionsAgain
+				CurrLine = LineBeforeCall
+				GoTo NextLineFunctions
 				
 			END If
 			
@@ -8509,6 +8474,8 @@ Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Ori
 	
 	Dim As String TrimParams, SubName, SubSig, Temp
 	Dim As Integer FP, PD
+	Dim As Integer CurrPos, CurrLevel
+	Dim As String CurrChar
 	
 	'Clear parameter list
 	With NewSubCall
@@ -8552,23 +8519,36 @@ Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Ori
 			'Get Origin
 			.Origin = Origin
 			
-			'Get parameters
-			'Need to keep function names hidden, or strange things happen
-			DO WHILE INSTR(TrimParams, ",") <> 0
-				.Params += 1
-				.Param(.Params, 1) = Trim(Left(TrimParams, INSTR(TrimParams, ",") - 1))
-				.Param(.Params, 2) = TypeOfValue(ReplaceFnNames(.Param(.Params, 1)), Subroutine(GetSubID(Origin)), -1)
-				'Print .Param(.Params, 1) + " is a " + .Param(.Params, 2)
-				SubSig += GetTypeLetter(.Param(.Params, 2))
-				TrimParams = LTrim(Mid(TrimParams, INSTR(TrimParams, ",") + 1))
-			LOOP
-			If TrimParams <> "" Then
-				.Params += 1
-				.Param(.Params, 1) = TrimParams
-				.Param(.Params, 2) = TypeOfValue(ReplaceFnNames(.Param(.Params, 1)), Subroutine(GetSubID(Origin)), -1)
-				'Print .Param(.Params, 1) + " is a " + .Param(.Params, 2)
-				SubSig += GetTypeLetter(.Param(.Params, 2))
-			End If
+			'Parse values - split at commas, except if commas are inside brackets
+			CurrLevel = 0
+			.Params = 1
+			.Param(.Params, 1) = ""
+			For CurrPos = 1 To Len(TrimParams)
+				CurrChar = Mid(TrimParams, CurrPos, 1)
+				If CurrChar = "(" Then
+					CurrLevel += 1
+				ElseIf CurrChar = ")" Then
+					CurrLevel -= 1
+				End If
+				If CurrChar = "," And CurrLevel = 0 Then
+					'Found comma that splits parameters
+					.Param(.Params, 1) = Trim(.Param(.Params, 1))
+					.Param(.Params, 2) = TypeOfValue(ReplaceFnNames(.Param(.Params, 1)), Subroutine(GetSubID(Origin)), -1)
+					'Print .Param(.Params, 1) + " is a " + .Param(.Params, 2)
+					SubSig += GetTypeLetter(.Param(.Params, 2))
+					.Params += 1
+					.Param(.Params, 1) = ""
+				Else
+					.Param(.Params, 1) = .Param(.Params, 1) + CurrChar
+				End If
+			Next
+			
+			'Get type of final parameter
+			.Param(.Params, 1) = Trim(.Param(.Params, 1))
+			.Param(.Params, 2) = TypeOfValue(ReplaceFnNames(.Param(.Params, 1)), Subroutine(GetSubID(Origin)), -1)
+			'Print .Param(.Params, 1) + " is a " + .Param(.Params, 2)
+			SubSig += GetTypeLetter(.Param(.Params, 2))
+			
 			'Print
 			.CallSig = SubSig
 		End With
@@ -11796,6 +11776,9 @@ SUB ProcessArrays (CompSub As SubType Pointer)
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
 		InLine = CurrLine->Value
+		'Color 1
+		'Print ,, InLine
+		'Color 7
 		
 		'No brackets means no arrays in line
 		If Instr(InLine, "(") = 0 Then Goto CompileArraysNextLine
