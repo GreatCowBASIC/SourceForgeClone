@@ -79,7 +79,7 @@
 '                wait 60 us    'minimum 60 us time slots between reads
 '            Loop
 	' The wait of 1ms between one wire commands is unnecessary.
-
+' 15/9/2014 - Correct silly errors in the code.  Timings were incorrect.
 
 
 
@@ -240,34 +240,33 @@ Sub DS18B20DeviceRead
   ' This routine makes available a variable called DSdata
   ' DSdata is the raw data value from the sensor
 
+   wait 250 ms ' Not really needed but left in just in case ***
    MasterRST   ' Reset ds18b20
    PPulse      ' Request a presence pulse
-
+   wait 1 ms
    OWout SkipRom  ' Bypass ds18b20 serial number read
-
+   wait 1 ms
    OWout ConvertT  ' Instruct ds18b20 to begin temperature conversion to digital
-   ' wait 1 s        ' Need at least 750 milliseconds for 12 bit conversion with DS18b20
    Do
-      dir DQ out
-      Set DQ Off
-      wait 4 us
-      Dir DQ In
-      wait 7 us
-      If DQ = 1 Then Exit Do
-      wait 60 us    'minimum 60 us time slots between reads
+                dir DQ out
+                Set DQ Off
+                wait 4 us
+                Dir DQ In
+                wait 7 us
+                If DQ = 1 Then Exit Do
+                wait 60 us    'minimum 60 us time slots between reads
    Loop
-
 
    MasterRST
    PPulse
-
+'   wait 1 ms
    OWout SkipRom         ' Bypass ds18b20 serial number read
-
+'   wait 1 ms
    OWout ReadScratch     ' Read temperature from db18b20
-
+'   wait 1 ms
    Owin                  ' Receive temperature low byte from db18b20
    DSdata = RxData       ' First byte  is low byte
-
+'   wait 1 ms
    Owin                  ' Receive temperature high byte from db18b20
    DSdata_H = RxData     ' Second byte is high byte  (auto combined into 16 bit word)
 end sub
