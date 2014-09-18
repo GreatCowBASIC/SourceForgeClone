@@ -19,45 +19,17 @@
 
 '    You can choose two Pics... or change to your own chip.
 
-'#chip 16f877a, 20
-''2024 bytes max in a table - why?
-'
-''  Setup GLCD
-'         #define GLCD_TYPE GLCD_TYPE_KS0108
-'         #define GLCD_WIDTH 128
-'         #define GLCD_HEIGHT 64
-'         ' #define GLCDFontWidth 6
-'
-'         #define GLCD_CS1 PORTa.4'D12 to actually since CS1, CS2 can be reversed on some devices
-'         #define GLCD_CS2 PORTa.5
-'
-'         #define GLCD_DB0 PORTD.0 'D0 to pin 7 on LCD
-'         #define GLCD_DB1 PORTD.1 'D1 to pin 8 on LCD
-'         #define GLCD_DB2 PORTD.2 'D2 to pin 9 on LCD
-'         #define GLCD_DB3 PORTD.3 'D3 to pin 10 on LCD
-'         #define GLCD_DB4 PORTD.4 'D4 to pin 11 on LCD
-'         #define GLCD_DB5 PORTD.5 'D5 to pin 12 on LCD
-'         #define GLCD_DB6 PORTD.6 'D6 to pin 13 on LCD
-'         #define GLCD_DB7 PORTD.7 'D7 to pin 14 on LCD
-'
-'
-'         #define GLCD_RS PORTa.0
-'         #define GLCD_Enable PORTA.1
-'         #define GLCD_RW PORTA.2
-'         #define GLCD_RESET PORTA.3
-'
+#chip 16f877a, 20
+'2024 bytes max in a table - why?
 
-
-#chip 16f1939, 32
-#config mclr_on, PLLEN_ON
-
+'  Setup GLCD
          #define GLCD_TYPE GLCD_TYPE_KS0108
          #define GLCD_WIDTH 128
-         #define GLCD_HEIGHT 63
+         #define GLCD_HEIGHT 64
          ' #define GLCDFontWidth 6
 
-         #define GLCD_CS1 PORTa.7'D12 to actually since CS1, CS2 can be reversed on some devices
-         #define GLCD_CS2 PORTa.6
+         #define GLCD_CS1 PORTa.4'D12 to actually since CS1, CS2 can be reversed on some devices
+         #define GLCD_CS2 PORTa.5
 
          #define GLCD_DB0 PORTD.0 'D0 to pin 7 on LCD
          #define GLCD_DB1 PORTD.1 'D1 to pin 8 on LCD
@@ -73,6 +45,34 @@
          #define GLCD_Enable PORTA.1
          #define GLCD_RW PORTA.2
          #define GLCD_RESET PORTA.3
+
+
+
+'#chip 16f1939, 32
+'#config mclr_on, PLLEN_ON
+'
+'         #define GLCD_TYPE GLCD_TYPE_KS0108
+'         #define GLCD_WIDTH 128
+'         #define GLCD_HEIGHT 63
+'         ' #define GLCDFontWidth 6
+'
+'         #define GLCD_CS1 PORTa.7'D12 to actually since CS1, CS2 can be reversed on some devices
+'         #define GLCD_CS2 PORTa.6
+'
+'         #define GLCD_DB0 PORTD.0 'D0 to pin 7 on LCD
+'         #define GLCD_DB1 PORTD.1 'D1 to pin 8 on LCD
+'         #define GLCD_DB2 PORTD.2 'D2 to pin 9 on LCD
+'         #define GLCD_DB3 PORTD.3 'D3 to pin 10 on LCD
+'         #define GLCD_DB4 PORTD.4 'D4 to pin 11 on LCD
+'         #define GLCD_DB5 PORTD.5 'D5 to pin 12 on LCD
+'         #define GLCD_DB6 PORTD.6 'D6 to pin 13 on LCD
+'         #define GLCD_DB7 PORTD.7 'D7 to pin 14 on LCD
+'
+'
+'         #define GLCD_RS PORTa.0
+'         #define GLCD_Enable PORTA.1
+'         #define GLCD_RW PORTA.2
+'         #define GLCD_RESET PORTA.3
 
 
 
