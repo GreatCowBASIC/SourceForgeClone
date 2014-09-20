@@ -24,20 +24,21 @@
 '    Revised Evan R Venn - Beta 0.84 corrected errors in ENABLE and DISABLE clock routines
 '    Revised Evan R Venn - Oct 2013, thanks go to Microchip and then Application Note AN1488 @ Beta v0.90
 '    Revised Thomas Henry, May 25, 2014
-'    edited for consistency and commented code
-'    removed several redundancies
-'    combined DS1307_Enab_Osc and DS1307_Dis_Osc
-'    combined DS1307_Set12HourMode and DS1307_Set24HourMode
-'    combined DS1307_SQWEnable and DS1307_SQWDisable
-'    made parameters private so not to conflict with user's variables,
-'    reused parameters where reasonable to save memory.
-'    amplified hour-mode to work under all conditions
-'    added a.m./p.m. flag (DS_A_P).
-'    renamed read and writer commands to indicate generality
-'    Revised Thomas Henry, May 26, 2014
-'    added DOW to DS1307_ReadDate and DS1307_SetDate
-'    added DS1307_ReadHourMode
-'    tweaked the comments and external documentation
+  '    edited for consistency and commented code
+  '    removed several redundancies
+  '    combined DS1307_Enab_Osc and DS1307_Dis_Osc
+  '    combined DS1307_Set12HourMode and DS1307_Set24HourMode
+  '    combined DS1307_SQWEnable and DS1307_SQWDisable
+  '    made parameters private so not to conflict with user's variables,
+  '    reused parameters where reasonable to save memory.
+  '    amplified hour-mode to work under all conditions
+  '    added a.m./p.m. flag (DS_A_P).
+  '    renamed read and writer commands to indicate generality
+  '    Revised Thomas Henry, May 26, 2014
+  '    added DOW to DS1307_ReadDate and DS1307_SetDate
+  '    added DS1307_ReadHourMode
+  '    tweaked the comments and external documentation
+'    Revised Evan R Venn - Sept 2014 for backwards compatibility added DS1307_WriteRam & DS1307_ReadRam
 '
 '    10 bytes are used as input and output parameters. They are:
 '    DS_Value, DS_Addr, DS_Hour, DS_Min, DS_Sec, DS_A_P, DS_Date, DS_Month, DS_Year and DS_DOW.
@@ -334,7 +335,7 @@ sub DS1307_SetSQW(in DS_Value)
 end sub
 
 ;-----
-
+#define DS1307_WriteRam DS1307_Write
 sub DS1307_Write(in DS_Addr, in DS_Value)
   ;Write to the internal RAM. Use addresses 0x08 to 0x3F only,
   ;else there will be wraparound to the register space of
@@ -350,7 +351,7 @@ sub DS1307_Write(in DS_Addr, in DS_Value)
 end sub
 
 ;-----
-
+#define DS1307_ReadRam DS1307_Read
 sub DS1307_Read(in DS_Addr, out DS_Value)
   ;Read from the internal RAM. See the notes, above.
   I2CStart
