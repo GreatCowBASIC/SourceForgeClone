@@ -15,6 +15,8 @@
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+'    Revised 27th Sept 2014 - following a bug report the log2_full to support 18F device, by removal of use of C, status.c and sequence and use of a long.
+
 ;-----
 
 ;Square root function for Great Cow Basic.
@@ -78,13 +80,14 @@ end function
 ;used. The lookup table takes 35 words of program memory.
 
 ;----- Functions
-
+' log2_full revised to support 18F device, by removal of use of C, status.c and sequence and use of a long by Evan R. Venn = 27092014
 function log2_full(log_arg as word) as word
-  ;This local function is the heart of all three logarithmic
+  ;This local functionis the heart of all three logarithmic
   ;functions. It returns a base-2 logarithm, to 3 decimal places.
-
   dim log_int as byte
   dim log_x1, log_y1, log_copy, log_frac as word
+  dim log_copy as word
+  dim log_checkvalue as long
 
   dim log_pnt alias log_x1 as byte            ;reuse these to save space
   dim log_count alias log_x1_H as byte
@@ -92,18 +95,21 @@ function log2_full(log_arg as word) as word
   dim log_y2 alias log_copy, log_copy_H  as word
 
   log_copy = log_arg                          ;leave argument intact
+  log_checkvalue = log_copy
   log_int = 16                                ;count down to high bit
-  set status.c off
-    do
+
+    do while ( log_checkvalue & 0x10000 ) <> 0x10000
     ;in effect, shift left until the first 1 is found
-    rotate log_copy left                      ;carry is 0, so just a shift
-    log_int--                                 ;keep track of # of shifts
-  loop until status.c
+    log_int--
+    log_copy = log_copy * 2
+    log_checkvalue = log_checkvalue  * 2
+  loop
 
   log_count = log_int                         ;leave integer part intact
   log_pow = 0
-  set status.c on                             ;move this bit in
-  do                                          ;find power less than argument
+  set C on                             ;move this bit in
+  do                                   ;find power less than argument
+
     rotate log_pow left
     log_count--
   loop until log_count = 255                  ;think of this as -1
@@ -123,7 +129,9 @@ function log2_full(log_arg as word) as word
   end if
 
   log2_full = [long]1000*log_int+(log_frac+5)/10  ;round to three places
+
 end function
+
 
 ;----- Table
 
@@ -214,7 +222,7 @@ function shiftR (in sh_arg1 as word, in sh_arg2 as byte) as word
   ;shift sh_arg1, sh_arg2 places to the right
 
   repeat sh_arg2
-    status.c = 0
+    C = 0
     rotate sh_arg1 right
   end repeat
   shiftR = sh_arg1
