@@ -15,8 +15,8 @@
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-'    Revised 27th Sept 2014 - following a bug report the log2_full to support 18F device, by removal of use of C, status.c and sequence and use of a long.
-
+'    27th Sept 2014 - Revised following a bug report the log2_full to support 18F, by removal of use of C, status.c and sequence and use of a long.
+'    28th Sept 2014 - Revised following a bug report the log2_full to support AVR devices by further removal of use of C, status.c and sequence and use of a long.
 ;-----
 
 ;Square root function for Great Cow Basic.
@@ -64,6 +64,7 @@ end function
 
 ;Logarithmic Functions for Great Cow Basic
 ;Thomas Henry --- 5/1/2014
+;Evan R. Venn ---- 27/9/2014
 
 ;These functions compute base 2, base e and base 10 logarithms
 ;accurate to 2 decimal places, +/- 0.01. The values returned are
@@ -80,7 +81,7 @@ end function
 ;used. The lookup table takes 35 words of program memory.
 
 ;----- Functions
-' log2_full revised to support 18F device, by removal of use of C, status.c and sequence and use of a long by Evan R. Venn = 27092014
+' log2_full revised to support 18F and AVR device, by removal of use of C, status.c and sequence and use of a long by Evan R. Venn = 27092014
 function log2_full(log_arg as word) as word
   ;This local functionis the heart of all three logarithmic
   ;functions. It returns a base-2 logarithm, to 3 decimal places.
@@ -99,21 +100,23 @@ function log2_full(log_arg as word) as word
   log_int = 16                                ;count down to high bit
 
     do while ( log_checkvalue & 0x10000 ) <> 0x10000
-    ;in effect, shift left until the first 1 is found
+    ;in effect, shift left until the first 1 is found @ bit16
     log_int--
     log_copy = log_copy * 2
     log_checkvalue = log_checkvalue  * 2
   loop
-
   log_count = log_int                         ;leave integer part intact
   log_pow = 0
-  set C on                             ;move this bit in
-  do                                   ;find power less than argument
 
-    rotate log_pow left
-    log_count--
-  loop until log_count = 255                  ;think of this as -1
+  log_checkvalue = 0x01
+  do   while (log_count <> 0 )                                ;find power less than argument
+    log_checkvalue =  log_checkvalue * 2                      ;rotate
+    log_count--                                               ;one reduction
+  loop
+  log_count--                                                 ;one additional reduction
+  log_pow = log_checkvalue                                    ;added to move the LONG to the WORD
 
+  ' This code from here is the same as the original code.
   log_frac = [long]10000*log_arg / log_pow    ;10000 times mantissa
 
   if log_copy = 0 then                        ;perfect power of 2
