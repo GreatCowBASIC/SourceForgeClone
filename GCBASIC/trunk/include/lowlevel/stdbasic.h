@@ -229,7 +229,7 @@ Function Swap4(Swap4In)
 		Dim Swap4In Alias SysCalcTempA
 		Dim Swap4 Alias SysCalcTempX
 		mov Swap4, Swap4In
-		swap Swap4
+		asm swap Swap4
 	#endif
 End Function
 
