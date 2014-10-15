@@ -1901,8 +1901,8 @@ Sub InitGLCD
 		Wait 100 ms
 		
 		'Colours
-		GLCDBackground = 65535
-		GLCDForeground = 0
+		GLCDBackground = ST7735_WHITE
+		GLCDForeground = ST7735_BLACK
 	#endif
 	
 
