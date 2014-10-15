@@ -1,5 +1,5 @@
 '    Serial/RS232 routines for Great Cow BASIC
-'    Copyright (C) 2006 Hugh Considine
+'    Copyright (C) 2006, 2014 Hugh Considine, Evan R Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -14,7 +14,9 @@
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+'
+'    October 2014 revised SerReceive to have a new parameter to prevent Interrupt handler
+'
 '********************************************************************************
 'IMPORTANT:
 'THIS FILE IS ESSENTIAL FOR SOME OF THE COMMANDS IN GCBASIC. DO NOT ALTER THIS FILE
@@ -116,7 +118,7 @@ sub InitSer(In Ser_Select, In Ser_Rate, In Ser_Start, In Ser_Data, In Ser_Stop, 
 		if Ser_Select = 1 THEN
 			Ser_Rate_A = Ser_Rate
 			Ser_Start_A = Ser_Start
-			Ser_Data_A = Ser_Data 
+			Ser_Data_A = Ser_Data
 			Ser_Stop_A = Ser_Stop
 			Ser_Parity_A = Ser_Parity
 			Ser_Invert_A = Ser_Invert
@@ -127,7 +129,7 @@ sub InitSer(In Ser_Select, In Ser_Rate, In Ser_Start, In Ser_Data, In Ser_Stop, 
 		if Ser_Select = 2 THEN
 			Ser_Rate_B = Ser_Rate
 			Ser_Start_B = Ser_Start
-			Ser_Data_B = Ser_Data 
+			Ser_Data_B = Ser_Data
 			Ser_Stop_B = Ser_Stop
 			Ser_Parity_B = Ser_Parity
 			Ser_Invert_B = Ser_Invert
@@ -138,7 +140,7 @@ sub InitSer(In Ser_Select, In Ser_Rate, In Ser_Start, In Ser_Data, In Ser_Stop, 
 		if Ser_Select = 3 THEN
 			Ser_Rate_C = Ser_Rate
 			Ser_Start_C = Ser_Start
-			Ser_Data_C = Ser_Data 
+			Ser_Data_C = Ser_Data
 			Ser_Stop_C = Ser_Stop
 			Ser_Parity_C = Ser_Parity
 			Ser_Invert_C = Ser_Invert
@@ -154,7 +156,12 @@ Sub SerSend(In Ser_Select, In Ser_Byte)
 	'Start
 	SerTemp = Ser_Start and (not WaitForStart)
 	for SerBit = 1 to SerTemp
+              #ifndef RS232ForPC
 		SerTxHigh
+              #endif
+              #ifdef RS232ForPC
+		SerTxlow
+              #endif
 	next
 	
 	'Data
@@ -181,7 +188,12 @@ Sub SerSend(In Ser_Select, In Ser_Byte)
 	
 	'End
 	for SerBit = 1 to Ser_Stop
+              #ifndef RS232ForPC
 		SerTxLow
+              #endif
+              #ifdef RS232ForPC
+		SerTxHigh
+              #endif
 	next
 	
 	'Extra delay at end
@@ -189,7 +201,8 @@ Sub SerSend(In Ser_Select, In Ser_Byte)
 	
 end sub
 
-Sub SerReceive(In Ser_Select, Out Ser_Byte)
+
+Sub SerReceive(In Ser_Select, Out Ser_Byte, Optional  Ser_DoNotChangeInterruptState = false )
 	
 	'Load configuration data
 	if Ser_Select <> Ser_Select_Old then SerCfgLoad(Ser_Select)
@@ -202,9 +215,11 @@ Sub SerReceive(In Ser_Select, Out Ser_Byte)
 		If SerQuickSample = False Then Exit Sub
 	End If
 	
-	'Disable interrupts
-	IntOff
-	
+          if Ser_DoNotChangeInterruptState = false then
+          	'Disable interrupts
+	          IntOff
+	end if
+
 	'Get start bits
 	SerTemp = Ser_Start and (not WaitForStart)
 	for SerBit = 1 to SerTemp
@@ -242,12 +257,13 @@ Sub SerReceive(In Ser_Select, Out Ser_Byte)
 	'end if
 	Wait Until SerQuickSample = FALSE
 	
-	'Re-enable interrupt
-	IntOn
-	
+          if Ser_DoNotChangeInterruptState = false then
+            'Re-enable interrupt
+            IntOn
+	end if
 end sub
 
-sub SerPrint (In Ser_Select, In PrintData As String)
+sub SerPrint (In Ser_Select, PrintData As String)
 	'PrintLen = LEN(PrintData$)
 	PrintLen = PrintData(0)
 	
@@ -299,7 +315,7 @@ Sub SerPrint (In Ser_Select, In SerPrintVal As Word)
 	
 	OutValueTemp = 0
 	
-	If SerPrintVal >= 10000 then 
+	If SerPrintVal >= 10000 then
 		OutValueTemp = SerPrintVal / 10000 [word]
 		SerPrintVal = SysCalcTempX
 		SerSend(Ser_Select, OutValueTemp + 48)
@@ -314,7 +330,7 @@ Sub SerPrint (In Ser_Select, In SerPrintVal As Word)
 		Goto SerPrintWord100
 	End If
 
-	If SerPrintVal >= 100 then 
+	If SerPrintVal >= 100 then
 	SerPrintWord100:
 		OutValueTemp = SerPrintVal / 100 [word]
 		SerPrintVal = SysCalcTempX
@@ -428,7 +444,7 @@ sub SerCfgLoad(Ser_Select) #NR
 Ser_Select_Old = Ser_Select
 
 #ifdef OneOf(SendAHigh, RecAHigh)
-if Ser_Select = 1 THEN 
+if Ser_Select = 1 THEN
  Ser_Rate = Ser_Rate_A
  Ser_Start = Ser_Start_A
  Ser_Data = Ser_Data_A
@@ -438,7 +454,7 @@ if Ser_Select = 1 THEN
 end if
 #endif
 #ifdef OneOf(SendBHigh, RecBHigh)
-if Ser_Select = 2 THEN 
+if Ser_Select = 2 THEN
  Ser_Rate = Ser_Rate_B
  Ser_Start = Ser_Start_B
  Ser_Data = Ser_Data_B
@@ -448,7 +464,7 @@ if Ser_Select = 2 THEN
 end if
 #ENDIF
 #ifdef OneOf(SendCHigh, RecCHigh)
-if Ser_Select = 3 THEN 
+if Ser_Select = 3 THEN
  Ser_Rate = Ser_Rate_C
  Ser_Start = Ser_Start_C
  Ser_Data = Ser_Data_C
