@@ -35,6 +35,8 @@
 ' 17/6/2014: Revised to correct error in KS0108 PSET routine.
 ' 28/6/2104: Revised GLCDDrawString.  Xpos was always 1 extra pixel to right.
 ' 14/8/2104: Removed GLCDTimeDelay to improve timing and a tidy up.
+' 15/10/2014: Adapted for color support for ST7735
+'             Added Defines and ST7735Rotation command
 
 
 'Initialisation routine
@@ -117,6 +119,79 @@
 'Chip select/deselect macros for ST7735
 #define ST7735Select Set ST7735_CS Off
 #define ST7735Deselect Set ST7735_CS On
+
+
+' Defines for ST7735
+#define INITR_GREENTAB 0x00
+#define INITR_REDTAB   0x01
+#define INITR_BLACKTAB   0x02
+
+#define ST7735_TFTWIDTH  128
+#define ST7735_TFTHEIGHT 160
+
+#define ST7735_NOP 0x00
+#define ST7735_SWRESET 0x01
+#define ST7735_RDDID 0x04
+#define ST7735_RDDST 0x09
+
+#define ST7735_SLPIN  0x10
+#define ST7735_SLPOUT  0x11
+#define ST7735_PTLON  0x12
+#define ST7735_NORON  0x13
+
+#define ST7735_INVOFF 0x20
+#define ST7735_INVON 0x21
+#define ST7735_DISPOFF 0x28
+#define ST7735_DISPON 0x29
+#define ST7735_CASET 0x2A
+#define ST7735_RASET 0x2B
+#define ST7735_RAMWR 0x2C
+#define ST7735_RAMRD 0x2E
+
+#define ST7735_COLMOD 0x3A
+#define ST7735_MADCTL 0x36
+
+
+#define ST7735_FRMCTR1 0xB1
+#define ST7735_FRMCTR2 0xB2
+#define ST7735_FRMCTR3 0xB3
+#define ST7735_INVCTR 0xB4
+#define ST7735_DISSET5 0xB6
+
+#define ST7735_PWCTR1 0xC0
+#define ST7735_PWCTR2 0xC1
+#define ST7735_PWCTR3 0xC2
+#define ST7735_PWCTR4 0xC3
+#define ST7735_PWCTR5 0xC4
+#define ST7735_VMCTR1 0xC5
+
+#define ST7735_RDID1 0xDA
+#define ST7735_RDID2 0xDB
+#define ST7735_RDID3 0xDC
+#define ST7735_RDID4 0xDD
+
+#define ST7735_PWCTR6 0xFC
+
+#define ST7735_GMCTRP1 0xE0
+#define ST7735_GMCTRN1 0xE1
+
+' Screen rotation
+#define ST7735_LANDSCAPE 1
+#define ST7735_PORTRAIT_REV 2
+#define ST7735_LANDSCAPE_REV 3
+#define ST7735_PORTRAIT 4
+
+
+' Color definitions
+#define ST7735_BLACK   0x0000
+#define ST7735_BLUE    0xF800
+#define ST7735_RED     0x001F
+#define ST7735_GREEN   0x07E0
+#define ST7735_CYAN    0xFFE0
+#define ST7735_MAGENTA 0xF81F
+#define ST7735_YELLOW  0x07FF
+#define ST7735_WHITE   0xFFFF
+
 
 ' Do not remove.
 #define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
@@ -289,7 +364,7 @@ End Sub
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
-Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour = GLCDForeground )
+Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour as word = GLCDForeground )
     for xchar = 1 to Chars(0)
       ' June 2014
       ' Corrected error X calcaluation. It was adding an Extra 1!
@@ -303,7 +378,7 @@ end sub
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
-Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour = GLCDForeground )
+Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour as word = GLCDForeground )
 
 
 	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
@@ -338,8 +413,12 @@ Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour =
 		Next
 	Next
           'Colours
-          GLCDBackground = 0
-          GLCDForeground = 1
+          'Restore colors
+          'Colours
+          if GLCD_TYPE <> GLCD_TYPE_ST7735 then
+            GLCDBackground = 0
+            GLCDForeground = 1
+          end if
 End Sub
 
 '''Draws a box on the GLCD screen
@@ -348,6 +427,7 @@ End Sub
 '''@param LineX2 Bottom right corner X location
 '''@param LineY2 Bottom right corner Y location
 '''@param LineColour Colour of box border (0 = erase, 1 = draw, default is 1)
+#define GLCDBox Box
 Sub Box(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
 	'Make sure that starting point (1) is always less than end point (2)
 	If LineX1 > LineX2 Then
@@ -380,6 +460,7 @@ End Sub
 '''@param LineX2 Bottom right corner X location
 '''@param LineY2 Bottom right corner Y location
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
+#define GCLDFilledBox FilledBox
 Sub FilledBox(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
 
 	'Make sure that starting point (1) is always less than end point (2)
@@ -433,7 +514,8 @@ End Sub
 '''@param xradius radius of circle
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 '''@param yordinate (optional) rounding
-sub Circle ( in xoffset, in yoffset, in xradius as integer, Optional In LineColour = GLCDForeground , Optional In yordinate = GLCD_yordinate)
+#define GCLDCircle Circle
+sub Circle ( in xoffset, in yoffset, in xradius as integer, Optional In LineColour as word = GLCDForeground , Optional In yordinate = GLCD_yordinate)
 
 
     dim  radiusErr as Integer
@@ -464,7 +546,8 @@ end sub
 '''@param Yoffset Y point of circle
 '''@param xradius radius of circle
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
-sub FilledCircle( in xoffset, in yoffset, in xradius, Optional In LineColour = GLCDForeground)
+#define GLCDFilledCircle FilledCircle
+sub FilledCircle( in xoffset, in yoffset, in xradius, Optional In LineColour as word = GLCDForeground)
 
     'Circle fill Code is merely a modification of the midpoint
     ' circle algorithem which is an adaption of Bresenham's line algorithm
@@ -511,7 +594,8 @@ end sub
 '''@param LineX2 Ending X point of line
 '''@param LineY2 Ending Y point of line
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
-Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour = GLCDForeground)
+#define GLCDLine Line
+Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour as word = GLCDForeground)
 
 '   replaced by new line drawing code May 2014
 
@@ -1458,6 +1542,25 @@ Sub ST7735SetAddress(In ST7735AddressType, In ST7735Start As Word, In ST7735End 
 End Sub
 
 '''@hide
+sub   ST7735Rotation ( in ST7735AddressType )
+
+  ST7735SendCommand ( ST7735_MADCTL )
+  select case ST7735AddressType
+        case LANDSCAPE
+             ST7735SendData( 0xB8 )
+        case PORTRAIT_REV
+             ST7735SendData( 0xDC )
+        case LANDSCAPE_REV
+             ST7735SendData( 0x6C )
+        case PORTRAIT
+             ST7735SendData( 0x08 )
+        case else
+             ST7735SendData( 0x08 )
+  end select
+
+end sub
+
+'''@hide
 Sub ST7735SetGammaCorrection
 	'Is this needed?
 	'Enable correction
@@ -1773,8 +1876,12 @@ Sub InitGLCD
 		'Software reset
 		ST7735SendCommand 0x01
 		Wait 200 ms
+
+		'Software reset
+		ST7735SendCommand 0x01
+		Wait 200 ms		
 		
-		'Out of sleep mode
+                    'Out of sleep mode
 		ST7735SendCommand 0x11
 		Wait 200 ms
 		
