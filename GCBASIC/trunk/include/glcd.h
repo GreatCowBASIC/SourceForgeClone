@@ -37,7 +37,7 @@
 ' 14/8/2104: Removed GLCDTimeDelay to improve timing and a tidy up.
 ' 15/10/2014: Adapted for color support for ST7735
 '             Added Defines and ST7735Rotation command
-
+' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ST7735 device.
 
 'Initialisation routine
 #startup InitGLCD
@@ -82,6 +82,7 @@
 #define GLCD_WIDTH 128
 #define GLCD_HEIGHT 160
 #define GLCDFontWidth 6
+
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
@@ -267,10 +268,10 @@ Sub GLCDCLS
 	#endif
 	
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
-		ST7735SetAddress ST7735_COLUMN, 0, GLCD_WIDTH
-		ST7735SetAddress ST7735_ROW, 0, GLCD_HEIGHT
+		ST7735SetAddress ST7735_COLUMN, 0, ST7735_GLCD_WIDTH
+		ST7735SetAddress ST7735_ROW, 0, ST7735_GLCD_HEIGHT
 		ST7735SendCommand 0x2C
-		Repeat [word]GLCD_WIDTH * GLCD_HEIGHT
+		Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
 			ST7735SendWord GLCDBackground
 		End Repeat
 	#endif
@@ -752,12 +753,14 @@ End Sub
 '''@param GLCDColour State of pixel (0 = erase, 1 = display)
 Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 
-            #ifdef GLCD_PROTECTOVERRUN
-                   if GLCDY => GLCD_HEIGHT then exit sub
-                   if GLCDX => GLCD_WIDTH then exit sub
-            #endif
+
 
 	#if GLCD_TYPE = GLCD_TYPE_ST7920
+
+                    #ifdef GLCD_PROTECTOVERRUN
+                           if GLCDY => GLCD_HEIGHT then exit sub
+                           if GLCDX => GLCD_WIDTH then exit sub
+                    #endif
 
 		'Set pixel at X, Y on LCD to State
 		'X is 0 to 127
@@ -1548,11 +1551,19 @@ sub   ST7735Rotation ( in ST7735AddressType )
   select case ST7735AddressType
         case LANDSCAPE
              ST7735SendData( 0xB8 )
+             ST7735_GLCD_WIDTH = GLCD_HEIGHT
+             ST7735_GLCD_HEIGHT = GLCD_WIDTH
         case PORTRAIT_REV
+             ST7735_GLCD_WIDTH = GLCD_WIDTH
+             ST7735_GLCD_HEIGHT = GLCD_HEIGHT
              ST7735SendData( 0xDC )
         case LANDSCAPE_REV
              ST7735SendData( 0x6C )
+             ST7735_GLCD_WIDTH = GLCD_HEIGHT
+             ST7735_GLCD_HEIGHT = GLCD_WIDTH
         case PORTRAIT
+             ST7735_GLCD_WIDTH = GLCD_WIDTH
+             ST7735_GLCD_HEIGHT = GLCD_HEIGHT
              ST7735SendData( 0x08 )
         case else
              ST7735SendData( 0x08 )
@@ -1903,6 +1914,10 @@ Sub InitGLCD
 		'Colours
 		GLCDBackground = ST7735_WHITE
 		GLCDForeground = ST7735_BLACK
+
+                    'Variables required for device
+                    ST7735_GLCD_WIDTH = GLCD_WIDTH
+                    ST7735_GLCD_HEIGHT = GLCD_HEIGHT
 	#endif
 	
 
