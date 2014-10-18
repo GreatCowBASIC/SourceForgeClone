@@ -1594,8 +1594,8 @@ Imports System.Threading
 		Private Sub ProgramConstsClick(sender As System.Object, e As System.EventArgs)
 			Dim CurrProgram As GCBProgram = GetCurrentProgram
 			If Not CurrProgram Is Nothing Then
-				Dim fChipConst As New DefineWindow(CurrProgram)
-				fChipConst.ShowDialog()
+				Dim fConstants As New ConstantWindow(CurrProgram)
+				fConstants.ShowDialog
 			End If
 		End Sub
 		
