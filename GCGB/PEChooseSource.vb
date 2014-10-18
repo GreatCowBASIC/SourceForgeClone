@@ -118,18 +118,18 @@ Imports System.Windows.Forms
 				ThisType = ThisType.Trim.ToLower
 								
 				'Condition
-				If ThisType = "condition" And Not ParamCondAdded Then
+				If (ThisType = "any" Or ThisType = "condition") And Not ParamCondAdded Then
 					ParamCondAdded = True
 					
 					'Options: simple condition, calculation, or function
 					sourceChoices.Add(New CaptionedListItem("simplecondition", "Simple Condition", "Compare two values, and check if they are the same or if one is lower or higher"))
 					sourceChoices.Add(New CaptionedListItem("calculation", "Complex Condition", "Perform a calculation. The condition will be true if the result is not 0."))
-					sourceChoices.Add(New CaptionedListItem("function", "Function", "Run a function. The condition will be true if the result is not 0."))
+					If ThisType <> "any" Then sourceChoices.Add(New CaptionedListItem("function", "Function", "Run a function. The condition will be true if the result is not 0."))
 					
 				End If
 				
 				'String
-				If ThisType = "string" And Not ParamStrAdded Then
+				If (ThisType = "any" Or ThisType = "string") And Not ParamStrAdded Then
 					ParamStrAdded = True
 					sourceChoices.Add(New CaptionedListItem("const_string", "Fixed string", "Use a fixed message"))
 					If Not ParamVarAdded Then
@@ -139,27 +139,27 @@ Imports System.Windows.Forms
 				End If
 				
 				'Array
-				If ThisType = "array" And Not ParamArrayAdded Then
+				If (ThisType = "any" Or ThisType = "array") And Not ParamArrayAdded Then
 					ParamArrayAdded = True
 					sourceChoices.Add(New CaptionedListItem("var_array", "Array variable", "Use an existing array variable, or make a new one"))
 					
 				End If
 				
 				'IOPin
-				If ThisType = "io_pin" Or ThisType = "bit" And Not ParamIOPinAdded Then
+				If (ThisType = "any" Or ThisType = "io_pin" Or ThisType = "bit") And Not ParamIOPinAdded Then
 					ParamIOPinAdded = True
 					sourceChoices.Add(New CaptionedListItem("io_pin", "IO Pin", "Use a single input/output pin."))
 				End If
 				
 				'IOPort
-				If ThisType = "io_port" And Not ParamIOPortAdded Then
+				If (ThisType = "any" Or ThisType = "io_port") And Not ParamIOPortAdded Then
 					ParamIOPortAdded = True
 					sourceChoices.Add(New CaptionedListItem("io_port", "IO Port", "Select an entire input/output port."))
 					
 				End If
 				
 				'Bit variable
-				If ThisType = "bit" And Not ParamBitAdded Then
+				If (ThisType = "any" Or ThisType = "bit") And Not ParamBitAdded Then
 					ParamBitAdded = True
 					sourceChoices.Add(New CaptionedListItem("bit", "Bit from a variable", "Use a single bit from a variable"))
 					If Not ParamVarAdded Then
@@ -169,7 +169,7 @@ Imports System.Windows.Forms
 				End If
 				
 				'Literal
-				If ThisType = "const" Or ThisType = "const_byte" Or ThisType = "const_word" Or _
+				If ThisType = "any" Or ThisType = "const" Or ThisType = "const_byte" Or ThisType = "const_word" Or _
 				   ThisType = "const_integer" Or ThisType = "integer" Or _
 				   ThisType = "const_long" Or ThisType = "long" Or _
 				   ThisType = "number" Or ThisType = "byte" Or ThisType = "word" Or ThisType.StartsWith("range") Then
@@ -181,7 +181,7 @@ Imports System.Windows.Forms
 				End If
 				
 				'Variable
-				If ThisType = "var" Or ThisType = "var_byte" Or ThisType = "var_word" Or _
+				If ThisType = "any" Or ThisType = "var" Or ThisType = "var_byte" Or ThisType = "var_word" Or _
 				   ThisType = "var_integer" Or ThisType = "integer" Or _
 				   ThisType = "var_long" Or ThisType = "long" Or _
 				   ThisType = "number" Or ThisType = "byte" Or ThisType = "word" Then
@@ -196,7 +196,7 @@ Imports System.Windows.Forms
 				End If
 				
 				'Calculation
-				If ThisType = "number" Or ThisType = "byte" Or ThisType = "word" Or _
+				If ThisType = "any" Or ThisType = "number" Or ThisType = "byte" Or ThisType = "word" Or _
 				   ThisType = "integer" Or ThisType = "long" Then
 					
 					If Not ParamCalcAdded Then
@@ -207,7 +207,7 @@ Imports System.Windows.Forms
 				End If
 				
 				'Array Element
-				If ThisType = "var" Or ThisType = "var_byte" Or ThisType = "var_word" Or _
+				If ThisType = "any" Or ThisType = "var" Or ThisType = "var_byte" Or ThisType = "var_word" Or _
 				   ThisType = "var_integer" Or ThisType = "integer" Or _
 				   ThisType = "var_long" Or ThisType = "long" Or _
 				   ThisType = "number" Or ThisType = "byte" Or ThisType = "word" Then
@@ -220,7 +220,7 @@ Imports System.Windows.Forms
 				End If
 				
 				'Function
-				If ThisType = "byte" Or ThisType = "word" Or ThisType = "number" Or _
+				If ThisType = "any" Or ThisType = "byte" Or ThisType = "word" Or ThisType = "number" Or _
 				   ThisType = "integer" Or ThisType = "long" Or ThisType = "string" Then
 					
 					If Not ParamFNAdded Then

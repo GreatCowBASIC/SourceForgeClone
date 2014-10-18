@@ -66,6 +66,10 @@
       <DependentUpon>CompReportViewer.vb</DependentUpon>
     </Compile>
     <Compile Include="CompReportViewer.vb" />
+    <Compile Include="ConstantWindow.Designer.vb">
+      <DependentUpon>ConstantWindow.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ConstantWindow.vb" />
     <Compile Include="MainForm.vb" />
     <Compile Include="AssemblyInfo.vb" />
     <Compile Include="About.vb" />
@@ -73,7 +77,6 @@
     <Compile Include="Preferences.vb" />
     <Compile Include="ProgramWindow.vb" />
     <Compile Include="ChipSettings.vb" />
-    <Compile Include="DefineWindow.vb" />
     <Compile Include="LowLevel.vb" />
     <Compile Include="SubNameDialog.vb" />
     <Compile Include="LibraryWindow.vb" />
@@ -133,6 +136,9 @@
     <EmbeddedResource Include="CompReportViewer.resx">
       <DependentUpon>CompReportViewer.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ConstantWindow.resx">
+      <DependentUpon>ConstantWindow.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resources">
       <DependentUpon>MainForm.vb</DependentUpon>
       <LogicalName>Great_Cow_Graphical_BASIC.MainForm.resources</LogicalName>
@@ -148,10 +154,6 @@
     <EmbeddedResource Include="ChipSettings.resources">
       <LogicalName>Great_Cow_Graphical_BASIC.ChipSettings.resources</LogicalName>
       <DependentUpon>ChipSettings.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DefineWindow.resources">
-      <LogicalName>Great_Cow_Graphical_BASIC.DefineWindow.resources</LogicalName>
-      <DependentUpon>DefineWindow.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SubNameDialog.resources">
       <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.SubNameDialog.resources</LogicalName>

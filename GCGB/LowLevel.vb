@@ -3,7 +3,7 @@
 ' User: Administrator
 ' Date: 6/01/2007
 ' Time: 12:51 AM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 
@@ -277,6 +277,7 @@ Imports System.Collections.Generic
 		Public Shared Function IsBitConst(ByVal InValue As String) As Boolean
 			Dim Temp As Integer
 			
+			If InValue = "" Then Return False
 			If InValue.IndexOf(".") = -1 Then Return False
 			InValue = InValue.Substring(0, InValue.IndexOf(".")).Trim
 			
@@ -327,7 +328,7 @@ Imports System.Collections.Generic
 				If CurrentParam.StartsWith("table") Then Return False
 				If CurrentParam.StartsWith("label") Then Return False
 				If CurrentParam.StartsWith("free") Then Return True
-			Next			
+			Next
 			
 			Return True
 		End Function
@@ -338,8 +339,9 @@ Imports System.Collections.Generic
 				Case "BYTE": Return 1
 				Case "WORD": Return 2
 				Case "INTEGER": Return 3
-				Case "FLOAT": Return 4
-				Case "STRING": Return 5
+				Case "LONG": Return 4
+				Case "FLOAT": Return 5
+				Case "STRING": Return 6
 				
 				Case Else: Return -1
 			End Select
@@ -587,7 +589,7 @@ Imports System.Collections.Generic
 				IF DataVar.ToUpper.IndexOf(FINDTemp) = -1 THEN Exit Do
 				
 				'Check for occurance of whole string
-				'T: 0 not found, 1 left matches, 2 right matches (all found), 3 = found but not whole 
+				'T: 0 not found, 1 left matches, 2 right matches (all found), 3 = found but not whole
 				T = 0
 				'Check start
 				IF INSTR(DataVar.ToUpper, FINDTemp) = 1 THEN T = 1
