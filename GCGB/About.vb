@@ -37,7 +37,7 @@ Imports System.Windows.Forms
 		' Do not change the method contents inside the source code editor. The Forms designer might
 		' not be able to load this method if it was changed manually.
 		Private Sub InitializeComponent()
-			Dim resources As System.Resources.ResourceManager = New System.Resources.ResourceManager(GetType(AboutForm))
+			Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(AboutForm))
 			Me.readLicense = New System.Windows.Forms.Button
 			Me.CowLogo = New System.Windows.Forms.PictureBox
 			Me.gcbLink = New System.Windows.Forms.LinkLabel
@@ -50,6 +50,7 @@ Imports System.Windows.Forms
 			Me.DisplayVersion = New System.Windows.Forms.TextBox
 			Me.contributorsBox = New System.Windows.Forms.TextBox
 			Me.contributorsGroup = New System.Windows.Forms.GroupBox
+			CType(Me.CowLogo,System.ComponentModel.ISupportInitialize).BeginInit
 			Me.licenseGroup.SuspendLayout
 			Me.linksGroup.SuspendLayout
 			Me.versionGroup.SuspendLayout
@@ -70,8 +71,8 @@ Imports System.Windows.Forms
 			'
 			Me.CowLogo.BackColor = System.Drawing.Color.White
 			Me.CowLogo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-			Me.CowLogo.Image = CType(resources.GetObject("CowLogo.Image"),System.Drawing.Image)
 			Me.CowLogo.Location = New System.Drawing.Point(16, 16)
+			Me.CowLogo.Image = resources.GetObject("CowLogo.Image")
 			Me.CowLogo.Name = "CowLogo"
 			Me.CowLogo.Size = New System.Drawing.Size(216, 128)
 			Me.CowLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage
@@ -81,7 +82,7 @@ Imports System.Windows.Forms
 			'gcbLink
 			'
 			Me.gcbLink.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.gcbLink.Location = New System.Drawing.Point(8, 24)
 			Me.gcbLink.Name = "gcbLink"
 			Me.gcbLink.Size = New System.Drawing.Size(216, 16)
@@ -97,8 +98,8 @@ Imports System.Windows.Forms
 			Me.licenseText.Size = New System.Drawing.Size(216, 80)
 			Me.licenseText.TabIndex = 0
 			Me.licenseText.Text = "Great Cow Graphical BASIC comes with ABSOLUTELY NO WARRANTY. This is free softwar"& _ 
-"e, and you are welcome to redistribute it under certain conditions; please read "& _ 
-"the license for details."
+			"e, and you are welcome to redistribute it under certain conditions; please read "& _ 
+			"the license for details."
 			Me.licenseText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
 			'
 			'closeButton
@@ -114,7 +115,7 @@ Imports System.Windows.Forms
 			'forumLink
 			'
 			Me.forumLink.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.forumLink.Location = New System.Drawing.Point(8, 48)
 			Me.forumLink.Name = "forumLink"
 			Me.forumLink.Size = New System.Drawing.Size(216, 16)
@@ -161,7 +162,7 @@ Imports System.Windows.Forms
 			'DisplayVersion
 			'
 			Me.DisplayVersion.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.DisplayVersion.BorderStyle = System.Windows.Forms.BorderStyle.None
 			Me.DisplayVersion.Location = New System.Drawing.Point(8, 21)
 			Me.DisplayVersion.Multiline = true
@@ -175,8 +176,8 @@ Imports System.Windows.Forms
 			'contributorsBox
 			'
 			Me.contributorsBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
-						Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.contributorsBox.BorderStyle = System.Windows.Forms.BorderStyle.None
 			Me.contributorsBox.HideSelection = false
 			Me.contributorsBox.Location = New System.Drawing.Point(8, 16)
@@ -185,12 +186,7 @@ Imports System.Windows.Forms
 			Me.contributorsBox.ReadOnly = true
 			Me.contributorsBox.Size = New System.Drawing.Size(216, 208)
 			Me.contributorsBox.TabIndex = 0
-			Me.contributorsBox.Text = "Great Cow Graphical BASIC:"&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&"Hugh Considine (Lead Developer)"&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&"Great Cow BASIC:"&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)& _ 
-"(Used by GCGB to compile programs)"&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&"Hugh Considine (Lead Developer)"&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&"Stefano Bon"& _ 
-"omi (2 bit LCD routines)"&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&"Kent Schafer (Peripheral routines)"&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&Microsoft.VisualBasic.ChrW(13)&Microsoft.VisualBasic.ChrW(10)&"Thank you also t"& _ 
-"o all of those who've helped out by reporting bugs, giving suggestions, answerin"& _ 
-"g questions on the forums, or just spreading the word - GCBASIC wouldn't be the "& _ 
-"same without it!"
+			Me.contributorsBox.Text = resources.GetString("contributorsBox.Text")
 			'
 			'contributorsGroup
 			'
@@ -222,10 +218,13 @@ Imports System.Windows.Forms
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
 			Me.Tag = ""
 			Me.Text = "About Great Cow Graphical BASIC"
+			CType(Me.CowLogo,System.ComponentModel.ISupportInitialize).EndInit
 			Me.licenseGroup.ResumeLayout(false)
 			Me.linksGroup.ResumeLayout(false)
 			Me.versionGroup.ResumeLayout(false)
+			Me.versionGroup.PerformLayout
 			Me.contributorsGroup.ResumeLayout(false)
+			Me.contributorsGroup.PerformLayout
 			Me.ResumeLayout(false)
 		End Sub
 		#End Region
