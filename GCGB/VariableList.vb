@@ -58,12 +58,12 @@ Imports System.Collections.Generic
 					If Length > 0 Then
 						OutData += " * " + Length.ToString
 					End If
-					If VarAlias <> "" Then
-						OutData += " Alias " + VarAlias
-					End If
-					If VarAt <> "" Then
-						OutData += " At " + VarAt
-					End If
+				End If
+				If VarAlias <> "" Then
+					OutData += " Alias " + VarAlias
+				End If
+				If VarAt <> "" Then
+					OutData += " At " + VarAt
 				End If
 				Return OutData
 			End Get

@@ -1,5 +1,5 @@
 ' Great Cow Graphical BASIC - an icon based programming language for microcontrollers
-' Copyright (C) 2006 - 2013 Hugh Considine
+' Copyright (C) 2006 - 2014 Hugh Considine
 '
 '	This program is free software; you can redistribute it and/or modify
 '	it under the terms of the GNU General Public License as published by
@@ -53,10 +53,10 @@ Imports System.Threading
 		Public Const MaxIconParams As Integer = 20
 		Public Const MaxUndo As Integer = 1000
 		Public Const MaxTables As Integer = 50
-		Public Const MaxTableElements As Integer = 255
+		Public Const MaxTableElements As Integer = 10000
 		
 		'Version constants
-		Public Const ProgVersion As String = "1.0 17/6/2014"
+		Public Const ProgVersion As String = "1.0 18/10/2014"
 		Public Const FileVersion As String = "20100130"
 		Public Const ShortVersion As String = "Version 1.0"
 		
@@ -1870,7 +1870,8 @@ Imports System.Threading
 			'If exit wait flag set, wait for compile to complete
 			If ExitWait Then
 				Do While startComp.Completed = False
-					Thread.Sleep(10)
+					Application.DoEvents
+					Thread.Sleep(20)
 				Loop
 				Return startComp.Result
 			End If
@@ -1929,6 +1930,7 @@ Imports System.Threading
 			
 			'MessageBox.Show(DoCompile.StartInfo.Arguments, "Command Line", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
 			DoCompile.Start()
+			
 			DoCompile.WaitForExit(30000)
 			
 			'Check for errors.txt, and exit sub if found
