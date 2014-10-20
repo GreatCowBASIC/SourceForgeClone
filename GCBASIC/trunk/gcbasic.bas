@@ -572,7 +572,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 10/9/2014"
+Version = "0.9 20/10/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3704,82 +3704,107 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 		End If
 	End If
 	
-	'Process each byte of variable one at a time
-	For CurrVarByte = 0 To GetTypeSize(CalcType) - 1
+	'On AVR, need to do negate on entire variable at once
+	If ModeAVR And Act = "-" Then
 		
-		'NOT (Byte and Word)
+		'Put value in register
+		'Overwrite V2?
+		Ovr = "O:"
+		If UCase(Left(V2, 7)) = "SYSTEMP" Then Ovr = ""
+		If UCase(Left(V2, 11)) = "SYSCALCTEMP" Then Ovr = ""
+				
+		NewCode = LinkedListCreate
+		R2 = PutInRegister(NewCode, Ovr + V2, "INTEGER", Origin)
+		AddVar V2, "BYTE", 1, 0, "REAL", Origin
+		CurrLine = LinkedListInsertList(CurrLine, NewCode)
+					
+		'Perform operation
+		For CurrVarByte = 0 To GetTypeSize(CalcType) - 1
+			CurrLine = LinkedListInsert(CurrLine, " com " + GetByte(R2, CurrVarByte))
+		Next
 		
-		'No matching byte in input, so set output byte to 255
-		If CurrVarByte >= GetTypeSize(V2Type) Then
-			If ModePIC Then
-				If ChipFamily <> 16 Then
-					CurrLine = LinkedListInsert(CurrLine, " movlw 255")
-					CurrLine = LinkedListInsert(CurrLine, " movwf " + GetByte(AV, CurrVarByte))
+		CurrLine = LinkedListInsert(CurrLine, " inc " + GetByte(R2, 0))
+		CurrLine = LinkedListInsert(CurrLine, " brne PC + 2")
+		CurrLine = LinkedListInsert(CurrLine, " inc " + GetByte(R2, 1))
+		
+		'Copy result to output variable
+		NewCode = CompileVarSet(R2, AV, Origin)
+		CurrLine = LinkedListInsertList(CurrLine, NewCode)
+		FreeCalcVar R2
+		
+	Else
+		
+		'Process each byte of variable one at a time
+		For CurrVarByte = 0 To GetTypeSize(CalcType) - 1
+			
+			'NOT (Byte and Word)
+			
+			'No matching byte in input, so set output byte to 255
+			If CurrVarByte >= GetTypeSize(V2Type) Then
+				If ModePIC Then
+					If ChipFamily <> 16 Then
+						CurrLine = LinkedListInsert(CurrLine, " movlw 255")
+						CurrLine = LinkedListInsert(CurrLine, " movwf " + GetByte(AV, CurrVarByte))
+					End If
+					If ChipFamily = 16 Then CurrLine = LinkedListInsert(CurrLine, " setf " + GetByte(AV, CurrVarByte))
+				ElseIf ModeAVR Then
+					'R2 = GetCalcVar("BYTE")
+					'CurrLine = LinkedListInsert(CurrLine, " clr " + R2)
+					'CurrLine = LinkedListInsert(CurrLine, " com " + R2)
+					R2 = "255"
 				End If
-				If ChipFamily = 16 Then CurrLine = LinkedListInsert(CurrLine, " setf " + GetByte(AV, CurrVarByte))
-			ElseIf ModeAVR Then
-				'R2 = GetCalcVar("BYTE")
-				'CurrLine = LinkedListInsert(CurrLine, " clr " + R2)
-				'CurrLine = LinkedListInsert(CurrLine, " com " + R2)
-				R2 = "255"
+				
+			'Matching byte in input for current output byte, so invert input
+			Else
+				If ModePIC Then
+					If AV <> V2 Then
+						CurrLine = LinkedListInsert(CurrLine, " comf " + GetByte(V2, CurrVarByte) + ",W")
+						CurrLine = LinkedListInsert(CurrLine, " movwf " + GetByte(AV, CurrVarByte))
+						If CurrVarByte = 0 Then
+							AddVar V2, "BYTE", 1, 0, "REAL", Origin
+							AddVar AV, "BYTE", 1, 0, "REAL", Origin
+						End If
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " comf " + GetByte(V2, CurrVarByte) + ",F")
+						If CurrVarByte = 0 Then
+							AddVar V2, "BYTE", 1, 0, "REAL", Origin
+						End If
+					End If
+						
+				ElseIf ModeAVR Then
+					'If AVR, put current byte in register
+					'Overwrite V2?
+					Ovr = "O:"
+					If UCase(Left(V2, 7)) = "SYSTEMP" Then Ovr = ""
+					If UCase(Left(V2, 11)) = "SYSCALCTEMP" Then Ovr = ""
+					
+					NewCode = LinkedListCreate
+					R2 = PutInRegister(NewCode, Ovr + GetByte(V2, CurrVarByte), "BYTE", Origin)
+					AddVar V2, "BYTE", 1, 0, "REAL", Origin
+					CurrLine = LinkedListInsertList(CurrLine, NewCode)
+					
+					'Perform operation
+					CurrLine = LinkedListInsert(CurrLine, " com " + R2)
+					
+				End If
 			End If
 			
-		'Matching byte in input for current output byte, so invert input
-		Else
-			If ModePIC Then
-				If AV <> V2 Then
-					CurrLine = LinkedListInsert(CurrLine, " comf " + GetByte(V2, CurrVarByte) + ",W")
-					CurrLine = LinkedListInsert(CurrLine, " movwf " + GetByte(AV, CurrVarByte))
-					If CurrVarByte = 0 Then
-						AddVar V2, "BYTE", 1, 0, "REAL", Origin
-						AddVar AV, "BYTE", 1, 0, "REAL", Origin
-					End If
-				Else
-					CurrLine = LinkedListInsert(CurrLine, " comf " + GetByte(V2, CurrVarByte) + ",F")
-					If CurrVarByte = 0 Then
-						AddVar V2, "BYTE", 1, 0, "REAL", Origin
-					End If
-				End If
-					
-			ElseIf ModeAVR Then
-				'If AVR, put current byte in register
-				'Overwrite V2?
-				Ovr = "O:"
-				If UCase(Left(V2, 7)) = "SYSTEMP" Then Ovr = ""
-				If UCase(Left(V2, 11)) = "SYSCALCTEMP" Then Ovr = ""
-				
-				NewCode = LinkedListCreate
-				R2 = PutInRegister(NewCode, Ovr + GetByte(V2, CurrVarByte), "BYTE", Origin)
-				AddVar V2, "BYTE", 1, 0, "REAL", Origin
+			If ModeAVR Then
+				'Copy result to output variable
+				NewCode = CompileVarSet(R2, "[byte]" + GetByte(AV, CurrVarByte), Origin)
 				CurrLine = LinkedListInsertList(CurrLine, NewCode)
-				
-				'Perform operation
-				CurrLine = LinkedListInsert(CurrLine, " com " + R2)
-				
+				FreeCalcVar R2
 			End If
-		End If
+			
+		Next
 		
-		If ModeAVR Then
-			'Copy result to output variable
-			NewCode = CompileVarSet(R2, "[byte]" + GetByte(AV, CurrVarByte), Origin)
-			CurrLine = LinkedListInsertList(CurrLine, NewCode)
-			FreeCalcVar R2
-		End If
-		
-	Next
-	
-	If Act = "-" And CalcType = "INTEGER" Then
-		If ModePIC Then
+		If Act = "-" And CalcType = "INTEGER" Then
+			'(PIC only, can't reach here on AVR)
 			CurrLine = LinkedListInsert(CurrLine, " incf " + GetByte(AV, 0) + ",F")
 			CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
 			CurrLine = LinkedListInsert(CurrLine, " incf " + GetByte(AV, 1) + ",F")
-			
-		ElseIf ModeAVR Then
-			CurrLine = LinkedListInsert(CurrLine, " inc " + GetByte(AV, 0))
-			CurrLine = LinkedListInsert(CurrLine, " brne PC + 2")
-			CurrLine = LinkedListInsert(CurrLine, " inc " + GetByte(AV, 1))
-			
 		End If
+		
 	End If
 	
 	OutList->CodeEnd = CurrLine
