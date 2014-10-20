@@ -357,6 +357,23 @@ Sub SerPrint (In Ser_Select, In SerPrintVal As Word)
 	
 End Sub
 
+Sub SerPrint (In Ser_Select, In SerPrintValInt As Integer)
+	Dim SerPrintVal As Word
+	
+	'If sign bit is on, print - sign and then negate
+	If SerPrintValInt.15 = On Then
+		SerSend(Ser_Select, "-")
+		SerPrintVal = -SerPrintValInt
+		
+	'Sign bit off, so just copy value
+	Else
+		SerPrintVal = SerPrintValInt
+	End If
+	
+	'Use Print(word) to display value
+	SerPrint Ser_Select, SerPrintVal
+End Sub
+
 'Note: When calling this sub, set Ser_Select and Ser_Rate, and read carry bit
 sub SerRxBit
 	'Clear bit counters
