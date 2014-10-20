@@ -185,7 +185,7 @@ Category = Communication (Software)
 Icon=serprint
 Syntax=SerPrint %P1%, %P2%
 P1 = Channel, CGR_RS232_Channels, Channel to send to
-P2 = Message, string|byte|word, Message or number to transmit
+P2 = Message, string|byte|word|integer, Message or number to transmit
 Tooltip = Sends a message or number over a serial connection
 Category = Communication (Software)
 
@@ -234,7 +234,7 @@ Category = Communication (Software)
 [COM_Hardware Serial Print]
 Icon=hserprint
 Syntax=HSerPrint %P1%
-P1 = Message, string|byte|word, Message or number to transmit
+P1 = Message, string|byte|word|integer, Message or number to transmit
 Tooltip = Sends a message or number over a hardware serial connection
 Category = Communication (Hardware)
 
