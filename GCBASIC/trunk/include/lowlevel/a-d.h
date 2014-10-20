@@ -480,8 +480,19 @@ macro LLReadAD (ADLeftAdjust)
 			ADMUX = ADReadPort
 		#endif
 		#ifdef Bit(MUX5)
-			ADCSRB.MUX5 = ADReadPort.5
-			ADMUX = ADReadPort And 0x1F
+			#ifdef NoBit(ADATE)
+				ADCSRB.MUX5 = ADReadPort.5
+				ADMUX = ADReadPort And 0x1F
+			#endif
+			#ifdef Bit(ADATE)
+				ADMUX = 0
+				MUX5 = ADReadPort.5
+				MUX4 = ADReadPort.4
+				MUX3 = ADReadPort.3
+				MUX2 = ADReadPort.2
+				MUX1 = ADReadPort.1
+				MUX0 = ADReadPort.0
+			#endif
 		#endif
 		#ifdef Bit(ADLAR)
 			If ADLeftAdjust = 1 Then
@@ -491,14 +502,27 @@ macro LLReadAD (ADLeftAdjust)
 				Set ADMUX.ADLAR Off
 			End If
 		#endif
+		
 		'Select reference source
-		If AD_REF_SOURCE = AD_REF_AVCC Then
-			Set ADMUX.REFS0 On
-		End If
-		If AD_REF_SOURCE = AD_REF_256 Then
-			Set ADMUX.REFS0 On
-			Set ADMUX.REFS1 On
-		End If
+		#ifndef Bit(REFS2)
+			If AD_REF_SOURCE = AD_REF_AVCC Then
+				Set ADMUX.REFS0 On
+			End If
+			If AD_REF_SOURCE = AD_REF_256 Then
+				Set ADMUX.REFS0 On
+				Set ADMUX.REFS1 On
+			End If
+		#endif
+		#ifdef Bit(REFS2)
+			If AD_REF_SOURCE = AD_REF_AREF Then
+				Set ADMUX.REFS0 On
+			End If
+			If AD_REF_SOURCE = AD_REF_256 Then
+				Set ADMUX.REFS0 On
+				Set ADMUX.REFS1 On
+				Set REFS2 On
+			End If
+		#endif
 		
 		'Set conversion clock
 		#IFDEF Bit(ADPS2)
