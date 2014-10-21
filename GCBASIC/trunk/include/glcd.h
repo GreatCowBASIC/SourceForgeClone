@@ -38,6 +38,8 @@
 ' 15/10/2014: Adapted for color support for ST7735
 '             Added Defines and ST7735Rotation command
 ' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ST7735 device.
+' 20/10/2014: Adapted to support PCD9844 devices.
+' 21/10/2014: PCD9844 device improvements to remove a method and reduce configuration
 
 'Initialisation routine
 #startup InitGLCD
@@ -104,6 +106,8 @@
 #define GLCD_TYPE_KS0108 1
 #define GLCD_TYPE_ST7735 2
 #define GLCD_TYPE_ST7920 3
+#define GLCD_TYPE_PCD8544 4
+
 
 'Pin mappings for ST7735
 #define ST7735_DC GLCD_DC
@@ -198,11 +202,420 @@
 #define ST7920GLCDEnableCharacterMode ST7920GLCDDisableGraphics
 dim GLCD_yordinate as integer
 
+'PCD8544 Details
+'This program was written using the Great Cow Basic IDE for use with the PIC
+'Microchio development board and a Nokia 3310 LCD. It is a nice small graphical LCD, suitable for a lot of various projects.
+'The display is 38*35 mm, with an active display surface of 30*22 mm, and a 84*48 pixel resolution.
+'The display is easy to interface, using an SPI type of communication.
+'A 1-10 uF electrolytic capacitor from VOUT to GND, is the only external component needed.
+' typically the device will need the following two defines
+'    #define GLCD_WIDTH 84
+'    #define GLCD_HEIGHT 48
+
+    ' On the 16F1 chips, the linear data space from location 0x2000 maps back to the normal data space.
+    ' So, each bank is 80 bytes long, so bank 0 starts at 0x2000 in the linear space, or 32 in the normal space.
+    ' Bank 1 starts at 0x2050 in the linear space, or at 160 in the normal space and #bootloader 2 starts at 0x2100, or 288, and so on...
+    ' So we can adddress the arrays via an alias of 0x2050 equates to address 160.
+    ' For the 16f devices you will get a compiler warning with respect to memory addressing - please ignore.
+
+    ' For 18f or AVR simply define the PCD8544_BufferAlias with 504 elements.
+'          Dim PCD8544_BufferLocationCalc as Word
+'
+'          Dim PCD8544_Buffer1(79) at 160
+'          Dim PCD8544_Buffer2(79) at 288
+'          Dim PCD8544_Buffer3(79) at 416
+'          Dim PCD8544_Buffer4(79) at 544
+'          Dim PCD8544_Buffer5(79) at 672
+'          Dim PCD8544_Buffer6(79) at 800
+'          Dim PCD8544_Buffer7(79) at 928
+'          Dim PCD8544_BufferAlias(2) at 0x2050
+
+    ' For devices with limited RAM you can use Character and Picture mode (no lines, circles etc.
+    ' Remove the arrays above and remove the remarks from the two defines below
+
+'        #define GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+
+'Pin mappings for  PCD8544
+#define PCD8544_DC              GLCD_DC
+#define PCD8544_CS              GLCD_CS
+#define PCD8544_RST             GLCD_RESET
+#define PCD8544_DI              GLCD_DI
+#define PCD8544_DO              GLCD_DO
+#define PCD8544_SCK             GLCD_SCK
+
+
+#define _PCD8544_DC              _GLCD_DC
+#define _PCD8544_CS              _GLCD_CS
+#define _PCD8544_RST             _GLCD_RESET
+#define _PCD8544_DI              _GLCD_DI
+#define _PCD8544_DO              _GLCD_DO
+#define _PCD8544_SCK             _GLCD_SCK
+
+
+'Setup code for PCD8544 controllers
+#if GLCD_TYPE = GLCD_TYPE_PCD8544
+
+    dim PCD8544_BufferLocationCalc as Word               ' mandated in main program for PCD8544
+
+    #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+
+        #script
+            If ChipRAM < 512 and not  var(GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY)    Then
+               Error "Not enough RAM for GLCD buffer on this chip model"
+               Error "."
+               Error "Please use #Define GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY to use PCD8544 in text mode only"
+               Error ""
+            End If
+        #endscript
+
+       ' ChipFamily 12 for 10F/12F5/16F5, 14 for most 12F/16F, 15 for 12F1/16F1, 16 for 18F
+       ' and, numbers 100, 110, 120, 130 for AVR,
+       #ifdef ChipFamily 15
+        Dim PCD8544_Buffer1(79) at 160
+        Dim PCD8544_Buffer2(79) at 288
+        Dim PCD8544_Buffer3(79) at 416
+        Dim PCD8544_Buffer4(79) at 544
+        Dim PCD8544_Buffer5(79) at 672
+        Dim PCD8544_Buffer6(79) at 800
+        Dim PCD8544_Buffer7(79) at 928
+        Dim PCD8544_BufferAlias(2) at 0x2050
+       #endif
+
+       #if ChipFamily <> 15
+        Dim PCD8544_BufferAlias(504)
+       #endif
+    #endif
+
+#endif
+
+
 
 
 'Foreground and background colours
 Dim GLCDBackground As Word
 Dim GLCDForeground As Word
+
+'''Initialise the GLCD device
+Sub InitGLCD
+
+          ' required variables
+		'Pin directions
+		Dir _PCD8544_CS Out
+		Dir _PCD8544_DC Out
+		Dir _PCD8544_RST Out
+		
+'		Dir _PCD8544_DI In
+		Dir _PCD8544_DO Out
+		Dir _PCD8544_SCK Out
+		
+                    'Reset ports
+                    Set PCD8544_CS off
+                    Set PCD8544_DC off
+                    Set PCD8544_RST off
+                    Set PCD8544_DO off
+                    Set PCD8544_SCK off
+
+                    ' Deselect Chip
+                    SET PCD8544_CS OFF
+		Wait 10 ms
+		'Reset display
+		Set PCD8544_RST On
+		Wait 10 ms
+		'Reset sequence (lower line for at least 10 us)
+		Set PCD8544_RST Off
+		Wait 25 us
+		Set PCD8544_RST On
+		Wait 10 ms
+                    PCD8544_CS = 1
+                    wait 10 us
+                    PCD8544_CS = 0
+
+		
+'	/*********SEE DATASHEET FOR ALL THIS********/
+
+                    PCD8544_Write_Command(0x21);		 Activate Chip and H=1.
+                    PCD8544_Write_Command(0x21);		 Activate Chip and H=1.
+                    PCD8544_Write_Command(0xC2);		 Set LCD Voltage to about 7V.
+                    PCD8544_Write_Command(0x13);		 Adjust voltage bias.
+                    PCD8544_Write_Command(0x20);		 Horizontal addressing and H=0.
+                    PCD8544_Write_Command(0x09);		 Activate all segments.
+                    PCD8544_Clear_RAM();			 Erase all pixel on the DDRAM.
+                    PCD8544_Write_Command(0x08);		 Blank the Display.
+                    PCD8544_Write_Command(0x0C);		 Display Normal.
+                    PCD8544_GOTO_Pixel(0,0);			 Cursor Home.	
+
+
+		'Colours
+		GLCDBackground = 0
+		GLCDForeground = 1
+
+	#endif
+
+      #if GLCD_TYPE = GLCD_TYPE_ST7920
+
+          #IFDEF GLCD_IO 4,8
+
+                    #IFNDEF GLCD_LAT
+                           DIR GLCD_RS OUT
+                           Dir GLCD_RESET Out
+		#ENDIF
+                    #IFDEF GLCD_LAT
+                           DIR _GLCD_RS OUT
+                           Dir _GLCD_RESET Out
+		#ENDIF
+
+		#IFNDEF GLCD_NO_RW
+                              #IFNDEF GLCD_LAT
+                                     DIR GLCD_RW OUT
+                              #ENDIF
+                              #IFDEF GLCD_LAT
+                                     DIR _GLCD_RW OUT
+                              #ENDIF
+		#ENDIF
+
+
+                    #IFNDEF GLCD_LAT
+                           DIR GLCD_Enable OUT
+                          'Reset
+                          Set GLCD_RESET Off
+                          set GLCD_RESET off
+                          Wait 1 s
+                          Set GLCD_RESET On
+                          Wait 50 ms
+                          Set GLCD_RESET On
+		#ENDIF
+                    #IFDEF GLCD_LAT
+                           DIR _GLCD_Enable OUT
+                           'Reset
+                           Set GLCD_RESET Off
+                           Wait 1 ms
+                           Set GLCD_RESET On
+                           Wait 50 ms
+		#ENDIF
+
+		
+		wait 10 ms
+		Wait until GLCDReady
+
+		'Set data bus width
+		SET GLCD_RS OFF
+	#ENDIF ' GLCD_IO 4,8
+
+	#IFDEF GLCD_IO 8
+                    SET GLCD_RS OFF
+                    SET GLCD_RW OFF
+                    SET GLCD_ENABLE OFF
+
+                    wait 200 ms
+		ST7920WriteCommand(0x56)
+                    wait 1 ms
+                    ST7920WriteCommand(0x56)
+                    wait 1 ms
+                    ST7920WriteByte(0x36
+		wait 5 10us
+                    ST7920WriteByte(0x0c)
+		wait 5 10us
+                    ST7920WriteByte(0x06)
+		wait 5 10us
+	#ENDIF
+
+	#IFDEF GLCD_IO 4
+		'Set pins to output
+                    #IFNDEF GLCD_LAT
+                        DIR GLCD_DB4 OUT
+                        DIR GLCD_DB5 OUT
+                        DIR GLCD_DB6 OUT
+                        DIR GLCD_DB7 OUT
+		#ENDIF
+                    #IFDEF GLCD_LAT
+                        DIR _GLCD_DB4 OUT
+                        DIR _GLCD_DB5 OUT
+                        DIR _GLCD_DB6 OUT
+                        DIR _GLCD_DB7 OUT
+		#ENDIF
+
+		set GLCD_RS OFF
+		#IFNDEF GLCD_NO_RW
+			set GLCD_RW OFF
+		#ENDIF
+
+                    wait 15 ms
+                    '0011
+		set GLCD_DB4 ON
+		set GLCD_DB5 ON
+		set GLCD_DB6 OFF
+		set GLCD_DB7 OFF
+                    Repeat 3
+                      PULSEOUT GLCD_Enable, 5 10us
+                      Wait 5 ms
+		  #IFNDEF GLCD_NO_RW
+			set GLCD_RW OFF
+                      #ENDIF
+                    end repeat
+		Wait 5 ms
+
+
+                    'function set
+		set GLCD_DB4 OFF
+		set GLCD_DB5 ON
+		set GLCD_DB6 OFF
+		set GLCD_DB7 OFF
+		PULSEOUT GLCD_Enable, 5 10us
+		Wait 5 ms
+
+                    'function set
+		set GLCD_DB4 OFF
+		set GLCD_DB5 OFF
+		set GLCD_DB6 OFF
+		set GLCD_DB7 OFF
+		PULSEOUT GLCD_Enable, 5 10us
+		Wait 5 ms
+
+		set GLCD_DB4 OFF
+		set GLCD_DB5 OFF
+		set GLCD_DB6 OFF
+		set GLCD_DB7 ON
+
+		PULSEOUT GLCD_Enable, 5 10us
+		Wait 5 ms
+
+		ST7920WriteByte(b'10000000')
+		wait 5 10us
+
+		ST7920WriteByte(b'00010000')
+		wait 5 ms
+
+		ST7920WriteByte(b'011000000')
+		wait 5 10us
+	#ENDIF    'GLCD_TYPE = GLCD_TYPE_ST7920
+
+
+	#IFDEF GLCD_IO 4,8
+
+		'Set Cursor movement
+		SET GLCD_RS OFF
+		ST7920WriteCommand(b'00000110')
+		wait 5 10us
+		'Turn off cursor
+		ST7920WriteCommand(b'00001100')
+		wait 5 10us
+		
+		'Clear screen
+                    GLCD_TYPE_ST7920_GRAPHICS_MODE = false
+		GLCDCLS
+	#ENDIF
+          'Colours
+          GLCDBackground = 0
+          GLCDForeground = 1
+      #ENDIF
+
+
+	'Setup code for KS0108 controllers
+	#if GLCD_TYPE = GLCD_TYPE_KS0108
+		'Set pin directions
+		Dir GLCD_RS Out
+		Dir GLCD_RW Out
+		Dir GLCD_ENABLE Out
+		Dir GLCD_CS1 Out
+		Dir GLCD_CS2 Out
+		Dir GLCD_RESET Out
+		
+		'Reset
+		Set GLCD_RESET Off
+		Wait 1 ms
+		Set GLCD_RESET On
+		Wait 1 ms
+		
+		'Select both chips
+		Set GLCD_CS1 On
+		Set GLCD_CS2 On
+		
+		'Set on
+		Set GLCD_RS Off
+		GLCDWriteByte 63
+
+		'Set Z to 0
+		GLCDWriteByte 192
+		
+		'Deselect chips
+		Set GLCD_CS1 Off
+		Set GLCD_CS2 Off
+		
+		'Colours
+		GLCDBackground = 0
+		GLCDForeground = 1
+		
+	#endif
+	
+	'Setup code for ST7735 controllers
+	#if GLCD_TYPE = GLCD_TYPE_ST7735
+		'Pin directions
+		Dir ST7735_CS Out
+		Dir ST7735_DC Out
+		Dir ST7735_RST Out
+		
+		Dir ST7735_DI In
+		Dir ST7735_DO Out
+		Dir ST7735_SCK Out
+		
+		'SPI mode
+		SPIMode MasterFast, 0
+		
+		'Reset display
+		Set ST7735_RST On
+		Wait 10 ms
+		'Reset sequence (lower line for at least 10 us)
+		Set ST7735_RST Off
+		Wait 25 us
+		Set ST7735_RST On
+		Wait 10 ms
+		
+		'Software reset
+		ST7735SendCommand 0x01
+		Wait 200 ms
+
+		'Software reset
+		ST7735SendCommand 0x01
+		Wait 200 ms		
+		
+                    'Out of sleep mode
+		ST7735SendCommand 0x11
+		Wait 200 ms
+		
+		'Gamma correction
+		'ST7735SetGammaCorrection
+		
+		'Scanning direction
+		ST7735SendCommand 0x36
+		ST7735SendData 0xC8
+		
+		'Set pixel mode to 16 bpp
+		ST7735SendCommand 0x3A
+		ST7735SendData 5
+		
+		'Display on
+		ST7735SendCommand 0x29
+		Wait 100 ms
+		
+		'Colours
+		GLCDBackground = ST7735_WHITE
+		GLCDForeground = ST7735_BLACK
+
+                    'Variables required for device
+                    ST7735_GLCD_WIDTH = GLCD_WIDTH
+                    ST7735_GLCD_HEIGHT = GLCD_HEIGHT
+	#endif
+	
+
+
+
+
+	'Clear screen
+	GLCDCLS
+	
+End Sub
+
+
 
 'Subs
 '''Clears the GLCD screen
@@ -275,6 +688,20 @@ Sub GLCDCLS
 			ST7735SendWord GLCDBackground
 		End Repeat
 	#endif
+
+          #if GLCD_TYPE = GLCD_TYPE_PCD8544
+              #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+                For PCD8544_BufferLocationCalc = 1 to 505
+                    PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = 0
+                Next
+              #endif
+              PCD8544_GOTO_Pixel(0,0);	'Goto the pixel specified by the Co-ordinate
+
+              for PCD8544_BufferLocationCalc = 503 to 0 step - 1
+                  PCD8544_Write_Data(0x00);
+              next
+
+          #endif
 End Sub
 
 '''Displays a message
@@ -404,14 +831,27 @@ Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour a
 			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
 			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
 		End Select
-		For CurrCharRow = 1 to 8
-			If CurrCharVal.0 = 0 Then
-				PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
-			Else
-				PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
-			End If
-			Rotate CurrCharVal Right
-		Next
+                    ' Handles general draw sequence. This caters for read display status then update display RAM
+                    #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+                        For CurrCharRow = 1 to 8
+                                  If CurrCharVal.0 = 0 Then
+                                            PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                                  Else
+                                            PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
+                                  End If
+                                  Rotate CurrCharVal Right
+                        Next
+                    #endif
+
+                    ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
+                    #ifdef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+                           PCD8544_Cursor_Position ( ( CharLocX + CurrCharCol -1 ) , CharLocY )
+                           If LineColour = 1 Then
+                              PCD8544_Write_Data( CurrCharVal )
+                           else
+                              PCD8544_Write_Data( 255 - CurrCharVal )
+                           end if
+                    #endif
 	Next
           'Colours
           'Restore colors
@@ -505,6 +945,15 @@ Sub FilledBox(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour
 		Repeat GLCDPixelCount
 			ST7735SendWord LineColour
 		End Repeat
+	#endif
+
+	#if GLCD_TYPE = GLCD_TYPE_PCD8544
+		'Draw lines going across
+		For DrawLine = LineX1 To LineX2
+			For GLCDTemp = LineY1 To LineY2
+				PSet DrawLine, GLCDTemp, LineColour
+			Next
+		Next
 	#endif
 End Sub
 
@@ -754,6 +1203,38 @@ End Sub
 Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 
 
+	#if GLCD_TYPE = GLCD_TYPE_PCD8544
+
+              #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+                    PCD8544_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
+                    PCD8544_BufferLocationCalc = GLCDX + PCD8544_BufferLocationCalc+1
+		GLCDDataTemp = PCD8544_BufferAlias(PCD8544_BufferLocationCalc)
+                    	
+		'Change data to set/clear pixel
+		GLCDBitNo = GLCDY And 7
+		If GLCDColour.0 = 0 Then
+			GLCDChange = 254
+			Set C On
+		Else
+			GLCDChange = 1
+			Set C Off
+		End If
+		Repeat GLCDBitNo
+			Rotate GLCDChange Left
+		End Repeat
+
+		If GLCDColour.0 = 0 Then
+			GLCDDataTemp = GLCDDataTemp And GLCDChange
+		Else
+			GLCDDataTemp = GLCDDataTemp Or GLCDChange
+		End If
+		
+		PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = GLCDDataTemp
+                    PCD8544_Cursor_Position ( GLCDX, GLCDY )
+                    PCD8544_Write_Data ( GLCDDataTemp )
+              #endif
+
+	#endif
 
 	#if GLCD_TYPE = GLCD_TYPE_ST7920
 
@@ -1661,273 +2142,157 @@ function GLCDReady
 end function
 
 
+sub PCD8544_Write_Command(in  PCD8544SendByte)
 
-'''Initialise the GLCD device
-Sub InitGLCD
+	SET PCD8544_DC OFF;		'Data/Command is set to zero to give Command of PCD8544 Controller
+          WAIT 1 us
+	set PCD8544_CS off ;	'Select the Chip, Chip Enable is an Active Low Signal
+          WAIT 2 us
+	PCD8544_SPI_Send_Data(PCD8544SendByte);
+	set PCD8544_CS on;	'Disable the Chip again by providing active high Signal
+          WAIT 1 us
+end sub
 
-      #if GLCD_TYPE = GLCD_TYPE_ST7920
+sub PCD8544_Write_Data(in PCD8544SendByte)
 
-          #IFDEF GLCD_IO 4,8
-
-                    #IFNDEF GLCD_LAT
-                           DIR GLCD_RS OUT
-                           Dir GLCD_RESET Out
-		#ENDIF
-                    #IFDEF GLCD_LAT
-                           DIR _GLCD_RS OUT
-                           Dir _GLCD_RESET Out
-		#ENDIF
-
-		#IFNDEF GLCD_NO_RW
-                              #IFNDEF GLCD_LAT
-                                     DIR GLCD_RW OUT
-                              #ENDIF
-                              #IFDEF GLCD_LAT
-                                     DIR _GLCD_RW OUT
-                              #ENDIF
-		#ENDIF
+          SET PCD8544_DC ON;				'Data/Command is set to One to give Data of PCD8544 Controller
+          WAIT 1 us
+	set PCD8544_CS off;	'Select the Chip, Chip Enable is an Active Low Signal
+          WAIT 2 us
+	PCD8544_SPI_Send_Data(PCD8544SendByte);
+	set PCD8544_CS on;	'Disable the Chip again by providing active high Signal
+          WAIT 1 us
+end sub
 
 
-                    #IFNDEF GLCD_LAT
-                           DIR GLCD_Enable OUT
-                          'Reset
-                          Set GLCD_RESET Off
-                          set GLCD_RESET off
-                          Wait 1 s
-                          Set GLCD_RESET On
-                          Wait 50 ms
-                          Set GLCD_RESET On
-		#ENDIF
-                    #IFDEF GLCD_LAT
-                           DIR _GLCD_Enable OUT
-                           'Reset
-                           Set GLCD_RESET Off
-                           Wait 1 ms
-                           Set GLCD_RESET On
-                           Wait 50 ms
-		#ENDIF
+sub PCD8544_SPI_Send_Data(in PCD8544SendByte)
 
-		
-		wait 10 ms
-		Wait until GLCDReady
+    repeat 8                      '8 data bits
+      wait 2 us
+      if PCD8544SendByte.7 = ON then      'put most significant bit on SDA line
+        set PCD8544_DO ON
+      else
+        set PCD8544_DO OFF
+      end if
 
-		'Set data bus width
-		SET GLCD_RS OFF
-	#ENDIF ' GLCD_IO 4,8
+      rotate PCD8544SendByte left         'shift in bit for the next time
+      wait 1 us
+      SET PCD8544_SCK ON              'now clock it in
+      wait 1 us
+      SET PCD8544_SCK OFF               'done clocking that bit
+    end repeat
+    wait 2 us
+end sub
 
-	#IFDEF GLCD_IO 8
-                    SET GLCD_RS OFF
-                    SET GLCD_RW OFF
-                    SET GLCD_ENABLE OFF
+sub PCD8544_Clear_RAM
 
-                    wait 200 ms
-		ST7920WriteCommand(0x56)
-                    wait 1 ms
-                    ST7920WriteCommand(0x56)
-                    wait 1 ms
-                    ST7920WriteByte(0x36
-		wait 5 10us
-                    ST7920WriteByte(0x0c)
-		wait 5 10us
-                    ST7920WriteByte(0x06)
-		wait 5 10us
-	#ENDIF
+          #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+            For PCD8544_BufferLocationCalc = 1 to 505
+                PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = 0
+            Next
+          #endif
+          PCD8544_GOTO_Pixel(0,0);	'Goto the pixel specified by the Co-ordinate
+          for PCD8544_BufferLocationCalc = 503 to 0 step - 1
+                    PCD8544_Write_Data(0x00);
+          next
 
-	#IFDEF GLCD_IO 4
-		'Set pins to output
-                    #IFNDEF GLCD_LAT
-                        DIR GLCD_DB4 OUT
-                        DIR GLCD_DB5 OUT
-                        DIR GLCD_DB6 OUT
-                        DIR GLCD_DB7 OUT
-		#ENDIF
-                    #IFDEF GLCD_LAT
-                        DIR _GLCD_DB4 OUT
-                        DIR _GLCD_DB5 OUT
-                        DIR _GLCD_DB6 OUT
-                        DIR _GLCD_DB7 OUT
-		#ENDIF
+end sub
 
-		set GLCD_RS OFF
-		#IFNDEF GLCD_NO_RW
-			set GLCD_RW OFF
-		#ENDIF
+sub  PCD8544_GOTO_Pixel( In LocX, In  LocY)
 
-                    wait 15 ms
-                    '0011
-		set GLCD_DB4 ON
-		set GLCD_DB5 ON
-		set GLCD_DB6 OFF
-		set GLCD_DB7 OFF
-                    Repeat 3
-                      PULSEOUT GLCD_Enable, 5 10us
-                      Wait 5 ms
-		  #IFNDEF GLCD_NO_RW
-			set GLCD_RW OFF
-                      #ENDIF
-                    end repeat
-		Wait 5 ms
+	'Refer Instruction Set Page of datasheet
+	'How to set Y-RAM Address and
+	'How to set X-RAM Address
+	PCD8544_Write_Command( 0x80 | (0x7F &	LocX ));	'Set X-Address of RAM 0 <= x <= 83
+          PCD8544_Write_Command( 0x40 | (0x07 & LocY ));	'Set Y-Address of RAM 0 <= y <= 5
 
 
-                    'function set
-		set GLCD_DB4 OFF
-		set GLCD_DB5 ON
-		set GLCD_DB6 OFF
-		set GLCD_DB7 OFF
-		PULSEOUT GLCD_Enable, 5 10us
-		Wait 5 ms
+end sub
 
-                    'function set
-		set GLCD_DB4 OFF
-		set GLCD_DB5 OFF
-		set GLCD_DB6 OFF
-		set GLCD_DB7 OFF
-		PULSEOUT GLCD_Enable, 5 10us
-		Wait 5 ms
+'   Takes raw pixel positions and translates to XY char positions
+sub PCD8544_Cursor_Position( in LocX, in LocY)
 
-		set GLCD_DB4 OFF
-		set GLCD_DB5 OFF
-		set GLCD_DB6 OFF
-		set GLCD_DB7 ON
+          PosCharY = LocY / 8
 
-		PULSEOUT GLCD_Enable, 5 10us
-		Wait 5 ms
+	PCD8544_Write_Command( 0x80 | (0x7F &	LocX ));	'Set X-Address of RAM 0 <= x <= 83
+          PCD8544_Write_Command( 0x40 | (0x07 & PosCharY ));	'Set Y-Address of RAM 0 <= y <= 5
 
-		ST7920WriteByte(b'10000000')
-		wait 5 10us
+end sub
 
-		ST7920WriteByte(b'00010000')
-		wait 5 ms
-
-		ST7920WriteByte(b'011000000')
-		wait 5 10us
-	#ENDIF    'GLCD_TYPE = GLCD_TYPE_ST7920
-
-
-	#IFDEF GLCD_IO 4,8
-
-		'Set Cursor movement
-		SET GLCD_RS OFF
-		ST7920WriteCommand(b'00000110')
-		wait 5 10us
-		'Turn off cursor
-		ST7920WriteCommand(b'00001100')
-		wait 5 10us
-		
-		'Clear screen
-                    GLCD_TYPE_ST7920_GRAPHICS_MODE = false
-		GLCDCLS
-	#ENDIF
-          'Colours
-          GLCDBackground = 0
-          GLCDForeground = 1
-      #ENDIF
-
-
-	'Setup code for KS0108 controllers
-	#if GLCD_TYPE = GLCD_TYPE_KS0108
-		'Set pin directions
-		Dir GLCD_RS Out
-		Dir GLCD_RW Out
-		Dir GLCD_ENABLE Out
-		Dir GLCD_CS1 Out
-		Dir GLCD_CS2 Out
-		Dir GLCD_RESET Out
-		
-		'Reset
-		Set GLCD_RESET Off
-		Wait 1 ms
-		Set GLCD_RESET On
-		Wait 1 ms
-		
-		'Select both chips
-		Set GLCD_CS1 On
-		Set GLCD_CS2 On
-		
-		'Set on
-		Set GLCD_RS Off
-		GLCDWriteByte 63
-
-		'Set Z to 0
-		GLCDWriteByte 192
-		
-		'Deselect chips
-		Set GLCD_CS1 Off
-		Set GLCD_CS2 Off
-		
-		'Colours
-		GLCDBackground = 0
-		GLCDForeground = 1
-		
-	#endif
+Sub PCD8544_SetPixel( SetPixelLocX , SetPixelLocY, Optional In LineColour as word = GLCDForeground )
 	
-	'Setup code for ST7735 controllers
-	#if GLCD_TYPE = GLCD_TYPE_ST7735
-		'Pin directions
-		Dir ST7735_CS Out
-		Dir ST7735_DC Out
-		Dir ST7735_RST Out
-		
-		Dir ST7735_DI In
-		Dir ST7735_DO Out
-		Dir ST7735_SCK Out
-		
-		'SPI mode
-		SPIMode MasterFast, 0
-		
-		'Reset display
-		Set ST7735_RST On
-		Wait 10 ms
-		'Reset sequence (lower line for at least 10 us)
-		Set ST7735_RST Off
-		Wait 25 us
-		Set ST7735_RST On
-		Wait 10 ms
-		
-		'Software reset
-		ST7735SendCommand 0x01
-		Wait 200 ms
+        row = SetPixelLocY / 8
+        PCD8544_BufferLocationCalc = row * GLCD_WIDTH
+        PCD8544_BufferLocationCalc = SetPixelLocX + PCD8544_BufferLocationCalc+1 ' Adjusted to the buffer start point
 
-		'Software reset
-		ST7735SendCommand 0x01
-		Wait 200 ms		
-		
-                    'Out of sleep mode
-		ST7735SendCommand 0x11
-		Wait 200 ms
-		
-		'Gamma correction
-		'ST7735SetGammaCorrection
-		
-		'Scanning direction
-		ST7735SendCommand 0x36
-		ST7735SendData 0xC8
-		
-		'Set pixel mode to 16 bpp
-		ST7735SendCommand 0x3A
-		ST7735SendData 5
-		
-		'Display on
-		ST7735SendCommand 0x29
-		Wait 100 ms
-		
-		'Colours
-		GLCDBackground = ST7735_WHITE
-		GLCDForeground = ST7735_BLACK
+        value = BufferAlias(PCD8544_BufferLocationCalc)
 
-                    'Variables required for device
-                    ST7735_GLCD_WIDTH = GLCD_WIDTH
-                    ST7735_GLCD_HEIGHT = GLCD_HEIGHT
-	#endif
-	
+                  ' create mask
+                  systemp = SetPixelLocY % 8
+                  mask = 1
+                  repeat systemp
+                         rotate mask
+                  end Repeat
+                  if ( LineColour = GLCDForeground ) then
+                            'value = value | (1 << (LocY % 8))
+                            value = value | mask
+                  else
+                            'value = value ^ (1 << (LocY % 8));
+                            value = value ^ mask
+                  end if
 
+        BufferAlias(PCD8544_BufferLocationCalc) = value
 
+end sub
 
+sub PCD8544_Show_Buffer
+PCD8544_BufferLocationCalc = 1
 
-	'Clear screen
-	GLCDCLS
-	
-End Sub
+PCD8544_GOTO_Pixel ( 0, 0 )
+      'For AVR compatibility, status.c should also be replaced with C
+      '(The compiler will convert that to STATUS.C on PIC or SREG.C on AVR as appropriate)
+      for GLCDY = 0 to 5
+
+          for GLCDX = 0 to 83
+              GLCDYY = GLCDY * 8
+
+              GLCDBitNo = 1
+                repeat 8
+                    GLCDBitNo =   GLCDBitNo % 9
+                    mask = 0
+                    SET C on
+
+                      repeat GLCDBitNo
+                             rotate mask left
+                      end Repeat
+                      ANSI ( (GLCDX + 2), GLCDYY + 5)
+                      GLCDYY++
+                      if ( BufferAlias(PCD8544_BufferLocationCalc) AND mask ) = 0 then
+                         HSerPrint "0"
+                      else
+                         HSerPrint "1"
+                      end if
+                      GLCDBitNo++
+                end Repeat
+                PCD8544_Write_Data BufferAlias(PCD8544_BufferLocationCalc)
+                PCD8544_BufferLocationCalc++
+
+          next
+
+      next
+
+end sub
+
+sub PCD8544_Buffer2Glcd
+    PCD8544_BufferLocationCalc = 1
+    PCD8544_GOTO_Pixel ( 0, 0 )
+    repeat 504
+           PCD8544_Write_Data BufferAlias(PCD8544_BufferLocationCalc)
+           PCD8544_BufferLocationCalc++
+    end Repeat
+
+end sub
+
 
 
 'Numbers taken from Arduino_LCD.cpp
