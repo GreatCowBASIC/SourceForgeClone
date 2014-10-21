@@ -114,6 +114,7 @@ Sub PrepareBuiltIn
 	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPFAMILY": gcDEF(DFC, 2) = Str(ChipFamily)
 	DFC = DFC + 1: gcDEF(DFC, 1) = "OSC": gcDEF(DFC, 2) = OSCType
 	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPPINS": gcDEF(DFC, 2) = Str(ChipPins)
+	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPRAM": gcDEF(DFC, 2) = Str(ChipRam)
 	If ModePIC Then DFC = DFC + 1: gcDEF(DFC, 1) = "PIC": gcDEF(DFC, 2) = ""
 	If ModeAVR Then
 		DFC = DFC + 1: gcDEF(DFC, 1) = "AVR": gcDEF(DFC, 2) = ""
