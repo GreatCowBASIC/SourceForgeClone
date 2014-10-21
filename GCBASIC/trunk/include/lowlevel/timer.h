@@ -1,5 +1,5 @@
 '    Timer control routines for Great Cow BASIC
-'    Copyright (C) 2006-2009 Hugh Considine
+'    Copyright (C) 2006-2009, 2014 Hugh Considine, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -25,15 +25,20 @@
 'Changes:
 ' 10/7/2009: Added AVR support
 ' 24/8/2014: Added SetTimer subroutine
+' 16/8/2014: Added support for Timer4 and Timer6
 
 'Subroutines:
 ' InitTimer0 (Source, Prescaler)
 ' InitTimer1 (Source, Prescaler)
 ' InitTimer2 (Prescaler, Postscaler)
 ' InitTimer3 (Source, Prescaler)
+' InitTimer4 (Source, Prescaler)
+' InitTimer6 (Source, Prescaler)
+
 ' ClearTimer(TimerNumber)
 ' StartTimer(TimerNumber)
 ' StopTimer(TimerNumber)
+' SetTimer(TimerNumber, Value)
 
 'Some simpler names for the timers (use to read)
 #ifdef PIC
@@ -43,6 +48,8 @@
 	'Is now a function, need to ensure read happens in certain order
 	'#define Timer2 TMR2
 	Dim Timer2 Alias TMR2
+          Dim Timer4 Alias TMR4
+          Dim Timer6 Alias TMR6
 #endif
 #ifdef AVR
 	Dim Timer0 Alias TCNT0
@@ -112,6 +119,26 @@
 #define PS3_4 32
 #define PS3_8 48
 
+'Timer 4 prescales
+#define PS4_1/1 0
+#define PS4_1/4 1
+#define PS4_1/16 2
+#define PS4_1/64 3
+#define PS4_1 0
+#define PS4_4 1
+#define PS4_16 2
+#define PS4_64 3
+
+'Timer 6 prescales
+#define PS6_1/1 0
+#define PS6_1/4 1
+#define PS6_1/16 2
+#define PS6_1/64 3
+#define PS6_1 0
+#define PS6_4 1
+#define PS6_16 2
+#define PS6_64 3
+
 
 Function Timer1 As Word
 	#ifdef PIC
@@ -169,6 +196,21 @@ Sub StartTimer(In TMRNumber)
 				Set TMR3ON On
 			End If
 		#endif
+
+		#ifdef Var(T4CON)
+			If TMRNumber = 4 Then
+				T4CON = TMR4Pres
+				Set TMR4ON On
+			End If
+		#endif
+
+		#ifdef Var(T6CON)
+			If TMRNumber = 6 Then
+				T6CON = TMR6Pres
+				Set TMR6ON On
+			End If
+		#endif
+
 	#endif
 	
 	#ifdef AVR
@@ -240,6 +282,21 @@ Sub ClearTimer (In TMRNumber)
 				SInitTimer3
 			End If
 		#endif
+		#ifdef Var(T4CON)
+			If TMRNumber = 4 Then
+				TMR4Pres = T4CON
+				TMR4 = 0
+				T4CON = TMR4Pres
+			End If
+		#endif
+		#ifdef Var(T6CON)
+			If TMRNumber = 6 Then
+				TMR6Pres = T6CON
+				TMR6 = 0
+				T6CON = TMR6Pres
+			End If
+		#endif
+
 	#endif
 	#ifdef AVR
 		#ifdef Var(TCNT0)
@@ -303,6 +360,19 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
 				TMR3L = TMRValue
 			End If
 		#endif
+
+		#ifdef Var(T4CON)
+			If TMRNumber = 4 Then
+				TMR4 = TMRValue
+			End If
+		#endif
+
+		#ifdef Var(T6CON)
+			If TMRNumber = 6 Then
+				TMR6 = TMRValue
+			End If
+		#endif
+
 	#endif
 	#ifdef AVR
 		#ifdef Var(TCNT0)
@@ -358,6 +428,17 @@ Sub StopTimer (In TMRNumber)
 				Set TMR3ON OFF
 			End If
 		#endif
+		#ifdef Var(T4CON)
+			If TMRNumber = 4 Then
+				Set TMR4ON OFF
+			End If
+		#endif
+		#ifdef Var(T6CON)
+			If TMRNumber = 6 Then
+				Set TMR6ON OFF
+			End If
+		#endif
+
 	#endif
 	#ifdef AVR
 		'Need to set clock select bits to 0
@@ -501,12 +582,14 @@ Sub SInitTimer3
 	
 End Sub
 
-Sub InitTimer4(In TMR4Source, In TMR4Pres)
-	#ifdef AVR
-		If TMR4Source = Ext Then
-			TMR4Pres = AVR_EXT_TMR
-		End If
+Sub InitTimer4 (In TMR4Pres, In TMR4Post)
+	#ifdef PIC
+		swapf TMR4Post,F
+		rrf TMR4Post,W
+		andlw 120
+		iorwf TMR4Pres,F
 	#endif
+	
 End Sub
 
 Sub InitTimer5(In TMR5Source, In TMR5Pres)
@@ -515,4 +598,14 @@ Sub InitTimer5(In TMR5Source, In TMR5Pres)
 			TMR5Pres = AVR_EXT_TMR
 		End If
 	#endif
+End Sub
+
+Sub InitTimer6 (In TMR6Pres, In TMR6Post)
+	#ifdef PIC
+		swapf TMR6Post,F
+		rrf TMR6Post,W
+		andlw 120
+		iorwf TMR6Pres,F
+	#endif
+
 End Sub
