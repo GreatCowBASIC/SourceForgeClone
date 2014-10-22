@@ -40,6 +40,7 @@
 ' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ST7735 device.
 ' 20/10/2014: Adapted to support PCD9844 devices.
 ' 21/10/2014: PCD9844 device improvements to remove a method and reduce configuration
+' 22/10/2014: PCD9844 device improvements to LAT configuration
 
 'Initialisation routine
 #startup InitGLCD
@@ -239,7 +240,6 @@ dim GLCD_yordinate as integer
 #define PCD8544_DC              GLCD_DC
 #define PCD8544_CS              GLCD_CS
 #define PCD8544_RST             GLCD_RESET
-#define PCD8544_DI              GLCD_DI
 #define PCD8544_DO              GLCD_DO
 #define PCD8544_SCK             GLCD_SCK
 
@@ -247,7 +247,6 @@ dim GLCD_yordinate as integer
 #define _PCD8544_DC              _GLCD_DC
 #define _PCD8544_CS              _GLCD_CS
 #define _PCD8544_RST             _GLCD_RESET
-#define _PCD8544_DI              _GLCD_DI
 #define _PCD8544_DO              _GLCD_DO
 #define _PCD8544_SCK             _GLCD_SCK
 
@@ -298,15 +297,28 @@ Dim GLCDForeground As Word
 '''Initialise the GLCD device
 Sub InitGLCD
 
+      #if GLCD_TYPE = GLCD_TYPE_PCD8544
           ' required variables
-		'Pin directions
-		Dir _PCD8544_CS Out
-		Dir _PCD8544_DC Out
-		Dir _PCD8544_RST Out
-		
-'		Dir _PCD8544_DI In
-		Dir _PCD8544_DO Out
-		Dir _PCD8544_SCK Out
+
+                    #IFNDEF GLCD_LAT
+                          'Pin directions
+                          Dir PCD8544_CS Out
+                          Dir PCD8544_DC Out
+                          Dir PCD8544_RST Out
+      		
+                          Dir PCD8544_DO Out
+                          Dir PCD8544_SCK Out
+                    #ENDIF
+                    #IFDEF GLCD_LAT
+                          'Pin directions
+                          Dir _PCD8544_CS Out
+                          Dir _PCD8544_DC Out
+                          Dir _PCD8544_RST Out
+      		
+                          Dir _PCD8544_DO Out
+                          Dir _PCD8544_SCK Out
+                    #ENDIF
+
 		
                     'Reset ports
                     Set PCD8544_CS off
@@ -349,7 +361,7 @@ Sub InitGLCD
 		GLCDBackground = 0
 		GLCDForeground = 1
 
-	#endif
+      #endif
 
       #if GLCD_TYPE = GLCD_TYPE_ST7920
 
