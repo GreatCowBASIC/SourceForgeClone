@@ -13,23 +13,6 @@ Imports System.Windows.Forms
 
 ''Namespace Great_Cow_Graphical_BASIC
 	
-	Public Class WizardPage
-		Public Dim Name As String
-		Public Dim Page As UserControl
-		
-	End Class
-	
-	Public Interface ParamEditPage
-		'Initialises the page
-		Sub Init (Frame As ParameterEditor, ParamType As String, CurrentSource As String)
-		
-		'Stores the next page ID. Empty string if no next page
-		ReadOnly Property NextPage As String
-		'Stores the output value for parameter. Empty string if not last page
-		ReadOnly Property OutputValue As String
-		
-	End Interface
-	
 	Public Class ParameterEditor
 		Inherits System.Windows.Forms.Form
 		Private pageChooseSource As Great_Cow_Graphical_BASIC.PEChooseSource
@@ -70,9 +53,9 @@ Imports System.Windows.Forms
 			'
 			Me.buttonBack.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.buttonBack.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.buttonBack.Location = New System.Drawing.Point(318, 336)
+			Me.buttonBack.Location = New System.Drawing.Point(318, 338)
 			Me.buttonBack.Name = "buttonBack"
-			Me.buttonBack.Size = New System.Drawing.Size(72, 24)
+			Me.buttonBack.Size = New System.Drawing.Size(72, 22)
 			Me.buttonBack.TabIndex = 1
 			Me.buttonBack.Text = "< Back"
 			AddHandler Me.buttonBack.Click, AddressOf Me.ButtonBackClick
@@ -81,9 +64,9 @@ Imports System.Windows.Forms
 			'
 			Me.buttonNext.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.buttonNext.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.buttonNext.Location = New System.Drawing.Point(390, 336)
+			Me.buttonNext.Location = New System.Drawing.Point(390, 338)
 			Me.buttonNext.Name = "buttonNext"
-			Me.buttonNext.Size = New System.Drawing.Size(72, 24)
+			Me.buttonNext.Size = New System.Drawing.Size(72, 22)
 			Me.buttonNext.TabIndex = 2
 			Me.buttonNext.Text = "Next >"
 			AddHandler Me.buttonNext.Click, AddressOf Me.ButtonNextClick
@@ -93,25 +76,25 @@ Imports System.Windows.Forms
 			Me.buttonCancel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
 			Me.buttonCancel.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.buttonCancel.Location = New System.Drawing.Point(470, 336)
+			Me.buttonCancel.Location = New System.Drawing.Point(470, 338)
 			Me.buttonCancel.Name = "buttonCancel"
-			Me.buttonCancel.Size = New System.Drawing.Size(72, 24)
+			Me.buttonCancel.Size = New System.Drawing.Size(72, 22)
 			Me.buttonCancel.TabIndex = 3
 			Me.buttonCancel.Text = "Cancel"
 			'
 			'pageChooseSource
 			'
 			Me.pageChooseSource.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
-						Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.pageChooseSource.Location = New System.Drawing.Point(4, 4)
 			Me.pageChooseSource.Name = "pageChooseSource"
-			Me.pageChooseSource.Size = New System.Drawing.Size(544, 312)
+			Me.pageChooseSource.Size = New System.Drawing.Size(544, 315)
 			Me.pageChooseSource.TabIndex = 0
 			'
 			'ParameterEditor
 			'
-			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 14)
+			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.buttonCancel
 			Me.ClientSize = New System.Drawing.Size(552, 366)
 			Me.ControlBox = false
@@ -121,9 +104,10 @@ Imports System.Windows.Forms
 			Me.Controls.Add(Me.pageChooseSource)
 			Me.MaximizeBox = false
 			Me.MinimizeBox = false
-			Me.MinimumSize = New System.Drawing.Size(396, 320)
+			Me.MinimumSize = New System.Drawing.Size(396, 297)
 			Me.Name = "ParameterEditor"
 			Me.ShowInTaskbar = false
+			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
 			Me.Text = "Parameter Editor"
 			Me.ResumeLayout(false)
 		End Sub
@@ -363,4 +347,21 @@ Imports System.Windows.Forms
 		End Sub
 		
 	End Class
+	
+	Public Class WizardPage
+		Public Dim Name As String
+		Public Dim Page As UserControl
+		
+	End Class
+	
+	Public Interface ParamEditPage
+		'Initialises the page
+		Sub Init (Frame As ParameterEditor, ParamType As String, CurrentSource As String)
+		
+		'Stores the next page ID. Empty string if no next page
+		ReadOnly Property NextPage As String
+		'Stores the output value for parameter. Empty string if not last page
+		ReadOnly Property OutputValue As String
+		
+	End Interface
 ''End Namespace
