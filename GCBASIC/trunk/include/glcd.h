@@ -40,7 +40,7 @@
 ' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ST7735 device.
 ' 20/10/2014: Adapted to support PCD9844 devices.
 ' 21/10/2014: PCD9844 device improvements to remove a method and reduce configuration
-' 22/10/2014: PCD9844 device improvements to LAT configuration
+' 22/10/2014: PCD9844 device improvements to handling of RAM limitations
 
 'Initialisation routine
 #startup InitGLCD
@@ -251,21 +251,28 @@ dim GLCD_yordinate as integer
 #define _PCD8544_SCK             _GLCD_SCK
 
 
+
+
+
+
 'Setup code for PCD8544 controllers
 #if GLCD_TYPE = GLCD_TYPE_PCD8544
+
+#script
+
+    If ChipRAM < 512  Then
+'               Error "Not enough RAM for GLCD buffer on this chip model"
+'               Error "."
+'               Error "Please use #Define GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY to use PCD8544 in text mode only"
+'               Error ""
+        GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY = TRUE
+    End If
+
+#endscript
 
     dim PCD8544_BufferLocationCalc as Word               ' mandated in main program for PCD8544
 
     #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
-
-        #script
-            If ChipRAM < 512 and not  var(GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY)    Then
-               Error "Not enough RAM for GLCD buffer on this chip model"
-               Error "."
-               Error "Please use #Define GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY to use PCD8544 in text mode only"
-               Error ""
-            End If
-        #endscript
 
        ' ChipFamily 12 for 10F/12F5/16F5, 14 for most 12F/16F, 15 for 12F1/16F1, 16 for 18F
        ' and, numbers 100, 110, 120, 130 for AVR,
@@ -707,11 +714,12 @@ Sub GLCDCLS
                     PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = 0
                 Next
               #endif
-              PCD8544_GOTO_Pixel(0,0);	'Goto the pixel specified by the Co-ordinate
 
+              PCD8544_GOTO_Pixel(0,0);	'Goto the pixel specified by the Co-ordinate
               for PCD8544_BufferLocationCalc = 503 to 0 step - 1
                   PCD8544_Write_Data(0x00);
               next
+              PCD8544_GOTO_Pixel(0,0);	'Goto the pixel specified by the Co-ordinate
 
           #endif
 End Sub
@@ -2215,7 +2223,7 @@ sub  PCD8544_GOTO_Pixel( In LocX, In  LocY)
 	'Refer Instruction Set Page of datasheet
 	'How to set Y-RAM Address and
 	'How to set X-RAM Address
-	PCD8544_Write_Command( 0x80 | (0x7F &	LocX ));	'Set X-Address of RAM 0 <= x <= 83
+	PCD8544_Write_Command( 0x80 | (0x7F & LocX ));	'Set X-Address of RAM 0 <= x <= 83
           PCD8544_Write_Command( 0x40 | (0x07 & LocY ));	'Set Y-Address of RAM 0 <= y <= 5
 
 
