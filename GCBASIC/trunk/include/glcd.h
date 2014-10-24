@@ -2287,11 +2287,6 @@ PCD8544_GOTO_Pixel ( 0, 0 )
                       end Repeat
                       ANSI ( (GLCDX + 2), GLCDYY + 5)
                       GLCDYY++
-                      if ( BufferAlias(PCD8544_BufferLocationCalc) AND mask ) = 0 then
-                         HSerPrint "0"
-                      else
-                         HSerPrint "1"
-                      end if
                       GLCDBitNo++
                 end Repeat
                 PCD8544_Write_Data BufferAlias(PCD8544_BufferLocationCalc)
