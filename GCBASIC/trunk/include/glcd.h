@@ -358,10 +358,10 @@ Sub InitGLCD
                     PCD8544_Write_Command(0x13);		 Adjust voltage bias.
                     PCD8544_Write_Command(0x20);		 Horizontal addressing and H=0.
                     PCD8544_Write_Command(0x09);		 Activate all segments.
-                    PCD8544_Clear_RAM();			 Erase all pixel on the DDRAM.
+                    PCD8544_Clear_RAM();	           Erase all pixel on the DDRAM.
                     PCD8544_Write_Command(0x08);		 Blank the Display.
                     PCD8544_Write_Command(0x0C);		 Display Normal.
-                    PCD8544_GOTO_Pixel(0,0);			 Cursor Home.	
+                    PCD8544_GOTO_Pixel(0,0);		 Cursor Home.	
 
 
 		'Colours
@@ -2309,7 +2309,16 @@ sub PCD8544_Buffer2Glcd
 end sub
 
 
+'Bits
+'Temperature control  0  0  0  0  0  0  1  TC1  TC0  Set Temperature Coefficient (TCx)
+'Bias system          0  0  0  0  1  0  BS2  BS1  BS0  set Bias System (BSx)
+'Set Vop              0  1  Vop6  Vop5  Vop4  Vop3  Vop2  Vop1  Vop0  Write Vop to register
 
+sub PCD8544_ExtendedCommand ( in PCD8544SendByte )
+                    PCD8544_Write_Command(0x21);		        LCD Extended Commands..
+                    PCD8544_Write_Command(PCD8544SendByte);         Set PCD8544SendByte
+                    PCD8544_Write_Command(0x0C);		        LCD in normal mode.
+end sub
 'Numbers taken from Arduino_LCD.cpp
 Table ST7735GammaCorrection
 	'For CMCTRP1 (command E0)
