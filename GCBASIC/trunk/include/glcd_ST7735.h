@@ -226,7 +226,6 @@ Sub GLCDDrawChar_ST7735(In CharLocX, In CharLocY, In CharCode, Optional In LineC
 	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
 	CharCode -= 15
 
-	
           'Need to read characters from CharColn (n = 0:7) tables
 	'(First 3, ie 0:2 are blank, so can ignore)
 	For CurrCharCol = 1 to 5
@@ -240,6 +239,7 @@ Sub GLCDDrawChar_ST7735(In CharLocX, In CharLocY, In CharCode, Optional In LineC
 	Next
 
 End Sub
+
 
 '''Draws a filled box on the GLCD screen
 '''@param LineX1 Top left corner X location
@@ -289,6 +289,28 @@ Sub PSet_ST7735(In GLCDX, In GLCDY, In GLCDColour As Word)
 	#endif
 End Sub
 
+'''Transfer a byte
+'''@hide
+Sub ST7735Transfer(In ST7735TempIn, Out ST7735TempOut)
+	
+	'Use mode 0 - CPOL = 0, CPHA = 0
+	repeat 8                      '8 data bits
+      wait 1 us
+      if ST7735TempIn.7 = ON then      'put most significant bit on SDA line
+        set ST7735_DO ON
+      else
+        set ST7735_DO OFF
+      end if
+
+      rotate ST7735TempIn left         'shift in bit for the next time
+      wait 1 us
+      SET ST7735_SCK ON              'now clock it in
+      wait 1 us
+      SET ST7735_SCK OFF               'done clocking that bit
+    end repeat
+    wait 1 us
+	
+End Sub
 
 '''Send a command to the ST7735 GLCD
 '''@param ST7735SendByte Command to send
@@ -296,7 +318,7 @@ End Sub
 Sub SendCommand_ST7735(In ST7735SendByte)
 	Set ST7735_DC Off
 	ST7735Select
-	SPITransfer ST7735SendByte, ST7735Received
+	ST7735Transfer ST7735SendByte, ST7735Received
 	ST7735Deselect
 End Sub
 
@@ -306,7 +328,7 @@ End Sub
 Sub SendData_ST7735(In ST7735SendByte)
 	Set ST7735_DC On
 	ST7735Select
-	SPITransfer ST7735SendByte, ST7735Received
+	ST7735Transfer ST7735SendByte, ST7735Received
 	ST7735Deselect
 End Sub
 
@@ -316,8 +338,8 @@ End Sub
 Sub SendWord_ST7735(In ST7735SendByte As Word)
 	Set ST7735_DC On
 	ST7735Select
-	SPITransfer ST7735SendByte_H, ST7735Received
-	SPITransfer ST7735SendByte, ST7735Received
+	ST7735Transfer ST7735SendByte_H, ST7735Received
+	ST7735Transfer ST7735SendByte, ST7735Received
 	ST7735Deselect
 End Sub
 
