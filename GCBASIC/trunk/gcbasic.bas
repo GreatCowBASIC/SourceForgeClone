@@ -525,7 +525,7 @@ DIM Shared FinalAliasList(8000) As VariableListElement: FALC = 0
 DIM SHARED PreserveCode(20000) As String: PCC = 0
 Dim Shared CalcVars(100) As CalcVar: TCVC = 0
 Dim Shared As String AllSysSubs, UsedSysSubs
-Dim Shared RegList(64, 2) As String: RegCount = 0
+Dim Shared RegList(512, 2) As String: RegCount = 0
 Dim Shared CalcAtAsm(2000) As String: CAAC = 0
 Dim Shared CalcTempType(3) As String
 Dim Shared Interrupts(200) As IntData: IntCount = 0
