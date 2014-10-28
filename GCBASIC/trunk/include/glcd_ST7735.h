@@ -130,6 +130,10 @@
 
 #startup InitGLCD_ST7735
 
+
+dim ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT as byte
+
+
 '''Initialise the GLCD device
 Sub InitGLCD_ST7735
 
@@ -193,6 +197,7 @@ Sub InitGLCD_ST7735
                     ST7735_GLCD_HEIGHT = GLCD_HEIGHT
 	#endif
 
+          GLCDRotate ( PORTRAIT_REV )
 	'Clear screen
 	GLCDCLS
 	
@@ -207,8 +212,11 @@ Sub GLCDCLS_ST7735
 
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
 		SetAddress_ST7735 ST7735_COLUMN, 0, ST7735_GLCD_WIDTH
+                    wait 2 ms
 		SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
-		SendCommand_ST7735 0x2C
+		wait 2 ms
+                    SendCommand_ST7735 0x2C
+                    wait 2 ms
 		Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
 			SendWord_ST7735 GLCDBackground
 		End Repeat
@@ -236,7 +244,18 @@ Sub GLCDDrawChar_ST7735(In CharLocX, In CharLocY, In CharCode, Optional In LineC
 			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
 			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
 		End Select
+                    For CurrCharRow = 1 to 8
+                              If CurrCharVal.0 = 0 Then
+                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                              Else
+                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
+                              End If
+                              Rotate CurrCharVal Right
+                    Next
+
 	Next
+
+
 
 End Sub
 
@@ -278,7 +297,7 @@ End Sub
 '''Draws a pixel on the GLCD
 '''@param GLCDX X coordinate of pixel
 '''@param GLCDY Y coordinate of pixel
-'''@param GLCDColour State of pixel (0 = erase, 1 = display)
+'''@param GLCDColour State of pixel
 Sub PSet_ST7735(In GLCDX, In GLCDY, In GLCDColour As Word)
 	
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
@@ -289,12 +308,13 @@ Sub PSet_ST7735(In GLCDX, In GLCDY, In GLCDColour As Word)
 	#endif
 End Sub
 
+'#define ST7735Transfer SPITransfer
 '''Transfer a byte
 '''@hide
 Sub ST7735Transfer(In ST7735TempIn, Out ST7735TempOut)
 	
 	'Use mode 0 - CPOL = 0, CPHA = 0
-	repeat 8                      '8 data bits
+    repeat 8                      '8 data bits
       wait 1 us
       if ST7735TempIn.7 = ON then      'put most significant bit on SDA line
         set ST7735_DO ON
@@ -378,6 +398,8 @@ sub   GLCDRotate ( in ST7735AddressType )
              ST7735_GLCD_HEIGHT = GLCD_HEIGHT
              SendData_ST7735( 0x08 )
         case else
+             ST7735_GLCD_WIDTH = GLCD_WIDTH
+             ST7735_GLCD_HEIGHT = GLCD_HEIGHT
              SendData_ST7735( 0x08 )
   end select
 
