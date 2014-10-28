@@ -23,8 +23,6 @@
 ' #define GLCD_PROTECTOVERRUN
 
 #define GLCD_TYPE GLCD_TYPE_KS0108
-#define GLCD_WIDTH 128
-#define GLCD_HEIGHT 64
 #define GLCDFontWidth 6
 
 
@@ -45,6 +43,8 @@ Dim GLCDBackground As Word
 Dim GLCDForeground As Word
 
 #script
+    ' Inside a script is different to anywhere else in the code, whatever is in there should be executed sequentially by the compiler
+    ' and, anything that is a constant elsewhere is a variable inside the script
 
   ' add new type here!
   If GLCD_TYPE = GLCD_TYPE_KS0108 Then
@@ -54,6 +54,9 @@ Dim GLCDForeground As Word
      GLCDCLS = GLCDCLS_KS0108
      FilledBox = FilledBox_KS0108
      Pset= Pset_KS0108
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 64
+     GLCD_CAPABILITY  = MONO
 
   End If
 
@@ -65,7 +68,8 @@ Dim GLCDForeground As Word
      GLCDDrawChar = GLCDDrawChar_ST7735
      FilledBox = FilledBox_ST7735
      Pset= Pset_ST7735
-
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 160
 
   End If
 
@@ -77,6 +81,8 @@ Dim GLCDForeground As Word
      FilledBox = FilledBox_ST7920
      Pset= Pset_ST7920
      GLCDPrint = GLCDPrint_ST7920
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 64
 
   End If
 
@@ -88,6 +94,8 @@ Dim GLCDForeground As Word
      GLCDDrawChar = GLCDDrawChar_PCD8544
      FilledBox = FilledBox_PCD8544
      Pset= Pset_PCD8544
+     GLCD_WIDTH = 84
+     GLCD_HEIGHT = 48
 
   End If
 
@@ -96,32 +104,9 @@ Dim GLCDForeground As Word
 
 
 '''Initialise the GLCD device
+#define GLCDInit InitGLCD
 Sub InitGLCD
-  'add new types here
-'
-'  If GLCD_TYPE = GLCD_TYPE_KS0108 Then
-'
-'     InitGLCD_KS0108
-'
-'  End If
-'
-'  If GLCD_TYPE = GLCD_TYPE_ST7735 Then
-'
-'     InitGLCD_ST7735
-'
-'  End If
-'
-'  If GLCD_TYPE = GLCD_TYPE_ST7920 Then
-'
-'     InitGLCD_ST7920
-'
-'  End If
-'
-'  If GLCD_TYPE = GLCD_TYPE_PCD8544 Then	
-'
-'     InitGLCD_PCD8544
-'
-'  End If
+    ' Each Device has a specific InitGLCD routine - do not delete this SUB!
 end sub
 
 
