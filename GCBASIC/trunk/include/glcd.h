@@ -67,7 +67,7 @@ Dim GLCDForeground As Word
      GLCDCLS = GLCDCLS_ST7735
      GLCDDrawChar = GLCDDrawChar_ST7735
      FilledBox = FilledBox_ST7735
-     Pset= Pset_ST7735
+     Pset = Pset_ST7735
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 160
 
@@ -127,41 +127,6 @@ Sub GLCDPrint(In PrintLocX, In PrintLocY, in LCDPrintData as string )
           PrintLen = LCDPrintData(0)
 	If PrintLen = 0 Then Exit Sub
 
-          #IF GLCD_TYPE = GLCD_TYPE_ST7920
-                ' Is this device in GRAPHICS mode?
-                if GLCD_TYPE_ST7920_GRAPHICS_MODE = false then
-                   	select case  PrintLocY
-                         case 0
-                              col = PrintLocX OR 0x80
-
-                         case 1
-                              col = PrintLocX OR 0x90
-
-                         case 2
-                              col = PrintLocX OR 0x88
-
-                         case 3
-                              col = PrintLocX OR 0x98
-
-                         case else
-                              col = PrintLocX OR 0x80
-                      end select
-                       SET GLCD_RS OFF
-	             ST7920WriteByte( col )
-                else
-                   GLCDDrawString PrintLocX, PrintLocY, LCDPrintData
-                   exit sub
-                end if
-
-                Set GLCD_RS On
-                'Write Data
-                For SysLCDPrintTemp = 1 To PrintLen
-                     ST7920WriteByte ( LCDPrintData(SysLCDPrintTemp) )
-                Next
-                Exit Sub
-          #endif
-
-
 	GLCDPrintLoc = PrintLocX
 	'Write Data
 	For SysPrintTemp = 1 To PrintLen
@@ -203,6 +168,7 @@ End Sub
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour as word = GLCDForeground )
+
     for xchar = 1 to Chars(0)
       ' June 2014
       ' Corrected error X calcaluation. It was adding an Extra 1!
