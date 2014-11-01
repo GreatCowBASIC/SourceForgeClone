@@ -146,7 +146,7 @@ Type DataTableType
 	CurrItem As LinkedListElement Pointer
 	
 	Items As Integer
-	Item(10000) As Integer
+	Item(65536) As Integer
 End Type
 
 Type ProgString
@@ -489,7 +489,7 @@ DIM SHARED As Integer ASPC, ASMCC, ASMSym, ToAsmSymbols
 
 'Code Array
 Dim Shared CompilerOutput As CodeSection Pointer
-DIM SHARED ASMPROG(40000) As String: ASPC = 0
+DIM SHARED ASMPROG(60000) As String: ASPC = 0
 
 'Sub arrays
 Dim Shared Subroutine(10000) As SubType Pointer: SBC = 0
@@ -522,7 +522,7 @@ Dim Shared ToAsmSymbol(500, 1 To 2) As String: ToAsmSymbols = 0
 DIM SHARED FinalVarList(8000) As VariableListElement: FVLC = 0
 DIM Shared FinalRegList(100) As VariableListElement: FRLC = 0
 DIM Shared FinalAliasList(8000) As VariableListElement: FALC = 0
-DIM SHARED PreserveCode(20000) As String: PCC = 0
+DIM SHARED PreserveCode(60000) As String: PCC = 0
 Dim Shared CalcVars(100) As CalcVar: TCVC = 0
 Dim Shared As String AllSysSubs, UsedSysSubs
 Dim Shared RegList(512, 2) As String: RegCount = 0
@@ -572,7 +572,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 21/10/2014"
+Version = "0.9 1/11/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"

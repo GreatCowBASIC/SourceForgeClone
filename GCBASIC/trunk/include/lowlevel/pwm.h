@@ -1,5 +1,5 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
-'    Copyright (C) 2006 Hugh Considine
+'    Copyright (C) 2006 - 2014 Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -125,6 +125,10 @@ Sub InitPWM
 		SET T2CON.TMR2ON ON
 	#endif
 	
+	#ifdef HPWM_FAST
+		PWMFreqOld = 0
+	#endif
+	
 End Sub
 
 sub PWMOn
@@ -138,36 +142,47 @@ end sub
 sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 	dim PR2_Temp as word
 	
-	T2_PR = 1
-	PR2_Temp = PWMOsc1/PWMFreq
-	IF PR2_Temp_H > 0 then 
-		T2_PR = 4
-		'Divide by 4
-		set STATUS.C off
-		rotate PR2_Temp right
-		set STATUS.C off
-		rotate PR2_Temp right
-	end if 
-	IF PR2_Temp_H > 0 then
-		'PR2_Temp = PWMOsc16/PWMFreq: T2_PR = 16
-		T2_PR = 16
-		'Divide by 4
-		set STATUS.C off
-		rotate PR2_Temp right
-		set STATUS.C off
-		rotate PR2_Temp right
-	end if
-	
-	PR2 = PR2_Temp
-
-	SET T2CON.T2CKPS0 OFF
-	SET T2CON.T2CKPS1 OFF
-	if T2_PR = 4 then SET T2CON.T2CKPS0 ON
-	if T2_PR = 16 then SET T2CON.T2CKPS1 ON
-	SET T2CON.TMR2ON ON
+	'If HPWM_FAST operation selected, only recalculate timer prescaler when
+	'needed. Gives faster operation, but uses extra byte of RAM and may cause
+	'problems if HPWM and PWMOn are used together in a program.
+	'(No issues using HPWM and PWMOff in the same program with HPWM_FAST.)
+	#ifdef HPWM_FAST
+	If PWMFreq <> PWMFreqOld Then
+	#endif
+		T2_PR = 1
+		PR2_Temp = PWMOsc1 / PWMFreq
+		IF PR2_Temp_H > 0 then 
+			T2_PR = 4
+			'Divide by 4
+			set STATUS.C off
+			rotate PR2_Temp right
+			set STATUS.C off
+			rotate PR2_Temp right
+		end if 
+		IF PR2_Temp_H > 0 then
+			'PR2_Temp = PWMOsc16/PWMFreq: T2_PR = 16
+			T2_PR = 16
+			'Divide by 4
+			set STATUS.C off
+			rotate PR2_Temp right
+			set STATUS.C off
+			rotate PR2_Temp right
+		end if
+		
+		PR2 = PR2_Temp
+		SET T2CON.T2CKPS0 OFF
+		SET T2CON.T2CKPS1 OFF
+		if T2_PR = 4 then SET T2CON.T2CKPS0 ON
+		if T2_PR = 16 then SET T2CON.T2CKPS1 ON
+		SET T2CON.TMR2ON ON
+	#ifdef HPWM_FAST
+	PWMFreqOld = PWMFreq
+	End If
+	#endif
 	
 	#ifdef NoVar(CCP2CON)
-		CCPR1L = ([word]PWMDuty * PR2) / 255
+		PR2_Temp = [word]PWMDuty * PR2
+		CCPR1L = PR2_Temp_H
 		SET CCP1CON.CCP1M3 ON
 		SET CCP1CON.CCP1M2 ON
 		SET CCP1CON.CCP1M1 OFF
@@ -175,14 +190,16 @@ sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 	#endif
 	#ifdef Var(CCP2CON)
 		if PWMChannel = 1 then 
-			CCPR1L = ([word]PWMDuty * PR2) / 255 
+			PR2_Temp = [word]PWMDuty * PR2
+			CCPR1L = PR2_Temp_H
 			SET CCP1CON.CCP1M3 ON
 			SET CCP1CON.CCP1M2 ON
 			SET CCP1CON.CCP1M1 OFF
 			SET CCP1CON.CCP1M0 OFF
 		end if 
 		if PWMChannel = 2 then
-			CCPR2L = ([word]PWMDuty * PR2) / 255
+			PR2_Temp = [word]PWMDuty * PR2
+			CCPR2L = PR2_Temp_H
 			SET CCP2CON.CCP1M3 ON
 			SET CCP2CON.CCP1M2 ON
 			SET CCP2CON.CCP1M1 OFF
@@ -190,7 +207,8 @@ sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 		end if
 		#ifdef Var(CCP3CON)
 			if PWMChannel = 3 then
-				CCPR3L = ([word]PWMDuty * PR2) / 255
+				PR2_Temp = [word]PWMDuty * PR2
+				CCPR3L = PR2_Temp_H
 				SET CCP3CON.CCP1M3 ON
 				SET CCP3CON.CCP1M2 ON
 				SET CCP3CON.CCP1M1 OFF

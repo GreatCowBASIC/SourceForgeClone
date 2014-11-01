@@ -332,8 +332,8 @@ SUB AssembleProgram
 	Dim As Integer CD, PD, IsSFR, SFL, SP1, CSB, CurrentLocation, T, DT, DataSize
 	Dim As Integer RP1, DWC, RSC, DWIC, SS, CS, RepeatBanksel, B, FB, RepeatPagesel
 	Dim As Integer PRC, KeepReplacing, AW, PB, FP, PVT, TBT, HT, PV
-	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, CHA, DataBlockSize
-	Dim As LongInt CL, OA, FRA
+	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, DataBlockSize
+	Dim As LongInt CL, OA, FRA, CHA
 	Dim As Integer CurrCmd
 	
 	Dim As Single CurrPerc, PercAdd, PercOld
@@ -342,7 +342,7 @@ SUB AssembleProgram
 	Dim As Integer ParamWasLabel(100)
 	Dim As Integer PValueCount, CurrentLine
 	
-	Dim As String Prog(20000)
+	Dim As String Prog(60000)
 	
 	'Clear compiled program
 	APC = 0
@@ -1025,7 +1025,7 @@ SUB AssembleProgram
 	CHA = 0 'High address word
 	FOR PD = 1 TO APC
 		
-		CL = VAL(Left(Prog(PD), INSTR(Prog(PD), ":") - 1))
+		CL = ValLng(Left(Prog(PD), INSTR(Prog(PD), ":") - 1))
 		IF ChipFamily <> 16 THEN CL = CL * 2
 		If PD = 1 Then OA = CL
 		NewRecordData = Trim(Mid(Prog(PD), INSTR(Prog(PD), ":") + 1))
@@ -1049,7 +1049,7 @@ SUB AssembleProgram
 			DO WHILE LEN(RecCheck) < 2: RecCheck = "0" + RecCheck: LOOP
 			
 			'Add high address?
-			IF ((FRA / 65536) AND 65535) <> CHA THEN
+			IF ((FRA \ 65536) AND 65535) <> CHA THEN
 				CHA = ((FRA \ 65536) AND 65535)
 				':02 0000 04 0030 CA
 				HexAddress = Right(HEX(CHA), 4)
@@ -1104,8 +1104,8 @@ SUB AssembleProgram
 	DO WHILE LEN(RecCheck) < 2: RecCheck = "0" + RecCheck: LOOP
 	
 	'Add high address?
-	IF ((FRA / 65536) AND 65535) <> CHA THEN
-		CHA = ((FRA / 65536) AND 65535)
+	IF ((FRA \ 65536) AND 65535) <> CHA THEN
+		CHA = ((FRA \ 65536) AND 65535)
 		':02 0000 04 0030 CA
 		HexAddress = Right(HEX(CHA), 4)
 		DO WHILE LEN(HexAddress) < 4: HexAddress = "0" + HexAddress: LOOP
