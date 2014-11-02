@@ -7166,7 +7166,7 @@ Sub CompileTables
 	  				TableSub->NoReturn = -1
 	  				
 	  				'Find last element in table that is non-zero
-	  				LastNonZeroElement = 0
+	  				LastNonZeroElement = -1
 	  				For CurrElement = DataTable(PD).Items To 0 Step -1
 	  					If (DataTable(PD).Item(CurrElement) And 255 * 256 ^ CurrTableByte) <> 0 Then
 	  						LastNonZeroElement = CurrElement
@@ -7197,7 +7197,7 @@ Sub CompileTables
 							End If
 							CurrLine = LinkedListInsert(CurrLine, " retlw 0")
 							'Retrieve item
-							If LastNonZeroElement > 0 Then
+							If LastNonZeroElement >= 0 Then
 								CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
 								CurrLine = LinkedListInsert(CurrLine, " addlw low (1 + " + Table + ")")
 								CurrLine = LinkedListInsert(CurrLine, " movwf SysStringA")
@@ -7222,7 +7222,7 @@ Sub CompileTables
 							End If
 							CurrLine = LinkedListInsert(CurrLine, " retlw 0")
 							
-							If LastNonZeroElement > 0 Then
+							If LastNonZeroElement >= 0 Then
 								CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
 								CurrLine = LinkedListInsert(CurrLine, " addlw low " + Table)
 								CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRL")
@@ -7253,7 +7253,7 @@ Sub CompileTables
 								NEXT
 								If Temp <> "" Then CurrLine = LinkedListInsert(CurrLine, " db " + Temp)
 							Else
-								CurrLine = LinkedListInsert(CurrLine, "retlw " + GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte))
+								CurrLine = LinkedListInsert(CurrLine, " retlw 0")
 							End If
 		   				END IF
 		   				If ChipFamily <> 16 Then
