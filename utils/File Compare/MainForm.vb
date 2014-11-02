@@ -23,6 +23,8 @@ Public Class MainForm
 	Private FileA As IntelHexFile
 	Private FileB As IntelHexFile
 	
+	Private Dim DiffCount As Integer
+	
 	Public Const InstallDir As String = "C:\Final\utils\File Compare"
 	
 	Public Shared Sub Main
@@ -51,6 +53,8 @@ Public Class MainForm
 		Me.buttonLoadB = New System.Windows.Forms.Button
 		Me.buttonLoadA = New System.Windows.Forms.Button
 		Me.FileContents = New System.Windows.Forms.ListBox
+		Me.diffCountLabel = New System.Windows.Forms.Label
+		Me.nextDiffButton = New System.Windows.Forms.Button
 		Me.SuspendLayout
 		'
 		'openFileDialogA
@@ -108,18 +112,41 @@ Public Class MainForm
 		'FileContents
 		'
 		Me.FileContents.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
-					Or System.Windows.Forms.AnchorStyles.Left)  _
-					Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+						Or System.Windows.Forms.AnchorStyles.Left)  _
+						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 		Me.FileContents.IntegralHeight = false
 		Me.FileContents.Location = New System.Drawing.Point(8, 8)
 		Me.FileContents.Name = "FileContents"
 		Me.FileContents.Size = New System.Drawing.Size(240, 407)
 		Me.FileContents.TabIndex = 2
 		'
+		'diffCountLabel
+		'
+		Me.diffCountLabel.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+		Me.diffCountLabel.Location = New System.Drawing.Point(256, 296)
+		Me.diffCountLabel.Name = "diffCountLabel"
+		Me.diffCountLabel.Size = New System.Drawing.Size(160, 16)
+		Me.diffCountLabel.TabIndex = 5
+		Me.diffCountLabel.Text = "Differences: 0"
+		'
+		'nextDiffButton
+		'
+		Me.nextDiffButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+		Me.nextDiffButton.Enabled = false
+		Me.nextDiffButton.Location = New System.Drawing.Point(256, 320)
+		Me.nextDiffButton.Name = "nextDiffButton"
+		Me.nextDiffButton.Size = New System.Drawing.Size(160, 24)
+		Me.nextDiffButton.TabIndex = 6
+		Me.nextDiffButton.Text = "Next Difference"
+		Me.nextDiffButton.UseVisualStyleBackColor = true
+		AddHandler Me.nextDiffButton.Click, AddressOf Me.NextDiffButtonClick
+		'
 		'MainForm
 		'
 		Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 		Me.ClientSize = New System.Drawing.Size(424, 426)
+		Me.Controls.Add(Me.nextDiffButton)
+		Me.Controls.Add(Me.diffCountLabel)
 		Me.Controls.Add(Me.labelB)
 		Me.Controls.Add(Me.labelA)
 		Me.Controls.Add(Me.FileContents)
@@ -129,6 +156,8 @@ Public Class MainForm
 		Me.Text = "Compare Intel Hex Files"
 		Me.ResumeLayout(false)
 	End Sub
+	Private nextDiffButton As System.Windows.Forms.Button
+	Private diffCountLabel As System.Windows.Forms.Label
 	#End Region
 	
 	Private Sub ButtonLoadAClick(sender As System.Object, e As System.EventArgs)
@@ -153,6 +182,8 @@ Public Class MainForm
 	
 	Private Sub UpdateDisplay
 		If Not FileA Is Nothing And Not FileB Is Nothing Then
+			
+			DiffCount = 0
 			
 			FileContents.Items.Clear
 			FileContents.BeginUpdate
@@ -193,6 +224,7 @@ Public Class MainForm
 					DiffText = ""
 					If ValA <> ValB Then
 						DiffText = "    Different!"
+						DiffCount += 1
 					End If
 					FileContents.Items.Add(ValLoc + ": " + ValA + ", " + ValB + DiffText)	
 				End If
@@ -200,9 +232,27 @@ Public Class MainForm
 			Next
 			
 			FileContents.EndUpdate
+			
+			Me.diffCountLabel.Text = "Differences: " + DiffCount.ToString
+			Me.nextDiffButton.Enabled = DiffCount > 0
 		End If
 		
 	End Sub
 	
+	Sub NextDiffButtonClick(sender As Object, e As EventArgs)
+		Dim CurrPos, NextPos, SearchPos As Integer
+		CurrPos = FileContents.SelectedIndex + 1
+		NextPos = -1
+		For SearchPos = CurrPos To FileContents.Items.Count - 1
+			If FileContents.Items.Item(SearchPos).Contains("Different") Then
+				NextPos = SearchPos
+				Exit For
+			End If
+		Next
+		
+		If NextPos <> -1 Then
+			FileContents.SelectedIndex = NextPos
+		End If
+	End Sub
 End Class
 
