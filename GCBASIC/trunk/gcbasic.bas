@@ -572,7 +572,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 1/11/2014"
+Version = "0.9 2/11/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2352,7 +2352,7 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Int
 				ElseIf ChipFamily = 15 Then
 					InstSize = 1
 				ElseIf ChipFamily = 16 Then
-					InstSize = 2
+					InstSize = 1
 				End If
 			ElseIf Left(CurrLineVal, 10) = " bankisel " Then
 				InstSize = 1
@@ -2403,7 +2403,7 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Int
 						'Temp contains integer
 						IF IsConst(Temp) Then
 							'Print "Int", MakeDec(Temp)
-							InstSize += 2
+							InstSize += 1
 							
 						'Temp contains string
 						Else
@@ -2416,7 +2416,9 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Int
 					END IF
 				Loop
 				
-				InstSize = (InstSize + 1) \ 2
+				If ChipFamily = 16 Then
+					InstSize = (InstSize + 1) \ 2
+				End If
 				'Print " Size:"; InstSize
 			End If
 		
