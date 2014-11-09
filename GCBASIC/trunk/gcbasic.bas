@@ -276,7 +276,7 @@ DECLARE SUB AddSysVarBits (CompSub As SubType Pointer)
 Declare SUB BuildMemoryMap
 DECLARE SUB CalcConfig
 DECLARE Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As String, OriginIn As String)
-Declare Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Integer = -1, GotoPos As Integer = -1, NextCodeLine As String = "") As Integer
+Declare Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Integer = -1, GotoPos As Integer = -1) As Integer
 Declare Sub CalcSubSize(CurrSub As SubType Pointer)
 DECLARE FUNCTION CastOrder (InType As String) As Integer
 Declare Sub CheckConstName (ConstName As String, Origin As String)
@@ -463,6 +463,7 @@ Declare Function LinkedListDelete (Location As LinkedListElement Pointer) As Lin
 Declare Function LinkedListDeleteList (StartLoc As LinkedListElement Pointer, EndLoc As LinkedListElement Pointer) As LinkedListElement Pointer
 Declare Sub LinkedListPrint(StartNode As LinkedListElement Pointer)
 Declare Function LinkedListSize(StartNode As LinkedListElement Pointer) As Integer
+Declare Function NextCodeLine(CodeLine As LinkedListElement Pointer) As LinkedListElement Pointer
 Declare Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
 DECLARE FUNCTION WholeINSTR (DataIn As String, FindIn As String, SearchAgain As Integer = -1) As Integer
 Declare Function WholeInstrLoc(DataSource As String, FindTemp As String) As Integer
@@ -572,7 +573,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 2/11/2014"
+Version = "0.9 9/11/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -757,6 +758,7 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 	Dim As Integer BankMask, Bank, FindVar, BankselNeeded, ReturnAdded
 	Dim As String TempData, OtherData, VarInBank, VarName, DestLabel
 	Dim As LinkedListElement Pointer CurrLine, LabelList, LabelListPos, LabelLoc, BankList, BankListLoc, PrintLoc
+	Dim As LinkedListElement Pointer RealNextLine
 	Dim As ProgLineMeta Pointer CurrMeta, DestMeta
 	
 	'Get bank size
@@ -934,8 +936,11 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 				
 			End If
 						
-		'cpfseq/cpfslt/cpfsgt
-		ElseIf CurrLine5 = " cpfs" Then
+		'conditional branch
+		ElseIf CurrLine4 = " bc " Or CurrLine4 = " bn " Or _
+			   CurrLine4 = " bz " Or CurrLine5 = " bnc " Or _
+			   CurrLine5 = " bnn " Or CurrLine5 = " bnz " Or _
+			   CurrLine5 = " bov " Or CurrLine6 = " bnov " Then
 			'Print CurrLine->Value; " to next or label"
 			'Show jump to next
 			LinkedListInsert(CurrMeta->NextCommands, CurrLine->Next)
@@ -964,26 +969,25 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 				LinkedListInsert(DestMeta->PrevCommands, CurrLine)
 			End If
 			
-		'btfsc/btfss
-		ElseIf CurrLine5 = " btfs" Or CurrLine8 = " decfsz " Or _
-			    CurrLine8 = " incfsz " Or CurrLine8 = " dcfsnz " Or _
-			    CurrLine8 = " infsnz " Or CurrLine8 = " tstfsz" Or _
-			    CurrLine4 = " bc " Or CurrLine4 = " bn " Or _
-			    CurrLine4 = " bz " Or CurrLine5 = " bnc " Or _
-			    CurrLine5 = " bnn " Or CurrLine5 = " bnz " Or _
-			    CurrLine5 = " bov " Or CurrLine6 = " bnov " Then
+		'btfsc/btfss/cpfseq/cpfslt/cpfsgt/decfsz
+		ElseIf CurrLine5 = " btfs" Or CurrLine5 = " cpfs" Or _
+			    CurrLine8 = " decfsz " Or CurrLine8 = " dcfsnz " Or _
+			    CurrLine8 = " incfsz " Or CurrLine8 = " infsnz " Or _
+			    CurrLine8 = " tstfsz" Then
 			'Print CurrLine->Value; " to next or after next"
 			'Show jump to next
-			LinkedListInsert(CurrMeta->NextCommands, CurrLine->Next)
-			If CurrLine->Next <> 0 Then
+			RealNextLine = NextCodeLine(CurrLine)
+			LinkedListInsert(CurrMeta->NextCommands, RealNextLine)
+			If RealNextLine <> 0 Then
 				'Show jump from this
-				DestMeta = CurrLine->Next->MetaData
+				DestMeta = RealNextLine->MetaData
 				LinkedListInsert(DestMeta->PrevCommands, CurrLine)
 				
 				'Show jump after next
-				LinkedListInsert(CurrMeta->NextCommands, CurrLine->Next->Next)
-				If CurrLine->Next->Next <> 0 Then
-					DestMeta = CurrLine->Next->Next->MetaData
+				RealNextLine = NextCodeLine(RealNextLine)
+				LinkedListInsert(CurrMeta->NextCommands, RealNextLine)
+				If RealNextLine <> 0 Then
+					DestMeta = RealNextLine->MetaData
 					LinkedListInsert(DestMeta->PrevCommands, CurrLine)
 				End If
 			End If
@@ -2315,7 +2319,7 @@ SearchForOpAgain:
 	
 END SUB
 
-Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Integer, GotoPos As Integer, NextCodeLine As String) As Integer
+Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Integer, GotoPos As Integer) As Integer
 	'Calculates the size in words of an assembly code line
 	'CallPos is the location of the call instruction in the instruction list
 	
@@ -2494,7 +2498,7 @@ Sub CalcSubSize(CurrSub As SubType Pointer)
 			NextLineValue = NextLine->Value
 		End If
 		
-		FinalSize += CalcLineSize(CurrLine->Value, ThisSubPage, CallPos, GotoPos, NextLineValue)
+		FinalSize += CalcLineSize(CurrLine->Value, ThisSubPage, CallPos, GotoPos)
 		CurrLine = CurrLine->Next
 	Loop
 	

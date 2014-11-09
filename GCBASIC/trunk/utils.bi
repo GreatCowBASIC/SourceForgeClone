@@ -1438,6 +1438,21 @@ Function LinkedListSize(StartNode As LinkedListElement Pointer) As Integer
 	Return OutSize
 End Function
 
+Function NextCodeLine(CodeLine As LinkedListElement Pointer) As LinkedListElement Pointer
+	'Get next line of code after the specified line
+	'Skip over any PRESERVE lines
+	Dim NextLine As LinkedListElement Pointer
+	
+	If CodeLine = 0 Then Return 0
+	NextLine = CodeLine->Next
+	Do While NextLine <> 0
+		If Left(NextLine->Value, 9) <> "PRESERVE " Then Exit Do
+		NextLine = NextLine->Next
+	Loop
+	
+	Return NextLine
+End Function
+
 Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
 	
 	'Print "Finding match for " + SubSigIn + " and " + CallSigIn
