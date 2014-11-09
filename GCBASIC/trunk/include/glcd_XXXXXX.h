@@ -19,7 +19,8 @@
 ' Supports XXXXXX controller only.
 
 'Changes
-
+' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+'
 
 'Hardware settings
 'Type
@@ -56,6 +57,7 @@ Sub InitGLCD_XXXXXX
 		'Colours
 		GLCDBackground = 0
 		GLCDForeground = 1
+                    GLCDFontWidth = 6
 		
 	#endif
 	

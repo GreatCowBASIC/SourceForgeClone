@@ -14,16 +14,22 @@
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+'    
+'    9/11/14	New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
+'
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
+' Defaults to KS0108
 
 #define GLCD_TYPE GLCD_TYPE_KS0108
-#define GLCDFontWidth 6
+#define GLCD_WIDTH 128
+#define GLCD_HEIGHT 64
+dim GLCDFontWidth,GLCDfntDefault as byte
+
 
 
 
@@ -35,16 +41,16 @@
 
 
 
+
+
 ' Do not remove - global variable required for Circles.
 dim GLCD_yordinate as integer
-
+dim glcd_type_string as string * 7
 'Foreground and background colours
 Dim GLCDBackground As Word
 Dim GLCDForeground As Word
 
 #script
-    ' Inside a script is different to anywhere else in the code, whatever is in there should be executed sequentially by the compiler
-    ' and, anything that is a constant elsewhere is a variable inside the script
 
   ' add new type here!
   If GLCD_TYPE = GLCD_TYPE_KS0108 Then
@@ -53,10 +59,10 @@ Dim GLCDForeground As Word
      InitGLCD = InitGLCD_KS0108
      GLCDCLS = GLCDCLS_KS0108
      FilledBox = FilledBox_KS0108
-     Pset= Pset_KS0108
+     Pset = Pset_KS0108
+     glcd_type_string = "KS0108"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 64
-     GLCD_CAPABILITY  = MONO
 
   End If
 
@@ -68,9 +74,10 @@ Dim GLCDForeground As Word
      GLCDDrawChar = GLCDDrawChar_ST7735
      FilledBox = FilledBox_ST7735
      Pset = Pset_ST7735
+     GLCDRotate = GLCDRotate_ST7735
+     glcd_type_string = "ST7735"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 160
-
   End If
 
   If GLCD_TYPE = GLCD_TYPE_ST7920 Then
@@ -79,11 +86,11 @@ Dim GLCDForeground As Word
      InitGLCD = InitGLCD_ST7920
      GLCDCLS = GLCDCLS_ST7920
      FilledBox = FilledBox_ST7920
-     Pset= Pset_ST7920
+     Pset = Pset_ST7920
      GLCDPrint = GLCDPrint_ST7920
+     glcd_type_string = "ST7920"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 64
-
   End If
 
   If GLCD_TYPE = GLCD_TYPE_PCD8544 Then
@@ -93,20 +100,21 @@ Dim GLCDForeground As Word
      GLCDCLS = GLCDCLS_PCD8544
      GLCDDrawChar = GLCDDrawChar_PCD8544
      FilledBox = FilledBox_PCD8544
-     Pset= Pset_PCD8544
+     Pset = Pset_PCD8544
+     glcd_type_string = "PCD8544"
+     PCD8544WriteDelay = 0
+     PCD8544ClockDelay = 0
      GLCD_WIDTH = 84
      GLCD_HEIGHT = 48
-
   End If
 
 #endscript
 
 
-
-'''Initialise the GLCD device
 #define GLCDInit InitGLCD
+'''Initialise the GLCD device
 Sub InitGLCD
-    ' Each Device has a specific InitGLCD routine - do not delete this SUB!
+    ' Empty sub DO NOT DELETE
 end sub
 
 
@@ -168,7 +176,6 @@ End Sub
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour as word = GLCDForeground )
-
     for xchar = 1 to Chars(0)
       ' June 2014
       ' Corrected error X calcaluation. It was adding an Extra 1!
@@ -441,7 +448,9 @@ Sub PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
 End Sub
 
 
-
+sub GLCDRotate ( in AddressType )
+    ' Empty routine  - do not delete
+end sub
 
 
 '''@hide

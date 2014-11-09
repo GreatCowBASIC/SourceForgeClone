@@ -30,7 +30,9 @@
 ' 28/6/2014: Revised GLCDDrawString.  Xpos was always 1 extra pixel to right.
 ' 14/8/2014: Removed GLCDTimeDelay to improve timing and a tidy up.
 ' 1/11/2014: Revised to support single controller.
-
+'    
+' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+'
 'Hardware settings
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_KS0108"
@@ -58,6 +60,11 @@ Sub InitGLCD_KS0108
 
 	'Setup code for KS0108 controllers
 	#if GLCD_TYPE = GLCD_TYPE_KS0108
+                   #define KS0108ReadDelay   9     ; 2 normal usage, 3 for 32 mhz!
+                   #define KS0108WriteDelay  1     ; 1 normal usage, 0 works
+                   #define KS0108ClockDelay  1     ; 1 normal usage, 0 works
+
+
 		'Set pin directions
 		Dir GLCD_RS Out
 		Dir GLCD_RW Out
@@ -90,6 +97,8 @@ Sub InitGLCD_KS0108
 		'Colours
 		GLCDBackground = 0
 		GLCDForeground = 1
+                    GLCDFontWidth = 6
+                    GLCDfntDefault = 0
 		
 	#endif
 	
@@ -288,13 +297,13 @@ Sub GLCDWriteByte_KS0108 (In LCDByte)
 	GLCD_DB2 = LCDByte.2
 	GLCD_DB1 = LCDByte.1
 	GLCD_DB0 = LCDByte.0
-	
+
 	'Write
-	Wait 2 us
+	Wait KS0108WriteDelay us
 	Set GLCD_ENABLE On
-	Wait 2 us
+	Wait KS0108_Clock_Delay us
 	Set GLCD_ENABLE Off
-	Wait 2 us
+	Wait KS0108WriteDelay us
 End Sub
 
 #define GLCDReadByte GLCDReadByte_KS0108
@@ -317,7 +326,7 @@ Function GLCDReadByte_KS0108
 	
 	'Read
 	Set GLCD_ENABLE On
-	Wait 2 us
+	Wait 3 us
 	'Get input data
           ' corrected 7/05/2014
 	GLCDReadByte.7 = GLCD_DB7
