@@ -1,0 +1,99 @@
+    '  FILE:    TestRoutine_16f1789_for_ST7920@32.gcb.gcb
+    '  DATE:    08/11/14
+    '  VERSION: 1.0
+    '  AUTHOR:  Anobium
+    '
+    'This program was written using the Great Cow Basic IDE for use with the PIC
+    '16F1789 development board (HCDVBD0003) and the ST7920 GLCD module
+    '
+    'You may copy, alter and reuse this code in any way you like, but please leave
+    'reference to Great Cow Basic and Anobium in your comments if you redistribute this code.
+    '
+    'THIS SOFTWARE IS PROVIDED "AS IS". WE MAKE, OR PROVIDE, ANY WARRANTIES,
+    'WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED
+    'WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, ACCURACY OR
+    'LACK OF NEGLIGENCE. ANOBIUM SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE
+    'FOR ANY DAMAGES INCLUDING, BUT NOT LIMITED TO, SPECIAL, INCIDENTAL OR
+    'CONSEQUENTIAL DAMAGES FOR ANY REASON WHATSOEVER.
+
+    'Chip Settings. Assumes the development board with with a 16F1789
+
+    #chip 16F1789,32
+    #config Osc = INT, VCAPEN_OFF, MCLRE_On, PLLEN_ON, CLKOUTEN_OFF
+
+    #include <GLCD.h>
+
+
+    #define GLCD_TYPE GLCD_TYPE_ST7920
+    #define GLCD_IO 8
+    #define GLCD_WIDTH 128
+    #define GLCD_HEIGHT 64
+    #define GLCD_LAT
+
+    ' read delay of 25 is required at 32mhz, this can be reduced to 0 for slower clock speeds
+    ' with LAT you may be able to reduce to 0
+    #define ST7920ReadDelay 0
+    ' write delay of 2 is required at 32mhz.  this can be reduced to 1 for slower clock speeds
+    #define ST7920WriteDelay 0
+
+
+    #define GLCD_RS LATE.0
+    #define GLCD_Enable LATE.2
+    #define GLCD_RW LATE.1
+    #define GLCD_RESET LATA.0
+    #define GLCD_DATA_PORT LATD
+
+    #define _GLCD_RS PORTE.0
+    #define _GLCD_Enable PORTE.2
+    #define _GLCD_RW PORTE.1
+    #define _GLCD_RESET PORTA.0
+    #define _GLCD_DATA_PORT PORTD
+
+
+    ' required to turn on graphics capabilities
+    GLCDEnableGraphics_ST7920
+    GLCDCLS
+
+        CCount = 0
+        dim longNumber as long
+        longNumber = 0 ' max value = 4294967290
+        dim wordNumber as Word
+        wordNumber = 0
+        byteNumber = 0
+
+        GLCDCLS
+
+        DO forever
+
+            GLCDPrint (0, 0, "Print String")
+
+            GLCDPrint ( 64 ,  36, "          ")
+            GLCDPrint ( 64 ,  44, "     ")
+            GLCDPrint ( 64 ,  52, "    ")
+
+
+            GLCDPrint ( 64 ,  36, longNumber)
+            GLCDPrint ( 64 ,  44, wordNumber)
+            GLCDPrint ( 64 ,  52, byteNumber)
+
+            GLCDDrawString( 0,8,"Drawstring Test")
+            GLCDDrawChar(100, 8, ( CCount + 31 ) mod 127)
+
+            box 0,0,127,63
+            box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1
+            filledbox 3,43,11,51, wordNumber
+            Circle( 44,41,15)
+            FilledCircle( 44,41,9, longNumber xor 1)
+            line 0,63,64,31
+            line 64,31,0,31
+
+            CCount++
+            longNumber = longNumber + 7
+            wordNumber = wordNumber + 3
+            byteNumber++
+        LOOP
+
+    end
+
+
+

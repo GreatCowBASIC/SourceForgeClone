@@ -23,7 +23,9 @@
 ' 20/10/2014: Adapted to support PCD9844 devices.
 ' 21/10/2014: PCD9844 device improvements to remove a method and reduce configuration
 ' 22/10/2014: PCD9844 device improvements to handling of RAM limitations
-
+'    
+' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+'
 'Hardware settings
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_PCD8544"
@@ -189,6 +191,8 @@ Sub InitGLCD_PCD8544
                         'Colours
                         GLCDBackground = 0
                         GLCDForeground = 1
+                        GLCDFontWidth = 6
+                        GLCDfntDefault = 0
 
           #endif
 
@@ -350,30 +354,30 @@ End Sub
 sub Write_Command_PCD8544(in  PCD8544SendByte)
 
 	SET PCD8544_DC OFF;		'Data/Command is set to zero to give Command of PCD8544 Controller
-          WAIT 1 us
+          WAIT PCD8544WriteDelay us
 	set PCD8544_CS off ;	'Select the Chip, Chip Enable is an Active Low Signal
-          WAIT 2 us
+          WAIT PCD8544WriteDelay us
 	SPI_Send_Data_PCD8544(PCD8544SendByte);
 	set PCD8544_CS on;	'Disable the Chip again by providing active high Signal
-          WAIT 1 us
+          WAIT PCD8544WriteDelay us
 end sub
 
 sub Write_Data_PCD8544(in PCD8544SendByte)
 
           SET PCD8544_DC ON;				'Data/Command is set to One to give Data of PCD8544 Controller
-          WAIT 1 us
+          WAIT PCD8544WriteDelay us
 	set PCD8544_CS off;	'Select the Chip, Chip Enable is an Active Low Signal
-          WAIT 2 us
+          WAIT PCD8544WriteDelay us
 	SPI_Send_Data_PCD8544(PCD8544SendByte);
 	set PCD8544_CS on;	'Disable the Chip again by providing active high Signal
-          WAIT 1 us
+          WAIT PCD8544WriteDelay us
 end sub
 
 
 sub SPI_Send_Data_PCD8544(in PCD8544SendByte)
 
     repeat 8                      '8 data bits
-      wait 2 us
+      wait PCD8544WriteDelay us
       if PCD8544SendByte.7 = ON then      'put most significant bit on SDA line
         set PCD8544_DO ON
       else
@@ -381,12 +385,12 @@ sub SPI_Send_Data_PCD8544(in PCD8544SendByte)
       end if
 
       rotate PCD8544SendByte left         'shift in bit for the next time
-      wait 1 us
+      wait PCD8544WriteDelay us
       SET PCD8544_SCK ON              'now clock it in
-      wait 1 us
+      wait PCD8544ClockDelay us
       SET PCD8544_SCK OFF               'done clocking that bit
     end repeat
-    wait 2 us
+    wait PCD8544WriteDelay us
 end sub
 
 sub Clear_RAM_PCD8544

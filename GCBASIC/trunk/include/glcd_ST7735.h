@@ -26,7 +26,9 @@
 '             Added Defines and ST7735Rotation command
 ' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ST7735 device.
 ' 27/10/2014: Changed ST7735Rotation to GLCDRotate
-
+'    
+' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+'
 'Hardware settings
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_ST7735"
@@ -44,18 +46,24 @@
 #define ST7735_DC GLCD_DC
 #define ST7735_CS GLCD_CS
 #define ST7735_RST GLCD_RESET
+
+' lat support
+#define _ST7735_DC _GLCD_DC
+#define _ST7735_CS _GLCD_CS
+#define _ST7735_RST _GLCD_RESET
+
 #define ST7735_DI GLCD_DI
 #define ST7735_DO GLCD_DO
 #define ST7735_SCK GLCD_SCK
 
+' lat support
+#define _ST7735_DI _GLCD_DI
+#define _ST7735_DO _GLCD_DO
+#define _ST7735_SCK _GLCD_SCK
+
 'Column/row select commands for ST7735
 #define ST7735_COLUMN 0x2A
 #define ST7735_ROW 0x2B
-
-'Chip select/deselect macros for ST7735
-#define ST7735Select Set ST7735_CS Off
-#define ST7735Deselect Set ST7735_CS On
-
 
 ' Defines for ST7735
 #define INITR_GREENTAB 0x00
@@ -141,17 +149,32 @@ Sub InitGLCD_ST7735
 	'Setup code for ST7735 controllers
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
 		'Pin directions
-		Dir ST7735_CS Out
-		Dir ST7735_DC Out
-		Dir ST7735_RST Out
+                    #IFNDEF GLCD_LAT
+                        Dir ST7735_CS Out
+                        Dir ST7735_DC Out
+                        Dir ST7735_RST Out
+    		
+                        Dir ST7735_DI In
+                        Dir ST7735_DO Out
+                        Dir ST7735_SCK Out
+                    #endif
+
+
+                    #IFDEF GLCD_LAT
+                        Dir _ST7735_CS Out
+                        Dir _ST7735_DC Out
+                        Dir _ST7735_RST Out
+    		
+                        Dir _ST7735_DI In
+                        Dir _ST7735_DO Out
+                        Dir _ST7735_SCK Out
+                    #endif
 		
-		Dir ST7735_DI In
-		Dir ST7735_DO Out
-		Dir ST7735_SCK Out
-		
-		'SPI mode
-		SPIMode MasterFast, 0
-		
+                    #ifdef ST7735_HardwareSPI
+                      ' harware SPI mode
+                      SPIMode MasterFast, 0
+		#endif
+
 		'Reset display
 		Set ST7735_RST On
 		Wait 10 ms
@@ -160,30 +183,109 @@ Sub InitGLCD_ST7735
 		Wait 25 us
 		Set ST7735_RST On
 		Wait 10 ms
-		
 		'Software reset
-		SendCommand_ST7735 0x01
+		SendCommand_ST7735 ST7735_SWRESET
 		Wait 200 ms
 
 		'Software reset
-		SendCommand_ST7735 0x01
+		SendCommand_ST7735 ST7735_SWRESET
 		Wait 200 ms		
 		
                     'Out of sleep mode
-		SendCommand_ST7735 0x11
+		SendCommand_ST7735 ST7735_SLPOUT
 		Wait 200 ms
-		
+
+                    SendCommand_ST7735(ST7735_COLMOD)   ; set color mode
+                    SendData_ST7735(0x05)               ; 16-bit color
+		Wait 10 ms
+
+                    SendCommand_ST7735(ST7735_FRMCTR1); // frame rate control
+                    SendData_ST7735(0x00);          // fastest refresh
+                    SendData_ST7735(0x06);          // 6 lines front porch
+                    SendData_ST7735(0x03);          // 3 lines backporch
+                    Wait 10 ms
+
+                    SendCommand_ST7735(ST7735_MADCTL);  // memory access control (directions)
+                    SendData_ST7735(0xC8);          // row address/col address, bottom to top refresh
+                    wait 10 ms
+
+                    SendCommand_ST7735(ST7735_DISSET5); // display settings #5
+                    SendData_ST7735(0x15);          // 1 clock cycle nonoverlap, 2 cycle gate rise, 3 cycle oscil. equalize
+                    SendData_ST7735(0x02);          // fix on VTL
+                    wait 10 ms;
+                    SendCommand_ST7735(ST7735_INVCTR);  // display inversion control
+                    SendData_ST7735(0x0);           // line inversion
+                    wait 10 ms;
+                    SendCommand_ST7735(ST7735_PWCTR1);  // power control
+                    SendData_ST7735(0x02);          // GVDD = 4.7V
+                    SendData_ST7735(0x70);          // 1.0uA
+                    wait 10 ms;
+
+'                    SendCommand_ST7735(ST7735_PWCTR2);  // power control
+'                    SendData_ST7735(0x05);          // VGH = 14.7V, VGL = -7.35V
+'                    SendCommand_ST7735(ST7735_PWCTR3);  // power control
+'                    SendData_ST7735(0x01);          // Opamp current small
+'                    SendData_ST7735(0x02);          // Boost frequency
+'                    wait 10 ms;
+'                    SendCommand_ST7735(ST7735_VMCTR1);  // power control
+'                    SendData_ST7735(0x3C);          // VCOMH = 4V
+'                    SendData_ST7735(0x38);          // VCOML = -1.1V
+'                    wait 10 ms;
+
+                    SendCommand_ST7735(ST7735_GMCTRP1);
+                    SendData_ST7735(0x09);
+                    SendData_ST7735(0x16);
+                    SendData_ST7735(0x09);
+                    SendData_ST7735(0x20);
+                    SendData_ST7735(0x21);
+                    SendData_ST7735(0x1B);
+                    SendData_ST7735(0x13);
+                    SendData_ST7735(0x19);
+                    SendData_ST7735(0x17);
+                    SendData_ST7735(0x15);
+                    SendData_ST7735(0x1E);
+                    SendData_ST7735(0x2B);
+                    SendData_ST7735(0x04);
+                    SendData_ST7735(0x05);
+                    SendData_ST7735(0x02);
+                    SendData_ST7735(0x0E);
+                    wait 10 ms;
+                    SendCommand_ST7735(ST7735_GMCTRN1);
+                    SendData_ST7735(0x0B);
+                    SendData_ST7735(0x14);
+                    SendData_ST7735(0x08);
+                    SendData_ST7735(0x1E);
+                    SendData_ST7735(0x22);
+                    SendData_ST7735(0x1D);
+                    SendData_ST7735(0x18);
+                    SendData_ST7735(0x1E);
+                    SendData_ST7735(0x1B);
+                    SendData_ST7735(0x1A);
+                    SendData_ST7735(0x24);
+                    SendData_ST7735(0x2B);
+                    SendData_ST7735(0x06);
+                    SendData_ST7735(0x06);
+                    SendData_ST7735(0x02);
+                    SendData_ST7735(0x0F);
+                    wait 10 ms;
+
+                    SendCommand_ST7735(ST7735_PWCTR6);  // power control
+                    SendData_ST7735(0x11);
+                    SendData_ST7735(0x15);
+                    wait 10 ms;	
+
+                    	
 		'Gamma correction
 		'SetGammaCorrection_ST7735
 		
 		'Scanning direction
 		SendCommand_ST7735 0x36
 		SendData_ST7735 0xC8
-		
+		wait 10 ms;
 		'Set pixel mode to 16 bpp
 		SendCommand_ST7735 0x3A
 		SendData_ST7735 5
-		
+		wait 10 ms;
 		'Display on
 		SendCommand_ST7735 0x29
 		Wait 100 ms
@@ -195,6 +297,8 @@ Sub InitGLCD_ST7735
                     'Variables required for device
                     ST7735_GLCD_WIDTH = GLCD_WIDTH
                     ST7735_GLCD_HEIGHT = GLCD_HEIGHT
+                    GLCDFontWidth = 6
+                    GLCDfntDefault = 0
 	#endif
 
           GLCDRotate ( PORTRAIT_REV )
@@ -213,13 +317,15 @@ Sub GLCDCLS_ST7735
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
 		SetAddress_ST7735 ST7735_COLUMN, 0, ST7735_GLCD_WIDTH
                     wait 2 ms
-		SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
-		wait 2 ms
+                    SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
+                    wait 2 ms
                     SendCommand_ST7735 0x2C
                     wait 2 ms
-		Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
-			SendWord_ST7735 GLCDBackground
+                    Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
+			SendData_ST7735 GLCDBackground_h
+                              SendData_ST7735 GLCDBackground
 		End Repeat
+'                    FilledBox( 0, 0, ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT, GLCDBackground )
 	#endif
 
 End Sub
@@ -308,14 +414,19 @@ Sub PSet_ST7735(In GLCDX, In GLCDY, In GLCDColour As Word)
 	#endif
 End Sub
 
-'#define ST7735Transfer SPITransfer
+
+
 '''Transfer a byte
 '''@hide
-Sub ST7735Transfer(In ST7735TempIn, Out ST7735TempOut)
-	
+Sub Transfer_ST7735(In ST7735TempIn, Out ST7735TempOut)
+
 	'Use mode 0 - CPOL = 0, CPHA = 0
+          'Set SSPSTAT.CKE On
+          'Set SSPCON1.CKP Off
+
+    SET ST7735_SCK OFF
     repeat 8                      '8 data bits
-      wait 1 us
+      Wait 1 us
       if ST7735TempIn.7 = ON then      'put most significant bit on SDA line
         set ST7735_DO ON
       else
@@ -323,45 +434,105 @@ Sub ST7735Transfer(In ST7735TempIn, Out ST7735TempOut)
       end if
 
       rotate ST7735TempIn left         'shift in bit for the next time
-      wait 1 us
-      SET ST7735_SCK ON              'now clock it in
-      wait 1 us
+      SET ST7735_SCK ON                'now clock bit out
+      Wait 1 us
       SET ST7735_SCK OFF               'done clocking that bit
+
     end repeat
-    wait 1 us
-	
+    Wait 1 us
+    SET ST7735_SCK OFF	
 End Sub
 
 '''Send a command to the ST7735 GLCD
 '''@param ST7735SendByte Command to send
 '''@hide
-Sub SendCommand_ST7735(In ST7735SendByte)
-	Set ST7735_DC Off
-	ST7735Select
-	ST7735Transfer ST7735SendByte, ST7735Received
-	ST7735Deselect
-End Sub
+sub  SendCommand_ST7735( IN ST7735SendByte as byte )
+
+  set ST7735_CS OFF;
+  set ST7735_DC OFF;
+
+  #ifdef ST7735_HardwareSPI
+     SPITransfer  ST7735SendByte,  ST7735TempOut
+     set ST7735_CS ON;
+     exit sub
+  #endif
+
+  repeat 8
+
+    if ST7735SendByte.7 = ON  then
+      set ST7735_DO ON;
+    else
+      set ST7735_DO OFF;
+    end if
+    SET GLCD_SCK OFF;
+    rotate ST7735SendByte left
+    set GLCD_SCK ON;
+
+  end repeat
+  set ST7735_CS ON;
+
+end Sub
 
 '''Send a data byte to the ST7735 GLCD
 '''@param ST7735SendByte Byte to send
 '''@hide
-Sub SendData_ST7735(In ST7735SendByte)
-	Set ST7735_DC On
-	ST7735Select
-	ST7735Transfer ST7735SendByte, ST7735Received
-	ST7735Deselect
-End Sub
+sub  SendData_ST7735( IN ST7735SendByte as byte )
+
+  set ST7735_CS OFF;
+  set ST7735_DC ON;
+
+  #ifdef ST7735_HardwareSPI
+     SPITransfer  ST7735SendByte,  ST7735TempOut
+     set ST7735_CS ON;
+     exit sub
+  #endif
+
+
+  repeat 8
+
+    if ST7735SendByte.7 = ON then
+      set ST7735_DO ON;
+    else
+      set ST7735_DO OFF;
+    end if
+    SET GLCD_SCK OFF;
+    rotate ST7735SendByte left
+    set GLCD_SCK ON;
+
+  end Repeat
+  set ST7735_CS ON;
+
+end Sub
 
 '''Send a data word (16 bits) to the ST7735 GLCD
 '''@param ST7735SendByte Word to send
 '''@hide
-Sub SendWord_ST7735(In ST7735SendByte As Word)
-	Set ST7735_DC On
-	ST7735Select
-	ST7735Transfer ST7735SendByte_H, ST7735Received
-	ST7735Transfer ST7735SendByte, ST7735Received
-	ST7735Deselect
+Sub SendWord_ST7735(In ST7735SendWord As Word)
+  set ST7735_CS OFF;
+  set ST7735_DC ON;
+
+  #ifdef ST7735_HardwareSPI
+     SPITransfer  ST7735SendWord_H,  ST7735TempOut
+     SPITransfer  ST7735SendWord,  ST7735TempOut
+     set ST7735_CS ON;
+     exit sub
+  #endif
+
+  repeat 16
+
+    if ST7735SendWord.15 = ON then
+      set ST7735_DO ON;
+    else
+      set ST7735_DO OFF;
+    end if
+    SET GLCD_SCK OFF;
+    rotate ST7735SendWord left
+    set GLCD_SCK ON;
+
+  end repeat
+  set ST7735_CS ON;
 End Sub
+
 
 '''Set the row or column address range for the ST7735 GLCD
 '''@param ST7735AddressType Address Type (ST7735_ROW or ST7735_COLUMN)
@@ -377,7 +548,7 @@ Sub SetAddress_ST7735(In ST7735AddressType, In ST7735Start As Word, In ST7735End
 End Sub
 
 '''@hide
-sub   GLCDRotate ( in ST7735AddressType )
+sub   GLCDRotate_ST7735 ( in ST7735AddressType )
 
   SendCommand_ST7735 ( ST7735_MADCTL )
   select case ST7735AddressType

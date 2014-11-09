@@ -28,7 +28,9 @@
 ' 09/5/2014: Remove more silly variable names. No functional changes
 ' 09/5/2014: Fixed circle and line to ensure cross device compatibility
 ' 11/5/2014: Revided to expose old line drawing routines
-
+'    
+' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+'
 'Hardware settings
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_ST7920"
@@ -45,15 +47,6 @@
 #define GLCD_ROW 	(GLCD_HEIGHT/1)
 #define GLCD_COLS 	(GLCD_WIDTH/16)
 
-' A few constants that might need to be set to support the ST7920
-' 4.4v = 25, 5.0v 20 - You may need to adjust
-#define ST7920ReadDelay 20
-  ' if ChipMHz = 4 then 10
-  ' if ChipMHz = 8 then 2
-  ' if ChipMHz = 16 then 2
-  ' if ChipMHz = 32 then 2
-#define ST7920WriteDelay 2
-
 
 ' Do not remove.
 #define GLCDEnableCharacterMode_ST7920 GLCDDisableGraphics_ST7920
@@ -65,6 +58,15 @@
 Sub InitGLCD_ST7920
 
           #if GLCD_TYPE = GLCD_TYPE_ST7920
+
+              ' A few constants that might need to be set to support the ST7920
+              ' 4.4v = 25, 5.0v 20 - You may need to adjust
+              #define ST7920ReadDelay = 20
+              ' if ChipMHz = 4 then 10
+              ' if ChipMHz = 8 then 2
+              ' if ChipMHz = 16 then 2
+              ' if ChipMHz = 32 then 2
+              #define ST7920WriteDelay = 2
 
               #IFDEF GLCD_IO 4,8
 
@@ -220,6 +222,8 @@ Sub InitGLCD_ST7920
               'Colours
               GLCDBackground = 0
               GLCDForeground = 1
+              GLCDFontWidth = 6
+              GLCDfntDefault = 0
           #ENDIF
 
 	'Clear screen
@@ -325,7 +329,7 @@ Sub GLCDPrint_ST7920(In PrintLocX, In PrintLocY, in LCDPrintData as string )
                 For SysLCDPrintTemp = 1 To PrintLen
                      WriteByte_ST7920 ( LCDPrintData(SysLCDPrintTemp) )
                 Next
-                Exit Sub
+
           #endif
 
 end sub
