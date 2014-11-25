@@ -316,6 +316,7 @@ SUB AllocateRAM
 	Dim As String OccursInSub(50)
 	Dim As Integer OccursInSubs, CurrSub, SubVar, SearchVarList, VarListLoc
 	Dim As Integer CurrByte, SRStart, SREnd, SRDir, UnallocatedVars, AllocAttempts
+	Dim As Integer UseLinear, CurrBlockSize
 	Dim As Integer RegisterUsed(32)
 	
 	Dim As LinkedListElement Pointer CurrLine
@@ -745,6 +746,9 @@ SUB AllocateRAM
 								SRStart = FreeRAM - VarSize - 1
 								SREnd = 1
 								SRDir = -1
+								If ChipFamily = 15 Then
+									UseLinear = -1
+								End If
 							Else
 								SRStart = 1
 								SREnd = FreeRAM - VarSize - 1
@@ -758,19 +762,29 @@ SUB AllocateRAM
 							SRStart = 1
 							SREnd = FreeRAM - VarSize - 1
 							SRDir = 1
+							UseLinear = 0
 						End If
 						
 						'Search RAM for suitable contiguous free locations
 						For SR = SRStart To SREnd Step SRDir
 							'Check for a continuous block of available RAM
-							IF VarLoc(SR + VarSize - 1) - VarLoc(SR) = VarSize - 1 And (.FixedLocation = -1 Or .FixedLocation = VarLoc(SR)) Then
+							If UseLinear Then
+								CurrBlockSize = GetLinearLoc(VarLoc(SR + VarSize - 1)) - GetLinearLoc(VarLoc(SR))
+							Else
+								CurrBlockSize = VarLoc(SR + VarSize - 1) - VarLoc(SR)
+							End If
+							IF CurrBlockSize = VarSize - 1 And (.FixedLocation = -1 Or .FixedLocation = VarLoc(SR)) Then
 								'Allocate RAM to variable
-								.Location = VarLoc(SR)
+								If UseLinear Then
+									.Location = GetLinearLoc(VarLoc(SR))
+								Else
+									.Location = VarLoc(SR)
+								End If
 								If .Size > 1 Or LCase(.Type) = "string" Then
 									'For an array, need to name first location only
 									FVLC += 1
 									FinalVarList(FVLC).Name = .Name
-									FinalVarList(FVLC).Value = Str(VarLoc(SR))
+									FinalVarList(FVLC).Value = Str(.Location)
 									FinalVarList(FVLC).IsArray = -1
 								Else
 									'For a scalar, need to name every byte
