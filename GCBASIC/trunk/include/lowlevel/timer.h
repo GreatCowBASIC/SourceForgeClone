@@ -490,12 +490,19 @@ Sub InitTimer0(In TMR0Source, In TMR0Pres)
 End Sub
 
 Sub SInitTimer0
-	OPTION_REG = OPTION_REG AND 192
-	SET OPTION_REG.PSA OFF
-	if TMR0Source = Osc THEN SET OPTION_REG.T0SE OFF
-	if TMR0Source = Ext THEN SET OPTION_REG.T0SE ON
+	#ifndef Var(T0CON)
+		OPTION_REG = OPTION_REG AND 192
+		OPTION_REG = OPTION_REG OR TMR0Pres
+	#endif
+	#ifdef Var(T0CON)
+		T0CON = T0CON And 192
+		T0CON = T0CON OR TMR0Pres
+	#endif
+	SET PSA OFF
+	if TMR0Source = Osc THEN SET T0SE OFF
+	if TMR0Source = Ext THEN SET T0SE ON
 	clrwdt
-	OPTION_REG = OPTION_REG OR TMR0Pres
+	
 End Sub
 
 Sub InitTimer1(In TMR1Source, In TMR1Pres)
