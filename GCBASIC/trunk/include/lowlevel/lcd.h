@@ -53,7 +53,7 @@
 '
 '   William Roth
 '**********************************************************************
-
+' 03-12-2014.  Changed comments within '===== now in 4 bit mode init. No functional changes.
 
 #startup InitLCD
 
@@ -277,12 +277,12 @@ sub InitLCD
                 wait 2 us
                 PULSEOUT LCD_Enable, 2 us
                 Wait 50 us
-                '===== now in 4 bit mode =====
-
-                LCDWriteByte 0x28    '(b'011000000') 0x28  set 2 line mode
-                LCDWriteByte 0x06    '(b'00000110')  'Set Cursor movement
-                LCDWriteByte 0x0C    '(b'00001100')  'Turn off cursor
-                CLS  'Clear the display
+		
+		'===== now in 4 bit mode =====
+            	LCDWriteByte 0x28    '(b'00101000')  Set 2 line mode`
+            	LCDWriteByte 0x06    '(b'00000110')  Set Cursor movement
+            	LCDWriteByte 0x0C    '(b'00001100')  Turn off cursor
+            	CLS  'Clear the display
           #ENDIF
 end sub
 
