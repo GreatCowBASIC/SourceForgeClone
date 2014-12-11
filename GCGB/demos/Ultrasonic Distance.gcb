@@ -1,5 +1,5 @@
 ;Chip Settings
-#chip 16F88,0
+#chip 16F88
 
 ;Include files (Libraries)
 #include <srf04.h>
@@ -23,13 +23,13 @@ Do Forever
 	Distance = USDistance(1)
 
 	'Check the reading, is the object too close?
-	if Temp < AlarmDistance then
+	if Distance < AlarmDistance then
 		Set PORTB.0 On
 	Else
 		Set PORTB.0 Off
 	end if
-
-'Delay for a few milliseconds before taking the next reading
-wait 10 ms
+	
+	'Delay for a few milliseconds before taking the next reading
+	Wait 10 ms
 Loop
 

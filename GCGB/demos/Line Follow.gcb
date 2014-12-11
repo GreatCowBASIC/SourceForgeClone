@@ -1,5 +1,5 @@
 ;Chip Settings
-#chip 12F675,0
+#chip 12F675
 
 'Sample line follower program
 'Will make a robot follow a line using a PIC 12F675.
