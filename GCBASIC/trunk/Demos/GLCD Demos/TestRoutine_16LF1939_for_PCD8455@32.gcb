@@ -1,6 +1,6 @@
-    '  FILE:    TestRoutine_16LF1939_for_PCD8455@32.gcb.gcb
+    '  FILE:    TestRoutine_16LF1939_for_PCD8455@32.gcb
     '  DATE:    08/11/14
-    '  VERSION: 1.0
+    '  VERSION: 1.3
     '  AUTHOR:  Anobium
     '
 
@@ -20,16 +20,16 @@
     'FOR ANY DAMAGES INCLUDING, BUT NOT LIMITED TO, SPECIAL, INCIDENTAL OR
     'CONSEQUENTIAL DAMAGES FOR ANY REASON WHATSOEVER.
 
-
+    '1.02 change x pos of straing only. No functional changes.
 
     'Chip Settings. Assumes the my development board 'C' with with a 16LF1939
     #chip 16lf1939,32
-    #config Osc = INT, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
+    #config Osc = INT, MCLRE_ON, PLLEN_Off, CLKOUTEN_OFF
 
         #include <glcd.h>
 
         #DEFINE GLCD_TYPE GLCD_TYPE_PCD8544
-        '#define GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+        '#DEFINE GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
 
         ' Comment out following paragraph for a non LAT port configuration and for ATMEL etc. devices.
          #define GLCD_LAT
@@ -64,8 +64,9 @@
 
           CCount = 0
           dim longNumber as long
-          longNumber = 0 ' max value = 4294967290
+          longNumber = 123456 ' max value = 4294967290
           dim wordNumber as Word
+          dim outstring as string
           wordNumber = 0
           byteNumber = 0
 
@@ -146,35 +147,44 @@
 
 
           DO forever
+             for CCount = 31 to 127
+                  GLCDPrint (0, 0, "PrintStr")
+                  GLCDDrawString (0, 9, "DrawStr")
+                  GLCDPrint ( 44 ,  21, "     ")
+                  GLCDPrint ( 44 ,  29, "     ")                                           ' word value
+                  GLCDPrint ( 44 ,  37, "   ")                                             ' Byte value
 
-              GLCDPrint (0, 0, "PrintStr")
+                  outstring = hex( longNumber_U)
+                  GLCDPrint ( 44 , 21,outstring )
+                  outstring = hex( longNumber_H)
+                  GLCDPrint ( 55 , 21, outstring)
+                  outstring = hex( longNumber)
+                  GLCDPrint ( 67 , 21,  outstring )
 
-              GLCDPrint ( 44 ,  21, "     ")
-              GLCDPrint ( 44 ,  29, "     ")
-              GLCDPrint ( 44 ,  37, "   ")
+                  GLCDPrint ( 44 , 29, mid( str(wordNumber),1, 6))
+                  GLCDPrint ( 44 , 37, byteNumber)
+
+                  box 46,9,57,19
+                  GLCDDrawChar(48, 9, CCount )
+                  outString = str( CCount )
+                  ' draw a box to overwrite existing strings
+                  FilledBox(58,9,GLCD_WIDTH-1,17,GLCDBackground )
+                  GLCDDrawString(58, 9, outString )
+
+                   box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
+                   box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1
+                   filledbox 2,30,6,38, wordNumber
+                   Circle( 25,30,8,1)            ;center
+                   FilledCircle( 25,30,4,longNumber xor 1)         ;center
+
+                   line 0,  GLCD_HEIGHT-1 , GLCD_WIDTH/2,  (GLCD_HEIGHT /2) +1
+                   line  GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1 ,0, (GLCD_HEIGHT /2) +1
 
 
-              GLCDPrint ( 44 , 21, longNumber)
-              GLCDPrint ( 44 , 29, wordNumber)
-              GLCDPrint ( 44 , 37, byteNumber)
-
-              GLCDDrawString( 0,8,"DrawStr")
-              GLCDDrawChar(64, 8, ( CCount + 31 ) mod 127)
-
-               box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
-               box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1
-               filledbox 2,30,6,38, wordNumber
-               Circle( 25,30,8,1)            ;center
-               FilledCircle( 25,30,4,longNumber xor 1)         ;center
-
-               line 0,  GLCD_HEIGHT-1 , GLCD_WIDTH/2,  (GLCD_HEIGHT /2) +1
-               line  GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1 ,0, (GLCD_HEIGHT /2) +1
-
-              CCount++
-              longNumber = longNumber + 7
-              wordNumber = wordNumber + 3
-              byteNumber++
-
+                  longNumber = longNumber + 7
+                  wordNumber = wordNumber + 3
+                  byteNumber++
+              NEXT
           LOOP
 
       end
