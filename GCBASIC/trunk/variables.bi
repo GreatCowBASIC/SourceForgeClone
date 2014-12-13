@@ -940,7 +940,7 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 	'Print " = "; OutTemp;
 	Calculate OutTemp
 	'Print " = "; OutTemp
-	Return Val(OutTemp)
+	Return GetNonLinearLoc(Val(OutTemp))
 End Function
 
 Function GetWholeSFR(BitName As String) As String
