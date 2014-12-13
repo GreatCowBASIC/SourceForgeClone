@@ -341,6 +341,7 @@ DECLARE FUNCTION GetDestSub(Origin As String) As Integer
 Declare Sub GetEqConfig
 Declare Function GetLabelList(CompSub As SubType Pointer) As LinkedListElement Pointer
 Declare Function GetLinearLoc(Location As Integer) As Integer
+Declare Function GetNonLinearLoc(Location As Integer) As Integer
 Declare Function GetMetaData(CurrLine As LinkedListElement Pointer) As ProgLineMeta Pointer
 Declare Function GetPinDirection(PinNameIn As String) As PinDirType Pointer
 Declare Function GetRealIOName(InName As String) As String
@@ -574,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 26/11/2014"
+Version = "0.9 13/12/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -9968,6 +9969,27 @@ Function GetLinearLoc(Location As Integer) As Integer
 	If BankLoc > 111 Then Return Location
 	
 	Return &H2000 + Bank * 80 + (BankLoc - 32)
+End Function
+
+Function GetNonLinearLoc(Location As Integer) As Integer
+	'On 16F1 chips, convert a linear address to a non-linear address
+	'Mapping: 0x20 to 0x6F < 0x2000 to 0x204F
+	'         0xA0 to 0xEF < 0x2050 to 0x209F
+	'         0x120 to 0x16F < 0x20A0 to 0x20EF
+	
+	'If not 16F1, or not linear location, return unchanged
+	If ChipFamily <> 15 Then Return Location
+	If Location >= &H8000 Then Return Location
+	If Location < &H2000 Then Return Location
+	
+	Dim As Integer TempLoc, Bank, BankLoc
+	
+	'Get bank and location in bank
+	TempLoc = Location - &H2000
+	Bank = TempLoc \ 80
+	BankLoc = (TempLoc - 80 * Bank) + 32
+	
+	Return Bank * 128 + BankLoc
 End Function
 
 Function GetMetaData(CurrLine As LinkedListElement Pointer) As ProgLineMeta Pointer
