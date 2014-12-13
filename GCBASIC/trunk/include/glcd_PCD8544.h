@@ -23,8 +23,11 @@
 ' 20/10/2014: Adapted to support PCD9844 devices.
 ' 21/10/2014: PCD9844 device improvements to remove a method and reduce configuration
 ' 22/10/2014: PCD9844 device improvements to handling of RAM limitations
-'    
+'
 ' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 13/12/14: Revised to support Linear array memory addressing.  Now requires the compiler after the date of 13/12/2014
+
+
 '
 'Hardware settings
 'Type
@@ -106,14 +109,16 @@
        ' ChipFamily 12 for 10F/12F5/16F5, 14 for most 12F/16F, 15 for 12F1/16F1, 16 for 18F
        ' and, numbers 100, 110, 120, 130 for AVR,
        #ifdef ChipFamily 15
-        Dim PCD8544_Buffer1(79) at 160
-        Dim PCD8544_Buffer2(79) at 288
-        Dim PCD8544_Buffer3(79) at 416
-        Dim PCD8544_Buffer4(79) at 544
-        Dim PCD8544_Buffer5(79) at 672
-        Dim PCD8544_Buffer6(79) at 800
-        Dim PCD8544_Buffer7(79) at 928
-        Dim PCD8544_BufferAlias(2) at 0x2050
+          '        Required for older compilers
+          '        Dim PCD8544_Buffer1(79) at 160
+          '        Dim PCD8544_Buffer2(79) at 288
+          '        Dim PCD8544_Buffer3(79) at 416
+          '        Dim PCD8544_Buffer4(79) at 544
+          '        Dim PCD8544_Buffer5(79) at 672
+          '        Dim PCD8544_Buffer6(79) at 800
+          '        Dim PCD8544_Buffer7(79) at 928
+          '        Dim PCD8544_BufferAlias(2) at 0x2050
+         Dim PCD8544_BufferAlias(504)
        #endif
 
        #if ChipFamily <> 15
