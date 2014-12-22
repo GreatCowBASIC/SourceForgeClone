@@ -29,7 +29,7 @@
 ' New functions  added Jan 2014 by 2014 Evan R Venn
 ' a built-in function, asc(), which takes a character and returns the numeric value for that character in the machine's character set. If the string passed to asc() has more than one character, only the first one is used.
 ' The inverse of this function is chr() (from the function of the same name in Pascal), which takes a number and returns the corresponding character. Both functions are written very nicely in GCB.
-
+' 22/12/2014: Add PAD function
 
 'Length/position
 Function Len (LenTemp())
