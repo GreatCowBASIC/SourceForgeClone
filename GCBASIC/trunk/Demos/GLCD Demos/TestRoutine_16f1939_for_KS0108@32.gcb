@@ -1,6 +1,6 @@
   '  FILE:    TestRoutine_16f1939_for_KS0108@32.gcb
-  '  DATE:    08/11/14
-  '  VERSION: 1.0
+  '  DATE:    22/12/14
+  '  VERSION: 1.2
   '  AUTHOR:  Anobium
   '
   '  Published - works
@@ -8,7 +8,7 @@
   'This program was written using the Great Cow Basic IDE for use with the PIC
   'Microchip development board and the KS0108 GLCD.
   '
-  'This file supports all the GLCD device types.  Simple remove comment as appropiate and change port settings.
+  'This file supports the KS0108 GLCD device type.  Simple remove comment as appropiate and change port settings.
   '
   'You may copy, alter and reuse this code in any way you like, but please leave
   'reference to Great Cow Basic and Anobium in your comments if you redistribute this code.
@@ -24,90 +24,110 @@
   #chip 16f1939,32
   #config Osc = INT, VCAPEN_OFF, MCLRE_On, PLLEN_ON, CLKOUTEN_OFF
 
-  '#define glcd_lat                      ' if required
-
-  ;Defines (Constants ofr GLCD) - 'Required for KS0108 Support and some of the constants are required for the ST7920
-         #define _GLCD_CS1 PORTa.7 ' CS1, CS2 can be reversed on some devices
-         #define _GLCD_CS2 PORTa.6
-         #define _GLCD_DB0 PORTD.0 'DB0 to pin 7 on LCD
-         #define _GLCD_DB1 PORTD.1 'DB1 to pin 8 on LCD
-         #define _GLCD_DB2 PORTD.2 'DB2 to pin 9 on LCD
-         #define _GLCD_DB3 PORTD.3 'DB3 to pin 10 on LCD
-         #define _GLCD_DB4 PORTD.4 'DB4 to pin 11 on LCD
-         #define _GLCD_DB5 PORTD.5 'DB5 to pin 12 on LCD
-         #define _GLCD_DB6 PORTD.6 'DB6 to pin 13 on LCD
-         #define _GLCD_DB7 PORTD.7 'DB7 to pin 14 on LCD
-
-         #define _GLCD_RS PORTa.0
-         #define _GLCD_Enable PORTA.1
-         #define _GLCD_RW PORTA.2
-         #define _GLCD_RESET PORTA.3
-
-         #define GLCD_CS1 PORTa.7'D12 to actually since CS1, CS2 can be reversed on some devices
-         #define GLCD_CS2 PORTa.6
-         #define GLCD_DB0 PORTD.0 'D0 to pin 7 on LCD
-         #define GLCD_DB1 PORTD.1 'D1 to pin 8 on LCD
-         #define GLCD_DB2 PORTD.2 'D2 to pin 9 on LCD
-         #define GLCD_DB3 PORTD.3 'D3 to pin 10 on LCD
-         #define GLCD_DB4 PORTD.4 'D4 to pin 11 on LCD
-         #define GLCD_DB5 PORTD.5 'D5 to pin 12 on LCD
-         #define GLCD_DB6 PORTD.6 'D6 to pin 13 on LCD
-         #define GLCD_DB7 PORTD.7 'D7 to pin 14 on LCD
-
-         #define GLCD_RS PORTa.0
-         #define GLCD_Enable PORTA.1
-         #define GLCD_RW PORTA.2
-         #define GLCD_RESET PORTA.3
-         ' Change timing for 32 mhz
-         #define KS0108ReadDelay    3     ; = 2 normal usage, 3 is OK at 32 mhz!
-         #define KS0108WriteDelay   0     ; = 1 normal usage
-         #define KS0108_Clock_Delay 0     ; = 1 normal usage
-
-
+  #include <glcd.h>
   #define GLCD_TYPE GLCD_TYPE_KS0108               ' This is the Default value, not required.
 
-  #include <glcd.h>
+
+   #define glcd_lat                      ' if required
+
+   ;Defines (Constants ofr GLCD) - 'Required for KS0108 Support and some of the constants are required for the ST7920
+   #define _GLCD_CS1 PORTa.7 ' CS1, CS2 can be reversed on some devices
+   #define _GLCD_CS2 PORTa.6
+   #define _GLCD_DB0 PORTD.0 'DB0 to pin 7 on LCD
+   #define _GLCD_DB1 PORTD.1 'DB1 to pin 8 on LCD
+   #define _GLCD_DB2 PORTD.2 'DB2 to pin 9 on LCD
+   #define _GLCD_DB3 PORTD.3 'DB3 to pin 10 on LCD
+   #define _GLCD_DB4 PORTD.4 'DB4 to pin 11 on LCD
+   #define _GLCD_DB5 PORTD.5 'DB5 to pin 12 on LCD
+   #define _GLCD_DB6 PORTD.6 'DB6 to pin 13 on LCD
+   #define _GLCD_DB7 PORTD.7 'DB7 to pin 14 on LCD
+
+   #define _GLCD_RS PORTa.0
+   #define _GLCD_Enable PORTA.1
+   #define _GLCD_RW PORTA.2
+   #define _GLCD_RESET PORTA.3
+
+   #define GLCD_CS1 LATa.7 ' CS1, CS2 can be reversed on some devices
+   #define GLCD_CS2 LATa.6
+   #define GLCD_DB0 LATD.0 'DB0 to pin 7 on LCD
+   #define GLCD_DB1 LATD.1 'DB1 to pin 8 on LCD
+   #define GLCD_DB2 LATD.2 'DB2 to pin 9 on LCD
+   #define GLCD_DB3 LATD.3 'DB3 to pin 10 on LCD
+   #define GLCD_DB4 LATD.4 'DB4 to pin 11 on LCD
+   #define GLCD_DB5 LATD.5 'DB5 to pin 12 on LCD
+   #define GLCD_DB6 LATD.6 'DB6 to pin 13 on LCD
+   #define GLCD_DB7 LATD.7 'DB7 to pin 14 on LCD
+
+   #define GLCD_RS LATa.0
+   #define GLCD_Enable LATA.1
+   #define GLCD_RW LATA.2
+   #define GLCD_RESET LATA.3
+
+         ; end of LAT
+
+'         #define GLCD_CS1 PORTa.7    'D12 to actually since CS1, CS2 can be reversed on some devices
+'         #define GLCD_CS2 PORTa.6
+'         #define GLCD_DB0 PORTD.0 'D0 to pin 7 on LCD
+'         #define GLCD_DB1 PORTD.1 'D1 to pin 8 on LCD
+'         #define GLCD_DB2 PORTD.2 'D2 to pin 9 on LCD
+'         #define GLCD_DB3 PORTD.3 'D3 to pin 10 on LCD
+'         #define GLCD_DB4 PORTD.4 'D4 to pin 11 on LCD
+'         #define GLCD_DB5 PORTD.5 'D5 to pin 12 on LCD
+'         #define GLCD_DB6 PORTD.6 'D6 to pin 13 on LCD
+'         #define GLCD_DB7 PORTD.7 'D7 to pin 14 on LCD
+'
+'         #define GLCD_RS PORTa.0
+'         #define GLCD_Enable PORTA.1
+'         #define GLCD_RW PORTA.2
+'         #define GLCD_RESET PORTA.3
+'
+'         ' Change timing for 32 mhz
+         #define KS0108ReadDelay    4    ; = 2 normal usage, 4 or above is OK at 32 mhz!
+         #define KS0108WriteDelay   0    ; = 1 normal usage you may get away with 0
+         #define KS0108ClockDelay   0     ; = 1 normal usage you may get away with 0
+
 
       CCount = 0
       dim longNumber as long
       longNumber = 0 ' max value = 4294967290
       dim wordNumber as Word
+      dim outString as string
       wordNumber = 0
       byteNumber = 0
 
-      GLCDCLS
+      ' Prepare the static components of the screen
+      GLCDPrint ( 0,   0, "PrintStr")                                ; Print some text
+      GLCDPrint ( 64,  0, "LAT@")                                    ; Print some more text
+      GLCDPrint ( 88,  0, ChipMhz)                                   ; Print chip speed
+      GLCDPrint ( 100, 0, "Mhz")                                     ; Print some text
+      GLCDDrawString( 0,8,"DrawStr")                                 ; Draw some text
+      box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1                            ; Draw a box
+      box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1    ; Draw a box
+      Circle( 44,41,15)                                              ; Draw a circle
+      line 64,31,0,31                                                ; Draw a line
 
       DO forever
 
-          GLCDPrint (0, 0, "Print String")
-
-          GLCDPrint ( 64 ,  36, "          ")
-          GLCDPrint ( 64 ,  44, "     ")
-          GLCDPrint ( 64 ,  52, "    ")
+          GLCDPrint ( 64 ,  36, pad(str(longNumber), 10) )           ; Print a padded string
+          GLCDPrint ( 64 ,  44, pad(str(wordNumber), 5 ) )           ; Print a padded string
+          GLCDPrint ( 64 ,  52, pad(str(byteNumber), 3 ) )           ; Print a padded string
 
 
-          GLCDPrint ( 64 ,  36, longNumber)
-          GLCDPrint ( 64 ,  44, wordNumber)
-          GLCDPrint ( 64 ,  52, byteNumber)
+          box (46,9,56,19)                                           ; Draw a Box
+          GLCDDrawChar(48, 9, ( CCount + 31 ) mod 127)               ; Draw a character
+          outString = str(( CCount + 31 ) mod 127)                   ; Prepare a string
+          outString = outString + "  "                               ; Futher prepare a string
+          GLCDDrawString(64, 9, outString )                          ; Draw a string
 
-          GLCDDrawString( 0,8,"Drawstring Test")
-          GLCDDrawChar(100, 8, ( CCount + 31 ) mod 127)
+          filledbox 3,43,11,51, wordNumber                           ; Draw a filled box
 
-          box 0,0,127,63
-          box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1
-          filledbox 3,43,11,51, wordNumber
-          Circle( 44,41,15)
-          FilledCircle( 44,41,9, longNumber xor 1)
-          line 0,63,64,31
-          line 64,31,0,31
+          FilledCircle( 44,41,9, longNumber xor 1)                   ; Draw a filled box
+          line 0,63,64,31                                            ; Draw a line
 
-          CCount++
-          longNumber = longNumber + 7
-          wordNumber = wordNumber + 3
-          byteNumber++
+                                                                     ; Do some simple maths
+          CCount++ : longNumber = longNumber + 7 : wordNumber = wordNumber + 3 : byteNumber++
       LOOP
 
   end
-
 
 
