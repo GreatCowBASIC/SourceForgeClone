@@ -68,6 +68,7 @@ End Function
 'Word > String
 '(Max output will be 5 characters)
 Function Str(SysValTemp As Word) As String * 5
+
   SysCharCount = 0
   Dim SysCalcTempX As Word
 
@@ -99,7 +100,6 @@ Function Str(SysValTemp As Word) As String * 5
     Str(SysCharCount) = SysStrData + 48
     Goto SysValTens
   End If
-
   'Tens
   IF SysValTemp >= 10 Then
     SysValTens:
@@ -115,6 +115,7 @@ Function Str(SysValTemp As Word) As String * 5
   SysValTemp = SysCalcTempX
 
   Str(0) = SysCharCount
+
 End Function
 
 'String > Word
@@ -383,3 +384,34 @@ Function WordToBin (In WordNum as Word ) as String * 16
 End Function
 
 
+'PAD(str,len,padchr )
+'Description  - The PAD() function pads a specified string
+'Parameters
+'str - String to be padded.
+'len - Length of str.
+'padchr - Pad character, which can be any string. The first character is used to pad new space in the output string.
+Function Pad ( in SysInString as string, SysStrLen, optional SysInString3 as string = " " ) As String
+  'Check length of search and find strings
+  'Exit if the find string cannot fit into the search string
+  ' If SysInString(0) = 0 Then Exit Function
+  'Check it is not already at the correct length
+    'Input length too high?
+  If SysInString(0) <= SysStrLen Then
+    SysCharCount = SysInString(0)
+      'Copy leftmost characters
+      For SysStringTemp = 1 To SysCharCount
+        Pad(SysStringTemp) = SysInString(SysStringTemp)
+      Next
+      For SysStringTemp = SysCharCount+1 to SysStrLen
+        Pad(SysStringTemp) = SysInString3(1)
+      Next
+  else
+      'Copy leftmost characters
+      For SysStringTemp = 1 To SysStrLen
+        Pad(SysStringTemp) = SysInString(SysStringTemp)
+      Next
+  End If
+
+  Pad(0) = SysStrLen
+
+End Function
