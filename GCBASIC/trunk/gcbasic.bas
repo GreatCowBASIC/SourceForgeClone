@@ -507,7 +507,7 @@ DIM SHARED SysVarBits(8000) As SysVarType '1 - name, 2 - location, 3 - var
 DIM SHARED FILE(300) As String
 Redim SHARED FreeMem(1) As Integer
 Redim SHARED VarLoc(1) As Integer
-DIM SHARED MemRanges(20) As String: MRC = 0
+DIM SHARED MemRanges(50) As String: MRC = 0
 Dim Shared NoBankLoc(10) As DataMemBankType: NoBankLocs = 0
 Dim SHARED StringStore(0 To 1000) As ProgString: SSC = 0: SASC = 0
 Dim Shared ConfigOps(200) As ConfigOp: COC = 0
@@ -516,7 +516,7 @@ Dim Shared EqConfigSettings As LinkedListElement Pointer
 Dim Shared ChipConfigCode As CodeSection Pointer
 DIM SHARED DefCONFIG(200) As String: DCOC = 0
 DIM SHARED ConfigMask(20) As Integer
-DIM SHARED DataTable(50) As DataTableType: DataTables = 0
+DIM SHARED DataTable(100) As DataTableType: DataTables = 0
 DIM SHARED Messages(1 TO 2, 200) As String: MSGC = 0
 DIM SHARED ASMCommands (200) As ASMCommand: ASMCC = 0
 DIM SHARED ASMSymbols(10000, 1 TO 2) As String: ASMSym = 0
@@ -575,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 13/12/2014"
+Version = "0.9 29/12/2014"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
