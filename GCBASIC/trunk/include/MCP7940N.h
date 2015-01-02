@@ -1,7 +1,7 @@
 '    Library for reading/writing to Microchip MCP7940N RTC for the GCBASIC compiler
 '    Copyright (C) 2012 - 2015 Thomas Henry, Pete Reverett and Evan Venn
 '
-'    Version 1.0a  1/1/2015
+'    Version 1.0b  2/1/2015
 '
 '    This code is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,8 @@
 '    adapted further by Thomas Henry, May 26, 2014 for DS1307
 '    adapted further for MCP7940N Special Christmas 2014 release by Pete Everett, Dec 14, 2014
 '    Revised and added new functionality to comply with MCP7940N datasheet by Evan R Venn - Jan 1 2015
+'    Revised and added MCP7940_ReadFailureClock functionality to comply with MCP7940N datasheet by Evan R Venn - Jan 2 2015
+
 
 ;12 bytes are used as input and output parameters. They are:
 ;DS_Value, DS_Addr, DS_Hour, DS_Min, DS_Sec, DS_A_P, DS_Date
@@ -56,7 +58,7 @@
 ;MCP7940_SetAlarmPolarity ( On | Off )
 ;MCP7940_EnableAlarm ( [0 |  1] )
 ;MCP7940_DisableAlarm ( [0 |  1] )
-
+;MCP7940_ReadFailureClock ( [0 |  1] , hour, minute, DOW, date, month ). Return values.  The MCP7940N includes a power-fail time-stamp module that stores the minutes, hours, date, and month when primary power is lost and when it is restored
 
 
 ;See the subroutine definitions below for full details on each.
@@ -161,7 +163,6 @@ end sub
 sub MCP7940_BatteryBackup(in DS_Value)
   ;Enables battery if DS_Value = TRUE, disables if DS_Value = FALSE
   'MCP7940 requires bit 3 of the RTCWKDAY register to be set to 1 to enable the battery support.
-
    I2CStart
    I2CSend(DS_AddrWrite)
    I2CSend( MCP7940_RTCWKDAY )                     ;indicate register
@@ -179,42 +180,6 @@ sub MCP7940_BatteryBackup(in DS_Value)
    I2CSend(DS_State)                               ;now send updated value
    I2CStop
 end sub
-
-;-----
-sub MCP7940_ClearPowerFail
-  ; Clearing this bit resets the power-fail time-stamp registers to ‘0’.
-   I2CStart
-   I2CSend(DS_AddrWrite)
-   I2CSend( MCP7940_RTCWKDAY )                     ;indicate register
-   I2CStart
-   I2CSend(DS_AddrRead)
-   I2CReceive(DS_State, NACK)                      ;get the current seconds
-   set DS_State.4 off                              ;CH bit = 0 disables
-   I2CStart
-   I2CSend(DS_AddrWrite)
-   I2CSend( MCP7940_RTCWKDAY )                     ;indicate register
-   I2CSend(DS_State)                               ;now send updated value
-   I2CStop
-end sub
-;-----
-function MCP7940_PowerFailStatus
-   ; Reading this bit shows the power-fail status
-   I2CStart
-   I2CSend(DS_AddrWrite)
-   I2CSend( MCP7940_RTCWKDAY )                     ;indicate register
-   I2CStart
-   I2CSend(DS_AddrRead)
-   I2CReceive(DS_State, NACK)                      ;get the current seconds
-   I2CStop
-   if DS_State.4 = 0 then                              ;CH bit = 0 disables
-      MCP7940_PowerFailStatus = false
-   else
-      MCP7940_PowerFailStatus = true
-   end if
-
-
-end function
-;-----
 
 sub MCP7940_ResetClock
   ;Reset clock to 00:00:00 01 01/01/00.
@@ -848,5 +813,82 @@ sub MCP7940_DisableAlarm ( in DS_Value )
   I2CSend( MCP7940_Control )
   I2CSend(DS_status)                 ;send value
   I2CStop
+
+end sub
+
+;-----
+sub MCP7940_ClearPowerFail
+  ; Clearing this bit resets the power-fail time-stamp registers to ‘0’.
+   I2CStart
+   I2CSend(DS_AddrWrite)
+   I2CSend( MCP7940_RTCWKDAY )                     ;indicate register
+   I2CStart
+   I2CSend(DS_AddrRead)
+   I2CReceive(DS_State, NACK)                      ;get the current seconds
+   set DS_State.4 off                              ;CH bit = 0 disables
+   I2CStart
+   I2CSend(DS_AddrWrite)
+   I2CSend( MCP7940_RTCWKDAY )                     ;indicate register
+   I2CSend(DS_State)                               ;now send updated value
+   I2CStop
+end sub
+;-----
+function MCP7940_PowerFailStatus
+   ; Reading this bit shows the power-fail status
+   I2CStart
+   I2CSend(DS_AddrWrite)
+   I2CSend( MCP7940_RTCWKDAY )                     ;indicate register
+   I2CStart
+   I2CSend(DS_AddrRead)
+   I2CReceive(DS_State, NACK)                      ;get the current seconds
+   I2CStop
+   if DS_State.4 = 0 then                              ;CH bit = 0 disables
+      MCP7940_PowerFailStatus = false
+   else
+      MCP7940_PowerFailStatus = true
+   end if
+
+
+end function
+;-----
+
+;--------
+;MCP7940_ReadFailureClock ( [0 |  1] , hour, minute, DoW, date, month ). Return values.
+;
+;The MCP7940N includes a power-fail time-stamp module that stores the minutes, hours, date, and month when primary power is lost and when it is restored
+;
+sub MCP7940_ReadFailureClock(in DS_Value, out DS_Hour, out DS_Min, out DS_DOW, out DS_Date, out DS_Month)
+
+;Read entire clock: hours, minutes, seconds, a.m. or p.m., day of week, date, month, year
+;DS_A_P = 0 means a.m. DS_A_P = 1 means p.m.
+
+  I2CStart
+  I2CSend(DS_AddrWrite)
+  DS_Temp = MCP7940_PWR00MIN + ( 7 * DS_Value )
+  I2CSend( DS_Temp )                         ;begin with address for alarm0 and then add the 7 for alarm1
+  I2CStart
+  I2CSend(DS_AddrRead)
+
+  I2CReceive(DS_Min, ACK)              ;get minutes
+  DS_Min = BcdToDec(DS_Min)       ;bit 7 is always 0
+
+  I2CReceive(DS_Hour, ACK)             ;get hours
+  if DS_Hour.6 then               ;12-hour mode
+    DS_A_P = DS_Hour.5            ;a.m. or p.m.
+    DS_Hour = BcdToDec(DS_Hour & 31)
+  else
+    DS_Hour = BcdToDec(DS_Hour)   ;24-hour mode
+    DS_A_P = (DS_Hour > 11)       ;a.m. or p.m.
+  end if
+
+  I2CReceive(DS_Date, ACK)             ;get date
+  DS_Date = BcdToDec(DS_Date)
+
+  I2CReceive(DS_Temp, NACK)            ;get month and DOW
+  DS_Month = BcdToDec(DS_Temp & 31)
+
+  DS_DOW = DS_Temp & 224              ;get day of week
+  DS_DOW = DS_DOW / 32
+  DS_DOW = BcdToDec(DS_DOW & 7 )
 
 end sub
