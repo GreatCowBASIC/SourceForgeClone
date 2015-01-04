@@ -1,7 +1,7 @@
 '    Library for reading/writing to Microchip MCP7940N RTC for the GCBASIC compiler
 '    Copyright (C) 2012 - 2015 Thomas Henry, Pete Reverett and Evan Venn
 '
-'    Version 1.0b  2/1/2015
+'    Version 1.0c  4/1/2015
 '
 '    This code is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,9 @@
 '    adapted further for MCP7940N Special Christmas 2014 release by Pete Everett, Dec 14, 2014
 '    Revised and added new functionality to comply with MCP7940N datasheet by Evan R Venn - Jan 1 2015
 '    Revised and added MCP7940_ReadFailureClock functionality to comply with MCP7940N datasheet by Evan R Venn - Jan 2 2015
+'    Revised by Evan R Venn - Jan 4 2015. As follows:
+'            Correct SetAlarm and ReadAlarm usage of the Month parameter and Date and Month respectively.
+'            Improve documentation for SetControl and SetAlarmMask
 
 
 ;12 bytes are used as input and output parameters. They are:
@@ -50,9 +53,9 @@
 ;MCP7940_ReadControl. A function return currrent value
 ;MCP7940_Write(address, value)
 ;MCP7940_Read(address, value)
-;MCP7940_SetAlarm ( [0 |  1] , hour, minute, second, DOW, date )
+;MCP7940_SetAlarm ( [0 |  1] , hour, minute, second, DOW, date, month )
 ;MCP7940_SetAlarmMask ( [0 |  1] , alarmAssertionMatch )
-;MCP7940_ReadAlarm ( [0 |  1] , hour, minute, second, DOW, date ). Return values
+;MCP7940_ReadAlarm ( [0 |  1] , hour, minute, second, DOW, date, month ). Return values
 ;MCP7940_ClearAlarm ( [0 |  1] )
 ;MCP7940_AlarmStatus ( [0 |  1] )
 ;MCP7940_SetAlarmPolarity ( On | Off )
@@ -112,12 +115,13 @@
  #define MCP7940_PWR00MTH   0x1B	           ' POWER-DOWN/POWER-UP TIME-STAMP MONTH VALUE REGISTER (ADDRESSES 0x1B/0x1F)
  #define MCP7940_PWR01MTH   0x1F	
 
- #define MCP7940_AlarmAssertion_Seconds            0x00
- #define MCP7940_AlarmAssertion_Minutes            0x01
- #define MCP7940_AlarmAssertion_Hours              0x02
- #define MCP7940_AlarmAssertion_DayofWeek          0x03
- #define MCP7940_AlarmAssertion_Date               0x04
- #define MCP7940_AlarmAssertion_All                0x07
+ ;The alarm can be set to go off if any of the following conditions are met
+ #define MCP7940_AlarmAssertion_Seconds            0x00                 ; a match of the seconds
+ #define MCP7940_AlarmAssertion_Minutes            0x01                 ; a match of the minutes
+ #define MCP7940_AlarmAssertion_Hours              0x02                 ; a match of the hours
+ #define MCP7940_AlarmAssertion_DayofWeek          0x03                 ; a match of the day of the week
+ #define MCP7940_AlarmAssertion_Date               0x04                 ; a match of the date
+ #define MCP7940_AlarmAssertion_All                0x07                 ; a match of all paraemters equals all seconds, minutes, hours, day of week, day and month match.
 
 
 
@@ -136,7 +140,7 @@ function BcdToDec(in va ) as byte
 end function
 
 ;-----
-
+#define MCP7940_Enable MCP7940_EnableOscillator
 sub MCP7940_EnableOscillator(in DS_Value)
   ;Enables clock if DS_Value = TRUE, disables if DS_Value = FALSE
   'MCP7940 requires bit 7 of the 0x00 register to be set to 1 to enable the oscillator.  DS1370 required this bit to be set to 0.
@@ -549,8 +553,25 @@ sub MCP7940_SetMFP(in MFP_Value)
 	I2CSend(DS_status)
 	I2CStop
 end sub
-;-----
 
+
+;-----
+;The CONTROL - RTCC CONTROL REGISTER is at ADDRESS 0x07.
+;Direct access to the control register permits reading and writing of the controls.
+; Bit 7           6           5           4           3           2           1           0
+;     OUT         SQWEN       ALM1EN      ALM0EN      EXTOSC      CRSTRIM     SQWFS1      SQWFS0
+;
+;Bits usage as  below:
+;7 OUT: Logic Level for General Purpose Output bit
+;6 SQWEN: Square Wave Output Enable bit
+;5 ALM1EN: Alarm 1 Module Enable bit
+;4 ALM0EN: Alarm 0 Module Enable bit
+;3 EXTOSC: External Oscillator Input bit
+;2 CRSTRIM: Coarse Trim Mode Enable bit
+;1 SQWFS<1:0>: Square Wave Clock Output Frequency Select bits
+;0 See bit 1
+;See the datasheet for more information
+;
 sub MCP7940_SetControl(in MFP_Value)
 	'New function for MCP7940. Sets Multifunction Pin status
 	'set the current value of the register
@@ -622,7 +643,7 @@ end sub
 
 ;------
 ;MCP7940_SetAlarm ( [0 |  1] , hour, minute, second, DOW, date )
-sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date )
+sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date, in DS_Month )
 
   I2CStart
   I2CSend(DS_AddrWrite)
@@ -650,11 +671,21 @@ sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW,
   I2CSend(DS_DOW)
 
   I2CSend(DecToBcd(DS_Date))		     ;send the date
+  I2CSend(DecToBcd(DS_Month))		     ;send the month
+
   I2CStop
 
 end sub
 
 ;------
+
+;The alarm can be set to go off if any of the following conditions are met
+;MCP7940_AlarmAssertion_Seconds            0x00                 ; a match of the seconds
+;MCP7940_AlarmAssertion_Minutes            0x01                 ; a match of the minutes
+;MCP7940_AlarmAssertion_Hours              0x02                 ; a match of the hours
+;MCP7940_AlarmAssertion_DayofWeek          0x03                 ; a match of the day of the week
+;MCP7940_AlarmAssertion_Date               0x04                 ; a match of the date
+;MCP7940_AlarmAssertion_All                0x07                 ; a match of all paraemters equals all seconds, minutes, hours, day of week, day and month match.
 ;MCP7940_SetAlarmMask ( [0 |  1] , alarmAssertionMatch )
 sub MCP7940_SetAlarmMask ( in DS_Value, in DS_Status )
 
@@ -678,8 +709,8 @@ sub MCP7940_SetAlarmMask ( in DS_Value, in DS_Status )
 
 end sub
 ;------
-;MCP7940_ReadAlarm ( [0 |  1] , hour, minute, second, DOW, date ). Return values
-sub MCP7940_ReadAlarm ( in DS_Value, out DS_Hour, out DS_Min, out DS_Sec, out DS_DOW, out DS_Date )
+;MCP7940_ReadAlarm ( [0 |  1] , hour, minute, second, DOW, date, month ). Return values
+sub MCP7940_ReadAlarm ( in DS_Value, out DS_Hour, out DS_Min, out DS_Sec, out DS_DOW, out DS_Date, out DS_Month )
 
   I2CStart
   I2CSend(DS_AddrWrite)
@@ -699,8 +730,15 @@ sub MCP7940_ReadAlarm ( in DS_Value, out DS_Hour, out DS_Min, out DS_Sec, out DS
     DS_Hour = BcdToDec(DS_Hour)   ;24-hour mode
     DS_A_P = (DS_Hour > 11)       ;a.m. or p.m.
   end if
-  I2CReceive(DS_DOW, NACK)        ;get the DOW
+  I2CReceive(DS_DOW, ACK)        ;get the DOW
   DS_DOW = BcdToDec(DS_DOW & 7)  ;strip off bits
+
+  I2CReceive(DS_Date, ACK)        ;get the Date
+  DS_Date = BcdToDec(DS_Date & 63)  ;strip off bits
+
+  I2CReceive(DS_Month, NACK)        ;get the Month
+  DS_Month = BcdToDec(DS_Month & 31)  ;strip off bits
+
   I2CStop
 
 end sub
