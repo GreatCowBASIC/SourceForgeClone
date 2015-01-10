@@ -1,7 +1,7 @@
 '    Library for reading/writing to Microchip DS3231 RTC for the GCBASIC compiler
 '    Copyright (C) 2012 - 2015 Thomas Henry and Evan Venn
 '
-'    Version 1.0a  4/1/2015
+'    Version 1.1a  10/1/2015
 '
 '    This code is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,8 @@
 '    Created Evan R Venn - Oct 2013 for DS1307
 '    adapted further by Thomas Henry, May 26, 2014 for DS1307
 '    adapted further and further for DS3231 to add new functionality to comply with DS3231 datasheet by Evan R Venn - Jan 4 2015
+'
+'    Evan R Venn/Anobium  ---  10/1/2015 - Corrected read protocol for alarms
 
 
 ;13 bytes are used as input and output parameters. They are:
@@ -50,10 +52,8 @@
 ;DS3231_Set32kHz(True | False OR On | Off)
 ;DS3231_SetControl(value)
 ;DS3231_ReadControl. A function return currrent value
-
-
-;DS3231_EnableAlarm ( [0 |  1] )
-;DS3231_DisableAlarm ( [0 |  1] )
+;DS3231_SetControlStatus(value)
+;DS3231_ReadControlStatus. A function return currrent value
 
 ;DS3231_SetAlarm1 ( hour, minute, second, DOW, date )
 ;DS3231_SetAlarmMask1 ( alarmAssertionMatch )
@@ -100,7 +100,7 @@
  #define DS3231_ALM2HOUR  0x0C	          ' ALARM 2 HOURS VALUE REGISTER
  #define DS3231_ALM2DAY_DATE  0x0D	          ' ALARM 2 DAY/DATE VALUE REGISTER
 
- #define DS3231_Control   0x0E		'Control register
+ #define DS3231_ControlRegister   0x0E		'Control register
  #define DS3231_ControlStatus   0x0F		'Control Status register
 
  #define DS3231_AgingOffset  0x10	          ' Aging VALUE REGISTER
@@ -151,18 +151,20 @@ sub DS3231_EnableOscillator(in DS_Value)
 
    I2CStart
    I2CSend(DS_AddrWrite)
-   I2CSend( DS3231_Control )                     ;indicate register
+   I2CSend( DS3231_ControlRegister )                     ;indicate register
    I2CStart
    I2CSend(DS_AddrRead)
    I2CReceive(DS_Temp, NACK)                      ;get the current value
-   if DS_Value.0 = 0 then
-      set DS_Temp.7 on            ;CH bit = 1 disables
+
+   if DS_Value.0 = 1 then
+      set DS_Temp.7 off            ;CH bit = 0 enables OSC
    else
-      set DS_Temp.7 off           ;CH bit = 0 enables
+      set DS_Temp.7 on             ;CH bit = 1 disables  OSC
    end if
+
    I2CStart
    I2CSend(DS_AddrWrite)
-   I2CSend( DS3231_Control )                     ;indicate register 0
+   I2CSend( DS3231_ControlRegister )                     ;indicate register
    I2CSend(DS_Temp)                ;now send updated value
    I2CStop
 end sub
@@ -439,7 +441,7 @@ sub DS3231_SetSQW(in DS_Value)
   'read the current value of the register
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Status, NACK)        ;get entire byte
@@ -448,7 +450,7 @@ sub DS3231_SetSQW(in DS_Value)
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)                      ;location is address
+  I2CSend(DS3231_ControlRegister)                      ;location is address
   select case DS_Value
      case 0                       ;0 = 1hz
 	set DS_Status.3 off
@@ -482,7 +484,7 @@ sub DS3231_EnableSQW
   'read the current value of the register
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Status, NACK)        ;get entire byte
@@ -490,7 +492,7 @@ sub DS3231_EnableSQW
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)                      ;location is address
+  I2CSend(DS3231_ControlRegister)                      ;location is address
   DS_Status.6 = 1                              ;When set to logic 1 with INTCN = 0 and VCC < VPF, this bit enables the square wave.
   DS_Status.2 = 0                              ;disable interrupt. When the INTCN bit is set to logic 0, a square wave is output on the INT/SQW pin
   DS_Status.1 = 0                              ;disable Alarm2 interrupt
@@ -508,7 +510,7 @@ sub DS3231_DisableSQW
   'read the current value of the register
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Status, NACK)        ;get entire byte
@@ -516,7 +518,7 @@ sub DS3231_DisableSQW
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)                      ;location is address
+  I2CSend(DS3231_ControlRegister)                      ;location is address
   DS_Status.6 = 0                              ;When BBSQW is logic 0, the INT/SQW pin goes high impedance when VCC < VPF.
   DS_Status.2 = 0
   I2CSend(DS_Status)
@@ -541,7 +543,7 @@ sub DS3231_EnableSQWInterruptControl(optional in DS_Value = 1 )
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Status, NACK)        ;get entire byte
@@ -549,7 +551,7 @@ sub DS3231_EnableSQWInterruptControl(optional in DS_Value = 1 )
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)                      ;location is address
+  I2CSend(DS3231_ControlRegister)                      ;location is address
   select case DS_Value.0
      case 0
 	set DS_Status.2 off
@@ -568,7 +570,7 @@ sub DS3231_DisableSQWInterruptControl(optional in DS_Value = 0 )
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Status, NACK)        ;get entire byte
@@ -576,7 +578,7 @@ sub DS3231_DisableSQWInterruptControl(optional in DS_Value = 0 )
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)                      ;location is address
+  I2CSend(DS3231_ControlRegister)                      ;location is address
   select case DS_Value.0
      case 0
 	set DS_Status.2 off
@@ -635,7 +637,7 @@ sub DS3231_SetControl(in MFP_Value)
 	'set the current value of the register
 	I2CStart
 	I2CSend(DS_AddrWrite)
-	I2CSend(DS3231_Control)              ;go to address
+	I2CSend(DS3231_ControlRegister)              ;go to address
 	I2CSend(MFP_Value)
 	I2CStop
 end sub
@@ -643,9 +645,10 @@ end sub
 ;------
 function DS3231_ReadControl
 	'read the current value of the register
+          do while DS3231_ReadControlStatus.2 = 1
 	I2CStart
 	I2CSend(DS_AddrWrite)
-	I2CSend(DS3231_Control)              ;go to address
+	I2CSend(DS3231_ControlRegister)              ;go to address
           I2CStart
           I2CSend(DS_AddrRead)
           I2CReceive( DS_status , NACK)      ;and get value
@@ -692,8 +695,10 @@ sub DS3231_SetAlarm1 ( in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date )
   I2CStart                            ;get and set seconds
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM1SEC )
+  I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
+  I2CStop
 
   DS_Temp = ( DS_Temp AND 128 )
   DS_Value = DS_Temp OR DecToBcd(DS_Sec)
@@ -707,6 +712,7 @@ sub DS3231_SetAlarm1 ( in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date )
   I2CStart                            ;get and set minutes
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM1MIN )
+  I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
 
@@ -722,6 +728,7 @@ sub DS3231_SetAlarm1 ( in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date )
   I2CStart                            ;get and set hours
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM1HOUR )
+  I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
 
@@ -737,6 +744,7 @@ sub DS3231_SetAlarm1 ( in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date )
   I2CStart                            ;get and set date
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM1DAY_DATE )
+  I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
 
@@ -893,7 +901,7 @@ end sub
 sub DS3231_EnableAlarm1Interrupt
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
@@ -905,7 +913,7 @@ sub DS3231_EnableAlarm1Interrupt
 
   I2CStart
   I2CSend(DS_AddrWrite)           ;indicate write mode
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CSend(DS_Temp)               ;send value
   I2CStop
 
@@ -915,7 +923,7 @@ end sub
 sub DS3231_DisableAlarm1Interrupt
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
@@ -925,7 +933,7 @@ sub DS3231_DisableAlarm1Interrupt
 
   I2CStart
   I2CSend(DS_AddrWrite)           ;indicate write mode
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CSend(DS_Temp)               ;send value
   I2CStop
 
@@ -959,7 +967,7 @@ sub DS3231_DisableAlarm1
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive( DS_Value , NACK)      ;and get value
@@ -968,7 +976,7 @@ sub DS3231_DisableAlarm1
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CSend(DS_Value)
   I2CStop
 
@@ -999,11 +1007,11 @@ sub DS3231_ClearOscillatorStopFlag
    I2CSend( DS3231_ControlStatus )                     ;indicate register
    I2CStart
    I2CSend(DS_AddrRead)
-   I2CReceive(DS_State, NACK)                      ;get the current seconds
-   set DS_State.7 off                              ;CH bit = 0 disables
+   I2CReceive(DS_State, NACK)                      ;get the current value
+   set DS_State.7 0                               ;CH bit = 0 disables
    I2CStart
    I2CSend(DS_AddrWrite)
-   I2CSend( DS3231_ControlStatus )                     ;indicate register
+   I2CSend( DS3231_ControlStatus )                 ;indicate register
    I2CSend(DS_State)                               ;now send updated value
    I2CStop
 end sub
@@ -1065,6 +1073,7 @@ sub DS3231_SetAlarm2 ( in DS_Hour, in DS_Min, in DS_DOW, in DS_Date )
   I2CStart                            ;get and set minutes
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM2MIN )
+  I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
 
@@ -1074,12 +1083,13 @@ sub DS3231_SetAlarm2 ( in DS_Hour, in DS_Min, in DS_DOW, in DS_Date )
   I2CStart
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM2MIN )
-  I2CSend(DS_Value)
+  I2CSend(DS_Value, NACK)
   I2CStop
 
   I2CStart                            ;get and set hours
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM2HOUR )
+  I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
 
@@ -1089,12 +1099,13 @@ sub DS3231_SetAlarm2 ( in DS_Hour, in DS_Min, in DS_DOW, in DS_Date )
   I2CStart
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM2HOUR )
-  I2CSend(DS_Value)
+  I2CSend(DS_Value, NACK)
   I2CStop
 
   I2CStart                            ;get and set date
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM2DAY_DATE )
+  I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
   I2CStop
@@ -1107,10 +1118,11 @@ sub DS3231_SetAlarm2 ( in DS_Hour, in DS_Min, in DS_DOW, in DS_Date )
      DS_Value = DS_Temp OR DecToBcd(DS_DOW)
      DS_Value.6 = 1
   end if
+
   I2CStart
   I2CSend(DS_AddrWrite)
   I2CSend( DS3231_ALM2DAY_DATE )
-  I2CSend(DS_Value)
+  I2CSend(DS_Value, NACK)
   I2CStop
 
 end sub
@@ -1233,7 +1245,7 @@ end sub
 sub DS3231_EnableAlarm2Interrupt
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
@@ -1245,7 +1257,7 @@ sub DS3231_EnableAlarm2Interrupt
 
   I2CStart
   I2CSend(DS_AddrWrite)           ;indicate write mode
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CSend(DS_Temp)               ;send value
   I2CStop
 
@@ -1255,7 +1267,7 @@ end sub
 sub DS3231_DisableAlarm2Interrupt
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive(DS_Temp, NACK)
@@ -1265,7 +1277,7 @@ sub DS3231_DisableAlarm2Interrupt
 
   I2CStart
   I2CSend(DS_AddrWrite)           ;indicate write mode
-  I2CSend( DS3231_Control )
+  I2CSend( DS3231_ControlRegister )
   I2CSend(DS_Temp)               ;send value
   I2CStop
 
@@ -1298,7 +1310,7 @@ sub DS3231_DisableAlarm2
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CStart
   I2CSend(DS_AddrRead)
   I2CReceive( DS_Value , NACK)      ;and get value
@@ -1307,7 +1319,7 @@ sub DS3231_DisableAlarm2
 
   I2CStart
   I2CSend(DS_AddrWrite)
-  I2CSend(DS3231_Control)              ;go to address
+  I2CSend(DS3231_ControlRegister)              ;go to address
   I2CSend(DS_Value)
   I2CStop
 
