@@ -1,0 +1,226 @@
+#chars #!&()
+-> ! / NOT / ! | \conditions.htm
+-> # / XOR / # | \conditions.htm
+-> #chip model, speed | \chip.htm
+-> #config option1, option2, ... , optionN | \config.htm
+-> #define Find Replace| \define.htm
+-> #endif | \ifdef.htm
+-> #endscript |#script [scriptcommand1] [scriptcommand2] ... [scriptcommandN] #endscript | \script.htm
+-> #if Condition ... #endif | \if.htm
+-> #ifdef |#ifdef Constant / Constant Value / Var (VariableName) ... #endif | \ifdef.htm
+-> #ifndef |#ifndef Constant / Constant Value / Var (VariableName) ... #endif | \ifndef.htm
+-> #include filename | \include.htm
+-> #mem 'This directive is obsolete' | \mem.htm
+-> #option Bootloader Address | \optionbootloader.htm
+-> #script |#script [scriptcommand1] [scriptcommand2] ... [scriptcommandN] #endscript | \script.htm
+-> #startup SubName | \startup.htm
+-> & |& / AND  | \conditions.htm
+-> 10ms | Wait timevalue 10-MILLISECONDS | \wait.htm
+-> 10us | Wait timevalue 10-MICROSECONDS | \wait.htm
+-> Abs (integer_variable) | integer_variable = Abs (integer_variable)
+-> ADOff ! This command is obsolete !
+-> AND |AND / &  | \conditions.htm
+-> Asc (string, [position]) | bytevar = Asc (string, [position])
+-> Average (byte_variable1, byte_variable2) | integer_variable = Average (byte_variable1, byte_variable2)
+-> BcdToDec_GCB (ByteVariable) | \BcdToDec.htm
+-> Bit | \variables.htm
+-> Bootloader |#option bootloader Address | \optionbootloader.htm
+-> Box (LineX1,LineY1, LineX2, LineY2, Optional LineColour = 1)
+-> ByteToBin (bytevar) |stringvar = ByteToBin (bytevar)
+-> Call |On Interrupt event Call handler / On Interrupt event Ignore | \oninterrupt.htm
+-> Case |Select Case var / Case value1 / ...code / ...Case valueN / ...code / ...Case Else / ...code / ...End Select | \select.htm
+-> Chr (bytevar) |stringvar = CHR (bytevar)
+-> ClearTimer TimerNo
+-> Cls | \cls.htm
+-> DecToBcd_GCB (bytevar) | \dectobcd.htm
+-> Dim |Dim variable [, variable2[, variable3]] [As type] [Alias othervar [,othervar2]] [At location] / Dim array (size) [At location]
+-> Dir |Dir port.bit {In / Out} -Individual Form- |Dir port {In / Out / DirectionByte} -Entire Port Form-
+-> DisplayChar (display, character)
+-> DisplayValue display, data
+-> Do [{While / Until} condition] /  ...program code /  ...Loop [{While / Until} condition]
+-> Else |1) If condition Then command  2) If condition Then / ...code to run if true / Else / ...code to run if false / End If | \if.htm
+-> End  'ends programm execution'
+-> EPRead location, store
+-> EPWrite location, data
+-> Exit Sub | \exitsub.htm
+-> Exit | \exitsub.htm
+-> Circle (XPixelPosition, YPixelPosition, Radius [,Optional LineColour] [,Optional Rounding]) | \circle.htm
+-> FilledCircle (XPixelPosition, YPixelPosition, Radius [,Optional LineColour] ) | \filledcircle.htm
+-> FilledBox (LineX1,LineY1, LineX2, LineY2, Optional LineColour = 1)
+-> For counter = start To end [Step increment] / ...program code / ...Next
+-> Function |Function return / ...program code / ...End Function | \functions.htm
+-> Get (Line, Column) |var = Get (Line, Column)
+-> GLCDCLS
+-> GLCDDrawChar (CharLocX, CharLocY, CharCode)
+-> GLCDDrawString (CharLocX, CharLocY, String )
+-> GLCDPrint (PrintLocX, PrintLocY, PrintData)
+-> GLCDReadByte (LCDByte)
+-> GLCDWriteByte (LCDByte)
+-> GLCDBackground
+-> GLCDForeground
+-> ST7735SendCommand ( ST7735Command)
+-> ST7735Rotation ( ST7735_LANDSCAPE | ST7735_PORTRAIT_REV | ST7735_LANDSCAPE_REV | ST7735_PORTRAIT )
+-> ST7735_BLACK
+-> ST7735_BLUE
+-> ST7735_RED
+-> ST7735_GREEN
+-> ST7735_CYAN
+-> ST7735_MAGENTA
+-> ST7735_YELLOW
+-> ST7735_WHITE
+-> GoSub label |...program code / ...Return
+-> GoTo label
+-> h |Wait timevalue HOURS | \wait.htm
+-> Hex (number) |stringvar = Hex (number) | \he.htm
+-> HI2CAckpollState
+-> HI2CReceive |HI2CReceive data HI2CReceive data, ack | nack
+-> HI2CRestart | \HI2crestart.htm
+-> HI2CSend |HI2CSend data [ack | nack ]
+-> HI2CStart
+-> HI2CStartOccurred
+-> HI2CMode | HI2CMode Master HI2CMode Slave |\HIC2Mode.htm
+-> HI2CSetAddress | HI2CSetAddress  this_device_address_on_bus | \hic2setaddress.htm
+-> HI2CStop |\HIC2Stop.htm
+-> HI2CStopped |\HIC2Stopped.htm
+-> HI2CWaitMSSP | \HIC2WaitMSSP.htm
+-> HPWM channel, frequency, duty cycle
+-> HSerPrint value
+-> HSerReceive |HSerReceive output / output = HserReceive
+-> HSerSend data
+-> I2CAckpoll (I2C_device_address)
+-> I2CReceive |I2CReceive data I2CReceive data, ack
+-> I2CReset
+-> I2CRestart | \I2crestart.htm
+-> I2CSend |I2CSend data I2CSend data, ack
+-> I2CSlaveDeviceReceive (this_devices_address, current_device_address_on_bus, [optional ACK/NACK])
+-> I2CStart
+-> I2CStartOccurred
+-> I2CStop
+-> If |1) If condition Then command  2) If condition Then / ...code to run if true / Else / ...code to run if false / End If
+-> Ignore |On Interrupt event Call handler / On Interrupt event Ignore | \oninterrupt.htm
+-> In |Dir port.bit {In / Out} (Individual Form) Dir port {In / Out / DirectionByte} (Entire Port Form) | \dir.htm
+-> IndCall Address | \indcall.htm
+-> InitGLCD
+-> InitSer channel, rate, start, data, stop, parity, invert
+-> InitTimer0 source, prescaler
+-> InitTimer1 source, prescaler
+-> InKey |output = InKey
+-> Instr (source, find) |location = Instr (source, find)
+-> Interrupt |On Interrupt event Call handler / On Interrupt event Ignore | \oninterrupt.htm
+-> IntOff
+-> IntOn
+-> KeypadData |var = KeypadData
+-> KeypadRaw |largevar = KeypadRaw
+-> LCase (source) |output = LCase (source)
+-> LCDBacklight ( On | Off ) Turns LCD backlight on or off
+-> LCDCreateChar | ( char, chardata() ) \ Create CGRAM character
+-> LCDHex ( byte_variable ) Prints byte variable to LCD as one character HEX format
+-> LCDHex ( byte_variable , LeadingZeroActive ) Prints byte variable to LCD as two characters. The second paramter called LeadingZeroActive is required.
+-> LCDWriteChar  ascii_character
+-> Left (source, count) |output = Left (source, count)
+-> Len (string) |output = Len (string) | \length.htm
+-> Line (LineX1,LineY1, LineX2, LineY2, Optional LineColour = 1)
+-> Locate ( LCDline, LCDcolumn )
+-> Loop |Do [{While / Until} condition] /  ...program code /  ...Loop [{While / Until} condition] | \do.htm
+-> LTrim (stringvar) |stringvar = LTrim (stringvar) | \ltim.htm
+-> m |Wait timevalue MINUTES | \wait.htm
+-> Mid (source, start, count) |output = Mid (source, start, count)
+-> ms |Wait timevalue MILLISECONDS | \wait.htm
+-> Next |For counter = start To end [Step increment] / ...program code / ...Next | \for.htm
+-> NOT |NOT / !  | \conditions.htm
+-> Off |Set variable.bit {On / Off} | \casting.htm
+-> On Interrupt |On Interrupt event Call handler / On Interrupt event Ignore | \oninterrupt.htm
+-> On |Set variable.bit {On / Off} | \casting.htm
+-> OR |OR / '|' | \conditions.htm
+-> Out |Dir port.bit {In / Out} (Individual Form) Dir port {In / Out / DirectionByte} (Entire Port Form) | \dir.htm
+-> Peek (location) |OutputVariable = Peek (location)
+-> Pset (GLCDX, GLCDY, GLCDState)
+-> Poke (location, value)
+-> Pot pin, output
+-> Print ( var [ byte | word | long | integer ] )
+-> ProgramErase (location)
+-> ProgramRead (location, store)
+-> ProgramWrite (location, value)
+-> PS2ReadByte |output = PS2ReadByte
+-> PS2SetKBLeds (LedStatus)
+-> PS2WriteByte
+-> PulseOut pin, time units
+-> PulseOutInv pin, time units
+-> Get (Line, Column) |var = Get (Line, Column)
+-> Put ( LCDLine,LCDColumn, Character )
+-> PWMOff
+-> PWMOn
+-> PWMOut channel, duty cycle, cycles
+-> Random |var = Random
+-> Randomize Randomize seed
+-> ReadAD (port) |var = ReadAD (port)
+-> ReadAD10 (port) |var = ReadAD10 (port)
+-> ReadTable TableName, Item, Output
+-> Repeat times
+-> Return |GoSub label / ...program code / ...Return | \gosub.htm
+-> Right (source, count) |output = Right (source, count)
+-> Rotate variable {Left / Right} [Simple]
+-> RTrim (stringvar) |stringvar = RTrim (stringvar)
+-> s | Wait timevalue SECONDS | \wait.htm
+-> Select Case var |Select Case var / Case value1 / ...code / ...Case valueN / ...code / ...Case Else / ...code / ...End Select
+-> SerPrint channel, value
+-> SerReceive channel, output
+-> SerSend channel, data
+-> Set variable.bit {On / Off}
+-> ShortTone Frequency, Duration
+-> Simple |Rotate variable {Left / Right} [Simple] | \rotate.htm
+-> SPIMode Mode
+-> SPITransfer tx, rx
+-> StartTimer TimerNo
+-> Step |For counter = start To end [Step increment] / ...program code / ...Next | \for.htm
+-> StopTimer TimerNo
+-> Str (number) |stringvar = Str (number)
+-> Sub |Sub (var1,[,var2] [,varN]) [#NR] / ...program code / ...End Sub | \subroutines.htm
+-> Swap (VariableA, VariableB)
+-> Swap4 (VariableA)
+-> Then |1) If condition Then command  2) If condition Then / ...code to run if true / Else / ...code to run if false / End If | \if.htm
+-> To |For counter = start To end [Step increment] / ...program code / ...Next | \for.htm
+-> Tone Frequency, Duration
+-> UCase (source) |output = UCase (source)
+-> Until |Do [{While / Until} condition] /  ...program code /  ...Loop [{While / Until} condition] | \do.htm
+-> us |Wait timevalue MICROSECONDS | \wait.htm
+-> Val (string) |var = Val (string)
+-> Wait |Wait timevalue timeunit / Wait {While / Until} condition
+-> While |Do [{While / Until} condition] /  ...program code /  ...Loop [{While / Until} condition] | \do.htm
+-> WordToBin (bytevar) |stringvar = WordToBin (bytevar)
+-> XOR |XOR / #  | \conditions.htm
+-> || OR / '|'  | \conditions.htm
+-> GLCDTimeDelay
+-> ST7920GLCDClearGraphics
+-> ST7920GLCDDisableGraphics
+-> ST7920GLCDEnableGraphics
+-> ST7920GraphicTest
+-> ST7920LineHs (Xpos, Ypos, XLength, Style)
+-> ST7920Locate (Xpos, Ypos)
+-> ST7920Tile (wordvar)
+-> ST7920cTile (wordvar)
+-> ST7920gLocate (xPos, Ypos)
+-> ST7920gTile (bytevar, bytevar)
+-> ST7920lineh (Xpos, Ypos, xUnitsStyle, On / Off)
+-> ST7920linev (Xpos, Ypos, xUnitsStyle, On / Off)
+-> ST7920GLCDReadByte |bytevar = ST7920GLCDReadByte
+-> ST7920WriteByte (byte)
+-> ST7920WriteCommand (byte)
+-> ST7920WriteData (byte)
+-> ST7920gReaddata |bytevar = ST7920gReaddata
+-> LCDCreateGraph | ( LCDCharLoc, LCDValue ) Create a CGRAM character that represents a bar graph
+-> LCDCmd bytevar
+-> LCDCursor | ( LCDON | LCDOFF | CURSORON | CURSOROFF | FLASHON | FLASHOFF)
+-> LCDHome
+-> LCDSpace ( value ) Print number of spaces to LCD display
+-> LCDDisplayOff Turns off LCD display, turn off cursor and turn off flash  \lcdoff.htm
+-> LCDDisplayOn Turns off LCD display, , turn off curor and turn off flash  \lcdon.htm
+-> HSerPrintByteCRLF data
+-> HSerPrintCRLF
+-> Pulsein pin, variable, time units
+-> Log2 |wordvar = Log2 (wordvar)
+-> Loge |wordvar = Loge (wordvar)
+-> Log10 |wordvar = Log10 (wordvar)
+-> Sqrt |wordvar = Sqrt (wordvar)
+-> Power |longvar = Power (base, exponent)
+-> #bootloader | \optionbootloader.htm
