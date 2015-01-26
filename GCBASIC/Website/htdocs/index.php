@@ -85,7 +85,18 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">29</span><span style="font-weight: bold;">/8/2014</span> A revised support file for I2C in now available<br>
+<td><span style="font-weight: bold;">2</span><span style="font-weight: bold;">6/1/2015</span>&nbsp;&nbsp;It has been a busy winter so far!
+
+<ul><li>Lots of new drivers and code has been posted.&nbsp;</li><ul><li>A revised <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/lowlevel/LCD.H">LCD.H</a> driver file.
+&nbsp; Revised handling of printing Hex strings, improved cursor
+handling, new backlight controls. &nbsp;Thank you William Roth.</li></ul><ul><li>A revised <span style="text-decoration: underline;"><a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/DS1307.h">DS1307.h</a> </span>
+&nbsp;driver file. &nbsp;Easier to use Real Time Clock , better
+documentation, plus sample&nbsp; programs are also available. &nbsp;
+Supports hardware and software I2C. &nbsp;See <a href="http://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/Demos/Clock%20Demos">here</a> for examples of the GCB clock code.&nbsp;</li><li>A new<span style="text-decoration: underline;"></span> <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/DS3231.h">DS3231.h</a>&nbsp; driver file. &nbsp;Easier to use Real Time Clock but with two alarms, better documentation, plus sample&nbsp; programs are also available. Supports hardware and software I2C.</li><li>A new<span style="text-decoration: underline;"></span> <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/MCP7940n.h">MCP7940N.h</a>&nbsp;
+file. &nbsp;Easier to use Real Time Clock but with two alarms, better
+documentation, plus sample&nbsp; programs are also available.&nbsp;Supports hardware and software I2C.</li><li>A new Nokia PCD8544.h driver
+file. &nbsp;A mono GCB driver for Nokia displays. &nbsp;All the
+standard GCB graphics controls &nbsp;- lines, box, circles etc.</li></ul><li>A revised Help File with lots of new information. &nbsp;See the online version for the latest information.</li></ul><br><span style="font-weight: bold;">29</span><span style="font-weight: bold;">/8/2014</span> A revised support file for I2C in now available<br>
 
 <ul><li><comment title="[if !supportLists]" xmlns="http://disruptive-innovations.com/zoo/nvu"><img src="chrome://editor/content/images/tag-comment.gif"><!--[if !supportLists]--></comment><span style="font-family: Symbol;"><span style=""><span style="font-family: &quot;Times New Roman&quot;; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;"></span></span></span><comment title="[endif]" xmlns="http://disruptive-innovations.com/zoo/nvu"><img src="chrome://editor/content/images/tag-comment.gif"><!--[endif]--></comment>A revised <span style="text-decoration: underline;"><a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/DS1307.h">DS1307.H</a> </span><a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/I2CEEPROM.h"></a> file. &nbsp;Easier to use, better documentation, plus sample&nbsp; programs are also available.<o:p></o:p></li></ul><span style="font-weight: bold;">25/8/2014</span> A revised set of support files for I2C in now available<br>
 
