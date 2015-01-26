@@ -1,5 +1,5 @@
 '	GCBASIC - A BASIC Compiler for microcontrollers
-'	Copyright (C) 2006 - 2014 Hugh Considine
+'	Copyright (C) 2006 - 2015 Hugh Considine
 '
 '	This program is free software; you can redistribute it and/or modify
 '	it under the terms of the GNU General Public License as published by
@@ -575,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 29/12/2014"
+Version = "0.9 26/1/2015"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6046,7 +6046,7 @@ SUB CompileRotate (CompSub As SubType Pointer)
 			End If
 			
 			'Save carry
-			If (ChipFamily <> 16 OR VarType = "WORD") And Not UseC Then
+			If (ChipFamily <> 16 OR VarType = "WORD" Or VarType = "LONG") And Not UseC Then
 				If ModePIC Then
 					If Direction = "RIGHT" Then CurrLine = LinkedListInsert(CurrLine, " rrf " + VarName + ",W")
 					If Direction = "LEFT" Then
@@ -6104,8 +6104,11 @@ SUB CompileRotate (CompSub As SubType Pointer)
 					Temp = " rrf "
 					IF Direction = "LEFT" THEN Temp = " rlf "
 				Else
-					If UseC OR VarType = "WORD" Then Temp = " rrcf ": IF Direction = "LEFT" THEN Temp = " rlcf "
-					If Not UseC AND VarType <> "WORD" Then Temp = " rrncf ": IF Direction = "LEFT" THEN Temp = " rlncf "
+					If UseC OR VarType = "WORD" Or VarType = "LONG" Then
+						Temp = " rrcf ": IF Direction = "LEFT" THEN Temp = " rlcf "
+					Else
+						Temp = " rrncf ": IF Direction = "LEFT" THEN Temp = " rlncf "
+					End If
 				END IF
 				CurrLine = LinkedListInsert(CurrLine, Temp + VarName + ",F")
 				IF VarType <> "WORD" THEN AddVar VarName, "BYTE", 1, 0, "REAL", Origin
