@@ -1,61 +1,72 @@
-'    Liquid Crystal Display routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2014 Hugh Considine, Stefano Bonomi, Evan Venn, William Roth
+;    Liquid Crystal Display routines for Great Cow BASIC
+;    Copyright (C) 2006 - 2015 Hugh Considine, Stefano Bonomi, Evan Venn, William Roth
 
-'    This library is free software; you can redistribute it and/or
-'    modify it under the terms of the GNU Lesser General Public
-'    License as published by the Free Software Foundation; either
-'    version 2.1 of the License, or (at your option) any later version.
+;    This library is free software; you can redistribute it and/or
+;    modify it under the terms of the GNU Lesser General Public
+;    License as published by the Free Software Foundation; either
+;    version 2.1 of the License, or (at your option) any later version.
 
-'    This library is distributed in the hope that it will be useful,
-'    but WITHOUT ANY WARRANTY; without even the implied warranty of
-'    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-'    Lesser General Public License for more details.
+;    This library is distributed in the hope that it will be useful,
+;    but WITHOUT ANY WARRANTY; without even the implied warranty of
+;    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;    Lesser General Public License for more details.
 
-'    You should have received a copy of the GNU Lesser General Public
-'    License along with this library; if not, write to the Free Software
-'    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+;    You should have received a copy of the GNU Lesser General Public
+;    License along with this library; if not, write to the Free Software
+;    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-'********************************************************************************
-'IMPORTANT:
-'THIS FILE IS ESSENTIAL FOR SOME OF THE COMMANDS IN GCBASIC. DO NOT ALTER THIS FILE
-'UNLESS YOU KNOW WHAT YOU ARE DOING. CHANGING THIS FILE COULD RENDER SOME GCBASIC
-'COMMANDS UNUSABLE!
-'********************************************************************************
+;********************************************************************************
+;    IMPORTANT:
+;    THIS FILE IS ESSENTIAL FOR SOME OF THE COMMANDS IN GCBASIC. DO NOT ALTER THIS FILE
+;    UNLESS YOU KNOW WHAT YOU ARE DOING. CHANGING THIS FILE COULD RENDER SOME GCBASIC
+;    COMMANDS UNUSABLE!
+;********************************************************************************
 
-'Credits:
-' 4 and 8 bit routines        Hugh Considine
-' 2 bit routines    Stefano Bonomi
-' Testing           Stefano Adami
-' Revised 4 bit routines    Evan Venn
-' and adapted to support LAT port support for fast devices
-' Revised to improve performance and improved functionality William Roth
-'*************************************************************************
-'*************************************************************************
-'08-17-2014
-' Modified for speed improvement in 4 and 8 bit modes.
-'
-'  1. MOdified sub LCDNormalWriteByte.
-'     A. Changed enable pulse duration duration to 2 us
-'     B. Added DEFINE  LCD_SPEED
-'         1. LCD_SPEED FAST
-'         2. LCD_SPEED MEDIUM
-'         3. LCD_SPEED SLOW
-'     C. The speed is improved from about 5,000 chars per second to
-'         apppoximately 20,000 CPS (FAST), 15,000 CPS (MEDUIM) and
-'         10,000 CPS (SLOW).
-'     D.  IF LCD_SPEED is not defined, the speed defaults to SLOW
-'
-'  2. Created separate code sections for 4-Bit & 8-bit initalization
-'
-'  3. Added comments to some code sections
-'
-'  4. Added sub routines for LCD_OFF and LCD_ON
-'
-'   William Roth
+;    Credits:
+;    4 and 8 bit routines        Hugh Considine
+;    2 bit routines    Stefano Bonomi
+;    Testing           Stefano Adami
+;    Revised 4 bit routines    Evan Venn
+;    and adapted to support LAT port support for fast devices
+;    Revised to improve performance and improved functionality William Roth
+;*************************************************************************
+;*************************************************************************
+;    08-17-2014
+;    Modified for speed improvement in 4 and 8 bit modes.
+;
+;    1. MOdified sub LCDNormalWriteByte.
+;     A. Changed enable pulse duration duration to 2 us
+;     B. Added DEFINE  LCD_SPEED
+;         1. LCD_SPEED FAST
+;         2. LCD_SPEED MEDIUM
+;         3. LCD_SPEED SLOW
+;     C. The speed is improved from about 5,000 chars per second to
+;         apppoximately 20,000 CPS (FAST), 15,000 CPS (MEDUIM) and
+;         10,000 CPS (SLOW).
+;     D.  IF LCD_SPEED is not defined, the speed defaults to SLOW
+;
+;    2. Created separate code sections for 4-Bit & 8-bit initalization
+;
+;    23-1-2015 by William Roth
+;
+;    3. Added comments to some code sections
+;
+;    4. Added sub routines for LCD_OFF and LCD_ON
+;
+;    26-1-2015 by William and Evan following Hughs code review;
+;
+;    5. Added new Sub for LCDHex with optional parameter
+;
+;    6. Deprecated LCD_On replaced with LCDDisplayOn
+;
+;    7. Deprecated LCD_Off replaced with LCDDisplayOff
+;
+;    8. Added new method LCDBackLight
+;
 '**********************************************************************
-' 03-12-2014.  Changed comments within '===== now in 4 bit mode init. No functional changes.
 
 #startup InitLCD
+
 
 'I/O Ports
 #define LCD_IO 4 'Number of pins used for LCD data bus (2, 4 or 8)
@@ -84,13 +95,26 @@
 
 #define LCD_Write_Delay 2 us  ' now change all delays
 
-#define FLASH 2
-#define LCDOFF 3
-#define FLASHON 4
-'#define LCD_NO_RW
+'for LCDCURSOR Sub
+#define DisplayON 12
+#define LCDON 12
+
+#define FLASHON 9
+#define FLASH 9
+#define CursorON 10
+
+#define FLASHOFF 14
+#define CursorOFF 13
+
+#define DisplayOFF 11
+#define LCDOFF 11
+
 'Lines for bar graph
 #define LCD_BAR_EMPTY b'00010001'
 #define LCD_BAR_FULL 255
+
+'Options for LCDHex
+#define LeadingZeroActive 2
 
 Sub PUT (In LCDPutLine, In LCDPutColumn, In LCDChar)
           LOCATE LCDPutLine, LCDPutColumn
@@ -116,7 +140,7 @@ Sub LOCATE (In LCDLine, In LCDColumn)
           LCDWriteByte(0x80 or 0x40 * LCDLine + LCDColumn)
           'wait 5 10us
 End Sub
-
+CLS
 Sub CLS
           SET LCD_RS OFF
 
@@ -126,7 +150,7 @@ Sub CLS
 
           'Move to start of visible DDRAM
           LCDWriteByte(0x80)
-          'Wait 10 10us
+          Wait 10 10us
 End Sub
 
 Sub LCDHOME
@@ -150,6 +174,11 @@ end sub
 #define LCDWord Print
 
 sub InitLCD
+
+    #IFDEF LCD_backlight
+     dir LCD_Backlight OUT
+     set LCD_Backlight OFF
+    #ENDIF
 
      #IFDEF LCD_IO 2
           SET LCD_DB OFF
@@ -176,6 +205,7 @@ sub InitLCD
           WAIT 1 MS
           LCDWriteByte 0x0C
           WAIT 1 MS
+
      #ENDIF
 
 
@@ -222,9 +252,14 @@ sub InitLCD
                end repeat
 
                LCDWriteByte 0x38     '2 line mode
+               wait 5 ms
                LCDWriteByte 0x06     'Cursor movement
+               wait 5 ms
                LCDWriteByte 0x0C     'Entry mode
+
+               wait 5 ms
                CLS   'Clear screen
+
           #ENDIF
 
           '***********************************
@@ -277,13 +312,15 @@ sub InitLCD
                 wait 2 us
                 PULSEOUT LCD_Enable, 2 us
                 Wait 50 us
-		
-		'===== now in 4 bit mode =====
-            	LCDWriteByte 0x28    '(b'00101000')  Set 2 line mode`
-            	LCDWriteByte 0x06    '(b'00000110')  Set Cursor movement
-            	LCDWriteByte 0x0C    '(b'00001100')  Turn off cursor
-            	CLS  'Clear the display
+                '===== now in 4 bit mode =====
+
+                LCDWriteByte 0x28    '(b'011000000') 0x28  set 2 line mode
+                LCDWriteByte 0x06    '(b'00000110')  'Set Cursor movement
+                LCDWriteByte 0x0C    '(b'00001100')  'Turn off cursor
+                CLS  'Clear the display
+                LCD_State = 12
           #ENDIF
+
 end sub
 
 'String output
@@ -395,23 +432,34 @@ Sub Print (In LCDValue As Long)
 
 End Sub
 
-sub LCDHex(In LCDValue)
-          LCDValueTemp = 0
-          Set LCD_RS On
+sub LCDHex  (In LCDValue, optional in LCDChar = 1 )
 
-          IF LCDValue >= 0x10 then
-                    LCDValueTemp = LCDValue / 0x10
-                    LCDValue = SysCalcTempX
-                    LCDHexValueTemp = LCDValueTemp
-                    if LCDHexValueTemp > 9 then LCDHexValueTemp = LCDHexValueTemp + 7
-                    LCDWriteByte(LCDHexValueTemp + 48)
-          end if
+    'Revised 01/26/2014 by William Roth
+    'Prints Hex value of ByteVal at current cursor location
+    'ByteVal must be in the range of 0 to 255 (Dec)
+    'ByteVal can be entered as dec, binary or hex
 
-          LCDHexValueTemp = LCDValue
-          if LCDHexValueTemp > 9 then LCDHexValueTemp = LCDHexValueTemp + 7
-          LCDWriteByte (LCDHexValueTemp + 48)
+    'Extract nibbles and convert to ascii values
+    HighChar = (LCDValue / 16)  + 48
+    LowChar  = (LCDValue and 15) + 48
+
+    'Check for alpha and convert.
+    If HighChar > 57 Then HighChar = HighChar + 7
+    If LowChar > 57 Then  LowChar = LowChar + 7
+
+    Set LCD_RS OFF
+
+    'Write chars to LCD - if user specifies LeadingZeroActive then print the leading char
+    IF LCDChar = LeadingZeroActive and LCDValue < 16 then LCDWriteChar HighChar
+
+    'Write high char if LCDValue is > 15 (DEC)
+    IF LCDValue > 15 then LCDWriteChar HighChar
+
+    LCDWriteChar LowChar
 
 end sub
+
+
 
 sub LCDWriteChar(In LCDChar)
           set LCD_RS on
@@ -682,17 +730,47 @@ function LCDNormalReadByte
 end function
 
 sub LCDCursor(In LCDCRSR)
-                 ' Revised Evan Venn March 2014
-          'Can be ON, FLASH or OFF, FLASHON
-          Set LCD_RS OFF
-          LCDTemp = 12 '0 or 12
-          If LCDCRSR = 11 Then LCDTemp = 11
-          If LCDCRSR = OFF Then LCDTemp = 12
-          If LCDCRSR = ON Then LCDTemp = 14 '2 or 12
-          If LCDCRSR = FLASH Then LCDTemp = 13 '3 or 12
-          If LCDCRSR = FLASHON Then LCDTemp = 15
-          LCDWriteByte(LCDTemp) '(LCDTemp or 12)
-          ;Wait 5 10us
+
+     ' Revised Evan Venn March 2014
+     ' Revised William Roth Jan 2105
+     ' Can be LCDON, LCDOFF, CURSORON, CURSOROFF, FLASHON, Or FLASHOFF
+
+'   1) FLASH is the same as FLASHON and has been retained
+'      for compatibility but should be considererd depricated.
+'
+'   2) ON & OFF Have been superceded with LCDON & LCDOFF for clarity.
+'      However they Will still work as usual. This was done
+'       because LCDCURSOR(OFF | ON) was confusing and implied
+'      control of the cursor instead of the entire display.
+'
+'   3) With this revision, changing one setting does not change the others.
+'      eg.  FlashOFF does turn off the cursor and CURSOROFF does not
+'      turn off Flash. Cursor and flash states are not changed when the
+'      display is turnd OFF or ON with LCDCURSOR LCDON OR LCDCURSOR LCDOFF.
+'
+'   4) See Help For New Commands  LCD_OFF and LCD_ON
+'      LCD_ON & LCD OFF are separate Subs that when called
+'      will also turn off the cursor and flash if they are on
+'-------------------------------------------------------------------
+
+ Set LCD_RS OFF
+
+     If LCDCRSR = ON  Then LCDTemp = LCD_State OR 12
+     IF LCDCRSR = LCDON Then LCDTemp = LCD_State OR 12
+
+     If LCDCRSR = OFF Then LCDTemp = LCD_State AND 11
+     If LCDCRSR = LCDOFF Then LCDTemp = LCD_State AND 11
+
+     If LCDCRSR = CursorOn Then LCDTemp = LCD_State OR 10
+     If LCDCRSR = CursorOFF then LCDTemp = LCD_State and 13
+
+     If LCDCRSR = FLASH  Then LCDTemp = LCD_State OR 9
+     If LCDCRSR = FLASHON  Then LCDTemp = LCD_State OR 9
+     If LCDCRSR = FLASHOFF then LCDTemp = LCD_State and 14
+
+     LCDWriteByte(LCDTemp)
+     LCD_State = LCDtemp  'save last state
+    ;Wait 5 10us
 
 end sub
 
@@ -782,16 +860,23 @@ sub LCDSpace(in LCDValue)
           loop
 end sub
 
-#DEFINE LCD_ON LCDOn
-sub LCDOn
-   set LCD_RS OFF
-    lcdwritebyte (b'00001100')
-    wait 5 ms
-end Sub
-
-#DEFINE LCD_OFF LCDOff
-sub LCDOff
-    set LCD_RS OFF
-    lcdwritebyte (b'00001000')
-    wait 5 ms  'intentional delay for better effect. Not necessary
+'sub to turn off display and turn off cursor and turn off flash
+sub LCDDisplayOff
+    set LCD_RS off
+    LCDWriteByte(b'00001000')
+    LCD_State = 0
+wait 10 ms
 end sub
+
+'sub to turn ON display, turn off curor and turn off flash
+sub LCDDisplayOn
+    set LCD_RS off
+    LCDWriteByte(b'00001100')
+    LCD_State = 8
+    wait 10 ms
+End Sub
+
+sub LCDBacklight(IN LCDTemp)
+    IF LCDTemp = OFF then set LCD_Backlight OFF
+    IF LCDTemp = ON then  set LCD_Backlight ON
+end Sub
