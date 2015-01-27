@@ -252,7 +252,7 @@ object SyntaxManager: TSyntaxManager
         ConditionList = <
           item
             TagList.Strings = (
-              ''
+              ' '
               '#bootloader'
               '#chip'
               '#config'
@@ -389,6 +389,7 @@ object SyntaxManager: TSyntaxManager
               'On Interrupt'
               'OR'
               'Out'
+              'Pad'
               'Peek'
               'Poke'
               'Pot'
@@ -412,7 +413,10 @@ object SyntaxManager: TSyntaxManager
               'Randomize'
               'ReadAD'
               'ReadAD10'
+              'ReadDigitalTemp'
               'ReadTable'
+              'readtemp'
+              'readtemp12'
               'Repeat'
               'Return'
               'Right'

@@ -133,6 +133,7 @@
 -> On |Set variable.bit {On / Off} | \casting.htm
 -> OR |OR / '|' | \conditions.htm
 -> Out |Dir port.bit {In / Out} (Individual Form) Dir port {In / Out / DirectionByte} (Entire Port Form) | \dir.htm
+-> Pad ( string, length_as_byte , pad_character )
 -> Peek (location) |OutputVariable = Peek (location)
 -> Pset (GLCDX, GLCDY, GLCDState)
 -> Poke (location, value)
@@ -155,6 +156,9 @@
 -> Randomize Randomize seed
 -> ReadAD (port) |var = ReadAD (port)
 -> ReadAD10 (port) |var = ReadAD10 (port)
+-> ReadDigitalTemp |Temperature is returned to the global variables of DSint and DSdec
+-> Readtemp <- byte_var = Readtemp12 | A funtion returning the value of the sensor as an integer rounded up to the nearest integer
+-> Readtemp12 <- byte_var = Readtemp12 | A funtion returning a 12 bit temperature data from the DS18B20 digital temperature sensor
 -> ReadTable TableName, Item, Output
 -> Repeat times
 -> Return |GoSub label / ...program code / ...Return | \gosub.htm
