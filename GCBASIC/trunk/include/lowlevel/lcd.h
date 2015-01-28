@@ -64,7 +64,10 @@
 ;    8. Added new method LCDBackLight
 ;
 '**********************************************************************
-
+;    28-1-2015 by Evan R Venn
+;
+;    Removed errant CLS from outside of methods.
+;
 #startup InitLCD
 
 
@@ -140,7 +143,7 @@ Sub LOCATE (In LCDLine, In LCDColumn)
           LCDWriteByte(0x80 or 0x40 * LCDLine + LCDColumn)
           'wait 5 10us
 End Sub
-CLS
+
 Sub CLS
           SET LCD_RS OFF
 
