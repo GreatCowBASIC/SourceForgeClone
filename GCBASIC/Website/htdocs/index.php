@@ -85,12 +85,18 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">2</span><span style="font-weight: bold;">7/1/2015</span><br><div style="margin-left: 40px;">Another driver and code has been posted.<br><ul><li>A new <a href="http://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/ds2482.h"><span style="text-decoration: underline;">DS2482.h</span></a>
+<td><span style="font-weight: bold;">30</span><span style="font-weight: bold;">/1/2015</span><br><div style="margin-left: 40px;">Another hardware driver with some example code has been posted.</div><ul><li>A new <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/DS1672.h?format=raw"><span style="text-decoration: underline;">DS1672.h</span></a>
+driver file.
+&nbsp;A 32-Bit Binary Counter clock. &nbsp;Documentation and sample&nbsp; programs are also available. &nbsp;
+Supports hardware and software I2C. &nbsp;See <a href="http://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/Demos/Clock%20Demos">here</a> for examples of the GCB clock code.</li></ul><span style="font-weight: bold;">2</span><span style="font-weight: bold;">9/1/2015</span><br><div style="margin-left: 40px;">Another driver and code has been posted.<br></div><ul><li>A new <a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/DS1337.h?format=raw"><span style="text-decoration: underline;">DS1337.h</span></a>
+driver file.
+&nbsp;&nbsp;Easy to use Real Time Clock. Documentation and sample&nbsp; programs are also available. &nbsp;
+Supports hardware and software I2C. &nbsp;See <a href="http://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/Demos/Clock%20Demos">here</a> for examples of the GCB clock code.&nbsp;</li></ul><span style="font-weight: bold;">2</span><span style="font-weight: bold;">7/1/2015</span><br><div style="margin-left: 40px;">Another driver and code has been posted.<br></div><ul><li>A new <a href="http://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/ds2482.h"><span style="text-decoration: underline;">DS2482.h</span></a>
 driver file.
 &nbsp; This DS2482-100 and the DS2482-800 driver supports the eight
 function commands that fall into four categories: device control, I2C
 communication for 1-Wire setup, and 1-Wire communication.&nbsp; This
-driver expands the Dallas 1-Wire support to multiple devices via I2C.</li></ul></div><br><span style="font-weight: bold;">2</span><span style="font-weight: bold;">6/1/2015</span><br><div style="margin-left: 40px;">It has been a busy winter so far!
+driver expands the Dallas 1-Wire support to multiple devices via I2C.</li></ul><span style="font-weight: bold;">2</span><span style="font-weight: bold;">6/1/2015</span><br><div style="margin-left: 40px;">It has been a busy winter so far!
 
 </div><ul><li>Lots of new drivers and code has been posted.&nbsp;</li><ul><li>A revised <a href="http://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/lowlevel/lcd.h">LCD.H</a> driver file.
 &nbsp; Revised handling of printing Hex strings, improved cursor
@@ -104,7 +110,7 @@ Supports hardware and software I2C.</li><li>A new<span style="text-decoration: u
 file. &nbsp;Easier to use Real Time Clock but with two alarms, better
 documentation, plus sample&nbsp; programs are also available.&nbsp;Supports hardware and software I2C.</li><li>A new Nokia <a href="http://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/glcd_PCD8544.h">PCD8544.h </a>driver
 file. &nbsp;A mono GCB driver for Nokia displays. &nbsp;All the
-standard GCB graphics controls &nbsp;- lines, box, circles etc.</li></ul><li>A revised Help File with lots of new information. &nbsp;See the online version for the latest information.</li></ul><br><span style="font-weight: bold;">29</span><span style="font-weight: bold;">/8/2014</span><br>
+standard GCB graphics controls &nbsp;- lines, box, circles etc.</li></ul><li>A revised Help File with lots of new information. &nbsp;See the online version for the latest information.</li></ul><span style="font-weight: bold;">29</span><span style="font-weight: bold;">/8/2014</span><br>
 
 <ul><li>A revised support file for I2C in now available. &nbsp;This improves performance for software I2C.</li><li><comment title="[if !supportLists]" xmlns="http://disruptive-innovations.com/zoo/nvu"></comment><span style="font-family: Symbol;"></span>A revised <span style="text-decoration: underline;"><a href="https://sourceforge.net/p/gcbasic/code/HEAD/tree/GCBASIC/trunk/include/DS1307.h">DS1307.H</a> </span> file. &nbsp;Easier to use, better documentation, plus sample&nbsp; programs are also available.<o:p></o:p></li></ul><span style="font-weight: bold;">25/8/2014</span><br><div style="margin-left: 40px;">A revised set of support files for I2C in now available<br></div>
 
