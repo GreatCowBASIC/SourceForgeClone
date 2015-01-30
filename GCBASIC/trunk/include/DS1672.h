@@ -72,20 +72,6 @@
  #define DS1672_TrickleChargeRegister   0x05	'Control Status register
 
 ;-----
-
-function DecToBcd(in va ) as byte
-  ;Convert pure decimal number to binary coded decimal
-  DecToBcd=( va /10)*16+ va %10
-end function
-
-;-----
-
-function BcdToDec(in va ) as byte
-  ;Convert binary coded decimal to pure decimal
-  BcdToDec=( va /16)*10+ va %16
-end function
-
-;-----
 #define DS1672_Enable DS1672_EnableOscillator
 ;
 ;When set to logic 0, the oscillator is started. When set to logic 1, the oscillator is stopped when the DS1672 switches to VBAT.
