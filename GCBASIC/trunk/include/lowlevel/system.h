@@ -47,7 +47,7 @@ Sub InitSys
 		#IFDEF Bit(FOSC4)
 			Set FOSC4 Off
 		#ENDIF
-		#ifndef Bit(SPLLEN)
+		#if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3)
 			'Most chips:
 			#ifndef Bit(HFIOFS)
 				#IFDEF ChipMHz 8
@@ -110,7 +110,7 @@ Sub InitSys
 			#endif
 		#endif
 		
-		#ifdef Bit(SPLLEN)
+		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3)
 			#ifdef Bit(IRCF3)
 				#IFDEF ChipMHz 64
 					'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
@@ -130,7 +130,9 @@ Sub InitSys
 					#ifdef Bit(SPLLMULT)
 						Set SPLLMULT On
 					#endif
-					Set SPLLEN On
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 32
 					'Same as for 8, assuming 32 MHz clock is 8 MHz x 4
@@ -143,7 +145,9 @@ Sub InitSys
 					#ifdef Bit(SPLLMULT)
 						Set SPLLMULT Off
 					#endif
-					Set SPLLEN On
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 24
 					'Same as for 8, assuming 24 MHz clock is 8 MHz x 3
@@ -154,7 +158,9 @@ Sub InitSys
 					#ifdef Bit(SPLLMULT)
 						Set SPLLMULT On
 					#endif
-					Set SPLLEN On
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 16
 					'OSCCON = OSCCON OR b'01111000'
@@ -162,7 +168,9 @@ Sub InitSys
 					Set IRCF2 On
 					Set IRCF1 On
 					Set IRCF0 On
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 8
 					'OSCCON = OSCCON AND b'10000111'
@@ -171,7 +179,9 @@ Sub InitSys
 					Set IRCF2 On
 					Set IRCF1 On
 					Set IRCF0 Off
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 4
 					'OSCCON = OSCCON AND b'10000111'
@@ -180,7 +190,9 @@ Sub InitSys
 					Set IRCF2 On
 					Set IRCF1 Off
 					Set IRCF0 On
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 2
 					'OSCCON = OSCCON AND b'10000111'
@@ -189,7 +201,9 @@ Sub InitSys
 					Set IRCF2 On
 					Set IRCF1 Off
 					Set IRCF0 Off
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 1
 					'OSCCON = OSCCON AND b'10000111'
@@ -198,7 +212,9 @@ Sub InitSys
 					Set IRCF2 Off
 					Set IRCF1 On
 					Set IRCF0 On
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 0.5
 					'OSCCON = OSCCON AND b'10000111'
@@ -207,7 +223,9 @@ Sub InitSys
 					Set IRCF2 On
 					Set IRCF1 On
 					Set IRCF0 On
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 0.25
 					'OSCCON = OSCCON AND b'10000111'
@@ -216,7 +234,9 @@ Sub InitSys
 					Set IRCF2 On
 					Set IRCF1 On
 					Set IRCF0 Off
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 0.125
 					'OSCCON = OSCCON AND b'10000111'
@@ -225,14 +245,18 @@ Sub InitSys
 					Set IRCF2 On
 					Set IRCF1 Off
 					Set IRCF0 On
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 			#endif
 			#ifndef Bit(IRCF3)
 				#IFDEF ChipMHz 32
 					OSCCON = OSCCON AND b'10001111'
 					OSCCON = OSCCON OR b'01100000'
-					Set SPLLEN On
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 16
 					OSCCON = OSCCON OR b'01110000'
@@ -240,7 +264,9 @@ Sub InitSys
 				#IFDEF ChipMHz 8
 					OSCCON = OSCCON AND b'10001111'
 					OSCCON = OSCCON OR b'01100000'
-					Set SPLLEN Off
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN Off
+					#endif
 				#ENDIF
 				#IFDEF ChipMHz 4
 					OSCCON = OSCCON AND b'10001111'
