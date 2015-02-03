@@ -174,9 +174,20 @@ Sub PrepareBuiltIn
 		CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempUS_H, F")
 		CurrPos = LinkedListInsert(CurrPos, " goto DUS_START")
 	ElseIf ModeAVR Then
-		
-	ElseIf ModeZ8 Then
-		
+		L = ChipMhz - 3
+		If L < 0 Then
+			L = 0
+			USDelaysInaccurate = -1
+		End If
+		CurrPos = LinkedListInsert(CurrPos, " inc SysWaitTempUS_H")
+		CurrPos = LinkedListInsert(CurrPos, " breq DUS_END")
+		CurrPos = LinkedListInsert(CurrPos, "DUS_START:")
+		CurrPos = LinkedListInsertList(CurrPos, GenerateExactDelay(L))
+		CurrPos = LinkedListInsert(CurrPos, " dec SysWaitTempUS")
+		CurrPos = LinkedListInsert(CurrPos, " brne DUS_START")
+		CurrPos = LinkedListInsert(CurrPos, "DUS_END:")
+		CurrPos = LinkedListInsert(CurrPos, " dec SysWaitTempUS_H")
+		CurrPos = LinkedListInsert(CurrPos, " brne DUS_START")
 	End If
 	
 	'Delay_10US
