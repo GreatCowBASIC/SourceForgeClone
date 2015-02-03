@@ -477,7 +477,7 @@ DIM SHARED As Integer APC, DFC, FVLC, FRLC, FALC, SBC, SLC, IFC, WSC, FLC, DLC, 
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
-Dim Shared As Integer ChipPins
+Dim Shared As Integer ChipPins, UseChipOutLatches
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, SVC, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
@@ -575,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 26/1/2015"
+Version = "0.9 3/2/2015"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -587,6 +587,7 @@ PinDirShadows = 0
 MainProgramSize = 0
 StatsUsedRam = 0
 StatsUsedProgram = 0
+UseChipOutLatches = -1
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -7581,7 +7582,17 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 	Select Case DType
 	'Copy to bit
 	Case "BIT":
-		DestTemp = FixBit(Dest, Origin): If INSTR(DestTemp, ".") <> 0 Then Replace DestTemp, ".", ","
+		DestTemp = FixBit(Dest, Origin)
+		
+		If InStr(DestTemp, ".") <> 0 Then Replace DestTemp, ".", ","
+		
+		'Redirect PORTx writes to LATx
+		If UseChipOutLatches And Left(DestTemp, 4) = "PORT" And Mid(DestTemp, 6, 1) = "," Then
+			Temp = Left(DestTemp, INSTR(DestTemp, ",") - 1)
+			If HasSFR(Temp) Then
+				DestTemp = "LAT" + Right(Temp, 1) + Mid(DestTemp, InStr(DestTemp, ","))
+			End If
+		End If
 		
 		'Add var that contains bit
 		IF INSTR(DestTemp, ",") Then
@@ -9428,6 +9439,13 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 	End If
 	
 	If ModePIC Then
+		'Redirect PORTx writes to LATx
+		If UseChipOutLatches And Left(VarName, 4) = "PORT" And Len(VarName) = 5 Then
+			If HasSFR(VarName) Then
+				VarName = "LAT" + Right(VarName, 1)
+			End If
+		End If
+		
 		Temp = " bsf ": IF Status = "0" THEN Temp = " bcf "
 		CurrLine = LinkedListInsert(CurrLine, Temp + VarName + "," + VarBit)
 		If Not IsIOReg(VarName) Then AddVar VarName, "BYTE", 1, 0, "REAL", Origin
@@ -12548,6 +12566,13 @@ SUB ReadChipData
 		Next
 	End If
 	
+	'Check for LAT registers
+	If ChipFamily <> 15 And ChipFamily <> 16 Then
+		UseChipOutLatches = 0
+	ElseIf Not (HasSFR("LATA") OrElse HasSFR("LATB") OrElse HasSFR("LATC")) Then
+		UseChipOutLatches = 0
+	End If
+	
 End Sub
 
 Sub ReadOptions(OptionsIn As String)
@@ -12569,6 +12594,10 @@ Sub ReadOptions(OptionsIn As String)
 					Bootloader = MakeDec(OptionElement(CurrElement + 1))
 				End If
 			End If
+		
+		'Disable automatic use of output latches?	
+		ElseIf OptionElement(CurrElement) = "NOLATCH" Then
+			UseChipOutLatches = 0
 		End If
 		
 	Next
