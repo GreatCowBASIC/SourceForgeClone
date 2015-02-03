@@ -43,6 +43,7 @@ Imports System.Text.RegularExpressions
 		'Misc Settings
 		Public Dim StartupSub As String = ""
 		Public Dim UseBootloader As Boolean = False
+		Public Dim OtherOptions As String = ""
 		Public Dim BootloaderPos As String = ""
 		Public Dim Device As HardwareDevice
 		
@@ -139,12 +140,18 @@ Imports System.Text.RegularExpressions
    				End If
    				OutCode.Append("#config " + ChipConfig + Environment.NewLine): CurrLineNo += 1
    			End If
-   			If UseBootloader Then
+   			If UseBootloader Or OtherOptions <> "" Then
    				If Not HeaderWritten Then
    					OutCode.Append(";Chip Settings" + Environment.NewLine)
 					HeaderWritten = True
    				End If
-   				OutCode.Append("#option bootloader " + BootloaderPos + Environment.NewLine): CurrLineNo += 1
+   				If UseBootloader And OtherOptions <> "" Then
+   					OutCode.Append("#option bootloader " + BootloaderPos + " " + OtherOptions + Environment.NewLine): CurrLineNo += 1
+   				Else If UseBootloader Then
+   					OutCode.Append("#option bootloader " + BootloaderPos + Environment.NewLine): CurrLineNo += 1
+   				Else
+   					OutCode.Append("#option " + OtherOptions + Environment.NewLine): CurrLineNo += 1
+   				End If
    			End If
    			If HeaderWritten Then OutCode.Append(Environment.NewLine)
 			
@@ -384,6 +391,8 @@ Imports System.Text.RegularExpressions
 	    	ChipName = ""
 	    	ChipSpeed = 0
 	    	ChipConfig = ""
+	    	OtherOptions = ""
+	    	UseBootloader = False
 	    	
 	    	TableCount = 0
 	    	Constants = New List(Of Setting)
@@ -1137,6 +1146,14 @@ Imports System.Text.RegularExpressions
 		     				If CurrOpt + 1 < Options.Length Then
 		     					CurrOpt += 1
 		     					BootloaderPos = Options(CurrOpt)
+		     				End If
+		     				
+		     			'Read other option
+		     			Else
+		     				If OtherOptions = "" Then
+		     					OtherOptions = Options(CurrOpt)
+		     				Else
+		     					OtherOptions = OtherOptions + " " + Options(CurrOpt)
 		     				End If
 		     			End If
 		     			

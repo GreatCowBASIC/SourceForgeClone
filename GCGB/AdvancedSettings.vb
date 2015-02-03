@@ -60,6 +60,7 @@ Imports System.Windows.Forms
 			'Show current settings
 			useBootloader.Checked = CurrProgram.UseBootloader
 			startLoc.Text = CurrProgram.BootloaderPos
+			OtherOptions.Text = CurrProgram.OtherOptions
 			'Select appropriate startup sub option
 			Dim checkItem As Integer
 			For checkItem = 0 To startupSubSelect.Items.Count - 1
@@ -81,28 +82,19 @@ Imports System.Windows.Forms
 		' not be able to load this method if it was changed manually.
 		Private Sub InitializeComponent()
 			Me.contextHelpProvider = New System.Windows.Forms.HelpProvider
-			Me.buttonCancel = New System.Windows.Forms.Button
 			Me.useBootloader = New System.Windows.Forms.CheckBox
-			Me.buttonOK = New System.Windows.Forms.Button
 			Me.startupSubSelect = New System.Windows.Forms.ComboBox
+			Me.startLoc = New System.Windows.Forms.TextBox
+			Me.OtherOptions = New System.Windows.Forms.TextBox
+			Me.buttonCancel = New System.Windows.Forms.Button
+			Me.buttonOK = New System.Windows.Forms.Button
 			Me.locPromptLabel = New System.Windows.Forms.Label
 			Me.bootloaderGroup = New System.Windows.Forms.GroupBox
-			Me.startLoc = New System.Windows.Forms.TextBox
 			Me.buttonHardwareSettings = New System.Windows.Forms.Button
 			Me.startupLabel = New System.Windows.Forms.Label
+			Me.optionsLabel = New System.Windows.Forms.Label
 			Me.bootloaderGroup.SuspendLayout
 			Me.SuspendLayout
-			'
-			'buttonCancel
-			'
-			Me.buttonCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom
-			Me.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
-			Me.buttonCancel.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.buttonCancel.Location = New System.Drawing.Point(120, 192)
-			Me.buttonCancel.Name = "buttonCancel"
-			Me.buttonCancel.Size = New System.Drawing.Size(96, 24)
-			Me.buttonCancel.TabIndex = 4
-			Me.buttonCancel.Text = "Cancel"
 			'
 			'useBootloader
 			'
@@ -115,27 +107,59 @@ Imports System.Windows.Forms
 			Me.useBootloader.Text = "Move code start location"
 			AddHandler Me.useBootloader.CheckedChanged, AddressOf Me.UseBootloaderCheckedChanged
 			'
-			'buttonOK
-			'
-			Me.buttonOK.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left),System.Windows.Forms.AnchorStyles)
-			Me.buttonOK.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.buttonOK.Location = New System.Drawing.Point(16, 192)
-			Me.buttonOK.Name = "buttonOK"
-			Me.buttonOK.Size = New System.Drawing.Size(96, 24)
-			Me.buttonOK.TabIndex = 3
-			Me.buttonOK.Text = "OK"
-			AddHandler Me.buttonOK.Click, AddressOf Me.ButtonOKClick
-			'
 			'startupSubSelect
 			'
 			Me.startupSubSelect.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
 			Me.contextHelpProvider.SetHelpString(Me.startupSubSelect, "Use in libraries. If any subroutines, functions or constants from this file are u"& _ 
-"sed, then this subroutine will be run at the start of the program.")
+						"sed, then this subroutine will be run at the start of the program.")
 			Me.startupSubSelect.Location = New System.Drawing.Point(8, 24)
 			Me.startupSubSelect.Name = "startupSubSelect"
 			Me.contextHelpProvider.SetShowHelp(Me.startupSubSelect, true)
 			Me.startupSubSelect.Size = New System.Drawing.Size(216, 21)
 			Me.startupSubSelect.TabIndex = 1
+			'
+			'startLoc
+			'
+			Me.startLoc.Enabled = false
+			Me.contextHelpProvider.SetHelpString(Me.startLoc, "New location for the reset vector. The interrupt vector will follow, then the pro"& _ 
+						"gram code.")
+			Me.startLoc.Location = New System.Drawing.Point(136, 56)
+			Me.startLoc.Name = "startLoc"
+			Me.contextHelpProvider.SetShowHelp(Me.startLoc, true)
+			Me.startLoc.Size = New System.Drawing.Size(72, 20)
+			Me.startLoc.TabIndex = 2
+			'
+			'OtherOptions
+			'
+			Me.contextHelpProvider.SetHelpString(Me.OtherOptions, "Other options. Options are passed to GCBASIC #option directive. Use nolatch to di"& _ 
+						"sable port latch use, or explicit to force variable declaration.")
+			Me.OtherOptions.Location = New System.Drawing.Point(8, 168)
+			Me.OtherOptions.Name = "OtherOptions"
+			Me.contextHelpProvider.SetShowHelp(Me.OtherOptions, true)
+			Me.OtherOptions.Size = New System.Drawing.Size(216, 20)
+			Me.OtherOptions.TabIndex = 3
+			'
+			'buttonCancel
+			'
+			Me.buttonCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom
+			Me.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
+			Me.buttonCancel.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.buttonCancel.Location = New System.Drawing.Point(120, 233)
+			Me.buttonCancel.Name = "buttonCancel"
+			Me.buttonCancel.Size = New System.Drawing.Size(96, 24)
+			Me.buttonCancel.TabIndex = 4
+			Me.buttonCancel.Text = "Cancel"
+			'
+			'buttonOK
+			'
+			Me.buttonOK.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left),System.Windows.Forms.AnchorStyles)
+			Me.buttonOK.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.buttonOK.Location = New System.Drawing.Point(16, 233)
+			Me.buttonOK.Name = "buttonOK"
+			Me.buttonOK.Size = New System.Drawing.Size(96, 24)
+			Me.buttonOK.TabIndex = 3
+			Me.buttonOK.Text = "OK"
+			AddHandler Me.buttonOK.Click, AddressOf Me.ButtonOKClick
 			'
 			'locPromptLabel
 			'
@@ -159,22 +183,10 @@ Imports System.Windows.Forms
 			Me.bootloaderGroup.TabStop = false
 			Me.bootloaderGroup.Text = "Bootloader"
 			'
-			'startLoc
-			'
-			Me.startLoc.Enabled = false
-			Me.contextHelpProvider.SetHelpString(Me.startLoc, "New location for the reset vector. The interrupt vector will follow, then the pro"& _ 
-"gram code.")
-			Me.startLoc.Location = New System.Drawing.Point(136, 56)
-			Me.startLoc.Name = "startLoc"
-			Me.contextHelpProvider.SetShowHelp(Me.startLoc, true)
-			Me.startLoc.Size = New System.Drawing.Size(72, 20)
-			Me.startLoc.TabIndex = 2
-			Me.startLoc.Text = ""
-			'
 			'buttonHardwareSettings
 			'
 			Me.buttonHardwareSettings.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.buttonHardwareSettings.Location = New System.Drawing.Point(8, 152)
+			Me.buttonHardwareSettings.Location = New System.Drawing.Point(8, 200)
 			Me.buttonHardwareSettings.Name = "buttonHardwareSettings"
 			Me.buttonHardwareSettings.Size = New System.Drawing.Size(216, 24)
 			Me.buttonHardwareSettings.TabIndex = 5
@@ -189,12 +201,22 @@ Imports System.Windows.Forms
 			Me.startupLabel.TabIndex = 0
 			Me.startupLabel.Text = "Startup subroutine:"
 			'
+			'optionsLabel
+			'
+			Me.optionsLabel.Location = New System.Drawing.Point(8, 152)
+			Me.optionsLabel.Name = "optionsLabel"
+			Me.optionsLabel.Size = New System.Drawing.Size(216, 16)
+			Me.optionsLabel.TabIndex = 6
+			Me.optionsLabel.Text = "Options"
+			'
 			'AdvancedSettings
 			'
 			Me.AcceptButton = Me.buttonOK
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.buttonCancel
-			Me.ClientSize = New System.Drawing.Size(234, 224)
+			Me.ClientSize = New System.Drawing.Size(234, 265)
+			Me.Controls.Add(Me.OtherOptions)
+			Me.Controls.Add(Me.optionsLabel)
 			Me.Controls.Add(Me.buttonHardwareSettings)
 			Me.Controls.Add(Me.buttonCancel)
 			Me.Controls.Add(Me.buttonOK)
@@ -210,8 +232,12 @@ Imports System.Windows.Forms
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
 			Me.Text = "Advanced Settings"
 			Me.bootloaderGroup.ResumeLayout(false)
+			Me.bootloaderGroup.PerformLayout
 			Me.ResumeLayout(false)
+			Me.PerformLayout
 		End Sub
+		Private OtherOptions As System.Windows.Forms.TextBox
+		Private optionsLabel As System.Windows.Forms.Label
 		#End Region
 		
 		Private Sub ApplyTranslation
@@ -223,6 +249,7 @@ Imports System.Windows.Forms
 				.TryTranslate("AdvancedSettings", "bootloaderGroup", Me.bootloaderGroup.Text)
 				.TryTranslate("AdvancedSettings", "useBootloader", Me.useBootloader.Text)
 				.TryTranslate("AdvancedSettings", "locPromptLabel", Me.locPromptLabel.Text)
+				.TryTranslate("AdvancedSettings", "optionsLabel", Me.optionsLabel.Text)
 				
 				'Set OK/Cancel button text
 				.TryTranslate("Misc", "Cancel", ButtonCancel.Text)
@@ -253,6 +280,8 @@ Imports System.Windows.Forms
 				Else
 					.BootloaderPos = ""
 				End If
+				
+				.OtherOptions = OtherOptions.Text
 				
 				.Device = Device
 				
