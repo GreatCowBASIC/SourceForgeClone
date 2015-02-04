@@ -180,6 +180,7 @@ Sub PrepareBuiltIn
 			USDelaysInaccurate = -1
 		End If
 		CurrPos = LinkedListInsert(CurrPos, " inc SysWaitTempUS_H")
+		CurrPos = LinkedListInsert(CurrPos, " tst SysWaitTempUS")
 		CurrPos = LinkedListInsert(CurrPos, " breq DUS_END")
 		CurrPos = LinkedListInsert(CurrPos, "DUS_START:")
 		CurrPos = LinkedListInsertList(CurrPos, GenerateExactDelay(L))
