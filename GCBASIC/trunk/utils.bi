@@ -660,6 +660,14 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 		End If
 		'11/4/2012: Changed from "low VAR" to "low (VAR)" on PIC
 		'Same format as AVR, MPASM is ok, need to check gputils
+		
+		'If on AVR, and dealing with I/O variable, add 32 to address
+		If ModeAVR Then
+			If IsIOReg(Mid(DataSource, 2)) Then
+				DataSource = DataSource + " + 32"
+			End If
+		EndIf
+		
 		If BS = 0 Then
 			Return "low(" + DataSource + ")"
 		ElseIf BS = 1 Then
