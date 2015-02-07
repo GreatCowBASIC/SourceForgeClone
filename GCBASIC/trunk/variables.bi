@@ -22,8 +22,9 @@
 Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0)
 	
 	Dim As String VarName, VarType, VarPointer, Origin, Temp, VarAlias, ConstName
+	Dim As String AliasList(16)
 	Dim As Integer VarSize, CL, TempSize, PD, VarSearchStart, T, VarFixedSize
-	Dim As Integer CurrFile
+	Dim As Integer CurrFile, ALC
 	Dim As VariableType Pointer VarFound
 	Dim As SubType Pointer VarSub, MainSub
 	
@@ -285,7 +286,14 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		'Print "Changing " + VarName + " from " + VarAlias + " to " + VarSub->Variable(VarFound).Alias
 		VarAlias = VarFound->Alias
 	End If
-	If VarAlias <> "" Then VarPointer = "POINTER"
+	If VarAlias <> "" Then
+		VarPointer = "POINTER"
+		'Ensure alias variable is also declared
+		GetTokens (VarAlias, AliasList(), ALC)
+		For PD = 1 To ALC
+			AddVar AliasList(PD), "BYTE", 1, VarSub, "REAL", Origin, -1, -1
+		Next
+	End If
 	
 	'Choose Origin
 	If VarFound->Origin <> "" Then Origin = VarFound->Origin
