@@ -251,6 +251,15 @@ Sub InitSys
 				#ENDIF
 			#endif
 			#ifndef Bit(IRCF3)
+				#ifdef ChipMhz 64
+					OSCCON = OSCCON OR b'01110000'
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
+					#ifdef Bit(PLLEN)
+						Set PLLEN On
+					#endif
+				#endif
 				#IFDEF ChipMHz 32
 					OSCCON = OSCCON AND b'10001111'
 					OSCCON = OSCCON OR b'01100000'
@@ -263,9 +272,6 @@ Sub InitSys
 				#ENDIF
 				#IFDEF ChipMHz 16
 					OSCCON = OSCCON OR b'01110000'
-					#ifdef Bit(PLLEN)
-						Set PLLEN On
-					#endif
 				#ENDIF
 				#IFDEF ChipMHz 8
 					OSCCON = OSCCON AND b'10001111'
