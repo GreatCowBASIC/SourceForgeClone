@@ -453,7 +453,7 @@ sub LCDHex  (In LCDValue, optional in LCDChar = 1 )
     Set LCD_RS OFF
 
     'Write chars to LCD - if user specifies LeadingZeroActive then print the leading char
-    IF LCDChar = LeadingZeroActive and LCDValue < 16 then LCDWriteChar HighChar
+    IF LCDChar = LeadingZeroActive and LCDValue < 16 then LCDWriteChar 48
 
     'Write high char if LCDValue is > 15 (DEC)
     IF LCDValue > 15 then LCDWriteChar HighChar
