@@ -70,6 +70,10 @@
       <DependentUpon>ConstantWindow.vb</DependentUpon>
     </Compile>
     <Compile Include="ConstantWindow.vb" />
+    <Compile Include="ExampleChooser.Designer.vb">
+      <DependentUpon>ExampleChooser.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ExampleChooser.vb" />
     <Compile Include="MainForm.vb" />
     <Compile Include="AssemblyInfo.vb" />
     <Compile Include="About.vb" />
@@ -138,6 +142,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ConstantWindow.resx">
       <DependentUpon>ConstantWindow.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ExampleChooser.resx">
+      <DependentUpon>ExampleChooser.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resources">
       <DependentUpon>MainForm.vb</DependentUpon>

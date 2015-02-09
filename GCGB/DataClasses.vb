@@ -3,7 +3,7 @@
 ' User: Administrator
 ' Date: 9/03/2008
 ' Time: 12:44 PM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 
@@ -40,6 +40,11 @@ Imports System.Collections.Generic
 		Public Dim Params As SettingSection
 		Public Dim HardwareSetting As String
 		Public Dim IncludedFrom As String
+		
+		'Used when DocSection applies to entire program
+		Public Dim Author As String
+		Public Dim Version As String
+		Public Dim Licence As String
 		
 		'Flags to indicate content
 		Public Dim IsHardwareSetting As Boolean = False
@@ -84,10 +89,23 @@ Imports System.Collections.Generic
 					ParamName = ParamName.Substring(0, ParamName.IndexOf(" ")).Trim
 					Params.AddSetting(ParamName, ParamDesc)
 					
+				Else If LineIn.ToLower.StartsWith("@author ") Then
+					Author = LineIn.Substring(8).Trim
+					
+				Else If LineIn.ToLower.StartsWith("@licence ") Then
+					Licence = LineIn.Substring(9).Trim
+					
+				Else If LineIn.ToLower.StartsWith("@version ") Then
+					Version = LineIn.Substring(9).Trim
+					
 				End If
 			Else
 				'If no tag, add new line to description
-				Description = (Description + " " + LineIn).Trim
+				If Description = "" Then
+					Description = LineIn.Trim
+				Else
+					Description = (Description + Environment.NewLine + LineIn).Trim
+				End If
 			End If
 			
 		End Sub

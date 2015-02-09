@@ -90,6 +90,7 @@ Imports System.Windows.Forms
 			End Get
 			Set
 				programEditor.Program = Value
+				Program.Editor = programEditor
 			End Set
 		End Property
 		
