@@ -1042,6 +1042,32 @@ Imports System.Threading
 			
 		End Sub
 		
+		Public Function CreateProgramContainer(InProgram As GCBProgram) As ProgramContainer
+			'Create window
+			Dim fProgWindow As New ProgramWindow
+			fProgWindow.Program = InProgram
+			If InProgram.FileName = "" Then
+				InProgram.FileName = "Untitled" + Mainform.UntitledCount.ToString
+				Mainform.UntitledCount += 1
+			End If
+			
+			fProgWindow.SyncProgramToEditor
+			
+			'Set up and display window
+			With fProgWindow
+				.MdiParent = Me
+				AddHandler .RefreshUndoRedo, AddressOf Me.UpdateUndoRedo
+				AddHandler .ThisWindowSelected, AddressOf Me.ProgWindowChanged
+				AddHandler .SubAdded, AddressOf Me.RedrawSubList
+				AddHandler .Program.LibraryListChanged, AddressOf Me.CommandListChanged
+				AddHandler .ViewModeChanged, AddressOf Me.RenderCommandList
+				.WindowState = FormWindowState.Maximized
+	    		.Show()
+	    	End With
+	    	
+	    	Return fProgWindow
+		End Function
+		
 		Public Function CreateProgramContainer(ByVal InFile As String) As ProgramContainer
 			
 			'Check if InFile needs to be converted to another file type
@@ -1383,6 +1409,12 @@ Imports System.Threading
 				AddHandler NewItem.Click, AddressOf FileOpenExampleItemClick
 				Me.FileOpenExample.DropDownItems.Add(NewItem)
 			Next
+			
+			'Add ExampleChooser test
+			NewItem = New ToolStripMenuItem("Choose another example ...")
+			AddHandler NewItem.Click, AddressOf FileOpenExampleClick
+			Me.FileOpenExample.DropDownItems.Add(New ToolStripSeparator)
+			Me.FileOpenExample.DropDownItems.Add(NewItem)
 			
 		End Sub
 		
@@ -2148,6 +2180,15 @@ Imports System.Threading
 		
 		Private Sub ViewZoomResetClick(sender As Object, e As EventArgs)
 			Me.GetCurrentContainer.Program.Editor.ZoomReset
+		End Sub
+		
+		Sub FileOpenExampleClick(sender As Object, e As EventArgs)
+			'Activated through double click while experimental
+			'(Change to click when finalised)
+			
+			Dim chooser As New ExampleChooser(InstallDir + "/demos/new")
+			chooser.ShowDialog
+			
 		End Sub
 	End Class
 ''End Namespace

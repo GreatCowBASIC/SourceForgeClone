@@ -31,6 +31,9 @@ Imports System.Text.RegularExpressions
 		Public Dim ProgInterrupts As List(Of InterruptHandler)
 		Public Dim ProgramDir As String
 		
+		'Documentation for program
+		Public Dim About As DocSection
+		
 		'Local constant groups
 		'Used for A/D channels, and anything else that needs to be generated for a particular chip
 		Private Dim LocalConstGroups As List(Of ConstGroup)
@@ -120,6 +123,30 @@ Imports System.Text.RegularExpressions
 			
     		'Header
     		CurrLineNo = 0
+    		If Not About Is Nothing Then
+    			Dim DescLines() As String = About.Description.Split(Environment.NewLine)
+    			Dim MarkHeaderEnd As Boolean = False
+    			For Each LineTemp In DescLines
+    				OutCode.AppendLine("'''" + LineTemp.Trim)
+    				MarkHeaderEnd = True
+    			Next
+    			If About.Author <> "" Then
+    				OutCode.AppendLine("'''@author " + About.Author)
+    				MarkHeaderEnd = True
+    			End If
+    			If About.Licence <> "" Then
+    				OutCode.AppendLine("'''@licence " + About.Licence)
+    				MarkHeaderEnd = True
+    			End If
+    			If About.Version <> "" Then
+    				OutCode.AppendLine("'''@version " + About.Version)
+    				MarkHeaderEnd = True
+    			End If
+    			If MarkHeaderEnd Then
+    				OutCode.AppendLine("'''***************************************************************************")
+    				OutCode.AppendLine
+    			End If
+    		End If
     		
 			'Chip Settings
 			CurrLineNo += 2
@@ -372,6 +399,7 @@ Imports System.Text.RegularExpressions
 	    	Dim CurrentSub As GCBSubroutine
 	    	Dim CurrLineNo As Integer
 		    Dim IsFirstCodeLine As Boolean = True
+		    Dim FoundNonComment As Boolean = False
 		    
 	    	Dim InTable As Boolean = False
 	    	
@@ -400,6 +428,7 @@ Imports System.Text.RegularExpressions
 			Libraries = New List(Of LibraryType)
 	    	
 	    	Device = Nothing
+	    	About = Nothing
 	    	
 	    	'Create main subroutine
 	    	Subroutines.Clear
@@ -425,38 +454,49 @@ Imports System.Text.RegularExpressions
 	     				If CurrDoc Is Nothing Then
 	     					CurrDoc = New DocSection
 	     				End If
-	     				CurrDoc.ParseLine(SourceLine)
 	     				
-	     				'Hardware setting?
-   						If CurrDoc.IsHardwareSetting Then
-   							
-   							'Has a device been made for the library?
-   							If Device Is Nothing Then
-   								Device = New HardwareDevice
-   								Device.Name = FileName
-   							End If
-   							
-   							'Create new device setting
-						    Dim SettingsLine() As String = CurrDoc.HardwareSetting.Split(";")
-						    CurrDoc = Nothing
-						    Dim CurrentDeviceSetting As New HardwareDeviceSetting
-						    Device.Settings.Add(CurrentDeviceSetting)
-						    
-						    Try
-							    'Condition
-							    CurrentDeviceSetting.Condition = SettingsLine(0).Trim
-							    'Name
-							    CurrentDeviceSetting.Name = SettingsLine(1).Trim
-							    'Constant
-							    CurrentDeviceSetting.Constant = SettingsLine(2).Trim
-							    'Type
-							    CurrentDeviceSetting.ParamType = SettingsLine(3).Trim
-							Catch
-								MessageBox.Show("Error in custom hardware settings", "Great Cow Graphical BASIC", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1)
-   							End Try
-   							
-   							CurrDoc = Nothing
-   						End If
+	     				'If comment has 3 or more stars, it marks end of a section
+	     				If SourceLine.Replace(" ", "").StartsWith("'''***") Then
+	     					'If nothing stored for About, store current buffer
+	     					If Not FoundNonComment And About Is Nothing Then
+	     						About = CurrDoc
+	     						CurrDoc = Nothing
+	     					End If
+	     					
+	     				Else
+	     					CurrDoc.ParseLine(SourceLine)
+	     					
+	     					'Hardware setting?
+	   						If CurrDoc.IsHardwareSetting Then
+	   							
+	   							'Has a device been made for the library?
+	   							If Device Is Nothing Then
+	   								Device = New HardwareDevice
+	   								Device.Name = FileName
+	   							End If
+	   							
+	   							'Create new device setting
+							    Dim SettingsLine() As String = CurrDoc.HardwareSetting.Split(";")
+							    CurrDoc = Nothing
+							    Dim CurrentDeviceSetting As New HardwareDeviceSetting
+							    Device.Settings.Add(CurrentDeviceSetting)
+							    
+							    Try
+								    'Condition
+								    CurrentDeviceSetting.Condition = SettingsLine(0).Trim
+								    'Name
+								    CurrentDeviceSetting.Name = SettingsLine(1).Trim
+								    'Constant
+								    CurrentDeviceSetting.Constant = SettingsLine(2).Trim
+								    'Type
+								    CurrentDeviceSetting.ParamType = SettingsLine(3).Trim
+								Catch
+									MessageBox.Show("Error in custom hardware settings", "Great Cow Graphical BASIC", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1)
+	   							End Try
+	   							
+	   							CurrDoc = Nothing
+	   						End If
+	     				End If
 	     				
 		     		'Remove comments starting with ; as these are inserted automatically by the save routine
 		     		Else If SourceLine.StartsWith(";") Then
@@ -466,18 +506,21 @@ Imports System.Text.RegularExpressions
 		     		Else If ReadDirective(SourceLine, CurrDoc) Then
 		     			'Do nothing
 		     			CurrDoc = Nothing
+		     			FoundNonComment = True
 		     			
 		     		Else If SourceLine.ToLower.StartsWith("sub ") Or SourceLine.ToLower.StartsWith("function ") Then
 		     			InTable = False
 		     			LineRecognised = 1
-		      			
+		     			
 		      			CurrentSub = GCBSubroutine.FromCode(SourceLine, CurrDoc)
 		     			Subroutines.Add(CurrentSub)
 		     			CurrDoc = Nothing
+		     	 		FoundNonComment = True
 		     	 		
 		     		Else If SourceLine.ToLower.StartsWith("end sub") or SourceLine.ToLower.StartsWith("end function") Then
 		     			CurrentSub = MainSub
 		     			CurrDoc = Nothing
+		     			FoundNonComment = True
 		     			
 		     		Else If SourceLine.ToLower.StartsWith("table ") Then
 		     			TableCount += 1
@@ -485,15 +528,18 @@ Imports System.Text.RegularExpressions
 		     			ProgTables(TableCount, 0) = SourceLine.Substring(5).Trim
 		     			InTable = True
 		     			CurrDoc = Nothing
+		     			FoundNonComment = True
 		     		
 		     		Else If SourceLine.ToLower.StartsWith("end table") Then
 		     			InTable = False
 		     			CurrDoc = Nothing
+		     			FoundNonComment = True
 		     			
 		     		Else If InTable Then
 		     			TableSize(TableCount) += 1
 			     		ProgTables(TableCount, TableSize(TableCount)) = SourceLine
 			     		CurrDoc = Nothing
+			     		FoundNonComment = True
 			     		
 		     		Else
 			     		'Line is plain GCBASIC code, so load into buffer
@@ -508,6 +554,7 @@ Imports System.Text.RegularExpressions
 				     		End If
 			     		Next
 			     		CurrDoc = Nothing
+			     		FoundNonComment = True
 		     		End If
 	    		End If
 	  		Loop
@@ -560,8 +607,9 @@ Imports System.Text.RegularExpressions
 	  		LoadIncludes
 	  		
 	  		'Update editor from loaded program
-	  		Editor.SyncProgramToEditor
-	  		
+	  		If Not Editor Is Nothing Then
+	  			Editor.SyncProgramToEditor
+	  		End If
 		End Sub
 		
 		Public Function GetActualLine(SubNo As Integer, LineNo As Integer) As Integer
