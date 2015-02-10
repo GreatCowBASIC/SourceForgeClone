@@ -1,5 +1,5 @@
 '    Timer control routines for Great Cow BASIC
-'    Copyright (C) 2006-2009, 2014 Hugh Considine, Evan Venn
+'    Copyright (C) 2006-2015 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -48,8 +48,12 @@
 	'Is now a function, need to ensure read happens in certain order
 	'#define Timer2 TMR2
 	Dim Timer2 Alias TMR2
-          Dim Timer4 Alias TMR4
-          Dim Timer6 Alias TMR6
+	#ifdef Var(TMR4)
+		Dim Timer4 Alias TMR4
+	#endif
+	#ifdef Var(TMR6)
+		Dim Timer6 Alias TMR6
+	#endif
 #endif
 #ifdef AVR
 	Dim Timer0 Alias TCNT0
