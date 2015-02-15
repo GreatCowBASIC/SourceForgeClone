@@ -68,11 +68,20 @@
 ;
 ;    Removed errant CLS from outside of methods.
 ;
+;    14-2-15 by Evan R Vemm
+;
+;    Added I2C support.  Added/revixed functions and added scripts
+;    Revised speed from constant to defines
+;    Fixed Cursor to remove IF AND THEN as a fix for AVR
+;    Changed init to support AVR
+;    Changed backlight to support IC2 and Transistor support.
+;
+
 #startup InitLCD
 
 
 'I/O Ports
-#define LCD_IO 4 'Number of pins used for LCD data bus (2, 4 or 8)
+#define LCD_IO 4 'Number of pins used for LCD data bus (2, 4 or 8) OR 10, 12
 
 'Sub used to write to LCD. Can be altered to allow custom LCD interfaces.
 #define LCDWriteByte LCDNormalWriteByte
@@ -97,6 +106,9 @@
 'Misc Settings
 
 #define LCD_Write_Delay 2 us  ' now change all delays
+#define slow_us 80
+#define medium_us 50
+#define fast_us 32
 
 'for LCDCURSOR Sub
 #define DisplayON 12
@@ -118,6 +130,42 @@
 
 'Options for LCDHex
 #define LeadingZeroActive 2
+
+'Required for I2C
+#define LCD_I2C_Address = 0x4e
+#define LCD_Backlight_On_State  1
+#define LCD_Backlight_Off_State 0
+#script
+
+    '''Model tested had I2C Address = 0x4e.  Change address if different
+    '''YwRobot LCD1602 IIC V1
+    if LCD_IO = 10 then
+      dim i2c_lcd_byte as Byte
+      i2c_lcd_e  = i2c_lcd_byte.2
+      i2c_lcd_rw = i2c_lcd_byte.1
+      i2c_lcd_rs = i2c_lcd_byte.0
+      i2c_lcd_bl = i2c_lcd_byte.3
+      i2c_lcd_d4 = i2c_lcd_byte.4
+      i2c_lcd_d5 = i2c_lcd_byte.5
+      i2c_lcd_d6 = i2c_lcd_byte.6
+      i2c_lcd_d7 = i2c_lcd_byte.7
+    end if
+
+    '''Definition for mjkdz I2C adapter with pot bent over top of chip
+    if LCD_IO = 12then
+      dim i2c_lcd_byte as Byte
+      i2c_lcd_e  = i2c_lcd_byte.4
+      i2c_lcd_rw = i2c_lcd_byte.5
+      i2c_lcd_rs = i2c_lcd_byte.6
+      i2c_lcd_bl = i2c_lcd_byte.7
+      i2c_lcd_d4 = i2c_lcd_byte.0
+      i2c_lcd_d5 = i2c_lcd_byte.1
+      i2c_lcd_d6 = i2c_lcd_byte.2
+      i2c_lcd_d7 = i2c_lcd_byte.3
+    end if
+
+
+#endscript
 
 Sub PUT (In LCDPutLine, In LCDPutColumn, In LCDChar)
           LOCATE LCDPutLine, LCDPutColumn
@@ -149,11 +197,11 @@ Sub CLS
 
           'Clear screen
           LCDWriteByte (b'00000001')
-          Wait 2 ms
+          Wait 4 ms
 
           'Move to start of visible DDRAM
           LCDWriteByte(0x80)
-          Wait 10 10us
+          Wait 12 10us
 End Sub
 
 Sub LCDHOME
@@ -161,7 +209,7 @@ Sub LCDHOME
 
           'Return CURSOR to home
           LCDWriteByte (b'00000010')
-          Wait 10 10us
+          Wait 12 10us
 End Sub
 
 Sub LCDcmd ( In LCDValue )
@@ -178,10 +226,12 @@ end sub
 
 sub InitLCD
 
-    #IFDEF LCD_backlight
-     dir LCD_Backlight OUT
-     set LCD_Backlight OFF
-    #ENDIF
+      #IFDEF LCD_backlight
+       dir LCD_Backlight OUT
+       set LCD_Backlight OFF
+      #ENDIF
+
+
 
      #IFDEF LCD_IO 2
           SET LCD_DB OFF
@@ -237,9 +287,9 @@ sub InitLCD
               #ENDIF
          #ENDIF
 
-         wait 10 ms
-         Wait until LCDReady
-               SET LCD_RS OFF
+              wait 10 ms
+              Wait until LCDReady
+              SET LCD_RS OFF
           #ENDIF
 
           '**********************************
@@ -321,9 +371,46 @@ sub InitLCD
                 LCDWriteByte 0x06    '(b'00000110')  'Set Cursor movement
                 LCDWriteByte 0x0C    '(b'00001100')  'Turn off cursor
                 CLS  'Clear the display
-                LCD_State = 12
+
           #ENDIF
 
+
+          '***********************************
+          'I2C pcf8574 initialization routine
+          '***********************************
+          #IFDEF LCD_IO 10, 12
+                #define slow_us 40
+                #define medium_us 20
+                #define fast_us 0
+
+                LCD_Backlight = LCD_Backlight_On_State
+                #ifdef I2C_DATA
+                  I2CStart
+                  I2CSend LCD_I2C_Address
+                  LCDWriteByte 0x03: wait 5 ms
+                  LCDWriteByte 0x03: wait 1 ms
+                  LCDWriteByte 0x03: wait 5 ms
+                  LCDWriteByte 0x02: wait 5 ms
+                  LCDWriteByte 0x28: wait 5 ms
+                  LCDWriteByte 0x0c: wait 5 ms
+                  LCDWriteByte 0x01: wait 30 ms
+                  LCDWriteByte 0x06: wait 1 ms
+                  I2CStop
+                #endif
+
+                #ifdef HI2C_DATA
+                  LCDWriteByte 0x03: wait 5 ms
+                  LCDWriteByte 0x03: wait 5 ms
+                  LCDWriteByte 0x03: wait 5 ms
+                  LCDWriteByte 0x02: wait 5 ms
+                  LCDWriteByte 0x28: wait 10 ms
+                  LCDWriteByte 0x0c: wait 10 ms
+                  LCDWriteByte 0x01: wait 40 ms
+                  LCDWriteByte 0x06: wait 12 ms
+                #endif
+
+          #ENDIF
+          LCD_State = 12
 end sub
 
 'String output
@@ -453,7 +540,11 @@ sub LCDHex  (In LCDValue, optional in LCDChar = 1 )
     Set LCD_RS OFF
 
     'Write chars to LCD - if user specifies LeadingZeroActive then print the leading char
-    IF LCDChar = LeadingZeroActive and LCDValue < 16 then LCDWriteChar 48
+    IF LCDChar = LeadingZeroActive then
+       if LCDValue < 16 then
+          LCDWriteChar 48
+       end if
+    END IF
 
     'Write high char if LCDValue is > 15 (DEC)
     IF LCDValue > 15 then LCDWriteChar HighChar
@@ -593,19 +684,19 @@ sub LCDNormalWriteByte(In LCDByte)
 
            'character delay settings
            #IFDEF LCD_SPEED FAST   'Charcter rate  ~20K
-                wait 32  us
+                wait fast_us  us
            #ENDIF
 
            #IFDEF LCD_SPEED MEDIUM  'Character Rate ~15K
-                wait 50 us
+                wait medium_us us
            #ENDIF
 
            #IFDEF LCD_SPEED SLOW   'Character Rate  ~10K
-                wait 80 us
+                wait slow_us us
            #ENDIF
 
            #IFNDEF LCD_Speed  ' Default to slow
-                wait 80 us
+                wait slow_us us
            #ENDIF
 
       #ENDIF
@@ -630,23 +721,124 @@ sub LCDNormalWriteByte(In LCDByte)
 
            'character delay settings
            #IFDEF LCD_Speed FAST   'Char Rate ~20K
-                wait 32 us
+                wait fast_us us
            #ENDIF
 
            #IFDEF LCD_SPEED MEDIUM  'Char Rate ~15K
-                wait 50 us
+                wait medium_us us
            #ENDIF
 
            #IFDEF LCD_SPEED SLOW  ' Char Rate ~10K
-                wait 80 us
+                wait slow_us us
            #ENDIF
 
            #IFNDEF LCD_SPEED ' default to slow
-                wait 80 us
+                wait slow_us us
            #ENDIF
 
       #ENDIF
 
+      #IFDEF LCD_IO 10, 12
+         #ifdef I2C_DATA
+             IF LCD_RS = 1 then
+                i2c_lcd_rs=1;   ''' Data
+             ELSE
+                i2c_lcd_rs=0;   ''' Command
+             end if
+
+             i2c_lcd_rw  = 0;
+             i2c_lcd_bl  = LCD_Backlight.0;
+             I2CReStart
+             I2CSend LCD_I2C_Address
+             ''' Send upper nibble
+             i2c_lcd_d7 = LCDByte.7
+             i2c_lcd_d6 = LCDByte.6
+             i2c_lcd_d5 = LCDByte.5
+             i2c_lcd_d4 = LCDByte.4
+             i2c_lcd_e = 0;
+             I2CSend i2c_lcd_byte
+             i2c_lcd_e = 1;
+             I2CSend i2c_lcd_byte
+             i2c_lcd_e = 0;
+             I2CSend i2c_lcd_byte
+
+             ''' Send lower nibble
+             i2c_lcd_d7 = LCDByte.3
+             i2c_lcd_d6 = LCDByte.2
+             i2c_lcd_d5 = LCDByte.1
+             i2c_lcd_d4 = LCDByte.0
+             i2c_lcd_e = 0;
+             I2CSend i2c_lcd_byte
+             i2c_lcd_e = 1;
+             I2CSend i2c_lcd_byte
+             i2c_lcd_e = 0;
+             I2CSend i2c_lcd_byte
+             I2CStop
+             LCD_State = 12
+          #ENDIF
+         #ifdef HI2C_DATA
+             HI2CMode Master    ;call to Mastere required to init I2C Baud Rate else.... toast!
+             IF LCD_RS = 1 then
+                i2c_lcd_rs=1;   ''' Data
+             ELSE
+                i2c_lcd_rs=0;   ''' Command
+             end if
+
+             i2c_lcd_rw  = 0;
+             i2c_lcd_bl  = LCD_Backlight.0;
+
+             HI2CReStart                        ;generate a start signal
+             HI2CSend LCD_I2C_Address                      ;inidcate a write
+
+             i2c_lcd_d7 = LCDByte.7
+             i2c_lcd_d6 = LCDByte.6
+             i2c_lcd_d5 = LCDByte.5
+             i2c_lcd_d4 = LCDByte.4
+             i2c_lcd_e = 0;
+             HI2CSend i2c_lcd_byte
+             i2c_lcd_e = 1;
+             HI2CSend i2c_lcd_byte
+             i2c_lcd_e = 0;
+             HI2CSend i2c_lcd_byte
+             ''' Send lower nibble
+             i2c_lcd_d7 = LCDByte.3
+             i2c_lcd_d6 = LCDByte.2
+             i2c_lcd_d5 = LCDByte.1
+             i2c_lcd_d4 = LCDByte.0
+             i2c_lcd_e = 0;
+             HI2CSend i2c_lcd_byte
+             i2c_lcd_e = 1;
+             HI2CSend i2c_lcd_byte
+             i2c_lcd_e = 0;
+             HI2CSend i2c_lcd_byte
+             HI2CStop
+             LCD_State = 12
+
+          #ENDIF
+          'character delay settings
+           #IFDEF LCD_Speed FAST   'Char Rate ~20K
+                wait fast_us us
+           #ENDIF
+
+           #IFDEF LCD_SPEED MEDIUM  'Char Rate ~15K
+                wait medium_us us
+           #ENDIF
+
+           #IFDEF LCD_SPEED SLOW  ' Char Rate ~10K
+                wait slow_us us
+           #ENDIF
+
+           #IFNDEF LCD_SPEED ' default to slow
+                wait slow_us us
+           #ENDIF
+
+
+      #ENDIF
+      IF LCDByte < 16 then
+         if LCDByte > 7 then
+            LCD_State = LCDByte
+         end if
+      END IF
 end sub
 
 SUB LCD2_NIBBLEOUT (In LCD2BYTE)
@@ -758,22 +950,21 @@ sub LCDCursor(In LCDCRSR)
 
  Set LCD_RS OFF
 
-     If LCDCRSR = ON  Then LCDTemp = LCD_State OR 12
-     IF LCDCRSR = LCDON Then LCDTemp = LCD_State OR 12
+     If LCDCRSR = ON  Then LCDTemp = LCD_State OR LCDON
+     IF LCDCRSR = LCDON Then LCDTemp = LCD_State OR LCDON
 
-     If LCDCRSR = OFF Then LCDTemp = LCD_State AND 11
-     If LCDCRSR = LCDOFF Then LCDTemp = LCD_State AND 11
+     If LCDCRSR = OFF Then LCDTemp = LCD_State AND LCDOFF
+     If LCDCRSR = LCDOFF Then LCDTemp = LCD_State AND LCDOFF
 
-     If LCDCRSR = CursorOn Then LCDTemp = LCD_State OR 10
-     If LCDCRSR = CursorOFF then LCDTemp = LCD_State and 13
+     If LCDCRSR = CursorOn Then LCDTemp = LCD_State OR CursorON
+     If LCDCRSR = CursorOFF then LCDTemp = LCD_State and CursorOFF
 
-     If LCDCRSR = FLASH  Then LCDTemp = LCD_State OR 9
-     If LCDCRSR = FLASHON  Then LCDTemp = LCD_State OR 9
-     If LCDCRSR = FLASHOFF then LCDTemp = LCD_State and 14
+     If LCDCRSR = FLASH  Then LCDTemp = LCD_State OR FLASHON
+     If LCDCRSR = FLASHON  Then LCDTemp = LCD_State OR FLASHON
+     If LCDCRSR = FLASHOFF then LCDTemp = LCD_State and FLASHOFF
 
      LCDWriteByte(LCDTemp)
      LCD_State = LCDtemp  'save last state
-    ;Wait 5 10us
 
 end sub
 
@@ -880,6 +1071,19 @@ sub LCDDisplayOn
 End Sub
 
 sub LCDBacklight(IN LCDTemp)
-    IF LCDTemp = OFF then set LCD_Backlight OFF
-    IF LCDTemp = ON then  set LCD_Backlight ON
+    #IFDEF LCD_IO 0,2,4,8
+      'Set the port for this mode
+      IF LCDTemp = OFF then set LCD_Backlight LCD_Backlight_Off_State
+      IF LCDTemp = ON then  set LCD_Backlight LCD_Backlight_On_State
+    #ENDIF
+    #IFDEF LCD_IO 10,12
+      'Assign the variable for this mode
+      IF LCDTemp = OFF then LCD_Backlight = LCD_Backlight_Off_State
+      IF LCDTemp = ON then  LCD_Backlight = LCD_Backlight_On_State
+      ' write a zero and the method will set display backlite
+      Set LCD_RS OFF
+      LCDWriteByte( 0 )
+    #ENDIF
+
+
 end Sub
