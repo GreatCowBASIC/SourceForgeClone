@@ -289,9 +289,11 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	If VarAlias <> "" Then
 		VarPointer = "POINTER"
 		'Ensure alias variable is also declared
-		GetTokens (VarAlias, AliasList(), ALC)
+		GetTokens (VarAlias, AliasList(), ALC, ",")
 		For PD = 1 To ALC
-			AddVar AliasList(PD), "BYTE", 1, VarSub, "REAL", Origin, -1, -1
+			If Not IsConst(AliasList(PD)) And Not IsCalc(AliasList(PD)) Then
+				AddVar AliasList(PD), "BYTE", 1, VarSub, "REAL", Origin, -1, -1
+			End If
 		Next
 	End If
 	
