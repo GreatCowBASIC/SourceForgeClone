@@ -75,7 +75,20 @@
 ;    Fixed Cursor to remove IF AND THEN as a fix for AVR
 ;    Changed init to support AVR
 ;    Changed backlight to support IC2 and Transistor support.
-;
+;    Revised to support multiple I2C.
+;    Uses
+'''Set LCD_10 to 10 for the YwRobot LCD1602 IIC V1 or the Sainsmart LCD_PIC I2C adapter
+'''Set LCD_10 to 12 for the Ywmjkdz I2C adapter with pot bent over top of chip
+
+'''   #define LCD_I2C_Address_1 0x4e
+'''   #define LCD_I2C_Address_2 0x4c
+'''   #define LCD_I2C_Address_3 0x4a
+'''   #define LCD_I2C_Address_4 0x49
+'''
+'''   Use LCD_I2C_Address_Current = LCD_I2C_Address to change the LCD output routines to a specific device.
+'''       LCD_I2C_Address_Current = LCD_I2C_Address
+'''       Print "LCD Address is now": LCDHex(  LCD_I2C_Address_Current, 2)
+
 
 #startup InitLCD
 
@@ -132,9 +145,9 @@
 #define LeadingZeroActive 2
 
 'Required for I2C
-#define LCD_I2C_Address = 0x4e
 #define LCD_Backlight_On_State  1
 #define LCD_Backlight_Off_State 0
+
 #script
 
     '''Model tested had I2C Address = 0x4e.  Change address if different
@@ -149,6 +162,7 @@
       i2c_lcd_d5 = i2c_lcd_byte.5
       i2c_lcd_d6 = i2c_lcd_byte.6
       i2c_lcd_d7 = i2c_lcd_byte.7
+
     end if
 
     '''Definition for mjkdz I2C adapter with pot bent over top of chip
@@ -162,8 +176,8 @@
       i2c_lcd_d5 = i2c_lcd_byte.1
       i2c_lcd_d6 = i2c_lcd_byte.2
       i2c_lcd_d7 = i2c_lcd_byte.3
-    end if
 
+    end if
 
 #endscript
 
@@ -379,38 +393,58 @@ sub InitLCD
           'I2C pcf8574 initialization routine
           '***********************************
           #IFDEF LCD_IO 10, 12
+                #ifndef LCD_I2C_Address_1
+                        #define LCD_I2C_Address_1 0x4E
+                #endif
                 #define slow_us 40
                 #define medium_us 20
-                #define fast_us 0
-
+                #define fast_us 10
                 LCD_Backlight = LCD_Backlight_On_State
+                wait 2 s
+
                 #ifdef I2C_DATA
-                  I2CStart
-                  I2CSend LCD_I2C_Address
-                  LCDWriteByte 0x03: wait 5 ms
-                  LCDWriteByte 0x03: wait 1 ms
-                  LCDWriteByte 0x03: wait 5 ms
-                  LCDWriteByte 0x02: wait 5 ms
-                  LCDWriteByte 0x28: wait 5 ms
-                  LCDWriteByte 0x0c: wait 5 ms
-                  LCDWriteByte 0x01: wait 30 ms
-                  LCDWriteByte 0x06: wait 1 ms
-                  I2CStop
+                  InitI2C       ;call to init i2c is required here!
                 #endif
 
                 #ifdef HI2C_DATA
-                  LCDWriteByte 0x03: wait 5 ms
-                  LCDWriteByte 0x03: wait 5 ms
-                  LCDWriteByte 0x03: wait 5 ms
-                  LCDWriteByte 0x02: wait 5 ms
-                  LCDWriteByte 0x28: wait 10 ms
-                  LCDWriteByte 0x0c: wait 10 ms
-                  LCDWriteByte 0x01: wait 40 ms
-                  LCDWriteByte 0x06: wait 12 ms
+                  HI2CMode Master    ;call to Master required to init I2C Baud Rate here!
                 #endif
+                repeat 2             ; called twice to ensure reset is complete.  Needed for cheap LCDs!!
 
+                #ifdef LCD_I2C_Address_1
+                       LCD_I2C_Address_Current = LCD_I2C_Address_1
+                       initI2CLCD
+                #endif
+                #ifdef LCD_I2C_Address_2
+                       LCD_I2C_Address_Current = LCD_I2C_Address_2
+                       initI2CLCD
+                #endif
+                #ifdef LCD_I2C_Address_3
+                       LCD_I2C_Address_Current = LCD_I2C_Address_3
+                       initI2CLCD
+                #endif
+                #ifdef LCD_I2C_Address_4
+                       LCD_I2C_Address_Current = LCD_I2C_Address_4
+                       initI2CLCD
+                #endif
+                end repeat
           #ENDIF
           LCD_State = 12
+end sub
+
+sub InitI2CLCD
+    ' moved to a sub support multiple devices
+                wait 15 ms
+                LCDWriteByte 0x03: wait 5 ms
+                LCDWriteByte 0x03: wait 1 ms
+                LCDWriteByte 0x03: wait 1 ms
+                LCDWriteByte 0x03: wait 1 ms
+                LCDWriteByte 0x02: wait 1 ms
+                LCDWriteByte 0x28: wait 1 ms
+                LCDWriteByte 0x0c: wait 1 ms
+                LCDWriteByte 0x01: wait 15 ms
+                LCDWriteByte 0x06: wait 1 ms
+                CLS
 end sub
 
 'String output
@@ -749,7 +783,7 @@ sub LCDNormalWriteByte(In LCDByte)
              i2c_lcd_rw  = 0;
              i2c_lcd_bl  = LCD_Backlight.0;
              I2CReStart
-             I2CSend LCD_I2C_Address
+             I2CSend LCD_I2C_Address_Current
              ''' Send upper nibble
              i2c_lcd_d7 = LCDByte.7
              i2c_lcd_d6 = LCDByte.6
@@ -777,7 +811,6 @@ sub LCDNormalWriteByte(In LCDByte)
              LCD_State = 12
           #ENDIF
          #ifdef HI2C_DATA
-             HI2CMode Master    ;call to Mastere required to init I2C Baud Rate else.... toast!
              IF LCD_RS = 1 then
                 i2c_lcd_rs=1;   ''' Data
              ELSE
@@ -788,7 +821,7 @@ sub LCDNormalWriteByte(In LCDByte)
              i2c_lcd_bl  = LCD_Backlight.0;
 
              HI2CReStart                        ;generate a start signal
-             HI2CSend LCD_I2C_Address                      ;inidcate a write
+             HI2CSend LCD_I2C_Address_Current   ;inidcate a write
 
              i2c_lcd_d7 = LCDByte.7
              i2c_lcd_d6 = LCDByte.6

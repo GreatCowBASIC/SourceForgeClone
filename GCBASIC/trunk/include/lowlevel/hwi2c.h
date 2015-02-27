@@ -1,6 +1,13 @@
 '    Hardware I2C routines for Great Cow BASIC
 '    Copyright (C) 2010 Hugh Considine
-'    Copyright (C) 2014 Evan R. Venn
+'    Copyright (C) 2014 & 2015 Evan R. Venn & Jacques Erdemaal
+'    Version 1.1e
+
+'    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
+'            and to improve the initialisation of the AVR
+'
+'    Updated Feb 2015 to support AVR and correct HI2CReceive parameter error.
+'
 
 
 '    This library is free software; you can redistribute it and/or
@@ -24,33 +31,30 @@
 'COMMANDS UNUSABLE!
 '********************************************************************************
 
-'To make the PIC pause until it receives an SPI message while in slave mode, set the
-'constant "WaitForSPI" at the start of the program. The value does not matter.
 
-'SPI mode constants also used by hardware I2C:
-' Define I2C settings - CHANGE PORTS
+'SPI mode constants ALSO used by hardware I2C:
+' Define HI2C settings - CHANGE PORTS
 '  #define MasterFast 13
-'  #define Master 12
+'  #define Master 12             ; Used in this module
 '  #define MasterSlow 11
 '  #define SlaveSS 2
-'  #define Slave 1
+'  #define Slave 1               ; Used in this module
 '
 
-'I2C Mode constants
+'HI2C Mode constants
 '#define Slave10 3
 'use Slave for 7-bit slave mode and Master for master mode
 
 
 'Setup
-     ' Master
+'        ;Master and AVR
 '        #define I2C_DATA PORTC.4
 '        #define I2C_CLOCK PORTC.3
-'        'Initialise I2C Slave
-'        'I2C pins need to be input for SSP module
-'        Dir I2C_DATA in
-'        Dir I2C_CLOCK in
-'      ' MASTER type
-'        HI2CMode MasterFast
+'        ;I2C pins need to be input for SSP module on a PIC
+'        Dir HI2C_DATA in
+'        Dir HI2C_CLOCK in
+'        ;Type
+'        HI2CMode Master
 
 
 '      ' SLAVE
@@ -71,19 +75,95 @@
 #define NACK            FALSE     'permit alternative spelling
 #define ACK             TRUE
 
+  ' Move to HWI2C.h when completed
+  #define AVR_I2C_START 0x08
+  #define AVR_I2C_ReSTART 0x10
+
+  #define MT_SLA_ACK 0x18
+  #define MT_SLA_NACK_REC 0x20
+  #define MT_DATA_ACK 0x28
+  #define MT_DATA_NACK_REC 0x30
+  #define ARB_LOST 0x38
+
+  #define MR_SLA_ACK 0x40
+  #define MR_SLA_NACK_REC 0x48
+  #define MR_DATA_ACK 0x50
+  #define MR_DATA_NACK_REC 0x58
+
+
+#startup AVRHIC2Init
+
 #script
 	HI2C_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) - 1
-	'error I2CBaudTemp
-	
+
 	If PIC Then
-		HI2CHasData = "BF = On"
+             HI2CHasData = "BF = On"
 	End If
-	
+
+
+
+          IF AVR then
+              'Redirects to AVR CODE
+              HI2CMode = AVRHI2CMode
+              HI2CStart = AVRHI2CStart
+              HI2CStop = AVRHI2CStop
+              HI2CReStart = AVRHI2CReStart
+              HI2CSend = AVRHI2CSend
+              HI2CReceive = AVRHI2CReceive
+
+
+              TWIMode = AVRHI2CMode
+              TWIStart = AVRHI2CStart
+              TWIStop = AVRHI2CStop
+              TWICReStart = AVRHI2CReStart
+              TWISend = AVRHI2CSend
+              TWIReceive = AVRHI2CReceive
+              TWIByte = I2CByte
+              TWIAckPollState = HI2CAckPollState
+              TWIStartOccurred = HI2CStartOccurred
+
+
+               ' SCL CLOCK
+               ' ---------
+               ' TWBR= (CPU_CLK - SCL_BD * 16)/2 * SCL_BD * PRESC       (328P  PDF 21.5.2)
+               CPU_Clk = ChipMhz * 1e6
+               BD_RATE=1000 * HI2C_BAUD_RATE
+
+               CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*1))
+               If CST_TWBR <= 255 Then
+                   CST_PRESCALER = 0
+               End If
+               If CST_TWBR > 255 Then
+                   CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*4))
+                   If CST_TWBR <= 255 Then
+                      CST_PRESCALER = 1
+                   End If
+                   If CST_TWBR > 255 Then
+                      CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*16))
+                      If CST_TWBE <= 255 Then
+                         CST_PRESCALER = 2
+                      End If
+                      If CST_TWBR > 255 Then
+                         CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*64))
+                         If CST_TWBR <=255 Then
+                            CST_PRESCALER = 3
+                         End If
+                         If CST_TWBR > 255 Then
+                             Compiler Will Show error
+                            Error "Error Computing TWI-I2C BAUD RATE PARAMETERS"
+                            Error "    CPU FREQ    = " ChipMhz " Mhz"
+                            Error "    I2C BAUD RATE " HI2C_BAUD_RATE " kHz"
+                         End If
+                      End If
+                   End If
+               End If
+              ' Uncommented Displays Results In GCB Output Window
+              ' Error " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWB
+          END IF
 #endscript
 
 
 Sub HI2CMode (In HI2CCurrentMode)
-	
 	
 	#ifdef PIC
 		#ifndef Var(SSPCON1)
@@ -251,9 +331,9 @@ Sub HI2CSend(In I2CByte)
                               HI2CWaitMSSP
 
 			if ACKSTAT =  1 then
-                              	HI2CAckPollState = true
+                                 HI2CAckPollState = true
                               else
-                                        HI2CAckPollState = false
+                                 HI2CAckPollState = false
                               end if
 
 		If SSPCON1.WCOL = On Then
@@ -267,7 +347,7 @@ Sub HI2CSend(In I2CByte)
 
 End Sub
 
-Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = NACK )
+Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
 	
 	#ifdef PIC
 
@@ -281,12 +361,12 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = NACK )
                     #ifdef Var(SSPCON2)
 			'Master mode
 			If HI2CCurrentMode > 10 Then
-                                if HI2CGetAck = NACK then
-                                   ' Not Acknowledge
-                                    ACKDT = 1 ; ACK DATA to send is 1 (NACK) ' bsf SSPCON2,ACKDT
+                                if HI2CGetAck.0 = 1 then
+                                   ' Acknowledge
+                                    ACKDT = 0
                                 else
-                                    ' Acknowledge
-                                    ACKDT = 0 ; ACK DATA to send is 1 (NACK) ' bsf SSPCON2,ACKDT
+                                    ' Not Acknowledge
+                                    ACKDT = 1
                                 end if
                                 RCEN = 1
 			'Slave mode
@@ -334,3 +414,161 @@ sub HI2CWaitMSSP
 end sub
 
 
+
+
+
+Sub AVRHI2CMode ( In HI2CCurrentMode )
+
+          #ifdef AVR
+                 If HI2CCurrentMode = Master Then
+
+                    TWSR = CST_PRESCALER    ' 0     0 0x00
+                    TWBR = CST_TWBR
+
+                 end if
+
+                 if HI2CCurrentMode = Slave then
+                 '  [tbd]
+                 end if
+                 ldi  SysValueCopy, 0|(1<<TWEN)
+                 sts	TWCR,SysValueCopy
+
+	#endif
+
+
+End Sub
+
+Sub AVRHI2CStart
+
+
+    if HI2CCurrentMode = 0 then
+       'assume MASTER
+       HI2CMode Master
+    end if
+
+    lds	SysValueCopy,TWCR
+    sbr   SysValueCopy, (1<<TWINT)|(1<<TWSTA)| (1<<TWEN)
+    sts	TWCR,SysValueCopy
+
+    Do While TWINT = 0
+    Loop
+
+    I2CByte = TWSR & 0xF8
+
+    if I2CByte = AVR_I2C_START then
+       HI2CStartOccurred = true
+    else
+       HI2CStartOccurred = false
+    end if
+
+End sub
+
+Sub AVRHI2CReStart
+
+    lds	SysValueCopy,TWCR
+    sbr   SysValueCopy, (1<<TWINT)|(1<<TWSTA)| (1<<TWEN)
+    sts	TWCR,SysValueCopy
+
+    Do While TWINT = 0
+    Loop
+
+    I2CByte = TWSR & 0xF8
+
+    ' extended code to ensure compiler gets the correctly.
+    if I2CByte = AVR_I2C_START then
+       HI2CStartOccurred = true
+       goto exitAVRHI2CReStart
+    else
+       HI2CStartOccurred = false
+    end if
+
+
+    if I2CByte = AVR_I2C_ReSTART then
+       HI2CStartOccurred = true
+       goto exitAVRHI2CReStart
+    else
+       HI2CStartOccurred = false
+    end if
+
+exitAVRHI2CReStart:
+End sub
+
+
+Sub AVRHI2CStop
+
+    lds	SysValueCopy,TWCR
+    sbr   SysValueCopy, (1<<TWINT)|(1<<TWEN)|(1<<TWSTO)
+    sts	TWCR,SysValueCopy
+
+End Sub
+
+
+Sub AVRHI2CSend ( In I2CByte )
+
+        lds       SysValueCopy,I2CBYTE
+        sts       TWDR,SysValueCopy
+        ldi       SysValueCopy, (1<<TWINT) | (1<<TWEN)
+        sts       TWCR, SysValueCopy
+
+        Do While TWINT = 0
+        Loop
+
+        'Destructive use of I2CByte to save memory
+        I2CByte = TWSR & 0xF8
+
+        HI2CAckPollState = true
+        Select case I2CByte
+               case AVR_I2C_START
+                    ' dummy
+               case MT_SLA_ACK
+                  HI2CAckPollState = false
+               case MT_DATA_ACK
+                  HI2CAckPollState = false
+               case MT_SLA_NACK_REC
+                   HI2CAckPollState = true
+               case MT_DATA_NACK_REC
+                   HI2CAckPollState = true
+               case MR_SLA_NACK_REC
+                   HI2CAckPollState = true
+               case MR_SLA_ACK
+                   HI2CAckPollState = false
+               case MR_DATA_NACK_REC
+                   HI2CAckPollState = false
+               case else
+                    ' bad event!!
+        end select
+
+        HI2CStartOccurred = false
+
+End Sub
+
+
+Sub AVRHI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
+
+        if HI2CGetAck.0 = 0 then
+
+          lds	SysValueCopy,TWCR
+          sbr       SysValueCopy, (1<<TWINT)
+          cbr       SysValueCopy, (1<<TWSTA) | (1<<TWSTO) | (1<<TWEA)
+          sts	TWCR,SysValueCopy
+
+        else
+            ' Acknowledge
+          lds	SysValueCopy,TWCR
+          cbr       SysValueCopy, (1<<TWSTA) | (1<<TWSTO)
+          sbr       SysValueCopy, (1<<TWINT) | (1<<TWEA)
+          sts	TWCR,SysValueCopy
+        end if
+
+        Do While TWINT = 0
+        Loop
+        'Get byte
+        I2CByte = TWDR
+
+End Sub
+
+
+
+sub AVRHIC2Init
+    HI2CCurrentMode = 0
+end sub
