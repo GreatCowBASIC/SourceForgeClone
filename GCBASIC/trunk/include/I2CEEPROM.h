@@ -2,6 +2,7 @@
 '    Copyright (C) 2013 Evan R. Venn
 '    Copyright (C) 2014 Thomas Henry
 '    Copyright (C) 2014 Evan R. Venn
+'    Copyright (C) 2015 Evan R. Venn
 
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -17,7 +18,7 @@
 '    License along with this library' if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-;	Evan R.  Venn                --- 10/2013   - Original work 
+;	Evan R.  Venn                --- 10/2013   - Original work
 ;	Thomas Henry                 --- 5/29/2014 - Updated and rationalised
 ;	Evan R.  Venn Revised        --- 6/28/2014 - Correct parameter    eeprom_rd _array to IN
 ;	Evan R.  Venn Revised        --- 7/3/2014 - Added Hardware I2C Support.  This simply detects your configuration variable I2C_DATA or HI2C_DATA
@@ -30,7 +31,8 @@
 '    		- eeprom_rd_string
 '
 '    		- and, the Variables were removed to ensure stability in all cases.
-'	Evan R.  Venn Revised        --- 7/13/2014  - Removed error in use of byte variable eepPageSize  
+'	Evan R.  Venn Revised        --- 7/13/2014  - Removed error in use of byte variable eepPageSize
+'	Evan R.  Venn Revised        --- 16/3/2015  - Renamed systemp to CalcNextPage to remove AVR error
 
 
 
@@ -210,8 +212,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
       for eep_i = 1 to eepLen
         HI2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        systemp = eepAddr mod eepPageSize  ; calculate next page
-        if systemp = 0 then ;end of page
+        CalcNextPage = eepAddr mod eepPageSize  ; calculate next page
+        if CalcNextPage = 0 then ;end of page
           HI2CStop                           ;so, lock in place
           do
             HI2CReStart                              ;generate a start signal
@@ -235,8 +237,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
       for eep_i = 1 to eepLen
         I2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        systemp = eepAddr mod eepPageSize  ; calculate next page
-        if systemp = 0 then ;end of page
+        CalcNextPage = eepAddr mod eepPageSize  ; calculate next page
+        if CalcNextPage = 0 then ;end of page
           I2CStop                           ;so, lock in place
           I2CAckPoll(eepDev)                ;wait for buffer write
           I2CReStart                          ;generate a start signal
@@ -266,8 +268,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
       for eep_i = 1 to eepLen
         HI2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        systemp = eepAddr mod eepPageSize
-        if systemp  = 0 then                    ;end of page
+        CalcNextPage = eepAddr mod eepPageSize
+        if CalcNextPage  = 0 then                    ;end of page
           HI2CStop                           ;so, lock in place
           do
             HI2CReStart                              ;generate a start signal
@@ -289,8 +291,8 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
       for eep_i = 1 to eepLen
         I2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
-        systemp = eepAddr mod eepPageSize  ; calculate next page
-        if systemp = 0 then ;end of page
+        CalcNextPage = eepAddr mod eepPageSize  ; calculate next page
+        if CalcNextPage = 0 then ;end of page
           I2CStop                           ;so, lock in place
           I2CAckPoll(eepDev)                ;wait for buffer write
           I2CReStart                          ;generate a start signal
