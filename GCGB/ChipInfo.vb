@@ -32,6 +32,18 @@ Imports System.Windows.Forms
 		
 	End Class
 	
+	Public Class SFRVarBit
+		Public Sub New (Name As String, Var As String, Bit As Integer)
+			Me.Name = Name
+			Me.Var = Var
+			Me.Bit = Bit
+		End Sub
+		
+		Public Dim Name As String
+		Public Dim Var As String
+		Public Dim Bit As Integer
+	End Class
+	
 	Public Class ChipInfo
 		'Stores info on the current chip
 		
@@ -48,6 +60,10 @@ Imports System.Windows.Forms
 		Public Dim ConfigSettings as List(Of ChipConfigOption)
 		Public Dim NoConfig As Integer
 		Public Dim PinCount As Integer
+		
+		'Stores special function registers
+		Public Dim SFRVars As Dictionary(Of String, Integer)
+		Public Dim SFRVarBits As Dictionary(Of String, SFRVarBit)
 		
 		'Stores pinout
 		Public Dim PinList As List(Of ChipPinInfo)
@@ -72,6 +88,8 @@ Imports System.Windows.Forms
 	    	ConfigSettings = New List(Of ChipConfigOption)
 	    	InterruptList = New List(Of String)
 	    	PinList = New List(Of ChipPinInfo)
+	    	SFRVars = New Dictionary(Of String, Integer)(StringComparer.CurrentCultureIgnoreCase)
+	    	SFRVarBits = New Dictionary(Of String, SFRVarBit)(StringComparer.CurrentCultureIgnoreCase)
 	    	CurrentSection = ""
 	    	
 	    	ADCInputs = 0
@@ -114,7 +132,21 @@ Imports System.Windows.Forms
 			    				End If
 			    				
 			    			End If
+		    			
+		    			'SFR variables
+		    			Else If CurrentSection = "[REGISTERS]" Then
+		    				If TempData.IndexOf(",") <> -1 Then
+		    					Dim LineSections() As String = TempData.Split(",")
+		    					SFRVars.Add(LineSections(0), LineSections(1))
+		    				End If
 		    				
+		    			'SFR variable bits
+		    			Else If CurrentSection = "[BITS]" Then
+		    				If TempData.IndexOf(",") <> -1 Then
+		    					Dim LineSections() As String = TempData.Split(",")
+		    					SFRVarBits.Add(LineSections(0), New SFRVarBit(LineSections(0), LineSections(1), LineSections(2)))
+		    				End If
+		    			
 		    			'Config operations section
 		    			Else If CurrentSection = "[CONFIGOPS]" Then
 		    				'This line is found on chips with no config settings

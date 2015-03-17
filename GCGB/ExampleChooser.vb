@@ -19,6 +19,8 @@ Public Partial Class ExampleChooser
 	Private Dim Program As GCBProgram
 	Private Dim SelectedFile As FileInfo
 	
+	Private Dim ProgramSFRList As List(Of String)
+	
 	Public Sub New(ExampleDir As String)
 		' The Me.InitializeComponent call is required for Windows Forms designer support.
 		Me.InitializeComponent()
@@ -42,7 +44,7 @@ Public Partial Class ExampleChooser
 		'Get list of supported chips
 		Dim ChipDataDir As New IO.DirectoryInfo(MainForm.InstallDir + Mainform.FilenameChipDir)
 		Dim ChipNameList As IO.FileInfo() = ChipDataDir.GetFiles()
-		Dim ChipFileName As IO.FileInfo			
+		Dim ChipFileName As IO.FileInfo
 		Dim ChipList As New List(Of String)
 		Dim ChipName As String
 		
@@ -107,6 +109,9 @@ Public Partial Class ExampleChooser
 				
 				Program = New GCBProgram(Nothing)
 				Program.LoadFile(SelectedFile.FullName)
+				'Find SFR vars/bits used by program
+				ProgramSFRList = Program.FindSFRNames
+				
 				UpdateDisplay
 				
 				Dim exampleName As String = SelectedFile.Name
@@ -127,8 +132,12 @@ Public Partial Class ExampleChooser
 	Sub LicenceLinkLinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs)
 		'If GPL or LGPL, display
 		Dim LicenceFile As String = ""
+		Dim LicenceName As String = ""
+		If TypeOf LicenceLink.Tag Is String Then
+			LicenceName = LicenceLink.Tag
+		End If
 		
-		Select Case LicenceLink.Text.ToUpper
+		Select Case LicenceName.ToUpper
 			Case "GPL": LicenceFile = "license.txt"
 			Case "LGPL": LicenceFile = "lesser.txt"
 		End Select
@@ -161,6 +170,11 @@ Public Partial Class ExampleChooser
 			Else If Program.About.Version <> "" Then
 				labelVersion.Text = "Version " + Program.About.Version
 			End If
+			If Not Program.About Is Nothing Then
+				If Program.About.PublishedDate <> "" Then
+					labelVersion.Text += " Date " + Program.About.PublishedDate
+				End If
+			End If
 			
 			labelAuthor.Text = ""
 			If Not Program.About Is Nothing Then
@@ -169,16 +183,17 @@ Public Partial Class ExampleChooser
 				End If
 			End If
 			
-			LicenceLink.Text = "Unknown"
+			LicenceLink.Text = "Licence: Unknown"
+			LicenceLink.Tag = ""
+			LicenceLink.Enabled = False
 			If Not Program.About Is Nothing Then
 				If Program.About.Licence <> "" Then
-					LicenceLink.Text = Program.About.Licence
+					LicenceLink.Text = "Licence: " + Program.About.Licence
+					If Program.About.Licence.ToUpper = "GPL" Or Program.About.Licence.ToUpper = "LGPL" Then
+						LicenceLink.Tag = Program.About.Licence
+						LicenceLink.Enabled = True
+					End If
 				End If
-			End If
-			If LicenceLink.Text.ToUpper = "GPL" Or LicenceLink.Text.ToUpper = "LGPL" Then
-				LicenceLink.Enabled = True
-			Else
-				LicenceLink.Enabled = False
 			End If
 			
 			'Summary display
@@ -252,7 +267,56 @@ Public Partial Class ExampleChooser
 		Me.Close
 	End Sub
 	
-	Sub NewChipModelSelectedValueChanged(sender As Object, e As EventArgs)
+	Private Sub ValidateNewChipModel
+		Dim NewChipData As New ChipInfo(newChipModel.Text)
+		Dim MissingList As String = ""
+		Dim CompatibilityMessage As String
 		
+		CompatibilityMessage = "Example will work on this chip"
+		
+		'Check for I/O ports that will need changing
+		
+		'Check for SFR vars and bits not present on new chip
+		Dim CurrSFR As String
+		If Not ProgramSFRList Is Nothing And Not NewChipData Is Nothing Then
+			For Each CurrSFR In ProgramSFRList
+				If Not (NewChipData.SFRVars.ContainsKey(CurrSFR) Or NewChipData.SFRVarBits.ContainsKey(CurrSFR)) Then
+					'Found missing SFR
+					If MissingList = "" Then
+						MissingList = CurrSFR
+					Else
+						MissingList += ", " + CurrSFR
+					End If
+				End If
+			Next
+			If MissingList <> "" Then
+				CompatibilityMessage = "Example will not work on this chip due to missing register/s (" + MissingList + ")"
+			End If
+		End If
+		
+		chipModelMessage.Text = CompatibilityMessage
 	End Sub
+	
+	Sub NewChipModelSelectedIndexChanged(sender As Object, e As EventArgs)
+		ValidateNewChipModel
+	End Sub
+	
+	Sub NewChipModelTextUpdate(sender As Object, e As EventArgs)
+		Dim ItemFound As Boolean
+		Dim SearchChip As String
+		
+		'Search in list of chips
+		ItemFound = False
+		For Each SearchChip In NewChipModel.Items
+			If SearchChip.ToUpper = NewChipModel.Text.ToUpper Then
+				ItemFound = True
+				Exit For
+			End If
+		Next
+		
+		If ItemFound Then
+			ValidateNewChipModel
+		End If
+	End Sub
+	
 End Class
