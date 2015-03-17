@@ -575,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 21/2/2015"
+Version = "0.9 12/3/2015"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2410,7 +2410,11 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Int
 						'Temp contains integer
 						IF IsConst(Temp) Then
 							'Print "Int", MakeDec(Temp)
-							InstSize += 1
+							If MakeDec(Temp) > 255 Then
+								InstSize += 2
+							Else
+								InstSize += 1
+							End If
 							
 						'Temp contains string
 						Else
