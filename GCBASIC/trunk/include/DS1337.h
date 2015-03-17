@@ -2,6 +2,7 @@
 ;    Copyright (C) 2013 - 2015 Thomas Henry and Evan Venn
 ;
 ;    Version 1.1a  27/1/2015
+;    Version 1.2a  17/3/2015
 ;
 ;    This code is free software; you can redistribute it and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -20,7 +21,7 @@
 ;    Created Evan R Venn - Oct 2013 for DS1307
 ;    adapted further by Thomas Henry, May 26, 2014 for DS1307
 ;    adapted further and further for DS1337 to add new functionality to comply with DEVICE datasheet by Evan R Venn - Jan 27 2015
-;
+;    revised to support AVR bit handling
 
 
 
@@ -1268,7 +1269,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1285,7 +1287,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1301,7 +1304,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1317,7 +1321,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.3 *  128 );set bit values
+      DS_Temp = DS_Status.3
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1336,7 +1341,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -1353,7 +1359,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -1369,7 +1376,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -1385,7 +1393,8 @@ sub DS1337_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.3 *  128 );set bit values
+      DS_Temp = DS_Status.3
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -2048,7 +2057,8 @@ sub DS1337_SetAlarmMask2 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -2064,7 +2074,8 @@ sub DS1337_SetAlarmMask2 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -2080,7 +2091,8 @@ sub DS1337_SetAlarmMask2 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -2100,7 +2112,8 @@ sub DS1337_SetAlarmMask2 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -2116,7 +2129,8 @@ sub DS1337_SetAlarmMask2 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -2132,7 +2146,8 @@ sub DS1337_SetAlarmMask2 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)

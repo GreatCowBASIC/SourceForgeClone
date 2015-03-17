@@ -3,6 +3,8 @@
 '
 '    Version 1.1a  10/1/2015
 '    Version 1.2a  11/1/2015
+'    Version 1.3a  17/3/2015
+
 '
 '    This code is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -24,6 +26,7 @@
 '
 '    Evan R Venn/Anobium  ---  10/1/2015 - Corrected read protocol for alarms
 '    Evan R Venn/Anobium  ---  11/1/2015 - Added Hardware I2C support
+'    Evan R Venn/Anobium  ---  17/3/2015 - Revised to support AVR it handling
 
 
 
@@ -1489,7 +1492,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1506,7 +1510,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1522,7 +1527,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1538,7 +1544,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.3 *  128 );set bit values
+      DS_Temp = DS_Status.3
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -1557,7 +1564,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -1574,7 +1582,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -1590,7 +1599,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -1606,7 +1616,8 @@ sub DS3231_SetAlarmMask1 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.3 *  128 );set bit values
+      DS_Temp = DS_Status.3
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -2256,22 +2267,24 @@ end sub
 
 ;DS3231_SetAlarmMask2 (   alarmAssertionMatch )
 sub DS3231_SetAlarmMask2 ( in DS_Status )
-  ;set the four bits for alarm 1. Bit by bit
-
+  ;set the three bits for alarm 2. Bit by bit
 
   #ifdef HI2C_DATA
 
       do
         HI2CReStart                          ;generate a start signal
-        HI2CSend(DS_AddrWrite)               ;inidcate a write
+        HI2CSend(DS_AddrWrite)               ;indicate a write
       loop While HI2CAckPollState
       HI2CSend( DS3231_ALM2MIN )
       HI2CReStart
       HI2CSend(DS_AddrRead)
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
+cls
+
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -2287,7 +2300,8 @@ sub DS3231_SetAlarmMask2 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -2303,7 +2317,8 @@ sub DS3231_SetAlarmMask2 ( in DS_Status )
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       HI2CReStart                                    ;restart
       HI2CSend(DS_AddrWrite)
@@ -2323,7 +2338,8 @@ sub DS3231_SetAlarmMask2 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.0 *  128 );set bit values
+      DS_Temp = DS_Status.0
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -2339,7 +2355,8 @@ sub DS3231_SetAlarmMask2 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.1 *  128 );set bit values
+      DS_Temp = DS_Status.1
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -2355,7 +2372,8 @@ sub DS3231_SetAlarmMask2 ( in DS_Status )
       I2CReceive(DS_NewValue, NACK)                   ;get the current value
       I2CStop
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
-      DS_NewValue = DS_NewValue or ( DS_Status.2 *  128 );set bit values
+      DS_Temp = DS_Status.2
+      DS_NewValue = DS_NewValue or ( DS_Temp *  128 );set bit values
 
       I2CStart                                    ;restart
       I2CSend(DS_AddrWrite)
@@ -2505,7 +2523,7 @@ sub DS3231_EnableAlarm2Interrupt
       DS_Temp.2 = 1                            ;set bit
       DS_Temp.6 = 1                            ;set bit
 
-      HI2CReStart
+      HI2CStart
       HI2CSend(DS_AddrWrite)           ;indicate write mode
       HI2CSend( DS3231_ControlRegister )
       HI2CSend(DS_Temp)               ;send value
