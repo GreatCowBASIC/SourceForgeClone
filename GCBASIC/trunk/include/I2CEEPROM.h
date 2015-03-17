@@ -33,7 +33,7 @@
 '    		- and, the Variables were removed to ensure stability in all cases.
 '	Evan R.  Venn Revised        --- 7/13/2014  - Removed error in use of byte variable eepPageSize
 '	Evan R.  Venn Revised        --- 16/3/2015  - Renamed systemp to CalcNextPage to remove AVR error
-
+'	Evan R.  Venn Revised        --- 17/3/2015  - Revised to fix AVR timing errors
 
 
 ;This include file began life as Evan R. Venn's "24LCxxxx.h"
@@ -166,6 +166,7 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as word, out eepromVal as byte 
       I2CSend(eepDev + 1)                   ;set the read flag
       I2CReceive(eepromVal, NACK)           ;read one byte and conclude
       I2CStop
+      I2CAckPoll(eepDev)                ;wait for buffer write
   #endif
 end sub
 
@@ -192,6 +193,7 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as byte, out eepromVal as byte 
       I2CSend(eepDev + 1)                   ;set the read flag
       I2CReceive(eepromVal, NACK)           ;read one byte and conclude
       I2CStop
+      I2CAckPoll(eepDev)                ;wait for buffer write
   #endif
 end sub
 ;-----
@@ -222,7 +224,7 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
           HI2CSend(eepAddr_H)                ;send next page address
           HI2CSend(eepAddr)
         end if
-      next i
+      next
 
       HI2CStop                               ;could be redundant in one
   #endif
@@ -246,9 +248,10 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
           I2CSend(eepAddr_H)                ;send next page address
           I2CSend(eepAddr)
         end if
-      next i
+      next
 
       I2CStop
+      I2CAckPoll(eepDev)                ;wait for buffer write
 
   #endif
 end sub
@@ -277,7 +280,7 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
           loop While HI2CAckPollState
           HI2CSend(eepAddr)
         end if
-      next i
+      next
 
       HI2CStop                               ;could be redundant in one
   #endif
@@ -300,9 +303,10 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
           I2CSend(eepAddr_H)                ;send next page address
           I2CSend(eepAddr)
         end if
-      next i
+      next
 
       I2CStop                               ;could be redundant in one
+      I2CAckPoll(eepDev)                ;wait for buffer write
 
   #endif
 end sub
