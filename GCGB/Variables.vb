@@ -308,139 +308,6 @@ Imports System.Collections.Generic
 			UpdateButtonStatus
 		End Sub
 		
-		Private Function ExtractVars(ByVal ScanLine As String) As String
-			Dim Temp As Integer = 0
-			Dim WordList(100) As String
-			Dim WordCount As Integer = 0
-			Dim DelStart, DelEnd As Integer
-			Dim TempData As String
-			Dim IsNotVar As Boolean
-			Dim AllDigits(10) As Char
-			Dim OutputBuffer As String = ""
-			
-			'Set up AllDigits array
-			AllDigits(0) = "0"
-			AllDigits(1) = "1"
-			AllDigits(2) = "2"
-			AllDigits(3) = "3"
-			AllDigits(4) = "4"
-			AllDigits(5) = "5"
-			AllDigits(6) = "6"
-			AllDigits(7) = "7"
-			AllDigits(8) = "8"
-			AllDigits(9) = "9"
-			AllDigits(10) = "0"
-			
-			'MessageBox.Show(ScanLine, "Line", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
-			
-			'Don't process labels or comments
-			If ScanLine.Trim.EndsWith(":") Then Return ""
-			If ScanLine.Trim.StartsWith("'") Then Return ""
-			
-			'Don't process some commands
-			If ScanLine.ToLower.Trim.StartsWith("goto ") Then Return ""
-			If ScanLine.ToLower.Trim.StartsWith("end ") Then Return ""
-			If ScanLine.ToLower.Trim.StartsWith("exit ") Then Return ""
-			If ScanLine.ToLower.Trim = "loop" Then Return ""
-			If ScanLine.ToLower.Trim = "next" Then Return ""
-			If ScanLine.ToLower.Trim.StartsWith("dir ") Then ScanLine = ScanLine.Substring(3).Trim
-			
-			'MessageBox.Show(ScanLine, "Line", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
-			
-			'Remove string literals from ScanLine
-			Do While ScanLine.IndexOf("""") <> -1
-				DelStart = ScanLine.IndexOf("""")
-				DelEnd = ScanLine.IndexOf("""", DelStart + 1)
-				If DelEnd = -1 Then ScanLine = ScanLine.Replace("""", ""): Exit Do
-				ScanLine = ScanLine.Substring(0, DelStart) + ScanLine.Substring(DelEnd + 1)
-				'MessageBox.Show(ScanLine + ":" + DelStart.ToString + ":" + DelEnd.ToString, "Line", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
-			Loop
-			
-			'Add dividers to ScanLine
-			ScanLine = ScanLine.Replace(" ", ":").Replace(",", ":").Replace("=", ":").Replace(".", ":")
-			ScanLine = ScanLine.Replace("<", ":").Replace(">", ":").Replace("!", ":")
-			ScanLine = ScanLine.Replace("<>", ":").Replace("<=", ":").Replace(">=", ":").Replace("=<", ":").Replace("=>", ":")
-			ScanLine = ScanLine.Replace("*", ":").Replace("/", ":").Replace("%", ":").Replace("+", ":").Replace("-",":")
-			ScanLine = ScanLine.Replace("&", ":").Replace("|", ":").Replace("#", ":").Replace("(", ":").Replace(")", ":") + ":"
-			Do While ScanLine.IndexOf("::") <> -1
-				ScanLine = ScanLine.Replace("::", ":")
-			Loop
-			
-			'Remove first section, it should be a command
-			ScanLine = ScanLine.Substring(ScanLine.IndexOf(":") + 1) + " "
-			
-			'Break up ScanLine
-			Do While ScanLine.IndexOf(":") <> -1
-				WordCount += 1
-				WordList(WordCount) = ScanLine.Substring(0, ScanLine.IndexOf(":"))
-				ScanLine = ScanLine.Substring(ScanLine.IndexOf(":") + 1)
-			Loop
-			
-			'Remove anything that does not belong
-			For Temp = 1 To WordCount
-				TempData = WordList(Temp).Trim.ToLower
-				IsNotVar = False
-				
-				'Literals
-				If TempData.IndexOfAny(AllDigits) = 0 Then IsNotVar = True
-				
-				'Keywords
-				If TempData = "to" Then IsNotVar = True
-				If TempData = "then" Then IsNotVar = True
-				If TempData = "until" Or TempData = "while" Then IsNotVar = True
-				If TempData = "us" Or TempData = "ms" Or TempData = "s" Or TempData = "m" Or TempData = "h" Then IsNotVar = True
-				If TempData = "usec" Or TempData = "msec" Or TempData = "sec" Or TempData = "min" Then IsNotVar = True
-				If TempData = "true" Or TempData = "false" Then IsNotVar = True
-				If TempData = "on" Or TempData = "off" Then IsNotVar = True
-				If TempData = "in" Or TempData = "out" Or TempData = "input" Or TempData = "output" Then IsNotVar = True
-				
-				'Program constants
-				Dim ConstTemp As Setting
-				If Not IsNotVar Then
-					With CurrentFile
-						For Each ConstTemp In .Constants
-							If ConstTemp.Name.Trim.ToLower = TempData Then IsNotVar = True: Exit For
-						Next
-					End With
-				End If
-				
-				'Library constants
-				'File, Include File, Element, Data
-				'Element: 0 = sub, 1 = constants, 2 = chip settings
-				'Public Dim Shared LibraryData(MaxFilesOpen, MaxIncludes, 2, 100) As String
-				'Public Dim Shared LibraryCount(MaxFilesOpen, MaxIncludes, 2) As Integer
-				Dim LibTemp As LibraryType
-				With CurrentFile
-					For Each LibTemp in .Libraries
-						For Each ConstTemp In LibTemp.Constants
-							If ConstTemp.Name.Trim.ToLower = TempData Then IsNotVar = True: Goto FoundInLib
-						Next
-					Next
-				End With
-				FoundInLib:
-				
-				'Constant group constants
-				
-				'Function names
-				
-				
-				If IsNotVar Then WordList(Temp) = ""
-			Next
-			
-			'Create list of variables
-			OutputBuffer = ""
-			For Temp = 1 To WordCount
-				If WordList(Temp) <> "" Then
-					'MessageBox.Show(WordList(Temp), "Message", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
-					If OutputBuffer <> "" Then OutputBuffer = OutputBuffer + "," + WordList(Temp)
-					If OutputBuffer = "" Then OutputBuffer = WordList(Temp)
-				End If
-			Next
-			
-			Return OutputBuffer
-			
-		End Function
-
 		Private Sub Button_FindClick(sender As System.Object, e As System.EventArgs)
 			
 			'Confirm
@@ -453,40 +320,29 @@ Imports System.Collections.Generic
 			'Dim SearchSub, SearchLine As Integer
 			Dim SearchSub As GCBSubroutine
 			Dim SearchLine As String
-			Dim TempVarList(200) As String
-			Dim TempVarCount As Integer = 0
-			Dim TempData As String
+			Dim FoundVars As List(Of String)
+			Dim NewVar As String
 			Dim VarExists As Boolean
 			
 			'Scan program for vars
 			With CurrentFile
 				For Each SearchSub In .Subroutines
 					For Each SearchLine in SearchSub.Lines
-						TempData = ExtractVars(SearchLine)
-						If TempData <> "" Then
-							'Get list of new vars
-							Do While TempData.IndexOf(",") <> -1
-								TempVarCount += 1
-								TempVarList(TempVarCount) = TempData.Substring(0, TempData.IndexOf(","))
-								TempData = TempData.Substring(TempData.IndexOf(",") + 1)
-							Loop
-							TempVarCount += 1
-							TempVarList(TempVarCount) = TempData
+						FoundVars = CurrentFile.ExtractVars(SearchLine)
 							
-							'Combine with existing list
-							For Temp = 1 To TempVarCount
-								VarExists = False
-								For SearchList = 0 To VariableList.Count - 1
-									If VariableList(SearchList).Name.Trim.ToLower = TempVarList(Temp).Trim.ToLower Then
-										VarExists = True
-										Exit For
-									End If
-								Next
-								If Not VarExists Then
-									VariableList.Add(New VariableListItem(TempVarList(Temp).Trim, "byte"))
+						'Combine with existing list
+						For Each NewVar In FoundVars
+							VarExists = False
+							For SearchList = 0 To VariableList.Count - 1
+								If VariableList(SearchList).Name.Trim.ToLower = NewVar.Trim.ToLower Then
+									VarExists = True
+									Exit For
 								End If
 							Next
-						End If
+							If Not VarExists Then
+								VariableList.Add(New VariableListItem(NewVar.Trim, "byte"))
+							End If
+						Next
 					Next
 				Next
 			End With

@@ -37,6 +37,10 @@ Partial Class ExampleChooser
 		Me.exampleTree = New System.Windows.Forms.TreeView
 		Me.dialogSplit = New System.Windows.Forms.SplitContainer
 		Me.buttonSearch = New System.Windows.Forms.Button
+		Me.tableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel
+		Me.labelAuthor = New System.Windows.Forms.Label
+		Me.labelVersion = New System.Windows.Forms.Label
+		Me.LicenceLink = New System.Windows.Forms.LinkLabel
 		Me.groupBox2 = New System.Windows.Forms.GroupBox
 		Me.connectionsDisplay = New System.Windows.Forms.TextBox
 		Me.groupBox1 = New System.Windows.Forms.GroupBox
@@ -45,16 +49,13 @@ Partial Class ExampleChooser
 		Me.newChipModel = New System.Windows.Forms.ComboBox
 		Me.chipModelMessage = New System.Windows.Forms.Label
 		Me.summaryDisplay = New System.Windows.Forms.TextBox
-		Me.labelLicenceCaption = New System.Windows.Forms.Label
-		Me.LicenceLink = New System.Windows.Forms.LinkLabel
-		Me.labelAuthor = New System.Windows.Forms.Label
-		Me.labelVersion = New System.Windows.Forms.Label
 		Me.labelExampleName = New System.Windows.Forms.Label
 		Me.buttonCancel = New System.Windows.Forms.Button
 		Me.buttonOpenExample = New System.Windows.Forms.Button
 		Me.dialogSplit.Panel1.SuspendLayout
 		Me.dialogSplit.Panel2.SuspendLayout
 		Me.dialogSplit.SuspendLayout
+		Me.tableLayoutPanel1.SuspendLayout
 		Me.groupBox2.SuspendLayout
 		Me.groupBox1.SuspendLayout
 		Me.SuspendLayout
@@ -94,13 +95,10 @@ Partial Class ExampleChooser
 		'
 		'dialogSplit.Panel2
 		'
+		Me.dialogSplit.Panel2.Controls.Add(Me.tableLayoutPanel1)
 		Me.dialogSplit.Panel2.Controls.Add(Me.groupBox2)
 		Me.dialogSplit.Panel2.Controls.Add(Me.groupBox1)
 		Me.dialogSplit.Panel2.Controls.Add(Me.summaryDisplay)
-		Me.dialogSplit.Panel2.Controls.Add(Me.labelLicenceCaption)
-		Me.dialogSplit.Panel2.Controls.Add(Me.LicenceLink)
-		Me.dialogSplit.Panel2.Controls.Add(Me.labelAuthor)
-		Me.dialogSplit.Panel2.Controls.Add(Me.labelVersion)
 		Me.dialogSplit.Panel2.Controls.Add(Me.labelExampleName)
 		Me.dialogSplit.Size = New System.Drawing.Size(640, 400)
 		Me.dialogSplit.SplitterDistance = 211
@@ -115,6 +113,61 @@ Partial Class ExampleChooser
 		Me.buttonSearch.TabIndex = 2
 		Me.buttonSearch.Text = "Search ..."
 		Me.buttonSearch.UseVisualStyleBackColor = true
+		'
+		'tableLayoutPanel1
+		'
+		Me.tableLayoutPanel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left)  _
+						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+		Me.tableLayoutPanel1.ColumnCount = 3
+		Me.tableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333!))
+		Me.tableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334!))
+		Me.tableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334!))
+		Me.tableLayoutPanel1.Controls.Add(Me.LicenceLink, 2, 0)
+		Me.tableLayoutPanel1.Controls.Add(Me.labelAuthor, 0, 0)
+		Me.tableLayoutPanel1.Controls.Add(Me.labelVersion, 1, 0)
+		Me.tableLayoutPanel1.Location = New System.Drawing.Point(8, 368)
+		Me.tableLayoutPanel1.Name = "tableLayoutPanel1"
+		Me.tableLayoutPanel1.RowCount = 1
+		Me.tableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100!))
+		Me.tableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28!))
+		Me.tableLayoutPanel1.Size = New System.Drawing.Size(408, 28)
+		Me.tableLayoutPanel1.TabIndex = 14
+		'
+		'labelAuthor
+		'
+		Me.labelAuthor.AutoSize = true
+		Me.labelAuthor.Dock = System.Windows.Forms.DockStyle.Fill
+		Me.labelAuthor.Location = New System.Drawing.Point(3, 0)
+		Me.labelAuthor.Name = "labelAuthor"
+		Me.labelAuthor.Size = New System.Drawing.Size(129, 28)
+		Me.labelAuthor.TabIndex = 2
+		Me.labelAuthor.Text = "Author label"
+		Me.labelAuthor.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+		'
+		'labelVersion
+		'
+		Me.labelVersion.AutoSize = true
+		Me.labelVersion.Dock = System.Windows.Forms.DockStyle.Fill
+		Me.labelVersion.Location = New System.Drawing.Point(138, 0)
+		Me.labelVersion.Name = "labelVersion"
+		Me.labelVersion.Size = New System.Drawing.Size(130, 28)
+		Me.labelVersion.TabIndex = 1
+		Me.labelVersion.Text = "Version label"
+		Me.labelVersion.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+		'
+		'LicenceLink
+		'
+		Me.LicenceLink.AutoSize = true
+		Me.LicenceLink.DisabledLinkColor = System.Drawing.Color.Black
+		Me.LicenceLink.Dock = System.Windows.Forms.DockStyle.Fill
+		Me.LicenceLink.Location = New System.Drawing.Point(274, 0)
+		Me.LicenceLink.Name = "LicenceLink"
+		Me.LicenceLink.Size = New System.Drawing.Size(131, 28)
+		Me.LicenceLink.TabIndex = 3
+		Me.LicenceLink.TabStop = true
+		Me.LicenceLink.Text = "Licence: Unknown"
+		Me.LicenceLink.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+		AddHandler Me.LicenceLink.LinkClicked, AddressOf Me.LicenceLinkLinkClicked
 		'
 		'groupBox2
 		'
@@ -182,7 +235,8 @@ Partial Class ExampleChooser
 		Me.newChipModel.Name = "newChipModel"
 		Me.newChipModel.Size = New System.Drawing.Size(88, 21)
 		Me.newChipModel.TabIndex = 8
-		AddHandler Me.newChipModel.SelectedValueChanged, AddressOf Me.NewChipModelSelectedValueChanged
+		AddHandler Me.newChipModel.SelectedIndexChanged, AddressOf Me.NewChipModelSelectedIndexChanged
+		AddHandler Me.newChipModel.TextUpdate, AddressOf Me.NewChipModelTextUpdate
 		'
 		'chipModelMessage
 		'
@@ -191,7 +245,7 @@ Partial Class ExampleChooser
 		Me.chipModelMessage.Name = "chipModelMessage"
 		Me.chipModelMessage.Size = New System.Drawing.Size(168, 56)
 		Me.chipModelMessage.TabIndex = 9
-		Me.chipModelMessage.Text = "Example will work well with selected chip"
+		Me.chipModelMessage.Text = "Example will work on this chip"
 		'
 		'summaryDisplay
 		'
@@ -205,53 +259,6 @@ Partial Class ExampleChooser
 		Me.summaryDisplay.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
 		Me.summaryDisplay.Size = New System.Drawing.Size(408, 192)
 		Me.summaryDisplay.TabIndex = 5
-		'
-		'labelLicenceCaption
-		'
-		Me.labelLicenceCaption.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-		Me.labelLicenceCaption.AutoSize = true
-		Me.labelLicenceCaption.Location = New System.Drawing.Point(308, 376)
-		Me.labelLicenceCaption.Name = "labelLicenceCaption"
-		Me.labelLicenceCaption.Size = New System.Drawing.Size(45, 13)
-		Me.labelLicenceCaption.TabIndex = 4
-		Me.labelLicenceCaption.Text = "Licence"
-		Me.labelLicenceCaption.TextAlign = System.Drawing.ContentAlignment.MiddleRight
-		'
-		'LicenceLink
-		'
-		Me.LicenceLink.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-		Me.LicenceLink.AutoSize = true
-		Me.LicenceLink.DisabledLinkColor = System.Drawing.Color.Black
-		Me.LicenceLink.Location = New System.Drawing.Point(356, 376)
-		Me.LicenceLink.Name = "LicenceLink"
-		Me.LicenceLink.Size = New System.Drawing.Size(53, 13)
-		Me.LicenceLink.TabIndex = 3
-		Me.LicenceLink.TabStop = true
-		Me.LicenceLink.Text = "Unknown"
-		Me.LicenceLink.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
-		AddHandler Me.LicenceLink.LinkClicked, AddressOf Me.LicenceLinkLinkClicked
-		'
-		'labelAuthor
-		'
-		Me.labelAuthor.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left),System.Windows.Forms.AnchorStyles)
-		Me.labelAuthor.AutoSize = true
-		Me.labelAuthor.Location = New System.Drawing.Point(8, 376)
-		Me.labelAuthor.Name = "labelAuthor"
-		Me.labelAuthor.Size = New System.Drawing.Size(63, 13)
-		Me.labelAuthor.TabIndex = 2
-		Me.labelAuthor.Text = "Author label"
-		Me.labelAuthor.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
-		'
-		'labelVersion
-		'
-		Me.labelVersion.Anchor = System.Windows.Forms.AnchorStyles.Bottom
-		Me.labelVersion.AutoSize = true
-		Me.labelVersion.Location = New System.Drawing.Point(162, 376)
-		Me.labelVersion.Name = "labelVersion"
-		Me.labelVersion.Size = New System.Drawing.Size(67, 13)
-		Me.labelVersion.TabIndex = 1
-		Me.labelVersion.Text = "Version label"
-		Me.labelVersion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 		'
 		'labelExampleName
 		'
@@ -304,11 +311,14 @@ Partial Class ExampleChooser
 		Me.dialogSplit.Panel2.ResumeLayout(false)
 		Me.dialogSplit.Panel2.PerformLayout
 		Me.dialogSplit.ResumeLayout(false)
+		Me.tableLayoutPanel1.ResumeLayout(false)
+		Me.tableLayoutPanel1.PerformLayout
 		Me.groupBox2.ResumeLayout(false)
 		Me.groupBox2.PerformLayout
 		Me.groupBox1.ResumeLayout(false)
 		Me.ResumeLayout(false)
 	End Sub
+	Private tableLayoutPanel1 As System.Windows.Forms.TableLayoutPanel
 	Private groupBox1 As System.Windows.Forms.GroupBox
 	Private groupBox2 As System.Windows.Forms.GroupBox
 	Private writtenFor As System.Windows.Forms.Label
@@ -321,7 +331,6 @@ Partial Class ExampleChooser
 	Private labelVersion As System.Windows.Forms.Label
 	Private labelAuthor As System.Windows.Forms.Label
 	Private LicenceLink As System.Windows.Forms.LinkLabel
-	Private labelLicenceCaption As System.Windows.Forms.Label
 	Private labelExampleName As System.Windows.Forms.Label
 	Private buttonOpenExample As System.Windows.Forms.Button
 	Private buttonCancel As System.Windows.Forms.Button

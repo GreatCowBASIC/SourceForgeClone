@@ -44,6 +44,7 @@ Imports System.Collections.Generic
 		'Used when DocSection applies to entire program
 		Public Dim Author As String
 		Public Dim Version As String
+		Public Dim PublishedDate As String
 		Public Dim Licence As String
 		
 		'Flags to indicate content
@@ -72,14 +73,14 @@ Imports System.Collections.Generic
 				If LineIn.ToLower.StartsWith("@hide") Then
 					HideItem = True
 					
-				Else If LineIn.ToLower.StartsWith("@icon ") Then
+				Else If LineIn.ToLower.Replace(Convert.ToChar(9), " ").StartsWith("@icon ") Then
 					IconFile = LineIn.Substring(6).Trim
 					
-				Else If LineIn.ToLower.StartsWith("@hardware ") Then
+				Else If LineIn.ToLower.Replace(Convert.ToChar(9), " ").StartsWith("@hardware ") Then
 					HardwareSetting = LineIn.Substring(10).Trim
 					IsHardwareSetting = True
 					
-				Else If LineIn.ToLower.StartsWith("@param") Then
+				Else If LineIn.ToLower.Replace(Convert.ToChar(9), " ").StartsWith("@param") Then
 					Dim ParamName, ParamDesc As String
 					'Get name and desc
 					'format:
@@ -89,13 +90,16 @@ Imports System.Collections.Generic
 					ParamName = ParamName.Substring(0, ParamName.IndexOf(" ")).Trim
 					Params.AddSetting(ParamName, ParamDesc)
 					
-				Else If LineIn.ToLower.StartsWith("@author ") Then
+				Else If LineIn.ToLower.Replace(Convert.ToChar(9), " ").StartsWith("@author ") Then
 					Author = LineIn.Substring(8).Trim
 					
-				Else If LineIn.ToLower.StartsWith("@licence ") Then
+				Else If LineIn.ToLower.Replace(Convert.ToChar(9), " ").StartsWith("@licence ") Then
 					Licence = LineIn.Substring(9).Trim
 					
-				Else If LineIn.ToLower.StartsWith("@version ") Then
+				Else If LineIn.ToLower.Replace(Convert.ToChar(9), " ").StartsWith("@date ") Then
+					PublishedDate = LineIn.Substring(5).Trim
+					
+				Else If LineIn.ToLower.Replace(Convert.ToChar(9), " ").StartsWith("@version ") Then
 					Version = LineIn.Substring(9).Trim
 					
 				End If
