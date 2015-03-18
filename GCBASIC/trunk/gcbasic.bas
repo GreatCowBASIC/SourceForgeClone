@@ -575,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 12/3/2015"
+Version = "0.9 2015-03-18"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -4049,25 +4049,25 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 						
 					ElseIf IsIOReg(VarName) Then
 						AddVar "SysCalcTempA", "BYTE", 1, CurrSub, "REAL", Origin
-						CurrLine = LinkedListInsert(CurrLine, " in SysCalcTempA," + VarName)
+						CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy," + VarName)
 						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN
 							Cmd = " sbrs SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrc SysCalcTempA,"
+							IF S = 1 THEN Cmd = " sbrc SysValueCopy,"
 						ElseIF INSTR(UCase(IfTrue), "FALSE") <> 0 THEN
 							Cmd = " sbrc SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrs SysCalcTempA,"
+							IF S = 1 THEN Cmd = " sbrs SysValueCopy,"
 						END IF
 						CurrLine = LinkedListInsert(CurrLine, Cmd + BI)
 						
 					Else
 						AddVar "SysCalcTempA", "BYTE", 1, CurrSub, "REAL", Origin
-						CurrLine = LinkedListInsert(CurrLine, " lds SysCalcTempA," + VarName)
+						CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + VarName)
 						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN
 							Cmd = " sbrs SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrc SysCalcTempA,"
+							IF S = 1 THEN Cmd = " sbrc SysValueCopy,"
 						ElseIF INSTR(UCase(IfTrue), "FALSE") <> 0 THEN
 							Cmd = " sbrc SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrs SysCalcTempA,"
+							IF S = 1 THEN Cmd = " sbrs SysValueCopy,"
 						END IF
 						CurrLine = LinkedListInsert(CurrLine, Cmd + BI)
 						AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
