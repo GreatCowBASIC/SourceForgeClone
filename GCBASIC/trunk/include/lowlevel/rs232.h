@@ -63,21 +63,21 @@
 'Start Bit settings
 #define WaitForStart 128
 
-;Bit rate delays
-;Moved to stdbasic.h
-;r* is us delay/52 for 1 bit
 
 'Calculate delay lengths
 #script
     If PIC Then
        '20 MHz PIC, 7 us taken off - 35 instructions
-       SerThirdDelay19200 = int(17 - 4 / ChipMHz * 35)
-       SerThirdDelay9600 = int(35 - 4 / ChipMHz * 35)
-       SerThirdDelay4800 = int(69 - 4 / ChipMHz * 35)
-       SerThirdDelay2400 = int(139 - 4 / ChipMHz * 35)
-       SerThirdDelay1200 = int(278 - 4 / ChipMHz * 35)
-       SerThirdDelay600 = int(555 - 4 / ChipMHz * 35)
-       SerThirdDelay300 = int(1111 - 4 / ChipMHz * 35)
+       'These Delays are for Serial RX  with PIC
+       'Modified Accuracy by William Roth 18-04-2105
+
+       SerThirdDelay19200 = int(18 - 4 / ChipMHz * 22)
+       SerThirdDelay9600 = int(35 - 4 / ChipMHz * 27)
+       SerThirdDelay4800 = int(70 - 4 / ChipMHz * 31)
+       SerThirdDelay2400 = int(142 - 5 / ChipMHz * 30)
+       SerThirdDelay1200 = int(283 - 5 / ChipMHz * 33)
+       SerThirdDelay600 = int(565  - 5 / ChipMhz) * 33
+       SerThirdDelay300 = int(1120 - 4 / ChipMHz * 35)
 
        '20 MHz PIC, 10 us taken off - 50 instructions
        SerFullDelay19200 = int(52 - 4 / ChipMHz * 36)
@@ -91,9 +91,9 @@
 
     If AVR Then
        '1 MHz AVR, 60 us taken off - 60 instructions
-       SerThirdDelay19200 = int(19 - 1 / ChipMHz * 60) 'fst; original 18 - 1 /
-       SerThirdDelay9600 = int(36 - 1 / ChipMHz * 60)  'fst; original 35 - 1 /
-       SerThirdDelay4800 = int(70 - 1 / ChipMHz * 60)  'fst; original 69 - 1 /
+       SerThirdDelay19200 = int(19 - 1 / ChipMHz * 60)
+       SerThirdDelay9600 = int(36 - 1 / ChipMHz * 60)
+       SerThirdDelay4800 = int(70 - 1 / ChipMHz * 60)
        SerThirdDelay2400 = int(139 - 1 / ChipMHz * 60)
        SerThirdDelay1200 = int(278 - 1 / ChipMHz * 60)
        SerThirdDelay600 = int(555 - 1 / ChipMHz * 60)
