@@ -1,12 +1,13 @@
 '    Hardware I2C routines for Great Cow BASIC
 '    Copyright (C) 2010 Hugh Considine
 '    Copyright (C) 2014 & 2015 Evan R. Venn & Jacques Erdemaal
-'    Version 1.1e
+'    Version 1.1f
 
 '    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
 '            and to improve the initialisation of the AVR
 '
 '    Updated Feb 2015 to support AVR and correct HI2CReceive parameter error.
+'    Moved defines ACK/NACK to sysen.ini to
 '
 
 
@@ -71,9 +72,6 @@
 
 'Baud rate in KHz (Change to desired frequency)
 #define HI2C_BAUD_RATE 100
-#define NAK             FALSE
-#define NACK            FALSE     'permit alternative spelling
-#define ACK             TRUE
 
   ' Move to HWI2C.h when completed
   #define AVR_I2C_START 0x08
