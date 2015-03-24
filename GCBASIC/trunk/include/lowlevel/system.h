@@ -27,6 +27,7 @@
 #define OFF 0
 #define TRUE 255
 #define FALSE 0
+#define Forever 0
 
 'Names for symbols
 #define AND &
@@ -38,6 +39,10 @@
 'Options
 #define CheckDivZero TRUE
 
+'Moved from from i2c.h to ensure hwi2c.h is initialised correctly.
+#define NAK             FALSE
+#define NACK            FALSE     'permit alternative spelling
+#define ACK             TRUE
 '********************************************************************************
 'System initialisation routine
 Sub InitSys
@@ -47,7 +52,7 @@ Sub InitSys
 		#IFDEF Bit(FOSC4)
 			Set FOSC4 Off
 		#ENDIF
-		#if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
+		#if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3)
 			'Most chips:
 			#ifndef Bit(HFIOFS)
 				#IFDEF ChipMHz 8
@@ -110,7 +115,7 @@ Sub InitSys
 			#endif
 		#endif
 		
-		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
+		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3)
 			#ifdef Bit(IRCF3)
 				#IFDEF ChipMHz 64
 					'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
@@ -251,23 +256,11 @@ Sub InitSys
 				#ENDIF
 			#endif
 			#ifndef Bit(IRCF3)
-				#ifdef ChipMhz 64
-					OSCCON = OSCCON OR b'01110000'
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
-					#ifdef Bit(PLLEN)
-						Set PLLEN On
-					#endif
-				#endif
 				#IFDEF ChipMHz 32
 					OSCCON = OSCCON AND b'10001111'
 					OSCCON = OSCCON OR b'01100000'
 					#ifdef Bit(SPLLEN)
 						Set SPLLEN On
-					#endif
-					#ifdef Bit(PLLEN)
-						Set PLLEN On
 					#endif
 				#ENDIF
 				#IFDEF ChipMHz 16
@@ -400,12 +393,12 @@ Sub InitSys
 		CMCON0 = 7
 	#ENDIF
 	'12F510,16F506 and other devices? (Thanks to Kent for suggesting these lines!)
-	#IFDEF Var(CM1CON0) 
-		#IFDEF Var(CM2CON0) 
-			C2ON = 0 
-		#ENDIF 
-		C1ON = 0 
-	#ENDIF 
+	#IFDEF Var(CM1CON0)
+		#IFDEF Var(CM2CON0)
+			C2ON = 0
+		#ENDIF
+		C1ON = 0
+	#ENDIF
 	
 	'Set GPIO.2 to digital (clear T0CS bit)
 	#IFDEF ChipFamily 12
@@ -493,10 +486,10 @@ sub SysCopyString
  #ENDIF
  movf SysCalcTempA, W
  movwf INDF
- 
+
  goto SysCopyStringCheck
 
-'When appending, add length to counter 
+'When appending, add length to counter
 SysCopyStringPart:
  movf SysStringA, W
  movwf FSR
@@ -514,7 +507,7 @@ SysCopyStringCheck:
  movf SysCalcTempA,W
  btfsc STATUS,Z
  return
- 
+
  'Copy char-by-char
 SysStringCopy:
 
@@ -588,10 +581,10 @@ SysStringCopy:
  'Get and copy length
  movff INDF0, SysCalcTempA
  movff SysCalcTempA, INDF1
- 
+
  goto SysCopyStringCheck
- 
-'When appending, add length to counter 
+
+'When appending, add length to counter
 SysCopyStringPart:
  movf INDF0, W
  movwf SysCalcTempA
@@ -618,18 +611,18 @@ SysCopyStringPart:
  'SysStringB (Y) stores destination
  'SysStringLength is counter, keeps track of size of destination string
  'SysCalcTempA is loop counter
- 
+
  'Get and copy length
  ld SysCalcTempA, X+
  st Y+, SysCalcTempA
- 
+
  rjmp SysCopyStringCheck
- 
-'When appending, add length to counter 
+
+'When appending, add length to counter
 SysCopyStringPart:
  ld SysCalcTempA, X+
  add SysStringLength, SysCalcTempA
- 
+
  SysCopyStringCheck:
  'Exit if length = 0
  cpi SysCalcTempA,0
@@ -640,7 +633,7 @@ SysCopyStringPart:
  'Copy character
  ld SysReadA, X+
  st Y+, SysReadA
- 
+
  dec SysCalcTempA
  brne SysStringCopy
 #ENDIF
@@ -679,7 +672,7 @@ sub SysReadString
   movwf SysCalcTempA
   movwf INDF
   addwf SysStringB, F
-  
+
   goto SysStringReadCheck
 
 SysReadStringPart:
@@ -699,20 +692,20 @@ SysReadStringPart:
   movwf SysCalcTempA
   addwf SysStringLength,F
   addwf SysStringB,F
-  
+
   'Check length
 SysStringReadCheck:
   'If length is 0, exit
   movf SysCalcTempA,F
   btfsc STATUS,Z
   return
-  
+
   'Copy
 SysStringRead:
-  
+
    'Get char
    call SysStringTables
-   
+
    'Set char
    incf FSR, F
    movwf INDF
@@ -757,7 +750,7 @@ SysStringRead:
 		goto SysStringRead
 		
 	#endif
- 
+
  #ifdef ChipFamily 16
 
   'Get length
@@ -766,7 +759,7 @@ SysStringRead:
   movff TABLAT,INDF1
   TBLRD*+
   goto SysStringReadCheck
-  
+
 SysReadStringPart:
   TBLRD*+
   movf TABLAT, W
@@ -780,10 +773,10 @@ SysStringReadCheck:
   movf SysCalcTempA,F
   btfsc STATUS,Z
   return
-  
+
   'Copy
 SysStringRead:
-  
+
    'Copy char
    TBLRD*+
    movff TABLAT,PREINC1
@@ -792,10 +785,10 @@ SysStringRead:
   goto SysStringRead
 
  #endif
- 
+
  #IFDEF AVR
 	Dim SysCalcTempX As Byte
-  
+
   'Get length
   'lpm SysCalcTempA, Z+
   lpm
@@ -803,7 +796,7 @@ SysStringRead:
   SysReadA += 1
   st Y+, SysCalcTempA
   rjmp SysStringReadCheck
-  
+
 SysReadStringPart:
   'lpm SysCalcTempA, Z+
   lpm
@@ -817,10 +810,10 @@ SysStringReadCheck:
   cpi SysCalcTempA, 0
   brne SysStringRead
   ret
-  
+
   'Copy
 SysStringRead:
-  
+
   'Copy char
   'lpm SysCalcTempX, Z+
   lpm
@@ -829,9 +822,9 @@ SysStringRead:
 
   dec SysCalcTempA
   brne SysStringRead
-  
+
  #ENDIF
- 
+
 end sub
 
 '********************************************************************************
@@ -990,10 +983,10 @@ SysStringComp:
  ld SysReadA_H, Y+
  cpse SysReadA, SysReadA_H
  ret
- 
+
  dec SysByteTempA
  brne SysStringComp
- 
+
  com SysByteTempX
 #ENDIF
 
@@ -1411,7 +1404,7 @@ sub SysDivSubInt
 		SysIntegerTempA = -SysIntegerTempA
 		SysIntegerTempX = -SysIntegerTempX
 	End If
- 
+
 end sub
 
 '32 bit
