@@ -458,8 +458,6 @@ End Sub
 
 sub SysCopyString
 
-
- Dim SysReadA As Byte
  Dim SysCalcTempA As Byte
  Dim SysStringLength As Byte
 
@@ -613,7 +611,9 @@ SysCopyStringPart:
  'SysStringB (Y) stores destination
  'SysStringLength is counter, keeps track of size of destination string
  'SysCalcTempA is loop counter
-
+ 
+ Dim SysReadA As Byte
+ 
  'Get and copy length
  ld SysCalcTempA, X+
  st Y+, SysCalcTempA
@@ -655,7 +655,6 @@ end sub
 
 sub SysReadString
 
-  Dim SysReadA As Byte
   Dim SysCalcTempA As Byte
   Dim SysStringLength As Byte
 
@@ -837,7 +836,6 @@ end sub
 
 sub SysCompEqualString
 
- Dim SysReadA As Byte
  Dim SysByteTempA As Byte
  Dim SysByteTempX As Byte
 
