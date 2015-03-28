@@ -458,8 +458,6 @@ End Sub
 
 sub SysCopyString
 
-
- Dim SysReadA As Byte
  Dim SysCalcTempA As Byte
  Dim SysStringLength As Byte
 
@@ -655,7 +653,6 @@ end sub
 
 sub SysReadString
 
-  Dim SysReadA As Byte
   Dim SysCalcTempA As Byte
   Dim SysStringLength As Byte
 
@@ -837,7 +834,6 @@ end sub
 
 sub SysCompEqualString
 
- Dim SysReadA As Byte
  Dim SysByteTempA As Byte
  Dim SysByteTempX As Byte
 
