@@ -575,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 2015-03-18"
+Version = "0.9 2015-03-28"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3987,6 +3987,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 			
 			'Compare bit variable to bit constant
 			If IsConst(V2) Then
+				Dim As String BitTestTemp = "SysBitTest"
 				
 				T = 1
 				'Get var and bit
@@ -4048,26 +4049,26 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 						CurrLine = LinkedListInsert(CurrLine, Cmd + VarName + "," + BI)
 						
 					ElseIf IsIOReg(VarName) Then
-						AddVar "SysCalcTempA", "BYTE", 1, CurrSub, "REAL", Origin
-						CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy," + VarName)
+						AddVar BitTestTemp, "BYTE", 1, CurrSub, "REAL", Origin
+						CurrLine = LinkedListInsert(CurrLine, " in " + BitTestTemp + "," + VarName)
 						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN
-							Cmd = " sbrs SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrc SysValueCopy,"
+							Cmd = " sbrs " + BitTestTemp + ","
+							IF S = 1 THEN Cmd = " sbrc " + BitTestTemp + ","
 						ElseIF INSTR(UCase(IfTrue), "FALSE") <> 0 THEN
-							Cmd = " sbrc SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrs SysValueCopy,"
+							Cmd = " sbrc " + BitTestTemp + ","
+							IF S = 1 THEN Cmd = " sbrs " + BitTestTemp + ","
 						END IF
 						CurrLine = LinkedListInsert(CurrLine, Cmd + BI)
 						
 					Else
-						AddVar "SysCalcTempA", "BYTE", 1, CurrSub, "REAL", Origin
-						CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + VarName)
+						AddVar BitTestTemp, "BYTE", 1, CurrSub, "REAL", Origin
+						CurrLine = LinkedListInsert(CurrLine, " lds " + BitTestTemp + "," + VarName)
 						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN
-							Cmd = " sbrs SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrc SysValueCopy,"
+							Cmd = " sbrs " + BitTestTemp + ","
+							IF S = 1 THEN Cmd = " sbrc " + BitTestTemp + ","
 						ElseIF INSTR(UCase(IfTrue), "FALSE") <> 0 THEN
-							Cmd = " sbrc SysCalcTempA,"
-							IF S = 1 THEN Cmd = " sbrs SysValueCopy,"
+							Cmd = " sbrc " + BitTestTemp + ","
+							IF S = 1 THEN Cmd = " sbrs " + BitTestTemp + ","
 						END IF
 						CurrLine = LinkedListInsert(CurrLine, Cmd + BI)
 						AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
@@ -10194,7 +10195,7 @@ Function GetRegisterLoc(RegName As String) As Integer
 			Case "syscalctempx_u", "syslongtempx_u", "sysdivmultx": DestLoc = 2
 			Case "syscalctempx_e", "syslongtempx_e", "sysdivmultx_h": DestLoc = 3
 			Case "syssignbyte": DestLoc = 4
-			Case "sysdivloop": DestLoc = 5
+			Case "sysdivloop", "sysbittest": DestLoc = 5
 			
 			Case "sysvaluecopy": DestLoc = 21
 			Case "syscalctempa", "sysbytetempa", "syswordtempa", "sysintegertempa", "syslongtempa": DestLoc = 22
@@ -11094,6 +11095,7 @@ Function IsRegister (VarName As String) As Integer
 	If ModeAVR Then
 		IF UCase(Left(VarName, 7)) = "SYSTEMP" Then Return -1
 		IF UCase(VarName) = "SYSVALUECOPY" Then Return -1
+		If UCase(VarName) = "SYSBITTEST" Then Return -1
 	End If
 	If ModePIC Then
 		If UCase(VarName) = "SYSW" Then Return -1
