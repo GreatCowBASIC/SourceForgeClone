@@ -1005,7 +1005,7 @@ end sub
 sub LCDCreateChar (In LCDCharLoc, LCDCharData())
 
 	'Store old location
-	#IFDEF LCD_IO 4,8
+	#IFDEF LCD_IO 4,8,10,12
 		#ifndef LCD_NO_RW
 			Set LCD_RS Off
 			LCDLoc = LCDReadByte
@@ -1026,7 +1026,7 @@ sub LCDCreateChar (In LCDCharLoc, LCDCharData())
 	Next
 
 	'Restore location
-	#IFDEF LCD_IO 4,8
+	#IFDEF LCD_IO 4,8,10,12
 		#ifndef LCD_NO_RW
 			Set LCD_RS Off
 			LCDWriteByte (LCDLoc)
@@ -1038,7 +1038,7 @@ sub LCDCreateChar (In LCDCharLoc, LCDCharData())
 			wait 5 10us
 		#endif
 	#endif
-	#ifndef LCD_IO 4,8
+	#ifndef LCD_IO 4,8,10,12
 		set LCD_RS off
 		LCDWriteByte(0x80)
 		wait 5 10us
