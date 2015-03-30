@@ -1004,76 +1004,93 @@ end sub
 'Create a custom character in CGRAM
 sub LCDCreateChar (In LCDCharLoc, LCDCharData())
 
-          'Store old location
-          #IFDEF LCD_IO 4,8
-                    Set LCD_RS Off
-                    LCDLoc = LCDReadByte
-                    Set LCDLoc.7 On
-          #ENDIF
+	'Store old location
+	#IFDEF LCD_IO 4,8
+		#ifndef LCD_NO_RW
+			Set LCD_RS Off
+			LCDLoc = LCDReadByte
+			Set LCDLoc.7 On
+		#endif
+	#ENDIF
 
-          'Select location
-          Set LCD_RS Off
-          LCDWriteByte (64 + LCDCharLoc * 8)
-          wait 5 10us
+	'Select location
+	Set LCD_RS Off
+	LCDWriteByte (64 + LCDCharLoc * 8)
+	wait 5 10us
 
-          'Write char
-          Set LCD_RS On
-          For LCDTemp = 1 to 8
-                    LCDWriteByte LCDCharData(LCDTemp)
-                    wait 5 10us
-          Next
+	'Write char
+	Set LCD_RS On
+	For LCDTemp = 1 to 8
+		LCDWriteByte LCDCharData(LCDTemp)
+		wait 5 10us
+	Next
 
-          'Restore location
-          #IFDEF LCD_IO 2
-                    set LCD_RS off
-                    LCDWriteByte(0x80)
-                    wait 5 10us
-          #ENDIF
-          #IFDEF LCD_IO 4,8
-                    Set LCD_RS Off
-                    LCDWriteByte (LCDLoc)
-                    wait 5 10us
-          #ENDIF
-
+	'Restore location
+	#IFDEF LCD_IO 4,8
+		#ifndef LCD_NO_RW
+			Set LCD_RS Off
+			LCDWriteByte (LCDLoc)
+			wait 5 10us
+		#endif
+		#ifdef LCD_NO_RW
+			set LCD_RS off
+			LCDWriteByte(0x80)
+			wait 5 10us
+		#endif
+	#endif
+	#ifndef LCD_IO 4,8
+		set LCD_RS off
+		LCDWriteByte(0x80)
+		wait 5 10us
+	#endif
 end sub
 
 'Create a graph character in CGRAM
 Sub LCDCreateGraph(In LCDCharLoc, In LCDValue)
 
-          'Store old location
-          #IFDEF LCD_IO 4,8
-                    Set LCD_RS Off
-                    LCDLoc = LCDReadByte
-                    Set LCDLoc.7 On
-          #ENDIF
+	'Store old location
+	#IFDEF LCD_IO 4,8
+		#ifndef LCD_NO_RW
+			Set LCD_RS Off
+			LCDLoc = LCDReadByte
+			Set LCDLoc.7 On
+		#endif
+	#ENDIF
 
-          'Select location
-          Set LCD_RS Off
-          LCDWriteByte (64 + LCDCharLoc * 8)
-          wait 5 10us
+	'Select location
+	Set LCD_RS Off
+	LCDWriteByte (64 + LCDCharLoc * 8)
+	wait 5 10us
 
-          'Write char for graph
-          Set LCD_RS On
-          For LCDTemp = 8 to 1
-                    If LCDTemp > LCDValue Then
-                              LCDWriteByte LCD_BAR_EMPTY
-                    Else
-                              LCDWriteByte LCD_BAR_FULL
-                    End If
-                    wait 5 10us
-          Next
+	'Write char for graph
+	Set LCD_RS On
+	For LCDTemp = 8 to 1
+		If LCDTemp > LCDValue Then
+			LCDWriteByte LCD_BAR_EMPTY
+		Else
+			LCDWriteByte LCD_BAR_FULL
+		End If
+		wait 5 10us
+	Next
 
-          'Restore location
-          #IFDEF LCD_IO 2
-                    set LCD_RS off
-                    LCDWriteByte(0x80)
-                    wait 5 10us
-          #ENDIF
-          #IFDEF LCD_IO 4,8
-                    Set LCD_RS Off
-                    LCDWriteByte (LCDLoc)
-                    wait 5 10us
-          #ENDIF
+	'Restore location
+	#IFDEF LCD_IO 4,8
+		#ifndef LCD_NO_RW
+			Set LCD_RS Off
+			LCDWriteByte (LCDLoc)
+			wait 5 10us
+		#endif
+		#ifdef LCD_NO_RW
+			set LCD_RS off
+			LCDWriteByte(0x80)
+			wait 5 10us
+		#endif
+	#endif
+	#ifndef LCD_IO 4,8
+		set LCD_RS off
+		LCDWriteByte(0x80)
+		Wait 5 10us
+	#endif
 
 End Sub
 
