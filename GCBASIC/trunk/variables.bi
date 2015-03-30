@@ -255,6 +255,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 			VarFound->Size = VarSize
 			VarFound->FixedLocation = -1
 			VarFound->FixedSize = VarFixedSize
+			VarFound->Alias = ""
 		End With
 	End If
 	
