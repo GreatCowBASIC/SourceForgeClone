@@ -575,7 +575,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 2015-03-28"
+Version = "0.9 2015-03-30"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -10428,6 +10428,10 @@ SUB InitCompiler
 		'(Alters the error listing format)
 		ElseIf ParamUpper = "/GCGB" Then
 			GCGB = 1
+		
+		ElseIf ParamUpper = "/VERSION" Then
+			Print Version
+			End
 			
 		'Complex options
 		'Settings file
@@ -10933,7 +10937,9 @@ Function IsInAccessBank(VarNameIn As String) As Integer
 	Next
 	
 	'Check if the variable being accessed is a SFR
-	If IsRegister(VarNameIn) Then Return -1
+	If IsRegister(VarNameIn) Then
+		Return -1
+	End If
 	Return 0
 End Function
 
@@ -11093,7 +11099,7 @@ Function IsRegister (VarName As String) As Integer
 	'System vars that are always registers
 	'SysTemp vars are only registers on AVR, no room to be registers on PIC
 	If ModeAVR Then
-		IF UCase(Left(VarName, 7)) = "SYSTEMP" Then Return -1
+		IF UCase(Left(VarName, 7)) = "SYSTEMP" And InStr(VarName, "_") = 0 Then Return -1 '_ means it's an array element
 		IF UCase(VarName) = "SYSVALUECOPY" Then Return -1
 		If UCase(VarName) = "SYSBITTEST" Then Return -1
 	End If
@@ -11130,7 +11136,9 @@ Function IsRegister (VarName As String) As Integer
 		FOR PD = 1 TO Subroutine(CurrSub)->Variables
 			IF UCase(Subroutine(CurrSub)->Variable(PD).Name) = Source THEN
 				Temp = Subroutine(CurrSub)->Variable(PD).Pointer
-				If Left(Temp, 8) = "REGISTER" Then Return -1
+				If Left(Temp, 8) = "REGISTER" Then
+					Return -1
+				End If
 			END IF
 		Next
 	Next
@@ -12221,7 +12229,7 @@ SUB ReadChipData
 	Dim As String ReadDataMode, ChipDataFile, InLine
 	Dim As String PinName, PinDir
 	Dim As PinDirType Pointer PinDirData
-	Dim As Integer TDC, CW, PD
+	Dim As Integer TDC, CW, PD, FirstSFR, FindSFR
 	Dim As ConfigSetting Pointer ThisSetting
 	Dim As LinkedListElement Pointer CurrLoc
 	
@@ -12472,14 +12480,24 @@ SUB ReadChipData
 						.EndLoc = &H7F
 					End With
 				Case 16:
+					'Guess where SFR access bank starts
+					'Not earlier than 0xF60, but can be later (0xF80 on 18F2620, for example)
+					FirstSFR = &HFFFF
+					For FindSFR = 1 To SVC
+						If SysVars(FindSFR).Location < FirstSFR Then
+							FirstSFR = SysVars(FindSFR).Location
+						End If
+					Next
+					If FirstSFR < &HF60 Then FirstSFR = &HF60
+					
 					NoBankLocs = 2
 					With NoBankLoc(1)
 						.StartLoc = 0
-						.EndLoc = &H5F
+						.EndLoc = (FirstSFR - 1) And 255
 					End With
 					'Access RAM for SFRs
 					With NoBankLoc(2)
-						.StartLoc = &HF60
+						.StartLoc = FirstSFR
 						.EndLoc = &HFFF
 					End With
 			End Select
@@ -12502,7 +12520,7 @@ SUB ReadChipData
 	
 	#IFDEF __FB_LINUX__
 		ChipDataFile = ID + "/chipdata/core" + Str(ChipFamily) + ".dat"
-	#ELSE
+	#Else
 		ChipDataFile = ID + "\chipdata\core" + Str(ChipFamily) + ".dat"
 	#ENDIF
 	If OPEN(ChipDataFile For INPUT AS #1) <> 0 Then
