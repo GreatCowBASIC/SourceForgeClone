@@ -1,5 +1,7 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
 '    Copyright (C) 2006 - 2014 Hugh Considine
+'    Copyright (C) 2015 William Roth
+
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -25,94 +27,96 @@
 'Defaults:
 #define PWM_Freq 38 'Frequency of PWM in KHz
 #define PWM_Duty 50 'Duty cycle of PWM (%)
-
+Dim PR2_Temp as WORD  ' Moved here from Line 144
+DIM TempVar as WORD
 #startup InitPWM
 
+            
 Sub InitPWM
 	'Script to calculate constants required for given Frequency and Duty Cycle
 	#script
-		PR2Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
-		T2PR = 1
+		  PR2Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
+		  T2PR = 1
 		if PR2Temp > 255 then
-			PR2Temp = int((1/PWM_Freq)/(16*(1/(ChipMHz*1000))))
-			T2PR = 4
-			if PR2Temp > 255 then
-				PR2Temp = int((1/PWM_Freq)/(64*(1/(ChipMHz*1000))))
-				T2PR = 16
+			  PR2Temp = int((1/PWM_Freq)/(16*(1/(ChipMHz*1000))))
+			  T2PR = 4
+			  if PR2Temp > 255 then
+				  PR2Temp = int((1/PWM_Freq)/(64*(1/(ChipMHz*1000))))
+				  T2PR = 16
 				if PR2Temp > 255 then
 					'error T2PR, PR2Temp
 					error msg(BadPWMFreq)
 				end if
 			end if
 		end if
-		
+   	
 		'DutyCycle = (PWM_Duty*10.24)*PR2Temp/1024
-		DutyCycle = (PWM_Duty / 25) * (PR2Temp + 1)
+		DutyCycle = (PWM_Duty / 25) * (PR2Temp + 1)  
 		DutyCycleH = (DutyCycle AND 1020)/4
 		DutyCycleL = DutyCycle AND 3
 		
 		PWMOsc1 = int(60000/(240/ChipMHz))
-		PWMOsc4 = int(60000/(960/ChipMHz))
-		PWMOsc16 = int(60000/(3840/ChipMHz))
+		PWMOsc4 = int(60000/(960/ChipMHz))    '*** Dead Code ***
+		PWMOsc16 = int(60000/(3840/ChipMHz))  '*** Dead Code ***
 	#endscript
 
 	#ifdef PIC
 		'Set PWM Period
 		PR2 = PR2Temp
 		#ifdef T2PR 1
-			SET T2CON.T2CKPS0 OFF
-			SET T2CON.T2CKPS1 OFF
+		    SET T2CON.T2CKPS0 OFF
+		    SET T2CON.T2CKPS1 OFF
 		#endif
 		#ifdef T2PR 4
-			SET T2CON.T2CKPS0 ON
-			SET T2CON.T2CKPS1 OFF
+		    SET T2CON.T2CKPS0 ON
+			  SET T2CON.T2CKPS1 OFF
 		#endif
 		#ifdef T2PR 16
-			SET T2CON.T2CKPS0 OFF
-			SET T2CON.T2CKPS1 ON
+			  SET T2CON.T2CKPS0 OFF
+			  SET T2CON.T2CKPS1 ON
 		#endif
 		
 		'Set Duty cycle
 		CCPR1L = DutyCycleH
 		#ifdef DutyCycleL 0
 			#ifdef Bit(CCP1X)
-				SET CCPCONCache.CCP1Y OFF
-				SET CCPCONCache.CCP1X OFF
-			#endif
-			#ifdef Bit(DC1B1)
+			    SET CCPCONCache.CCP1Y OFF
+			    SET CCPCONCache.CCP1X OFF
+			 #endif
+			 #ifdef Bit(DC1B1)
 				SET CCPCONCache.DC1B1 OFF
 				SET CCPCONCache.DC1B0 OFF
-			#endif
+			 #endif
 		#endif
 		#ifdef DutyCycleL 1
-			#ifdef Bit(CCP1X)
-				SET CCPCONCache.CCP1Y ON
+		    #ifdef Bit(CCP1X)
+			    SET CCPCONCache.CCP1Y ON
 				SET CCPCONCache.CCP1X OFF
 			#endif
 			#ifdef Bit(DC1B1)
-				SET CCPCONCache.DC1B1 OFF
-				SET CCPCONCache.DC1B0 ON
+			    SET CCPCONCache.DC1B1 OFF
+			    SET CCPCONCache.DC1B0 ON
 			#endif
 		#endif
 		#ifdef DutyCycleL 2
 			#ifdef Bit(CCP1X)
-				SET CCPCONCache.CCP1Y OFF
+			    SET CCPCONCache.CCP1Y OFF
 				SET CCPCONCache.CCP1X ON
-			#endif
-			#ifdef Bit(DC1B1)
-				SET CCPCONCache.DC1B1 ON
+			 #endif
+			 #ifdef Bit(DC1B1)
+			    SET CCPCONCache.DC1B1 ON
 				SET CCPCONCache.DC1B0 OFF
-			#endif
+			 #endif
 		#endif
 		#ifdef DutyCycleL 3
-			#ifdef Bit(CCP1X)
-				SET CCPCONCache.CCP1Y ON
+			 #ifdef Bit(CCP1X)
+			    SET CCPCONCache.CCP1Y ON
 				SET CCPCONCache.CCP1X ON
-			#endif
-			#ifdef Bit(DC1B1)
+			 #endif
+			 #ifdef Bit(DC1B1)
 				SET CCPCONCache.DC1B1 ON
 				SET CCPCONCache.DC1B0 ON
-			#endif
+			 #endif
 		#endif
 		
 		'Finish preparing CCP*CON
@@ -140,81 +144,93 @@ sub PWMOff
 end sub
 
 sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
-	dim PR2_Temp as word
+	  
+    'Dim PR2_Temp as word   'moved to top  - WMR 
 	
 	'If HPWM_FAST operation selected, only recalculate timer prescaler when
 	'needed. Gives faster operation, but uses extra byte of RAM and may cause
 	'problems if HPWM and PWMOn are used together in a program.
 	'(No issues using HPWM and PWMOff in the same program with HPWM_FAST.)
 	#ifdef HPWM_FAST
-	If PWMFreq <> PWMFreqOld Then
-	#endif
-		T2_PR = 1
-		PR2_Temp = PWMOsc1 / PWMFreq
-		IF PR2_Temp_H > 0 then 
-			T2_PR = 4
-			'Divide by 4
-			set STATUS.C off
-			rotate PR2_Temp right
-			set STATUS.C off
-			rotate PR2_Temp right
-		end if 
-		IF PR2_Temp_H > 0 then
-			'PR2_Temp = PWMOsc16/PWMFreq: T2_PR = 16
-			T2_PR = 16
-			'Divide by 4
-			set STATUS.C off
-			rotate PR2_Temp right
-			set STATUS.C off
-			rotate PR2_Temp right
-		end if
-		
-		PR2 = PR2_Temp
-		SET T2CON.T2CKPS0 OFF
-		SET T2CON.T2CKPS1 OFF
-		if T2_PR = 4 then SET T2CON.T2CKPS0 ON
-		if T2_PR = 16 then SET T2CON.T2CKPS1 ON
-		SET T2CON.TMR2ON ON
-	#ifdef HPWM_FAST
-	PWMFreqOld = PWMFreq
-	End If
+	    If PWMFreq <> PWMFreqOld Then  
 	#endif
 	
-	#ifdef NoVar(CCP2CON)
-		PR2_Temp = [word]PWMDuty * PR2
-		CCPR1L = PR2_Temp_H
-		SET CCP1CON.CCP1M3 ON
-		SET CCP1CON.CCP1M2 ON
-		SET CCP1CON.CCP1M1 OFF
-		SET CCP1CON.CCP1M0 OFF
+  T2_PR = 1
+	PR2_Temp = PWMOsc1 / PWMFreq
+	IF PR2_Temp_H > 0 then 
+	    T2_PR = 4
+			'Divide by 4
+			set STATUS.C off
+			rotate PR2_Temp right
+			set STATUS.C off
+			rotate PR2_Temp right
+	end if 
+	IF PR2_Temp_H > 0 then
+	    'PR2_Temp = PWMOsc16/PWMFreq: T2_PR = 16  ' ** Artifact? -WMR 
+			 T2_PR = 16
+			'Divide by 4
+			set STATUS.C off
+			rotate PR2_Temp right
+			set STATUS.C off
+			rotate PR2_Temp right
+	end if
+		
+	PR2 = PR2_Temp
+    
+	SET T2CON.T2CKPS0 OFF
+	SET T2CON.T2CKPS1 OFF
+	if T2_PR = 4 then SET T2CON.T2CKPS0 ON
+	if T2_PR = 16 then SET T2CON.T2CKPS1 ON
+	SET T2CON.TMR2ON ON
+	
+  #ifdef HPWM_FAST
+	    PWMFreqOld = PWMFreq
+	    End If   
+	#endif
+	
+	#ifdef NoVar(CCP2CON)                
+	    PR2_Temp = PWMDuty * (PR2 + 2)   'Correction  - WMR 
+		  CCPR1L = PR2_Temp_H               
+      If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+    
+      SET CCP1CON.CCP1M3 ON  
+		  SET CCP1CON.CCP1M2 ON
+		  SET CCP1CON.CCP1M1 OFF
+      SET CCP1CON.CCP1M0 OFF
 	#endif
 	#ifdef Var(CCP2CON)
-		if PWMChannel = 1 then 
-			PR2_Temp = [word]PWMDuty * PR2
-			CCPR1L = PR2_Temp_H
-			SET CCP1CON.CCP1M3 ON
-			SET CCP1CON.CCP1M2 ON
-			SET CCP1CON.CCP1M1 OFF
-			SET CCP1CON.CCP1M0 OFF
-		end if 
-		if PWMChannel = 2 then
-			PR2_Temp = [word]PWMDuty * PR2
-			CCPR2L = PR2_Temp_H
-			SET CCP2CON.CCP1M3 ON
-			SET CCP2CON.CCP1M2 ON
-			SET CCP2CON.CCP1M1 OFF
-			SET CCP2CON.CCP1M0 OFF
-		end if
-		#ifdef Var(CCP3CON)
+      if PWMChannel = 1 then 
+			    PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR 
+		      CCPR1L = PR2_Temp_H  
+          If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+			    
+          SET CCP1CON.CCP1M3 ON
+			    SET CCP1CON.CCP1M2 ON
+			    SET CCP1CON.CCP1M1 OFF
+			    SET CCP1CON.CCP1M0 OFF
+		  end if 
+		  if PWMChannel = 2 then
+			    PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR 
+		      CCPR1L = PR2_Temp_H  
+          If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+			    
+          SET CCP2CON.CCP1M3 ON
+			    SET CCP2CON.CCP1M2 ON
+			    SET CCP2CON.CCP1M1 OFF
+			    SET CCP2CON.CCP1M0 OFF
+		  end if
+	#endif
+  #ifdef Var(CCP3CON)
 			if PWMChannel = 3 then
-				PR2_Temp = [word]PWMDuty * PR2
-				CCPR3L = PR2_Temp_H
-				SET CCP3CON.CCP1M3 ON
-				SET CCP3CON.CCP1M2 ON
-				SET CCP3CON.CCP1M1 OFF
-				SET CCP3CON.CCP1M0 OFF
+			  	PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR 
+		      CCPR1L = PR2_Temp_H  
+          If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+				  
+          SET CCP3CON.CCP1M3 ON
+				  SET CCP3CON.CCP1M2 ON
+				  SET CCP3CON.CCP1M1 OFF
+				  SET CCP3CON.CCP1M0 OFF
 			end if
-		#endif
 	#endif
 	
 end sub
