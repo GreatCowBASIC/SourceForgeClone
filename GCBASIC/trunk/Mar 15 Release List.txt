@@ -1,0 +1,101 @@
+Changes to Great Cow Basic and Great Cow Graphical Basic since May 2014 Release.
+31st March 2015
+
+The release is called 0.94
+
+This release is brought to you by, in no specific order:
+     Hugh Considine (of course!), Evan Venn, Theo Loermans, William Roth, Kent Schafer,
+     Jacque Erdermaal, Thomas Henry, Perry Weinthal, Marco Cariboni,
+     Avast, Chuck Hellebuyck, Frank Steinberg, Jim Nordquist.
+     I am sure there are others. If I missed your name - please let us know, truly sorry.
+
+Index	Fix	New	Classification	Description & GCB User Impact
+1	Yes		GCBasic		GCBasic fixed an issue for a byte multiply bug on PIC 18F devices. This fix is for specific issue when multiplying by 2 ( 2 * [times]) error.	None
+2		Yes	GCBasic		GCBasic was enhanced to include Exit Repeat as an instruction within the Repeat-End Repeat loop.	New command - Exit Repeat
+3		Yes	GCBasic		GCBasic was enhanced to accept more configuration options with the same names for the same config settings on a PIC.	None
+4	Yes		GCBasic		GCBasic fixed an issue when setting the #config on PIC18F.  The fix resolves default values were not being overridden. 	None
+5		Yes	GCBasic		GCBasic was enhanced to include ChipNameStr and ChipRAM constants to get current chip name and RAM as a string for general usage.	New constants - ChipNameStr and ChipRAM
+6		Yes	GCBasic		"GCBasic was enhanced to support the definition of data tables with multiple elements on a single line, separated by commas."	"Revised usage.   Now  data tables can have multiple elements on a single line, separated by commas."
+7		Yes	GCBasic		GCBasic was enhanced to allow constants and calculations to be used in data table entries	Revised usage.   Now  data tables can have constants and calculations.
+8		Yes	GCBasic		GCBasic was enhanced to add a SetTimer subroutine to set 16 bit timer values correctly.	New command - SetTimer
+9	Yes		GCBasic		GCBasic was revised to fix an issue when adding byte variable to larger constant on PIC (14 bit core).	None
+10		Yes	GCBasic		GCBasic was enhanced to increase the maximum size of data tables from 255 elements to 10000 elements.	Revised usage. New limits.
+11	Yes		GCBasic		GCBasic was enhanced to show error message if chip data file has a pin count of 0	None
+12	Yes				Support file (string.h) was revised to fix bugs with respect to handling of MID and LEFT methods.	None
+13	Yes		GCBasic		GCBasic was revised to fix an issue involving long data tables and a false syntax error being reported in SYSTEM.H	None
+14		Yes	EEPROM		"A new EEPROM.H file.  Now supports writing/reading bytes, strings and array to I2C Serial EEPROM devices."	New hardware specific command set.  See the associated documentation.
+15		Yes	DS18B20		A new DS18B20.H file.  Supports three different ways of reading temperature from these inexpensive devices	New hardware specific command set.  See the associated documentation.
+16		Yes	I2C - Software	A revised software I2C.H header file.  Now supports Master mode and Slave mode.  Improved documentation is included in this support file.	None - same command set.
+17		Yes	EEPROM - FRAM	A revised FRAM.H EEPROM header file.  Support for this I2C Serial EEPROM devices.	New hardware specific command set.  See the associated documentation.
+18		Yes	LCD		"A revised LCD.H file.   Improved in terms of speed and functionality. New commands also – LCDDisplayOn, LCDDisplayOff, LCDBacklite (On | Off ), new LCDHex command with the optional [, LeadingZeroActive ] parameter to print leading HEX zeros."	"New commands:  LCDDisplayOn, LCDDisplayOff, LCDBacklite (On | Off ),  new LCDHex command with the optional [, LeadingZeroActive ] parameter "
+19		Yes	GLCD		A new Nokia 3110/PCD 9850 GLCD driver.  Use GLCD.H to access this hardware driver.	New hardware specific command set.  See the associated documentation.
+20		Yes	GLCD		A revised ST7735 color GLCD driver. Use GLCD.H to access this hardware driver.	New hardware specific command set.  See the associated documentation.
+21		Yes	TIMERS		A revised support file to update support for Timer4 and Timer6 for PIC.	None.
+22		Yes	CONVERTERS	New functionality to support #include <*.bmp> and the auto creation of tables of BMP files.	New functionality.  See the Help File.
+23	Yes		ADC		A revised ADC.H to fixe A/D on ATtiny861 and other related devices.	None
+24		Yes	GCGB		Great Cow Graphical Basic user interface was updated to allow printing of integer variables.	None
+25	Yes		GCBasic		GCBasic was revised to fix and issue for negate operator on AVR.	None
+26		Yes	SerPrint	          Support files were enhances to add the method to print via the software port.  GCBasic now supports SerPrint (integer).	 New command.  SerPrint (integer)
+27	Yes		GCGB		Great Cow Graphical Basic was revised to the  Replace Constants window to improved handling.	None
+28	Yes		GCBasic		"GCBasic was revised to fix a swap4 issue on AVR with respect to the ""swap"" method and ""swap4” method,"	None
+29	Yes		GCBasic		GCBasic was revised to improve LOG handling for AVR and 18f devices.	None
+30		Yes	CLOCK		New device driver for the Maxim DS2482 Real Time Clock device	New hardware specific command set.  See the associated documentation.
+31	Yes		GCBasic		GCBasic was enhanced to resolve an issue for subroutine/function parameter parsing bug.	None
+32		Yes	GLCD		Support files for GLCD were revised to provide new functionality in support of multiple GLCD fonts.	GLCD specific command set.  See the associated documentation.
+33	Yes		GCBasic		GCBasic was enhanced to resolve issue involving long data tables and a false syntax error being reported in SYSTEM.H	None
+34		Yes	CHIP FILES	New chip data files for PIC and AVR.	None
+35		Yes	CLOCK		Improved device driver for the DS1307 Real Time Clock device.	New hardware specific command set.  See the associated documentation.
+36		Yes	GCBasic		"GCBasic was enhanced to support for larger arrays using linear memory for 16f and 12f.  Arrays are now limited to 10,000 or limited by the available RAM."	Revised usage. New limits.
+37		Yes	GLCD		Revised GLCD.H to support a larger number of GCLD devices. All GCLD drivers revised.	GLCD specific command set.  See the associated documentation.
+38	Yes		CHIP FILES	Revised chip data files for 16c84.dat for improved chip support	None
+39			GCBasic		GCBasic was fixed to support correct handling of large data table size high byte on 18F.	None
+40	Yes		CHIP FILES	Revised chip data files for 18F26K22/46K22 (added XINST = off as default).	None
+41	Yes	Yes	GCBasic		GCBasic was enhanced to allow slightly larger programs and data tables. Fixed bug in assembler when dealing with larger programs - address was being written incorrectly to output hex file.	None
+42			HPWM		Added HPWM_Fast constant. This declaration is intended to speed up HPWM routine when duty cycle changes but frequency does not.	New constants - HPWM_Fast
+43	Yes		GCBasic		GCBasic was revised to fix an issue Timer 0 on PIC18F2620	None
+44		Yes	PAD		"New command PAD.  This method Pads a string.  PAD ( string, length [, [char] defaults to spaces )"	"New command. PAD (string, length, [char])"
+45		Yes	CLOCK		"New hardware drivers for DS1307, DS3231 and MCP7940N real time clocks.  These drivers now support software and hardware I2C"	New hardware specific command set.  See the associated documentation.
+46	Yes		CHIP FILES	Revised some 18F chip data files to set secondary oscillator pins to general purpose I/O by default.	None
+47	Yes		GCBasic		GCBasic was revised to fix the Rotate command on 18F chips.  This fix was for the carry bit wasn't being saved properly for long variables. Impacted SIMPLE rotate only.	None
+48		Yes	CLOCK		New hardware driver for the DS1672 32-bit clock support. Includes documentation and example code.	New hardware specific command set.  See the associated documentation.
+49		Yes	CLOCK		New hardware driver for the DS1377 RTC clock support. Includes documentation and example code.	New hardware specific command set.  See the associated documentation.
+50	Yes		GCBasic		GCBasic was revised to fix the AVR variable microsecond delay length when delay is a multiple of 256 us.	None
+51	Yes		GCBasic		GCBasic was revised to Implement a variable microsecond delay on AVR. Requires chip speed greater than 3 MHz.	None
+52	Yes		CONFIG		Changed SYSTEM.H to improved internal oscillator configuration. This change should fix speed on 12F1501 and possibly others.	None
+53	Yes		GCGB		Revised GCGB advanced settings dialog. GCGB can now set GCBASIC #option directive.	None
+54		Yes	GCBasic		"GCBasic was enhanced to altered the redirection of all I/O pin writes from PORTx to LATx registers on PIC 16F1/18F. This enhancement may increase size of program on 16F1 due to extra bank switching, disable with #option nolatch if problems occur."	New Option. #option nolatch
+55	Yes		GCBasic		GCBasic was revised to fix an assembler error when using Poke or Peek on AVR.	None
+56	Yes		GCBasic		GCBasic was revised to fix the @ operator issue on AVR devices.	None
+57	Yes		GCBasic		GCBasic was revised to fix internal oscillator speed issues on 18FxxK20 chips	None
+58	Yes		SERIAL		"Improved RS232.h to improve timing of serial communications.  These changes are as documented in the Help File.   However, for existing users that have previously used Software RS232 the configuration should be reviewed prior to compiling to ensure the configuration is correct."	None
+59		Yes	LCD		Revised LCD.H support for LCDs.  Now supports for I2C LCD - type 10 - YwRobot LCD1602 IIC V1 or the Sainsmart LCD_PIC I2C adapter	New command.  LCD_IO 10
+60		Yes	LCD		Revised LCD.H support for LCDs.  Now supports for I2C LCD - type 12- Ywmjkdz I2C adapter with pot bent over top of chip	New command.  LCD_IO 12
+61		Yes	SENSOR		New hardware driver for the SRF01 sensor. GCB now includes the SRF01.h	New hardware specific command set.  See the associated documentation.
+62		Yes	I2C - Hardware	Revised Hardware I2C support.  HWI2C.H now includes support for AVR TWI/I2C.	None
+63		Yes	GCGB		Great Cow Graphical Basic user interface was updated to enable users to select and review the 2015 release of the demonstration code.	None
+64		Yes	DEMOS		New demonstration files for Great Cow Basic.	None
+65		Yes	DEMOS		GCB@SYN: Includes 2015 release of the demonstration code.	None
+66		Yes	GCB@SYN		GCB@SYN: SynWrite updated to 6.16.1970	None
+67		Yes	GCB@SYN		GCB@SYN: GCB lexer improvement to match release level of GCBasic	None
+68		Yes	GCB@SYN		GCB@SYN: GCB lexer improvements (labels in syntaxtree)	None
+69		Yes	GCB@SYN		GCB@SYN: G@Stools adapted to SynWrites and GCBs new folder-structure	None
+70		Yes	GCB@SYN		GCB@SYN: Inclusion of samples for Arduino bootloaders added to flashAVR.bat	None
+71		Yes	GCB@SYN		GCB@SYN: PICpgm updated to 1.8.3	None
+72		Yes	GCB@SYN		GCB@SYN:  AvrDude updated to 6.1	None
+73		Yes	GCB@SYN		GCB@SYN: GUI for AvrDude changed to AvrDudess	None
+74	Yes		CHIP FILES	PIC16F946.dat updated to correct pin direction error message on PortG.5	None	WIP
+75	Yes				Known Error: IF-AND-THEN error when using AVR compilation to handle 2-bit LCD displays.	Please use workaround by expanding these conditional tests.
+76	Yes		GCBasic		"IF-string_test_condition-THEN when using AVR compilation.  Examples errors include if left(string,#), mid, len etc. "	None
+77	Yes		GCBasic		Fix for LCDCreateChar array passing error.  1) For  AVR compilation error.  SYSTEMP conditional test caused compilation error. 2) For PIC resolved bankselect issue.	None
+78	Yes		GCBasic		Fix for internal oscillator speed setting on 18F2620.	None
+79	Yes		GCBasic		Fix for error in calculating string table size that could cause incorrect use of relative jump/relative call on PIC18F.	None
+80	Yes		GCBasic		"Fix for AVR variable.bit multiplier error where btye=btyevar+(bytevar.n * n) failed to be calculated correctly.  Implemented  a new register variable, SysBitTest, which shares a location with SysDivLoop."
+81	Yes				Simple word and byte calcs are failing without casting.  Multiplication without casting is now deprecated.   Casting has been required since the release of 3/6/12.  Please ensure code now uses casting when required.		None
+82	Yes		SYSTEM.H	          Fixed AVR string handling error.  Error: GCASM: Symbol SYSREADA has not been defined. Updated SYSTEM.H to initialise variable correctly.	None
+83		Yes	GCBasic        	GCBASIC.EXE now returns version number and exits.  /version	None
+84	Yes		SYSTEM.H            CLEARTIMER now reset timer, where appropriate, and resets to 0	None
+85		Yes	LCD.H	          LCDCreateChar will now reset to the saved LCD position\location if RW is defined, or else this method will reset the cursor to 0,0	None
+86	Yes				Known Error: AVR compiling shows incorrect memory usage.  AVR users should use other tools to assess memory usage. This will be resolved in future releases.
+87      Yes                   SYSTEM.H            Revised to set frequency related issues.
+88      Yes                   CHIP FILES	Revised some 18F chip data files to set Frequency and Delay Timings correctly.
+89		Yes			Release includes Pickit 2 and Pickit 3 software and information packages and assiocated license files.

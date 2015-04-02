@@ -85,12 +85,12 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">31/3/2105<br><br></span><div style="margin-left: 40px;">
+<td><span style="font-weight: bold;">2/04/2105<br><br></span><div style="margin-left: 40px;">
 
-<p>We are just about to post a new Hot Release of the Great Cow Basic and Great
+<p>We have posted a new Hot Release of the Great Cow Basic and Great
 Cow Graphical Basic<o:p></o:p></p>
 
-<p>This will be the latest build.<o:p></o:p></p>
+<p>This is latest build. Version 0.94<o:p></o:p></p>
 
 <p>This release is brought to you by, in no specific order:<br></p><div style="margin-left: 40px;">
 Hugh Considine (of course!), Evan Venn, Theo Loermans, William Roth, Kent
@@ -101,7 +101,7 @@ I am sure there are others. If I missed your name - please let us know, truly
 sorry.<o:p></o:p></div><p></p>
 
 <p>@31/3/2015<br>
-The Hot release of Great Cow Graphical Basic v9.10 will include (a summary):<o:p></o:p></p>
+The Hot release of Great Cow Basic v.94 will includes (a summary):<o:p></o:p></p>
 
 <ul type="disc"><li class="MsoNormal" style="">A new release of GCB@SYN
      including Pickit driver set.<o:p></o:p></li><li class="MsoNormal" style="">A pre-release version of
