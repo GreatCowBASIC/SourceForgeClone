@@ -40,6 +40,11 @@
 'Number to multiply above by to get correct delay length (us)
 #define rBitRateUnit 52
 
+'Moved from from i2c.h to ensure hwi2c.h is initialised correctly.
+#define NAK             FALSE
+#define NACK            FALSE     'permit alternative spelling
+#define ACK             TRUE
+
 'Indirect call
 Sub IndCall(In MemAdr As Word)
 	'Jump to a subroutine located at MemAdr

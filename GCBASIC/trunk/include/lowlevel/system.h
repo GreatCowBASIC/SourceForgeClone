@@ -27,7 +27,6 @@
 #define OFF 0
 #define TRUE 255
 #define FALSE 0
-#define Forever 0
 
 'Names for symbols
 #define AND &
@@ -39,10 +38,6 @@
 'Options
 #define CheckDivZero TRUE
 
-'Moved from from i2c.h to ensure hwi2c.h is initialised correctly.
-#define NAK             FALSE
-#define NACK            FALSE     'permit alternative spelling
-#define ACK             TRUE
 '********************************************************************************
 'System initialisation routine
 Sub InitSys
