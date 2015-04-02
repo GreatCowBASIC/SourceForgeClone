@@ -138,7 +138,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		ElseIf ModeAVR Then
 			IF UCase(VarName) = "SYSVALUECOPY" Then VarPointer = "REGISTER@-2"
 			If UCase(VarName) = "SYSBITTEST" Then VarPointer = "REGISTER@-2"
-			IF UCase(Left(VarName, 7)) = "SYSTEMP" Then
+			IF IsSysTemp(VarName) Then
 				If VarPointer = "REAL" Then VarPointer = "REGISTER@-2"
 			End If
 		End If

@@ -449,6 +449,7 @@ DECLARE FUNCTION IsConst (Temp As String) As Integer
 DECLARE FUNCTION IsDivider (Temp As String) As Integer
 Declare Function IsIntType(InType As String) As Integer
 DECLARE FUNCTION IsLet(Temp As String) As Integer
+Declare Function IsSysTemp(VarNameIn As String) As Integer
 Declare Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
 DECLARE FUNCTION MakeDec (DataSource As String) As LongInt
 DECLARE SUB Replace (DataVar As String, Find As String, Rep As String)
@@ -575,7 +576,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 2015-03-30"
+Version = "0.9 2015-04-02"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -11099,7 +11100,7 @@ Function IsRegister (VarName As String) As Integer
 	'System vars that are always registers
 	'SysTemp vars are only registers on AVR, no room to be registers on PIC
 	If ModeAVR Then
-		IF UCase(Left(VarName, 7)) = "SYSTEMP" And InStr(VarName, "_") = 0 Then Return -1 '_ means it's an array element
+		If IsSysTemp(VarName) Then Return -1
 		IF UCase(VarName) = "SYSVALUECOPY" Then Return -1
 		If UCase(VarName) = "SYSBITTEST" Then Return -1
 	End If

@@ -925,6 +925,39 @@ FUNCTION IsLet (DataSource As String) As Integer
 	
 END Function
 
+Function IsSysTemp(VarNameIn As String) As Integer
+	'Check if a variable name is a system temp variable
+	'(Check if name is SysTempn, where n is a number, possibly followed by _H, _U or _E)
+	Dim StartPos As Integer = 8
+	Dim CurrChar As UInteger
+	Dim VarName As String
+	
+	VarName = UCase(Trim(VarNameIn))
+	If Left(VarName, 7) <> "SYSTEMP" Then Return 0
+	If Len(VarName) < 8 Then Return 0
+	
+	Do While StartPos < Len(VarName)
+		'Check for a digit
+		CurrChar = Asc(Mid(VarName, StartPos, 1))
+		If CurrChar >= 48 And CurrChar <= 57 Then
+			StartPos += 1
+			GoTo ValidChar
+		EndIf
+		'Check for a byte specifier
+		Select Case Mid(VarName, StartPos, 2)
+			Case "_H", "_U", "_E"
+				StartPos += 2
+				GoTo ValidChar
+		End Select
+		'Found something invalid, so not SysTemp variable
+		Return 0
+		ValidChar:
+	Loop
+	
+	'Got to the end of the name without anything invalid, so must be valid!
+	Return -1
+End Function
+
 Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
 	'Check if a value is allowed for the given data type
 	Dim ValType As String
