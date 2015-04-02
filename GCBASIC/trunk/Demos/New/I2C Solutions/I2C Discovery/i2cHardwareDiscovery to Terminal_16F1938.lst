@@ -1,0 +1,2542 @@
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;Program compiled by Great Cow BASIC (0.9 2015-03-30)
+                      00002 ;Need help? See the GCBASIC forums at http://sourceforge.net/projects/gcbasic/forums,
+                      00003 ;check the documentation or email w_cholmondeley at users dot sourceforge dot net.
+                      00004 
+                      00005 ;********************************************************************************
+                      00006 
+                      00007 ;Set up the assembler options (Chip type, clock source, other bits and pieces)
+                      00008  LIST p=16F1938, r=DEC
+                      00009 #include <P16F1938.inc>
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F1938 processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+                      01409         LIST
+Message[303]: Program word too large.  Truncated to core size. (FFE4)
+8007   3FE4           00010  __CONFIG _CONFIG1, _MCLRE_ON & _WDTE_OFF & _FOSC_INTOSC
+Message[303]: Program word too large.  Truncated to core size. (DFFF)
+8008   1FFF           00011  __CONFIG _CONFIG2, _LVP_OFF & _PLLEN_ON & _VCAPEN_OFF
+                      00012 
+                      00013 ;********************************************************************************
+                      00014 
+                      00015 ;Set aside memory locations for variables
+  00000070            00016 DELAYTEMP       EQU     112
+  00000071            00017 DELAYTEMP2      EQU     113
+  00000077            00018 SysStringA      EQU     119
+  00000078            00019 SysStringA_H    EQU     120
+  00000072            00020 SysWaitTempMS   EQU     114
+  00000073            00021 SysWaitTempMS_H EQU     115
+  000023EA            00022 HEX     EQU     9194
+  00000020            00023 DEVICEID        EQU     32
+  00000021            00024 HI2CACKPOLLSTATE        EQU     33
+  00000022            00025 HI2CCURRENTMODE EQU     34
+  00000023            00026 HSERPRINTCRLFCOUNT      EQU     35
+  00000024            00027 I2CBYTE EQU     36
+  00000025            00028 PR2_TEMP        EQU     37
+  00000026            00029 PR2_TEMP_H      EQU     38
+  00000027            00030 PRINTLEN        EQU     39
+  00000028            00031 SERDATA EQU     40
+  00000029            00032 SLAVE10 EQU     41
+  0000002A            00033 SYSPRINTTEMP    EQU     42
+  0000002B            00034 SYSSTRINGTEMP   EQU     43
+  0000002C            00035 SYSVALTEMP      EQU     44
+  0000002D            00036 StringPointer   EQU     45
+  0000002E            00037 SysPRINTDATAHandler     EQU     46
+  0000002F            00038 SysPRINTDATAHandler_H   EQU     47
+  00000030            00039 SysRepeatTemp1  EQU     48
+  00000031            00040 TEMPVAR EQU     49
+  00000032            00041 TEMPVAR_H       EQU     50
+  00000033            00042 TESTID  EQU     51
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00043 
+                      00044 ;********************************************************************************
+                      00045 
+                      00046 ;Alias variables
+  00000004            00047 AFSR0   EQU     4
+  00000005            00048 AFSR0_H EQU     5
+  0000064A            00049 SYSHEX_0        EQU     1610
+  0000064B            00050 SYSHEX_1        EQU     1611
+  0000064C            00051 SYSHEX_2        EQU     1612
+                      00052 
+                      00053 ;********************************************************************************
+                      00054 
+                      00055 ;Vectors
+0000                  00056         ORG     0
+0000   2805           00057         goto    BASPROGRAMSTART
+0004                  00058         ORG     4
+0004   0009           00059         retfie
+                      00060 
+                      00061 ;********************************************************************************
+                      00062 
+                      00063 ;Start of program memory page 0
+0005                  00064         ORG     5
+0005                  00065 BASPROGRAMSTART
+                      00066 ;Call initialisation routines
+0005   21EB           00067         call    INITSYS
+0006   21FF           00068         call    INITUSART
+0007   2057           00069         call    AVRHIC2INIT
+                      00070 
+                      00071 ;Start of the main program
+                      00072 ;''A demonstration program for GCGB and GCB.
+                      00073 ;''-----------------------------------------------------------------------------------------------------
+                            ---------------------------
+                      00074 ;''This program searches for I2C devices and display their adresses to the attached PC terminal.
+                      00075 ;''This program uses the hardware implementation of I2C and TWI for the Microchip and ATMEL microprocess
+                            ors.  The microprocessor must have a suitable I2C or TWI module.
+                      00076 ;''The hardware serial connections are shown in the program.
+                      00077 ;''This program requires "DisplayDevices.h" in the same folder.
+                      00078 ;''@author      EvanV
+                      00079 ;''@licence     GPL
+                      00080 ;''@version     1.0a
+                      00081 ;''@date        14.02.15
+                      00082 ;''********************************************************************************
+                      00083 ;----- Configuration
+                      00084 ;----- Define Hardware settings
+                      00085 ;#define HI2C_BAUD_RATE 100
+                      00086 ;#define HI2C_DATA PORTC.4
+                      00087 ;#define HI2C_CLOCK PORTC.3
+                      00088 ;Dir HI2C_DATA in
+0008   0021           00089         banksel TRISC
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0009   160E           00090         bsf     TRISC,4
+                      00091 ;Dir HI2C_CLOCK in
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000A   158E           00092         bsf     TRISC,3
+                      00093 ;HI2CMode Master
+000B   300C           00094         movlw   12
+000C   0020           00095         banksel HI2CCURRENTMODE
+000D   00A2           00096         movwf   HI2CCURRENTMODE
+000E   2147           00097         call    HI2CMODE
+                      00098 ;#define USART_BAUD_RATE 9600
+                      00099 ;Dir PORTc.6 Out
+000F   0021           00100         banksel TRISC
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0010   130E           00101         bcf     TRISC,6
+                      00102 ;Dir PORTc.7 In
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0011   178E           00103         bsf     TRISC,7
+                      00104 ;#define USART_DELAY 5 ms
+                      00105 ;#define SerSendDelayms 10
+                      00106 ;#define USART_BLOCKING
+                      00107 ;wait 500 ms
+0012   30F4           00108         movlw   244
+0013   00F2           00109         movwf   SysWaitTempMS
+0014   3001           00110         movlw   1
+0015   00F3           00111         movwf   SysWaitTempMS_H
+0016   0020           00112         banksel STATUS
+0017   2113           00113         call    Delay_MS
+                      00114 ;----- Main body of program commences here.
+                      00115 ;HSerPrintCRLF
+0018   3001           00116         movlw   1
+0019   00A3           00117         movwf   HSERPRINTCRLFCOUNT
+001A   21D3           00118         call    HSERPRINTCRLF
+                      00119 ;HSerPrint "Hardware I2C Device Search for Microchip"
+001B   3013           00120         movlw   low StringTable1
+001C   00AE           00121         movwf   SysPRINTDATAHandler
+001D   3082           00122         movlw   (high StringTable1) | 128
+001E   00AF           00123         movwf   SysPRINTDATAHandler_H
+001F   21B2           00124         call    HSERPRINT170
+                      00125 ;HSerPrintCRLF 2
+0020   3002           00126         movlw   2
+0021   00A3           00127         movwf   HSERPRINTCRLFCOUNT
+0022   21D3           00128         call    HSERPRINTCRLF
+                      00129 ;for deviceID = 0 to 255
+0023   30FF           00130         movlw   255
+0024   00A0           00131         movwf   DEVICEID
+0025                  00132 SysForLoop1
+0025   0AA0           00133         incf    DEVICEID,F
+                      00134 ;HI2CStart
+0026   2190           00135         call    HI2CSTART
+                      00136 ;HI2CSend ( deviceID )
+0027   0820           00137         movf    DEVICEID,W
+0028   00A4           00138         movwf   I2CBYTE
+0029   216E           00139         call    HI2CSEND
+                      00140 ;if HI2CAckPollState = false then
+002A   08A1           00141         movf    HI2CACKPOLLSTATE,F
+002B   1D03           00142         btfss   STATUS, Z
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+002C   2848           00143         goto    ENDIF1
+                      00144 ;HSerPrint   "ID: 0x"
+002D   303C           00145         movlw   low StringTable2
+002E   00AE           00146         movwf   SysPRINTDATAHandler
+002F   3082           00147         movlw   (high StringTable2) | 128
+0030   00AF           00148         movwf   SysPRINTDATAHandler_H
+0031   21B2           00149         call    HSERPRINT170
+                      00150 ;HSerPrint   hex(deviceID)
+0032   0820           00151         movf    DEVICEID,W
+0033   00AC           00152         movwf   SYSVALTEMP
+0034   2121           00153         call    FN_HEX
+0035   30EA           00154         movlw   low HEX
+0036   00AE           00155         movwf   SysPRINTDATAHandler
+0037   3023           00156         movlw   high HEX
+0038   00AF           00157         movwf   SysPRINTDATAHandler_H
+0039   21B2           00158         call    HSERPRINT170
+                      00159 ;HSerSend 9
+003A   3009           00160         movlw   9
+003B   00A8           00161         movwf   SERDATA
+003C   21E4           00162         call    HSERSEND
+                      00163 ;testid = deviceID | 1
+003D   3001           00164         movlw   1
+003E   0420           00165         iorwf   DEVICEID,W
+003F   00B3           00166         movwf   TESTID
+                      00167 ;DisplayDevices
+0040   2059           00168         call    DISPLAYDEVICES
+                      00169 ;HI2CSend ( 0 )
+0041   01A4           00170         clrf    I2CBYTE
+0042   216E           00171         call    HI2CSEND
+                      00172 ;HI2CSend ( 0 )
+0043   01A4           00173         clrf    I2CBYTE
+0044   216E           00174         call    HI2CSEND
+                      00175 ;HSerPrintCRLF
+0045   3001           00176         movlw   1
+0046   00A3           00177         movwf   HSERPRINTCRLFCOUNT
+0047   21D3           00178         call    HSERPRINTCRLF
+                      00179 ;end if
+0048                  00180 ENDIF1
+                      00181 ;HI2CStop
+0048   219E           00182         call    HI2CSTOP
+                      00183 ;next
+0049   30FF           00184         movlw   255
+004A   0220           00185         subwf   DEVICEID,W
+004B   1C03           00186         btfss   STATUS, C
+004C   2825           00187         goto    SysForLoop1
+004D                  00188 SysForLoopEnd1
+                      00189 ;HSerPrint   "End of Device Search"
+004D   3043           00190         movlw   low StringTable3
+004E   00AE           00191         movwf   SysPRINTDATAHandler
+004F   3082           00192         movlw   (high StringTable3) | 128
+0050   00AF           00193         movwf   SysPRINTDATAHandler_H
+0051   21B2           00194         call    HSERPRINT170
+                      00195 ;HSerPrintCRLF 2
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0052   3002           00196         movlw   2
+0053   00A3           00197         movwf   HSERPRINTCRLFCOUNT
+0054   21D3           00198         call    HSERPRINTCRLF
+                      00199 ;#define LCD_I2C_Address_1 0x4E
+                      00200 ;#define slow_us 40
+                      00201 ;#define medium_us 20
+                      00202 ;#define fast_us 10
+0055                  00203 BASPROGRAMEND
+0055   0063           00204         sleep
+0056   2855           00205         goto    BASPROGRAMEND
+                      00206 
+                      00207 ;********************************************************************************
+                      00208 
+0057                  00209 AVRHIC2INIT
+                      00210 ;HI2CCurrentMode = 0
+0057   01A2           00211         clrf    HI2CCURRENTMODE
+0058   0008           00212         return
+                      00213 
+                      00214 ;********************************************************************************
+                      00215 
+0059                  00216 DISPLAYDEVICES
+                      00217 ;select case testid
+                      00218 ;case 49
+0059                  00219 SysSelect1Case1
+0059   3031           00220         movlw   49
+005A   0233           00221         subwf   TESTID,W
+005B   1D03           00222         btfss   STATUS, Z
+005C   2863           00223         goto    SysSelect1Case2
+                      00224 ;Hserprint "DS2482_1Channel_1Wire Master"
+005D   3058           00225         movlw   low StringTable4
+005E   00AE           00226         movwf   SysPRINTDATAHandler
+005F   3082           00227         movlw   (high StringTable4) | 128
+0060   00AF           00228         movwf   SysPRINTDATAHandler_H
+0061   21B2           00229         call    HSERPRINT170
+                      00230 ;case 65
+0062   2912           00231         goto    SysSelectEnd1
+0063                  00232 SysSelect1Case2
+0063   3041           00233         movlw   65
+0064   0233           00234         subwf   TESTID,W
+0065   1D03           00235         btfss   STATUS, Z
+0066   286D           00236         goto    SysSelect1Case3
+                      00237 ;Hserprint "Serial_Expander_Device"
+0067   3075           00238         movlw   low StringTable5
+0068   00AE           00239         movwf   SysPRINTDATAHandler
+0069   3082           00240         movlw   (high StringTable5) | 128
+006A   00AF           00241         movwf   SysPRINTDATAHandler_H
+006B   21B2           00242         call    HSERPRINT170
+                      00243 ;case 73
+006C   2912           00244         goto    SysSelectEnd1
+006D                  00245 SysSelect1Case3
+006D   3049           00246         movlw   73
+006E   0233           00247         subwf   TESTID,W
+006F   1D03           00248         btfss   STATUS, Z
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0070   2877           00249         goto    SysSelect1Case4
+                      00250 ;Hserprint "IC2/Serial_Expander_Device"
+0071   308C           00251         movlw   low StringTable6
+0072   00AE           00252         movwf   SysPRINTDATAHandler
+0073   3082           00253         movlw   (high StringTable6) | 128
+0074   00AF           00254         movwf   SysPRINTDATAHandler_H
+0075   21B2           00255         call    HSERPRINT170
+                      00256 ;case 75
+0076   2912           00257         goto    SysSelectEnd1
+0077                  00258 SysSelect1Case4
+0077   304B           00259         movlw   75
+0078   0233           00260         subwf   TESTID,W
+0079   1D03           00261         btfss   STATUS, Z
+007A   2881           00262         goto    SysSelect1Case5
+                      00263 ;Hserprint "IC2/Serial_Expander_Device"
+007B   308C           00264         movlw   low StringTable6
+007C   00AE           00265         movwf   SysPRINTDATAHandler
+007D   3082           00266         movlw   (high StringTable6) | 128
+007E   00AF           00267         movwf   SysPRINTDATAHandler_H
+007F   21B2           00268         call    HSERPRINT170
+                      00269 ;case 77
+0080   2912           00270         goto    SysSelectEnd1
+0081                  00271 SysSelect1Case5
+0081   304D           00272         movlw   77
+0082   0233           00273         subwf   TESTID,W
+0083   1D03           00274         btfss   STATUS, Z
+0084   288B           00275         goto    SysSelect1Case6
+                      00276 ;Hserprint "IC2/Serial_Expander_Device"
+0085   308C           00277         movlw   low StringTable6
+0086   00AE           00278         movwf   SysPRINTDATAHandler
+0087   3082           00279         movlw   (high StringTable6) | 128
+0088   00AF           00280         movwf   SysPRINTDATAHandler_H
+0089   21B2           00281         call    HSERPRINT170
+                      00282 ;case 79
+008A   2912           00283         goto    SysSelectEnd1
+008B                  00284 SysSelect1Case6
+008B   304F           00285         movlw   79
+008C   0233           00286         subwf   TESTID,W
+008D   1D03           00287         btfss   STATUS, Z
+008E   2895           00288         goto    SysSelect1Case7
+                      00289 ;Hserprint "IC2/Serial_Expander_Device"
+008F   308C           00290         movlw   low StringTable6
+0090   00AE           00291         movwf   SysPRINTDATAHandler
+0091   3082           00292         movlw   (high StringTable6) | 128
+0092   00AF           00293         movwf   SysPRINTDATAHandler_H
+0093   21B2           00294         call    HSERPRINT170
+                      00295 ;case 97
+0094   2912           00296         goto    SysSelectEnd1
+0095                  00297 SysSelect1Case7
+0095   3061           00298         movlw   97
+0096   0233           00299         subwf   TESTID,W
+0097   1D03           00300         btfss   STATUS, Z
+0098   289F           00301         goto    SysSelect1Case8
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00302 ;Hserprint "GCB Slave Device"
+0099   30A7           00303         movlw   low StringTable7
+009A   00AE           00304         movwf   SysPRINTDATAHandler
+009B   3082           00305         movlw   (high StringTable7) | 128
+009C   00AF           00306         movwf   SysPRINTDATAHandler_H
+009D   21B2           00307         call    HSERPRINT170
+                      00308 ;case 161
+009E   2912           00309         goto    SysSelectEnd1
+009F                  00310 SysSelect1Case8
+009F   30A1           00311         movlw   161
+00A0   0233           00312         subwf   TESTID,W
+00A1   1D03           00313         btfss   STATUS, Z
+00A2   28A9           00314         goto    SysSelect1Case9
+                      00315 ;Hserprint "EEProm_Device_Device"
+00A3   30B8           00316         movlw   low StringTable8
+00A4   00AE           00317         movwf   SysPRINTDATAHandler
+00A5   3082           00318         movlw   (high StringTable8) | 128
+00A6   00AF           00319         movwf   SysPRINTDATAHandler_H
+00A7   21B2           00320         call    HSERPRINT170
+                      00321 ;case 163
+00A8   2912           00322         goto    SysSelectEnd1
+00A9                  00323 SysSelect1Case9
+00A9   30A3           00324         movlw   163
+00AA   0233           00325         subwf   TESTID,W
+00AB   1D03           00326         btfss   STATUS, Z
+00AC   28B3           00327         goto    SysSelect1Case10
+                      00328 ;Hserprint "EEProm_Device_Device"
+00AD   30B8           00329         movlw   low StringTable8
+00AE   00AE           00330         movwf   SysPRINTDATAHandler
+00AF   3082           00331         movlw   (high StringTable8) | 128
+00B0   00AF           00332         movwf   SysPRINTDATAHandler_H
+00B1   21B2           00333         call    HSERPRINT170
+                      00334 ;case 165
+00B2   2912           00335         goto    SysSelectEnd1
+00B3                  00336 SysSelect1Case10
+00B3   30A5           00337         movlw   165
+00B4   0233           00338         subwf   TESTID,W
+00B5   1D03           00339         btfss   STATUS, Z
+00B6   28BD           00340         goto    SysSelect1Case11
+                      00341 ;Hserprint "EEProm_Device_Device"
+00B7   30B8           00342         movlw   low StringTable8
+00B8   00AE           00343         movwf   SysPRINTDATAHandler
+00B9   3082           00344         movlw   (high StringTable8) | 128
+00BA   00AF           00345         movwf   SysPRINTDATAHandler_H
+00BB   21B2           00346         call    HSERPRINT170
+                      00347 ;case 167
+00BC   2912           00348         goto    SysSelectEnd1
+00BD                  00349 SysSelect1Case11
+00BD   30A7           00350         movlw   167
+00BE   0233           00351         subwf   TESTID,W
+00BF   1D03           00352         btfss   STATUS, Z
+00C0   28C7           00353         goto    SysSelect1Case12
+                      00354 ;Hserprint "EEProm_Device_Device"
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00C1   30B8           00355         movlw   low StringTable8
+00C2   00AE           00356         movwf   SysPRINTDATAHandler
+00C3   3082           00357         movlw   (high StringTable8) | 128
+00C4   00AF           00358         movwf   SysPRINTDATAHandler_H
+00C5   21B2           00359         call    HSERPRINT170
+                      00360 ;case 169
+00C6   2912           00361         goto    SysSelectEnd1
+00C7                  00362 SysSelect1Case12
+00C7   30A9           00363         movlw   169
+00C8   0233           00364         subwf   TESTID,W
+00C9   1D03           00365         btfss   STATUS, Z
+00CA   28D1           00366         goto    SysSelect1Case13
+                      00367 ;Hserprint "EEProm_Device_Device"
+00CB   30B8           00368         movlw   low StringTable8
+00CC   00AE           00369         movwf   SysPRINTDATAHandler
+00CD   3082           00370         movlw   (high StringTable8) | 128
+00CE   00AF           00371         movwf   SysPRINTDATAHandler_H
+00CF   21B2           00372         call    HSERPRINT170
+                      00373 ;case 171
+00D0   2912           00374         goto    SysSelectEnd1
+00D1                  00375 SysSelect1Case13
+00D1   30AB           00376         movlw   171
+00D2   0233           00377         subwf   TESTID,W
+00D3   1D03           00378         btfss   STATUS, Z
+00D4   28DB           00379         goto    SysSelect1Case14
+                      00380 ;Hserprint "EEProm_Device_Device"
+00D5   30B8           00381         movlw   low StringTable8
+00D6   00AE           00382         movwf   SysPRINTDATAHandler
+00D7   3082           00383         movlw   (high StringTable8) | 128
+00D8   00AF           00384         movwf   SysPRINTDATAHandler_H
+00D9   21B2           00385         call    HSERPRINT170
+                      00386 ;case 173
+00DA   2912           00387         goto    SysSelectEnd1
+00DB                  00388 SysSelect1Case14
+00DB   30AD           00389         movlw   173
+00DC   0233           00390         subwf   TESTID,W
+00DD   1D03           00391         btfss   STATUS, Z
+00DE   28E5           00392         goto    SysSelect1Case15
+                      00393 ;Hserprint "EEProm_Device_Device"
+00DF   30B8           00394         movlw   low StringTable8
+00E0   00AE           00395         movwf   SysPRINTDATAHandler
+00E1   3082           00396         movlw   (high StringTable8) | 128
+00E2   00AF           00397         movwf   SysPRINTDATAHandler_H
+00E3   21B2           00398         call    HSERPRINT170
+                      00399 ;case 175
+00E4   2912           00400         goto    SysSelectEnd1
+00E5                  00401 SysSelect1Case15
+00E5   30AF           00402         movlw   175
+00E6   0233           00403         subwf   TESTID,W
+00E7   1D03           00404         btfss   STATUS, Z
+00E8   28EF           00405         goto    SysSelect1Case16
+                      00406 ;Hserprint "EEProm_Device_Device"
+00E9   30B8           00407         movlw   low StringTable8
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00EA   00AE           00408         movwf   SysPRINTDATAHandler
+00EB   3082           00409         movlw   (high StringTable8) | 128
+00EC   00AF           00410         movwf   SysPRINTDATAHandler_H
+00ED   21B2           00411         call    HSERPRINT170
+                      00412 ;case 199
+00EE   2912           00413         goto    SysSelectEnd1
+00EF                  00414 SysSelect1Case16
+00EF   30C7           00415         movlw   199
+00F0   0233           00416         subwf   TESTID,W
+00F1   1D03           00417         btfss   STATUS, Z
+00F2   28F9           00418         goto    SysSelect1Case17
+                      00419 ;Hserprint "AXE033 I2C LCD Device"
+00F3   30CD           00420         movlw   low StringTable9
+00F4   00AE           00421         movwf   SysPRINTDATAHandler
+00F5   3082           00422         movlw   (high StringTable9) | 128
+00F6   00AF           00423         movwf   SysPRINTDATAHandler_H
+00F7   21B2           00424         call    HSERPRINT170
+                      00425 ;case 209
+00F8   2912           00426         goto    SysSelectEnd1
+00F9                  00427 SysSelect1Case17
+00F9   30D1           00428         movlw   209
+00FA   0233           00429         subwf   TESTID,W
+00FB   1D03           00430         btfss   STATUS, Z
+00FC   2903           00431         goto    SysSelect1Case18
+                      00432 ;Hserprint "DS1307_RTC_Device"
+00FD   30E3           00433         movlw   low StringTable10
+00FE   00AE           00434         movwf   SysPRINTDATAHandler
+00FF   3082           00435         movlw   (high StringTable10) | 128
+0100   00AF           00436         movwf   SysPRINTDATAHandler_H
+0101   21B2           00437         call    HSERPRINT170
+                      00438 ;case 249
+0102   2912           00439         goto    SysSelectEnd1
+0103                  00440 SysSelect1Case18
+0103   30F9           00441         movlw   249
+0104   0233           00442         subwf   TESTID,W
+0105   1D03           00443         btfss   STATUS, Z
+0106   290D           00444         goto    SysSelect1Case19
+                      00445 ;Hserprint "FRAM_Device"
+0107   30F5           00446         movlw   low StringTable11
+0108   00AE           00447         movwf   SysPRINTDATAHandler
+0109   3082           00448         movlw   (high StringTable11) | 128
+010A   00AF           00449         movwf   SysPRINTDATAHandler_H
+010B   21B2           00450         call    HSERPRINT170
+                      00451 ;case else
+010C   2912           00452         goto    SysSelectEnd1
+010D                  00453 SysSelect1Case19
+                      00454 ;Hserprint "Unknown_Device"
+010D   3001           00455         movlw   low StringTable12
+010E   00AE           00456         movwf   SysPRINTDATAHandler
+010F   3083           00457         movlw   (high StringTable12) | 128
+0110   00AF           00458         movwf   SysPRINTDATAHandler_H
+0111   21B2           00459         call    HSERPRINT170
+                      00460 ;end select
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0112                  00461 SysSelect1Case20
+0112                  00462 SysSelectEnd1
+0112   0008           00463         return
+                      00464 
+                      00465 ;********************************************************************************
+                      00466 
+0113                  00467 Delay_MS
+0113   0AF3           00468         incf    SysWaitTempMS_H, F
+0114                  00469 DMS_START
+0114   300E           00470         movlw   14
+0115   00F1           00471         movwf   DELAYTEMP2
+0116                  00472 DMS_OUTER
+0116   30BD           00473         movlw   189
+0117   00F0           00474         movwf   DELAYTEMP
+0118                  00475 DMS_INNER
+0118   0BF0           00476         decfsz  DELAYTEMP, F
+0119   2918           00477         goto    DMS_INNER
+011A   0BF1           00478         decfsz  DELAYTEMP2, F
+011B   2916           00479         goto    DMS_OUTER
+011C   0BF2           00480         decfsz  SysWaitTempMS, F
+011D   2914           00481         goto    DMS_START
+011E   0BF3           00482         decfsz  SysWaitTempMS_H, F
+011F   2914           00483         goto    DMS_START
+0120   0008           00484         return
+                      00485 
+                      00486 ;********************************************************************************
+                      00487 
+0121                  00488 FN_HEX
+                      00489 ;Hex(0) = 2
+0121   3002           00490         movlw   2
+0122   002C           00491         banksel SYSHEX_0
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0123   00CA           00492         movwf   SYSHEX_0
+                      00493 ;SysStringTemp = SysValTemp And 0x0F
+0124   300F           00494         movlw   15
+0125   0020           00495         banksel SYSVALTEMP
+0126   052C           00496         andwf   SYSVALTEMP,W
+0127   00AB           00497         movwf   SYSSTRINGTEMP
+                      00498 ;If SysStringTemp > 9 Then SysStringTemp = SysStringTemp + 7
+0128   3C09           00499         sublw   9
+0129   1803           00500         btfsc   STATUS, C
+012A   292D           00501         goto    ENDIF3
+012B   3007           00502         movlw   7
+012C   07AB           00503         addwf   SYSSTRINGTEMP,F
+012D                  00504 ENDIF3
+                      00505 ;Hex(2) = SysStringTemp + 48
+012D   3030           00506         movlw   48
+012E   072B           00507         addwf   SYSSTRINGTEMP,W
+012F   002C           00508         banksel SYSHEX_2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0130   00CC           00509         movwf   SYSHEX_2
+                      00510 ;For SysStringTemp = 1 to 4
+0131   0020           00511         banksel SYSSTRINGTEMP
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0132   01AB           00512         clrf    SYSSTRINGTEMP
+0133                  00513 SysForLoop2
+0133   0AAB           00514         incf    SYSSTRINGTEMP,F
+                      00515 ;Rotate SysValTemp Right
+0134   0CAC           00516         rrf     SYSVALTEMP,F
+                      00517 ;Next
+0135   3004           00518         movlw   4
+0136   022B           00519         subwf   SYSSTRINGTEMP,W
+0137   1C03           00520         btfss   STATUS, C
+0138   2933           00521         goto    SysForLoop2
+0139                  00522 SysForLoopEnd2
+                      00523 ;SysStringTemp = SysValTemp And 0x0F
+0139   300F           00524         movlw   15
+013A   052C           00525         andwf   SYSVALTEMP,W
+013B   00AB           00526         movwf   SYSSTRINGTEMP
+                      00527 ;If SysStringTemp > 9 Then SysStringTemp = SysStringTemp + 7
+013C   3C09           00528         sublw   9
+013D   1803           00529         btfsc   STATUS, C
+013E   2941           00530         goto    ENDIF5
+013F   3007           00531         movlw   7
+0140   07AB           00532         addwf   SYSSTRINGTEMP,F
+0141                  00533 ENDIF5
+                      00534 ;Hex(1) = SysStringTemp + 48
+0141   3030           00535         movlw   48
+0142   072B           00536         addwf   SYSSTRINGTEMP,W
+0143   002C           00537         banksel SYSHEX_1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0144   00CB           00538         movwf   SYSHEX_1
+0145   0020           00539         banksel STATUS
+0146   0008           00540         return
+                      00541 
+                      00542 ;********************************************************************************
+                      00543 
+0147                  00544 HI2CMODE
+                      00545 ;set SSPSTAT.SMP on
+0147   0024           00546         banksel SSPSTAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0148   1794           00547         bsf     SSPSTAT,SMP
+                      00548 ;set SSPCON1.CKP on
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0149   1615           00549         bsf     SSPCON1,CKP
+                      00550 ;set SSPCON1.WCOL Off
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+014A   1395           00551         bcf     SSPCON1,WCOL
+                      00552 ;If HI2CCurrentMode = Master Then
+014B   300C           00553         movlw   12
+014C   0020           00554         banksel HI2CCURRENTMODE
+014D   0222           00555         subwf   HI2CCURRENTMODE,W
+014E   1D03           00556         btfss   STATUS, Z
+014F   2957           00557         goto    ENDIF9
+                      00558 ;set SSPCON1.SSPM3 on
+0150   0024           00559         banksel SSPCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0151   1595           00560         bsf     SSPCON1,SSPM3
+                      00561 ;set SSPCON1.SSPM2 off
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0152   1115           00562         bcf     SSPCON1,SSPM2
+                      00563 ;set SSPCON1.SSPM1 off
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0153   1095           00564         bcf     SSPCON1,SSPM1
+                      00565 ;set SSPCON1.SSPM0 off
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0154   1015           00566         bcf     SSPCON1,SSPM0
+                      00567 ;SSPADD = HI2C_BAUD_TEMP And 127
+0155   304F           00568         movlw   79
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0156   0092           00569         movwf   SSPADD
+                      00570 ;end if
+0157                  00571 ENDIF9
+                      00572 ;if HI2CCurrentMode = Slave then
+0157   0020           00573         banksel HI2CCURRENTMODE
+0158   08A2           00574         movf    HI2CCURRENTMODE,F
+0159   1D03           00575         btfss   STATUS, Z
+015A   2960           00576         goto    ENDIF10
+                      00577 ;set SSPCON1.SSPM3 off
+015B   0024           00578         banksel SSPCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+015C   1195           00579         bcf     SSPCON1,SSPM3
+                      00580 ;set SSPCON1.SSPM2 on
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+015D   1515           00581         bsf     SSPCON1,SSPM2
+                      00582 ;set SSPCON1.SSPM1 on
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+015E   1495           00583         bsf     SSPCON1,SSPM1
+                      00584 ;set SSPCON1.SSPM0 off
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+015F   1015           00585         bcf     SSPCON1,SSPM0
+                      00586 ;end if
+0160                  00587 ENDIF10
+                      00588 ;if HI2CCurrentMode = Slave10 then
+0160   0020           00589         banksel SLAVE10
+0161   0829           00590         movf    SLAVE10,W
+0162   0222           00591         subwf   HI2CCURRENTMODE,W
+0163   1D03           00592         btfss   STATUS, Z
+0164   296A           00593         goto    ENDIF11
+                      00594 ;set SSPCON1.SSPM3 off
+0165   0024           00595         banksel SSPCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0166   1195           00596         bcf     SSPCON1,SSPM3
+                      00597 ;set SSPCON1.SSPM2 on
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0167   1515           00598         bsf     SSPCON1,SSPM2
+                      00599 ;set SSPCON1.SSPM1 on
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0168   1495           00600         bsf     SSPCON1,SSPM1
+                      00601 ;set SSPCON1.SSPM0 on
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0169   1415           00602         bsf     SSPCON1,SSPM0
+                      00603 ;end if
+016A                  00604 ENDIF11
+                      00605 ;set SSPCON1.SSPEN on
+016A   0024           00606         banksel SSPCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+016B   1695           00607         bsf     SSPCON1,SSPEN
+016C   0020           00608         banksel STATUS
+016D   0008           00609         return
+                      00610 
+                      00611 ;********************************************************************************
+                      00612 
+016E                  00613 HI2CSEND
+016E                  00614 RETRYHI2CSEND
+                      00615 ;SET SSPCON1.WCOL OFF
+016E   0024           00616         banksel SSPCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+016F   1395           00617         bcf     SSPCON1,WCOL
+                      00618 ;SSPBUF = I2CByte
+0170   0020           00619         banksel I2CBYTE
+0171   0824           00620         movf    I2CBYTE,W
+0172   0024           00621         banksel SSPBUF
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0173   0091           00622         movwf   SSPBUF
+                      00623 ;HI2CWaitMSSP
+0174   0020           00624         banksel STATUS
+0175   21AE           00625         call    HI2CWAITMSSP
+                      00626 ;if ACKSTAT =  1 then
+0176   0024           00627         banksel SSPCON2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0177   1F16           00628         btfss   SSPCON2,ACKSTAT
+0178   297D           00629         goto    ELSE14_1
+                      00630 ;HI2CAckPollState = true
+0179   30FF           00631         movlw   255
+017A   0020           00632         banksel HI2CACKPOLLSTATE
+017B   00A1           00633         movwf   HI2CACKPOLLSTATE
+                      00634 ;else
+017C   297F           00635         goto    ENDIF14
+017D                  00636 ELSE14_1
+                      00637 ;HI2CAckPollState = false
+017D   0020           00638         banksel HI2CACKPOLLSTATE
+017E   01A1           00639         clrf    HI2CACKPOLLSTATE
+                      00640 ;end if
+017F                  00641 ENDIF14
+                      00642 ;If SSPCON1.WCOL = On Then
+017F   0024           00643         banksel SSPCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0180   1F95           00644         btfss   SSPCON1,WCOL
+0181   2987           00645         goto    ENDIF15
+                      00646 ;If HI2CCurrentMode <= 10 Then Goto RetryHI2CSend
+0182   0020           00647         banksel HI2CCURRENTMODE
+0183   0822           00648         movf    HI2CCURRENTMODE,W
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0184   3C0A           00649         sublw   10
+0185   1803           00650         btfsc   STATUS, C
+0186   296E           00651         goto    RETRYHI2CSEND
+                      00652 ;End If
+0187                  00653 ENDIF15
+                      00654 ;If HI2CCurrentMode <= 10 Then Set SSPCON1.CKP On
+0187   0020           00655         banksel HI2CCURRENTMODE
+0188   0822           00656         movf    HI2CCURRENTMODE,W
+0189   3C0A           00657         sublw   10
+018A   1C03           00658         btfss   STATUS, C
+018B   298E           00659         goto    ENDIF16
+018C   0024           00660         banksel SSPCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+018D   1615           00661         bsf     SSPCON1,CKP
+018E                  00662 ENDIF16
+018E   0020           00663         banksel STATUS
+018F   0008           00664         return
+                      00665 
+                      00666 ;********************************************************************************
+                      00667 
+0190                  00668 HI2CSTART
+                      00669 ;If HI2CCurrentMode > 10 Then
+0190   0822           00670         movf    HI2CCURRENTMODE,W
+0191   3C0A           00671         sublw   10
+0192   1803           00672         btfsc   STATUS, C
+0193   2999           00673         goto    ELSE12_1
+                      00674 ;Set SSPCON2.SEN On
+0194   0024           00675         banksel SSPCON2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0195   1416           00676         bsf     SSPCON2,SEN
+                      00677 ;HI2CWaitMSSP
+0196   0020           00678         banksel STATUS
+0197   21AE           00679         call    HI2CWAITMSSP
+                      00680 ;Else
+0198   299C           00681         goto    ENDIF12
+0199                  00682 ELSE12_1
+                      00683 ;Wait Until SSPSTAT.S = On
+0199                  00684 SysWaitLoop2
+0199   0024           00685         banksel SSPSTAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+019A   1D94           00686         btfss   SSPSTAT,S
+019B   2999           00687         goto    SysWaitLoop2
+                      00688 ;End If
+019C                  00689 ENDIF12
+019C   0020           00690         banksel STATUS
+019D   0008           00691         return
+                      00692 
+                      00693 ;********************************************************************************
+                      00694 
+019E                  00695 HI2CSTOP
+                      00696 ;If HI2CCurrentMode > 10 Then
+019E   0822           00697         movf    HI2CCURRENTMODE,W
+019F   3C0A           00698         sublw   10
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+01A0   1803           00699         btfsc   STATUS, C
+01A1   29A9           00700         goto    ELSE13_1
+                      00701 ;wait while R_NOT_W = 1   'wait for completion of activities
+01A2                  00702 SysWaitLoop3
+01A2   0024           00703         banksel SSPSTAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01A3   1914           00704         btfsc   SSPSTAT,R_NOT_W
+01A4   29A2           00705         goto    SysWaitLoop3
+                      00706 ;Set SSPCON2.PEN On
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01A5   1516           00707         bsf     SSPCON2,PEN
+                      00708 ;HI2CWaitMSSP
+01A6   0020           00709         banksel STATUS
+01A7   21AE           00710         call    HI2CWAITMSSP
+                      00711 ;Else
+01A8   29AC           00712         goto    ENDIF13
+01A9                  00713 ELSE13_1
+                      00714 ;Wait Until SSPSTAT.P = On
+01A9                  00715 SysWaitLoop4
+01A9   0024           00716         banksel SSPSTAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01AA   1E14           00717         btfss   SSPSTAT,P
+01AB   29A9           00718         goto    SysWaitLoop4
+                      00719 ;End If
+01AC                  00720 ENDIF13
+01AC   0020           00721         banksel STATUS
+01AD   0008           00722         return
+                      00723 
+                      00724 ;********************************************************************************
+                      00725 
+01AE                  00726 HI2CWAITMSSP
+                      00727 ;if SSPIF = 0 then goto $-1
+01AE   1D91           00728         btfss   PIR1,SSPIF
+01AF   29AE           00729         goto    $-1
+                      00730 ;SSPIF = 0
+01B0   1191           00731         bcf     PIR1,SSPIF
+01B1   0008           00732         return
+                      00733 
+                      00734 ;********************************************************************************
+                      00735 
+                      00736 ;Overloaded signature: STRING:
+01B2                  00737 HSERPRINT170
+                      00738 ;PrintLen = PrintData(0)
+01B2   082E           00739         movf    SysPRINTDATAHandler,W
+01B3   0084           00740         movwf   AFSR0
+01B4   082F           00741         movf    SysPRINTDATAHandler_H,W
+01B5   0085           00742         movwf   AFSR0_H
+01B6   0800           00743         movf    INDF0,W
+01B7   00A7           00744         movwf   PRINTLEN
+                      00745 ;If PrintLen <> 0 then
+01B8   08A7           00746         movf    PRINTLEN,F
+01B9   1903           00747         btfsc   STATUS, Z
+01BA   29D2           00748         goto    ENDIF6
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00749 ;for SysPrintTemp = 1 to PrintLen
+01BB   01AA           00750         clrf    SYSPRINTTEMP
+01BC   3001           00751         movlw   1
+01BD   0227           00752         subwf   PRINTLEN,W
+01BE   1C03           00753         btfss   STATUS, C
+01BF   29D2           00754         goto    SysForLoopEnd3
+01C0                  00755 SysForLoop3
+01C0   0AAA           00756         incf    SYSPRINTTEMP,F
+                      00757 ;HSerSend(PrintData(SysPrintTemp))
+01C1   082A           00758         movf    SYSPRINTTEMP,W
+01C2   072E           00759         addwf   SysPRINTDATAHandler,W
+01C3   0084           00760         movwf   AFSR0
+01C4   3000           00761         movlw   0
+01C5   3D2F           00762         addwfc  SysPRINTDATAHandler_H,W
+01C6   0085           00763         movwf   AFSR0_H
+01C7   0800           00764         movf    INDF0,W
+01C8   00A8           00765         movwf   SERDATA
+01C9   21E4           00766         call    HSERSEND
+                      00767 ;Wait USART_DELAY
+01CA   3005           00768         movlw   5
+01CB   00F2           00769         movwf   SysWaitTempMS
+01CC   01F3           00770         clrf    SysWaitTempMS_H
+01CD   2113           00771         call    Delay_MS
+                      00772 ;next
+01CE   0827           00773         movf    PRINTLEN,W
+01CF   022A           00774         subwf   SYSPRINTTEMP,W
+01D0   1C03           00775         btfss   STATUS, C
+01D1   29C0           00776         goto    SysForLoop3
+01D2                  00777 SysForLoopEnd3
+                      00778 ;End If
+01D2                  00779 ENDIF6
+01D2   0008           00780         return
+                      00781 
+                      00782 ;********************************************************************************
+                      00783 
+01D3                  00784 HSERPRINTCRLF
+                      00785 ;repeat HSerPrintCRLFCount
+01D3   0823           00786         movf    HSERPRINTCRLFCOUNT,W
+01D4   00B0           00787         movwf   SysRepeatTemp1
+01D5   1903           00788         btfsc   STATUS,Z
+01D6   29E3           00789         goto    SysRepeatLoopEnd1
+01D7                  00790 SysRepeatLoop1
+                      00791 ;HSerSend(13)
+01D7   300D           00792         movlw   13
+01D8   00A8           00793         movwf   SERDATA
+01D9   21E4           00794         call    HSERSEND
+                      00795 ;Wait USART_DELAY
+01DA   3005           00796         movlw   5
+01DB   00F2           00797         movwf   SysWaitTempMS
+01DC   01F3           00798         clrf    SysWaitTempMS_H
+01DD   2113           00799         call    Delay_MS
+                      00800 ;HSerSend(10)
+01DE   300A           00801         movlw   10
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+01DF   00A8           00802         movwf   SERDATA
+01E0   21E4           00803         call    HSERSEND
+                      00804 ;end Repeat
+01E1   0BB0           00805         decfsz  SysRepeatTemp1,F
+01E2   29D7           00806         goto    SysRepeatLoop1
+01E3                  00807 SysRepeatLoopEnd1
+01E3   0008           00808         return
+                      00809 
+                      00810 ;********************************************************************************
+                      00811 
+01E4                  00812 HSERSEND
+                      00813 ;HSerSendBlocker
+                      00814 ;HSerSendBlockCheck
+                      00815 ;Wait While TXIF = Off
+01E4                  00816 SysWaitLoop1
+01E4   1E11           00817         btfss   PIR1,TXIF
+01E5   29E4           00818         goto    SysWaitLoop1
+                      00819 ;TXREG = SerData
+01E6   0828           00820         movf    SERDATA,W
+01E7   0023           00821         banksel TXREG
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01E8   009A           00822         movwf   TXREG
+01E9   0020           00823         banksel STATUS
+01EA   0008           00824         return
+                      00825 
+                      00826 ;********************************************************************************
+                      00827 
+01EB                  00828 INITSYS
+                      00829 ;Set IRCF3 On
+01EB   0021           00830         banksel OSCCON
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01EC   1719           00831         bsf     OSCCON,IRCF3
+                      00832 ;Set IRCF2 On
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01ED   1699           00833         bsf     OSCCON,IRCF2
+                      00834 ;Set IRCF1 On
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01EE   1619           00835         bsf     OSCCON,IRCF1
+                      00836 ;Set IRCF0 Off
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01EF   1199           00837         bcf     OSCCON,IRCF0
+                      00838 ;Set SPLLEN On
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01F0   1799           00839         bsf     OSCCON,SPLLEN
+                      00840 ;SET ADCON0.ADON OFF
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01F1   101D           00841         bcf     ADCON0,ADON
+                      00842 ;SET ADFM OFF
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01F2   139E           00843         bcf     ADCON1,ADFM
+                      00844 ;ANSELA = 0
+01F3   0023           00845         banksel ANSELA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+01F4   018C           00846         clrf    ANSELA
+                      00847 ;ANSELB = 0
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01F5   018D           00848         clrf    ANSELB
+                      00849 ;C2ON = 0
+01F6   0022           00850         banksel CM2CON0
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01F7   1393           00851         bcf     CM2CON0,C2ON
+                      00852 ;C1ON = 0
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01F8   1391           00853         bcf     CM1CON0,C1ON
+                      00854 ;PORTA = 0
+01F9   0020           00855         banksel PORTA
+01FA   018C           00856         clrf    PORTA
+                      00857 ;PORTB = 0
+01FB   018D           00858         clrf    PORTB
+                      00859 ;PORTC = 0
+01FC   018E           00860         clrf    PORTC
+                      00861 ;PORTE = 0
+01FD   0190           00862         clrf    PORTE
+01FE   0008           00863         return
+                      00864 
+                      00865 ;********************************************************************************
+                      00866 
+01FF                  00867 INITUSART
+                      00868 ;SPBRG = SPBRGL_TEMP
+01FF   3040           00869         movlw   64
+0200   0023           00870         banksel SPBRG
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0201   009B           00871         movwf   SPBRG
+                      00872 ;SPBRGH = SPBRGH_TEMP
+0202   3003           00873         movlw   3
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0203   009C           00874         movwf   SPBRGH
+                      00875 ;BRG16 = BRG16_TEMP
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0204   159F           00876         bsf     BAUDCON,BRG16
+                      00877 ;BRGH = BRGH_TEMP
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0205   151E           00878         bsf     TXSTA,BRGH
+                      00879 ;Set SYNC Off
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0206   121E           00880         bcf     TXSTA,SYNC
+                      00881 ;Set SPEN On
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0207   179D           00882         bsf     RCSTA,SPEN
+                      00883 ;Set CREN On
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0208   161D           00884         bsf     RCSTA,CREN
+                      00885 ;Set TXEN On
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0209   169E           00886         bsf     TXSTA,TXEN
+020A   0020           00887         banksel STATUS
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+020B   0008           00888         return
+                      00889 
+                      00890 ;********************************************************************************
+                      00891 
+020C                  00892 SysStringTables
+020C   0878           00893         movf    SysStringA_H,W
+020D   008A           00894         movwf   PCLATH
+020E   0877           00895         movf    SysStringA,W
+020F   0AF7           00896         incf    SysStringA,F
+0210   1903           00897         btfsc   STATUS,Z
+0211   0AF8           00898         incf    SysStringA_H,F
+0212   0082           00899         movwf   PCL
+                      00900 
+0213                  00901 StringTable1
+0213   3428           00902         retlw   40
+0214   3448           00903         retlw   72      ;H
+0215   3461           00904         retlw   97      ;a
+0216   3472           00905         retlw   114     ;r
+0217   3464           00906         retlw   100     ;d
+0218   3477           00907         retlw   119     ;w
+0219   3461           00908         retlw   97      ;a
+021A   3472           00909         retlw   114     ;r
+021B   3465           00910         retlw   101     ;e
+021C   3420           00911         retlw   32      ; 
+021D   3449           00912         retlw   73      ;I
+021E   3432           00913         retlw   50      ;2
+021F   3443           00914         retlw   67      ;C
+0220   3420           00915         retlw   32      ; 
+0221   3444           00916         retlw   68      ;D
+0222   3465           00917         retlw   101     ;e
+0223   3476           00918         retlw   118     ;v
+0224   3469           00919         retlw   105     ;i
+0225   3463           00920         retlw   99      ;c
+0226   3465           00921         retlw   101     ;e
+0227   3420           00922         retlw   32      ; 
+0228   3453           00923         retlw   83      ;S
+0229   3465           00924         retlw   101     ;e
+022A   3461           00925         retlw   97      ;a
+022B   3472           00926         retlw   114     ;r
+022C   3463           00927         retlw   99      ;c
+022D   3468           00928         retlw   104     ;h
+022E   3420           00929         retlw   32      ; 
+022F   3466           00930         retlw   102     ;f
+0230   346F           00931         retlw   111     ;o
+0231   3472           00932         retlw   114     ;r
+0232   3420           00933         retlw   32      ; 
+0233   344D           00934         retlw   77      ;M
+0234   3469           00935         retlw   105     ;i
+0235   3463           00936         retlw   99      ;c
+0236   3472           00937         retlw   114     ;r
+0237   346F           00938         retlw   111     ;o
+0238   3463           00939         retlw   99      ;c
+0239   3468           00940         retlw   104     ;h
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 20
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+023A   3469           00941         retlw   105     ;i
+023B   3470           00942         retlw   112     ;p
+                      00943 
+                      00944 
+023C                  00945 StringTable2
+023C   3406           00946         retlw   6
+023D   3449           00947         retlw   73      ;I
+023E   3444           00948         retlw   68      ;D
+023F   343A           00949         retlw   58      ;:
+0240   3420           00950         retlw   32      ; 
+0241   3430           00951         retlw   48      ;0
+0242   3478           00952         retlw   120     ;x
+                      00953 
+                      00954 
+0243                  00955 StringTable3
+0243   3414           00956         retlw   20
+0244   3445           00957         retlw   69      ;E
+0245   346E           00958         retlw   110     ;n
+0246   3464           00959         retlw   100     ;d
+0247   3420           00960         retlw   32      ; 
+0248   346F           00961         retlw   111     ;o
+0249   3466           00962         retlw   102     ;f
+024A   3420           00963         retlw   32      ; 
+024B   3444           00964         retlw   68      ;D
+024C   3465           00965         retlw   101     ;e
+024D   3476           00966         retlw   118     ;v
+024E   3469           00967         retlw   105     ;i
+024F   3463           00968         retlw   99      ;c
+0250   3465           00969         retlw   101     ;e
+0251   3420           00970         retlw   32      ; 
+0252   3453           00971         retlw   83      ;S
+0253   3465           00972         retlw   101     ;e
+0254   3461           00973         retlw   97      ;a
+0255   3472           00974         retlw   114     ;r
+0256   3463           00975         retlw   99      ;c
+0257   3468           00976         retlw   104     ;h
+                      00977 
+                      00978 
+0258                  00979 StringTable4
+0258   341C           00980         retlw   28
+0259   3444           00981         retlw   68      ;D
+025A   3453           00982         retlw   83      ;S
+025B   3432           00983         retlw   50      ;2
+025C   3434           00984         retlw   52      ;4
+025D   3438           00985         retlw   56      ;8
+025E   3432           00986         retlw   50      ;2
+025F   345F           00987         retlw   95      ;_
+0260   3431           00988         retlw   49      ;1
+0261   3443           00989         retlw   67      ;C
+0262   3468           00990         retlw   104     ;h
+0263   3461           00991         retlw   97      ;a
+0264   346E           00992         retlw   110     ;n
+0265   346E           00993         retlw   110     ;n
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 21
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0266   3465           00994         retlw   101     ;e
+0267   346C           00995         retlw   108     ;l
+0268   345F           00996         retlw   95      ;_
+0269   3431           00997         retlw   49      ;1
+026A   3457           00998         retlw   87      ;W
+026B   3469           00999         retlw   105     ;i
+026C   3472           01000         retlw   114     ;r
+026D   3465           01001         retlw   101     ;e
+026E   3420           01002         retlw   32      ; 
+026F   344D           01003         retlw   77      ;M
+0270   3461           01004         retlw   97      ;a
+0271   3473           01005         retlw   115     ;s
+0272   3474           01006         retlw   116     ;t
+0273   3465           01007         retlw   101     ;e
+0274   3472           01008         retlw   114     ;r
+                      01009 
+                      01010 
+0275                  01011 StringTable5
+0275   3416           01012         retlw   22
+0276   3453           01013         retlw   83      ;S
+0277   3465           01014         retlw   101     ;e
+0278   3472           01015         retlw   114     ;r
+0279   3469           01016         retlw   105     ;i
+027A   3461           01017         retlw   97      ;a
+027B   346C           01018         retlw   108     ;l
+027C   345F           01019         retlw   95      ;_
+027D   3445           01020         retlw   69      ;E
+027E   3478           01021         retlw   120     ;x
+027F   3470           01022         retlw   112     ;p
+0280   3461           01023         retlw   97      ;a
+0281   346E           01024         retlw   110     ;n
+0282   3464           01025         retlw   100     ;d
+0283   3465           01026         retlw   101     ;e
+0284   3472           01027         retlw   114     ;r
+0285   345F           01028         retlw   95      ;_
+0286   3444           01029         retlw   68      ;D
+0287   3465           01030         retlw   101     ;e
+0288   3476           01031         retlw   118     ;v
+0289   3469           01032         retlw   105     ;i
+028A   3463           01033         retlw   99      ;c
+028B   3465           01034         retlw   101     ;e
+                      01035 
+                      01036 
+028C                  01037 StringTable6
+028C   341A           01038         retlw   26
+028D   3449           01039         retlw   73      ;I
+028E   3443           01040         retlw   67      ;C
+028F   3432           01041         retlw   50      ;2
+0290   342F           01042         retlw   47      ;/
+0291   3453           01043         retlw   83      ;S
+0292   3465           01044         retlw   101     ;e
+0293   3472           01045         retlw   114     ;r
+0294   3469           01046         retlw   105     ;i
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 22
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0295   3461           01047         retlw   97      ;a
+0296   346C           01048         retlw   108     ;l
+0297   345F           01049         retlw   95      ;_
+0298   3445           01050         retlw   69      ;E
+0299   3478           01051         retlw   120     ;x
+029A   3470           01052         retlw   112     ;p
+029B   3461           01053         retlw   97      ;a
+029C   346E           01054         retlw   110     ;n
+029D   3464           01055         retlw   100     ;d
+029E   3465           01056         retlw   101     ;e
+029F   3472           01057         retlw   114     ;r
+02A0   345F           01058         retlw   95      ;_
+02A1   3444           01059         retlw   68      ;D
+02A2   3465           01060         retlw   101     ;e
+02A3   3476           01061         retlw   118     ;v
+02A4   3469           01062         retlw   105     ;i
+02A5   3463           01063         retlw   99      ;c
+02A6   3465           01064         retlw   101     ;e
+                      01065 
+                      01066 
+02A7                  01067 StringTable7
+02A7   3410           01068         retlw   16
+02A8   3447           01069         retlw   71      ;G
+02A9   3443           01070         retlw   67      ;C
+02AA   3442           01071         retlw   66      ;B
+02AB   3420           01072         retlw   32      ; 
+02AC   3453           01073         retlw   83      ;S
+02AD   346C           01074         retlw   108     ;l
+02AE   3461           01075         retlw   97      ;a
+02AF   3476           01076         retlw   118     ;v
+02B0   3465           01077         retlw   101     ;e
+02B1   3420           01078         retlw   32      ; 
+02B2   3444           01079         retlw   68      ;D
+02B3   3465           01080         retlw   101     ;e
+02B4   3476           01081         retlw   118     ;v
+02B5   3469           01082         retlw   105     ;i
+02B6   3463           01083         retlw   99      ;c
+02B7   3465           01084         retlw   101     ;e
+                      01085 
+                      01086 
+02B8                  01087 StringTable8
+02B8   3414           01088         retlw   20
+02B9   3445           01089         retlw   69      ;E
+02BA   3445           01090         retlw   69      ;E
+02BB   3450           01091         retlw   80      ;P
+02BC   3472           01092         retlw   114     ;r
+02BD   346F           01093         retlw   111     ;o
+02BE   346D           01094         retlw   109     ;m
+02BF   345F           01095         retlw   95      ;_
+02C0   3444           01096         retlw   68      ;D
+02C1   3465           01097         retlw   101     ;e
+02C2   3476           01098         retlw   118     ;v
+02C3   3469           01099         retlw   105     ;i
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 23
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02C4   3463           01100         retlw   99      ;c
+02C5   3465           01101         retlw   101     ;e
+02C6   345F           01102         retlw   95      ;_
+02C7   3444           01103         retlw   68      ;D
+02C8   3465           01104         retlw   101     ;e
+02C9   3476           01105         retlw   118     ;v
+02CA   3469           01106         retlw   105     ;i
+02CB   3463           01107         retlw   99      ;c
+02CC   3465           01108         retlw   101     ;e
+                      01109 
+                      01110 
+02CD                  01111 StringTable9
+02CD   3415           01112         retlw   21
+02CE   3441           01113         retlw   65      ;A
+02CF   3458           01114         retlw   88      ;X
+02D0   3445           01115         retlw   69      ;E
+02D1   3430           01116         retlw   48      ;0
+02D2   3433           01117         retlw   51      ;3
+02D3   3433           01118         retlw   51      ;3
+02D4   3420           01119         retlw   32      ; 
+02D5   3449           01120         retlw   73      ;I
+02D6   3432           01121         retlw   50      ;2
+02D7   3443           01122         retlw   67      ;C
+02D8   3420           01123         retlw   32      ; 
+02D9   344C           01124         retlw   76      ;L
+02DA   3443           01125         retlw   67      ;C
+02DB   3444           01126         retlw   68      ;D
+02DC   3420           01127         retlw   32      ; 
+02DD   3444           01128         retlw   68      ;D
+02DE   3465           01129         retlw   101     ;e
+02DF   3476           01130         retlw   118     ;v
+02E0   3469           01131         retlw   105     ;i
+02E1   3463           01132         retlw   99      ;c
+02E2   3465           01133         retlw   101     ;e
+                      01134 
+                      01135 
+02E3                  01136 StringTable10
+02E3   3411           01137         retlw   17
+02E4   3444           01138         retlw   68      ;D
+02E5   3453           01139         retlw   83      ;S
+02E6   3431           01140         retlw   49      ;1
+02E7   3433           01141         retlw   51      ;3
+02E8   3430           01142         retlw   48      ;0
+02E9   3437           01143         retlw   55      ;7
+02EA   345F           01144         retlw   95      ;_
+02EB   3452           01145         retlw   82      ;R
+02EC   3454           01146         retlw   84      ;T
+02ED   3443           01147         retlw   67      ;C
+02EE   345F           01148         retlw   95      ;_
+02EF   3444           01149         retlw   68      ;D
+02F0   3465           01150         retlw   101     ;e
+02F1   3476           01151         retlw   118     ;v
+02F2   3469           01152         retlw   105     ;i
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 24
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02F3   3463           01153         retlw   99      ;c
+02F4   3465           01154         retlw   101     ;e
+                      01155 
+                      01156 
+02F5                  01157 StringTable11
+02F5   340B           01158         retlw   11
+02F6   3446           01159         retlw   70      ;F
+02F7   3452           01160         retlw   82      ;R
+02F8   3441           01161         retlw   65      ;A
+02F9   344D           01162         retlw   77      ;M
+02FA   345F           01163         retlw   95      ;_
+02FB   3444           01164         retlw   68      ;D
+02FC   3465           01165         retlw   101     ;e
+02FD   3476           01166         retlw   118     ;v
+02FE   3469           01167         retlw   105     ;i
+02FF   3463           01168         retlw   99      ;c
+0300   3465           01169         retlw   101     ;e
+                      01170 
+                      01171 
+0301                  01172 StringTable12
+0301   340E           01173         retlw   14
+0302   3455           01174         retlw   85      ;U
+0303   346E           01175         retlw   110     ;n
+0304   346B           01176         retlw   107     ;k
+0305   346E           01177         retlw   110     ;n
+0306   346F           01178         retlw   111     ;o
+0307   3477           01179         retlw   119     ;w
+0308   346E           01180         retlw   110     ;n
+0309   345F           01181         retlw   95      ;_
+030A   3444           01182         retlw   68      ;D
+030B   3465           01183         retlw   101     ;e
+030C   3476           01184         retlw   118     ;v
+030D   3469           01185         retlw   105     ;i
+030E   3463           01186         retlw   99      ;c
+030F   3465           01187         retlw   101     ;e
+                      01188 
+                      01189 
+                      01190 ;********************************************************************************
+                      01191 
+                      01192 ;Start of program memory page 1
+0800                  01193         ORG     2048
+                      01194 ;Start of program memory page 2
+1000                  01195         ORG     4096
+                      01196 ;Start of program memory page 3
+1800                  01197         ORG     6144
+                      01198 ;Start of program memory page 4
+2000                  01199         ORG     8192
+                      01200 ;Start of program memory page 5
+2800                  01201         ORG     10240
+                      01202 ;Start of program memory page 6
+3000                  01203         ORG     12288
+                      01204 ;Start of program memory page 7
+3800                  01205         ORG     14336
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 25
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01206 
+Message[303]: Program word too large.  Truncated to core size. (FFE4)
+Message[303]: Program word too large.  Truncated to core size. (DFFF)
+                      01207  END
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 26
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ABDEN                             00000000
+ABDOVF                            00000007
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ACKTIM                            00000007
+ADCON0                            0000009D
+ADCON1                            0000009E
+ADCS0                             00000004
+ADCS1                             00000005
+ADCS2                             00000006
+ADDEN                             00000003
+ADFM                              00000007
+ADFVR0                            00000000
+ADFVR1                            00000001
+ADGO                              00000001
+ADIE                              00000006
+ADIF                              00000006
+ADNREF                            00000002
+ADON                              00000000
+ADPREF0                           00000000
+ADPREF1                           00000001
+ADRES                             0000009B
+ADRESH                            0000009C
+ADRESL                            0000009B
+AFSR0                             00000004
+AFSR0_H                           00000005
+AHEN                              00000001
+ANSA0                             00000000
+ANSA1                             00000001
+ANSA2                             00000002
+ANSA3                             00000003
+ANSA4                             00000004
+ANSA5                             00000005
+ANSB0                             00000000
+ANSB1                             00000001
+ANSB2                             00000002
+ANSB3                             00000003
+ANSB4                             00000004
+ANSB5                             00000005
+ANSELA                            0000018C
+ANSELB                            0000018D
+APFCON                            0000011D
+AVRHIC2INIT                       00000057
+BASPROGRAMEND                     00000055
+BASPROGRAMSTART                   00000005
+BAUDCON                           0000019F
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BIASMD                            00000006
+BOEN                              00000004
+BORCON                            00000116
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 27
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BORRDY                            00000000
+BRG16                             00000003
+BRGH                              00000002
+BSR                               00000008
+BSR0                              00000000
+BSR1                              00000001
+BSR2                              00000002
+BSR3                              00000003
+BSR4                              00000004
+BSR_SHAD                          00000FE6
+C                                 00000000
+C1HYS                             00000001
+C1IE                              00000005
+C1IF                              00000005
+C1INTN                            00000006
+C1INTP                            00000007
+C1NCH0                            00000000
+C1NCH1                            00000001
+C1OE                              00000005
+C1ON                              00000007
+C1OUT                             00000006
+C1PCH0                            00000004
+C1PCH1                            00000005
+C1POL                             00000004
+C1SP                              00000002
+C1SYNC                            00000000
+C1TSEL0                           00000000
+C1TSEL1                           00000001
+C2HYS                             00000001
+C2IE                              00000006
+C2IF                              00000006
+C2INTN                            00000006
+C2INTP                            00000007
+C2NCH0                            00000000
+C2NCH1                            00000001
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2OUTSEL                          00000002
+C2PCH0                            00000004
+C2PCH1                            00000005
+C2POL                             00000004
+C2SP                              00000002
+C2SYNC                            00000000
+C2TSEL0                           00000002
+C2TSEL1                           00000003
+C3TSEL0                           00000004
+C3TSEL1                           00000005
+C4TSEL0                           00000006
+C4TSEL1                           00000007
+C5TSEL0                           00000000
+C5TSEL1                           00000001
+CCP1AS                            00000295
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 28
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CCP1AS0                           00000004
+CCP1AS1                           00000005
+CCP1AS2                           00000006
+CCP1ASE                           00000007
+CCP1CON                           00000293
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP2AS                            0000029C
+CCP2AS0                           00000004
+CCP2AS1                           00000005
+CCP2AS2                           00000006
+CCP2ASE                           00000007
+CCP2CON                           0000029A
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2SEL                           00000000
+CCP3AS                            00000315
+CCP3AS0                           00000004
+CCP3AS1                           00000005
+CCP3AS2                           00000006
+CCP3ASE                           00000007
+CCP3CON                           00000313
+CCP3IE                            00000004
+CCP3IF                            00000004
+CCP3M0                            00000000
+CCP3M1                            00000001
+CCP3M2                            00000002
+CCP3M3                            00000003
+CCP3SEL                           00000006
+CCP4CON                           0000031A
+CCP4IE                            00000005
+CCP4IF                            00000005
+CCP4M0                            00000000
+CCP4M1                            00000001
+CCP4M2                            00000002
+CCP4M3                            00000003
+CCP5CON                           0000031E
+CCP5IE                            00000006
+CCP5IF                            00000006
+CCP5M0                            00000000
+CCP5M1                            00000001
+CCP5M2                            00000002
+CCP5M3                            00000003
+CCPR1H                            00000292
+CCPR1L                            00000291
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 29
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CCPR2H                            00000299
+CCPR2L                            00000298
+CCPR3H                            00000312
+CCPR3L                            00000311
+CCPR4H                            00000319
+CCPR4L                            00000318
+CCPR5H                            0000031D
+CCPR5L                            0000031C
+CCPTMRS0                          0000029E
+CCPTMRS1                          0000029F
+CDAFVR0                           00000002
+CDAFVR1                           00000003
+CFGS                              00000006
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+CHS4                              00000006
+CKE                               00000006
+CKP                               00000004
+CM1CON0                           00000111
+CM1CON1                           00000112
+CM2CON0                           00000113
+CM2CON1                           00000114
+CMOUT                             00000115
+CPSCH0                            00000000
+CPSCH1                            00000001
+CPSCH2                            00000002
+CPSCON0                           0000001E
+CPSCON1                           0000001F
+CPSON                             00000007
+CPSOUT                            00000001
+CPSRM                             00000006
+CPSRNG0                           00000002
+CPSRNG1                           00000003
+CREN                              00000004
+CS0                               00000002
+CS1                               00000003
+CSRC                              00000007
+C_SHAD                            00000000
+DACCON0                           00000118
+DACCON1                           00000119
+DACEN                             00000007
+DACLPS                            00000006
+DACNSS                            00000000
+DACOE                             00000005
+DACPSS0                           00000002
+DACPSS1                           00000003
+DACR0                             00000000
+DACR1                             00000001
+DACR2                             00000002
+DACR3                             00000003
+DACR4                             00000004
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 30
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DC2B0                             00000004
+DC2B1                             00000005
+DC3B0                             00000004
+DC3B1                             00000005
+DC4B0                             00000004
+DC4B1                             00000005
+DC5B0                             00000004
+DC5B1                             00000005
+DC_SHAD                           00000001
+DELAYTEMP                         00000070
+DELAYTEMP2                        00000071
+DEVICEID                          00000020
+DHEN                              00000000
+DISPLAYDEVICES                    00000059
+DMS_INNER                         00000118
+DMS_OUTER                         00000116
+DMS_START                         00000114
+D_NOT_A                           00000005
+Delay_MS                          00000113
+ECCP1AS                           00000295
+ECCP2AS                           0000029C
+ECCP3AS                           00000315
+EEADR                             00000191
+EEADRH                            00000192
+EEADRL                            00000191
+EECON1                            00000195
+EECON2                            00000196
+EEDAT                             00000193
+EEDATH                            00000194
+EEDATL                            00000193
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+ELSE12_1                          00000199
+ELSE13_1                          000001A9
+ELSE14_1                          0000017D
+ENDIF1                            00000048
+ENDIF10                           00000160
+ENDIF11                           0000016A
+ENDIF12                           0000019C
+ENDIF13                           000001AC
+ENDIF14                           0000017F
+ENDIF15                           00000187
+ENDIF16                           0000018E
+ENDIF3                            0000012D
+ENDIF5                            00000141
+ENDIF6                            000001D2
+ENDIF9                            00000157
+F                                 00000001
+FERR                              00000002
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 31
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+FN_HEX                            00000121
+FREE                              00000004
+FSR0                              00000004
+FSR0H                             00000005
+FSR0H_SHAD                        00000FE9
+FSR0L                             00000004
+FSR0L_SHAD                        00000FE8
+FSR1                              00000006
+FSR1H                             00000007
+FSR1H_SHAD                        00000FEB
+FSR1L                             00000006
+FSR1L_SHAD                        00000FEA
+FVRCON                            00000117
+FVREN                             00000007
+FVRRDY                            00000006
+GCEN                              00000007
+GIE                               00000007
+GO                                00000001
+GO_NOT_DONE                       00000001
+HEX                               000023EA
+HFIOFL                            00000003
+HFIOFR                            00000004
+HFIOFS                            00000000
+HI2CACKPOLLSTATE                  00000021
+HI2CCURRENTMODE                   00000022
+HI2CMODE                          00000147
+HI2CSEND                          0000016E
+HI2CSTART                         00000190
+HI2CSTOP                          0000019E
+HI2CWAITMSSP                      000001AE
+HSERPRINT170                      000001B2
+HSERPRINTCRLF                     000001D3
+HSERPRINTCRLFCOUNT                00000023
+HSERSEND                          000001E4
+I2CBYTE                           00000024
+INDF0                             00000000
+INDF1                             00000001
+INITSYS                           000001EB
+INITUSART                         000001FF
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IOCBF                             00000396
+IOCBF0                            00000000
+IOCBF1                            00000001
+IOCBF2                            00000002
+IOCBF3                            00000003
+IOCBF4                            00000004
+IOCBF5                            00000005
+IOCBF6                            00000006
+IOCBF7                            00000007
+IOCBN                             00000395
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 32
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+IOCBN0                            00000000
+IOCBN1                            00000001
+IOCBN2                            00000002
+IOCBN3                            00000003
+IOCBN4                            00000004
+IOCBN5                            00000005
+IOCBN6                            00000006
+IOCBN7                            00000007
+IOCBP                             00000394
+IOCBP0                            00000000
+IOCBP1                            00000001
+IOCBP2                            00000002
+IOCBP3                            00000003
+IOCBP4                            00000004
+IOCBP5                            00000005
+IOCBP6                            00000006
+IOCBP7                            00000007
+IOCIE                             00000003
+IOCIF                             00000000
+IRCF0                             00000003
+IRCF1                             00000004
+IRCF2                             00000005
+IRCF3                             00000006
+LATA                              0000010C
+LATA0                             00000000
+LATA1                             00000001
+LATA2                             00000002
+LATA3                             00000003
+LATA4                             00000004
+LATA5                             00000005
+LATA6                             00000006
+LATA7                             00000007
+LATB                              0000010D
+LATB0                             00000000
+LATB1                             00000001
+LATB2                             00000002
+LATB3                             00000003
+LATB4                             00000004
+LATB5                             00000005
+LATB6                             00000006
+LATB7                             00000007
+LATC                              0000010E
+LATC0                             00000000
+LATC1                             00000001
+LATC2                             00000002
+LATC3                             00000003
+LATC4                             00000004
+LATC5                             00000005
+LATC6                             00000006
+LATC7                             00000007
+LATE                              00000110
+LATE3                             00000003
+LCDA                              00000005
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 33
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+LCDCON                            00000791
+LCDCST                            00000794
+LCDCST0                           00000000
+LCDCST1                           00000001
+LCDCST2                           00000002
+LCDDATA0                          000007A0
+LCDDATA1                          000007A1
+LCDDATA10                         000007AA
+LCDDATA3                          000007A3
+LCDDATA4                          000007A4
+LCDDATA6                          000007A6
+LCDDATA7                          000007A7
+LCDDATA9                          000007A9
+LCDEN                             00000007
+LCDIE                             00000002
+LCDIF                             00000002
+LCDIRE                            00000007
+LCDIRI                            00000005
+LCDIRS                            00000006
+LCDPS                             00000792
+LCDREF                            00000793
+LCDRL                             00000795
+LCDSE0                            00000798
+LCDSE1                            00000799
+LFIOFR                            00000001
+LMUX0                             00000000
+LMUX1                             00000001
+LP0                               00000000
+LP1                               00000001
+LP2                               00000002
+LP3                               00000003
+LRLAP0                            00000006
+LRLAP1                            00000007
+LRLAT0                            00000000
+LRLAT1                            00000001
+LRLAT2                            00000002
+LRLBP0                            00000004
+LRLBP1                            00000005
+LWLO                              00000005
+MC1OUT                            00000000
+MC2OUT                            00000001
+MFIOFR                            00000002
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RI                            00000002
+NOT_RMCLR                         00000003
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_WPUEN                         00000007
+OERR                              00000001
+OPTION_REG                        00000095
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 34
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+OSCCON                            00000099
+OSCSTAT                           0000009A
+OSCTUNE                           00000098
+OSFIE                             00000007
+OSFIF                             00000007
+OSTS                              00000005
+P                                 00000004
+P1DC0                             00000000
+P1DC1                             00000001
+P1DC2                             00000002
+P1DC3                             00000003
+P1DC4                             00000004
+P1DC5                             00000005
+P1DC6                             00000006
+P1M0                              00000006
+P1M1                              00000007
+P1RSEN                            00000007
+P2BSEL                            00000004
+P2DC0                             00000000
+P2DC1                             00000001
+P2DC2                             00000002
+P2DC3                             00000003
+P2DC4                             00000004
+P2DC5                             00000005
+P2DC6                             00000006
+P2M0                              00000006
+P2M1                              00000007
+P2RSEN                            00000007
+P3DC0                             00000000
+P3DC1                             00000001
+P3DC2                             00000002
+P3DC3                             00000003
+P3DC4                             00000004
+P3DC5                             00000005
+P3DC6                             00000006
+P3M0                              00000006
+P3M1                              00000007
+P3RSEN                            00000007
+PCIE                              00000006
+PCL                               00000002
+PCLATH                            0000000A
+PCLATH_SHAD                       00000FE7
+PCON                              00000096
+PEIE                              00000006
+PEN                               00000002
+PIE1                              00000091
+PIE2                              00000092
+PIE3                              00000093
+PIR1                              00000011
+PIR2                              00000012
+PIR3                              00000013
+PLLR                              00000006
+PORTA                             0000000C
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 35
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PORTB                             0000000D
+PORTC                             0000000E
+PORTE                             00000010
+PR2                               0000001B
+PR2_TEMP                          00000025
+PR2_TEMP_H                        00000026
+PR4                               00000416
+PR6                               0000041D
+PRINTLEN                          00000027
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSS1AC0                           00000002
+PSS1AC1                           00000003
+PSS1BD0                           00000000
+PSS1BD1                           00000001
+PSS2AC0                           00000002
+PSS2AC1                           00000003
+PSS2BD0                           00000000
+PSS2BD1                           00000001
+PSS3AC0                           00000002
+PSS3AC1                           00000003
+PSS3BD0                           00000000
+PSS3BD1                           00000001
+PSTR1CON                          00000296
+PSTR2CON                          0000029D
+PSTR3CON                          00000316
+PWM1CON                           00000294
+PWM2CON                           0000029B
+PWM3CON                           00000314
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 36
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RC6                               00000006
+RC7                               00000007
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             00000199
+RCSTA                             0000019D
+RD                                00000000
+RE3                               00000003
+RETRYHI2CSEND                     0000016E
+RSEN                              00000001
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+S                                 00000003
+SBCDE                             00000002
+SBOREN                            00000007
+SCIE                              00000005
+SCKP                              00000004
+SCS0                              00000000
+SCS1                              00000001
+SDAHT                             00000003
+SE0                               00000000
+SE1                               00000001
+SE10                              00000002
+SE11                              00000003
+SE12                              00000004
+SE13                              00000005
+SE14                              00000006
+SE15                              00000007
+SE2                               00000002
+SE3                               00000003
+SE4                               00000004
+SE5                               00000005
+SE6                               00000006
+SE7                               00000007
+SE8                               00000000
+SE9                               00000001
+SEG0COM0                          00000000
+SEG0COM1                          00000000
+SEG0COM2                          00000000
+SEG0COM3                          00000000
+SEG10COM0                         00000002
+SEG10COM1                         00000002
+SEG10COM2                         00000002
+SEG10COM3                         00000002
+SEG11COM0                         00000003
+SEG11COM1                         00000003
+SEG11COM2                         00000003
+SEG11COM3                         00000003
+SEG12COM0                         00000004
+SEG12COM1                         00000004
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 37
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SEG12COM2                         00000004
+SEG12COM3                         00000004
+SEG13COM0                         00000005
+SEG13COM1                         00000005
+SEG13COM2                         00000005
+SEG13COM3                         00000005
+SEG14COM0                         00000006
+SEG14COM1                         00000006
+SEG14COM2                         00000006
+SEG14COM3                         00000006
+SEG15COM0                         00000007
+SEG15COM1                         00000007
+SEG15COM2                         00000007
+SEG15COM3                         00000007
+SEG1COM0                          00000001
+SEG1COM1                          00000001
+SEG1COM2                          00000001
+SEG1COM3                          00000001
+SEG2COM0                          00000002
+SEG2COM1                          00000002
+SEG2COM2                          00000002
+SEG2COM3                          00000002
+SEG3COM0                          00000003
+SEG3COM1                          00000003
+SEG3COM2                          00000003
+SEG3COM3                          00000003
+SEG4COM0                          00000004
+SEG4COM1                          00000004
+SEG4COM2                          00000004
+SEG4COM3                          00000004
+SEG5COM0                          00000005
+SEG5COM1                          00000005
+SEG5COM2                          00000005
+SEG5COM3                          00000005
+SEG6COM0                          00000006
+SEG6COM1                          00000006
+SEG6COM2                          00000006
+SEG6COM3                          00000006
+SEG7COM0                          00000007
+SEG7COM1                          00000007
+SEG7COM2                          00000007
+SEG7COM3                          00000007
+SEG8COM0                          00000000
+SEG8COM1                          00000000
+SEG8COM2                          00000000
+SEG8COM3                          00000000
+SEG9COM0                          00000001
+SEG9COM1                          00000001
+SEG9COM2                          00000001
+SEG9COM3                          00000001
+SEN                               00000000
+SENDB                             00000003
+SERDATA                           00000028
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 38
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SLAVE10                           00000029
+SLPEN                             00000006
+SMP                               00000007
+SPBRG                             0000019B
+SPBRGH                            0000019C
+SPBRGL                            0000019B
+SPEN                              00000007
+SPLLEN                            00000007
+SRCLK0                            00000004
+SRCLK1                            00000005
+SRCLK2                            00000006
+SRCON0                            0000011A
+SRCON1                            0000011B
+SREN                              00000005
+SRLEN                             00000007
+SRNQEN                            00000002
+SRNQSEL                           00000003
+SRPR                              00000000
+SRPS                              00000001
+SRQEN                             00000003
+SRRC1E                            00000000
+SRRC2E                            00000001
+SRRCKE                            00000002
+SRRPE                             00000003
+SRSC1E                            00000004
+SRSC2E                            00000005
+SRSCKE                            00000006
+SRSPE                             00000007
+SSPADD                            00000212
+SSPBUF                            00000211
+SSPCON                            00000215
+SSPCON1                           00000215
+SSPCON2                           00000216
+SSPCON3                           00000217
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000213
+SSPOV                             00000006
+SSPSTAT                           00000214
+SSSEL                             00000001
+STATUS                            00000003
+STATUS_SHAD                       00000FE4
+STKOVF                            00000007
+STKPTR                            00000FED
+STKUNF                            00000006
+STR1A                             00000000
+STR1B                             00000001
+STR1C                             00000002
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 39
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+STR1D                             00000003
+STR1SYNC                          00000004
+STR2A                             00000000
+STR2B                             00000001
+STR2C                             00000002
+STR2D                             00000003
+STR2SYNC                          00000004
+STR3A                             00000000
+STR3B                             00000001
+STR3C                             00000002
+STR3D                             00000003
+STR3SYNC                          00000004
+SWDTEN                            00000000
+SYNC                              00000004
+SYSHEX_0                          0000064A
+SYSHEX_1                          0000064B
+SYSHEX_2                          0000064C
+SYSPRINTTEMP                      0000002A
+SYSSTRINGTEMP                     0000002B
+SYSVALTEMP                        0000002C
+StringPointer                     0000002D
+StringTable1                      00000213
+StringTable10                     000002E3
+StringTable11                     000002F5
+StringTable12                     00000301
+StringTable2                      0000023C
+StringTable3                      00000243
+StringTable4                      00000258
+StringTable5                      00000275
+StringTable6                      0000028C
+StringTable7                      000002A7
+StringTable8                      000002B8
+StringTable9                      000002CD
+SysForLoop1                       00000025
+SysForLoop2                       00000133
+SysForLoop3                       000001C0
+SysForLoopEnd1                    0000004D
+SysForLoopEnd2                    00000139
+SysForLoopEnd3                    000001D2
+SysPRINTDATAHandler               0000002E
+SysPRINTDATAHandler_H             0000002F
+SysRepeatLoop1                    000001D7
+SysRepeatLoopEnd1                 000001E3
+SysRepeatTemp1                    00000030
+SysSelect1Case1                   00000059
+SysSelect1Case10                  000000B3
+SysSelect1Case11                  000000BD
+SysSelect1Case12                  000000C7
+SysSelect1Case13                  000000D1
+SysSelect1Case14                  000000DB
+SysSelect1Case15                  000000E5
+SysSelect1Case16                  000000EF
+SysSelect1Case17                  000000F9
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 40
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SysSelect1Case18                  00000103
+SysSelect1Case19                  0000010D
+SysSelect1Case2                   00000063
+SysSelect1Case20                  00000112
+SysSelect1Case3                   0000006D
+SysSelect1Case4                   00000077
+SysSelect1Case5                   00000081
+SysSelect1Case6                   0000008B
+SysSelect1Case7                   00000095
+SysSelect1Case8                   0000009F
+SysSelect1Case9                   000000A9
+SysSelectEnd1                     00000112
+SysStringA                        00000077
+SysStringA_H                      00000078
+SysStringTables                   0000020C
+SysWaitLoop1                      000001E4
+SysWaitLoop2                      00000199
+SysWaitLoop3                      000001A2
+SysWaitLoop4                      000001A9
+SysWaitTempMS                     00000072
+SysWaitTempMS_H                   00000073
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T0XCS                             00000000
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000018
+T1GCON                            00000019
+T1GGO                             00000003
+T1GGO_NOT_DONE                    00000003
+T1GPOL                            00000006
+T1GSEL                            00000005
+T1GSPM                            00000004
+T1GSS0                            00000000
+T1GSS1                            00000001
+T1GTM                             00000005
+T1GVAL                            00000002
+T1OSCEN                           00000003
+T1OSCR                            00000007
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             0000001C
+T2OUTPS0                          00000003
+T2OUTPS1                          00000004
+T2OUTPS2                          00000005
+T2OUTPS3                          00000006
+T4CKPS0                           00000000
+T4CKPS1                           00000001
+T4CON                             00000417
+T4OUTPS0                          00000003
+T4OUTPS1                          00000004
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 41
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T4OUTPS2                          00000005
+T4OUTPS3                          00000006
+T6CKPS0                           00000000
+T6CKPS1                           00000001
+T6CON                             0000041E
+T6OUTPS0                          00000003
+T6OUTPS1                          00000004
+T6OUTPS2                          00000005
+T6OUTPS3                          00000006
+TEMPVAR                           00000031
+TEMPVAR_H                         00000032
+TESTID                            00000033
+TMR0                              00000015
+TMR0CS                            00000005
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR0SE                            00000004
+TMR1                              00000016
+TMR1CS0                           00000006
+TMR1CS1                           00000007
+TMR1GE                            00000007
+TMR1GIE                           00000007
+TMR1GIF                           00000007
+TMR1H                             00000017
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             00000016
+TMR1ON                            00000000
+TMR2                              0000001A
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TMR4                              00000415
+TMR4IE                            00000001
+TMR4IF                            00000001
+TMR4ON                            00000002
+TMR6                              0000041C
+TMR6IE                            00000003
+TMR6IF                            00000003
+TMR6ON                            00000002
+TOSH                              00000FEF
+TOSL                              00000FEE
+TRISA                             0000008C
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             0000008D
+TRISB0                            00000000
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 42
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             0000008E
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISE                             00000090
+TRISE3                            00000003
+TRMT                              00000001
+TSEN                              00000005
+TSRNG                             00000004
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TUN5                              00000005
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             0000019A
+TXSTA                             0000019E
+UA                                00000001
+VLCD1PE                           00000001
+VLCD2PE                           00000002
+VLCD3PE                           00000003
+W                                 00000000
+WA                                00000004
+WCOL                              00000007
+WDTCON                            00000097
+WDTPS0                            00000001
+WDTPS1                            00000002
+WDTPS2                            00000003
+WDTPS3                            00000004
+WDTPS4                            00000005
+WERR                              00000005
+WFT                               00000007
+WPUB                              0000020D
+WPUB0                             00000000
+WPUB1                             00000001
+WPUB2                             00000002
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 43
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+WPUB3                             00000003
+WPUB4                             00000004
+WPUB5                             00000005
+WPUB6                             00000006
+WPUB7                             00000007
+WPUE                              00000210
+WPUE3                             00000003
+WR                                00000001
+WREG                              00000009
+WREG_SHAD                         00000FE5
+WREN                              00000002
+WRERR                             00000003
+WUE                               00000001
+Z                                 00000002
+Z_SHAD                            00000002
+_BOREN_NSLEEP                     0000FDFF
+_BOREN_OFF                        0000F9FF
+_BOREN_ON                         0000FFFF
+_BOREN_SBODEN                     0000FBFF
+_BORV_19                          0000FFFF
+_BORV_25                          0000FBFF
+_BORV_HI                          0000FBFF
+_BORV_LO                          0000FFFF
+_CLKOUTEN_OFF                     0000FFFF
+_CLKOUTEN_ON                      0000F7FF
+_CONFIG1                          00008007
+_CONFIG2                          00008008
+_CPD_OFF                          0000FFFF
+_CPD_ON                           0000FEFF
+_CP_OFF                           0000FFFF
+_CP_ON                            0000FF7F
+_DEVID1                           00008006
+_FCMEN_OFF                        0000DFFF
+_FCMEN_ON                         0000FFFF
+_FOSC_ECH                         0000FFFF
+_FOSC_ECL                         0000FFFD
+_FOSC_ECM                         0000FFFE
+_FOSC_EXTRC                       0000FFFB
+_FOSC_HS                          0000FFFA
+_FOSC_INTOSC                      0000FFFC
+_FOSC_LP                          0000FFF8
+_FOSC_XT                          0000FFF9
+_IDLOC0                           00008000
+_IDLOC1                           00008001
+_IDLOC2                           00008002
+_IDLOC3                           00008003
+_IESO_OFF                         0000EFFF
+_IESO_ON                          0000FFFF
+_LVP_OFF                          0000DFFF
+_LVP_ON                           0000FFFF
+_MCLRE_OFF                        0000FFBF
+_MCLRE_ON                         0000FFFF
+_PLLEN_OFF                        0000FEFF
+MPASM  5.51  I2CHARDWAREDISCOVERY TO TERMINAL   4-1-2015  13:17:32         PAGE 44
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_PLLEN_ON                         0000FFFF
+_PWRTE_OFF                        0000FFFF
+_PWRTE_ON                         0000FFDF
+_STVREN_OFF                       0000FDFF
+_STVREN_ON                        0000FFFF
+_VCAPEN_OFF                       0000FFFF
+_VCAPEN_RA0                       0000FFCF
+_VCAPEN_RA5                       0000FFDF
+_VCAPEN_RA6                       0000FFEF
+_WDTE_NSLEEP                      0000FFF7
+_WDTE_OFF                         0000FFE7
+_WDTE_ON                          0000FFFF
+_WDTE_SWDTEN                      0000FFEF
+_WRT_ALL                          0000FFFC
+_WRT_BOOT                         0000FFFE
+_WRT_HALF                         0000FFFD
+_WRT_OFF                          0000FFFF
+__16F1938                         00000001
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+00C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0100 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0140 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0180 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+01C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0200 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0240 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0280 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+02C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0300 : XXXXXXXXXXXXXXXX ---------------- ---------------- ----------------
+8000 : -------XX------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   783
+Program Memory Words Free: 15601
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :    58 reported,     0 suppressed
+
+
