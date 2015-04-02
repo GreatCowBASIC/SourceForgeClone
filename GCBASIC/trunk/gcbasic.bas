@@ -576,7 +576,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.9 2015-04-02"
+Version = "0.94 2015-04-02"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
