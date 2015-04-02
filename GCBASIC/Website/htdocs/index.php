@@ -85,7 +85,53 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">4/2/2015<br><br></span><div style="margin-left: 40px;">The January 2015 release of the Great Cow Basic demonstration code is <a href="https://sourceforge.net/projects/gcbasic/files/Demonstration%20Files/">here.</a> <br><br>This
+<td><span style="font-weight: bold;">31/3/2105<br><br></span><div style="margin-left: 40px;">
+
+<p>We are just about to post a new Hot Release of the Great Cow Basic and Great
+Cow Graphical Basic<o:p></o:p></p>
+
+<p>This will be the latest build.<o:p></o:p></p>
+
+<p>This release is brought to you by, in no specific order:<br></p><div style="margin-left: 40px;">
+Hugh Considine (of course!), Evan Venn, Theo Loermans, William Roth, Kent
+Schafer,<br>
+Jacque Erdermaal, Thomas Henry, Perry Weinthal, Marco Cariboni,<br>
+Avast, Chuck Hellebuyck, Frank Steinberg, Jim Nordquist.<br>
+I am sure there are others. If I missed your name - please let us know, truly
+sorry.<o:p></o:p></div><p></p>
+
+<p>@31/3/2015<br>
+The Hot release of Great Cow Graphical Basic v9.10 will include (a summary):<o:p></o:p></p>
+
+<ul type="disc"><li class="MsoNormal" style="">A new release of GCB@SYN
+     including Pickit driver set.<o:p></o:p></li><li class="MsoNormal" style="">A pre-release version of
+     the new Great Cow Graphical Basic User Interface that supports the review
+     of the demonstration files and the new chip change configuration.<o:p></o:p></li><li class="MsoNormal" style="">Improved support for AVR.<o:p></o:p></li><li class="MsoNormal" style="">Improved Help File.<o:p></o:p></li><li class="MsoNormal" style="">~160 demonstration files.<o:p></o:p></li><li class="MsoNormal" style="">Rationalization of the
+     files provided in terms of documentation.<o:p></o:p></li><li class="MsoNormal" style="">A host of new functionality
+     with ~90 enhancements or fixes. See the release note for the details. If
+     your issue is not shown in the release note.... We have not got round to
+     fixing it yet.<o:p></o:p></li><li class="MsoNormal" style="">Changes to memory management,
+     tables and arrays<o:p></o:p></li><li class="MsoNormal" style="">A larger set of supported
+     hardware via the include files.<o:p></o:p></li><li class="MsoNormal" style="">Improved LATx support. LATx
+     is now in-built to the Microchip compiler.<o:p></o:p></li><li class="MsoNormal" style="">Improved LCD driver and LCD
+     performance including two new I2C LCD drivers.<o:p></o:p></li><li class="MsoNormal" style="">We have improved GLCD handling
+     with five types of GLCD supported, see the help file for Common Anode
+     Support<o:p></o:p></li><li class="MsoNormal" style="">I2C and TWI hardware
+     support for Microchip and AVR respectively.<o:p></o:p></li><li class="MsoNormal" style="">A host of commands!! Check
+     out the Help File!<o:p></o:p></li></ul>
+
+<p>As this is a Hot Release we need your feedback.<o:p></o:p></p>
+
+<p>We will change the way we handle issues for this release please DO NOT
+post your problems and issues to the forums you MUST post to the Support section of the
+Forum. Why? We have to assign the jobs to lots of developers now and we need a
+method to track etc.<o:p></o:p></p>
+
+<ul type="disc"><li class="MsoNormal" style="">For bugs in the release - <a href="https://sourceforge.net/p/gcbasic/bugs">https://sourceforge.net/p/gcbasic/bugs/</a><o:p></o:p></li><li class="MsoNormal" style="">For feature requests and/or
+     changes to the release - <a href="https://sourceforge.net/p/gcbasic/feature-requests">https://sourceforge.net/p/gcbasic/feature-requests/</a><o:p></o:p></li></ul>
+
+<p>From lots of us!<o:p></o:p></p>
+</div><br><span style="font-weight: bold;"><br>4/2/2015<br><br></span><div style="margin-left: 40px;">The January 2015 release of the Great Cow Basic demonstration code is <a href="https://sourceforge.net/projects/gcbasic/files/Demonstration%20Files/">here.</a> <br><br>This
 release has over 100 demonstrations for Microchip and Atmel
 microprocessors. &nbsp;These demonstrations, and more, will be provided
 as the baseline demonstration code for GCB and GCGB in the next
