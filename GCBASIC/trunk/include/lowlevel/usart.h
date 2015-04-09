@@ -1,5 +1,6 @@
 '    USART routines for Great Cow BASIC
-'    Copyright (C) 2009 - 2013 Hugh Considine
+'    Copyright (C) 2009 - 2013, 2105 Hugh Considine and William Roth
+
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -33,6 +34,7 @@
 ' 29/9/2013: Fixes for ATmega32u4
 ' 16/2/2104: Fixed HERPRINT Long Bug
 ' 28/6/2014: Changed HSerPrintCRLF to have a parameter... you can have lots of CRLF's
+' 4/7/15: Improved timing 	
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -54,14 +56,15 @@
 Sub HserPrintByteCRLF(In PrintValue)
 	HSerPrint(PrintValue)
 	HSerSend(13)
-          HSerSend(10)
+  HSerSend(10)
 End Sub
 
 Sub HserPrintCRLF  ( Optional in HSerPrintCRLFCount = 1 )
     repeat HSerPrintCRLFCount
-	HSerSend(13)
-	Wait USART_DELAY
-	HSerSend(10)
+			HSerSend(13)
+			Wait USART_DELAY
+			HSerSend(10)
+  			wait USART_DELAY
     end Repeat
 End Sub
 
@@ -75,16 +78,17 @@ End Sub
 		If NoBit(RC1IF) Then
 			USARTHasData = "RCIF = On"
 		End If
-		
+
 		If USART_BAUD_RATE Then
 			'Find best baud rate
 			If Bit(BRG16) Then
-				'Try 16 bit /4 (H = 1, 16 = 1)
+         'Try 16 bit /4 (H = 1, 16 = 1)
 				SPBRG_TEMP = ChipMHz / USART_BAUD_RATE / 4 * 1000000 - 1
 				BRGH_TEMP = 1
 				BRG16_TEMP = 1
-				If SPBRG_TEMP > 65535 Then
-					'If too high, try 16 bit /16 (H = 0, 16 = 1)
+
+        If SPBRG_TEMP > 65535 Then
+           'If too high, try 16 bit /16 (H = 0, 16 = 1)
 					SPBRG_TEMP = ChipMHz / USART_BAUD_RATE / 16 * 1000000 - 1
 					BRGH_TEMP = 0
 					BRG16_TEMP = 1
@@ -100,7 +104,7 @@ End Sub
 				End If
 			End If
 			If NoBit(BRG16) Then
-				'Try /16
+         'Try /16
 				SPBRG_TEMP = ChipMHz / USART_BAUD_RATE / 16 * 1000000 - 1
 				BRGH_TEMP = 1
 				'If too high, try /64
@@ -113,7 +117,7 @@ End Sub
 					End If
 				End If
 			End If
-			
+
 			'Get high and low bytes
 			SPBRGL_TEMP = Int(SPBRG_TEMP) And 255
 			SPBRGH_TEMP = Int(SPBRG_TEMP / 256)
@@ -134,12 +138,12 @@ End Sub
 				UBRR_TEMP = ChipMHz * 1000000 / (8 * USART_BAUD_RATE) - 1
 				U2X0_TEMP = 1
 			End If
-			
+
 			'Check that rate will work
 			If UBRR_TEMP > 65535 Then
 				Error Msg(UsartBaudTooLow)
 			End If
-			
+
 			'Get high and low bytes
 			UBRRL_TEMP = Int(UBRR_TEMP) And 255
 			UBRRH_TEMP = Int(UBRR_TEMP / 256)
@@ -159,11 +163,11 @@ Sub InitUSART
 				BRG16 = BRG16_TEMP
 			#endif
 			BRGH = BRGH_TEMP
-			
+
 			'Enable async mode
 			Set SYNC Off
 			Set SPEN On
-			
+
 			'Enable TX and RX
 			Set CREN On
 			Set TXEN On
@@ -174,21 +178,29 @@ Sub InitUSART
 			#ifdef Bit(BRG16)
 				SPBRGH1 = SPBRGH_TEMP
 				BAUDCON1.BRG16 = BRG16_TEMP
-			#endif
-			TX1STA.BRGH = BRGH_TEMP
-			
+      #endif
+
+	;  Section added to support chips with TXSTA1 instead of TX1STA
+      #ifdef Var(TX1STA)
+      TX1STA.BRGH = BRGH_TEMP
+      #endif
+
+      #ifdef  Var(TXSTA1)
+       TXSTA1.BRGH = BRGH_TEMP
+      #endif
+
 			'Enable async mode
 			Set SYNC1 Off
 			Set SPEN1 On
-			
+
 			'Enable TX and RX
 			Set CREN1 On
 			Set TXEN1 On
 		#endif
 	#endif
-	
+
 	#ifdef AVR
-		
+
 		'Set baud rate
 		#ifndef Bit(U2X0)
 			#ifdef Bit(U2X1)
@@ -207,7 +219,7 @@ Sub InitUSART
 			UBRR0L = UBRRL_TEMP
 			UBRR0H = UBRRH_TEMP
 		#endif
-		
+
 		'Enable TX and RX
 		#ifndef Bit(RXEN0)
 			#ifdef Bit(RXEN1)
@@ -223,14 +235,14 @@ Sub InitUSART
 			RXEN0 = On
 			TXEN0 = On
 		#endif
-		
+
 	#endif
 End Sub
 
 sub HSerSend(In SerData)
 	'Block before sending (if needed)
 	HSerSendBlocker
-	
+
 	'Send byte
 	#ifdef PIC
 		#ifndef Var(TXREG1)
@@ -252,7 +264,7 @@ sub HSerSend(In SerData)
 		#ifdef Var(UDR0)
 			UDR0 = SerData
 		#endif
-		
+
 	#endif
 end sub
 
@@ -266,14 +278,14 @@ Sub HSerReceive(Out SerData)
 	#ifdef USART_BLOCKING
 		Wait Until USARTHasData
 	#endif
-	
+
 	#ifdef PIC
 		#ifndef Var(RCREG1)
 			'Get a bytes from FIFO
 			If USARTHasData Then
 				SerData = RCREG
 			End if
-			
+
 			'Clear error
 			If OERR Then
 				Set CREN Off
@@ -285,7 +297,7 @@ Sub HSerReceive(Out SerData)
 			If USARTHasData Then
 				SerData = RCREG1
 			End if
-			
+
 			'Clear error
 			If OERR1 Then
 				Set CREN1 Off
@@ -313,7 +325,7 @@ End Sub
 sub HSerPrint (In PrintData As String)
 	'PrintLen = LEN(PrintData$)
 	PrintLen = PrintData(0)
-	
+
 	If PrintLen <> 0 then
 		'Write Data
 		for SysPrintTemp = 1 to PrintLen
@@ -321,7 +333,7 @@ sub HSerPrint (In PrintData As String)
 			Wait USART_DELAY
 		next
 	End If
-	
+
 	'CR
 	#IFDEF SerPrintCR
 		HSerSend(13)
@@ -334,9 +346,9 @@ sub HSerPrint (In PrintData As String)
 end sub
 
 sub HSerPrint (In SerPrintVal)
-	
+
 	OutValueTemp = 0
-	
+
 	IF SerPrintVal >= 100 Then
 		OutValueTemp = SerPrintVal / 100
 		SerPrintVal = SysCalcTempX
@@ -351,7 +363,7 @@ sub HSerPrint (In SerPrintVal)
 	End If
 	HSerSend(SerPrintVal + 48)
 	Wait USART_DELAY
-	
+
 	'CR
 	#IFDEF SerPrintCR
 		HSerSend(13)
@@ -361,14 +373,14 @@ sub HSerPrint (In SerPrintVal)
 		HSerSend(10)
 		Wait USART_DELAY
 	#ENDIF
-	
+
 end sub
 
 Sub HSerPrint (In SerPrintVal As Word)
 	Dim SysCalcTempX As Word
-	
+
 	OutValueTemp = 0
-	
+
 	If SerPrintVal >= 10000 then
 		OutValueTemp = SerPrintVal / 10000 [word]
 		SerPrintVal = SysCalcTempX
@@ -405,7 +417,7 @@ Sub HSerPrint (In SerPrintVal As Word)
 
 	HSerSend(SerPrintVal + 48)
 	Wait USART_DELAY
-	
+
 	'CR
 	#IFDEF SerPrintCR
 		HSerSend(13)
@@ -415,23 +427,23 @@ Sub HSerPrint (In SerPrintVal As Word)
 		HSerSend(10)
 		Wait USART_DELAY
 	#ENDIF
-	
+
 End Sub
 
 Sub HSerPrint (In SerPrintValInt As Integer)
 	Dim SerPrintVal As Word
-	
+
 	'If sign bit is on, print - sign and then negate
 	If SerPrintValInt.15 = On Then
 		HSerSend("-")
 		Wait USART_DELAY
 		SerPrintVal = -SerPrintValInt
-		
+
 	'Sign bit off, so just copy value
 	Else
 		SerPrintVal = SerPrintValInt
 	End If
-	
+
 	'Use Print(word) to display value
 	HSerPrint SerPrintVal
 End Sub
@@ -443,20 +455,20 @@ Sub HSerPrint (In SerPrintVal As Long)
 	Dim SysCalcTempA As Long
 	Dim SysPrintBuffer(10)
 	SysPrintBuffLen = 0
-	
+
 	Do
 		'Divide number by 10, remainder into buffer
 		SysPrintBuffLen += 1
 		SysPrintBuffer(SysPrintBuffLen) = SerPrintVal % 10
 		SerPrintVal = SysCalcTempA
 	Loop While SerPrintVal <> 0
-	
+
 	'Display
 	For SysPrintTemp = SysPrintBuffLen To 1 Step -1
 		HSerSend(SysPrintBuffer(SysPrintTemp) + 48)
 		Wait USART_DELAY
 	Next
-	
+
 	'CR
 	#IFDEF SerPrintCR
 		HSerSend(13)
@@ -466,7 +478,7 @@ Sub HSerPrint (In SerPrintVal As Long)
 		HSerSend(10)
 		Wait USART_DELAY
 	#ENDIF
-	
+
 End Sub
 
 Macro HSerSendBlocker
