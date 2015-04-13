@@ -47,7 +47,7 @@ Sub InitSys
 		#IFDEF Bit(FOSC4)
 			Set FOSC4 Off
 		#ENDIF
-		#if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3)
+		#if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
 			'Most chips:
 			#ifndef Bit(HFIOFS)
 				#IFDEF ChipMHz 8
@@ -110,7 +110,7 @@ Sub InitSys
 			#endif
 		#endif
 		
-		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3)
+		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
 			#ifdef Bit(IRCF3)
 				#IFDEF ChipMHz 64
 					'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
