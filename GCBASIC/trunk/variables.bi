@@ -729,6 +729,7 @@ SUB AllocateRAM
 									Else
 										'Could not find location, try again
 										UnallocatedVars = -1
+										GoTo NextVarAdd
 									End If
 								Next
 								If .Location <> -1 Then FALC += VarSize
@@ -922,9 +923,11 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 			'Check if token is a divider
 			If IsDivider(LineToken(CurrToken)) Then GoTo AliasConstReplaced
 			
+			LineToken(CurrToken) = UCase(LineToken(CurrToken))
+			
 			'Check if LocationIn is SFR
 			FOR FC = 1 TO SVC
-				IF SysVars(FC).Name = LineToken(CurrToken) Then
+				IF UCase(SysVars(FC).Name) = LineToken(CurrToken) Then
 					LineToken(CurrToken) = Str(SysVars(FC).Location)
 					GoTo AliasConstReplaced
 				End If
@@ -932,7 +935,7 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 			
 			'Check if LocationIn is a variable
 			For FC = 1 To FVLC
-				If FinalVarList(FC).Name = LineToken(CurrToken) Then
+				If UCase(FinalVarList(FC).Name) = LineToken(CurrToken) Then
 					LineToken(CurrToken) = FinalVarList(FC).Value
 					GoTo AliasConstReplaced
 				End If
