@@ -25,7 +25,8 @@
 '********************************************************************************
 
 
-'	10 april 2015 - fixes for HWPMW and add PHWPWM channel 4 - WillR
+'	10 april 2015 - fixes for HWPMW and add HWPWM channel 4 - WillR
+'	19 April 2015 - final fixes for HWPWM channel 4 - Tony Golding
 'Defaults:
 #define PWM_Freq 38 'Frequency of PWM in KHz
 #define PWM_Duty 50 'Duty cycle of PWM (%)
@@ -143,6 +144,9 @@ end sub
 
 sub PWMOff
 	CCP1CON = 0
+               CCP2CON = 0
+              CCP3CON = 0
+             CCP4CON = 0
 end sub
 
 sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
@@ -233,6 +237,17 @@ sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 				  SET CCP3CON.CCP1M1 OFF
 				  SET CCP3CON.CCP1M0 OFF
 			end if
+	#endif
+  if PWMChannel = 4 then
+			    PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
+		      CCPR4L = PR2_Temp_H
+          If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero - WMR
+
+          SET CCP4CON.CCP4M3 ON
+			    SET CCP4CON.CCP4M2 ON
+			    SET CCP4CON.CCP4M1 OFF
+			    SET CCP4CON.CCP4M0 OFF
+		  end if
 	#endif
 
 end sub
