@@ -46,19 +46,20 @@
 #define ACK             TRUE
 
 'Indirect call
-Sub IndCall(In MemAdr As Word)
+Sub IndCall(In SysCallAdr As Word)
 	'Jump to a subroutine located at MemAdr
 	#ifdef PIC
+		Dim SysCallAdr As Word Alias SysWordTempX_H, SysWordTempX
 		#ifdef Var(PCLATU)
 			PCLATU = 0
 		#endif
-		PCLATH = MemAdr_H
+		PCLATH = SysCallAdr_H
 		'Use inline assembly, or movff will be generated for 18F and this does not work
-		movf MemAdr, W
+		movf SysCallAdr, W
 		movwf PCL
 	#endif
 	#ifdef AVR
-		Dim MemAdr As Word Alias SysReadA_H, SysReadA
+		Dim SysCallAdr As Word Alias SysReadA_H, SysReadA
 		Dim SysReadA As Word
 		ijmp
 	#endif

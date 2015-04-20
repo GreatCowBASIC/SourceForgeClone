@@ -576,7 +576,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-04-07"
+Version = "0.94 2015-04-20"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1116,7 +1116,7 @@ End Sub
 Sub AddPageCommands(CompSub As SubType Pointer)
 	
 	Dim As LinkedListElement Pointer CurrLine, NextLine
-	Dim As Integer CalledSub, CalledSubPage, ThisSubPage, TempDataCount
+	Dim As Integer CalledSub, CalledSubPage, ThisSubPage, CheckSub, TempDataCount
 	Dim As Integer RestorePage, ForceRestorePage, NextCalledSub, NextCalledSubPage
 	Dim As String TempData(100), CallTarget, ThisSubName, NextCallTarget
 	Dim As SubType Pointer GotoSub
@@ -1192,6 +1192,17 @@ Sub AddPageCommands(CompSub As SubType Pointer)
 					Exit Do
 				End If
 			Loop
+			
+			'If called sub is IndCall, may need to restore page
+			If UCase(CallTarget) = "INDCALL" Then
+				'Any sub could be called from IndCall. So, if any subs off page 0, restore needed
+				For CheckSub = 1 To SBC
+					If Subroutine(CheckSub)->Required And Subroutine(CheckSub)->DestPage <> 0 Then
+						RestorePage = -1
+						Exit For
+					End If
+				Next
+			End If
 			
 			'Alter call to correct instruction/s
 			If ModePIC Then
