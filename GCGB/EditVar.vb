@@ -19,11 +19,18 @@ Imports System.Windows.Forms
 		Private Button_Cancel As System.Windows.Forms.Button
 		Private EditVarHelp As System.Windows.Forms.HelpProvider
 		Private VarName As System.Windows.Forms.TextBox
-		Private ArraySize As System.Windows.Forms.NumericUpDown
+		Private ArraySize As System.Windows.Forms.DomainUpDown
 		
 		Public Dim NewVarName As String = ""
 		Public Dim NewVarType As String = ""
-		Public Dim NewArraySize As Integer = 1
+		Public Dim NewArraySize As String = ""
+		
+		Public Enum EditOptions
+			NO_ARRAY
+			ARRAY_ONLY
+			SIZELESS_ARRAY
+			ANY
+		End Enum
 		
 		Private Dim NoArraySize, ArrayOnly As Boolean
 		
@@ -41,29 +48,16 @@ Imports System.Windows.Forms
 		' Do not change the method contents inside the source code editor. The Forms designer might
 		' not be able to load this method if it was changed manually.
 		Private Sub InitializeComponent()
-			Me.ArraySize = New System.Windows.Forms.NumericUpDown
 			Me.VarName = New System.Windows.Forms.TextBox
 			Me.ArraySizeLabel = New System.Windows.Forms.Label
 			Me.EditVarHelp = New System.Windows.Forms.HelpProvider
+			Me.VarType = New Great_Cow_Graphical_BASIC.CaptionedComboBox
 			Me.Button_Cancel = New System.Windows.Forms.Button
 			Me.Button_OK = New System.Windows.Forms.Button
 			Me.label2 = New System.Windows.Forms.Label
 			Me.label3 = New System.Windows.Forms.Label
-			Me.VarType = New Great_Cow_Graphical_BASIC.CaptionedComboBox
-			CType(Me.ArraySize,System.ComponentModel.ISupportInitialize).BeginInit
+			Me.ArraySize = New System.Windows.Forms.DomainUpDown
 			Me.SuspendLayout
-			'
-			'ArraySize
-			'
-			Me.EditVarHelp.SetHelpString(Me.ArraySize, "The number of elements in the array. Each element uses 1 byte of RAM.")
-			Me.ArraySize.Location = New System.Drawing.Point(128, 136)
-			Me.ArraySize.Maximum = New Decimal(New Integer() {255, 0, 0, 0})
-			Me.ArraySize.Minimum = New Decimal(New Integer() {1, 0, 0, 0})
-			Me.ArraySize.Name = "ArraySize"
-			Me.EditVarHelp.SetShowHelp(Me.ArraySize, true)
-			Me.ArraySize.Size = New System.Drawing.Size(56, 20)
-			Me.ArraySize.TabIndex = 8
-			Me.ArraySize.Value = New Decimal(New Integer() {1, 0, 0, 0})
 			'
 			'VarName
 			'
@@ -83,6 +77,20 @@ Imports System.Windows.Forms
 			Me.ArraySizeLabel.Text = "Items in array"
 			Me.ArraySizeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight
 			'
+			'VarType
+			'
+			Me.EditVarHelp.SetHelpString(Me.VarType, "Type of data that will be stored in this variable.")
+			Me.VarType.ListFont = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0,Byte))
+			Me.VarType.Location = New System.Drawing.Point(8, 72)
+			Me.VarType.Name = "VarType"
+			Me.VarType.SelectedID = ""
+			Me.VarType.SelectedIndex = -1
+			Me.VarType.SelectedObject = Nothing
+			Me.EditVarHelp.SetShowHelp(Me.VarType, true)
+			Me.VarType.Size = New System.Drawing.Size(232, 56)
+			Me.VarType.TabIndex = 2
+			AddHandler Me.VarType.SelectedIndexChanged, AddressOf Me.VarTypeSelectedIndexChanged
+			'
 			'Button_Cancel
 			'
 			Me.Button_Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
@@ -90,7 +98,7 @@ Imports System.Windows.Forms
 			Me.Button_Cancel.Location = New System.Drawing.Point(136, 176)
 			Me.Button_Cancel.Name = "Button_Cancel"
 			Me.Button_Cancel.Size = New System.Drawing.Size(88, 24)
-			Me.Button_Cancel.TabIndex = 10
+			Me.Button_Cancel.TabIndex = 5
 			Me.Button_Cancel.Text = "Cancel"
 			'
 			'Button_OK
@@ -99,7 +107,7 @@ Imports System.Windows.Forms
 			Me.Button_OK.Location = New System.Drawing.Point(24, 176)
 			Me.Button_OK.Name = "Button_OK"
 			Me.Button_OK.Size = New System.Drawing.Size(88, 24)
-			Me.Button_OK.TabIndex = 9
+			Me.Button_OK.TabIndex = 4
 			Me.Button_OK.Text = "OK"
 			AddHandler Me.Button_OK.Click, AddressOf Me.Button_OKClick
 			'
@@ -119,19 +127,13 @@ Imports System.Windows.Forms
 			Me.label3.TabIndex = 23
 			Me.label3.Text = "Data type stored"
 			'
-			'VarType
+			'ArraySize
 			'
-			Me.EditVarHelp.SetHelpString(Me.VarType, "Type of data that will be stored in this variable.")
-			Me.VarType.ListFont = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0,Byte))
-			Me.VarType.Location = New System.Drawing.Point(8, 72)
-			Me.VarType.Name = "VarType"
-			Me.VarType.SelectedID = ""
-			Me.VarType.SelectedIndex = -1
-			Me.VarType.SelectedObject = Nothing
-			Me.EditVarHelp.SetShowHelp(Me.VarType, true)
-			Me.VarType.Size = New System.Drawing.Size(232, 56)
-			Me.VarType.TabIndex = 24
-			AddHandler Me.VarType.SelectedIndexChanged, AddressOf Me.VarTypeSelectedIndexChanged
+			Me.ArraySize.Location = New System.Drawing.Point(128, 136)
+			Me.ArraySize.Name = "ArraySize"
+			Me.ArraySize.Size = New System.Drawing.Size(112, 20)
+			Me.ArraySize.TabIndex = 3
+			Me.ArraySize.Text = "1"
 			'
 			'EditVar
 			'
@@ -139,9 +141,9 @@ Imports System.Windows.Forms
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.Button_Cancel
 			Me.ClientSize = New System.Drawing.Size(251, 208)
+			Me.Controls.Add(Me.ArraySize)
 			Me.Controls.Add(Me.VarType)
 			Me.Controls.Add(Me.label3)
-			Me.Controls.Add(Me.ArraySize)
 			Me.Controls.Add(Me.ArraySizeLabel)
 			Me.Controls.Add(Me.label2)
 			Me.Controls.Add(Me.VarName)
@@ -155,7 +157,6 @@ Imports System.Windows.Forms
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
 			Me.Text = "Edit Variable"
-			CType(Me.ArraySize,System.ComponentModel.ISupportInitialize).EndInit
 			Me.ResumeLayout(false)
 			Me.PerformLayout
 		End Sub
@@ -165,7 +166,7 @@ Imports System.Windows.Forms
 		Private label2 As System.Windows.Forms.Label
 		#End Region
 		
-		Public Sub InitEdit(ByVal NewName As String, ByVal NewType As String, ByVal NewSize As Integer)
+		Public Sub InitEdit(ByVal NewName As String, ByVal NewType As String, ByVal NewSize As String, ByVal Options As EditOptions)
 			
 			Dim AddArray As Boolean = True
 			Dim AddScalars As Boolean = True
@@ -174,29 +175,24 @@ Imports System.Windows.Forms
 			AddArray = True
 			NoArraySize = False
 			ArrayOnly = False
+				
+			'Don't show array or array size (was -1)
+			If Options = EditOptions.NO_ARRAY Then
+				AddArray = False
+				Me.ArraySize.Enabled = False
 			
-			If NewSize < 0 Then
+			'Show array option but don't allow size to be entered (was -2)
+			ElseIf Options = EditOptions.SIZELESS_ARRAY Then
+				NoArraySize = True
+				NewSize = -1
 				
-				'Don't show array or array size
-				If NewSize = -1 Then
-					AddArray = False
-					Me.ArraySize.Enabled = False
-				
-				'Show array option but don't allow size to be entered
-				ElseIf NewSize = -2 Then
-					NoArraySize = True
-					NewSize = -1
-					
-				'Allow only array, no scalar variables
-				ElseIf NewSize = -3 Then
-					ArrayOnly = True
-					AddScalars = False
-					NewType = "array"
-					NewSize = -10
-				End If
-				NewSize *= -1
+			'Allow only array, no scalar variables (was -3)
+			ElseIf Options = EditOptions.ARRAY_ONLY Then
+				ArrayOnly = True
+				AddScalars = False
+				NewType = "array"
+				NewSize = "10"
 			End If
-			If NewSize = 0 Then NewSize = 1
 			
 			'Fill type box
 			If AddScalars Then
@@ -211,13 +207,19 @@ Imports System.Windows.Forms
 				VarType.Add(New CaptionedListItem("ARRAY", "Array", "Stores a list of numbers between 0 and 255"))
 			End If
 			
+			'Fill domain for array size
+			Dim PossibleSize As Integer
+			For PossibleSize = 1 to 1000
+				ArraySize.Items.Add(PossibleSize.ToString)
+			Next
+			
 			'Load data from parameters into form
 			'Variable name
 			Me.VarName.Text = NewName
 			'Variable type
 			VarType.SelectedID = NewType
 			'Hide array size entry unless we have an array
-			Me.ArraySize.Value = NewSize
+			Me.ArraySize.Text = NewSize
 			Me.ArraySizeLabel.Visible = False
 			Me.ArraySize.Visible = False
 			
@@ -242,7 +244,7 @@ Imports System.Windows.Forms
 			NewVarName = Me.VarName.Text.Trim
 			NewVarType = Me.VarType.SelectedID.ToLower
 			If NewVarType = "array" Then
-				NewArraySize = Me.ArraySize.Value
+				NewArraySize = Me.ArraySize.Text
 			End If
 			
 '			If Me.Type_Bit.Checked Then NewVarType = "bit"

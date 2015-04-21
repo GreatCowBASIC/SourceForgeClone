@@ -3,7 +3,7 @@
 ' User: Hugh
 ' Date: 28/01/2010
 ' Time: 12:05 PM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 
@@ -16,7 +16,7 @@ Imports System.Collections.Generic
 		Public Dim Name As String
 		Public Dim Type As String
 		Public Dim IsArray As Boolean
-		Public Dim Length As Integer
+		Public Dim Length As String
 		Public Dim Hidden As Boolean
 		Public Dim VarAlias As String 'Don't expose, but do store
 		Public Dim VarAt As String 'Don't expose, but do store
@@ -37,7 +37,7 @@ Imports System.Collections.Generic
 			End With
 		End Sub
 		
-		Public Sub New (VarName As String, VarType As String, Optional IsArray As Boolean = False, Optional Length As Integer = 0)
+		Public Sub New (VarName As String, VarType As String, Optional IsArray As Boolean = False, Optional Length As String = "")
 			Me.Name = VarName
 			Me.Type = VarType
 			Me.IsArray = IsArray
@@ -52,11 +52,11 @@ Imports System.Collections.Generic
 			Get
 				Dim OutData As String
 				If IsArray Then
-					OutData = "Dim " + Name + "(" + Length.ToString + ")"
+					OutData = "Dim " + Name + "(" + Length + ")"
 				Else
 					OutData = "Dim " + Name + " As " + Type
-					If Length > 0 Then
-						OutData += " * " + Length.ToString
+					If Length <> "" Then
+						OutData += " * " + Length
 					End If
 				End If
 				If VarAlias <> "" Then
@@ -78,7 +78,7 @@ Imports System.Collections.Generic
 	     		Name = TempData.Trim
      			Type = "byte"
      			IsArray = False
-     			Length = 0
+     			Length = ""
      			VarAlias = ""
      			VarAt = ""
      			
@@ -137,6 +137,20 @@ Imports System.Collections.Generic
 			Return outItem
 		End Function
 		
+		Public ReadOnly Property NumLength As Integer
+			Get
+				Dim OutSize As Integer
+				If Length = "" Then Return -1
+				Try
+					outSize = Length
+				Catch
+					outSize = -1
+				End Try
+				
+				Return outSize
+			End Get
+		End Property
+		
 	End Class
 	
 	Public Class VariableList
@@ -181,12 +195,6 @@ Imports System.Collections.Generic
 			Return Nothing
 			
 		End Function
-		
-'		Public Sub AddVar(NewVar As VariableListItem)
-'			With NewVar
-'				AddVar(.Name, .Type, .IsArray, .Length, .Hidden)
-'			End With
-'		End Sub
 		
 		Public Sub AddVar(ByVal VarName As String, ByVal VarType As String, Optional IsArray As Boolean = False, Optional Length As Integer = 0, Optional Hidden As Boolean = False)
 			Dim NewVar As New VariableListItem(VarName, VarType, IsArray, Length)
