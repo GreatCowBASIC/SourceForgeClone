@@ -277,12 +277,14 @@ Imports System.Collections.Generic
 					ElseIf .Type.Trim.ToLower = "string" Then
 						VarSize = 20
 						'Size specified?
-						If .Length > 0 Then
+						If .NumLength <> -1 Then
 							VarSize = .Length
 						End If
 					End If
 					If .IsArray Then
-						VarSize *= .Length
+						If .NumLength <> -1 Then
+							VarSize *= .Length
+						End If
 					End If
 					RamUsed += VarSize
 				End With
@@ -418,7 +420,7 @@ Imports System.Collections.Generic
 			'Display dialog
 			Dim fEditVar As New EditVar
 			fEditVar.Text = "Add Variable"
-			fEditVar.InitEdit("", "byte", 1)
+			fEditVar.InitEdit("", "byte", "1", EditVar.EditOptions.ANY)
 			
 			GetNewVarName:
 			
@@ -481,7 +483,7 @@ Imports System.Collections.Generic
 		
 		Private Sub Button_EditClick(sender As System.Object, e As System.EventArgs)
 			Dim NewType As String = ""
-			Dim NewSize As Integer = 1
+			Dim NewSize As String = "1"
 			Dim SearchList As Integer = 0
 			Dim VarExists As Boolean = False
 			Dim TempData As String = ""
@@ -499,7 +501,7 @@ Imports System.Collections.Generic
 			'Display dialog
 			Dim fEditVar As New EditVar
 			fEditVar.Text = "Edit Variable"
-			fEditVar.InitEdit(VariableList(EditIndex).Name, NewType, NewSize)
+			fEditVar.InitEdit(VariableList(EditIndex).Name, NewType, NewSize, EditVar.EditOptions.ANY)
 			fEditVar.ShowDialog()
 						
 			'Apply

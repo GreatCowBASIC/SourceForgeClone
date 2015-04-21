@@ -79,10 +79,12 @@ Public Partial Class ExampleChooser
 		For Each ExampleDirName In FolderList
 			Dim NewNode As New TreeNode(ExampleDirName.Name)
 			AddExamplesFromDir(ExampleDirName.FullName, NewNode)
-			If ParentNode Is Nothing Then
-				Me.exampleTree.Nodes.Add(NewNode)
-			Else
-				ParentNode.Nodes.Add(NewNode)
+			If NewNode.Nodes.Count > 0 Then
+				If ParentNode Is Nothing Then
+					Me.exampleTree.Nodes.Add(NewNode)
+				Else
+					ParentNode.Nodes.Add(NewNode)
+				End If
 			End If
 		Next
 		

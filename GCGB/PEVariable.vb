@@ -238,9 +238,9 @@ Imports System.Windows.Forms
 			Dim fEditVar As New EditVar
 			fEditVar.Text = "Add Variable"
 			If ArrayMode Then
-				fEditVar.InitEdit("", "byte", -3)
+				fEditVar.InitEdit("", "byte", "", EditVar.EditOptions.ARRAY_ONLY)
 			Else
-				fEditVar.InitEdit("", "byte", -1)
+				fEditVar.InitEdit("", "byte", "", EditVar.EditOptions.NO_ARRAY)
 			End If
 			fEditVar.ShowDialog()
 			

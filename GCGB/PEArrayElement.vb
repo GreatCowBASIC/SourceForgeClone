@@ -194,7 +194,7 @@ Imports System.Windows.Forms
 			'Display dialog
 			Dim fEditVar As New EditVar
 			fEditVar.Text = "Add Array Variable"
-			fEditVar.InitEdit("", "array", -3)
+			fEditVar.InitEdit("", "array", "", EditVar.EditOptions.ARRAY_ONLY)
 			fEditVar.ShowDialog()
 			
 			'Apply
