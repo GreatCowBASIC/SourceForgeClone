@@ -24,16 +24,15 @@
 'COMMANDS UNUSABLE!
 '********************************************************************************
 
-
-'	10 april 2015 - fixes for HWPMW and add HWPWM channel 4 - WillR
-'	19 April 2015 - final fixes for HWPWM channel 4 - Tony Golding
 'Defaults:
-#define PWM_Freq 38 'Frequency of PWM in KHz
-#define PWM_Duty 50 'Duty cycle of PWM (%)
-Dim PR2_Temp as WORD  ' Moved here from Line 144
-DIM TempVar as WORD
-#startup InitPWM
+#define PWM_Freq 38      'Frequency of PWM in KHz
+#define PWM_Duty 50      'Duty cycle of PWM (%)
+Dim PR2_Temp as WORD     'Moved here from Line 144
+DIM CCPCONCache as BYTE  'Added 27.04.2105 - WMR
+CCPCONCache = 0          'Added 27.04.2015 = WMR
 
+
+#startup InitPWM
 
 Sub InitPWM
 	'Script to calculate constants required for given Frequency and Duty Cycle
@@ -67,59 +66,69 @@ Sub InitPWM
 		'Set PWM Period
 		PR2 = PR2Temp
 		#ifdef T2PR 1
-		    SET T2CON.T2CKPS0 OFF
+			SET T2CON.T2CKPS0 OFF
 		    SET T2CON.T2CKPS1 OFF
 		#endif
 		#ifdef T2PR 4
 		    SET T2CON.T2CKPS0 ON
-			  SET T2CON.T2CKPS1 OFF
+			SET T2CON.T2CKPS1 OFF
 		#endif
 		#ifdef T2PR 16
-			  SET T2CON.T2CKPS0 OFF
-			  SET T2CON.T2CKPS1 ON
+			SET T2CON.T2CKPS0 OFF
+			SET T2CON.T2CKPS1 ON
 		#endif
 
 		'Set Duty cycle
 		CCPR1L = DutyCycleH
+
 		#ifdef DutyCycleL 0
-			#ifdef Bit(CCP1X)
-			    SET CCPCONCache.CCP1Y OFF
-			    SET CCPCONCache.CCP1X OFF
-			 #endif
-			 #ifdef Bit(DC1B1)
+
+			#ifdef Bit(CCP1X)               '***  NOt Defined
+				SET CCPCONCache.CCP1Y OFF
+				SET CCPCONCache.CCP1X OFF
+			#endif
+			#ifdef Bit(DC1B1)              '*** DEFINED
 				SET CCPCONCache.DC1B1 OFF
 				SET CCPCONCache.DC1B0 OFF
-			 #endif
+			#endif
+
 		#endif
+
 		#ifdef DutyCycleL 1
-		    #ifdef Bit(CCP1X)
-			    SET CCPCONCache.CCP1Y ON
+
+			#ifdef Bit(CCP1X)
+				SET CCPCONCache.CCP1Y ON
 				SET CCPCONCache.CCP1X OFF
 			#endif
 			#ifdef Bit(DC1B1)
-			    SET CCPCONCache.DC1B1 OFF
-			    SET CCPCONCache.DC1B0 ON
+				SET CCPCONCache.DC1B1 OFF
+				SET CCPCONCache.DC1B0 ON
 			#endif
+
 		#endif
+
+
 		#ifdef DutyCycleL 2
 			#ifdef Bit(CCP1X)
-			    SET CCPCONCache.CCP1Y OFF
+				SET CCPCONCache.CCP1Y OFF
 				SET CCPCONCache.CCP1X ON
-			 #endif
-			 #ifdef Bit(DC1B1)
-			    SET CCPCONCache.DC1B1 ON
+			#endif
+
+			#ifdef Bit(DC1B1)
+				SET CCPCONCache.DC1B1 ON
 				SET CCPCONCache.DC1B0 OFF
-			 #endif
+		 	#endif
 		#endif
+
 		#ifdef DutyCycleL 3
-			 #ifdef Bit(CCP1X)
-			    SET CCPCONCache.CCP1Y ON
+			#ifdef Bit(CCP1X)
+				SET CCPCONCache.CCP1Y ON
 				SET CCPCONCache.CCP1X ON
-			 #endif
-			 #ifdef Bit(DC1B1)
+			#endif
+			#ifdef Bit(DC1B1)
 				SET CCPCONCache.DC1B1 ON
 				SET CCPCONCache.DC1B0 ON
-			 #endif
+			#endif
 		#endif
 
 		'Finish preparing CCP*CON
@@ -127,7 +136,6 @@ Sub InitPWM
 		SET CCPCONCache.CCP1M2 ON
 		SET CCPCONCache.CCP1M1 OFF
 		SET CCPCONCache.CCP1M0 OFF
-
 		'Enable Timer 2
 		SET T2CON.TMR2ON ON
 	#endif
@@ -144,14 +152,11 @@ end sub
 
 sub PWMOff
 	CCP1CON = 0
-               CCP2CON = 0
-              CCP3CON = 0
-             CCP4CON = 0
 end sub
 
 sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 
-    'Dim PR2_Temp as word   'moved to top  - WMR
+	'Dim PR2_Temp as word   'moved to top  - WMR
 
 	'If HPWM_FAST operation selected, only recalculate timer prescaler when
 	'needed. Gives faster operation, but uses extra byte of RAM and may cause
@@ -161,24 +166,24 @@ sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 	    If PWMFreq <> PWMFreqOld Then
 	#endif
 
-  T2_PR = 1
+	T2_PR = 1
 	PR2_Temp = PWMOsc1 / PWMFreq
 	IF PR2_Temp_H > 0 then
-	    T2_PR = 4
-			'Divide by 4
-			set STATUS.C off
-			rotate PR2_Temp right
-			set STATUS.C off
-			rotate PR2_Temp right
+		T2_PR = 4
+		'Divide by 4
+		set STATUS.C off
+		rotate PR2_Temp right
+		set STATUS.C off
+		rotate PR2_Temp right
 	end if
 	IF PR2_Temp_H > 0 then
-	    'PR2_Temp = PWMOsc16/PWMFreq: T2_PR = 16  ' ** Artifact? -WMR
-			 T2_PR = 16
-			'Divide by 4
-			set STATUS.C off
-			rotate PR2_Temp right
-			set STATUS.C off
-			rotate PR2_Temp right
+		'PR2_Temp = PWMOsc16/PWMFreq: T2_PR = 16  ' ** Artifact? -WMR
+		T2_PR = 16
+		'Divide by 4
+		set STATUS.C off
+		rotate PR2_Temp right
+		set STATUS.C off
+		rotate PR2_Temp right
 	end if
 
 	PR2 = PR2_Temp
@@ -189,65 +194,93 @@ sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 	if T2_PR = 16 then SET T2CON.T2CKPS1 ON
 	SET T2CON.TMR2ON ON
 
-  #ifdef HPWM_FAST
-	    PWMFreqOld = PWMFreq
-	    End If
+	#ifdef HPWM_FAST
+		PWMFreqOld = PWMFreq
+		End If
 	#endif
 
-	#ifdef NoVar(CCP2CON)
-	    PR2_Temp = PWMDuty * (PR2 + 2)   'Correction  - WMR
-		  CCPR1L = PR2_Temp_H
-      If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+	#ifdef NoVar(CCP2CON)   'Only 1 CCP module on Chip
+		PR2_Temp = PWMDuty * (PR2 + 2)   'Correction  - WMR
+		CCPR1L = PR2_Temp_H
+		If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
 
-      SET CCP1CON.CCP1M3 ON
-		  SET CCP1CON.CCP1M2 ON
-		  SET CCP1CON.CCP1M1 OFF
-      SET CCP1CON.CCP1M0 OFF
+		SET CCP1CON.CCP1M3 ON
+		SET CCP1CON.CCP1M2 ON
+		SET CCP1CON.CCP1M1 OFF
+		SET CCP1CON.CCP1M0 OFF
 	#endif
+
 	#ifdef Var(CCP2CON)
-      if PWMChannel = 1 then
-			    PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
-		      CCPR1L = PR2_Temp_H
-          If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+		if PWMChannel = 1 then
+			PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
+			CCPR1L = PR2_Temp_H
+			If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
 
-          SET CCP1CON.CCP1M3 ON
-			    SET CCP1CON.CCP1M2 ON
-			    SET CCP1CON.CCP1M1 OFF
-			    SET CCP1CON.CCP1M0 OFF
-		  end if
-		  if PWMChannel = 2 then
-			    PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
-		      CCPR2L = PR2_Temp_H
-          If PWMDuty = 0 Then CCPR2L = 0  ' Assure OFF at Zero - WMR
+			SET CCP1CON.CCP1M3 ON
+			SET CCP1CON.CCP1M2 ON
+			SET CCP1CON.CCP1M1 OFF
+			SET CCP1CON.CCP1M0 OFF
+		end if
+		if PWMChannel = 2 then
+			PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
+			CCPR2L = PR2_Temp_H
+			If PWMDuty = 0 Then CCPR2L = 0  ' Assure OFF at Zero - WMR
 
-          SET CCP2CON.CCP1M3 ON
-			    SET CCP2CON.CCP1M2 ON
-			    SET CCP2CON.CCP1M1 OFF
-			    SET CCP2CON.CCP1M0 OFF
-		  end if
-	#endif
-  #ifdef Var(CCP3CON)
-			if PWMChannel = 3 then
-			  	PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
-		      CCPR3L = PR2_Temp_H
-          If PWMDuty = 0 Then CCPR3L = 0  ' Assure OFF at Zero - WMR
-
-          SET CCP3CON.CCP1M3 ON
-				  SET CCP3CON.CCP1M2 ON
-				  SET CCP3CON.CCP1M1 OFF
-				  SET CCP3CON.CCP1M0 OFF
-			end if
-	#endif
-  if PWMChannel = 4 then
-			    PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
-		      CCPR4L = PR2_Temp_H
-          If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero - WMR
-
-          SET CCP4CON.CCP4M3 ON
-			    SET CCP4CON.CCP4M2 ON
-			    SET CCP4CON.CCP4M1 OFF
-			    SET CCP4CON.CCP4M0 OFF
-		  end if
+			SET CCP2CON.CCP2M3 ON
+			SET CCP2CON.CCP2M2 ON
+			SET CCP2CON.CCP2M1 OFF
+			SET CCP2CON.CCP2M0 OFF
+		end if
 	#endif
 
+	#ifdef Var(CCP3CON)
+		if PWMChannel = 3 then
+			PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
+			CCPR3L = PR2_Temp_H
+        	If PWMDuty = 0 Then CCPR3L = 0  ' Assure OFF at Zero - WMR
+
+			SET CCP3CON.CCP3M3 ON
+			SET CCP3CON.CCP3M2 ON
+			SET CCP3CON.CCP3M1 OFF
+			SET CCP3CON.CCP3M0 OFF
+		end if
+	#endif
+
+	#ifdef Var(CCP4CON)    'Added 17.04.2105 - WMR
+		if PWMChannel = 4 then
+			PR2_Temp = PWMDuty * (PR2 + 2)  'Correction  - WMR
+			CCPR4L = PR2_Temp_H
+			If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero - WMR
+
+			SET CCP4CON.CCP4M3 ON
+			SET CCP4CON.CCP4M2 ON
+			SET CCP4CON.CCP4M1 OFF
+			SET CCP4CON.CCP4M0 OFF
+		end if
+	#endif
 end sub
+
+SUB PWMOff (IN Channel)   'Added 27.04.2015
+
+    If Channel > 4 OR Channel < 1 then channel = 1
+
+    #IFNDEF VAR(CCP2CON)  'There is only 1 CCP Module
+     if channel = 1 then
+          CCP1CON = 0
+          exit sub
+     end if
+    #ENDIF
+
+    #IFDEF VAR(CCP2CON)   '2 or more CCP modules
+       IF Channel = 1 then CCP1CON = 0
+       IF Channel = 2 then CCP2CON = 0
+    #ENDIF
+
+    #IFDEF VAR(CCP3CON)
+       IF Channel = 3 then CCP3CON = 0
+    #ENDIF
+
+    #IFDEF VAR(CCP4CON)
+       IF Channel = 4 then CCP4CON = 0
+    #ENDIF
+END SUB
