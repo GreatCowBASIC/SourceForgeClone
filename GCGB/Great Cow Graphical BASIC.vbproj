@@ -74,6 +74,10 @@
       <DependentUpon>ExampleChooser.vb</DependentUpon>
     </Compile>
     <Compile Include="ExampleChooser.vb" />
+    <Compile Include="InternalErrorDialog.Designer.vb">
+      <DependentUpon>InternalErrorDialog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="InternalErrorDialog.vb" />
     <Compile Include="MainForm.vb" />
     <Compile Include="AssemblyInfo.vb" />
     <Compile Include="About.vb" />
@@ -145,6 +149,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ExampleChooser.resx">
       <DependentUpon>ExampleChooser.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InternalErrorDialog.resx">
+      <DependentUpon>InternalErrorDialog.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resources">
       <DependentUpon>MainForm.vb</DependentUpon>

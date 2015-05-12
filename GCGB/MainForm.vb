@@ -56,7 +56,7 @@ Imports System.Threading
 		Public Const MaxTableElements As Integer = 10000
 		
 		'Version constants
-		Public Const ProgVersion As String = "1.0 2015-04-22"
+		Public Const ProgVersion As String = "1.0 2015-05-12"
 		Public Const FileVersion As String = "20100130"
 		Public Const ShortVersion As String = "Version 1.0"
 		
@@ -196,6 +196,11 @@ Imports System.Threading
 			Me.InitializeComponent
 			
 			MainformInstance = Me
+			
+			'Default exception handlers
+			Dim Domain As AppDomain = AppDomain.CurrentDomain
+			AddHandler Domain.UnhandledException, AddressOf UnhandledExceptionHandler
+			AddHandler Application.ThreadException, AddressOf ThreadExceptionHandler
 			
 		End Sub
 		
@@ -875,6 +880,27 @@ Imports System.Threading
 		Private FileNew As System.Windows.Forms.ToolStripMenuItem
 		
 		#End Region
+		
+		'Handler for anything that goes wrong and doesn't get handled elsewhere
+		Private Sub UnhandledExceptionHandler(sender as Object, args As UnhandledExceptionEventArgs)
+			Dim Ex As Exception = args.ExceptionObject
+			'MessageBox.Show(Ex.Message + Environment.NewLine + Ex.StackTrace, "Internal error in " + Ex.Source, MessageBoxButtons.OK, MessageBoxIcon.Warning)
+			
+			Dim errorWindow As New InternalErrorDialog
+			errorWindow.ErrorMessage = Ex.Message + Environment.NewLine + Ex.StackTrace
+			errorWindow.ShowDialog
+			
+		End Sub
+		
+		'Handler for anything that goes wrong in underlying system
+		Private Sub ThreadExceptionHandler(sender As Object, args As ThreadExceptionEventArgs)
+			Dim Ex As Exception = args.Exception
+			
+			Dim errorWindow As New InternalErrorDialog
+			errorWindow.ErrorMessage = Ex.Message + Environment.NewLine + Ex.StackTrace
+			errorWindow.ShowDialog
+			
+		End Sub
 		
 		Private Sub MainFormLoad(sender As System.Object, e As System.EventArgs)
 		 	
@@ -1963,7 +1989,7 @@ Imports System.Threading
 			'MessageBox.Show(DoCompile.StartInfo.Arguments, "Command Line", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
 			DoCompile.Start()
 			
-			DoCompile.WaitForExit(30000)
+			DoCompile.WaitForExit(90000)
 			
 			'Check for errors.txt, and exit sub if found
 			Dim FileCheck As New IO.FileInfo(System.Environment.GetEnvironmentVariable("Temp") + "\errors.txt")
