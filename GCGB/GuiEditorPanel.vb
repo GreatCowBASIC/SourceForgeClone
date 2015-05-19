@@ -3,7 +3,7 @@
 ' User: Hugh
 ' Date: 14/07/2009
 ' Time: 10:37 PM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 
@@ -143,7 +143,7 @@ Imports System.Collections.Generic
 		 	
 		 	'Clear scroll locations
 		 	For Temp = 0 To MainForm.MaxSubCount
-		 		CurrentScroll(Temp) = 0	
+		 		CurrentScroll(Temp) = 0
 		 		CurrentSubLine(Temp) = 0
 		 	Next
 		 			 	
@@ -426,7 +426,7 @@ Imports System.Collections.Generic
 			Me.SubSelect.Name = "SubSelect"
 			Me.SubSelect.Size = New System.Drawing.Size(120, 78)
 			Me.SubSelect.TabIndex = 5
-			Me.iconTipDisplay.SetToolTip(Me.SubSelect, "These are the subroutines in the program. Click Main to return to the main subrou"& _ 
+			Me.iconTipDisplay.SetToolTip(Me.SubSelect, "These are the subroutines in the program. Click Main to return to the main subrou"& _
 "tine")
 			'
 			'GuiEditorPanel
@@ -521,7 +521,7 @@ Imports System.Collections.Generic
 		
 		Private Sub ProgramClosed(sender As System.Object, e As System.ComponentModel.CancelEventArgs)
 			
-			If Program.HasChanged Then 
+			If Program.HasChanged Then
 				
 				Dim UnsavedPrompt As String = "There are unsaved changes to this file. Save them?"
 				MainForm.Translator.TryTranslate("Misc", "UnsavedChanges", UnsavedPrompt)
@@ -540,7 +540,7 @@ Imports System.Collections.Generic
 						Exit Sub
 					End If
 					Program.SaveFile(Program.Filename)
-				End If		
+				End If
 			End If
 			
 			RaiseEvent ThisWindowSelected
@@ -1153,7 +1153,7 @@ Imports System.Collections.Generic
 				If ParamCount = 0 Then
 					ParamMode = 1
 					ParamText = MainForm.Translator.GetMessage("GuiEditorPanel", "SubNoParams", "This subroutine has no parameters")
-				End If				
+				End If
 				
 			'Comment
 			Case -2
@@ -1673,17 +1673,23 @@ Imports System.Collections.Generic
 				Dim TempNo As Integer
 				
 				ParamChanged = -1
-				Do While NewCommand.ToUpper.IndexOf("%P") <> -1
+				Dim StartPos As Integer = 0
+				Do While NewCommand.ToUpper.IndexOf("%P", StartPos) <> -1
 			 		TempData = NewCommand.Substring(NewCommand.ToUpper.IndexOf("%P") + 2)
-			 		TempNo = TempData.Substring(0, TempData.IndexOf("%"))
-			 		With IconParamBox(TempNo)
-			 			Lowlevel.Replace(NewCommand, "%P" + TempNo.ToString + "%", .GetValue)
-			 			If .HasParamChanged Then
-			 				MinorParamChange = .IsMinorChange
-			 				.ClearParamChanged
-			 				ParamChanged = TempNo
-			 			End If
-			 		End With
+			 		If TempData.Contains("%") Then
+			 			TempNo = TempData.Substring(0, TempData.IndexOf("%"))
+				 		With IconParamBox(TempNo)
+				 			Lowlevel.Replace(NewCommand, "%P" + TempNo.ToString + "%", .GetValue)
+				 			If .HasParamChanged Then
+				 				MinorParamChange = .IsMinorChange
+				 				.ClearParamChanged
+				 				ParamChanged = TempNo
+				 			End If
+				 		End With
+			 		Else
+			 			StartPos = NewCommand.ToUpper.IndexOf("%P") + 2
+			 		End If
+			 		
 			 	Loop
 				
 				OldCommand = CurrentCodeLine
@@ -1878,7 +1884,7 @@ Imports System.Collections.Generic
 			If CommandsAdded > 0 Then
 				'Clear Selection
 				'For Temp = 0 To MainForm.MaxSubSize
-				'	IconSelected(Temp) = False				
+				'	IconSelected(Temp) = False
 				'Next
 				
 				'Redraw
@@ -2235,7 +2241,7 @@ Imports System.Collections.Generic
 			'Stop scrolling
 			ScrollTimer.Stop
 			
-			If e.Data.GetDataPresent(DataFormats.Text) Then 
+			If e.Data.GetDataPresent(DataFormats.Text) Then
 				NewCommand = e.Data.GetData(DataFormats.Text)
 				
 				'AddCommand(NewCommand)

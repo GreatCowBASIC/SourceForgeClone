@@ -3,7 +3,7 @@
 ' User: Hugh
 ' Date: 13/07/2009
 ' Time: 11:30 PM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 
@@ -222,19 +222,25 @@ Imports System.Collections.Generic
 							
 							'Get label text, and make needed replacements
 							CurrLine = Icon.Line(Temp)
-							Do While CurrLine.ToUpper.IndexOf("%P") <> -1
+							Dim StartPos As Integer = 0
+							Do While CurrLine.ToUpper.IndexOf("%P", StartPos) <> -1
 								TempData = CurrLine.Substring(CurrLine.ToUpper.IndexOf("%P") + 2)
-								TempNo = TempData.Substring(0, TempData.IndexOf("%"))
-								TempData = ""
-								Try
-									If TempNo = 99 Then
-										TempData = Parameters(0)
-									Else
-										TempData = Parameters(TempNo)
-									End If
-								Catch
-								End Try
-								CurrLine = CurrLine.Replace("%P" + TempNo.ToString.Trim + "%", TempData)
+								'Need this in case %P ends up in user code
+								If TempData.IndexOf("%") <> -1 Then
+									TempNo = TempData.Substring(0, TempData.IndexOf("%"))
+									TempData = ""
+									Try
+										If TempNo = 99 Then
+											TempData = Parameters(0)
+										Else
+											TempData = Parameters(TempNo)
+										End If
+									Catch
+									End Try
+									CurrLine = CurrLine.Replace("%P" + TempNo.ToString.Trim + "%", TempData)
+								Else
+									StartPos = CurrLine.ToUpper.IndexOf("%P") + 2
+								End If
 							Loop
 							
 							'If label is too long, split into multiple lines
