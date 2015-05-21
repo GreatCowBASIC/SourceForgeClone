@@ -576,7 +576,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-04-20"
+Version = "0.94 2015-05-21"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6620,11 +6620,11 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 				'Only search for ;STRING at start, not in middle!
 				IF INSTR(.Param(CD, 1), ";STRING") = 1 Then
 					Temp = StringStore(Val(MID(.Param(CD, 1), Instr(.Param(CD, 1), ";STRING") + 7))).Value
-					If Len(Temp) = 1 And (*.Called).Params(CD).Type <> "STRING" Then
-						C = 1
-					Else
+					If Len(Temp) > 1 Or (INSTR((*.Called).Params(CD).Type, "$") <> 0 Or INSTR((*.Called).Params(CD).Type, "()") <> 0 Or (*.Called).Params(CD).Type = "STRING") Then
 						C = 4
 						If InStr(.Param(CD, 1), "+") Then C = 5
+					Else
+						C = 1
 					End If
 				End If
 				
