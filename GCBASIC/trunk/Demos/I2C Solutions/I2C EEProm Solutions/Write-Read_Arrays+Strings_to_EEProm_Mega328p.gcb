@@ -1,0 +1,115 @@
+'''A demonstration program for GCGB and GCB.
+'''This program shows how to write and read EEProm devices via the I2C protocol using the GCB software I2C implementation and the microprocessors hardware I2C implementation.
+'''To use the software or hardware I2C implementation change the I2C implementation to 'software' or 'hardware'.
+'''
+'''@author 	Evan R. Venn
+'''@licence	GPL
+'''@version	1.0a
+'''@date   	17th  March 2015
+'''********************************************************************************
+
+; ----- Configuration
+
+  #chip mega328p, 16
+  #include <I2CEEPROM.h>
+
+; ----- Constants
+
+' Define I2C software settings
+' #define I2C_MODE Master
+' #define I2C_DATA PORTC.4
+' #define I2C_CLOCK PORTC.5
+' #define I2C_DISABLE_INTERRUPTS ON
+
+' Define I2C Hardware settings
+ HI2CMode Master
+ #define HI2C_DATA
+ #define HI2C_BAUD_RATE 400
+
+
+ ' THIS CONFIG OF THE SERIAL PORT WORKS WITH A  MAX232 (or equiv) THEN TO PC
+ ' USART settings - CHANGE PORTS if required
+ #define USART_BAUD_RATE 9600
+ Dir PORTc.6 Out
+ Dir PORTc.7 In
+ #define USART_DELAY 5 ms
+ #define USART_BLOCKING
+ 'wait 500 ms
+
+; ----- Define Hardware settings
+  #define eepDev 0xAE
+  #define EEpromPageSize 64
+
+; ----- Variables
+  Dim eepAddr as word
+  Dim datarray( EEpromPageSize )
+  Dim datastring as String * 16
+
+; ----- Quick Command Reference
+
+
+
+; ----- Main body of program commences here.
+
+  'Show whether you have selected harware or software I2C
+  HSerPrintCRLF 2
+  #ifdef I2C_DATA
+        HSerPrint "SW I2C"
+  #endif
+  #ifdef HI2C_DATA
+        HSerPrint "HW I2C"
+  #endif
+  HSerPrintCRLF
+
+  ' Write an Array
+        'populate the array, the array is 10 elements long
+        datarray = 10,9,8,7,6,5,4,3,2,1
+        'set EEProm start address for saving the array
+        eepAddr = 0
+        'write array
+        eeprom_wr_array( eepDev, EEpromPageSize, eepAddr , datarray, 10 )
+
+        'populate the array with 127 as test to see if the operation populates correctly.
+        for xloop = 1 to 10
+          datarray(xloop) = 127
+        next
+
+        'set EEProm start address for reading the array
+        eepAddr = 0
+        eeprom_rd_array( eepDev, eepAddr , datarray(), 10 )
+
+        'show results
+        for xloop = 1 to 10
+          HSerPrint datarray(xloop)
+          if xloop < 10 then HSerPrint ","
+        next
+        HSerPrintCRLF
+        HSerPrint "End of array operations"
+        HSerPrintCRLF
+
+  ' Write a String
+        'populate the string
+        datastring ="0123456789ABCDEF"
+        'set EEProm start address for saving the length of string
+        eepAddr = 0
+        'write byte zero of the string. Btye zero is the length of the string.
+        eeprom_wr_byte( eepDev, eepAddr , datastring(0) )
+        'set EEProm next address for saving the whole string
+        eepAddr = 1
+        'write string
+        eeprom_wr_string( eepDev, EEpromPageSize, eepAddr , datastring, datastring(0) )
+
+        'empty string
+        datastring = ""
+
+        'rebuild string by reading eleven bytes - from byte zero and next ten bytes
+        for eepAddr = 0 to 10
+          eeprom_rd_byte( eepDev, eepAddr , datastring(eepAddr) )
+        next
+
+        HSerPrint datastring
+        HSerPrintCRLF
+        HSerPrint "End of string operations"
+        HSerPrintCRLF
+
+; ----- Support methods.  Subroutines and Functions
