@@ -2,12 +2,16 @@
 '    Copyright (C) 2010 Hugh Considine
 '    Copyright (C) 2014 & 2015 Evan R. Venn & Jacques Erdemaal
 '    Version 1.1f
+'    Version 1.1g
+
 
 '    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
 '            and to improve the initialisation of the AVR
 '
 '    Updated Feb 2015 to support AVR and correct HI2CReceive parameter error.
 '    Moved defines ACK/NACK to sysen.ini to
+'
+'    Updated May 2015 - enhance hi2cwaitmssp
 '
 
 
@@ -89,7 +93,7 @@
   #define MR_DATA_NACK_REC 0x58
 
 
-#startup AVRHIC2Init
+#startup HIC2Init
 
 #script
 	HI2C_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) - 1
@@ -162,18 +166,18 @@
 
 
 Sub HI2CMode (In HI2CCurrentMode)
-	
+
 	#ifdef PIC
 		#ifndef Var(SSPCON1)
 			#ifdef Var(SSPCON)
 				Dim SSPCON1 Alias SSPCON
 			#endif
 		#endif
-		
+
 		set SSPSTAT.SMP on
 		set SSPCON1.CKP on
 		set SSPCON1.WCOL Off
-		
+
 		'Select mode and clock
 		If HI2CCurrentMode = Master Then
 			set SSPCON1.SSPM3 on
@@ -182,25 +186,25 @@ Sub HI2CMode (In HI2CCurrentMode)
 			set SSPCON1.SSPM0 off
 			SSPADD = HI2C_BAUD_TEMP And 127
 		end if
-		
+
 		if HI2CCurrentMode = Slave then
 			set SSPCON1.SSPM3 off
 			set SSPCON1.SSPM2 on
 			set SSPCON1.SSPM1 on
 			set SSPCON1.SSPM0 off
 		end if
-		
+
 		if HI2CCurrentMode = Slave10 then
 			set SSPCON1.SSPM3 off
 			set SSPCON1.SSPM2 on
 			set SSPCON1.SSPM1 on
 			set SSPCON1.SSPM0 on
 		end if
-		
+
 		'Enable I2C
 		set SSPCON1.SSPEN on
 	#ENDIF
-	
+
 End Sub
 
 Sub HI2CSetAddress(In I2CAddress)
@@ -223,15 +227,15 @@ Sub HI2CStart
                         HI2CWaitMSSP
 		  #endif
 		#endif
-		
+
 	'Slave mode
 	Else
 		#ifdef PIC
 			Wait Until SSPSTAT.S = On
 		#endif
-		
+
 	End If
-	
+
 End Sub
 
 Sub HI2CReStart
@@ -245,7 +249,7 @@ Sub HI2CReStart
 			#endif
 		#endif
 	End If
-	
+
 End Sub
 
 
@@ -263,15 +267,15 @@ Sub HI2CStop
                                      HI2CWaitMSSP
 			#endif
 		#endif
-		
+
 	'Slave mode
 	Else
 		#ifdef PIC
 			Wait Until SSPSTAT.P = On
 		#endif
-		
+
 	End If
-	
+
 End Sub
 
 Function HI2CStartOccurred
@@ -280,7 +284,7 @@ Function HI2CStartOccurred
 	If HI2CCurrentMode > 10 Then
 		HI2CStartOccurred = TRUE
 		Exit Function
-		
+
 	'Slave mode, check if start condition received last
 	Else
 		HI2CStartOccurred = FALSE
@@ -289,7 +293,7 @@ Function HI2CStartOccurred
 				If SSPSTAT.S = On Then HI2CStartOccurred = TRUE
 			#endif
 		#endif
-		
+
 	End If
 End Function
 
@@ -299,7 +303,7 @@ Function HI2CStopped
 	If HI2CCurrentMode > 10 Then
 		HI2CStopped = FALSE
 		Exit Function
-		
+
 	'Slave mode, check if start condition received last
 	Else
 		HI2CStopped = FALSE
@@ -308,7 +312,7 @@ Function HI2CStopped
 				If SSPSTAT.P = On Then HI2CStopped = TRUE
 			#endif
 		#endif
-		
+
 	End If
 End Function
 
@@ -320,7 +324,7 @@ Sub HI2CSend(In I2CByte)
 				Dim SSPCON1 Alias SSPCON
 			#endif
 		#endif
-		
+
 		RetryHI2CSend:
 			'Clear WCOL
 			SET SSPCON1.WCOL OFF
@@ -337,16 +341,16 @@ Sub HI2CSend(In I2CByte)
 		If SSPCON1.WCOL = On Then
 			If HI2CCurrentMode <= 10 Then Goto RetryHI2CSend
 		End If
-		
+
 		'Release clock (only needed by slave)
 		If HI2CCurrentMode <= 10 Then Set SSPCON1.CKP On
-		
+
 	#endif
 
 End Sub
 
 Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
-	
+
 	#ifdef PIC
 
 		#ifndef Var(SSPCON1)
@@ -354,7 +358,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
 				Dim SSPCON1 Alias SSPCON
 			#endif
 		#endif
-		
+
 		'Enable receive
                     #ifdef Var(SSPCON2)
 			'Master mode
@@ -376,7 +380,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
 		'Clear Collisions
 		SET SSPCON1.WCOL OFF
 		SET SSPCON1.SSPOV Off
-		
+
 		'Wait for receive
 		Wait Until SSPSTAT.BF = 1' AND SSPIF = 1
 
@@ -406,8 +410,24 @@ End Sub
 ; Then, it clears SSPIF
 sub HI2CWaitMSSP
 
-     if SSPIF = 0 then goto $-1
-     SSPIF = 0
+
+    #ifdef bit(SSP1IF)
+        if SSP1IF = 0 then goto $-1
+        SSP1IF = 0
+        exit sub
+    #endif
+    #ifdef bit(SSPIF)
+        if SSPIF = 0 then goto $-1
+        SSPIF = 0
+        exit sub
+    #endif
+
+    ' no int flag Exit
+    wait 1 us
+
+
+
+
 
 end sub
 
@@ -567,6 +587,6 @@ End Sub
 
 
 
-sub AVRHIC2Init
+sub HIC2Init
     HI2CCurrentMode = 0
 end sub
