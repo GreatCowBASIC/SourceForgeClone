@@ -30,6 +30,7 @@
 ' a built-in function, asc(), which takes a character and returns the numeric value for that character in the machine's character set. If the string passed to asc() has more than one character, only the first one is used.
 ' The inverse of this function is chr() (from the function of the same name in Pascal), which takes a number and returns the corresponding character. Both functions are written very nicely in GCB.
 ' 22/12/2014: Add PAD function
+' 1/6/2016: Add Fill function
 
 'Length/position
 Function Len (LenTemp())
@@ -415,3 +416,21 @@ Function Pad ( in SysInString as string, SysStrLen, optional SysInString3 as str
   Pad(0) = SysStrLen
 
 End Function
+
+
+'Fill(len,padchr )
+'Description  - The Fill() function returns a string
+'Parameters
+'len - Length of str.
+'Fill - Pad characters, the second is used to pad new space in the output string.
+Function Fill ( SysStrLen, optional SysInString3 as string = " " ) As String
+
+      'Copy leftmost characters
+      For SysStringTemp = 1 To SysStrLen
+        Fill(SysStringTemp) = SysInString3(1)
+      Next
+
+  Fill(0) = SysStrLen
+
+End Function
+
