@@ -22,7 +22,7 @@
 #define SerInPort  PORTB.5    ' RX
 #define SerOutPort PORTB.7    ' TX
 
-#include "heflash.h"
+#include <heflash.h>
 
 wait 1 s
 
