@@ -18,7 +18,7 @@
 ; ----- Configuration
 'Chip model
 #chip 16F886, 8
-#config MCLRE_OFF
+#config MCLRE_ON
 #include <chipino.h>
 
 
