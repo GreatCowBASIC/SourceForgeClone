@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2015 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-'    
+'
 '    9/11/14	New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
 '
 
 'Constants that might need to be set
-'#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544
+'#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
@@ -38,6 +38,7 @@ dim GLCDFontWidth,GLCDfntDefault as byte
 #define GLCD_TYPE_ST7735  2
 #define GLCD_TYPE_ST7920  3
 #define GLCD_TYPE_PCD8544 4
+#define GLCD_TYPE_SSD1306 5
 
 
 
@@ -65,6 +66,20 @@ Dim GLCDForeground As Word
      GLCD_HEIGHT = 64
 
   End If
+
+  If GLCD_TYPE = GLCD_TYPE_SSD1306 Then
+     #include <glcd_SSD1306.h>
+     InitGLCD = InitGLCD_SSD1306
+     GLCDCLS = GLCDCLS_SSD1306
+     FilledBox = FilledBox_SSD1306
+     Pset = Pset_SSD1306
+     glcd_type_string = "SSD1306"
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 64
+
+  End If
+
+
 
   If GLCD_TYPE = GLCD_TYPE_ST7735 Then
 
@@ -151,21 +166,21 @@ Sub GLCDPrint(In PrintLocX, In PrintLocY, In LCDValue As Long)
 	Dim SysCalcTempA As Long
 	Dim SysPrintBuffer(10)
 	SysPrintBuffLen = 0
-	
+
 	Do
 		'Divide number by 10, remainder into buffer
 		SysPrintBuffLen += 1
 		SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
 		LCDValue = SysCalcTempA
 	Loop While LCDValue <> 0
-	
+
 	'Display
 	GLCDPrintLoc = PrintLocX
 	For SysPrintTemp = SysPrintBuffLen To 1 Step -1
 		GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48
 		GLCDPrintLoc += GLCDFontWidth
 	Next
-	
+
 End Sub
 
 
@@ -201,7 +216,7 @@ Sub GLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour a
             GLCDBackground = 1
             GLCDForeground = 0
           end if
-	
+
           'Need to read characters from CharColn (n = 0:7) tables
 	'(First 3, ie 0:2 are blank, so can ignore)
 	For CurrCharCol = 1 to 5
@@ -248,13 +263,13 @@ Sub Box(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Wo
 		LineY1 = LineY2
 		LineY2 = GLCDTemp
 	End If
-	
+
 	'Draw lines going across
 	For DrawLine = LineX1 To LineX2
 		PSet DrawLine, LineY1, LineColour
 		PSet DrawLine, LineY2, LineColour
 	Next
-	
+
 	'Draw lines going down
 	For DrawLine = LineY1 To LineY2
 		PSet LineX1, DrawLine, LineColour
@@ -399,7 +414,7 @@ Sub Line(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour as w
 
       LineDiffX_x2 = LineDiffX*2
       LineDiffY_x2 = LineDiffY*2
-          	
+
       if ( LineDiffX >= LineDiffY) then
 
           LineErr = LineDiffY_x2 - LineDiffX
