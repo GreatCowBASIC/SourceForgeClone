@@ -318,7 +318,7 @@ end sub
 
 
 '''Stops all scrolling
-sub stopscroll_SSD1306
+sub Stopscroll_SSD1306
     Write_Command_SSD1306(SSD1306_DEACTIVATE_SCROLL)
 end sub
 
@@ -328,7 +328,7 @@ end sub
 ''' startscrollright_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB startscrollright_SSD1306 ( IN start , IN stop)
+SUB Startscrollright_SSD1306 ( IN start , IN stop)
   Write_Command_SSD1306(SSD1306_RIGHT_HORIZONTAL_SCROLL)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(start)
@@ -346,7 +346,7 @@ end sub
 '''startscrollleft_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB startscrollleft_SSD1306 ( IN start , IN stop)
+SUB Startscrollleft_SSD1306 ( IN start , IN stop)
   Write_Command_SSD1306(SSD1306_LEFT_HORIZONTAL_SCROLL)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(start)
@@ -364,7 +364,7 @@ end sub
 '''startscrolldiagright_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB startscrolldiagright_SSD1306 ( IN start , IN stop)
+SUB Startscrolldiagright_SSD1306 ( IN start , IN stop)
   Write_Command_SSD1306(SSD1306_SET_VERTICAL_SCROLL_AREA)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(GLCD_HEIGHT)
@@ -383,7 +383,7 @@ end sub
 '''startscrolldiagleft_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB startscrolldiagleft_SSD1306 ( IN start , IN stop)
+SUB Startscrolldiagleft_SSD1306 ( IN start , IN stop)
   Write_Command_SSD1306(SSD1306_SET_VERTICAL_SCROLL_AREA)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(GLCD_HEIGHT)
