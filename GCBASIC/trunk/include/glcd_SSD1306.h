@@ -22,6 +22,8 @@
 '  #define GLCD_TYPE GLCD_TYPE_SSD1306
 '  #define GLCD_I2C_Address 0x78
 
+' 1.01 Added scrollspeed
+
 
 #define SSD1306_SETCONTRAST 0x81
 #define SSD1306_DISPLAYALLON_RESUME 0xA4
@@ -318,7 +320,7 @@ end sub
 
 
 '''Stops all scrolling
-sub Stopscroll_SSD1306
+sub stopscroll_SSD1306
     Write_Command_SSD1306(SSD1306_DEACTIVATE_SCROLL)
 end sub
 
@@ -328,11 +330,12 @@ end sub
 ''' startscrollright_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB Startscrollright_SSD1306 ( IN start , IN stop)
+'''@param Set time interval between each scroll step in terms of frame frequency
+SUB startscrollright_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_RIGHT_HORIZONTAL_SCROLL)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(start)
-  Write_Command_SSD1306(0X00)
+  Write_Command_SSD1306(scrollspeed)
   Write_Command_SSD1306(stop)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(0XFF)
@@ -346,11 +349,12 @@ end sub
 '''startscrollleft_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB Startscrollleft_SSD1306 ( IN start , IN stop)
+'''@param Set time interval between each scroll step in terms of frame frequency
+SUB startscrollleft_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_LEFT_HORIZONTAL_SCROLL)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(start)
-  Write_Command_SSD1306(0X00)
+  Write_Command_SSD1306(scrollspeed)
   Write_Command_SSD1306(stop)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(0XFF)
@@ -364,12 +368,13 @@ end sub
 '''startscrolldiagright_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB Startscrolldiagright_SSD1306 ( IN start , IN stop)
+'''@param Set time interval between each scroll step in terms of frame frequency
+SUB startscrolldiagright_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_SET_VERTICAL_SCROLL_AREA)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(GLCD_HEIGHT)
   Write_Command_SSD1306(SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL)
-  Write_Command_SSD1306(0X00)
+  Write_Command_SSD1306(scrollspeed)
   Write_Command_SSD1306(start)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(stop)
@@ -383,12 +388,13 @@ end sub
 '''startscrolldiagleft_SSD1306(0x00, 0x0F)
 '''@param Start row
 '''@param End row
-SUB Startscrolldiagleft_SSD1306 ( IN start , IN stop)
+'''@param Set time interval between each scroll step in terms of frame frequency
+SUB startscrolldiagleft_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_SET_VERTICAL_SCROLL_AREA)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(GLCD_HEIGHT)
   Write_Command_SSD1306(SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL)
-  Write_Command_SSD1306(0X00)
+  Write_Command_SSD1306(scrollspeed)
   Write_Command_SSD1306(start)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(stop)
