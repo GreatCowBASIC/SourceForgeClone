@@ -10,7 +10,7 @@
 '''The GLCD is connected to the microprocessor as shown in the hardware section of this code.
 '''@author 	EvanV
 '''@licence	GPL
-'''@version	1.3
+'''@version	1.4
 '''@date   	25.5.15
 '''********************************************************************************
 
@@ -32,6 +32,18 @@
 ; ----- Define GLCD Hardware settings
   #define GLCD_TYPE GLCD_TYPE_SSD1306
   #define GLCD_I2C_Address 0x78
+
+; ----- Define variables
+  CCount = 0
+  dim longNumber as long
+  longNumber = 123456 ' max value = 4294967290
+  dim wordNumber as Word
+  dim outstring as string
+  wordNumber = 0
+  byteNumber = 0
+
+; ----- Main program
+
 
   GLCDPrint (0, 0, "Great Cow Basic")
   GLCDPrint (0, 8, "Anobium 2015")
