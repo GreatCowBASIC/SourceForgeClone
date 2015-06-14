@@ -301,7 +301,7 @@ Imports System.Collections.Generic
 			Dim RamUsedMessage As String = RamUsed.ToString
 			
 			If Not CurrentFile.ChipData Is Nothing Then
-				RamUsedMessage += "/" + CurrentFile.ChipData.RAMBytes.ToString
+				RamUsedMessage += "/" + CurrentFile.ChipData.ChipRAM.ToString
 			End If
 			RamUsedMessage += " bytes"
 			Me.VarSpace.Text = RamUsedMessage
