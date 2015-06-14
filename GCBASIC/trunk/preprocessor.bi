@@ -32,7 +32,7 @@ Function CheckSysVarDef(ConditionIn As String) As String
 	Do While INSTR(Condition, "BIT(") <> 0
 		'Get name of bit, and whether checking for presence or absence
 		FV = 0: If INSTR(Condition, "NOBIT(") = INSTR(Condition, "BIT(") - 2 Then FV = 1
-		Temp = Mid(Condition, INSTR(Condition, "(") + 1)
+		Temp = Mid(Condition, INSTR(Condition, "BIT(") + 4)
 		Temp = Left(Temp, INSTR(Temp, ")") - 1)
 		If FV = 0 Then
 			Original = "BIT(" + Temp + ")"
@@ -62,7 +62,7 @@ Function CheckSysVarDef(ConditionIn As String) As String
 	Do While INSTR(Condition, "VAR(") <> 0
 		'Get name of SFR, and checking mode
 		FV = 0: IF INSTR(Condition, "NOVAR(") = INSTR(Condition, "VAR(") - 2 THEN FV = 1
-		Temp = Mid(Condition, INSTR(Condition, "(") + 1)
+		Temp = Mid(Condition, INSTR(Condition, "VAR(") + 4)
 		Temp = Left(Temp, INSTR(Temp, ")") - 1)
 		If FV = 0 Then
 			Original = "VAR(" + Temp + ")"
@@ -115,6 +115,8 @@ Sub PrepareBuiltIn
 	DFC = DFC + 1: gcDEF(DFC, 1) = "OSC": gcDEF(DFC, 2) = OSCType
 	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPPINS": gcDEF(DFC, 2) = Str(ChipPins)
 	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPRAM": gcDEF(DFC, 2) = Str(ChipRam)
+	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPWORDS": gcDEF(DFC, 2) = Str(ChipProg)
+	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPEEPROM": gcDEF(DFC, 2) = Str(ChipEEPROM)
 	If ModePIC Then DFC = DFC + 1: gcDEF(DFC, 1) = "PIC": gcDEF(DFC, 2) = ""
 	If ModeAVR Then
 		DFC = DFC + 1: gcDEF(DFC, 1) = "AVR": gcDEF(DFC, 2) = ""
