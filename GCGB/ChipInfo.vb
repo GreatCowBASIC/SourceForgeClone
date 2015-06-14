@@ -25,10 +25,38 @@ Imports System.Windows.Forms
 		Public Dim PortName As String
 		Public Dim PortBit As Integer
 		
+		Public Dim PinFunctions() As String
+		
 		Public Sub New(PinNo As Integer)
 			Me.PinNo = PinNo
 			PortBit = -1
 		End Sub
+		
+	End Class
+	
+	Public Class MemPageInfo
+		Public Dim StartLoc As Integer
+		Public Dim EndLoc As Integer
+	End Class
+	
+	Public Class SFRVar
+		
+		Public Sub New (Name As String, Location As Integer)
+			Me.Name = Name
+			Me.Location = Location
+		End Sub
+		
+		Public Dim Name As String
+		Public Dim Location As Integer
+		
+		'Some variables to allow faster simulation
+		'Public Dim IsPortRead As Boolean 'Not suitable for AVR
+		Public Dim IsPortRead As Boolean
+		Public Dim IsPortWrite As Boolean
+		Public Dim IsPortDir As Boolean '(aka TRIS)
+		Public Dim TrisVar As SFRVar 'Stores TRIS for PORT or LAT
+		Public Dim PortVar As SFRVar 'Stores PORT for LAT or TRIS
+		Public Dim LatVar As SFRVar 'Stores LAT for PORT or TRIS
 		
 	End Class
 	
@@ -50,11 +78,18 @@ Imports System.Windows.Forms
 		'Name of chip
 		Public Dim ChipName As String
 		
+		'Chip technical details
+		Public Dim ChipFamily As Integer
+		Public Dim ChipRAM As Integer
+		Public Dim ChipEEPROM As Integer
+		Public Dim ChipProgMem As Integer
+		Public Dim MaxAddress As Integer
+		Public Dim IntOscMHz As Single
+		
 		Public Dim ChipNotValid As Boolean
 		
 		'Misc chip data
 		Public Dim ADCInputs As Integer
-		Public Dim RAMBytes As Integer
 		
 		'Stores config settings
 		Public Dim ConfigSettings as List(Of ChipConfigOption)
@@ -62,8 +97,11 @@ Imports System.Windows.Forms
 		Public Dim PinCount As Integer
 		
 		'Stores special function registers
-		Public Dim SFRVars As Dictionary(Of String, Integer)
+		Public Dim SFRVars As Dictionary(Of String, SFRVar)
 		Public Dim SFRVarBits As Dictionary(Of String, SFRVarBit)
+		
+		'List of non-banked locations
+		Public Dim NoBankRAM As List(Of MemPageInfo)
 		
 		'Stores pinout
 		Public Dim PinList As List(Of ChipPinInfo)
@@ -88,9 +126,11 @@ Imports System.Windows.Forms
 	    	ConfigSettings = New List(Of ChipConfigOption)
 	    	InterruptList = New List(Of String)
 	    	PinList = New List(Of ChipPinInfo)
-	    	SFRVars = New Dictionary(Of String, Integer)(StringComparer.CurrentCultureIgnoreCase)
+	    	SFRVars = New Dictionary(Of String, SFRVar)(StringComparer.CurrentCultureIgnoreCase)
 	    	SFRVarBits = New Dictionary(Of String, SFRVarBit)(StringComparer.CurrentCultureIgnoreCase)
 	    	CurrentSection = ""
+	    	
+	    	NoBankRAM = New List(Of MemPageInfo)
 	    	
 	    	ADCInputs = 0
 	    	
@@ -123,13 +163,21 @@ Imports System.Windows.Forms
 			    				OpName = TempData.Substring(0, TempData.IndexOf("=")).Trim.ToUpper
 			    				OpData = TempData.Substring(TempData.IndexOf("=") + 1).Trim.ToUpper
 			    				
-			    				If OpName = "ADC" Then
-			    					ADCInputs = OpData
-			    				ElseIf OpName = "PINS" Then
-			    					PinCount = OpData
-			    				ElseIf OpName = "RAM" Then
-			    					RamBytes = OpData
-			    				End If
+			    				Select Case OpName
+			    					Case "FAMILY": ChipFamily = OpData
+			    					Case "PROG": ChipProgMem = OpData
+			    					Case "RAM": ChipRAM = OpData
+			    					Case "EEPROM": ChipEEPROM = OpData
+			    					Case "ADC": ADCInputs = OpData
+			    					Case "MAXADDRESS": MaxAddress = OpData
+			    					Case "INTOSC"
+			    						If OpData.IndexOf(",") <> -1 Then
+			    							IntOscMHz = OpData.Substring(0, OpData.IndexOf(","))
+			    						Else
+			    							IntOscMHz = OpData
+			    						End If
+			    					Case "PINS": PinCount = OpData
+			    				End Select
 			    				
 			    			End If
 		    			
@@ -137,7 +185,7 @@ Imports System.Windows.Forms
 		    			Else If CurrentSection = "[REGISTERS]" Then
 		    				If TempData.IndexOf(",") <> -1 Then
 		    					Dim LineSections() As String = TempData.Split(",")
-		    					SFRVars.Add(LineSections(0), LineSections(1))
+		    					SFRVars.Add(LineSections(0), New SFRVar(LineSections(0), LineSections(1)))
 		    				End If
 		    				
 		    			'SFR variable bits
@@ -170,6 +218,14 @@ Imports System.Windows.Forms
 		    					InterruptList.Add(TempData.Substring(0, TempData.IndexOf(":")).Trim)
 		    				End If
 		    				
+		    			Else If CurrentSection = "[NOBANKRAM]" Then
+		    				If TempData.IndexOf(":") <> -1 Then
+		    					Dim NewBank As New MemPageInfo
+		    					NewBank.StartLoc = LowLevel.Other2Dec(TempData.Substring(0, TempData.IndexOf(":")), 16)
+		    					NewBank.EndLoc = LowLevel.Other2Dec(TempData.Substring(TempData.IndexOf(":") + 1), 16)
+		    					NoBankRAM.Add(NewBank)
+		    				End If
+		    			
 		    			Else If CurrentSection = "[PINS-DIP]" Or (Not PinsDipLoaded And CurrentSection.StartsWith("[PINS-")) Then
 		    				If TempData.IndexOf(",") <> -1 Then
 		    					'Split line at commas
@@ -196,6 +252,11 @@ Imports System.Windows.Forms
 			    						End If
 			    					End If
 		    					End With
+		    					
+		    					'Store list of all pin functions
+		    					NewPin.PinFunctions = PinFunctions
+		    					
+		    					'Add to list of pins
 		    					PinList.Add(NewPin)
 		    					
 		    				End If
@@ -236,6 +297,43 @@ Imports System.Windows.Forms
 			End If
 			
 			Return False
+		End Function
+		
+		Public Function GetSFR(VarName As String) As SFRVar
+			'Find SFRVar for VarName
+			'Return Nothing if not found
+			
+			If SFRVars.ContainsKey(VarName) Then
+				Return SFRVars(VarName)
+			Else
+				Return Nothing
+			End If
+			
+		End Function
+		
+		Public Function GetSFRLoc(VarName As String) As Integer
+			'Find location of VarName
+			'Return -1 if not found
+			
+			If SFRVars.ContainsKey(VarName) Then
+				Return SFRVars(VarName).Location
+			Else
+				Return -1
+			End If
+			
+		End Function
+		
+		'Public Function GetSFRBit(BitNameIn As String, Optional VarNameIn As String = "") As SFRVarBit
+		Public Function GetSFRBit(BitName As String) As SFRVarBit
+			'Find location of BitName
+			'Return Nothing if not found
+			
+			If SFRVarBits.ContainsKey(BitName) Then
+				Return SFRVarBits(BitName)
+			Else
+				Return Nothing
+			End If
+			
 		End Function
 		
 	End Class
