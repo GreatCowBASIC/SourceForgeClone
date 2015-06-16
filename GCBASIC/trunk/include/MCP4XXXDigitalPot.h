@@ -24,11 +24,11 @@
 ''':
 '''@author 		EvanV
 '''@licence		GPL
-'''@version		1.00
+'''@version		1.01
 '''@date   		June 2015
 '''********************************************************************************
 
-
+'''1.01	  Changed read time from 3 ms to 3950 us
 
 
   #ifdef AVR
@@ -126,7 +126,8 @@ sub  DigitalWriteMemory ( in MCPValue as Word, optional MCPAddress = DigitalPot_
     Set DigitalPot_CS On
     'Delaying when  eeprom address memory
     if ( ( MCPAddress = 2 ) or ( MCPAddress = 3 ) or ( MCPAddress > 5 ) ) then
-        wait 3 ms
+        wait 3950 us
+
         wait while DigitalReadMemory ( 5 ).4 = 1
     end if
 end sub

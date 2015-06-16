@@ -8,7 +8,18 @@
 ''':
 '''This library is broadly compatible with the other devices in this series.
 '''They are: Microchip MCP4131, MCP4132, MCP4231, MCP4232, MCP4141, MCP4142, MCP4241, MCP4242, MCP4151, MCP4152, MCP4251, MCP4252, MCP4161, MCP4162, MCP4261, MCP4262.
-
+''':
+'''This also shows all commands including how to set the wiper position.
+''':
+'''Commands are:
+'''			DigitalPotIncrement
+'''			DigitalPotDecrement
+'''			DigitalReadMemory ( RAM or EEProm address [0-15] )
+'''			DigitalWriteMemory ( 9bit number [0-511], EEProm address [6-15] )
+'''			DigitalPotSetWiperPosition  ( 0 to 128 | 0 to 256 )
+''':
+'''Warning: Do not DigitalWriteMemory ( 4 ) without refering to the DataSheet.  Writing to this address may stop the device from operating as expected.
+''':
 '''@author 		EvanV
 '''@licence		GPL
 '''@version		1.00
