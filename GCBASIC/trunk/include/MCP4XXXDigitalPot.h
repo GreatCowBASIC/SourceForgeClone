@@ -24,11 +24,12 @@
 ''':
 '''@author 		EvanV
 '''@licence		GPL
-'''@version		1.01
+'''@version		1.02
 '''@date   		June 2015
 '''********************************************************************************
 
 '''1.01	  Changed read time from 3 ms to 3950 us
+'''1.02   Documentation added 
 
 
   #ifdef AVR
@@ -47,7 +48,7 @@
     #define DigitalPot_DI 	portc.4
   #endif
 
-	#define DigitalPot_ADR_WIPER0       0B00000000
+  #define DigitalPot_ADR_WIPER0       0B00000000
   #define DigitalPot_ADR_WIPER1       0B00010000
 
   #define DigitalPot_CMD_READ         0B00001100
@@ -59,20 +60,19 @@
   #define DigitalPot_TCON_REGISTER    0B00000100
   #define DigitalPot_STATUS_REGISTER  0B00000101
 
-  #define DigitalPot_VOLATILE_INC   	0B00000100
-	#define DigitalPot_VOLATILE_DEC   	0B00001000
+  #define DigitalPot_VOLATILE_INC     0B00000100
+  #define DigitalPot_VOLATILE_DEC     0B00001000
 
 
 sub MCP4XXXInit
 
   #ifdef _MCP4XXXSoftwareSPI
-
-	' Four ports are required for SW SPI
+    ' Four ports are required for SW SPI
     Dir DigitalPot_DI in
     Dir DigitalPot_DO Out
     Dir DigitalPot_SCK Out
     Dir DigitalPot_CS out
-	' Initial state of ports required for SW SPI
+    ' Initial state of ports required for SW SPI
     set DigitalPot_DO off
     set DigitalPot_SCK off
     set DigitalPot_CS off
@@ -86,6 +86,7 @@ sub MCP4XXXInit
     Dir DigitalPot_DO Out
     Dir DigitalPot_SCK Out
     Dir DigitalPot_CS out
+    'Default -  can be changed in main program
     SPIMode MasterFast, 0
   #endif
 
@@ -93,26 +94,34 @@ sub MCP4XXXInit
 
 end sub
 
-'Returns a 9bit value
+'''Read a word value from the device 
+'''@param MCPValue.  The value to written to device. Valid addresses are [0-9]
+'''@return a 9-bit value in a WORD variable
 function DigitalReadMemory ( optional in MCPValue = DigitalPot_ADR_WIPER0 ) as Word
 
     MCPTemp = DigitalPot_CMD_READ + ( MCPValue * 16 )
 
+    'Handle the memory addresses correcrtly - these registers only return an 8 bit value.	
     if ( ( MCPValue <> DigitalPot_TCON_REGISTER ) and  ( MCPValue <> DigitalPot_STATUS_REGISTER ) ) then
-      MCPTemp = MCPTemp or 0x01
+        MCPTemp = MCPTemp or 0x01
     end if
 
     Set DigitalPot_CS Off
-    SPITransfer( MCPTemp, DigitalReadMemory_h )  'Send command
-    SPITransfer( 0xff, [BYTE]DigitalReadMemory ) 'Data
+    SPITransfer( MCPTemp, DigitalReadMemory_h )  'Send adddress
+    SPITransfer( 0xff, [BYTE]DigitalReadMemory ) 'Get Data
     Set DigitalPot_CS On
-    'Return value
+    'Return value - 9 bit value
     DigitalReadMemory   = DigitalReadMemory & 0x01ff
 
 end Function
 
 
+'Define a simple user name to this method.
 #define DigitalPotSetWiperPosition DigitalWriteMemory
+
+'''Write a word value to the device 
+'''@param MCPValue.  The value to written to device
+'''@param MCPAddress. An optional memory address [0-15], default to 0. Beware of writing to memory address 4 without referring to datasheet
 sub  DigitalWriteMemory ( in MCPValue as Word, optional MCPAddress = DigitalPot_ADR_VOLATILE )
 
     Dim MCPTemp as Word
@@ -121,32 +130,35 @@ sub  DigitalWriteMemory ( in MCPValue as Word, optional MCPAddress = DigitalPot_
     MCPTemp =  MCPTemp + ( MCPValue & 0x1FF )
 
     Set DigitalPot_CS Off
-    SPITransfer( ( MCPTemp_h ) , temp )
-    SPITransfer( [byte]MCPTemp , temp )
+    SPITransfer( ( MCPTemp_h ) , MCPResult )
+    SPITransfer( [byte]MCPTemp , MCPResult )
     Set DigitalPot_CS On
-    'Delaying when  eeprom address memory
+    'Delaying when  eeprom address memory - do not add delay when not EEPROM
     if ( ( MCPAddress = 2 ) or ( MCPAddress = 3 ) or ( MCPAddress > 5 ) ) then
         wait 3950 us
-
-        wait while DigitalReadMemory ( 5 ).4 = 1
+	'Examine status to ensure write has completed
+        wait while DigitalReadMemory ( DigitalPot_STATUS_REGISTER ).4 = 1
     end if
 end sub
 
 
+'''Decrement Pot Wiper 
 sub  DigitalPotIncrement
     Set DigitalPot_CS Off
     SPITransfer(DigitalPot_VOLATILE_INC, MCPValue)
     Set DigitalPot_CS On
 end sub
 
+'''Increment Pot Wiper 
 sub  DigitalPotDecrement
     Set DigitalPot_CS Off
     SPITransfer(DigitalPot_VOLATILE_DEC, MCPValue)
     Set DigitalPot_CS On
 end sub
 
-
+'Redefine SPITransfer so we can support hardware and software SPI
 #define SPITransfer SWSPITransfer
+'''@hide
 sub  SWSPITransfer( IN DigitalPotSendByte as byte, OUT DigitalPotTempOut as byte )
 
   #ifdef _MCP4XXXHardwareSPI
@@ -160,7 +172,7 @@ sub  SWSPITransfer( IN DigitalPotSendByte as byte, OUT DigitalPotTempOut as byte
     Dir DigitalPot_SCK Out
     Dir DigitalPot_CS out
 
-  	DigitalPotTempOut = 0
+    DigitalPotTempOut = 0
     set DigitalPot_SCK Off
 
     repeat 8
@@ -176,7 +188,7 @@ sub  SWSPITransfer( IN DigitalPotSendByte as byte, OUT DigitalPotTempOut as byte
       rotate DigitalPotSendByte left
 
 
-			rotate DigitalPotTempOut left
+      rotate DigitalPotTempOut left
       if DigitalPot_DI = On then
         set DigitalPotTempOut.0 On
       Else
