@@ -13,7 +13,7 @@
 '''Commands are:
 '''			DigitalPotIncrement
 '''			DigitalPotDecrement
-'''			DigitalReadMemory ( RAM or EEProm address [0-15 )
+'''			DigitalReadMemory ( RAM or EEProm address [0-15] )
 '''			DigitalWriteMemory ( 9bit number [0-511], EEProm address [6-15] )
 '''			DigitalPotSetWiperPosition  ( 0 to 128 | 0 to 256 )
 ''':
