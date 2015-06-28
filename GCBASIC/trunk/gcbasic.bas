@@ -141,6 +141,7 @@ Type DataTableType
 	Origin As String
 	StoreLoc As Integer '0 = Flash, 1 = Data EEPROM
 	Used As Integer
+	SourceFile As String 'Used if table loaded from file
 	
 	RawItems As LinkedListElement Pointer
 	CurrItem As LinkedListElement Pointer
@@ -425,6 +426,7 @@ Declare Sub MakeSFR (UserVar As String, SFRAddress As Integer)
 
 'Subs in preprocessor.bi
 Declare Function CheckSysVarDef(ConditionIn As String) As String
+Declare Sub LoadTableFromFile(DataTable As DataTableType Pointer)
 DECLARE SUB PrepareBuiltIn ()
 DECLARE SUB PreProcessor ()
 Declare Sub ReadTableValues
@@ -576,7 +578,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-06-14"
+Version = "0.94 2015-06-29"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
