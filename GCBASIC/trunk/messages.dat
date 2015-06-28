@@ -246,6 +246,7 @@ WarningPinNotOutput = "Pin %pin% cannot be used as an output"
 WarningNoAutoPinDir = "Direction of pin %pin% cannot be set automatically"
 WarningFixedLocBad = "Memory location specified for %var% may be invalid"
 WarningNameUsedSystem = "Variable name %name% is used for a system bit on the current chip"
+WarningTableFileNotFound = "Could not load %table% from %file%: File not found"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."

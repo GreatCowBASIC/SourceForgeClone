@@ -90,6 +90,34 @@ Function CheckSysVarDef(ConditionIn As String) As String
 	Return Condition
 End Function
 
+Sub LoadTableFromFile(DataTable As DataTableType Pointer)
+	'Read a data table from a file
+	Dim TempData As String
+	Dim DataIn As UByte
+	Dim FileNo As Integer
+	
+	'Check that table is passed in and that it has a source file
+	If DataTable = 0 Then Exit Sub
+	If Dir(DataTable->SourceFile) = "" Then
+		'Warning if file not found
+		TempData = Message("WarningTableFileNotFound")
+		Replace TempData, "%table%", DataTable->Name
+		Replace TempData, "%file%", DataTable->SourceFile
+		LogWarning(TempData, DataTable->Origin)
+		Exit Sub
+	End If
+	
+	'Open and read
+	FileNo = FreeFile
+	Open DataTable->SourceFile For Binary As FileNo
+	Do While Not Eof(FileNo)
+		Get #FileNo, , DataIn
+		DataTable->CurrItem = LinkedListInsert(DataTable->CurrItem, Str(DataIn))
+	Loop
+	Close #FileNo
+	
+End Sub
+
 Sub PrepareBuiltIn
 	
 	'Read built-in subs and constants
@@ -913,6 +941,7 @@ SUB PreProcessor
 						.Type = "BYTE"
 						.RawItems = LinkedListCreate
 						.CurrItem = .RawItems
+						.Items = 0
 						For T = 2 To LineTokens
 							'Get store location
 							If LineToken(T) = "STORE" Then
@@ -928,9 +957,13 @@ SUB PreProcessor
 							'Get type
 							ElseIf LineToken(T) = "AS" Then
 								.Type = LineToken(T + 1)
+							'Load table from file - get file and read
+							ElseIf LineToken(T) = "FROM" Then
+								.SourceFile = AddFullPath(GetString(";" + LineToken(T + 1), 0), ProgDir)
+								LoadTableFromFile @DataTable(DataTables)
+								S = 0
 							End If
 						Next
-						.Items = 0
 					End With
 					
 					GOTO LoadNextLine
