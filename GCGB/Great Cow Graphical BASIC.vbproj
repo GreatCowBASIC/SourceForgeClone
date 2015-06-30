@@ -324,6 +324,7 @@
       <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.HardwareSettings.resources</LogicalName>
       <DependentUpon>HardwareSettings.vb</DependentUpon>
     </EmbeddedResource>
+    <None Include="app.config" />
     <None Include="Great Cow Graphical BASIC.build" />
     <Content Include="Great Cow Graphical BASIC.cd" />
   </ItemGroup>
