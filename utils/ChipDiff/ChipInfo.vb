@@ -14,9 +14,31 @@ Imports System.IO
 
 ''Namespace Great_Cow_Graphical_BASIC
 
-	Public Class ChipConfigOption
+	Public Class ChipConfigBitMask
 		Public Dim Name As String
-		Public Dim Options() As String
+		Public Dim Word As Integer
+		Public Dim Value As Integer
+		
+		Public Sub New(Name As String, Word As Integer, Value As Integer)
+			Me.Name = Name
+			Me.Word = Word
+			Me.Value = Value
+		End Sub
+		
+		Public Overrides Function Equals(obj As Object) As Boolean
+			If Not TypeOf obj Is ChipConfigBitMask Then
+				Return False
+			End If
+			Dim OtherMask As ChipConfigBitMask = obj
+			
+			With OtherMask
+				Return Name = .Name And Word = .Word And Value = .Value
+			End With
+		End Function
+		
+		Public Overrides Function ToString() As String
+			Return Name + "," + Word.ToString + "," + Value.ToString
+		End Function
 	End Class
 	
 	Public Class ChipPinInfo
@@ -37,6 +59,10 @@ Imports System.IO
 	Public Class MemPageInfo
 		Public Dim StartLoc As Integer
 		Public Dim EndLoc As Integer
+		
+		Public Overrides Function ToString As String
+			Return StartLoc.ToString + ":" + EndLoc.ToString
+		End Function
 	End Class
 	
 	Public Class SFRVar
@@ -122,14 +148,19 @@ Imports System.IO
 		Public Dim GPR As Integer
 		Public Dim HardwareMult As Boolean
 		
-		Public Dim ChipNotValid As Boolean
+		Public Dim ChipNotValid As Boolean 'File definitely not usable
+		Public Dim ChipSuspect As Boolean 'File may not be usable
 		
 		'Misc chip data
 		Public Dim ADCInputs As Integer
 		
 		'Stores config settings
-		Public Dim ConfigSettings as List(Of ChipConfigOption)
+		Public Dim ConfigSettings as Dictionary(Of String, List(Of String))
 		Public Dim NoConfig As Integer
+		Public Dim DefaultConfig As Dictionary(Of String, String)
+		Public Dim ConfigMasks As List(Of Integer)
+		Public Dim ConfigBitMasks As Dictionary(Of String, ChipConfigBitMask)
+		
 		Public Dim PinCount As Integer
 		
 		'Stores special function registers
@@ -149,14 +180,20 @@ Imports System.IO
 		'Stores interrupts
 		Public Dim InterruptList As Dictionary(Of String, ChipInterrupt)
 		
-		Private Sub DisplayError(ErrorMessage As String)
+		Private Sub LogWarning(ErrorMessage As String)
+			ChipSuspect = True
+			Console.WriteLine(ChipName + ":" + ErrorMessage)
+		End Sub
+		
+		Private Sub LogError(ErrorMessage As String)
 			'MessageBox.Show(ErrorMessage, "Great Cow Graphical BASIC", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1)
-			Console.WriteLine(ErrorMessage)
+			ChipNotValid = True
+			Console.WriteLine(ChipName + ":" + ErrorMessage)
 		End Sub
 		
 		Public Sub New(SourceDir As String, ChipName As String)
 			Dim TempData, OpName, OpData, CurrentSection, ChipDataFile, PinName As String
-			Dim NewSetting As ChipConfigOption
+			'Dim NewSetting As ChipConfigOption
 			
 			'Flag to indicate whether DIP pinout has been loaded
 			'Should load DIP if possible, if not then load whatever else there is
@@ -171,15 +208,19 @@ Imports System.IO
 			ChipDataFile = SourceDir + ChipName.ToLower + ".dat"
 	    	NoConfig = 0
 	    	ChipNotValid = False
-	    	ConfigSettings = New List(Of ChipConfigOption)
 	    	InterruptList = New Dictionary(Of String, ChipInterrupt)(StringComparer.CurrentCultureIgnoreCase)
 	    	PinList = New List(Of ChipPinInfo)
 	    	SFRVars = New Dictionary(Of String, SFRVar)(StringComparer.CurrentCultureIgnoreCase)
 	    	SFRVarBits = New Dictionary(Of String, SFRVarBit)(StringComparer.CurrentCultureIgnoreCase)
-	    	CurrentSection = ""
 	    	
 	    	FreeRAM = New List(Of MemPageInfo)
 	    	NoBankRAM = New List(Of MemPageInfo)
+	    	ConfigSettings = New Dictionary(Of String, List(Of String))
+	    	DefaultConfig = New Dictionary(Of String, String)
+	    	ConfigMasks = New List(Of Integer)
+	    	ConfigBitMasks = New Dictionary(Of String, ChipConfigBitMask)
+	    	
+	    	CurrentSection = ""
 	    	
 	    	ADCInputs = 0
 	    	
@@ -244,7 +285,7 @@ Imports System.IO
 		    					Try
 		    						SFRVars.Add(LineSections(0), New SFRVar(LineSections(0), LineSections(1)))
 		    					Catch Ex As Exception
-		    						DisplayError("Error in chip data file, duplicate register " + LineSections(0))
+		    						LogWarning("Error in chip data file, duplicate register " + LineSections(0))
 		    					End Try
 		    				End If
 		    				
@@ -252,7 +293,11 @@ Imports System.IO
 		    			Else If CurrentSection = "[BITS]" Then
 		    				If TempData.IndexOf(",") <> -1 Then
 		    					Dim LineSections() As String = TempData.Split(",")
-		    					SFRVarBits.Add(LineSections(0), New SFRVarBit(LineSections(0), LineSections(1), LineSections(2)))
+		    					Try
+		    						SFRVarBits.Add(LineSections(0), New SFRVarBit(LineSections(0), LineSections(1), LineSections(2)))
+		    					Catch Ex As ArgumentException
+		    						LogWarning("Duplicate SFR bit " + LineSections(0))
+		    					End Try
 		    				End If
 		    			
 		    			'Config operations section
@@ -267,24 +312,56 @@ Imports System.IO
 			    				OpName = TempData.Substring(0, TempData.IndexOf("=")).Trim.ToUpper
 			    				OpData = TempData.Substring(TempData.IndexOf("=") + 1).Trim.ToUpper
 			    				
-			    				NewSetting = New ChipConfigOption
-			    				NewSetting.Name = OpName
-			    				NewSetting.Options = OpData.Split(",")
-			    				ConfigSettings.Add(NewSetting)
+			    				ConfigSettings.Add(OpName, New List(Of String)(OpData.Split(",")))
 			    			End If
+		    			
+		    			'ASM default config (only present in PIC18F)
+		    			Else If CurrentSection = "[ASMCONFIG]" Then
+		    				If TempData.IndexOf("=") <> -1 Then
+			    				OpName = TempData.Substring(0, TempData.IndexOf("=")).Trim.ToUpper
+			    				OpData = TempData.Substring(TempData.IndexOf("=") + 1).Trim.ToUpper
+			    				Try
+			    					DefaultConfig.Add(OpName, OpData)
+			    				Catch Ex As ArgumentException
+			    					LogWarning("Duplicate default config for " + OpName)
+			    				End Try
+			    			End If
+		    			
+		    			'Config word masks (only present in 18F)
+		    			Else If CurrentSection = "[CONFIGMASK]" Then
+		    				ConfigMasks.Add(Integer.Parse(TempData))
+		    				
+		    			'Config bit masks
+		    			Else If CurrentSection = "[CONFIG]" Then
+		    				If TempData.Contains(",") Then
+		    					Dim ConfigElements() As String = TempData.Split(",")
+		    					If ConfigElements.Length = 3 Then
+		    						Try
+		    							ConfigBitMasks.Add(ConfigElements(0), New ChipConfigBitMask(ConfigElements(0), ConfigElements(1), ConfigElements(2)))
+		    						Catch Ex As ArgumentException
+		    							LogWarning("Duplicate config option " + ConfigElements(0))
+		    						End Try
+		    					Else
+		    						LogWarning("Unrecognised config option " + TempData)
+		    					End If
+		    				End If
 		    			
 		    			Else If CurrentSection = "[INTERRUPTS]" Then
 		    				If TempData.IndexOf(":") <> -1 Then
 		    					'InterruptList.Add(TempData.Substring(0, TempData.IndexOf(":")).Trim)
 		    					Dim IntElements() As String
 		    					IntElements = TempData.Split(New Char(){",", ":"})
-		    					If IntElements.Length = 3 Then
-		    						InterruptList.Add(IntElements(0), New ChipInterrupt(IntElements(0), IntElements(1), IntElements(2)))
-		    					ElseIf IntElements.Length = 5 Then
-		    						InterruptList.Add(IntElements(0), New ChipInterrupt(IntElements(0), IntElements(1), IntElements(2), IntElements(3), IntElements(4)))
-		    					Else
-		    						Console.WriteLine("Unrecognised interrupt event")
-		    					End If
+		    					Try
+			    					If IntElements.Length = 3 Then
+			    						InterruptList.Add(IntElements(0), New ChipInterrupt(IntElements(0), IntElements(1), IntElements(2)))
+			    					ElseIf IntElements.Length = 5 Then
+			    						InterruptList.Add(IntElements(0), New ChipInterrupt(IntElements(0), IntElements(1), IntElements(2), IntElements(3), IntElements(4)))
+			    					Else
+			    						LogWarning("Unrecognised interrupt event " + TempData)
+			    					End If
+		    					Catch Ex As ArgumentException
+		    						LogWarning("Error in chip data file, duplicate interrupt " + IntElements(0))
+		    					End Try
 		    				End If
 		    			
 		    			Else If CurrentSection = "[FREERAM]" Then
@@ -348,8 +425,8 @@ Imports System.IO
 			Catch Ex As Exception
 				'If chip model isn't valid, show error once and set error flag
 				If Not ChipNotValid Then
-					DisplayError("The chip model currently selected for this program is not valid. Please check that the model of chip is correct.")
-					Console.WriteLine(ChipName + ":" + Ex.Message + Environment.NewLine + Ex.StackTrace)
+					LogWarning(Ex.Message + Environment.NewLine + Ex.StackTrace)
+					LogError("The chip model currently selected for this program is not valid. Please check that the model of chip is correct.")
 					ChipNotValid = True
 				End If
 			End Try
