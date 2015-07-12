@@ -37,6 +37,12 @@
 'Acquisition time. Can be reduced in some circumstances - see PIC manual for details
 #define AD_Delay 2 10us
 
+'Delay for AVR VRef capacitor charging from internal reference
+'Increase if reference voltage is too low, or decrease for faster readings
+'(ATmega328p datasheet suggests 70 us, but this isn't enough for Arduino)
+'Only applies whe AD_REF_SOURCE is AD_REF_256
+#define AD_VREF_DELAY 1 ms
+
 'Optimisation
 #define ADSpeed MediumSpeed
 
@@ -545,6 +551,10 @@ macro LLReadAD (ADLeftAdjust)
 		
 		'Take reading
 		Set ADEN On
+		'After turning on ADC, let internal Vref stabilise
+		If AD_REF_SOURCE = AD_REF_256 Then
+			Wait AD_VREF_DELAY
+		End If
 		Set ADSC On
 		Wait While ADSC On
 		Set ADEN Off
