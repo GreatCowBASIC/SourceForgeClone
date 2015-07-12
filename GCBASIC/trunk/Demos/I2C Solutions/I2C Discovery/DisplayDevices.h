@@ -6,7 +6,7 @@
 ;    Description.
 '    A support method for GCGB and GCB.
 '    Edit this file to add more devices.  This is used by the I2C discovery routines.
-'    Supports the hardware and software discovery routines.	
+'    Supports the hardware and software discovery routines.
 '
 
 ;    This file is part of the Great Cow Basic compiler.
@@ -33,6 +33,15 @@ Sub DisplayDevices
               Hserprint "IC2/Serial_Expander_Device"
          case 97
               Hserprint "GCB Slave Device"
+
+         case 113
+         			Hserprint "PCF8574T IC2/Serial_Expander_Device""    ' can be 113,115,117,119,121,123,125,127
+         case 115
+         			Hserprint "PCF8574T IC2/Serial_Expander_Device""    ' can be 113,115,117,119,121,123,125,127
+         case 127
+         			Hserprint "PCF8574T IC2/Serial_Expander_Device""    ' can be 113,115,117,119,121,123,125,127
+         case 121
+              Hserprint "IC2 OLED Display"
          case 161
               Hserprint "EEProm_Device_Device"
          case 163
@@ -49,6 +58,8 @@ Sub DisplayDevices
               Hserprint "EEProm_Device_Device"
          case 175
               Hserprint "EEProm_Device_Device"
+         case 193
+              HSerPrint "TEA5767 FM Radio"
          case 199
               Hserprint "AXE033 I2C LCD Device"
          case 209
