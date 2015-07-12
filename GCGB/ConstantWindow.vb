@@ -39,6 +39,9 @@ Public Partial Class ConstantWindow
 			For Each currRow In constantsView.Rows
 				newName = currRow.Cells(0).Value
 				newValue = currRow.Cells(1).Value
+				If newValue Is Nothing Then
+					newValue = ""
+				End If
 				If newName <> "" Then
 					.Constants.Add(New Setting(newName, newValue))
 				End If

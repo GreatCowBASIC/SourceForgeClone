@@ -1593,7 +1593,6 @@ Public Class GCBProgram
 					Dim Constant As Setting
 					Dim groupItem As String
 					For Each Constant In Constants
-						'For AddParams = 1 To MainForm.MaxCGRItems
 						For Each groupItem in thisConstGroup.Items
 							If Constant.Value.Trim.ToUpper = groupItem.ToUpper And ParamName <> Constant.Name Then
 								ParamListBox.Items.Add(Constant.Name.Trim)
@@ -1604,7 +1603,6 @@ Public Class GCBProgram
 					Dim CheckLib As LibraryType
 					For Each CheckLib In Libraries
 						For Each Constant In CheckLib.Constants
-							'For AddParams = 1 To MainForm.MaxCGRItems
 							For Each groupItem In thisConstGroup.Items
 								If Constant.Value.Trim.ToUpper = groupItem.ToUpper And ParamName <> Constant.Name Then
 									ParamListBox.Items.Add(Constant.Name.Trim)
