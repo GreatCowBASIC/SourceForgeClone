@@ -480,7 +480,7 @@ DIM SHARED As Integer APC, DFC, FVLC, FRLC, FALC, SBC, SLC, IFC, WSC, FLC, DLC, 
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
-Dim Shared As Integer ChipPins, UseChipOutLatches
+Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, SVC, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
@@ -578,7 +578,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-06-29"
+Version = "0.94 2015-07-21"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -591,6 +591,7 @@ MainProgramSize = 0
 StatsUsedRam = 0
 StatsUsedProgram = 0
 UseChipOutLatches = -1
+AutoContextSave = -1
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -1411,173 +1412,175 @@ Sub AddInterruptCode
 	
 	'Make list of all variables that may need saving
 	RegItems = 0
-	RegItems += 1: RegItem(RegItems) = "DelayTemp"
-	RegItems += 1: RegItem(RegItems) = "DelayTemp2"
-	RegItems += 1: RegItem(RegItems) = "SysDivMultX"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTempMS"
-	RegItems += 1: RegItem(RegItems) = "SysStringB"
-	RegItems += 1: RegItem(RegItems) = "SysDivMultX_H"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTempMS_H"
-	RegItems += 1: RegItem(RegItems) = "SysStringB_H"
-	RegItems += 1: RegItem(RegItems) = "SysDivLoop"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTemp10MS"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTempS"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTempUS"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTemp10US"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTempM"
-	RegItems += 1: RegItem(RegItems) = "SysStringLength"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTempUS_H"
-	RegItems += 1: RegItem(RegItems) = "SysWaitTempH"
-	RegItems += 1: RegItem(RegItems) = "SysDivMultA"
-	RegItems += 1: RegItem(RegItems) = "SysStringA"
-	RegItems += 1: RegItem(RegItems) = "SysDivMultA_H"
-	RegItems += 1: RegItem(RegItems) = "SysStringA_H"
-	RegItems += 1: RegItem(RegItems) = "SysDivMultB"
-	RegItems += 1: RegItem(RegItems) = "SysReadA"
-	RegItems += 1: RegItem(RegItems) = "SysDivMultB_H"
-	RegItems += 1: RegItem(RegItems) = "SysReadA_H"
-	RegItems += 1: RegItem(RegItems) = "SysSignByte"
-	
-	RegItems += 1: RegItem(RegItems) = "DataPointer"
-	
-	'Temporary calculation registers
-	'Need to do A, B, X for SysCalcTemp, SysByteTemp, SysWordTemp, SysIntTemp, SysLongTemp
-	Dim TempVarLetter(3) As String = {"A", "B", "X"}
-	Dim TempVarType(5) As String = {"Calc", "Byte", "Word", "Integer", "Long"}
-	Dim As Integer CurrLetter, CurrTypeNo, CurrByte
-	Dim As String CurrType, SaveRegName
-	For CurrLetter = 0 To 2
-		For CurrTypeNo = 0 To 4
-			CurrType = TempVarType(CurrTypeNo)
-			If CurrType = "Calc" Then CurrType = "Long"
-			For CurrByte = 1 To GetTypeSize(CurrType)
-				RegItems += 1: RegItem(RegItems) = GetByte("Sys" + TempVarType(CurrTypeNo) + "Temp" + TempVarLetter(CurrLetter), CurrByte - 1)
+	If AutoContextSave Then
+		RegItems += 1: RegItem(RegItems) = "DelayTemp"
+		RegItems += 1: RegItem(RegItems) = "DelayTemp2"
+		RegItems += 1: RegItem(RegItems) = "SysDivMultX"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTempMS"
+		RegItems += 1: RegItem(RegItems) = "SysStringB"
+		RegItems += 1: RegItem(RegItems) = "SysDivMultX_H"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTempMS_H"
+		RegItems += 1: RegItem(RegItems) = "SysStringB_H"
+		RegItems += 1: RegItem(RegItems) = "SysDivLoop"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTemp10MS"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTempS"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTempUS"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTemp10US"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTempM"
+		RegItems += 1: RegItem(RegItems) = "SysStringLength"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTempUS_H"
+		RegItems += 1: RegItem(RegItems) = "SysWaitTempH"
+		RegItems += 1: RegItem(RegItems) = "SysDivMultA"
+		RegItems += 1: RegItem(RegItems) = "SysStringA"
+		RegItems += 1: RegItem(RegItems) = "SysDivMultA_H"
+		RegItems += 1: RegItem(RegItems) = "SysStringA_H"
+		RegItems += 1: RegItem(RegItems) = "SysDivMultB"
+		RegItems += 1: RegItem(RegItems) = "SysReadA"
+		RegItems += 1: RegItem(RegItems) = "SysDivMultB_H"
+		RegItems += 1: RegItem(RegItems) = "SysReadA_H"
+		RegItems += 1: RegItem(RegItems) = "SysSignByte"
+		
+		RegItems += 1: RegItem(RegItems) = "DataPointer"
+		
+		'Temporary calculation registers
+		'Need to do A, B, X for SysCalcTemp, SysByteTemp, SysWordTemp, SysIntTemp, SysLongTemp
+		Dim TempVarLetter(3) As String = {"A", "B", "X"}
+		Dim TempVarType(5) As String = {"Calc", "Byte", "Word", "Integer", "Long"}
+		Dim As Integer CurrLetter, CurrTypeNo, CurrByte
+		Dim As String CurrType, SaveRegName
+		For CurrLetter = 0 To 2
+			For CurrTypeNo = 0 To 4
+				CurrType = TempVarType(CurrTypeNo)
+				If CurrType = "Calc" Then CurrType = "Long"
+				For CurrByte = 1 To GetTypeSize(CurrType)
+					RegItems += 1: RegItem(RegItems) = GetByte("Sys" + TempVarType(CurrTypeNo) + "Temp" + TempVarLetter(CurrLetter), CurrByte - 1)
+				Next
 			Next
 		Next
-	Next
-	
-	If ModePIC Then
-		RegItems += 1: RegItem(RegItems) = "SysIFTemp"
-		RegItems += 1: RegItem(RegItems) = "PCLATH"
-		If ChipFamily = 12 Or ChipFamily = 14 Then
-			RegItems += 1: RegItem(RegItems) = "FSR"
-		Else
-			RegItems += 1: RegItem(RegItems) = "FSR0"
-			RegItems += 1: RegItem(RegItems) = "FSR0H"
-			RegItems += 1: RegItem(RegItems) = "FSR1"
-			RegItems += 1: RegItem(RegItems) = "FSR1H"
-		End If
-	End If
-	
-	'Add calc vars to list
-	For SV = 1 to TCVC
-		With CalcVars(SV)
-			If .MaxType <> "" Then
-				For CurrBit = 0 To GetTypeSize(.MaxType) - 1
-					RegItems += 1: RegItem(RegItems) = GetByte("SysTemp" + Str(SV), CurrBit)
-				Next
+		
+		If ModePIC Then
+			RegItems += 1: RegItem(RegItems) = "SysIFTemp"
+			RegItems += 1: RegItem(RegItems) = "PCLATH"
+			If ChipFamily = 12 Or ChipFamily = 14 Then
+				RegItems += 1: RegItem(RegItems) = "FSR"
+			Else
+				RegItems += 1: RegItem(RegItems) = "FSR0"
+				RegItems += 1: RegItem(RegItems) = "FSR0H"
+				RegItems += 1: RegItem(RegItems) = "FSR1"
+				RegItems += 1: RegItem(RegItems) = "FSR1H"
 			End If
-		End With
-	Next
-	
-	'Get list for all vectors
-	SaveVars = LinkedListCreate
-	SaveVarPos = SaveVars
-	
-	'Search all handlers for registers
-	'When CurrVect = 0, check for Interrupt sub
-	For CurrVect = 0 To IntCount
-		HandlerID = 0
-		If CurrVect = 0 Then
-			HandlerID = LocationOfSub("Interrupt", "")
-		Else
-			With Interrupts(CurrVect)
-				If .Handler <> "" Then
-					'Handler is defined for vector
-					HandlerID = LocationOfSub(.Handler, "", "")
+		End If
+		
+		'Add calc vars to list
+		For SV = 1 to TCVC
+			With CalcVars(SV)
+				If .MaxType <> "" Then
+					For CurrBit = 0 To GetTypeSize(.MaxType) - 1
+						RegItems += 1: RegItem(RegItems) = GetByte("SysTemp" + Str(SV), CurrBit)
+					Next
 				End If
 			End With
-		End If
-				
-		If HandlerID > 0 Then
-			'Get all subroutines called from handler
-			HandlerSub = Subroutine(HandlerID)
-			HandlerSubs = GetCalledSubs(HandlerSub)
-			LinkedListInsert(HandlerSubs, HandlerSub)
-			'Scan through all handler subs
-			CurrCalled = HandlerSubs->Next
-			Do While CurrCalled <> 0
-				CalledSub = CurrCalled->MetaData
-				'Search sub lines
-				CurrLine = CalledSub->CodeStart->Next
-				Do While CurrLine <> 0
-					'Search line for variables to back up 
-					CurrReg = 1
-					Do While CurrReg <= RegItems
-						If WholeINSTR(CurrLine->Value, RegItem(CurrReg)) = 2 Then
-							SaveVarPos = LinkedListInsert(SaveVarPos, RegItem(CurrReg))
-							'Remove register from list, no need to keep looking for it
-							RegItem(CurrReg) = RegItem(RegItems)
-							RegItems -= 1
-							CurrReg -= 1
-						End If
-						CurrReg += 1
-					Loop
-					
-					'Some PIC only values that will need saving
-					If ModePIC Then
-						If WholeINSTR(CurrLine->Value, "lfsr") <> 0 Then
-							GetTokens(CurrLine->Value, TempData(), DataCount)
-							If LCase(TempData(1)) = "lfsr" Then
-								SaveVarPos = LinkedListInsert(SaveVarPos, "FSR" + TempData(2) + "L")
-								SaveVarPos = LinkedListInsert(SaveVarPos, "FSR" + TempData(2) + "H")
-							End If
-						ElseIf WholeINSTR(CurrLine->Value, "AFSR") = 1 Then
-							Temp = Mid(CurrLine->Value, InStr(UCase(CurrLine->Value), "AFSR"))
-							If Mid(Temp, 7, 1) = "H" Then
-								Temp = "FSR" + Mid(Temp, 5, 1) + Mid(Temp, 7, 1)
-							Else
-								Temp = "FSR" + Mid(Temp, 5, 1) + "L"
-							End If
-							SaveVarPos = LinkedListInsert(SaveVarPos, Temp)
-						End If
+		Next
+		
+		'Get list for all vectors
+		SaveVars = LinkedListCreate
+		SaveVarPos = SaveVars
+		
+		'Search all handlers for registers
+		'When CurrVect = 0, check for Interrupt sub
+		For CurrVect = 0 To IntCount
+			HandlerID = 0
+			If CurrVect = 0 Then
+				HandlerID = LocationOfSub("Interrupt", "")
+			Else
+				With Interrupts(CurrVect)
+					If .Handler <> "" Then
+						'Handler is defined for vector
+						HandlerID = LocationOfSub(.Handler, "", "")
 					End If
-					
-					CurrLine = CurrLine->Next
-				Loop
-				CurrCalled = CurrCalled->Next
-			Loop
-			
-		End If
-	Next
-	
-	'Always save PCLATH
-	PCHUsed = 0
-	If ChipFamily = 14 Or ChipFamily = 15 Then
-		If HasSFR("PCLATH") Then
-			SaveVarPos = LinkedListInsert(SaveVarPos, "PCLATH")
-			PCHUsed = -1
-		End If
-	End If
-	
-	'Delete variables that share location with another saved var
-	SearchA = SaveVars->Next
-	Do While SearchA <> 0
-		SearchB = SearchA->Next
-		Do While SearchB <> 0
-			'A and B share location, remove B
-			If GetRegisterLoc(SearchA->Value) = GetRegisterLoc(SearchB->Value) Then
-				If (Left(SearchA->Value, 7) <> "SysTemp" And GetRegisterLoc(SearchA->Value) <> -1) Or _
-					LCase(SearchA->Value) = LCase(SearchB->Value) Then
-					SearchB = LinkedListDelete(SearchB)
-				End If
+				End With
 			End If
-			
-			SearchB = SearchB->Next
+					
+			If HandlerID > 0 Then
+				'Get all subroutines called from handler
+				HandlerSub = Subroutine(HandlerID)
+				HandlerSubs = GetCalledSubs(HandlerSub)
+				LinkedListInsert(HandlerSubs, HandlerSub)
+				'Scan through all handler subs
+				CurrCalled = HandlerSubs->Next
+				Do While CurrCalled <> 0
+					CalledSub = CurrCalled->MetaData
+					'Search sub lines
+					CurrLine = CalledSub->CodeStart->Next
+					Do While CurrLine <> 0
+						'Search line for variables to back up 
+						CurrReg = 1
+						Do While CurrReg <= RegItems
+							If WholeINSTR(CurrLine->Value, RegItem(CurrReg)) = 2 Then
+								SaveVarPos = LinkedListInsert(SaveVarPos, RegItem(CurrReg))
+								'Remove register from list, no need to keep looking for it
+								RegItem(CurrReg) = RegItem(RegItems)
+								RegItems -= 1
+								CurrReg -= 1
+							End If
+							CurrReg += 1
+						Loop
+						
+						'Some PIC only values that will need saving
+						If ModePIC Then
+							If WholeINSTR(CurrLine->Value, "lfsr") <> 0 Then
+								GetTokens(CurrLine->Value, TempData(), DataCount)
+								If LCase(TempData(1)) = "lfsr" Then
+									SaveVarPos = LinkedListInsert(SaveVarPos, "FSR" + TempData(2) + "L")
+									SaveVarPos = LinkedListInsert(SaveVarPos, "FSR" + TempData(2) + "H")
+								End If
+							ElseIf WholeINSTR(CurrLine->Value, "AFSR") = 1 Then
+								Temp = Mid(CurrLine->Value, InStr(UCase(CurrLine->Value), "AFSR"))
+								If Mid(Temp, 7, 1) = "H" Then
+									Temp = "FSR" + Mid(Temp, 5, 1) + Mid(Temp, 7, 1)
+								Else
+									Temp = "FSR" + Mid(Temp, 5, 1) + "L"
+								End If
+								SaveVarPos = LinkedListInsert(SaveVarPos, Temp)
+							End If
+						End If
+						
+						CurrLine = CurrLine->Next
+					Loop
+					CurrCalled = CurrCalled->Next
+				Loop
+				
+			End If
+		Next
+		
+		'Always save PCLATH
+		PCHUsed = 0
+		If ChipFamily = 14 Or ChipFamily = 15 Then
+			If HasSFR("PCLATH") Then
+				SaveVarPos = LinkedListInsert(SaveVarPos, "PCLATH")
+				PCHUsed = -1
+			End If
+		End If
+		
+		'Delete variables that share location with another saved var
+		SearchA = SaveVars->Next
+		Do While SearchA <> 0
+			SearchB = SearchA->Next
+			Do While SearchB <> 0
+				'A and B share location, remove B
+				If GetRegisterLoc(SearchA->Value) = GetRegisterLoc(SearchB->Value) Then
+					If (Left(SearchA->Value, 7) <> "SysTemp" And GetRegisterLoc(SearchA->Value) <> -1) Or _
+						LCase(SearchA->Value) = LCase(SearchB->Value) Then
+						SearchB = LinkedListDelete(SearchB)
+					End If
+				End If
+				
+				SearchB = SearchB->Next
+			Loop
+			SearchA = SearchA->Next
 		Loop
-		SearchA = SearchA->Next
-	Loop
-	'Should now have a list of variables that need to be backed up before interrupt
+		'Should now have a list of variables that need to be backed up before interrupt
+	End If
 	
 	If ModePIC Then
 		'On PIC, need to add context save and On Int to start of interrupt routine
@@ -1606,56 +1609,61 @@ Sub AddInterruptCode
 			'Get code start
 			SubStart = .CodeStart
 		End With
+		CurrLine = SubStart
+		
+		'Add variable to store int on/off count
+		AddVar "SysIntOffCount", "BYTE", 1, 0, "REAL", ""
 		
 		'Add context save code
-		CurrLine = SubStart
-		AddVar "SysW", "BYTE", 1, 0, "REAL", ""
-		AddVar "SysSTATUS", "BYTE", 1, 0, "REAL", ""
-		AddVar "SysIntOffCount", "BYTE", 1, 0, "REAL", ""
-		'Variables to store registers
-		SaveVarPos = SaveVars->Next
-		Do While SaveVarPos <> 0
-			AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "")
-			SaveVarPos = SaveVarPos->Next
-		Loop
-		If ChipFamily = 14 Or ChipFamily = 15 Then
-			'Will need to put SysW, SysSTATUS into shared bank
-			CurrLine = LinkedListInsert(CurrLine, ";Save Context")
-			CurrLine = LinkedListInsert(CurrLine, " movwf SysW")
-			CurrLine = LinkedListInsert(CurrLine, " swapf STATUS,W")
-			CurrLine = LinkedListInsert(CurrLine, " movwf SysSTATUS")
-			If ChipFamily = 15 Then
+		If AutoContextSave Then
+			AddVar "SysW", "BYTE", 1, 0, "REAL", ""
+			AddVar "SysSTATUS", "BYTE", 1, 0, "REAL", ""
+			
+			'Variables to store registers
+			SaveVarPos = SaveVars->Next
+			Do While SaveVarPos <> 0
+				AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "")
+				SaveVarPos = SaveVarPos->Next
+			Loop
+			If ChipFamily = 14 Or ChipFamily = 15 Then
+				'Will need to put SysW, SysSTATUS into shared bank
+				CurrLine = LinkedListInsert(CurrLine, ";Save Context")
+				CurrLine = LinkedListInsert(CurrLine, " movwf SysW")
+				CurrLine = LinkedListInsert(CurrLine, " swapf STATUS,W")
+				CurrLine = LinkedListInsert(CurrLine, " movwf SysSTATUS")
+				If ChipFamily = 15 Then
+					AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
+					CurrLine = LinkedListInsert(CurrLine, " movf BSR,W")
+					CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
+					CurrLine = LinkedListInsert(CurrLine, " movwf SysBSR")
+				Else
+					CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
+				End If
+				CurrLine = LinkedListInsert(CurrLine, " incf SysIntOffCount,F")
+				CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
+				SaveVarPos = SaveVars->Next
+				Do While SaveVarPos <> 0
+					CurrLine = LinkedListInsert(CurrLine, " movf " + SaveVarPos->Value + ",W")
+					CurrLine = LinkedListInsert(CurrLine, " movwf Save" + SaveVarPos->Value)
+					SaveVarPos = SaveVarPos->Next
+				Loop
+				If PCHUsed Then
+					CurrLine = LinkedListInsert(CurrLine, " clrf PCLATH")
+				End If
+			ElseIf ChipFamily = 16 Then
 				AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
-				CurrLine = LinkedListInsert(CurrLine, " movf BSR,W")
-				CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
-				CurrLine = LinkedListInsert(CurrLine, " movwf SysBSR")
-			Else
-				CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
+				CurrLine = LinkedListInsert(CurrLine, ";Save Context")
+				CurrLine = LinkedListInsert(CurrLine, " movff WREG,SysW")
+				CurrLine = LinkedListInsert(CurrLine, " movff STATUS,SysSTATUS")
+				CurrLine = LinkedListInsert(CurrLine, " movff BSR,SysBSR")
+				CurrLine = LinkedListInsert(CurrLine, " incf SysIntOffCount,F")
+				CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
+				SaveVarPos = SaveVars->Next
+				Do While SaveVarPos <> 0
+					CurrLine = LinkedListInsert(CurrLine, " movff " + SaveVarPos->Value + ",Save" + SaveVarPos->Value)
+					SaveVarPos = SaveVarPos->Next
+				Loop
 			End If
-			CurrLine = LinkedListInsert(CurrLine, " incf SysIntOffCount,F")
-			CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
-			SaveVarPos = SaveVars->Next
-			Do While SaveVarPos <> 0
-				CurrLine = LinkedListInsert(CurrLine, " movf " + SaveVarPos->Value + ",W")
-				CurrLine = LinkedListInsert(CurrLine, " movwf Save" + SaveVarPos->Value)
-				SaveVarPos = SaveVarPos->Next
-			Loop
-			If PCHUsed Then
-				CurrLine = LinkedListInsert(CurrLine, " clrf PCLATH")
-			End If
-		ElseIf ChipFamily = 16 Then
-			AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
-			CurrLine = LinkedListInsert(CurrLine, ";Save Context")
-			CurrLine = LinkedListInsert(CurrLine, " movff WREG,SysW")
-			CurrLine = LinkedListInsert(CurrLine, " movff STATUS,SysSTATUS")
-			CurrLine = LinkedListInsert(CurrLine, " movff BSR,SysBSR")
-			CurrLine = LinkedListInsert(CurrLine, " incf SysIntOffCount,F")
-			CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
-			SaveVarPos = SaveVars->Next
-			Do While SaveVarPos <> 0
-				CurrLine = LinkedListInsert(CurrLine, " movff " + SaveVarPos->Value + ",Save" + SaveVarPos->Value)
-				SaveVarPos = SaveVarPos->Next
-			Loop
 		End If
 		
 		'Add On Interrupt generated code
@@ -1672,118 +1680,133 @@ Sub AddInterruptCode
 		'Add context restore code
 		CurrLine = SubEnd
 		CurrLine = LinkedListInsert(CurrLine, "INTERRUPTDONE")
-		CurrLine = LinkedListInsert(CurrLine, ";Restore Context")
-		If ChipFamily = 14 Or ChipFamily = 15 Then
-			CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
-			SaveVarPos = SaveVars->Next
-			Do While SaveVarPos <> 0
-				CurrLine = LinkedListInsert(CurrLine, " movf Save" + SaveVarPos->Value + ",W")
-				CurrLine = LinkedListInsert(CurrLine, " movwf " + SaveVarPos->Value)
-				SaveVarPos = SaveVarPos->Next
-			Loop
-			CurrLine = LinkedListInsert(CurrLine, " clrf SysIntOffCount")
-			If ChipFamily = 15 Then
-				AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
-				CurrLine = LinkedListInsert(CurrLine, " movf SysBSR,W")
-				CurrLine = LinkedListInsert(CurrLine, " movwf BSR")
+		If AutoContextSave Then
+			CurrLine = LinkedListInsert(CurrLine, ";Restore Context")
+			If ChipFamily = 14 Or ChipFamily = 15 Then
+				CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
+				SaveVarPos = SaveVars->Next
+				Do While SaveVarPos <> 0
+					CurrLine = LinkedListInsert(CurrLine, " movf Save" + SaveVarPos->Value + ",W")
+					CurrLine = LinkedListInsert(CurrLine, " movwf " + SaveVarPos->Value)
+					SaveVarPos = SaveVarPos->Next
+				Loop
+				CurrLine = LinkedListInsert(CurrLine, " clrf SysIntOffCount")
+				If ChipFamily = 15 Then
+					AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
+					CurrLine = LinkedListInsert(CurrLine, " movf SysBSR,W")
+					CurrLine = LinkedListInsert(CurrLine, " movwf BSR")
+				End If
+				CurrLine = LinkedListInsert(CurrLine, " swapf SysSTATUS,W")
+				CurrLine = LinkedListInsert(CurrLine, " movwf STATUS")
+				CurrLine = LinkedListInsert(CurrLine, " swapf SysW,F")
+				CurrLine = LinkedListInsert(CurrLine, " swapf SysW,W")
+				CurrLine = LinkedListInsert(CurrLine, " retfie")
+			ElseIf ChipFamily = 16 Then
+				CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
+				SaveVarPos = SaveVars->Next
+				Do While SaveVarPos <> 0
+					CurrLine = LinkedListInsert(CurrLine, " movff Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
+					SaveVarPos = SaveVarPos->Next
+				Loop
+				CurrLine = LinkedListInsert(CurrLine, " clrf SysIntOffCount")
+				CurrLine = LinkedListInsert(CurrLine, " movff SysW,WREG")
+				CurrLine = LinkedListInsert(CurrLine, " movff SysSTATUS,STATUS")
+				CurrLine = LinkedListInsert(CurrLine, " movff SysBSR,BSR")
+				CurrLine = LinkedListInsert(CurrLine, " retfie 0")
 			End If
-			CurrLine = LinkedListInsert(CurrLine, " swapf SysSTATUS,W")
-			CurrLine = LinkedListInsert(CurrLine, " movwf STATUS")
-			CurrLine = LinkedListInsert(CurrLine, " swapf SysW,F")
-			CurrLine = LinkedListInsert(CurrLine, " swapf SysW,W")
-			CurrLine = LinkedListInsert(CurrLine, " retfie")
-		ElseIf ChipFamily = 16 Then
-			CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
-			SaveVarPos = SaveVars->Next
-			Do While SaveVarPos <> 0
-				CurrLine = LinkedListInsert(CurrLine, " movff Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
-				SaveVarPos = SaveVarPos->Next
-			Loop
-			CurrLine = LinkedListInsert(CurrLine, " clrf SysIntOffCount")
-			CurrLine = LinkedListInsert(CurrLine, " movff SysW,WREG")
-			CurrLine = LinkedListInsert(CurrLine, " movff SysSTATUS,STATUS")
-			CurrLine = LinkedListInsert(CurrLine, " movff SysBSR,BSR")
-			CurrLine = LinkedListInsert(CurrLine, " retfie 0")
+			
+		Else
+			'Do not save context, return
+			If ChipFamily = 14 Or ChipFamily = 15 Then
+				CurrLine = LinkedListInsert(CurrLine, " retfie")
+			ElseIf ChipFamily = 16 Then
+				CurrLine = LinkedListInsert(CurrLine, " retfie 0")
+			End If
 		End If
 		
 	ElseIf ModeAVR Then
 		'On AVR, need to add subs for context save/restore, and set up vectors to
 		'call correct handlers
 		
-		'Add variables
-		AddVar("SaveSysValueCopy", "BYTE", 1, 0, "REAL", "")
-		AddVar("SaveSREG", "BYTE", 1, 0, "REAL", "")
-		AddVar("SysIntOffCount", "BYTE", 1, 0, "REAL", "")
-		'Variables to store registers
-		SaveVarPos = SaveVars->Next
-		Do While SaveVarPos <> 0
-			AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "")
-			SaveVarPos = SaveVarPos->Next
-		Loop
+		'Add variable to store int on/off count
+		AddVar "SysIntOffCount", "BYTE", 1, 0, "REAL", ""
 		
-		'Interrupt subs must go on first page
-		'Create context save sub
-		SBC += 1: Subroutine(SBC) = NewSubroutine("SysIntContextSave")
-		'Set up flags (required, not compiled, needs first page, needs return)
-		With *Subroutine(SBC)
-			.Required = -1
-			.Compiled = 0
-			.FirstPage = -1
-			.NoReturn = 0
-			SubStart = .CodeStart
-		End With
-		CurrLine = SubStart
-		'Add context save code
-		CurrLine = LinkedListInsert(CurrLine, ";Store SysValueCopy")
-		CurrLine = LinkedListInsert(CurrLine, " sts SaveSysValueCopy,SysValueCopy")
-		CurrLine = LinkedListInsert(CurrLine, ";Store SREG")
-		CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy,SREG")
-		CurrLine = LinkedListInsert(CurrLine, " sts SaveSREG,SysValueCopy")
-		'Store all registers
-		CurrLine = LinkedListInsert(CurrLine, ";Store registers")
-		SaveVarPos = SaveVars->Next
-		Do While SaveVarPos <> 0
-			CurrLine = LinkedListInsert(CurrLine, " sts Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
-			SaveVarPos = SaveVarPos->Next
-		Loop
-		CurrLine = LinkedListInsert(CurrLine, ";Prevent interrupt from being re-enabled")
-		'CurrLine = LinkedListInsert(CurrLine, " clr SysValueCopy")
-		'CurrLine = LinkedListInsert(CurrLine, " inc SysValueCopy")
-		CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,1")
-		CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
-		'Compile the sub
-		CompileSubroutine(Subroutine(SBC))
-		
-		'Create context restore sub
-		SBC += 1: Subroutine(SBC) = NewSubroutine("SysIntContextRestore")
-		'Set up flags (required, not compiled, needs first page, no return)
-		With *Subroutine(SBC)
-			.Required = -1
-			.Compiled = 0
-			.FirstPage = -1
-			.NoReturn = -1
-			SubStart = .CodeStart
-		End With
-		CurrLine = SubStart
-		'Add context restore code
-		CurrLine = LinkedListInsert(CurrLine, ";Allow interrupt to be re-enabled")
-		CurrLine = LinkedListInsert(CurrLine, " clr SysValueCopy")
-		CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
-		'Restore all registers
-		CurrLine = LinkedListInsert(CurrLine, ";Restore registers")
-		SaveVarPos = SaveVars->Next
-		Do While SaveVarPos <> 0
-			CurrLine = LinkedListInsert(CurrLine, " lds " + SaveVarPos->Value + ",Save" + SaveVarPos->Value)
-			SaveVarPos = SaveVarPos->Next
-		Loop
-		CurrLine = LinkedListInsert(CurrLine, ";Restore SREG")
-		CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy,SaveSREG")
-		CurrLine = LinkedListInsert(CurrLine, " out SREG,SysValueCopy")
-		CurrLine = LinkedListInsert(CurrLine, ";Restore SysValueCopy")
-		CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy,SaveSysValueCopy")
-		CurrLine = LinkedListInsert(CurrLine, " reti")
-		'Compile the sub
-		CompileSubroutine(Subroutine(SBC))
+		If AutoContextSave Then
+			'Add variables
+			AddVar("SaveSysValueCopy", "BYTE", 1, 0, "REAL", "")
+			AddVar("SaveSREG", "BYTE", 1, 0, "REAL", "")
+			
+			'Variables to store registers
+			SaveVarPos = SaveVars->Next
+			Do While SaveVarPos <> 0
+				AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "")
+				SaveVarPos = SaveVarPos->Next
+			Loop
+			
+			'Interrupt subs must go on first page
+			'Create context save sub
+			SBC += 1: Subroutine(SBC) = NewSubroutine("SysIntContextSave")
+			'Set up flags (required, not compiled, needs first page, needs return)
+			With *Subroutine(SBC)
+				.Required = -1
+				.Compiled = 0
+				.FirstPage = -1
+				.NoReturn = 0
+				SubStart = .CodeStart
+			End With
+			CurrLine = SubStart
+			'Add context save code
+			CurrLine = LinkedListInsert(CurrLine, ";Store SysValueCopy")
+			CurrLine = LinkedListInsert(CurrLine, " sts SaveSysValueCopy,SysValueCopy")
+			CurrLine = LinkedListInsert(CurrLine, ";Store SREG")
+			CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy,SREG")
+			CurrLine = LinkedListInsert(CurrLine, " sts SaveSREG,SysValueCopy")
+			'Store all registers
+			CurrLine = LinkedListInsert(CurrLine, ";Store registers")
+			SaveVarPos = SaveVars->Next
+			Do While SaveVarPos <> 0
+				CurrLine = LinkedListInsert(CurrLine, " sts Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
+				SaveVarPos = SaveVarPos->Next
+			Loop
+			CurrLine = LinkedListInsert(CurrLine, ";Prevent interrupt from being re-enabled")
+			'CurrLine = LinkedListInsert(CurrLine, " clr SysValueCopy")
+			'CurrLine = LinkedListInsert(CurrLine, " inc SysValueCopy")
+			CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,1")
+			CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
+			'Compile the sub
+			CompileSubroutine(Subroutine(SBC))
+			
+			'Create context restore sub
+			SBC += 1: Subroutine(SBC) = NewSubroutine("SysIntContextRestore")
+			'Set up flags (required, not compiled, needs first page, no return)
+			With *Subroutine(SBC)
+				.Required = -1
+				.Compiled = 0
+				.FirstPage = -1
+				.NoReturn = -1
+				SubStart = .CodeStart
+			End With
+			CurrLine = SubStart
+			'Add context restore code
+			CurrLine = LinkedListInsert(CurrLine, ";Allow interrupt to be re-enabled")
+			CurrLine = LinkedListInsert(CurrLine, " clr SysValueCopy")
+			CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
+			'Restore all registers
+			CurrLine = LinkedListInsert(CurrLine, ";Restore registers")
+			SaveVarPos = SaveVars->Next
+			Do While SaveVarPos <> 0
+				CurrLine = LinkedListInsert(CurrLine, " lds " + SaveVarPos->Value + ",Save" + SaveVarPos->Value)
+				SaveVarPos = SaveVarPos->Next
+			Loop
+			CurrLine = LinkedListInsert(CurrLine, ";Restore SREG")
+			CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy,SaveSREG")
+			CurrLine = LinkedListInsert(CurrLine, " out SREG,SysValueCopy")
+			CurrLine = LinkedListInsert(CurrLine, ";Restore SysValueCopy")
+			CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy,SaveSysValueCopy")
+			CurrLine = LinkedListInsert(CurrLine, " reti")
+			'Compile the sub
+			CompileSubroutine(Subroutine(SBC))
+		End If
 		
 		'Create subs for On Interrupt events
 		For CurrVect = 1 To IntCount
@@ -1796,15 +1819,44 @@ Sub AddInterruptCode
 					Subroutine(SBC)->NoReturn = -1
 					CurrLine = Subroutine(SBC)->CodeStart
 					
-					CurrLine = LinkedListInsert(CurrLine, " rcall SysIntContextSave")
+					If AutoContextSave Then CurrLine = LinkedListInsert(CurrLine, " rcall SysIntContextSave")
 					CurrLine = LinkedListInsert(CurrLine, " rcall " + .Handler)
 					If .FlagBit <> "" Then
 						CurrLine = LinkedListInsertList(CurrLine, GenerateBitSet(.FlagBit, "0", ""))
 					End If
-					CurrLine = LinkedListInsert(CurrLine," rjmp SysIntContextRestore")
+					If AutoContextSave Then
+						CurrLine = LinkedListInsert(CurrLine," rjmp SysIntContextRestore")
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " reti")
+					End If
 				End If
 			End With
 		Next
+		
+		'Add appropriate return and context save and restore to user Interrupt routine
+		IntSubLoc = LocationOfSub("Interrupt", "")
+		If IntSubLoc <> 0 Then
+			'No return needed
+			Subroutine(IntSubLoc)->NoReturn = -1
+			
+			'Add save
+			CurrLine = Subroutine(IntSubLoc)->CodeStart
+			If AutoContextSave Then CurrLine = LinkedListInsert(CurrLine, " rcall SysIntContextSave")
+			
+			'Add context restore code
+			Do While CurrLine <> 0
+				SubEnd = CurrLine
+				CurrLine = CurrLine->Next
+			Loop
+			CurrLine = SubEnd
+			CurrLine = LinkedListInsert(CurrLine, "INTERRUPTDONE")
+			If AutoContextSave Then
+				CurrLine = LinkedListInsert(CurrLine," rjmp SysIntContextRestore")
+			Else
+				CurrLine = LinkedListInsert(CurrLine, " reti")
+			End If
+			
+		End If
 		
 	ElseIf ModeZ8 Then
 		'Z8 can use vectors, so same as AVR
@@ -4629,8 +4681,8 @@ SUB CompileDir (CompSub As SubType Pointer)
 							End If
 						End If
 					ElseIf ModeAVR Then
-						CurrLine->Value = " ldi SysValueCopy,0"
-						CurrLine = LinkedListInsert(CurrLine, " out " + VarName + ",SysValueCopy")
+						CurrLine = LinkedListDelete(CurrLine)
+						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("0", VarName, Origin))
 					End If
 					
 				ElseIf Direction = "OUT" THEN
@@ -4642,8 +4694,8 @@ SUB CompileDir (CompSub As SubType Pointer)
 							CurrLine->Value = " clrf " + VarName
 						End If
 					ElseIf ModeAVR Then
-						CurrLine->Value = " ldi SysValueCopy,255"
-						CurrLine = LinkedListInsert(CurrLine, " out " + VarName + ",SysValueCopy")
+						CurrLine = LinkedListDelete(CurrLine)
+						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("255", VarName, Origin))
 					End If
 					
 				Else
@@ -4705,8 +4757,8 @@ SUB CompileDir (CompSub As SubType Pointer)
 				End If
 				
 				'Generate code
-				Replace VarName, ".", ","
 				If ModePIC Then
+					Replace VarName, ".", ","
 					If Direction = "IN" Then
 						CurrLine->Value = " bsf " + VarName
 					ElseIf Direction = "OUT" Then
@@ -4715,10 +4767,11 @@ SUB CompileDir (CompSub As SubType Pointer)
 						LogError Message("BadDirection"), Origin
 					End If
 				ElseIf ModeAVR Then
+					CurrLine = LinkedListDelete(CurrLine)
 					If Direction = "IN" Then
-						CurrLine->Value = " cbi " + VarName
+						CurrLine = LinkedListInsertList(CurrLine, GenerateBitSet(VarName, "0", Origin))
 					ElseIf Direction = "OUT" Then
-						CurrLine->Value = " sbi " + VarName
+						CurrLine = LinkedListInsertList(CurrLine, GenerateBitSet(VarName, "1", Origin))
 					Else
 						LogError Message("BadDirection"), Origin
 					End If
@@ -11589,9 +11642,9 @@ Sub OptimiseCalls
 					If Left(CurrLine->Value, 2) = " r" Or Left(CurrLine->Value, 2) = " b" Then IsRelative = -1
 				End If
 				
-				'If chip has 8192 or less bytes program memory, use r* exclusively
+				'If chip has 4096 or less words program memory, use r* exclusively
 				'Otherwise, alter as needed
-				If (ModeAVR And ChipProg <= 8192) Or (ChipFamily = 16 And ChipProg < 2048) Then
+				If (ModeAVR And ChipProg <= 4096) Or (ChipFamily = 16 And ChipProg < 2048) Then
 					UseRelative = -1
 				Else
 					UseRelative = 0
@@ -12616,26 +12669,43 @@ End Sub
 Sub ReadOptions(OptionsIn As String)
 	'Process #option statements
 	
-	Dim As String OptionElement(100)
-	Dim As Integer OptionElements, CurrElement
+	Dim As String OutMessage, OptionElement(100)
+	Dim As Integer OptionElements, CurrElement, SkipNext
 	
 	'Set defaults
 	Bootloader = 0
 	
 	'Get settings
 	GetTokens(OptionsIn, OptionElement(), OptionElements)
+	SkipNext = 0
 	For CurrElement = 1 To OptionElements
-		'Get bootloader setting
-		If OptionElement(CurrElement) = "BOOTLOADER" Then
-			If OptionElements > CurrElement Then
-				If IsConst(OptionElement(CurrElement + 1)) Then
-					Bootloader = MakeDec(OptionElement(CurrElement + 1))
+		If SkipNext Then
+			SkipNext = 0
+			
+		Else
+			'Get bootloader setting
+			If OptionElement(CurrElement) = "BOOTLOADER" Then
+				If OptionElements > CurrElement Then
+					If IsConst(OptionElement(CurrElement + 1)) Then
+						Bootloader = MakeDec(OptionElement(CurrElement + 1))
+						SkipNext = -1
+					End If
 				End If
+			
+			'Disable automatic use of output latches?	
+			ElseIf OptionElement(CurrElement) = "NOLATCH" Then
+				UseChipOutLatches = 0
+				
+			'Disable automatic interrupt context save/restore?
+			ElseIf OptionElement(CurrElement) = "NOCONTEXTSAVE" Then	
+				AutoContextSave = 0
+				
+			'Unrecognised option
+			Else
+				OutMessage = Message("WarningBadOption")
+				Replace OutMessage, "%option%", OptionElement(CurrElement)
+				LogWarning(OutMessage, "")
 			End If
-		
-		'Disable automatic use of output latches?	
-		ElseIf OptionElement(CurrElement) = "NOLATCH" Then
-			UseChipOutLatches = 0
 		End If
 		
 	Next
@@ -13031,7 +13101,7 @@ Sub ValueChanged(VarName As String, VarValue As String)
 End Sub
 
 Sub WriteAssembly
-	Dim As String Temp, VarDecLine
+	Dim As String Temp, VarDecLine, AddedBits, BitName
 	Dim As Integer PD, AddSFR, FindSREG
 	Dim As LinkedListElement Pointer CurrLine
 	
@@ -13081,7 +13151,12 @@ Sub WriteAssembly
 		Print #1, ";SREG bit names (for AVR Assembler compatibility, GCBASIC uses different names)"
 		For FindSREG = 1 To SVBC
 			If UCASE(SysVarBits(FindSREG).Parent) = "SREG" Then
-				Print #1, "#define " + SysVarBits(FindSREG).Name + " " + Str(SysVarBits(FindSREG).Location) 
+				'Get letter of bit (C, Z, etc)
+				BitName = Right(SysVarBits(FindSREG).Name, 1)
+				If InStr(AddedBits, BitName) = 0 Then
+					Print #1, "#define " + BitName + " " + Str(SysVarBits(FindSREG).Location)
+				End If
+				AddedBits += BitName
 			End If
 		Next
 	
