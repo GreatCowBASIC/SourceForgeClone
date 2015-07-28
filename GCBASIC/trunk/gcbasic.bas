@@ -578,7 +578,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-07-21"
+Version = "0.94 2015-07-28"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7281,9 +7281,13 @@ Sub CompileTables
 							'Retrieve item
 							If LastNonZeroElement >= 0 Then
 								CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
-								CurrLine = LinkedListInsert(CurrLine, " addlw low (1 + " + Table + ")")
+								CurrLine = LinkedListInsert(CurrLine, " addlw low " + Table)
 								CurrLine = LinkedListInsert(CurrLine, " movwf SysStringA")
-								CurrLine = LinkedListInsert(CurrLine, " movlw high " + Table)
+								If ChipFamily = 15 Then
+									CurrLine = LinkedListInsert(CurrLine, " movlw (high " + Table + ") & 127")
+								Else
+									CurrLine = LinkedListInsert(CurrLine, " movlw high " + Table)
+								End If
 								CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
 								CurrLine = LinkedListInsert(CurrLine, " addlw 1")
 								If LargeTable Then
@@ -7291,8 +7295,8 @@ Sub CompileTables
 								End If
 								CurrLine = LinkedListInsert(CurrLine, " movwf PCLATH")
 								CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
-								CurrLine = LinkedListInsert(CurrLine, Table)
 								CurrLine = LinkedListInsert(CurrLine, " movwf PCL")
+								CurrLine = LinkedListInsert(CurrLine, Table)
 							End If
 								
 		   				ElseIf ChipFamily = 16 Then
