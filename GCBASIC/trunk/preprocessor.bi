@@ -1663,7 +1663,7 @@ SUB RunScripts
 	Dim As String CO, COCR, OCO, TempData, OtherData, MoreData
 	Dim As String OutVar, Value, Origin
 	Dim As Integer PD, ReadScript, CondFalse, TL, FC, CD
-	Dim As Integer CurrSub
+	Dim As Integer CurrSub, IsError
 	Dim As LinkedListElement Pointer CurrLine
 	
 	Dim As LinkedListElement Pointer ScriptCode, ScriptCodePos
@@ -1751,8 +1751,14 @@ SUB RunScripts
 		END IF
 		
 		'ERROR
-		IF Left(CO, 6) = "ERROR " THEN
-			TempData = Mid(COCR, 7)
+		IF Left(CO, 6) = "ERROR " Or Left(CO, 8) = "WARNING " Then
+			IsError = Left(CO, 6) = "ERROR "
+			If IsError Then
+				TempData = Mid(COCR, 7)
+			Else
+				TempData = Mid(COCR, 9)
+			End If
+			
 			Do While INSTR(TempData, ";STRING") <> 0
 				OtherData = Mid(TempData, INSTR(TempData, ";") + 1)
 				OtherData = ";" + Left(OtherData, INSTR(OtherData, ";"))
@@ -1765,7 +1771,11 @@ SUB RunScripts
 				Replace TempData, OtherData, Message(MoreData)
 			Loop
 			
-			LogError TempData
+			If IsError Then
+				LogError TempData
+			Else
+				LogWarning TempData
+			EndIf
 		END IF
 		
 		'CALCULATE

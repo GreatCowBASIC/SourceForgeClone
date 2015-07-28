@@ -1,6 +1,6 @@
 'English messages.dat for Great Cow BASIC
 'Original translation creator Hugh Considine
-'Translation last updated 17/2/2014 by Hugh Considine
+'Translation last updated 19/7/2015 by Hugh Considine
 
 'Common Messages
 AnyKey = "Press any key to continue"
@@ -41,7 +41,7 @@ End Block
 
 Block License
 Great Cow BASIC - A BASIC Compiler for microcontrollers
-Copyright (C) 2006 - 2014 Hugh Considine
+Copyright (C) 2006 - 2015 Hugh Considine
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -247,6 +247,7 @@ WarningNoAutoPinDir = "Direction of pin %pin% cannot be set automatically"
 WarningFixedLocBad = "Memory location specified for %var% may be invalid"
 WarningNameUsedSystem = "Variable name %name% is used for a system bit on the current chip"
 WarningTableFileNotFound = "Could not load %table% from %file%: File not found"
+WarningBadOption = "Unrecognised compiler option: %option%"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."
