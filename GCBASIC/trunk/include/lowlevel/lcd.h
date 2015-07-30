@@ -76,6 +76,14 @@
 ;    Changed init to support AVR
 ;    Changed backlight to support IC2 and Transistor support.
 ;    Revised to support multiple I2C.
+;
+;			Revised 31/07/2-15 to removed defines being defined when not needed.
+;
+
+
+
+
+
 ;    Uses
 '''Set LCD_10 to 10 for the YwRobot LCD1602 IIC V1 or the Sainsmart LCD_PIC I2C adapter
 '''Set LCD_10 to 12 for the Ywmjkdz I2C adapter with pot bent over top of chip
@@ -162,7 +170,10 @@
       i2c_lcd_d5 = i2c_lcd_byte.5
       i2c_lcd_d6 = i2c_lcd_byte.6
       i2c_lcd_d7 = i2c_lcd_byte.7
-
+      slow_us = 40
+      medium_us = 20
+      fast_us = 10
+			#define LCD_I2C_Address_1 0x4E
     end if
 
     '''Definition for mjkdz I2C adapter with pot bent over top of chip
@@ -176,7 +187,10 @@
       i2c_lcd_d5 = i2c_lcd_byte.1
       i2c_lcd_d6 = i2c_lcd_byte.2
       i2c_lcd_d7 = i2c_lcd_byte.3
-
+      slow_us = 40
+      medium_us = 20
+      fast_us = 10
+			#define LCD_I2C_Address_1 0x4E
     end if
 
 #endscript
@@ -393,14 +407,10 @@ sub InitLCD
           'I2C pcf8574 initialization routine
           '***********************************
           #IFDEF LCD_IO 10, 12
+
                 #ifndef LCD_I2C_Address_1
-                        #define LCD_I2C_Address_1 0x4E
+'                        #define LCD_I2C_Address_1 0x4E
                 #endif
-                #define slow_us 40
-                #define medium_us 20
-                #define fast_us 10
-                LCD_Backlight = LCD_Backlight_On_State
-                wait 2 s
 
                 #ifdef I2C_DATA
                   InitI2C       ;call to init i2c is required here!
@@ -409,7 +419,12 @@ sub InitLCD
                 #ifdef HI2C_DATA
                   HI2CMode Master    ;call to Master required to init I2C Baud Rate here!
                 #endif
-                repeat 2             ; called twice to ensure reset is complete.  Needed for cheap LCDs!!
+
+
+                LCD_Backlight = LCD_Backlight_On_State
+                wait 2 s
+
+                repeat 2             ; called to ensure reset is complete.  Needed for cheap LCDs!!
 
                 #ifdef LCD_I2C_Address_1
                        LCD_I2C_Address_Current = LCD_I2C_Address_1
