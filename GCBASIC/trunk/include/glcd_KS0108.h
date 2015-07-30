@@ -32,7 +32,7 @@
 ' 1/11/2014: Revised to support single controller.
 '    
 ' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
-'
+' 31/7/15	Added GLCDDirection test to invert display
 'Hardware settings
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_KS0108"
@@ -63,7 +63,7 @@ Sub InitGLCD_KS0108
                    #define KS0108ReadDelay   9     ; 2 normal usage, 3 for 32 mhz!
                    #define KS0108WriteDelay  1     ; 1 normal usage, 0 works
                    #define KS0108ClockDelay  1     ; 1 normal usage, 0 works
-
+                   #define GLCDDirection     0     ; 0 normal mode
 
 		'Set pin directions
 		Dir GLCD_RS Out
@@ -192,6 +192,13 @@ Sub PSet_KS0108(In GLCDX, In GLCDY, In GLCDColour As Word)
 		'X is 0 to 127
 		'Y is 0 to 63
 		'Origin in top left
+
+		#ifdef	GLCDDirection
+			if GLCDDirection=1 then
+				GLCDX=127-GLCDX
+				GLCDY=63-GLCDY
+			end if
+		#endif
 		
 		'Select screen half
 		If GLCDX.6 = Off Then Set GLCD_CS2 On:Set GLCD_CS1 off
