@@ -224,6 +224,7 @@ Sub InitGLCD_ST7920
               GLCDForeground = 1
               GLCDFontWidth = 6
               GLCDfntDefault = 0
+	      GLCDfntDefaultsize = 1
           #ENDIF
 
 	'Clear screen
