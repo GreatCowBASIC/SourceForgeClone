@@ -1,11 +1,27 @@
-  '
-  '    Created Evan R Venn - Jan 2014
-  '    Beta v0.91
+'    TEA5767 routines for the GCBASIC compiler
+'    Copyright (C) 2014 Evan Venn
 
-  ' This is the address of the generic device
-  ' this is 0011110b, I2C 7bit address of HMC5883L
-  #define HMC5883L_address 0x1E
+'    This library is free software; you can redistribute it and/or
+'    modify it under the terms of the GNU Lesser General Public
+'    License as published by the Free Software Foundation; either
+'    version 2.1 of the License, or (at your option) any later version.
 
+'    This library is distributed in the hope that it will be useful,
+'    but WITHOUT ANY WARRANTY; without even the implied warranty of
+'    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+'    Lesser General Public License for more details.
+
+'    You should have received a copy of the GNU Lesser General Public
+'    License along with this library; if not, write to the Free Software
+'    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+'
+'    Created Evan R Venn - Jan 2014 revised July 2015
+
+'		 This support the address of the generic device 0011110b, therefore
+'		 I2C 8bit address of HMC5883L is 0x3C.
+'		 Change in the main program to alternative addresses, if required
+
+  #define HMC5883L_address 0x3C
 
 
 
@@ -62,47 +78,41 @@
 
 
 
-
-
-  ' Examples #1
-  ' to be done
-
-
-
-  ' Examples #2
-  ' to be done
-
-
-
-
-
-
-
-
-
   ;Variables
   Dim HMC5883L_x As word
   Dim HMC5883L_y As word
   Dim HMC5883L_z As word
 
+	#startup Init_HMC5883L
 
+  Sub Init_HMC5883L ( Optional DeviceOpMode As Byte = HMC5843_MODE_CONVERSION_CONTINUOUS )
 
-  Sub Init_HMC5883L ( Optional DeviceOpMode As Byte = HMC5843_MODE_CONVERSION_CONTINUOU )
-
+	#ifdef I2C_DATA
      I2CSTART
      I2CSEND ( HMC5883L_address )
      I2CSEND ( HMC5843_MODE_REG )
      I2CSEND ( DeviceOpMode )
      I2CSTART
+  #endif
+
+  #ifdef HI2C_DATA
+     HI2CSTART
+     HI2CSEND ( HMC5883L_address )
+     HI2CSEND ( HMC5843_MODE_REG )
+     HI2CSEND ( DeviceOpMode )
+     HI2CSTART
+  #endif
 
   end sub
 
 
 
-  Sub Read_HMC5883L ( out HMC5883L_x, Out HMC5883L_y, Out HMC5883L_z)
+  Sub Read_HMC5883L ( out HMC5883L_x, Out HMC5883L_y, Out HMC5883L_z )
+
+	  #ifdef I2C_DATA
 
      I2CSTART
-     I2CSEND ( HMC5883L_address )
+     I2CSEND ( HMC5883L_address | 1 )
      I2CSEND ( HMC5843_MODE_CONVERSION_CONTINUOUS )
      I2CSTART
 
@@ -113,5 +123,23 @@
      I2CReceive ( HMC5883L_y_h )
      I2CReceive ( HMC5883L_y, NACK )
      I2CStop
+
+	#endif
+
+  #ifdef HI2C_DATA
+     HI2CSTART
+     HI2CSEND ( HMC5883L_address | 1 )
+     HI2CSEND ( HMC5843_MODE_CONVERSION_CONTINUOUS )
+     HI2CSTART
+
+     HI2CReceive ( HMC5883L_x_h )
+     HI2CReceive ( HMC5883L_x   )
+     HI2CReceive ( HMC5883L_z_h )
+     HI2CReceive ( HMC5883L_z   )
+     HI2CReceive ( HMC5883L_y_h )
+     HI2CReceive ( HMC5883L_y, NACK )
+     HI2CStop
+
+  #endif
 
   end sub
