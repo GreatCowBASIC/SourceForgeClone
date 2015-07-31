@@ -130,6 +130,7 @@ Dim GLCDForeground As Word
 '''Initialise the GLCD device
 Sub InitGLCD
     ' Empty sub DO NOT DELETE
+    GLCDfntDefaultsize = 1	
 end sub
 
 

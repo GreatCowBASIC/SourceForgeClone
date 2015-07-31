@@ -57,7 +57,8 @@ Sub InitGLCD_XXXXXX
 		'Colours
 		GLCDBackground = 0
 		GLCDForeground = 1
-                    GLCDFontWidth = 6
+                GLCDFontWidth = 6
+		GLCDfntDefaultsize = 1
 		
 	#endif
 	

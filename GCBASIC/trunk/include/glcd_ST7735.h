@@ -299,6 +299,7 @@ Sub InitGLCD_ST7735
                     ST7735_GLCD_HEIGHT = GLCD_HEIGHT
                     GLCDFontWidth = 6
                     GLCDfntDefault = 0
+		    GLCDfntDefaultsize = 1
 	#endif
 
           GLCDRotate ( PORTRAIT_REV )

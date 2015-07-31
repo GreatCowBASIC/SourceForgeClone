@@ -192,6 +192,7 @@ Sub InitGLCD_SSD1306
     GLCDForeground = 1
     GLCDFontWidth = 6
     GLCDfntDefault = 0
+    GLCDfntDefaultsize = 1
 
     'Clear screen
     GLCDCLS_SSD1306
