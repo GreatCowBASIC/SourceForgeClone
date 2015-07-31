@@ -10,18 +10,18 @@
 '''
 '''@author	EvanV
 '''@licence	GPL
-'''@version	1.00a
+'''@version	1.01a
 '''@date   	31.07.2015
 '''********************************************************************************
 
 ; ----- Configuration
 ' [todo] Change chip and speed
-  #chip 16F1938, 32
-  #config Osc = intOSC, MCLRE_OFF, PLLEN_ON, VCAPEN_OFF
+  #chip 16f1938,32
+  #config Osc = INT, VCAPEN_OFF, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
 
 	' Initialise HMC5883L device is automatic
   #include <HMC5883L.h>
-	#include <LCD2SerialRedirect.h>
+  #include <LCD2SerialRedirect.h>
 
 
   ; ----- Define Hardware settings
@@ -57,15 +57,15 @@
 		'This assumes you are using an ANSI compatible terminal.  Use PUTTY.EXE it is very easy.
     wait 1 s
     CLS
-    Locate ( 0, 2)
+    Locate ( 0, 0)
     Print "Started: "
     Print "HMC5883L"
 
-    do while ( true )
+    Do Forever
 
 
         Read_HMC5883L ( device_x, device_y, device_z )
-        Locate 0, 6
+        Locate 1, 0
         Print "Current Location "
 				'Note: This uses HEX() to ensure you only address the low byte of the word address.  If you want to both bytes use
     		' Print hex(device_x_h): Print hex(device_x) 'this will display 0000. Four hex digits.
