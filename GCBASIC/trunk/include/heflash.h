@@ -12,16 +12,16 @@
 '''
 '''The heflash.h library provide the following variables for the current
 '''list of chips supporting this design :
-'''  FLASH_ROWSIZE : size of a HEFM row. 16 or 32 words (byte variable)
-'''  HEFLASH_START : starting address of HEFM (word variable)
-'''  HEFLASH_END   : ending address of HEFM (word variable)
+'''  HEFLASH_ROWSIZE : size of a HEFM row. 16 or 32 words (byte variable)
+'''  HEFLASH_START   : starting address of HEFM (word variable)
+'''  HEFLASH_END     : ending address of HEFM (word variable)
 '''
 '''These are the user's oriented functions/subroutines:
-'''  HEFLASH_readBlock  : sub to read a HEFM row into a n bytes buffer array
-'''  HEFLASH_writeBlock : sub to write a buffer array of n bytes in a HEFM row
-'''  HEFLASH_readByte   : byte function to read a HEFM row at a given offset
-'''  HEFRead  : sub equivalent to EPRead sub for EEPROM
-'''  HEFWrite : sub equivalent to EPwrite sub for EEPROM
+'''  HEFreadBlock  : sub to read a HEFM row into a n bytes buffer array
+'''  HEFreadByte   : byte function to read a HEFM row at a given offset
+'''  HEFRead  	   : sub equivalent to EPRead sub for EEPROM
+'''  HEFwriteBlock : sub to write a buffer array of n bytes in a HEFM row
+'''  HEFWrite 	   : sub equivalent to EPWrite sub for EEPROM
 '''
 '''WORD OF CAUTION:
 '''Whenever you update the hex file of your PIC with your programmer you
@@ -35,65 +35,31 @@
 '''AN1673 "Using the PIC16F1XXX High-Endurance Flash (HEF) block
 '''by Lucio Di Jasio, 2014
 '''
+'''Log of version changes:
+'''1.0 Original release
+'''1.1 HEFWrite sub fixed
+'''1.2 Include inline comments. Hide internal functions
+'''1.3 FLASH_read/write made private. FLASH_readconfig removed.
+'''    Fews subs and var names changed for better consistency
+'''
 '''@author 	Jacques Nilo
 '''@licence	GPL
-'''@version	1.2
-'''@date   	31.05.2015
+'''@version	1.3
+'''@date   	05.06.2015
 '''*****************************************************************************
-
-; Define HEF Global variables
-dim HEFLASH_START,HEFLASH_END as word
-dim FLASH_ROWSIZE as Byte
-#startup HEFLASH_init
-
+;
+; Computes HEF global variables from *.dat file characteristics
+#script
+If ChipEEPROM = 0 And Var(PMDATH) And Bit(LWLO) Then
+    HEFLASH_END = ChipWords - 1
+    HEFLASH_START = HEFLASH_END - 127
+    HEFLASH_ROWSIZE = 16
+    If ChipWords > 2048 Then
+        HEFLASH_ROWSIZE = 32
+    End If
+End If
+#endscript
 '''@hide
-sub HEFLASH_init
-#ifdef Chip_12F1501
-  FLASH_ROWSIZE = 16
-  HEFLASH_START = 0x0380
-  HEFLASH_END = 0x03FF
-#endif
-#ifdef Oneof(Chip_16f1503, Chip_16f1507, Chip_16f1703, Chip_16f1707)
-  FLASH_ROWSIZE = 16
-  HEFLASH_START = 0x0780
-  HEFLASH_END = 0x07FF
-#endif
-#ifdef Chip_10f320
-  FLASH_ROWSIZE = 16
-  HEFLASH_START = 0x0080
-  HEFLASH_END = 0x00FF
-#endif
-#ifdef Chip_10f322
-  FLASH_ROWSIZE = 16
-  HEFLASH_START = 0x0180
-  HEFLASH_END = 0x01FF
-#endif
-#ifdef Oneof(Chip_16f1512, Chip_16f720)
-  FLASH_ROWSIZE = 32
-  HEFLASH_START = 0x0780
-  HEFLASH_END = 0x07FF
-#endif
-#ifdef Oneof(Chip_16f1508, Chip_16f1513, Chip_16f1704, Chip_16f1708)
-  FLASH_ROWSIZE = 32
-  HEFLASH_START = 0x0F80
-  HEFLASH_END = 0x0FFF
-#endif
-; ifdef statement cannot be splitted on different lines :-(
-#ifdef Oneof(Chip_16f1454, Chip_16f1455, Chip_16f1459, Chip_16f1509, Chip_16f1516, Chip_16f1517, Chip_16f1526, Chip_16f1705, Chip_16f1709)
-  FLASH_ROWSIZE = 32
-  HEFLASH_START = 0x1F80
-  HEFLASH_END = 0x1FFF
-#endif
-#ifdef Oneof(Chip_16f1518, Chip_16f1519, Chip_16f1527)
-  FLASH_ROWSIZE = 32
-  HEFLASH_START = 0x3F80
-  HEFLASH_END = 0x3FFF
-#endif
-end sub
-
-'''Read a word from HEFM
-'''@param FlashAddress HEFM source absolute address (word)
-'''@return memory value stored at absolute address specified by flashaddress (word)
 function FLASH_read(in FlashAddress as word) as word
 ;
 ; This word function returns the memory value stored at
@@ -103,24 +69,6 @@ function FLASH_read(in FlashAddress as word) as word
 Dim FlashAddress alias PMADRH,PMADRL
 Dim FLASH_read   alias PMDATH,PMDATL
 PMCON1.CFGS=0       'Select the Flash address space
-PMCON1.RD=1         'Read control bit on
-NOP
-NOP
-end function
-
-'''Read a word from configuration Flash memory
-'''@param FlashAddress source absolute address (word)
-'''@return memory value stored at absolute address specified by flashaddress (word)
-function FLASH_readconfig(in FlashAddress as word) as word
-;
-; This word function returns the memory value stored at
-; absolute address [Flashaddress] above 0x8000 where the
-; IDLOC, CONFIG bits and calibration data can be found
-; For experienced programmers only.
-;
-Dim FlashAddress     alias PMADRH,PMADRL
-Dim FLASH_readconfig alias PMDATH,PMDATL
-PMCON1.CFGS=1       'Select the configuration Flash address space
 PMCON1.RD=1         'Read control bit on
 NOP
 NOP
@@ -184,20 +132,20 @@ INTCON.GIE=old_gie      'Restore initial GIE state
 end sub
 
 '''Write a block of data to HEFM. (Lenght should be < row size)
-'''@param Flash_rel_addr HEFM block number (0,...,FLASH_ROWSIZE-1)
+'''@param Flash_rel_addr HEFM block number (0,...,HEFLASH_ROWSIZE-1)
 '''@param Flash_buffer HEFM block source buffer
-'''@param Flashcount # of bytes to write to HEFM block (<FLASH_ROWSIZE)
-sub HEFLASH_writeBlock(in Flash_rel_addr, in Flash_buffer(),in FlashCount)
+'''@param Flashcount # of bytes to write to HEFM block (<HEFLASH_ROWSIZE)
+sub HEFwriteBlock(in Flash_rel_addr, in Flash_buffer(),in FlashCount)
 ;
 ; This subroutine writes Flashcount bytes from the Flash_buffer() array
 ; at a given row # of the HEM
 ; row [Flash_rel_addr] is generally comprised between 0 and 3
 ; The writing starts at the begining at the first byte of the row
-; Flashcount must always be lower than FLASH_ROWSIZE
+; Flashcount must always be lower than HEFLASH_ROWSIZE
 ;
 Dim Flash_abs_addr as word
 ; Obtain absolute address if HEFlash row
-Flash_abs_addr=Flash_rel_addr*FLASH_ROWSIZE+HEFLASH_START
+Flash_abs_addr=Flash_rel_addr*HEFLASH_ROWSIZE+HEFLASH_START
 ; Erase the entire row
 FLASH_erase(Flash_abs_addr)
 index=0
@@ -214,19 +162,19 @@ end sub
 
 '''Read a block of data from HEFM. (Lenght should be < row size)
 '''@param Flash_buffer destination buffer (should be large enough)
-'''@param Flash_rel_addr HEFM block number (0,...,FLASH_ROWSIZE-1)
-'''@param Flashcount # of bytes to read from HEFM block (<FLASH_ROWSIZE)
-sub HEFLASH_readBlock(in Flash_buffer(),in Flash_rel_addr,in FlashCount)
+'''@param Flash_rel_addr HEFM block number (0,...,HEFLASH_ROWSIZE-1)
+'''@param Flashcount # of bytes to read from HEFM block (<HEFLASH_ROWSIZE)
+sub HEFreadBlock(in Flash_buffer(),in Flash_rel_addr,in FlashCount)
 ;
 ; This subroutine returns in Flash_buffer array the [Flashcount] byte values
 ; stored in HEM given its row #
 ; row [Flash_rel_addr] is generally comprised between 0 and 3
 ; The reading starts at the begining at the first byte of the row
-; Flashcount must therefore be always lower than FLASH_ROWSIZE
+; Flashcount must therefore be always lower than HEFLASH_ROWSIZE
 ;
 Dim Flash_abs_addr as word
 ; Obtain absolute address if HEFlash row
-Flash_abs_addr=Flash_rel_addr*FLASH_ROWSIZE+HEFLASH_START
+Flash_abs_addr=Flash_rel_addr*HEFLASH_ROWSIZE+HEFLASH_START
 index=1
 ; Read content
 do while FlashCount > 0
@@ -236,61 +184,60 @@ do while FlashCount > 0
 loop
 end sub
 
-'''Read a byte of data from HEFM 
-'''@param Flash_rel_addr HEFM block number (0,...,FLASH_ROWSIZE-1)
-'''@param Flash_offset offset within the HEFM block (<FLASH_ROWSIZE)
-'''@return Byte of data retrieved 
-function HEFLASH_readByte(in Flash_rel_addr, in Flash_offset) as byte
+'''Read a byte of data from HEFM
+'''@param Flash_rel_addr HEFM block number (0,...,HEFLASH_ROWSIZE-1)
+'''@param Flash_offset offset within the HEFM block (<HEFLASH_ROWSIZE)
+'''@return Byte of data retrieved
+function HEFreadByte(in Flash_rel_addr, in Flash_offset) as byte
 ;
 ; Returns the byte value stored in HEM given row # and offset #
 ; row [Flash_rel_addr] is generally comprised between 0 and 3
-; offset [Flash_offset] cannot be greater than FLASH_ROWSIZE
+; offset [Flash_offset] cannot be greater than HEFLASH_ROWSIZE
 ;
 Dim Flash_abs_addr as word
 ; Add offset into HEFlash memory
-Flash_abs_addr=Flash_rel_addr*FLASH_ROWSIZE+HEFLASH_START+Flash_offset
+Flash_abs_addr=Flash_rel_addr*HEFLASH_ROWSIZE+HEFLASH_START+Flash_offset
 ; Read content
-HEFLASH_readByte=FLASH_Read(Flash_abs_addr)
+HEFreadByte=FLASH_Read(Flash_abs_addr)
 end function
 
-'''Read a byte of data from HEFM 
-'''@param location relative adress within global HEFM (0,...,127)
-'''@param Flash_data Byte of data retrieved
-sub HEFRead(in location, out Flash_data)
+'''Read a byte of data from HEFM
+'''@param HEFaddress relative adress within global HEFM (0,...,127)
+'''@param HEFDataValue Byte of data retrieved
+sub HEFRead(in HEFaddress, out HEFDataValue)
 ;
-; This subroutine returns in Flash_data the byte value stored in HEM
-; at relative location [location] with 0 being the first HEM location
-; location must generally be comprised between 0 and 127
-; The syntax is therefore similar to the EEPROM subroutine
+; This subroutine returns in HEFDataValue the byte value stored in HEFM
+; at relative location [HEFaddress] with 0 being the first HEFM location
+; HEFaddress is generally be comprised between 0 and 127
+; The syntax is therefore similar to the EPRead subroutine
 ;
-Flash_rel_addr = location / FLASH_ROWSIZE
-Flash_offset = location % FLASH_ROWSIZE
-Flash_data = HEFLASH_readByte(Flash_rel_addr,Flash_offset)
+Flash_rel_addr = HEFaddress / HEFLASH_ROWSIZE
+Flash_offset = HEFaddress % HEFLASH_ROWSIZE
+HEFDataValue = HEFreadByte(Flash_rel_addr,Flash_offset)
 end sub
 
 '''Write a byte of data to HEFM. Remaining block data kept unchanged
-'''@param location relative adress within global HEFM (0,...,127)
-'''@param Flash_data Byte of data to be written
-sub HEFwrite(in location, in Flash_data)
+'''@param HEFaddress relative adress within global HEFM (0,...,127)
+'''@param HEFDataValue Byte of data to be written
+sub HEFwrite(in HEFaddress, in HEFDataValue)
 ;
-; This subroutine write the byte data [Flash_data] in HEM
-; at relative location [location] with 0 being the first HEM location
-; location must generally be comprised between 0 and 127
-; The syntax is therefore similar to the EEPROM subroutine
-; The data already existing in the row of [location] are preserved
+; This subroutine write the byte data [HEFDataValue] in HEFM
+; at relative location [HEFaddress] with 0 being the first HEFM location
+; HEFaddress is generally be comprised between 0 and 127
+; The syntax is therefore similar to the EPWrite subroutine
+; The data already existing in the row of [HEFaddress] are preserved
 ; If you need to save several data at once in the same row the
 ; HEFLASH_writeBlock subroutine will be more efficient
 ;
-; It would be good to be able to declare dim Flash_TempBuffer(FLASH_ROWSIZE)...
-dim Flash_TempBuffer(32)
+dim HEFTempBuffer(HEFLASH_ROWSIZE)
 ; Compute row #
-Flash_rel_addr = location / FLASH_ROWSIZE
+Flash_rel_addr = HEFaddress / HEFLASH_ROWSIZE
 ; Compute offset # in row
-Flash_offset = location % FLASH_ROWSIZE
+Flash_offset = HEFaddress % HEFLASH_ROWSIZE
 ; Save data previously stored in row #
-HEFLASH_readBlock(Flash_TempBuffer(),Flash_rel_addr,FLASH_ROWSIZE)
-; Update row buffer with Flash_data at offset
-Flash_TempBuffer(Flash_offset+1)=Flash_data
+HEFreadBlock(HEFTempBuffer(),Flash_rel_addr,HEFLASH_ROWSIZE)
+; Update row buffer with HEFDataValue at offset
+HEFTempBuffer(Flash_offset+1)=HEFDataValue
 ; Write back the updated row buffer in HEFM
-HEFLASH_writeBlock(Flash_rel_addr,Flash_TempBuffer(),FLASH_ROWSIZE)
+HEFwriteBlock(Flash_rel_addr,HEFTempBuffer(),HEFLASH_ROWSIZE)
 end sub
