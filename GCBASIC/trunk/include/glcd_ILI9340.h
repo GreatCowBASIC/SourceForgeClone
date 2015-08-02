@@ -141,7 +141,7 @@
 #define ILI9340_NAVY    0x0010
 #define ILI9340_FUCHSIA 0xF81F
 
-dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
+
 
 
 #startup InitGLCD_ILI9340
@@ -151,6 +151,9 @@ dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
 
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9340
+
+	'	 Mapped to global variables to same RAM
+	'	dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
 
 
 	'Setup code for ILI9340 controllers
