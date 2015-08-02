@@ -30,8 +30,9 @@
 #define GLCD_HEIGHT 64
 dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define GLCDLineWidth 1
-'default font size
-GLCDfntDefaultsize = 1
+
+'''default font size
+'GLCDfntDefaultsize = 1
 
 
 ' Screen rotation
@@ -61,6 +62,10 @@ dim glcd_type_string as string * 7
 'Foreground and background colours
 Dim GLCDBackground As Word
 Dim GLCDForeground As Word
+'to minimise memory map to the these word variables
+Dim GLCDDeviceHeight as Word
+Dim GLCDDeviceWidth as Word
+
 
 #script
 
@@ -75,6 +80,8 @@ Dim GLCDForeground As Word
      glcd_type_string = "KS0108"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 64
+     KS0108_GLCD_HEIGHT = GLCDDeviceHeight
+     KS0108_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
 
@@ -87,6 +94,8 @@ Dim GLCDForeground As Word
      glcd_type_string = "SSD1306"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 64
+     SSD1306_GLCD_HEIGHT = GLCDDeviceHeight
+     SSD1306_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
 
@@ -105,6 +114,8 @@ Dim GLCDForeground As Word
      glcd_type_string = "ILI9340"
      GLCD_WIDTH = 240
      GLCD_HEIGHT = 320
+     ILI9340_GLCD_HEIGHT = GLCDDeviceHeight
+     ILI9340_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
 
@@ -122,10 +133,12 @@ Dim GLCDForeground As Word
      FilledCircle  = FilledCircle_SSD1289
      Line =  Line_SSD1289
      Pset = PSet_SSD1289
-	 GLCDRotate = GLCDRotate_SSD1289
+			GLCDRotate = GLCDRotate_SSD1289
      glcd_type_string = "SSD1289"
      GLCD_WIDTH = 240
      GLCD_HEIGHT = 320
+     SSD1289_GLCD_HEIGHT = GLCDDeviceHeight
+     SSD1289_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
 
@@ -141,6 +154,10 @@ Dim GLCDForeground As Word
      glcd_type_string = "ST7735"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 160
+     ST7735_GLCD_HEIGHT = GLCDDeviceHeight
+     ST7735_GLCD_WIDTH = GLCDDeviceWidth
+
+
   End If
 
   If GLCD_TYPE = GLCD_TYPE_ST7920 Then
@@ -154,6 +171,8 @@ Dim GLCDForeground As Word
      glcd_type_string = "ST7920"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 64
+     ST7920_GLCD_HEIGHT = GLCDDeviceHeight
+     ST7920_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
   If GLCD_TYPE = GLCD_TYPE_PCD8544 Then
@@ -169,6 +188,8 @@ Dim GLCDForeground As Word
      PCD8544ClockDelay = 0
      GLCD_WIDTH = 84
      GLCD_HEIGHT = 48
+     PCD8544_GLCD_HEIGHT = GLCDDeviceHeight
+     PCD8544_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
 	'Loads extended fonts set ASCII characters 31-254

@@ -26,7 +26,7 @@
 '             Added Defines and ST7735Rotation command
 ' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ST7735 device.
 ' 27/10/2014: Changed ST7735Rotation to GLCDRotate
-'    
+'
 ' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 '
 'Hardware settings
@@ -139,13 +139,15 @@
 #startup InitGLCD_ST7735
 
 
-dim ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT as byte
+
 
 
 '''Initialise the GLCD device
 Sub InitGLCD_ST7735
 
-	
+	'mapped to global variable
+	'dim ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT as byte
+
 	'Setup code for ST7735 controllers
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
 		'Pin directions
@@ -153,7 +155,7 @@ Sub InitGLCD_ST7735
                         Dir ST7735_CS Out
                         Dir ST7735_DC Out
                         Dir ST7735_RST Out
-    		
+
                         Dir ST7735_DI In
                         Dir ST7735_DO Out
                         Dir ST7735_SCK Out
@@ -164,12 +166,12 @@ Sub InitGLCD_ST7735
                         Dir _ST7735_CS Out
                         Dir _ST7735_DC Out
                         Dir _ST7735_RST Out
-    		
+
                         Dir _ST7735_DI In
                         Dir _ST7735_DO Out
                         Dir _ST7735_SCK Out
                     #endif
-		
+
                     #ifdef ST7735_HardwareSPI
                       ' harware SPI mode
                       SPIMode MasterFast, 0
@@ -189,8 +191,8 @@ Sub InitGLCD_ST7735
 
 		'Software reset
 		SendCommand_ST7735 ST7735_SWRESET
-		Wait 200 ms		
-		
+		Wait 200 ms
+
                     'Out of sleep mode
 		SendCommand_ST7735 ST7735_SLPOUT
 		Wait 200 ms
@@ -272,12 +274,12 @@ Sub InitGLCD_ST7735
                     SendCommand_ST7735(ST7735_PWCTR6);  // power control
                     SendData_ST7735(0x11);
                     SendData_ST7735(0x15);
-                    wait 10 ms;	
+                    wait 10 ms;
 
-                    	
+
 		'Gamma correction
 		'SetGammaCorrection_ST7735
-		
+
 		'Scanning direction
 		SendCommand_ST7735 0x36
 		SendData_ST7735 0xC8
@@ -289,7 +291,7 @@ Sub InitGLCD_ST7735
 		'Display on
 		SendCommand_ST7735 0x29
 		Wait 100 ms
-		
+
 		'Colours
 		GLCDBackground = ST7735_WHITE
 		GLCDForeground = ST7735_BLACK
@@ -305,7 +307,7 @@ Sub InitGLCD_ST7735
           GLCDRotate ( PORTRAIT_REV )
 	'Clear screen
 	GLCDCLS
-	
+
 End Sub
 
 
@@ -386,7 +388,7 @@ Sub FilledBox_ST7735(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Lin
 		LineY1 = LineY2
 		LineY2 = GLCDTemp
 	End If
-	
+
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
 		'Set address window
 		SetAddress_ST7735 ST7735_COLUMN, LineX1, LineX2
@@ -406,7 +408,7 @@ End Sub
 '''@param GLCDY Y coordinate of pixel
 '''@param GLCDColour State of pixel
 Sub PSet_ST7735(In GLCDX, In GLCDY, In GLCDColour As Word)
-	
+
 	#if GLCD_TYPE = GLCD_TYPE_ST7735
 		SetAddress_ST7735 ST7735_COLUMN, GLCDX, GLCDX
 		SetAddress_ST7735 ST7735_ROW, GLCDY, GLCDY
@@ -441,7 +443,7 @@ Sub Transfer_ST7735(In ST7735TempIn, Out ST7735TempOut)
 
     end repeat
     Wait 1 us
-    SET ST7735_SCK OFF	
+    SET ST7735_SCK OFF
 End Sub
 
 '''Send a command to the ST7735 GLCD
@@ -582,10 +584,10 @@ Sub SetGammaCorrection_ST7735
 
 	SendCommand_ST7735 0x26
 	SendData_ST7735 0x04
-	
+
 	SendCommand_ST7735 0xF2
 	SendData_ST7735 0x01
-	
+
 	'Send commands and values from table
 	For ST7735ByteNo = 1 to 32
 		ReadTable ST7735GammaCorrection, ST7735ByteNo, ST7735Byte
