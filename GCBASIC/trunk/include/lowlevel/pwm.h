@@ -24,17 +24,26 @@
 'COMMANDS UNUSABLE!
 '********************************************************************************
 
+'''Changed position of 'Dim PR2_Temp as word' to remove declaration of variables when not required
+
+
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
 #define PWM_Duty 50      'Duty cycle of PWM (%)
-Dim PR2_Temp as WORD     'Moved here from Line 144
-DIM CCPCONCache as BYTE  'Added 27.04.2105 - WMR
-CCPCONCache = 0          'Added 27.04.2015 = WMR
+
 
 
 #startup InitPWM
 
+
+
 Sub InitPWM
+
+  DIM CCPCONCache as BYTE  'Added 27.04.2105 - WMR
+  CCPCONCache = 0          'Added 27.04.2015 = WMR
+
+  Dim PR2_Temp as WORD     'Moved here from Line 144
+
 	'Script to calculate constants required for given Frequency and Duty Cycle
 	#script
 		  PR2Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
@@ -156,7 +165,7 @@ end sub
 
 sub HPWM (In PWMChannel, In PWMFreq, In PWMDuty)
 
-	'Dim PR2_Temp as word   'moved to top  - WMR
+	Dim PR2_Temp as word
 
 	'If HPWM_FAST operation selected, only recalculate timer prescaler when
 	'needed. Gives faster operation, but uses extra byte of RAM and may cause
