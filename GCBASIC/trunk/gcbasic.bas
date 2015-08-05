@@ -578,7 +578,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-07-28"
+Version = "0.94 2015-08-05"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1412,6 +1412,7 @@ Sub AddInterruptCode
 	
 	'Make list of all variables that may need saving
 	RegItems = 0
+	SaveVars = 0
 	If AutoContextSave Then
 		RegItems += 1: RegItem(RegItems) = "DelayTemp"
 		RegItems += 1: RegItem(RegItems) = "DelayTemp2"
@@ -1864,7 +1865,9 @@ Sub AddInterruptCode
 	End If	
 	
 	'Delete save list
-	LinkedListDeleteList(SaveVars, 0)
+	If SaveVars <> 0 Then
+		LinkedListDeleteList(SaveVars, 0)
+	End If
 	
 End Sub
 
@@ -6664,23 +6667,31 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 				'C = 3: Copy string/array reference
 				'C = 4: Copy string into temp array then pass reference
 				'C = 5: Concatenate strings, store in temp array, pass reference
-				C = 0
-				IF IsConst(.Param(CD, 1)) THEN C = 1
-				IF IsCalc(.Param(CD, 1)) THEN C = 2
-				IF INSTR((*.Called).Params(CD).Type, "$") <> 0 Or INSTR((*.Called).Params(CD).Type, "()") <> 0 Or (*.Called).Params(CD).Type = "STRING" Then
-					C = 3
-					If InStr(.Param(CD, 1), "+") Then C = 5
-				End If
-				'IF INSTR(.Param(CD, 1), ";STRING") <> 0 THEN
-				'Only search for ;STRING at start, not in middle!
-				IF INSTR(.Param(CD, 1), ";STRING") = 1 Then
-					Temp = StringStore(Val(MID(.Param(CD, 1), Instr(.Param(CD, 1), ";STRING") + 7))).Value
-					If Len(Temp) > 1 Or (INSTR((*.Called).Params(CD).Type, "$") <> 0 Or INSTR((*.Called).Params(CD).Type, "()") <> 0 Or (*.Called).Params(CD).Type = "STRING") Then
-						C = 4
+				'C = -1: Error
+				If .Param(CD, 1) <> "" Then
+					C = 0
+					IF IsConst(.Param(CD, 1)) THEN C = 1
+					IF IsCalc(.Param(CD, 1)) THEN C = 2
+					IF INSTR((*.Called).Params(CD).Type, "$") <> 0 Or INSTR((*.Called).Params(CD).Type, "()") <> 0 Or (*.Called).Params(CD).Type = "STRING" Then
+						C = 3
 						If InStr(.Param(CD, 1), "+") Then C = 5
-					Else
-						C = 1
 					End If
+					'IF INSTR(.Param(CD, 1), ";STRING") <> 0 THEN
+					'Only search for ;STRING at start, not in middle!
+					IF INSTR(.Param(CD, 1), ";STRING") = 1 Then
+						Temp = StringStore(Val(MID(.Param(CD, 1), Instr(.Param(CD, 1), ";STRING") + 7))).Value
+						If Len(Temp) > 1 Or (INSTR((*.Called).Params(CD).Type, "$") <> 0 Or INSTR((*.Called).Params(CD).Type, "()") <> 0 Or (*.Called).Params(CD).Type = "STRING") Then
+							C = 4
+							If InStr(.Param(CD, 1), "+") Then C = 5
+						Else
+							C = 1
+						End If
+					End If
+				Else
+					Temp = Message("MissingSubParam")
+					Replace Temp, "%param%", (*.Called).Params(CD).Name
+					LogError Temp, .Origin
+					C = -1
 				End If
 				
 				'Pass by copying
