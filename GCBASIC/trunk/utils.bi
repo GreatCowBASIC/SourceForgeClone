@@ -1422,6 +1422,11 @@ End Function
 Function LinkedListDeleteList (StartLoc As LinkedListElement Pointer, EndLoc As LinkedListElement Pointer) As LinkedListElement Pointer
 	Dim As LinkedListElement Pointer CurrLine, DeleteLine, LastLine
 	
+	If StartLoc = 0 Then
+		Print "Internal error in LinkedListDeleteList: No start location"
+		Return 0
+	End If
+	
 	'Remove items from list
 	'Fix next pointer of node before start
 	If StartLoc->Prev <> 0 Then

@@ -230,6 +230,7 @@ NextWithoutFor = "Next without matching For"
 FloatInDelay = "Found decimal point, but delays can only handle whole numbers"
 RepeatMissingCount = "No value given for Repeat"
 UndeclaredVar = "Variable %var% was not explicitly declared"
+MissingSubParam = "Missing value for parameter %param%"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"
