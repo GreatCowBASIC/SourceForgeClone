@@ -34,7 +34,9 @@
 ' 29/9/2013: Fixes for ATmega32u4
 ' 16/2/2104: Fixed HERPRINT Long Bug
 ' 28/6/2014: Changed HSerPrintCRLF to have a parameter... you can have lots of CRLF's
-' 4/7/15: Improved timing 	
+' 04/07/15:  Improved timing
+' 31/7/2105: Fix Compile Error for 16F1705 1709  and other Pics - WMR
+'            See lines 311 - 320
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -49,7 +51,7 @@
 
 'To slow down print, set this delay:
 '(Setting to 0 ms will remove all delays)
-#define USART_DELAY 1 ms
+#define USART_DELAY 12 ms
 
 'Some wrappers for compatibility with Contributors USART routines
 #define HserPrintByte HSerPrint
@@ -292,19 +294,32 @@ Sub HSerReceive(Out SerData)
 				Set CREN On
 			End If
 		#endif
+
 		#ifdef Var(RCREG1)
 			'Get a bytes from FIFO
 			If USARTHasData Then
 				SerData = RCREG1
 			End if
 
+			#ifdef bit(OEER1)
 			'Clear error
-			If OERR1 Then
-				Set CREN1 Off
-				Set CREN1 On
-			End If
+				If OERR1 Then
+					Set CREN1 Off
+					Set CREN1 On
+				End If
+			#endif
+			#Ifndef bit(OEER1) '  For Chips with RCREG1 but no OEER1
+				#IFDEF Bit(OEER)
+					IF OEER then
+						Set CREN off
+						Set CREN On
+					END IF
+                #ENDIF
+			#ENDIF
 		#endif
 	#endif
+
+
 	#ifdef AVR
 		If USARTHasData Then
 			#ifndef Var(UDR0)
