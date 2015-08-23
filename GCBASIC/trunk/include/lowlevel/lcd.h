@@ -80,10 +80,6 @@
 ;			Revised 31/07/2-15 to removed defines being defined when not needed.
 ;
 
-
-
-
-
 ;    Uses
 '''Set LCD_10 to 10 for the YwRobot LCD1602 IIC V1 or the Sainsmart LCD_PIC I2C adapter
 '''Set LCD_10 to 12 for the Ywmjkdz I2C adapter with pot bent over top of chip
@@ -97,16 +93,26 @@
 '''       LCD_I2C_Address_Current = LCD_I2C_Address
 '''       Print "LCD Address is now": LCDHex(  LCD_I2C_Address_Current, 2)
 
+'**************************************************************************
+'''		14-08-2015 by Theo Loermans
+'''
+'''		Added 1-wire support with shift-register 74HC595
+'''		Use LCD_CD as port for combined data and clock
+'''
+'''   Added LCDBacklight On/Off for LCD_IO 1,2 mode
+
 
 #startup InitLCD
 
 
 'I/O Ports
-#define LCD_IO 4 'Number of pins used for LCD data bus (2, 4 or 8) OR 10, 12
+#define LCD_IO 4 'Number of pins used for LCD data bus (1,2, 4 or 8) OR 10, 12
 
 'Sub used to write to LCD. Can be altered to allow custom LCD interfaces.
 #define LCDWriteByte LCDNormalWriteByte
 #define LCDReadByte LCDNormalReadByte
+
+#define LCD_CD SysLCDTemp.0 'Combined clock & data bit. Used in 1-wire mode
 
 #define LCD_DB SysLCDTemp.0 'Data bit. Used in 2-bit mode
 #define LCD_CB SysLCDTemp.0 'Clock bit. Used in 2-bit mode
@@ -152,7 +158,8 @@
 'Options for LCDHex
 #define LeadingZeroActive 2
 
-'Required for I2C
+'Required for LCDBacklight, led-electronic needs a one or a zero to be active
+'Adapt if needed.
 #define LCD_Backlight_On_State  1
 #define LCD_Backlight_Off_State 0
 
@@ -201,7 +208,7 @@ Sub PUT (In LCDPutLine, In LCDPutColumn, In LCDChar)
           LCDWriteByte(LCDChar)
 End Sub
 
-'GET not available in 2-bit mode
+'GET not available in 1 and 2-bit mode
 Function GET (LCDPutLine, LCDPutColumn)
           Locate LCDPutLine, LCDPutColumn
           Set LCD_RS on
@@ -217,7 +224,7 @@ Sub LOCATE (In LCDLine, In LCDColumn)
           End If
 
           LCDWriteByte(0x80 or 0x40 * LCDLine + LCDColumn)
-          'wait 5 10us
+          wait 5 10us 'test
 End Sub
 
 Sub CLS
@@ -248,24 +255,73 @@ Sub LCDcmd ( In LCDValue )
           Wait 4 10us
 end sub
 
+Sub Zerobit   ' a "zero" bit is 10us low and minimal 20 us High
+ SET LCD_CD OFF
+  wait 10 us ' bit time
+  SET LCD_CD ON
+  wait 20 us ' recovery RC time
+end sub
+
+Sub Onebit   ' a "one" bit is 1us low and minimal 5 us High
+  SET LCD_CD OFF
+  wait 1 us ' bit time
+  SET LCD_CD ON
+  wait 5 us ' recovery RC time
+end sub
+
+Sub ResetShiftReg      ' Reset is 350 us low and minimal 300 us high
+  SET LCD_CD OFF
+  wait 350 us
+  SET LCD_CD ON
+  wait 300 us
+end sub
+
 'Compatibility with older programs
 #define LCDInt Print
 #define LCDWord Print
 
 sub InitLCD
 
+  #IFDEF LCD_IO 4,8,10,12
       #IFDEF LCD_backlight
        dir LCD_Backlight OUT
        set LCD_Backlight OFF
       #ENDIF
+  #ENDIF
 
+  #IFDEF LCD_IO 1		'1-wire mode with shiftreg 74HC595
+  SET LCD_CD ON		  'default high
+  DIR LCD_CD OUT
+  LCDBacklight Off	'this is to prevent an error during compiling if LCDbacklight is not used in the script
+  wait 10 MS
+  SET LCD_RS OFF
+  ResetShiftReg
+  LCD2_NIBBLEOUT 0X03
+  Wait 5 ms
+  LCD2_NIBBLEOUT 0X03
+  WAIT 1 MS
+  LCD2_NIBBLEOUT 0X03
+  WAIT 1 MS
+  LCD2_NIBBLEOUT 0X02
+  WAIT 1 MS
+  LCDWriteByte 0x28
+  WAIT 1 MS
+  LCDWriteByte 0x08
+  WAIT 1 MS
+  LCDWriteByte 0x01
+  WAIT 1 MS
+  LCDWriteByte 0x06
+  WAIT 1 MS
+  LCDWriteByte 0x0C
+  WAIT 1 MS
+  #ENDIF
 
-
-     #IFDEF LCD_IO 2
+     #IFDEF LCD_IO 2		'2-wire mode with shiftreg 74HC164
           SET LCD_DB OFF
           SET LCD_CB OFF
           DIR LCD_DB OUT
           DIR LCD_CB OUT
+          LCDBacklight Off	'this is to prevent an error during compiling if LCDbacklight is not used in the script
           WAIT 35 MS
           SET LCD_RS OFF
           LCD2_NIBBLEOUT 0X03
@@ -424,7 +480,7 @@ sub InitLCD
                 LCD_Backlight = LCD_Backlight_On_State
                 wait 2 s
 
-                repeat 2             ; called to ensure reset is complete.  Needed for cheap LCDs!!
+                repeat 2	; called to ensure reset is complete.  Needed for cheap LCDs!!
 
                 #ifdef LCD_I2C_Address_1
                        LCD_I2C_Address_Current = LCD_I2C_Address_1
@@ -571,7 +627,7 @@ Sub Print (In LCDValue As Long)
 
 End Sub
 
-sub LCDHex  (In LCDValue, optional in LCDChar = 1 )
+sub LCDHex  (In LCDValue, optional in LCDChar = 1)
 
     'Revised 01/26/2014 by William Roth
     'Prints Hex value of ByteVal at current cursor location
@@ -607,6 +663,7 @@ end sub
 sub LCDWriteChar(In LCDChar)
           set LCD_RS on
           LCDWriteByte(LCDChar)
+          'wait 5 10us
 end sub
 
 function LCDReady
@@ -617,7 +674,7 @@ function LCDReady
           #ENDIF
 
           #IFNDEF LCD_NO_RW
-                    #IFDEF LCD_IO 2
+                    #IFDEF LCD_IO 1,2
                               LCDReady = TRUE
                               exit function
                     #ENDIF
@@ -675,7 +732,7 @@ sub LCDNormalWriteByte(In LCDByte)
           #ENDIF
      #ENDIF
 
-     #IFDEF LCD_IO 2
+     #IFDEF LCD_IO 1,2
           LCD2_NIBBLEOUT Swap4(LCDByte)     'Swap byte; Most significant NIBBLE sent first
           LCD2_NIBBLEOUT LCDByte            'Less Significant NIBBLE output
      #ENDIF
@@ -836,7 +893,7 @@ sub LCDNormalWriteByte(In LCDByte)
              i2c_lcd_bl  = LCD_Backlight.0;
 
              HI2CReStart                        ;generate a start signal
-             HI2CSend LCD_I2C_Address_Current   ;inidcate a write
+             HI2CSend LCD_I2C_Address_Current   ;indicate a write
 
              i2c_lcd_d7 = LCDByte.7
              i2c_lcd_d6 = LCDByte.6
@@ -880,7 +937,6 @@ sub LCDNormalWriteByte(In LCDByte)
                 wait slow_us us
            #ENDIF
 
-
       #ENDIF
       IF LCDByte < 16 then
          if LCDByte > 7 then
@@ -890,36 +946,87 @@ sub LCDNormalWriteByte(In LCDByte)
 end sub
 
 SUB LCD2_NIBBLEOUT (In LCD2BYTE)
- 'Set Data and Clock bits off
- SET LCD_DB OFF
- SET LCD_CB OFF
 
- 'Clear Shift Register With six 0s prior to loading
- FOR LCDTemp = 1 TO 6
-  SET LCD_CB ON  ' STROBE
-  SET LCD_CB OFF ' ======
- NEXT
+  #IFDEF LCD_IO 1
+    SET LCD_CD ON		' idle high
 
- SET LCD_DB ON  ' First bit out to Shift register, always 1 for E gate
- SET LCD_CB ON  ' STROBE
- SET LCD_CB OFF ' ======
- IF LCD_RS OFF THEN SET LCD_DB OFF ' Second bit out equal to R/S
- SET LCD_CB ON  ' STROBE
- SET LCD_CB OFF ' ======
+    Onebit			' send QH/QH' as a "One"; mandatory for resetting the shiftreg and a working monoflop
 
- '4 bits Data out to Shift register, starting from Nibble most significant bit
- FOR LCDTemp = 1 to 4
-  SET LCD_DB OFF
-  IF LCD2Byte.3 ON THEN SET LCD_DB ON
-  SET LCD_CB ON
-  SET LCD_CB OFF
-  ROTATE LCD2Byte LEFT
- NEXT
+    IF LCD_RS ON THEN	' send QG; LCD RS signal
+      Onebit
+    ELSE
+      Zerobit
+    END IF
 
-SET LCD_DB ON                                     ' Last pulse for Nibble output. Not for Shift register
-WAIT 1 MS                               ' Put E pin on LCD to one through an AND operation
-SET LCD_DB OFF                                    ' with the first bit outputted (E)
+    Zerobit			' send QF; Spare pin
 
+    If LCD_Backlight Then	' Background LED is used
+      Onebit			' send QE (pin 4 74HC595); used for Backlight
+    Else
+      Zerobit
+    End if
+
+    REPEAT 4		' send QD - QA to Shift register; starting from Nibble most significant bit
+      IF LCD2Byte.3 ON THEN
+        Onebit
+      Else
+        Zerobit
+      END IF
+      ROTATE LCD2Byte LEFT
+    END REPEAT
+
+    ResetShiftReg		'generate reset signal for shiftreg and activate monoflop
+
+  #ENDIF
+
+  #IFDEF LCD_IO 2
+
+    'Set Data and Clock bits off
+    SET LCD_DB OFF
+    SET LCD_CB OFF
+
+    'Clear Shift Register with eight zero's
+    REPEAT 8
+      SET LCD_CB ON  ' STROBE
+      SET LCD_CB OFF ' ======
+    END REPEAT
+
+    SET LCD_DB ON  ' First bit out to Shift register (QH), always 1 for E gate LCD
+    SET LCD_CB ON  ' STROBE
+    SET LCD_CB OFF ' ======
+
+    SET LCD_DB OFF ' spare bit (QG)
+    SET LCD_CB ON  ' STROBE
+    SET LCD_CB OFF ' ======
+
+    If LCD_Backlight Then	' Background LED is used
+      SET LCD_DB ON  ' send a one bit (QF, pin 11 74HC595)
+      SET LCD_CB ON  ' STROBE
+      SET LCD_CB OFF ' ======
+    Else
+      SET LCD_DB OFF ' send a zero bit (QF, pin 11 74HC595)
+      SET LCD_CB ON  ' STROBE
+      SET LCD_CB OFF ' ======
+    End if
+
+    SET LCD_DB ON
+    IF LCD_RS OFF THEN SET LCD_DB OFF ' Shift register (QE), R/S gate LCD
+    SET LCD_CB ON  ' STROBE
+    SET LCD_CB OFF ' ======
+
+    '4 bits Data (QD - QA) out to Shift register, starting from Nibble most significant bit
+    REPEAT 4	'FOR LCDTemp = 1 to 4
+      SET LCD_DB OFF
+      IF LCD2Byte.3 ON THEN SET LCD_DB ON
+      SET LCD_CB ON  ' STROBE
+      SET LCD_CB OFF ' ======
+      ROTATE LCD2Byte LEFT
+    END REPEAT	'NEXT
+
+    SET LCD_DB ON                 ' Last pulse for Nibble output. Not for Shift register
+    WAIT 1 MS                     ' Put E pin on LCD to one through an AND operation
+    SET LCD_DB OFF                ' with the first bit outputted (QH)
+  #ENDIF
 END SUB
 
 function LCDNormalReadByte
@@ -989,7 +1096,7 @@ sub LCDCursor(In LCDCRSR)
 '   3) With this revision, changing one setting does not change the others.
 '      eg.  FlashOFF does turn off the cursor and CURSOROFF does not
 '      turn off Flash. Cursor and flash states are not changed when the
-'      display is turnd OFF or ON with LCDCURSOR LCDON OR LCDCURSOR LCDOFF.
+'      display is turned OFF or ON with LCDCURSOR LCDON OR LCDCURSOR LCDOFF.
 '
 '   4) See Help For New Commands  LCD_OFF and LCD_ON
 '      LCD_ON & LCD OFF are separate Subs that when called
@@ -1136,7 +1243,14 @@ sub LCDDisplayOn
 End Sub
 
 sub LCDBacklight(IN LCDTemp)
-    #IFDEF LCD_IO 0,2,4,8
+  #IFDEF LCD_IO 1,2
+    IF LCDTemp = ON then
+      LCD_Backlight = LCD_Backlight_On_State
+    Else
+      LCD_Backlight = LCD_Backlight_Off_State
+    END IF
+  #ENDIF
+    #IFDEF LCD_IO 0,4,8
       'Set the port for this mode
       IF LCDTemp = OFF then set LCD_Backlight LCD_Backlight_Off_State
       IF LCDTemp = ON then  set LCD_Backlight LCD_Backlight_On_State
@@ -1147,7 +1261,7 @@ sub LCDBacklight(IN LCDTemp)
       IF LCDTemp = ON then  LCD_Backlight = LCD_Backlight_On_State
       ' write a zero and the method will set display backlite
       Set LCD_RS OFF
-      LCDWriteByte( 0 )
+      LCDWriteByte(0)
     #ENDIF
 
 
