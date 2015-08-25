@@ -80,10 +80,11 @@
 
 'Some simpler names for the timers (use to read)
 #ifdef PIC
-
-		#ifndef TIMER2OVERFLOW
-    	#define TIMER2OVERFLOW TIMER2MATCH
-    #endif
+    #ifdef TIMER2MATCH
+        #ifndef TIMER2OVERFLOW
+    	    #define TIMER2OVERFLOW TIMER2MATCH
+        #endif
+    #endif	
 
     #ifndef TMR0_16BIT   'Test for 16Bit timer0 mode
 		 #define Timer0 TMR0
