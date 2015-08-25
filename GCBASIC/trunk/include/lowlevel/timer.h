@@ -1,5 +1,5 @@
 '    Timer control routines for Great Cow BASIC
-'    Copyright (C) 2006-2015 Hugh Considine and Evan Venn
+'    Copyright (C) 2006-2015 Hugh Considine, Evan Venn and William Roth
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -23,38 +23,96 @@
 '********************************************************************************
 
 'Changes:
-' 10/7/2009: Added AVR support
-' 24/8/2014: Added SetTimer subroutine
-' 16/8/2014: Added support for Timer4 and Timer6
+' 10/07/2009: Added AVR support
+' 24/08/2014: Added SetTimer subroutine
+' 16/08/2014: Added support for Timer4 and Timer6
+' 03/06/2015: Added support for PIC Timer 5
+' 12/06/2015: Added support for PIC Timer 7/8/10/12 - WMR
+' 12/06/2015: Changed "cleartimer" to not stop timers 1/3/5/7 -WMR
+' 12/06/2015: Added support for PICs that use SOSCEN instead of OSCEN
+' 12/06/2015: Added Starttimer/Stoptimer support for Timer 0 for 18F PICS
+' 12/06/2015: Added support for Timer 0 16-Bit mode
+' 12/06/2015: Corrected some typos - WMR
+' 24/06/2015: Corrected "Timer 0 Notes" formatting
+' 25/08/2015: Added redirection of TIMER2OVERFLOW to TIMER2MATCH for handling deprecated commands - ERV
+' 25/08/2015: Added Functions for Timer8/10&12 - ERV
+' 25/08/2015: Removed errors and improved handles timers and added Inittimer7- ERV
+
 
 'Subroutines:
 ' InitTimer0 (Source, Prescaler)
 ' InitTimer1 (Source, Prescaler)
 ' InitTimer2 (Prescaler, Postscaler)
 ' InitTimer3 (Source, Prescaler)
-' InitTimer4 (Source, Prescaler)
-' InitTimer6 (Source, Prescaler)
+' InitTimer4 (Prescaler,Postascaler)
+' InitTimer5 (Source, Prescaler)
+' InitTimer6 (Prescaler,Postscaler)
+' InitTimer7 (Source, Prescaler)
+' InitTimer8 (Prescaler.Postscaler)
+' InitTimer10 (Prescaler,Postscaler)
+' InitTimer12 (Prescaler,Postscaler)
 
 ' ClearTimer(TimerNumber)
 ' StartTimer(TimerNumber)
 ' StopTimer(TimerNumber)
 ' SetTimer(TimerNumber, Value)
 
+'**************  Timer 0 Notes ***********************
+' PIC Timer0 is a free running timer on midrange and
+' baseline PICs. On these chips timer 0 always runs
+' and cannot be stopped.   However on most 18Fxxx PICs,
+' timer 0 can be started or stopped via the T0CON.7 Bit.
+' Therefore, on these chips The timer MUST be started with
+' StartTimer 0.
+'
+'
+' On Many 18F PICS, Timer 0 can be either an 8-Bit or 16-Bit
+' timer.  On these chips this is determined by TC0CON.6
+' (T08BIT). The timer defaults to 8-bit. To set the timer
+' to 16-Bit mode the GCB source code must include the
+' following line.
+'
+'              #define TMR0_16BIT
+'
+' Using 16 bit mode with the 1:256 prescaler allows for very
+' long timer periods ( > 8 sec @ 8Mhz)
+'*********************************************************
+
 'Some simpler names for the timers (use to read)
 #ifdef PIC
-	'#define Timer0 TMR0
-	Dim Timer0 Alias TMR0
-	'#define Timer1 TMR1L
-	'Is now a function, need to ensure read happens in certain order
-	'#define Timer2 TMR2
-	Dim Timer2 Alias TMR2
-	#ifdef Var(TMR4)
+
+		#ifndef TIMER2OVERFLOW
+    	#define TIMER2OVERFLOW TIMER2MATCH
+    #endif
+
+    #ifndef TMR0_16BIT   'Test for 16Bit timer0 mode
+		 #define Timer0 TMR0
+    #endif
+    ' IF TMR0_16bit is defined in the source code
+    ' a function is then used for Timer0 - WMR
+
+    'PIC Timer1/3/5/7 are all functions
+
+    #ifdef Var(TMR2)
+        Dim Timer2 Alias TMR2
+    #endif
+    #ifdef Var(TMR4)
 		Dim Timer4 Alias TMR4
 	#endif
 	#ifdef Var(TMR6)
 		Dim Timer6 Alias TMR6
 	#endif
+	#ifdef Var(TMR8)
+		Dim Timer8 Alias TMR8
+	#endif
+	#ifdef Var(TMR10)
+		Dim Timer10 Alias TMR10
+	#endif
+    #ifdef Var(TMR12)
+		Dim Timer12 Alias TMR12
+	#endif
 #endif
+
 #ifdef AVR
 	Dim Timer0 Alias TCNT0
 	Dim Timer2 Alias TCNT2
@@ -109,9 +167,11 @@
 #define PS2_1/1 0
 #define PS2_1/4 1
 #define PS2_1/16 2
+#define PS2_1/64 3  'Added WMR
 #define PS2_1 0
 #define PS2_4 1
 #define PS2_16 2
+#define PS2_64 3    'Added WMR
 
 'Timer 3 prescales
 #define PS3_1/1 0
@@ -133,6 +193,16 @@
 #define PS4_16 2
 #define PS4_64 3
 
+'Timer 5 prescales
+#define PS5_1/1 0
+#define PS5_1/2 16
+#define PS5_1/4 32
+#define PS5_1/8 48
+#define PS5_1 0
+#define PS5_2 16
+#define PS5_4 32
+#define PS5_8 48
+
 'Timer 6 prescales
 #define PS6_1/1 0
 #define PS6_1/4 1
@@ -143,7 +213,57 @@
 #define PS6_16 2
 #define PS6_64 3
 
+'Timer 7 prescales -wmr
+#define PS7_1/1 0
+#define PS7_1/2 16
+#define PS7_1/4 32
+#define PS7_1/8 48
+#define PS7_1 0
+#define PS7_2 16
+#define PS7_4 32
+#define PS7_8 48
 
+'Timer 8 prescales -wmr
+#define PS8_1/1 0
+#define PS8_1/4 1
+#define PS8_1/16 2
+#define PS8_1/64 3
+#define PS8_1 0
+#define PS8_4 1
+#define PS8_16 2
+#define PS8_64 3
+
+'Timer 10 prescales -wmr
+#define PS10_1/1 0
+#define PS10_1/4 1
+#define PS10_1/16 2
+#define PS10_1/64 3
+#define PS10_1 0
+#define PS10_4 1
+#define PS10_16 2
+#define PS10_64 3
+
+'Timer 12 prescales -wmr
+#define PS12_1/1 0
+#define PS12_1/4 1
+#define PS12_1/16 2
+#define PS12_1/64 3
+#define PS12_1 0
+#define PS12_4 1
+#define PS12_16 2
+#define PS12_64 3
+
+
+function Timer0 As Word  'Added to support 16-bit mode
+	#ifdef PIC
+        #ifdef TMR0_16BIT
+			#Ifdef Bit(T08BIT)
+        		[byte]Timer0 = TMR0L
+				Timer0_H = TMR0H
+        	#endif
+        #endif
+    #endif
+end function
 Function Timer1 As Word
 	#ifdef PIC
 		[byte]Timer1 = TMR1L
@@ -174,27 +294,73 @@ Function Timer4 As Word
 End Function
 
 Function Timer5 As Word
-	#ifdef AVR
-		[byte]Timer5 = TCNT5L
-		Timer5_H = TCNT5H
+	#ifdef PIC
+		[byte]Timer5 = TMR5L
+		Timer5_H = TMR5H
 	#endif
 End Function
+
+
+Function Timer6 As Word
+	#ifdef PIC
+		[byte]Timer6 = TMR6L
+		Timer6_H = TMR6H
+	#endif
+End Function
+
+
+Function Timer7 As Word
+	#ifdef PIC
+		[byte]Timer7 = TMR7L
+		Timer7_H = TMR7H
+	#endif
+End Function
+
+Function Timer8 As Word
+	#ifdef PIC
+		[byte]Timer8 = TMR8L
+		Timer8_H = TMR8H
+	#endif
+End Function
+
+Function Timer10 As Word
+	#ifdef PIC
+		[byte]Timer10 = TMR10L
+		Timer10_H = TMR10H
+	#endif
+End Function
+
+Function Timer12 As Word
+	#ifdef PIC
+		[byte]Timer12 = TMR12L
+		Timer12_H = TMR12H
+	#endif
+End Function
+
 
 'Start/Clear/Stop subs
 Sub StartTimer(In TMRNumber)
 	#ifdef PIC
-		'Timer 0 always runs
+
+		#ifdef bit(TMR0ON)
+			If TMRNumber = 0 Then
+				Set TMR0ON on
+			end if
+		#endif
+
 		#ifdef Var(T1CON)
 			If TMRNumber = 1 Then
 				Set TMR1ON On
 			End If
 		#endif
+
 		#ifdef Var(T2CON)
 			If TMRNumber = 2 Then
 				T2CON = TMR2Pres
 				Set TMR2ON On
 			End If
 		#endif
+
 		#ifdef Var(T3CON)
 			If TMRNumber = 3 Then
 				Set TMR3ON On
@@ -208,6 +374,12 @@ Sub StartTimer(In TMRNumber)
 			End If
 		#endif
 
+		#ifdef Var(T5CON)
+			If TMRNumber = 5 Then
+				Set TMR5ON On
+			End If
+		#endif
+
 		#ifdef Var(T6CON)
 			If TMRNumber = 6 Then
 				T6CON = TMR6Pres
@@ -215,8 +387,33 @@ Sub StartTimer(In TMRNumber)
 			End If
 		#endif
 
+		#ifdef Var(T7CON)
+			If TMRNumber = 7 Then
+				Set TMR7ON On
+			End If
+		#endif
+
+		#ifdef Var(T8CON)
+			If TMRNumber = 8 Then
+				T8CON = TMR8Pres
+				Set TMR8ON On
+			End If
+		#endif
+
+		#ifdef Var(T10CON)
+			If TMRNumber = 10 Then
+				T10CON = TMR10Pres
+				Set TMR10ON On
+			End If
+		#endif
+		#ifdef Var(T12CON)
+			If TMRNumber = 12 Then
+				T12CON = TMR12Pres
+				Set TMR12ON On
+			End If
+		#endif
 	#endif
-	
+
 	#ifdef AVR
 		'Need to set clock select bits to 0
 		#ifndef Var(TCCR0B)
@@ -261,43 +458,79 @@ End Sub
 
 Sub ClearTimer (In TMRNumber)
 	#ifdef PIC
-		If TMRNumber = 0 Then
-			TMR0 = 0
-			SInitTimer0
-		End If
+		#ifndef bit(T08bit)
+ 			If TMRNumber = 0 Then
+				 'SInitTimer0  'Unnecessary overhead ?
+            	TMR0 = 0
+			end If
+		#endif
+		#ifdef bit(T08BIT)
+    		if TMRNumber = 0 then
+				TRM0H = 0
+				TMR0L = 0
+			end if
+		#endif
 		#ifdef Var(T1CON)
-			If TMRNumber = 1 then
+			If TMRNumber = 1 Then
+				'SInitTimer1  'Unnecessary / stops timer
 				TMR1H = 0
 				TMR1L = 0
-				SInitTimer1
 			End If
 		#endif
 		#ifdef Var(T2CON)
 			If TMRNumber = 2 Then
-				TMR2Pres = T2CON
+				'TMR2Pres = T2CON
 				TMR2 = 0
-				T2CON = TMR2Pres
+				'T2CON = TMR2Pres
 			End If
 		#endif
 		#ifdef Var(T3CON)
 			If TMRNumber = 3 then
+				'SInitTimer3   'Unnecessary / stops timer
 				TMR3H = 0
 				TMR3L = 0
-				SInitTimer3
 			End If
 		#endif
 		#ifdef Var(T4CON)
 			If TMRNumber = 4 Then
-				TMR4Pres = T4CON
+				'TMR4Pres = T4CON
 				TMR4 = 0
-				T4CON = TMR4Pres
+				'T4CON = TMR4Pres
+			End If
+		#endif
+		#ifdef Var(T5CON)
+			If TMRNumber = 5 then
+				'SInitTimer5   'Unnecessary / stops timer
+				TMR5H = 0
+				TMR5L = 0
 			End If
 		#endif
 		#ifdef Var(T6CON)
 			If TMRNumber = 6 Then
-				TMR6Pres = T6CON
+				'TMR6Pres = T6CON
 				TMR6 = 0
-				T6CON = TMR6Pres
+				'T6CON = TMR6Pres
+			End If
+		#endif
+		#ifdef Var(T7CON)
+			If TMRNumber = 7 then
+				'SInitTimer7   'Unnecessary / stops timer
+				TMR7H = 0
+				TMR7L = 0
+			End If
+		#endif
+		#ifdef Var(T8CON)
+			If TMRNumber = 8 Then
+				'TMR8Pres = T8CON
+				TMR6 = 0
+				'T8CON = TMR8Pres
+			End If
+		#endif
+		#ifdef Var(T10CON)
+			If TMRNumber = 10 Then
+				'TMR10Pres = T10CON
+				TMR10 = 0
+				'T10CON = TMR10Pres
 			End If
 		#endif
 
@@ -370,12 +603,42 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
 				TMR4 = TMRValue
 			End If
 		#endif
-
+		#ifdef Var(T5CON)
+			If TMRNumber = 5 then
+				TMR5L = 0
+				TMR5H = TMRValue_H
+				TMR5L = TMRValue
+			End If
+		#endif
 		#ifdef Var(T6CON)
 			If TMRNumber = 6 Then
 				TMR6 = TMRValue
 			End If
 		#endif
+		#ifdef Var(T7CON)
+			If TMRNumber = 7 then
+				TMR7L = 0
+				TMR7H = TMRValue_H
+				TMR7L = TMRValue
+			End If
+		#endif
+        #ifdef Var(T8CON)
+			If TMRNumber = 8 Then
+				TMR8 = TMRValue
+			End If
+		#endif
+		#ifdef Var(T10CON)
+			If TMRNumber = 10 Then
+				TMR10 = TMRValue
+			End If
+		#endif
+
+		#ifdef Var(T12CON)
+			If TMRNumber = 12 Then
+				TMR12 = TMRValue
+			End If
+		#endif
+
 
 	#endif
 	#ifdef AVR
@@ -419,6 +682,14 @@ End Sub
 Sub StopTimer (In TMRNumber)
 	#ifdef PIC
 		'Timer 0 always runs
+		' Not Always. Below is for PICs that
+        ' Support Timer0 on/off
+         #ifdef bit(TMR0ON)
+           If TMRNumber = 0 Then
+              Set TMR0ON off
+           end if
+        #endif
+
 		If TMRNumber = 1 Then
 			Set TMR1ON OFF
 		End If
@@ -437,9 +708,34 @@ Sub StopTimer (In TMRNumber)
 				Set TMR4ON OFF
 			End If
 		#endif
+		#ifdef Var(T5CON)
+			If TMRNumber = 5 Then
+				Set TMR5ON OFF
+			End If
+		#endif
 		#ifdef Var(T6CON)
 			If TMRNumber = 6 Then
 				Set TMR6ON OFF
+			End If
+		#endif
+        #ifdef Var(T7CON)
+			If TMRNumber = 7 Then
+				Set TMR7ON OFF
+			End If
+		#endif
+		#ifdef Var(T8CON)
+			If TMRNumber = 8 Then
+				Set TMR8ON OFF
+			End If
+		#endif
+		#ifdef Var(T10CON)
+			If TMRNumber = 10 Then
+				Set TMR10ON OFF
+			End If
+		#endif
+        #ifdef Var(T12CON)
+			If TMRNumber = 12 Then
+				Set TMR12ON OFF
 			End If
 		#endif
 
@@ -499,14 +795,26 @@ Sub SInitTimer0
 		OPTION_REG = OPTION_REG OR TMR0Pres
 	#endif
 	#ifdef Var(T0CON)
-		T0CON = T0CON And 192
-		T0CON = T0CON OR TMR0Pres
-	#endif
+	    #ifndef bit(TMR0ON)	' Modified 14/08/2105
+        	T0CON = T0CON And 192
+			T0CON = T0CON OR TMR0Pres
+	    #endif
+        #ifdef bit(TMR0ON)  'Added for PIC 18Fxxx
+            T0CON = T0CON And 64  'Don't start the timer
+            T0CON = T0CON OR TMR0Pres
+			#ifdef TMR0_16BIT  ' Added for TMR0 16-bit mode
+               #ifdef bit(T08BIT)
+					Set T08BIT OFF
+                    TMR0H = 0: TMR0L = 0
+            	#endif
+			#endif
+        #endif
+    #endif
 	SET PSA OFF
 	if TMR0Source = Osc THEN SET T0SE OFF
 	if TMR0Source = Ext THEN SET T0SE ON
 	clrwdt
-	
+
 End Sub
 
 Sub InitTimer1(In TMR1Source, In TMR1Pres)
@@ -521,26 +829,38 @@ Sub InitTimer1(In TMR1Source, In TMR1Pres)
 End Sub
 
 Sub SInitTimer1
-	T1CON = TMR1Pres
-	#ifndef Bit(TMR1CS1)
+	T1CON = TMR1Pres  'Will stop timer if already started !
+	#Ifndef Bit(TMR1CS1)
 		If TMR1Source = Ext Then
 			Set TMR1CS On
 		End If
 		If TMR1Source = ExtOsc Then
-			Set TMR1CS On
-			Set T1OSCEN On
-		End If
-	#endif
-	#ifdef Bit(TMR1CS1)
+        	Set TMR1CS On
+        	#ifdef Bit(T1SOSCEN) ' Added -WMR
+				Set T1SOSCEN On
+        	#endif
+        	#ifdef Bit(T1OSCEN)
+        		set T1OSCEN on
+        	end If
+		#Endif
+	#Endif
+
+	#Ifdef Bit(TMR1CS1)
 		If TMR1Source = Ext Then
 			Set TMR1CS1 On
 		End If
 		If TMR1Source = ExtOsc Then
 			Set TMR1CS1 On
-			Set T1OSCEN On
+	        #ifdef bit(T1SOSCEN) ' Added -WMR
+            	Set T1SOSCEN On
+            #endif
+			#ifdef Bit(T1OSCEN)
+                Set T1OSCEN ON
+            #endif
 		End If
-	#endif
+	#Endif
 End Sub
+
 
 Sub InitTimer2 (In TMR2Pres, In TMR2Post)
 	#ifdef PIC
@@ -569,28 +889,40 @@ Sub InitTimer3(In TMR3Source, In TMR3Pres)
 End Sub
 
 Sub SInitTimer3
-	T3CON = TMR3Pres
+	T3CON = TMR3Pres  'Will stop timer if already started !
 	#ifndef Bit(TMR3CS1)
 		If TMR3Source = Ext Then
-			Set TMR3CS On
-		End If
-		#ifdef Bit(T3OSCEN)
-			If TMR3Source = ExtOsc Then
+    	#ifdef TMR3CS
 				Set TMR3CS On
+      #endif
+		End If
+		If TMR3Source = ExtOsc Then
+    	#ifdef TMR3CS
+				Set TMR3CS On
+      #endif
+			#ifdef Bit(T3SOSCEN) ' Added -WMR
+				Set T3SOSCEN On
+		    #endif
+        	#ifdef Bit(T3OSCEN)
 				Set T3OSCEN On
-			End If
-		#endif
+            #endif
+		End If
 	#endif
+
 	#ifdef Bit(TMR3CS1)
 		If TMR3Source = Ext Then
 			Set TMR3CS1 On
 		End If
 		If TMR3Source = ExtOsc Then
 			Set TMR3CS1 On
-			Set T3OSCEN On
+			#ifdef bit(T3SOSCEN) ' Added -WMR
+				Set T3SOSCEN On
+			#endif
+			#ifdef Bit(T3OSCEN)
+                Set T3OSCEN ON
+            #endif
 		End If
 	#endif
-	
 End Sub
 
 Sub InitTimer4 (In TMR4Pres, In TMR4Post)
@@ -600,13 +932,59 @@ Sub InitTimer4 (In TMR4Pres, In TMR4Post)
 		andlw 120
 		iorwf TMR4Pres,F
 	#endif
-	
 End Sub
 
 Sub InitTimer5(In TMR5Source, In TMR5Pres)
-	#ifdef AVR
+	#ifdef PIC
+		SInitTimer5
+	#endif
+
+    #ifdef AVR
 		If TMR5Source = Ext Then
 			TMR5Pres = AVR_EXT_TMR
+		End If
+	#endif
+End Sub
+
+Sub SInitTimer5
+	T5CON = TMR5Pres  'Will stop timer if already started !
+	#ifndef Bit(TMR5CS1)
+		If TMR5Source = Ext Then
+    	#ifdef TMR5CS
+				Set TMR5CS On
+      #endif
+      #ifndef TMR5CS
+				'No timer5 defined please use alternate timer
+      #endif
+		End If
+		If TMR5Source = ExtOsc Then
+    	#ifdef TMR5CS
+				Set TMR5CS On
+      #endif
+      #ifndef TMR5CS
+				'No timer5 defined please use alternate timer
+      #endif
+			#ifdef Bit(T5SOSCEN) ' Added -WMR
+				Set T5SOSCEN On
+			#endIf
+			#ifdef Bit(T5OSCEN)
+				Set T5OSCEN On
+			#endif
+    End if
+	#Endif
+
+	#ifdef Bit(TMR5CS1)
+		If TMR5Source = Ext Then
+			Set TMR5CS1 On
+		End If
+		If TMR5Source = ExtOsc Then
+			Set TMR5CS1 On
+	        #ifdef bit(T5SOSCEN) 'Added - WMR
+            	Set T5SOSCEN On
+            #endif
+			#ifdef Bit(T5OSCEN)
+                Set T5OSCEN ON
+            #endif
 		End If
 	#endif
 End Sub
@@ -618,5 +996,80 @@ Sub InitTimer6 (In TMR6Pres, In TMR6Post)
 		andlw 120
 		iorwf TMR6Pres,F
 	#endif
+End Sub
 
+Sub InitTimer7(In TMR7Source, In TMR7Pres)
+	#ifdef PIC
+		SInitTimer7
+	#endif
+
+    #ifdef AVR
+		If TMR7Source = Ext Then
+			TMR7Pres = AVR_EXT_TMR
+		End If
+	#endif
+End Sub
+
+Sub SInitTimer7
+	T7CON = TMR7Pres  'Will stop timer if already started !
+	#ifndef Bit(TMR7CS1)
+		If TMR7Source = Ext Then
+    	#ifdef TMR7CS
+				Set TMR7CS On
+      #endif
+		End If
+		If TMR7Source = ExtOsc Then
+    	#ifdef TMR7CS
+				Set TMR7CS On
+      #endif
+			#ifdef Bit(T7SOSCEN) ' Added -WMR
+				Set T7SOSCEN On
+			#endIf
+			#ifdef Bit(T7OSCEN)
+				Set T7OSCEN On
+			#endif
+    end if
+	#Endif
+
+	#ifdef Bit(TMR7CS1)
+		If TMR7Source = Ext Then
+			Set TMR7CS1 On
+		End If
+		If TMR7Source = ExtOsc Then
+			Set TMR7CS1 On
+	        #ifdef bit(T7SOSCEN) ' Added -WMR
+            	Set T7SOSCEN On
+            #endif
+			#ifdef Bit(T7OSCEN)
+                Set T7OSCEN ON
+            #endif
+		End If
+	#endif
+End Sub
+
+Sub InitTimer8 (In TMR8Pres, In TMR8Post)
+	#ifdef PIC
+		swapf TMR8Post,F
+		rrf TMR8Post,W
+		andlw 120
+		iorwf TMR8Pres,F
+	#endif
+End Sub
+
+Sub InitTimer10 (In TMR10Pres, In TMR10Post)
+	#ifdef PIC
+		swapf TMR10Post,F
+		rrf TMR10Post,W
+		andlw 120
+		iorwf TMR10Pres,F
+	#endif
+End Sub
+
+Sub InitTimer12 (In TMR12Pres, In TMR12Post)
+	#ifdef PIC
+		swapf TMR12Post,F
+		rrf TMR12Post,W
+		andlw 120
+		iorwf TMR12Pres,F
+	#endif
 End Sub
