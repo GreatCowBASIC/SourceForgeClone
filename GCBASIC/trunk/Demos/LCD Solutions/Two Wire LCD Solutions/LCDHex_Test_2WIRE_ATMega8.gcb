@@ -8,17 +8,17 @@
 '''@author 	TheoL plus works of WilliamR
 '''@licence	GPL
 '''@version	1.0a
-'''@date   	23.01.2015
+'''@date   	31.08.2015
 '''********************************************************************************
 
 
 
 ;Set chip model required:
-  #chip mega8, 8
+  #chip mega8, 16
 
 ;Setup LCD Parameters
 ;Use LCD in 2-wire mode with shift reg. 74LS164 / 74HC164
- #define LCD_IO 2
+ #define LCD_IO 2_74XX164
  #define LCD_NO_RW
 
   'Change as necessary

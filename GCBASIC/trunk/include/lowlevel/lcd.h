@@ -77,7 +77,7 @@
 ;    Changed backlight to support IC2 and Transistor support.
 ;    Revised to support multiple I2C.
 ;
-;			Revised 31/07/2-15 to removed defines being defined when not needed.
+;		 Revised 31/07/2-15 to removed defines being defined when not needed.
 ;
 
 ;    Uses
@@ -94,14 +94,16 @@
 '''       Print "LCD Address is now": LCDHex(  LCD_I2C_Address_Current, 2)
 
 '**************************************************************************
-'''		14-08-2015 by Theo Loermans
+'''   14-08-2015 by Theo Loermans
 '''
-'''		Added 1-wire support with shift-register 74HC595
-'''		Use LCD_CD as port for combined data and clock
+'''   Added LCD_IO 1: 1-wire support with shift-register 74HC595
+'''   Use LCD_CD as port for combined data and clock
 '''
 '''   Added LCDBacklight On/Off for LCD_IO 1,2 mode
-
-
+'''
+'''   30-08-2015
+'''   Added LCD_IO 2_74XX174 and LCD_IO 2_74XX164: 2-wire modes for different shiftregisters
+'''
 #startup InitLCD
 
 
@@ -255,25 +257,28 @@ Sub LCDcmd ( In LCDValue )
           Wait 4 10us
 end sub
 
-Sub Zerobit   ' a "zero" bit is 10us low and minimal 20 us High
- SET LCD_CD OFF
+Sub Zerobit   ' Used in 1-wire mode; a "zero" bit is 10us low and minimal 20 us High
+  SET LCD_CD OFF
   wait 10 us ' bit time
   SET LCD_CD ON
   wait 20 us ' recovery RC time
+  wait 1 ms
 end sub
 
-Sub Onebit   ' a "one" bit is 1us low and minimal 5 us High
+Sub Onebit   ' Used in 1-wire mode; a "one" bit is 1us low and minimal 5 us High
   SET LCD_CD OFF
   wait 1 us ' bit time
   SET LCD_CD ON
   wait 5 us ' recovery RC time
+  wait 1 ms
 end sub
 
-Sub ResetShiftReg      ' Reset is 350 us low and minimal 300 us high
+Sub ResetShiftReg      ' Used in 1-wire mode; reset is 350 us low and minimal 300 us high
   SET LCD_CD OFF
   wait 350 us
   SET LCD_CD ON
   wait 300 us
+  wait 1 ms
 end sub
 
 'Compatibility with older programs
@@ -289,10 +294,10 @@ sub InitLCD
       #ENDIF
   #ENDIF
 
-  #IFDEF LCD_IO 1		'1-wire mode with shiftreg 74HC595
-  SET LCD_CD ON		  'default high
+  #IFDEF LCD_IO 1		' 1-wire mode with shiftreg 74HC595
+  SET LCD_CD ON		  ' Default high
   DIR LCD_CD OUT
-  LCDBacklight Off	'this is to prevent an error during compiling if LCDbacklight is not used in the script
+  LCDBacklight Off	' This is to prevent an error during compiling if LCDbacklight is not used in the script
   wait 10 MS
   SET LCD_RS OFF
   ResetShiftReg
@@ -316,7 +321,7 @@ sub InitLCD
   WAIT 1 MS
   #ENDIF
 
-     #IFDEF LCD_IO 2		'2-wire mode with shiftreg 74HC164
+     #IFDEF LCD_IO 2, 2_74XX174, 2_74XX164   		'All 2-wire modes
           SET LCD_DB OFF
           SET LCD_CB OFF
           DIR LCD_DB OUT
@@ -674,7 +679,7 @@ function LCDReady
           #ENDIF
 
           #IFNDEF LCD_NO_RW
-                    #IFDEF LCD_IO 1,2
+                    #IFDEF LCD_IO 1, 2, 2_74XX174, 2_74XX164	' All 1 and 2-wire modes
                               LCDReady = TRUE
                               exit function
                     #ENDIF
@@ -732,12 +737,12 @@ sub LCDNormalWriteByte(In LCDByte)
           #ENDIF
      #ENDIF
 
-     #IFDEF LCD_IO 1,2
-          LCD2_NIBBLEOUT Swap4(LCDByte)     'Swap byte; Most significant NIBBLE sent first
-          LCD2_NIBBLEOUT LCDByte            'Less Significant NIBBLE output
+     #IFDEF LCD_IO 1, 2, 2_74XX174, 2_74XX164	' All 1 and 2-wire modes
+          LCD2_NIBBLEOUT Swap4(LCDByte)     ' Swap byte; Most significant NIBBLE sent first
+          LCD2_NIBBLEOUT LCDByte            ' Less Significant NIBBLE output
      #ENDIF
 
-     #IFDEF LCD_IO 4  'Using 4 bit mode
+     #IFDEF LCD_IO 4  ' Using 4 bit mode
 
          'Set pins to output
           #IFNDEF LCD_LAT
@@ -947,7 +952,7 @@ end sub
 
 SUB LCD2_NIBBLEOUT (In LCD2BYTE)
 
-  #IFDEF LCD_IO 1
+  #IFDEF LCD_IO 1	' 1-wire mode with 74HC595
     SET LCD_CD ON		' idle high
 
     Onebit			' send QH/QH' as a "One"; mandatory for resetting the shiftreg and a working monoflop
@@ -976,38 +981,66 @@ SUB LCD2_NIBBLEOUT (In LCD2BYTE)
     END REPEAT
 
     ResetShiftReg		'generate reset signal for shiftreg and activate monoflop
+          'character delay settings
+           #IFDEF LCD_Speed FAST   'Char Rate ~20K
+                wait fast_us us
+           #ENDIF
 
+           #IFDEF LCD_SPEED MEDIUM  'Char Rate ~15K
+                wait medium_us us
+           #ENDIF
+
+           #IFDEF LCD_SPEED SLOW  ' Char Rate ~10K
+                wait slow_us us
+           #ENDIF
+
+           #IFNDEF LCD_SPEED ' default to slow
+                wait slow_us us
+           #ENDIF
   #ENDIF
 
-  #IFDEF LCD_IO 2
+  #IFDEF LCD_IO 2, 2_74XX174, 2_74XX164 ' All 2-wire modes with Shiftreg
 
-    'Set Data and Clock bits off
+    ' Set Data and Clock bits off
     SET LCD_DB OFF
     SET LCD_CB OFF
 
-    'Clear Shift Register with eight zero's
-    REPEAT 8
+    #IFDEF LCD_IO 2, 2_74XX174	' This is old mode with 74LS174 or
+    														' 74HC164 with diode connected to pin 11
+                                ' NO BACKLIGHT!
+    REPEAT 6	' Clear Shift Register With six zero's
+    	SET LCD_CB ON  ' STROBE
+    	SET LCD_CB OFF ' ======
+  	END REPEAT
+    #ENDIF
+
+    #IFDEF LCD_IO 2_74XX164	' This is new mode with 74HC164 and Backlight
+    REPEAT 8	' Clear Shift Register with eight zero's
       SET LCD_CB ON  ' STROBE
       SET LCD_CB OFF ' ======
     END REPEAT
+    #ENDIF
 
-    SET LCD_DB ON  ' First bit out to Shift register (QH), always 1 for E gate LCD
+    SET LCD_DB ON  ' First bit out to Shift register, always 1 for E gate LCD
     SET LCD_CB ON  ' STROBE
     SET LCD_CB OFF ' ======
 
-    SET LCD_DB OFF ' spare bit (QG)
+
+    #IFDEF LCD_IO 2_74XX164	' Set Spare pin and background pin 74HC164
+    SET LCD_DB OFF ' Spare bit (QG)
     SET LCD_CB ON  ' STROBE
     SET LCD_CB OFF ' ======
 
     If LCD_Backlight Then	' Background LED is used
-      SET LCD_DB ON  ' send a one bit (QF, pin 11 74HC595)
+      SET LCD_DB ON  ' send a one bit (QF, pin 11 74HC164)
       SET LCD_CB ON  ' STROBE
       SET LCD_CB OFF ' ======
     Else
-      SET LCD_DB OFF ' send a zero bit (QF, pin 11 74HC595)
+      SET LCD_DB OFF ' send a zero bit (QF, pin 11 74HC164)
       SET LCD_CB ON  ' STROBE
       SET LCD_CB OFF ' ======
     End if
+    #ENDIF
 
     SET LCD_DB ON
     IF LCD_RS OFF THEN SET LCD_DB OFF ' Shift register (QE), R/S gate LCD
@@ -1243,7 +1276,7 @@ sub LCDDisplayOn
 End Sub
 
 sub LCDBacklight(IN LCDTemp)
-  #IFDEF LCD_IO 1,2
+  #IFDEF LCD_IO 1, 2_74XX164   		'1 and 2-wire mode with Backlight
     IF LCDTemp = ON then
       LCD_Backlight = LCD_Backlight_On_State
     Else
