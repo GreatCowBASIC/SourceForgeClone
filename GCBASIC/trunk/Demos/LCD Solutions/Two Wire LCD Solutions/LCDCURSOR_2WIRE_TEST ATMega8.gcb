@@ -17,7 +17,7 @@
 ; ----- Define Hardware settings
   ;Setup LCD Parameters
   ;Use LCD in 2 wire mode with shift reg. 74LS164 / 74HC164
-  #define LCD_IO 2
+  #define LCD_IO 2_74XX164
   #define LCD_DB PORTC.0           ; databit
   #define LCD_CB PORTC.1           ; clockbit
   #define LCD_NO_RW

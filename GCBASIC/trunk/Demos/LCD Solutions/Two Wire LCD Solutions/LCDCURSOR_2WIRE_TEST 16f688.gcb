@@ -8,7 +8,7 @@
 '''@author 	EvanV plus works of ThomasH and MikeP
 '''@licence	GPL
 '''@version	1.0a
-'''@date   	21.01.2015
+'''@date   	31.08.2015
 '''********************************************************************************
 
 ; ----- Configuration
@@ -23,7 +23,7 @@
 
 
   ;Setup LCD Parameters
-  #define LCD_IO 2
+  #define LCD_IO 2_74XX164
   #define LCD_DB portb.2
   #define LCD_CB portb.0
   #define LCD_NO_RW
