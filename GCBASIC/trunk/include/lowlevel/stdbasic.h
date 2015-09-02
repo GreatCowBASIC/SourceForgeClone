@@ -26,6 +26,8 @@
 ' 17/6/2009: AVR support added
 ' 10/2/2013: Indirect call added
 ' 08/02/2013: added to new functions _dectobcd and _bcdtodec
+' 01/09/2015: added Difference
+
 
 'Misc settings
 
@@ -250,3 +252,16 @@ Function BcdToDec_GCB( SysCalcTempA as byte ) as byte
          BcdToDec_GCB = (SysCalcTempA/16)*10+SysCalcTempA%16
 End Function
 
+
+'added 1st Sept 2015
+
+'''Calculate the difference between two numbers
+'''@param SysCalcTempA First Value
+'''@param SysCalcTempB Second Value
+Function Difference(SysCalcTempA As Word, SysCalcTempB As Word) As Word
+    If SysCalcTempA < SysCalcTempB Then
+        Difference = SysCalcTempB - SysCalcTempA
+    Else
+        Difference = SysCalcTempA - SysCalcTempB
+    End If
+End Function
