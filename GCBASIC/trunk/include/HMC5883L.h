@@ -16,6 +16,7 @@
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
 '    Created Evan R Venn - Jan 2014 revised July 2015
+'	 Revised to support init of I2C before device call Sept 2015
 
 '		 This support the address of the generic device 0011110b, therefore
 '		 I2C 8bit address of HMC5883L is 0x3C.
@@ -87,7 +88,9 @@
 
   Sub Init_HMC5883L ( Optional DeviceOpMode As Byte = HMC5843_MODE_CONVERSION_CONTINUOUS )
 
+
 	#ifdef I2C_DATA
+ 		 InitI2C
      I2CSTART
      I2CSEND ( HMC5883L_address )
      I2CSEND ( HMC5843_MODE_REG )
@@ -96,6 +99,7 @@
   #endif
 
   #ifdef HI2C_DATA
+  	 HINITI2C
      HI2CSTART
      HI2CSEND ( HMC5883L_address )
      HI2CSEND ( HMC5843_MODE_REG )
@@ -107,7 +111,7 @@
 
 
 
-  Sub Read_HMC5883L ( out HMC5883L_x, Out HMC5883L_y, Out HMC5883L_z )
+  Sub Read_HMC5883L ( out HMC5883L_x , Out HMC5883L_y, Out HMC5883L_z )
 
 	  #ifdef I2C_DATA
 
