@@ -49,6 +49,7 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define GLCD_TYPE_SSD1306 5
 #define GLCD_TYPE_ILI9340 6
 #define GLCD_TYPE_SSD1289 7
+#define GLCD_TYPE_ILI9341 8
 
 
 
@@ -99,6 +100,23 @@ Dim GLCDDeviceWidth as Word
 
   End If
 
+
+  If GLCD_TYPE = GLCD_TYPE_ILI9341 Then
+
+     #include <glcd_ILI9341.h>
+     InitGLCD = InitGLCD_ILI9341
+     GLCDCLS = GLCDCLS_ILI9341
+     GLCDDrawChar = GLCDDrawChar_ILI9341
+     GLCDDrawString = GLCDDrawString_ILI9341
+     FilledBox = FilledBox_ILI9341
+     Pset = Pset_ILI9341
+     GLCDRotate = GLCDRotate_ILI9341
+     glcd_type_string = "ILI9341"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 320
+     ILI9341_GLCD_HEIGHT = GLCDDeviceHeight
+     ILI9341_GLCD_WIDTH = GLCDDeviceWidth
+  End If
 
 
   If GLCD_TYPE = GLCD_TYPE_ILI9340 Then
@@ -569,6 +587,77 @@ end Sub
 Sub VLine(In GLCDY1 as word, In GLCDY2 as word, In  GLCDX1 as word, Optional In LineColour As Word = GLCDForeground)
  GLCDTemp=[Word]GLCDX1+GLCDLineWidth-1
  Box( GLCDX1, GLCDY1, GLCDTemp, GLCDY2, LineColour )
+End Sub
+
+
+
+
+Sub RoundRect(In  RX1 as Word, In  RY1 as Word, In  RX2 as Word, In  RY2 as Word, Optional In  Color as Word=GLCDForeground)
+    if RX1>RX2 then SWAP (RX1 , RX2)
+    if RY1>RY2 then SWAP (RY1 , RY2)
+    if (RX2-RX1>4) and (RY2-RY1>4) Then
+       Pset (RX1+1, RY1+2 , Color)
+       Pset (RX1+2, RY1+1 , Color)
+       Pset (RX2-2, RY1+1 , Color)
+       Pset (RX2-1, RY1+2 , Color)
+       Pset (RX1+1, RY2-2 , Color)
+       Pset (RX1+2, RY2-1 , Color)
+       Pset (RX2-2, RY2-1 , Color)
+       Pset (RX2-1, RY2-2 , Color)
+       Line RX1+3, RY1 , RX2-3, RY1, Color
+       Line RX1+3, RY2 , RX2-3, RY2, Color
+       Line RX1 , RY1+3, RX1 , RY2-3, Color
+       Line RX2 , RY1+3, RX2 , RY2-3, Color
+    end if
+End Sub
+
+Sub FillRoundRect(In  RX1 as Word, In  RY1 as Word, In  RX2 as Word, In  RY2 as Word, Optional In  Color as Word=GLCDForeground)
+    Dim FRI as Word
+    if RX1>RX2 then SWAP (RX1 , RX2)
+    if RY1>RY2 then SWAP (RY1 , RY2)
+    if (RX2-RX1>4) and (RY2-RY1>4) Then
+       for FRI=0 to (RY2-RY1)/2
+           Select Case FRI
+               Case 0
+                  Line RX1+3 , RY1 , RX2-3, RY1 , Color
+                  Line RX1+3 , RY2 , RX2-3, RY2 , Color
+               Case 1
+                  Line RX1+2 , RY1+1 , RX2-2, RY1+1 , Color
+                  Line RX1+2 , RY2-1 , RX2-1, RY2-1 , Color
+               Case 2
+                  Line RX1+1 , RY1+2 , RX2-1, RY1+2 , Color
+                  Line RX1+1 , RY2-2 , RX2-1, RY2-2 , Color
+               Case Else
+                  Line RX1 , RY1+FRI , RX2, RY1+FRI , Color
+                  Line RX1 , RY2-FRI , RX2, RY2-FRI , Color
+           End Select
+       Next
+    End if
+End Sub
+
+' CreateButton_SSD1289 method creates Botton on screen.
+'Parameters
+'BX1,BY1,BX2,BY2 coordinates of Botton
+'FillColor ,
+'BorderColor the colors of Botton
+'PrintData the text in center of Botton
+'FColor The color of text and
+'Size the size of characters
+Sub CreateButton (In BX1 as Word, In BY1 as Word , In BX2 as Word , In BY2 as Word , In FillColor as Word, In BorderColor as Word, In PrintData As String, In FColor as Word, In Size = 1)
+    Dim TempColor1 , TempColor2 as Word
+    Dim X1 , Y1 as Word
+
+    FillRoundRect(BX1, BY1, BX2, BY2, FillColor)
+    RoundRect(BX1, BY1, BX2, BY2, BorderColor)
+    X1=(BX1+BX2)/2-PrintData(0)*6*Size/2
+    Y1=(BY1+BY2)/2-4*Size
+    TempColor1=GLCDBackground
+    TempColor2= GLCDForeground
+    GLCDBackground=FillColor
+
+    GLCDPrint( X1, Y1, PrintData, FColor, Size )
+    GLCDBackground=TempColor1
+    GLCDForeground=TempColor2
 End Sub
 
 '''@hide
