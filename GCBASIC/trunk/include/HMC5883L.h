@@ -99,7 +99,7 @@
   #endif
 
   #ifdef HI2C_DATA
-  	 HINITI2C
+  	 HIC2Init
      HI2CSTART
      HI2CSEND ( HMC5883L_address )
      HI2CSEND ( HMC5843_MODE_REG )
