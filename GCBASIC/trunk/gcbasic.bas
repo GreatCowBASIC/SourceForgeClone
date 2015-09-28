@@ -578,7 +578,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-08-05"
+Version = "0.94 2015-09-28"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -8285,13 +8285,13 @@ SUB CompileWait (CompSub As SubType Pointer)
 				
 				'Add word variables (PIC only)
 				'If ModePIC Then
-					If Unit = "Delay_US" Then AddVar "SysWaitTempUS", "WORD", 1, 0, "REAL", Origin
-					If Unit = "Delay_MS" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin
+					If Unit = "Delay_US" Then AddVar "SysWaitTempUS", "WORD", 1, 0, "REAL", Origin,, -1
+					If Unit = "Delay_MS" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin,, -1
 					'Delays which depend on Delay_MS
-					If Unit = "Delay_10MS" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin
-					If Unit = "Delay_S" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin
-					If Unit = "Delay_M" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin
-					If Unit = "Delay_H" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin
+					If Unit = "Delay_10MS" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin,, -1
+					If Unit = "Delay_S" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin,, -1
+					If Unit = "Delay_M" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin,, -1
+					If Unit = "Delay_H" Then AddVar "SysWaitTempMS", "WORD", 1, 0, "REAL", Origin,, -1
 				'End If
 				
 				'Check for delay of 0
