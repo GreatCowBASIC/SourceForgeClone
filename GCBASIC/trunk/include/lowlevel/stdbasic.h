@@ -1,5 +1,5 @@
 '    Some common BASIC commands/functions for Great Cow BASIC
-'    Copyright (C) 2006 - 2014 Hugh Considine
+'    Copyright (C) 2006 - 2015 Hugh Considine, Evan Venn and Chris Roper
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -25,9 +25,8 @@
 'Changes:
 ' 17/6/2009: AVR support added
 ' 10/2/2013: Indirect call added
-' 08/02/2013: added to new functions _dectobcd and _bcdtodec
-' 01/09/2015: added Difference
-
+' 08/02/2013: added to new functions _dectobcd and _bcdtodecot
+' 26/09/2015: Added new methods LSR, LSL and IsNot - created by Chris Roper
 
 'Misc settings
 
@@ -118,7 +117,7 @@ End Function
 sub PWMOut(PWMChannel, SoftPWMDuty, SoftPWMCycles) #NR
 	For PWMDur = 1 to SoftPWMCycles
 		For DOPWM = 1 to 255
-			
+
 			if SoftPWMDuty > DOPWM then
 				#IFDEF PWM_Out1
 					if PWMChannel = 1 then set PWM_Out1 ON
@@ -252,16 +251,33 @@ Function BcdToDec_GCB( SysCalcTempA as byte ) as byte
          BcdToDec_GCB = (SysCalcTempA/16)*10+SysCalcTempA%16
 End Function
 
+' Macro by Chris Roper
+' BitIn is the BIT to be Complimented
+' BitOut is the BIT to SET/CLEAR
+' BitIn and BitOut may be the same
+' BitOut != BitIn
+Macro isNot(BitOut, BitIn)
+  If BitIn then
+     BitOut = 0
+  Else
+     BitOut = 1
+  End If
+End Macro
 
-'added 1st Sept 2015
+' BitsOut = BitsIn << NumBits
+Macro LSL(BitsOut, BitsIn, NumBits)
+  BitsOut = BitsIn
+  Repeat NumBits
+    STATUS.C = 0
+    Rotate BitsOut Left
+  End Repeat
+End Macro
 
-'''Calculate the difference between two numbers
-'''@param SysCalcTempA First Value
-'''@param SysCalcTempB Second Value
-Function Difference(SysCalcTempA As Word, SysCalcTempB As Word) As Word
-    If SysCalcTempA < SysCalcTempB Then
-        Difference = SysCalcTempB - SysCalcTempA
-    Else
-        Difference = SysCalcTempA - SysCalcTempB
-    End If
-End Function
+' BitsOut = BitsIn >> NumBits
+Macro LSR(BitsOut, BitsIn, NumBits)
+  BitsOut = BitsIn
+  Repeat NumBits
+    STATUS.C = 0
+    Rotate BitsOut Right
+  End Repeat
+End Macro
