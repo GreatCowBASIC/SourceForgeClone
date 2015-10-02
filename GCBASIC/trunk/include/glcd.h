@@ -49,7 +49,7 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define GLCD_TYPE_SSD1306 5
 #define GLCD_TYPE_ILI9340 6
 #define GLCD_TYPE_SSD1289 7
-
+#define GLCD_TYPE_ILI9341 8
 
 
 
@@ -99,6 +99,25 @@ Dim GLCDDeviceWidth as Word
      SSD1306_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
+
+
+  If GLCD_TYPE = GLCD_TYPE_ILI9341 Then
+
+     #include <glcd_ILI9341.h>
+     InitGLCD = InitGLCD_ILI9341
+     GLCDCLS = GLCDCLS_ILI9341
+     GLCDDrawChar = GLCDDrawChar_ILI9341
+     GLCDDrawString = GLCDDrawString_ILI9341
+     FilledBox = FilledBox_ILI9341
+     Pset = Pset_ILI9341
+     GLCDRotate = GLCDRotate_ILI9341
+     glcd_type_string = "ILI9341"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 320
+     ILI9341_GLCD_HEIGHT = GLCDDeviceHeight
+     ILI9341_GLCD_WIDTH = GLCDDeviceWidth
+  End If
+
 
   If GLCD_TYPE = GLCD_TYPE_ILI9340 Then
 
