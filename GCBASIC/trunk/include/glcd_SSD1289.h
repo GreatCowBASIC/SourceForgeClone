@@ -14,7 +14,10 @@
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+'
+'    31st Aug 2015 Initial release
+'    1st Sept 2015 Minor correction to color and other parameters.	
+'				
 'Notes:
 ' Supports SSD1289 controller only.
 
@@ -45,6 +48,12 @@
 '''@font GLCD_EXTENDEDFONTSET1
 
 
+'Define Orientation
+
+#define LANDSCAPE	  1
+#define PORTRAIT_REV  2
+#define LANDSCAPE_REV 3
+#define PORTRAIT	  4
 
 'Extended font set
 '#define GLCD_EXTENDEDFONTSET1
@@ -127,7 +136,7 @@ End Sub
 
 '''Send data to the device.
 '''@param Wdata
-Sub Write_Data_SSD1289(Wdata)
+Sub Write_Data_SSD1289(In Wdata as Word)
   SSD1289_RS = 1
   SetBus_SSD1289 (Wdata)
   SSD1289_WR = 0
@@ -148,6 +157,13 @@ End Sub
 '''@param PX2 X
 '''@param PY2 Y
 Sub Set_Address_SSD1289(In PX1 as word, In PY1 as word, In PX2 as word, In PY2 as word)
+  if Orientation_SSD1289=LANDSCAPE or Orientation_SSD1289=LANDSCAPE_REV then
+     SWAP (PX1,PY1)
+     SWAP (PX2,PY2)
+     PX1=SSD1289_GLCD_HEIGHT-PX1
+     PX2=SSD1289_GLCD_HEIGHT-PX2
+     SWAP (PX1 , PX2)
+  end if
   GLCDTempXY = PX2
   Repeat 8
     Rotate PX2 Left
@@ -164,20 +180,11 @@ End Sub
 
 
 
+
 '''Initialises the device
-Sub InitGLCD_SSD1289 ()
+Sub InitGLCD_SSD1289 (Optional In Orientation_SSD1289 as Byte = PORTRAIT, Optional In GLCDBackground = SSD1289_BLACK)
 
-        'Dim Variables
-        Dim Wcommand as Word
-        Dim DataVal as Word
-        Dim Wdata as Word
-        Dim PX1, PY1, PX2, PY2, GLCDTempXY as Word
-        Dim X1, X2 , Y1 , Y2 as Word
-        Dim Color , FColor , BColor as Word
-        Dim CountI,CountJ as Word
-        'Mapped to global varaible to reduce ram
-        'Dim SSD1289_GLCD_WIDTH, SSD1289_GLCD_HEIGHT as Word
-
+        Dim SSD1289_GLCD_WIDTH, SSD1289_GLCD_HEIGHT as Word
         SSD1289_RST=1
         Wait 5 ms
         SSD1289_RST=0
@@ -193,7 +200,28 @@ Sub InitGLCD_SSD1289 ()
         Write_Command_Data_SSD1289 (0x001E,0x00B7)
         Write_Command_Data_SSD1289 (0x0002,0x0600)
         Write_Command_Data_SSD1289 (0x0010,0x0000)
-        Write_Command_Data_SSD1289 (0x0011,0x6070)
+        Select Case Orientation_SSD1289
+           case LANDSCAPE_REV
+                SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
+                SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
+                Write_Command_Data_SSD1289 (0x0001,0x2B3F)
+                Write_Command_Data_SSD1289 (0x0011,0x6070)
+           case LANDSCAPE
+                SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
+                SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
+                Write_Command_Data_SSD1289 (0x0001,0x693F)
+                Write_Command_Data_SSD1289 (0x0011,0x6070)
+           case PORTRAIT_REV
+                SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
+                SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
+                Write_Command_Data_SSD1289 (0x0001,0x693F)
+                Write_Command_Data_SSD1289 (0x0011,0x6070)
+           case Else
+                SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
+                SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
+                Write_Command_Data_SSD1289 (0x0001,0x2B3F)
+                Write_Command_Data_SSD1289 (0x0011,0x6070)
+        end Select
         Write_Command_Data_SSD1289 (0x0005,0x0000)
         Write_Command_Data_SSD1289 (0x0006,0x0000)
         Write_Command_Data_SSD1289 (0x0016,0xEF1C)
@@ -228,42 +256,56 @@ Sub InitGLCD_SSD1289 ()
         Write_Command_SSD1289(0x0022)
         SSD1289_CS =1
         Wait 100 ms
-        GLCDBackground = SSD1289_Black
         GLCDCLS_SSD1289 GLCDBackground
+        GLCDCLS_SSD1289 GLCDBackground 'for sure
         GLCDFontWidth = 6
         'Default size
         GLCDfntDefaultSize = 2
 End Sub
 
-sub   GLCDRotate_SSD1289 ( in SSD1289AddressType )
-
-    select case SSD1289AddressType
+sub   GLCDRotate_SSD1289 ( In Orientation_SSD1289, Optional in GLCDBackground=GLCDBackground)
+  Dim SSD1289_GLCD_WIDTH, SSD1289_GLCD_HEIGHT as Word
+  select case Orientation_SSD1289
         case LANDSCAPE
-             SSD1289_GLCD_WIDTH = GLCD_HEIGHT
-             SSD1289_GLCD_HEIGHT = GLCD_WIDTH
-             Write_Command_Data_SSD1289 (0x0001,0x293F)
-             Write_Command_Data_SSD1289 (0x0011,0x6078)
+             SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
+             SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
+             SSD1289_CS =0
+             Write_Command_Data_SSD1289(0x0001,0x693F)
+             Write_Command_Data_SSD1289(0x0011,0x6070)
+             SSD1289_CS =1
+             wait 1 ms
         case PORTRAIT_REV
-             SSD1289_GLCD_WIDTH = GLCD_WIDTH
-             SSD1289_GLCD_HEIGHT = GLCD_HEIGHT
-             Write_Command_Data_SSD1289 (0x0001,0x693F)
-             Write_Command_Data_SSD1289 (0x0011,0x6070)
+             SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
+             SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
+             SSD1289_CS =0
+             Write_Command_Data_SSD1289(0x0001,0x693F)
+             Write_Command_Data_SSD1289(0x0011,0x6070)
+             SSD1289_CS =1
+             wait 1 ms
         case LANDSCAPE_REV
-             SSD1289_GLCD_WIDTH = GLCD_HEIGHT
-             SSD1289_GLCD_HEIGHT = GLCD_WIDTH
-             Write_Command_Data_SSD1289 (0x0001,0x6B3F)
-             Write_Command_Data_SSD1289 (0x0011,0x6078)
-        case PORTRAIT
-             SSD1289_GLCD_WIDTH = GLCD_WIDTH
-             SSD1289_GLCD_HEIGHT = GLCD_HEIGHT
-             Write_Command_Data_SSD1289 (0x0001,0x2B3F)
-             Write_Command_Data_SSD1289 (0x0011,0x6070)
+             SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
+             SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
+             SSD1289_CS =0
+             Write_Command_Data_SSD1289(0x0001,0x2B3F)
+             Write_Command_Data_SSD1289(0x0011,0x6070)
+             SSD1289_CS =1
+             wait 1 ms
+        case else
+             SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
+             SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
+             SSD1289_CS =0
+             Write_Command_Data_SSD1289(0x0001,0x2B3F)
+             Write_Command_Data_SSD1289(0x0011,0x6070)
+             SSD1289_CS =1
+             wait 1 ms
   end select
 
 end sub
 
-'erv what does this method do?
-Function Set_color_SSD1289(In rC, In gC, In bC)as Word
+
+
+'''Compute SSD1289_COLOR from R-G-B Values
+Function Set_color_SSD1289(In rC as Byte, In gC as Byte, In bC)as Word
   Set_color_H=(rC and 0xF8) or ([Word]gC/16)
   gC=(gC and 0x1C)
   Set_color=([Word]gC*8) or ([Word]bC/8)
@@ -272,11 +314,17 @@ End Function
 '''Clears the devices
 '''@param GLCDBackground Optional background color
 Sub GLCDCLS_SSD1289( Optional In  GLCDBackground as word = GLCDBackground)
+  Dim CountI,CountJ as Word
   SSD1289_CS  = 0
-  Set_Address_SSD1289 (0,0,SSD1289_GLCD_WIDTH,SSD1289_GLCD_HEIGHT)
+  Write_Command_Data_SSD1289(0x0044,0xEF00)
+  Write_Command_Data_SSD1289(0x0045,0x0000)
+  Write_Command_Data_SSD1289(0x0046,0x013F)
+  Write_Command_Data_SSD1289(0x004E,0x0000)
+  Write_Command_Data_SSD1289(0x004F,0x0000)
+  Write_Command_SSD1289(0x0022)
   Write_Data_SSD1289 (GLCDBackground)
-  for CountI = 0 to SSD1289_GLCD_HEIGHT
-    for CountJ = 0 to SSD1289_GLCD_WIDTH
+  for CountI = 0 to 319
+    for CountJ = 0 to 239
         SSD1289_WR = 0
         SSD1289_WR = 1
     next CountJ
@@ -285,10 +333,10 @@ Sub GLCDCLS_SSD1289( Optional In  GLCDBackground as word = GLCDBackground)
 End Sub
 
 '''Draws a box
-'''@param PX1 X1 Position
-'''@param PY1 Y1 Position
-'''@param PX2 X2 Position
-'''@param PY2 Y2 Position
+'''@param BX1 X1 Position
+'''@param BY1 Y1 Position
+'''@param BX2 X2 Position
+'''@param BY2 Y2 Position
 '''@param color Optional
 Sub Box_SSD1289(In BX1 as word, In BY1 as word, In  BX2 as word, In  BY2 as word, Optional In  FColor as word = GLCDForeground )
 
@@ -306,18 +354,10 @@ Sub Box_SSD1289(In BX1 as word, In BY1 as word, In  BX2 as word, In  BY2 as word
           'Draw lines going across
           Line BX1 , BY1 , BX2 , BY1 , FColor
           Line BX1 , BY2 , BX2 , BY2 , FColor
-	'For GLCDTempXY = BX1 To BX2
-	'	PSet GLCDTempXY, BY1, Color
-	'	PSet GLCDTempXY, BY2, Color
-	'Next
 
 	'Draw lines going down
           Line BX1 , BY1 , BX1 , BY2 , FColor
           Line BX2 , BY1 , BX2 , BY2 , FColor
-	'For GLCDTempXY = BY1 To BY2
-	'	PSet BX1, GLCDTempXY, Color
-	'	PSet BX2, GLCDTempXY, Color
-	'Next
 
 End Sub
 
@@ -328,6 +368,7 @@ End Sub
 '''@param PY2 Y2 Position
 '''@param color Optional
 Sub FilledBox_SSD1289(In PX1 as word, In PY1 as word, In  PX2 as word, In  PY2 as word, Optional In  Color as word = GLCDForeground)
+  Dim CountI,CountJ as Word
   SSD1289_CS  = 0
   Set_Address_SSD1289 (PX1,PY1,PX2,PY2)
   Write_Data_SSD1289 (Color)
@@ -341,44 +382,32 @@ Sub FilledBox_SSD1289(In PX1 as word, In PY1 as word, In  PX2 as word, In  PY2 a
 End Sub
 
 '''@hide
-Sub Pset_SSD1289(In  PX1 as word, In  PY1 as word, Optional In  Color = GLCDForeground)
+Sub Pset_SSD1289(In  PX1 as word, In  PY1 as word, Optional In  Color as Word = GLCDForeground)
   SSD1289_CS  = 0
   Set_Address_SSD1289 (PX1,PY1,PX1,PY1)
   Write_Data_SSD1289 (Color)
   SSD1289_CS  = 1
 End Sub
 
-'''Draws a Rectangle
-'''@param PX1 X1 Position
-'''@param PY1 Y1 Position
-'''@param PX2 X2 Position
-'''@param PY2 Y2 Position
-'''@param color Optional
-Sub Rectangle_SSD1289(In  X1 as word, In  Y1 as word, In  X2 as word, In  Y2 as word, Optional In  Color as word = GLCDForeground)
-  PX1=X1
-  PX2=X2
-  PY1=Y1
-  PY2=Y2
-  'Line PX1 , PY1 , PX2 , PY1 , Color
-  HLine  PX1, PX2, PY1, Color
-  PX1=X1
-  PX2=X2
-  PY1=Y1
-  PY2=Y2
-  'Line PX1 , PY2 , PX2 , PY2 , Color '
-  HLine  PX1, PX2, PY2, Color
-  PX1=X1
-  PX2=X2
-  PY1=Y1
-  PY2=Y2
-  'Line PX1 , PY1 , PX1 , PY2 , Color '
-  VLine  PY1, PY2, PX1, Color
-  PX1=0
-  PX2=X2
-  PY1=Y1
-  PY2=Y2
-  'Line PX2 , PY1 , PX2 , PY2 , Color '
-  VLine  PY1, PY2, PX2, Color
+
+
+
+' Try this with SetScrollPosition_SSD1289
+  ' for pos =0 to 319
+   ' SetScrollPosition_SSD1289 (pos)
+   ' wait 30 ms
+   'next
+   'for pos = 319 to 0 step -1
+   '  SetScrollPosition_SSD1289 (pos)
+    ' wait 30 ms
+   'next
+
+Sub SetScrollPosition_SSD1289 (In scrollPosition as Integer)
+    if scrollPosition<0 then scrollPosition+=320
+    if scrollPosition>319 then scrollPosition-=320
+    SSD1289_CS =0
+    Write_Command_Data_SSD1289(0x000F,scrollPosition)
+    SSD1289_CS =1
 End Sub
 
 
@@ -440,7 +469,7 @@ End Sub
 '''@param xradius Radius of circle
 '''@param Color Optional color
 '''@param yordinate Optional corner handling
-Sub Circle_SSD1289 ( In xoffset as Word, In yoffset as Word, In xradius as integer, Optional In  Color as word = GLCDForeground , Optional In yordinate = 0)
+Sub Circle_SSD1289 ( In xoffset as Word, In yoffset as Word, In xradius as integer, Optional In  LineColour as word = GLCDForeground , Optional In yordinate = 0)
     Dim  radiusErr as Integer
     radiusErr = -(xradius/2)
     Do While xradius >=  yordinate
@@ -488,74 +517,25 @@ Sub FilledCircle_SSD1289( In xoffset as Word, In yoffset as Word, In xradius as 
 	   FillCircleXX++
 	   ddF_x += 2
 	   ff += ddF_x
-	   Line_SSD1289 (xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour);
-	   Line_SSD1289 (xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour);
-	   Line_SSD1289 (xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour);
-	   Line_SSD1289 (xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour);
+	   Line_SSD1289 (xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour)
+	   Line_SSD1289 (xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour)
+	   Line_SSD1289 (xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour)
+	   Line_SSD1289 (xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour)
   	Loop
 End Sub
 
 
 
 'Text Routines
-'''Prints small text of device
+
+'''Prints small on device
 '''@param PrintLocX X position
 '''@param PrintLocY Y position
 '''@param PrintData String to be printed
 '''@param Color Optional color
-Sub SmallPrint_SSD1289(In PrintLocX as Word, In PrintLocY as Word, PrintData As String, Optional In  Color as word = GLCDForeground  )
-	PrintLen = PrintData(0)
-	If PrintLen = 0 Then Exit Sub
-	GLCDPrintLoc = PrintLocX
-	'Write Data
-	For SysPrintTemp = 1 To PrintLen
-		DrawSmallChar_SSD1289 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), Color
-		GLCDPrintLoc += GLCDFontWidth
-	Next
-End Sub
-
-
-
-'''Prints single character
-'''@param CharLocX X position
-'''@param CharLocY Y position
-'''@param CharLocY Character to be printed
-'''@param Color Optional color
-Sub DrawSmallChar_SSD1289(In CharLocX as Word, In CharLocY as Word, In CharCode, Optional In  Color as word = GLCDForeground )
-	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-	CharCode -= 15
-          if CharCode>=178 and CharCode<=202 then
-             CharLocY=CharLocY-1
-          end if
-	'Need to read characters from CharColn (n = 0:7) tables
-	'(First 3, ie 0:2 are blank, so can ignore)
-	For CurrCharCol = 1 to 5
-		Select Case CurrCharCol
-			Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-			Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-			Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-		End Select
-		For CurrCharRow = 1 to 8
-			if CurrCharVal.0=1 then
-                                 PSet_SSD1289 CharLocX + CurrCharCol, CharLocY + CurrCharRow, Color
-                              end if
-			Rotate CurrCharVal Right
-		Next
-	Next
-End Sub
-
-
-
-
-'''Prints small text on device
-'''@param PrintLocX X position
-'''@param PrintLocY Y position
-'''@param PrintData String to be printed
-'''@param Color Optional color
-Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, PrintData As String, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size = GLCDfntDefaultsize )
-	PrintLen = PrintData(0)
+Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In PrintData As String, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize )
+          Dim GLCDPrintLoc as Word
+          PrintLen = PrintData(0)
 	If PrintLen = 0 Then Exit Sub
 	GLCDPrintLoc = PrintLocX
 	'Write Data
@@ -565,6 +545,32 @@ Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, PrintData As Strin
 	Next
 End Sub
 
+'''Displays a number
+'''@param PrintLocX X coordinate for message
+'''@param PrintLocY Y coordinate for message
+'''@param GLCDValue Number to display
+'''@param Color Optional color
+Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Long, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize)
+	Dim GLCDPrintLoc as Word
+          Dim SysCalcTempA As Long
+	Dim SysPrintBuffer(10)
+	SysPrintBuffLen = 0
+	Do
+		'Divide number by 10, remainder into buffer
+		SysPrintBuffLen += 1
+		SysPrintBuffer(SysPrintBuffLen) = GLCDValue %10
+		GLCDValue = SysCalcTempA
+	Loop While GLCDValue <> 0
+	'Display
+	GLCDPrintLoc = PrintLocX
+	For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+		   DrawChar_SSD1289 GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48, GLCDForeground , Size
+		   GLCDPrintLoc += GLCDFontWidth*Size
+	Next
+
+End Sub
+
+
 
 '''Prints single character
 '''@param CharLocX X position
@@ -572,21 +578,22 @@ End Sub
 '''@param CharLocY Character to be printed
 '''@param Color Optional color
 Sub DrawChar_SSD1289(In CharLocX as Word, In CharLocY as Word, In CharCode, Optional In  GLCDForeground as word = GLCDForeground , Optional In Size = GLCDfntDefaultsize)
-	CharCode -= 15
-          if CharCode>=178 and CharCode<=202 then
-             CharLocY=CharLocY-1
-          end if
-          CharCol=1
-	For CurrCharCol = 1 to 5
-		Select Case CurrCharCol
-			Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-			Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-			Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-		End Select
+  Dim CharCol , CharRow , CharColS ,  CharRowS as Word
+  CharCode -= 15
+  if CharCode>=178 and CharCode<=202 then
+     CharLocY=CharLocY-1
+  end if
+  CharCol=1
+  For CurrCharCol = 1 to 5
+    Select Case CurrCharCol
+           Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+	 Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+	 Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+	 Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+	 Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+    End Select
     CharRow=0
-		For CurrCharRow = 1 to 8
+    For CurrCharRow = 1 to 8
         CharColS=0
         For Col=1 to Size
               CharColS +=1
@@ -600,11 +607,11 @@ Sub DrawChar_SSD1289(In CharLocX as Word, In CharLocY as Word, In CharCode, Opti
                   End if
               Next Row
         Next Col
-			Rotate CurrCharVal Right
-      CharRow +=Size
-		Next
+        Rotate CurrCharVal Right
+       CharRow +=Size
+    Next
     CharCol +=Size
-	Next
+  Next
 End Sub
 
 '''Displays a string in a larger font
@@ -612,8 +619,9 @@ End Sub
 '''@param PrintLocY Y coordinate for message
 '''@param PrintData String to display
 '''@param Color Optional color
-Sub BigPrint_SSD1289(In PrintLocX, In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
-	PrintLen = PrintData(0)
+Sub BigPrint_SSD1289(In PrintLocX as Word , In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
+	Dim GLCDPrintLoc as Word
+          PrintLen = PrintData(0)
 	If PrintLen = 0 Then Exit Sub
 	GLCDPrintLoc = PrintLocX
 	For SysPrintTemp = 1 To PrintLen
@@ -622,28 +630,25 @@ Sub BigPrint_SSD1289(In PrintLocX, In PrintLocY as Word,  PrintData As String, O
 	Next
 End Sub
 
-'''Draws a Vertical Line on the GLCD with a
-'''@param GLCDY1 Y coordinate of one end of the line
-'''@param GLCDY2 Y coordinate of the other end of the line
-'''@param GLCDX1 X coordinate of the line
-'''@param LineColour color
-Sub DrawBigChar_SSD1289 (In CharLocX, In CharLocY as Word, In CharCode, Optional In  Color as word = GLCDForeground )
-            if CharCode <=126 Then
-               CharCode -=32
-               Goto Tables
-            end if
-            if CharCode <=210 Then
-               CharCode -=33
-               Goto Tables
-            end if
-            if CharCode <= 250 Then
-               CharCode -=34
-               Goto Tables
-            end if
-            Tables:
-	  For CurrCharCol = 1 to 24
-      CurrCol=CurrCharCol+CharCode*24-(CharCode/10)*240
-      if CharCode>=0 and CharCode<=9 then ReadTable BigFont32_41 , CurrCol, CurrCharVal
+'''Displays a character in a larger font
+Sub DrawBigChar_SSD1289 (In CharLocX as Word, In CharLocY as Word, In CharCode, Optional In  Color as word = GLCDForeground )
+    Dim LocX , LocY as Word
+    if CharCode <=126 Then
+       CharCode -=32
+       Goto Tables
+    end if
+    if CharCode <=210 Then
+       CharCode -=33
+       Goto Tables
+    end if
+    if CharCode <= 250 Then
+       CharCode -=34
+       Goto Tables
+    end if
+    Tables:
+    For CurrCharCol = 1 to 24
+        CurrCol=CurrCharCol+CharCode*24-(CharCode/10)*240
+        if CharCode>=0 and CharCode<=9 then ReadTable BigFont32_41 , CurrCol, CurrCharVal
         if CharCode>=10 and CharCode<=19 then ReadTable BigFont42_51 , CurrCol, CurrCharVal
         if CharCode>=20 and CharCode<=29 then ReadTable BigFont52_61 , CurrCol, CurrCharVal
         if CharCode>=30 and CharCode<=39 then ReadTable BigFont62_71 , CurrCol, CurrCharVal
@@ -659,8 +664,8 @@ Sub DrawBigChar_SSD1289 (In CharLocX, In CharLocY as Word, In CharCode, Optional
 
         if CurrCharVal=36 then CurrCharVal=33 'For Arduino only
         For CurrCharRow = 1 to 8
-          LocX=CharLocX+CurrCharCol
-          LocY=CharLocY+CurrCharRow
+          LocX=[word]CharLocX+CurrCharCol
+          LocY=[word]CharLocY+CurrCharRow
           if CurrCharCol>12 then
              LocX= LocX - 12
              LocY= LocY + 8
@@ -668,58 +673,54 @@ Sub DrawBigChar_SSD1289 (In CharLocX, In CharLocY as Word, In CharCode, Optional
           if CurrCharVal.0=1 then
              PSet_SSD1289 LocX , LocY , Color
           end if
-					Rotate CurrCharVal Right
-				Next
-	  Next
+	Rotate CurrCharVal Right
+        Next
+    Next
 End Sub
 
-'''Draws a Vertical Line on the GLCD with a
-'''@param GLCDY1 Y coordinate of one end of the line
-'''@param GLCDY2 Y coordinate of the other end of the line
-'''@param GLCDX1 X coordinate of the line
-'''@param LineColour color
-Sub DrawBigSymbol_SSD1289 (In CharLocX, In CharLocY as Word, In CharCode, Optional In  Color as word = GLCDForeground )
-            CharCode -=1
-	  For CurrCharCol = 1 to 24
-                    CurrCol=CurrCharCol+CharCode*24-(CharCode/10)*240
-                    if CharCode>=0 and CharCode<=9 then
-                        ReadTable Symbols1 , CurrCol, CurrCharVal
-                        Goto EndSymbol
-                    end if
-		if CharCode>=10 and CharCode<=19 then
-      ReadTable Symbols2 , CurrCol, CurrCharVal
-      Goto EndSymbol
-      end if
-      if CharCode>=20 and CharCode<=29 then
-          ReadTable Symbols3 , CurrCol, CurrCharVal
-          Goto EndSymbol
-      end if
-      if CharCode>=30 and CharCode<=39 then
-          ReadTable Symbols4 , CurrCol, CurrCharVal
-      end if
-      EndSymbol:
-      if CurrCharVal=37 then CurrCharVal=33 'only for Arduino
-      For CurrCharRow = 1 to 8
-        LocX=CharLocX+CurrCharCol
-        LocY=CharLocY+CurrCharRow
-        if CurrCharCol>12 then
-           LocX= LocX - 12
-           LocY= LocY + 8
+'''Draws a symbol on the GLCD
+Sub DrawBigSymbol_SSD1289 (In CharLocX, In CharLocY as Word, In CharCode, Optional In  GLCDForeground as word = GLCDForeground )
+    CharCode -=1
+    For CurrCharCol = 1 to 24
+        CurrCol=CurrCharCol+CharCode*24-(CharCode/10)*240
+        if CharCode>=0 and CharCode<=9 then
+           ReadTable Symbols1 , CurrCol, CurrCharVal
+           Goto EndSymbol
         end if
-        if CurrCharVal.0=1 then
-           PSet_SSD1289 LocX , LocY , Color
-        'Else
-         '  PSet_SSD1289 LocX , LocY , GLCDBackground
+        if CharCode>=10 and CharCode<=19 then
+           ReadTable Symbols2 , CurrCol, CurrCharVal
+           Goto EndSymbol
         end if
-        Rotate CurrCharVal Right
-      Next
-	  Next
+        if CharCode>=20 and CharCode<=29 then
+           ReadTable Symbols3 , CurrCol, CurrCharVal
+           Goto EndSymbol
+        end if
+        if CharCode>=30 and CharCode<=39 then
+           ReadTable Symbols4 , CurrCol, CurrCharVal
+        end if
+        EndSymbol:
+        if CurrCharVal=37 then CurrCharVal=33 'only for Arduino
+        For CurrCharRow = 1 to 8
+            LocX=CharLocX+CurrCharCol
+            LocY=CharLocY+CurrCharRow
+            if CurrCharCol>12 then
+               LocX= LocX - 12
+               LocY= LocY + 8
+            end if
+            if CurrCharVal.0=1 then
+               PSet_SSD1289 LocX , LocY , GLCDForeground
+            Else
+               PSet_SSD1289 LocX , LocY , GLCDBackground
+            end if
+            Rotate CurrCharVal Right
+        Next
+    Next
 End Sub
 
 'Image Routines
 '''Display Image on the screen
-Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as word , Color)
-		Dim TableReadPosition, TableLen, SelectedTable as word
+Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as word , in Color as Word)
+    Dim TableReadPosition, TableLen, SelectedTable as word
     ' Start of code
     TableReadPosition = 1
     'Read selected table
@@ -743,9 +744,8 @@ Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as 
     oldTFTXPos = TFTXPos
     TableReadPosition = 3
     WholeYBytes = objHeight /  8               ; Number of whole bytes within Y Axis.  This is integer maths!
-      if WholeYBytes <> 0 then
-
-          for hCount = 0 to (WholeYBytes - 1)  ; counter to number of whole bytes
+    if WholeYBytes <> 0 then
+            for hCount = 0 to (WholeYBytes - 1)  ; counter to number of whole bytes
                 TFTY = TFTYPos+hCount
                 for widthCount = 0 to (objwidth - 1)  ; increment thru bytes horizontally
                     'Read selected table
@@ -769,19 +769,17 @@ Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as 
                                     End If
                                     Rotate wByte Right
                           Next
-                     end if
+                    end if
                 next widthCount
                 TFTXPos =  oldTFTXPos
                 TFTYPos = TFTYPos + 8
-          next hCount
-      end if
-
-      maxHeight = objHeight % 8       ; calculate the remaining bits
-      'writes and remaining bits, if any
-      if maxHeight <> 0 then
-
+            next hCount
+    end if
+    maxHeight = objHeight % 8       ; calculate the remaining bits
+    'writes and remaining bits, if any
+    if maxHeight <> 0 then
         for widthCount = 0 to objwidth - 1
-          'Read selected table
+           'Read selected table
             Select Case SelectedTable
             Case @TFTTable1: ReadTable TFTTable1, TableReadPosition, wByte
 
@@ -795,19 +793,19 @@ Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as 
 
             End Select
             TableReadPosition++
-              For CurrCharRow = 0 to maxHeight-1
-                        If wByte.0 = 1 Then
-                                  PSet_SSD1289 TFTXPos+widthCount, ( CurrCharRow + TFTYPos ), Color
-                        End If
-                        Rotate wByte Right
-              Next
-        next
-      end if
+            For CurrCharRow = 0 to maxHeight-1
+                If wByte.0 = 1 Then
+                   PSet_SSD1289 TFTXPos+widthCount, ( CurrCharRow + TFTYPos ), Color
+                End If
+                Rotate wByte Right
+            Next
+        Next
+    end if
 End Sub
 
 '''Display BMP on the screen
 Sub DrawBMP_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as word)
-		Dim TableReadPosition, TableLen, SelectedTable as word
+    Dim TableReadPosition, TableLen, SelectedTable as word
     ' Start of code
     Dim  PixelRGB , XCount, YCount, TFTYEnd, objwidth, objHeight, TableReadPosition, TFTX , TFTY as Word
     TableReadPosition = 1
@@ -847,6 +845,1221 @@ Sub DrawBMP_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable a
                 Next
     Next
 End Sub
+
+
+
+
+'Character bitmaps for print routines
+Table GLCDCharCol3
+0
+16
+12
+10
+136
+34
+56
+32
+8
+32
+16
+16
+128
+128
+64
+4
+0
+0
+0
+40
+72
+70
+108
+0
+0
+0
+40
+16
+0
+16
+0
+64
+124
+0
+132
+130
+48
+78
+120
+6
+108
+12
+0
+0
+16
+40
+0
+4
+100
+248  'A
+254  'B
+124  'C
+254  'D
+254  'E
+254  'F
+124  'G
+254  'H
+0    'I
+64   'J
+254  'K
+254  'L
+254  'M
+254  'N
+124  'O
+254  'P
+124  'Q
+254  'R
+76   'S
+2    'T
+126  'U
+62   'V
+126  'W
+198  'X
+14   'Y
+194  'Z
+0
+4
+0
+8
+128
+0
+64
+254
+112
+112
+112
+16
+16
+254
+0
+64
+254
+0
+248
+248
+112
+248
+16
+248
+144
+16
+120
+56
+120
+136
+24
+136
+0
+0
+0
+32
+120 '127
+0
+0
+0
+0
+0
+0
+0     '134 ¢
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+248   '193 Á
+254   '194 B
+254   '195 Ã
+248   '196 Ä
+254   '197 E
+194   '198 Z
+254   '199 H
+124   '200 È
+0     '201 É
+254   '202 Ê
+248   '203 Ë
+254   '204 Ì
+254   '205 Í
+130   '206 Î
+124   '207 Ï
+254   '208 Ð
+254   '209 Ñ
+0
+198   '211 Ó
+2     '212 Ô
+14    '213 Õ
+56    '214 Ö
+198   '215 ×
+14    '216 Ø
+188   '217 Ù
+0
+0
+56    '220 Ü
+40    '221 Ý
+124   '222 Þ
+0     '223 ß
+0
+56    '225 á
+254   '226 â
+4     '227 ã
+48    '228 ä
+40    '229 å
+1     '230 æ
+124   '231 ç
+48    '232 è
+0     '233 é
+124   '234 ê
+64    '235 ë
+252   '236 ì
+28    '237 í
+0     '238 î
+56    '239 ï
+4     '240 ð
+248   '241 ñ
+24    '242 ò
+56    '243 ó
+4     '244 ô
+60    '245 õ
+56    '246 ö
+68    '247 ÷
+60    '248 ø
+60    '249 ù
+0     '250 ú
+60    '251 û
+56    '252 ü
+60    '253 ý
+60    '254 þ
+End Table
+
+Table GLCDCharCol4
+254
+56
+10
+6
+204
+102
+124
+112
+4
+64
+16
+56
+136
+162
+112
+28
+0
+0
+14
+254
+84
+38
+146
+10
+56
+130
+16
+16
+160
+16
+192
+32
+162
+132
+194
+130
+40
+138
+148
+2
+146
+146
+108
+172
+40
+40
+130
+2
+146
+36    'Á
+146   'B
+130   'C
+130   'D
+146   'E
+18    'F
+130   'G
+16    'H
+130   'I
+128   'J
+16    'K
+128   'L
+4     'M
+8     'N
+130   'O
+18    'P
+130   'Q
+18    'R
+146   'S
+2     'T
+128   'U
+64    'V
+128   'W
+40    'X
+16    'Y
+162   'Z
+254
+8
+130
+4
+128
+2
+168
+144
+136
+136
+168
+252
+168
+16
+144
+128
+32
+130
+8
+16
+136
+40
+40
+16
+168
+124
+128
+64
+128
+80
+160
+200
+16
+0
+130
+16
+68
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+36    '193 Á
+146   '194 B
+2     '195 Ã
+132   '196 Ä
+146   '197 E
+162   '198 Z
+16    '199 H
+146   '200 È
+130   '201 É
+16    '202 Ê
+4     '203 Ë
+4     '204 Ì
+8     '205 Í
+146   '206 Î
+130   '207 Ï
+2     '208 Ð
+18    '209 Ñ
+0
+170   '211 Ó
+2     '212 Ô
+16    '213 Õ
+68    '214 Ö
+40    '215 ×
+16    '216 Ø
+194   '217 Ù
+0
+0
+68    '220 Ü
+84    '221 Ý
+8     '222 Þ
+0     '223 ß
+0
+68    '225 á
+73    '226 â
+104   '227 ã
+73    '228 ä
+84    '229 å
+25    '230 æ
+8     '231 ç
+74    '232 è
+0     '233 é
+16    '234 ê
+50    '235 ë
+64    '236 ì
+32    '237 í
+1     '238 î
+68    '239 ï
+124   '240 ð
+36    '241 ñ
+36    '242 ò
+68    '243 ó
+4     '244 ô
+64    '245 õ
+68    '246 ö
+40    '247 ÷
+64    '248 ø
+64    '249 ù
+1     '250 ú
+65    '251 û
+68    '252 ü
+64    '253 ý
+64    '254 þ
+End Table
+
+Table GLCDCharCol5
+124
+124
+0
+0
+238
+238
+124
+168
+254
+254
+84
+84
+148
+148
+124
+124
+0
+158
+0
+40
+254
+16
+170
+6
+68
+68
+124
+124
+96
+16
+192
+16
+146
+254
+162
+138
+36
+138
+146
+226
+146
+146
+108
+108
+68
+40
+68
+162
+242
+34   'A
+146  'B
+130  'C
+130  'D
+146  'E
+18   'F
+146  'G
+16   'H
+254  'I
+130  'J
+40   'K
+128  'L
+24   'M
+16   'N
+130  'O
+18   'P
+162  'Q
+50   'R
+146  'S
+254  'T
+128  'U
+128  'V
+112  'W
+16   'X
+224  'Y
+146  'Z
+130
+16
+130
+2
+128
+4
+168
+136
+136
+136
+168
+18
+168
+8
+250
+136
+80
+254
+240
+8
+136
+40
+40
+8
+168
+144
+128
+128
+96
+32
+160
+168
+108
+254
+108
+16
+66
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+34   '193 Á
+146  '194 B
+2    '195 Ã
+130  '196 Ä
+146  '197 E
+146  '198 Z
+16   '199 H
+146  '200 È
+254  '201 É
+40   '202 Ê
+2    '203 Ë
+24   '204 Ì
+16   '205 Í
+146  '206 Î
+130  '207 Ï
+2    '208 Ð
+18   '209 Ñ
+0
+146  '211 Ó
+254  '212 Ô
+224  '213 Õ
+254  '214 Ö
+16   '215 ×
+254  '216 Ø
+2    '217 Ù
+0
+0
+69   '220 Ü
+84   '221 Ý
+5    '222 Þ
+61   '223 ß
+0
+68    '225 á
+73    '226 â
+144   '227 ã
+75    '228 ä
+84    '229 å
+165   '230 æ
+4     '231 ç
+77    '232 è
+60    '233 é
+40    '234 ê
+9     '235 ë
+64    '236 ì
+64    '237 í
+149   '238 î
+68    '239 ï
+4     '240 ð
+36    '241 ñ
+164   '242 ò
+68    '243 ó
+124   '244 ô
+64    '245 õ
+254   '246 ö
+16    '247 ÷
+248   '248 ø
+56    '249 ù
+60    '250 ú
+64    '251 û
+69    '252 ü
+66    '253 ý
+58    '254 þ
+End Table
+
+Table GLCDCharCol6
+56
+254
+12
+10
+204
+102
+124
+32
+4
+64
+56
+16
+162
+136
+112
+28
+0
+0
+14
+254
+84
+200
+68
+0
+130
+56
+16
+16
+0
+16
+0
+8
+138
+128
+146
+150
+254
+138
+146
+18
+146
+82
+0
+0
+130
+40
+40
+18
+130
+36   'A
+146  'B
+130  'C
+68   'D
+146  'E
+18   'F
+146  'G
+16   'H
+130  'I
+126  'J
+68   'K
+128  'L
+4    'M
+32   'N
+130  'O
+18   'P
+66   'Q
+82   'R
+146  'S
+2    'T
+128  'U
+64   'V
+128  'W
+40   'X
+16   'Y
+138  'Z
+130
+32
+254
+4
+128
+8
+168
+136
+136
+144
+168
+2
+168
+8
+128
+122
+136
+128
+8
+8
+136
+40
+48
+8
+168
+128
+64
+64
+128
+80
+160
+152
+130
+0
+16
+32
+68
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+36   '193 Á
+146  '194 B
+2    '195 Ã
+132  '196 Ä
+146  '197 E
+138  '198 Z
+16   '199 H
+146  '200 È
+130  '201 É
+68   '202 Ê
+4    '203 Ë
+4    '204 Ì
+32   '205 Í
+146  '206 Î
+130  '207 Ï
+2    '208 Ð
+18   '209 Ñ
+0
+130  '211 Ó
+2    '212 Ô
+16   '213 Õ
+68   '214 Ö
+40   '215 ×
+16   '216 Ø
+194  '217 Ù
+0
+0
+56   '220 Ü
+85   '221 Ý
+4    '222 Þ
+64   '223 ß
+0
+56    '225 á
+78    '226 â
+104   '227 ã
+77    '228 ä
+84    '229 å
+67    '230 æ
+4     '231 ç
+73    '232 è
+64    '233 é
+68    '234 ê
+9     '235 ë
+32    '236 ì
+32    '237 í
+171   '238 î
+68    '239 ï
+124   '240 ð
+36    '241 ñ
+164   '242 ò
+76    '243 ó
+4     '244 ô
+64    '245 õ
+68    '246 ö
+40    '247 ÷
+64    '248 ø
+64    '249 ù
+65    '250 ú
+65    '251 û
+68    '252 ü
+65    '253 ý
+65    '254 þ
+End Table
+
+Table GLCDCharCol7
+16
+0
+10
+6
+136
+34
+56
+62
+8
+32
+16
+16
+128
+128
+64
+4
+0
+0
+0
+40
+36
+196
+160
+0
+0
+0
+40
+16
+0
+16
+0
+4
+124
+0
+140
+98
+32
+114
+96
+14
+108
+60
+0
+0
+0
+40
+16
+12
+124
+248   'A
+108   'B
+68    'C
+56    'D
+130   'E
+2     'F
+244   'G
+254   'H
+0     'I
+2     'J
+130   'K
+128   'L
+254   'M
+254   'N
+124   'O
+12    'P
+188   'Q
+140   'R
+100   'S
+2     'T
+126   'U
+62    'V
+126   'W
+198   'X
+14    'Y
+134   'Z
+0
+64
+0
+8
+128
+0
+240
+112
+64
+254
+48
+4
+120
+240
+0
+0
+0
+0
+240
+240
+112
+16
+248
+16
+64
+64
+248
+56
+120
+136
+120
+136
+0
+0
+0
+16
+120
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+248    '193 Á
+108    '194 B
+2      '195 Ã
+248    '196 Ä
+130    '197 E
+134    '198 Z
+254    '199 H
+124    '200 È
+0      '201 É
+130    '202 Ê
+248    '203 Ë
+254    '204 Ì
+254    '205 Í
+130    '206 Î
+124    '207 Ï
+254    '208 Ð
+12     '209 Ñ
+0
+130    '211 Ó
+2      '212 Ô
+14     '213 Õ
+56     '214 Ö
+198    '215 ×
+14     '216 Ø
+188    '217 Ù
+0
+0
+68     '220 Ü
+68     '221 Ý
+120    '222 Þ
+32     '223 ß
+0
+68    '225 á
+48    '226 â
+4     '227 ã
+49    '228 ä
+68    '229 å
+1     '230 æ
+120   '231 ç
+62    '232 è
+32    '233 é
+0     '234 ê
+126   '235 ë
+124   '236 ì
+28    '237 í
+65    '238 î
+56    '239 ï
+4     '240 ð
+24    '241 ñ
+72    '242 ò
+52    '243 ó
+4     '244 ô
+60    '245 õ
+56    '246 ö
+68    '247 ÷
+60    '248 ø
+60    '249 ù
+32    '250 ú
+60    '251 û
+56    '252 ü
+60    '253 ý
+60    '254 þ
+End Table
+
 
 '**********************************************************************************
 Table BigFont32_41
