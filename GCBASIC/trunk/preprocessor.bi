@@ -483,19 +483,25 @@ SUB PreProcessor
 			
 			IF VBS = 1 THEN PRINT SPC(10); SourceFile(T).FileName;
 			IF Dir(SourceFile(T).FileName) = "" THEN
+				Temp = Message("NoFile")
+				Replace Temp, FI, SourceFile(T).FileName
 				IF VBS = 0 THEN 
-					Temp = Message("NoFile")
-					Replace Temp, FI, SourceFile(T).FileName
 					PRINT Temp
 				Else
 					PRINT ": " + Message("NotFound")   
 				End If
+				
+				'Log warning
+				LogWarning(Temp, SourceFile(T).IncludeOrigin)
 			
 			Else
 				IF VBS = 1 THEN PRINT ": " + Message("found")
 				OPEN SourceFile(T).FileName For INPUT AS #1
+				LC = 0
+				
 				DO WHILE NOT EOF(1)
 					LINE INPUT #1, Temp
+					LC += 1
 					Temp = Trim(Temp)
 					IF Left(UCase(Temp), 8) = "#INCLUDE" THEN
 						IF INSTR(Temp, Chr(34)) <> 0 THEN
@@ -522,6 +528,7 @@ SUB PreProcessor
 							
 							SourceFiles += 1
 							SourceFile(SourceFiles).FileName = Temp
+							SourceFile(SourceFiles).IncludeOrigin = ";?F" + Str(T) + "L" + Str(LC) + "S0?"
 						End If
 					END IF
 				LOOP

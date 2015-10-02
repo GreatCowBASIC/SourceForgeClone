@@ -51,6 +51,8 @@ Type SourceFileType
 	InitSub As String
 	InitSubUsed As Integer
 	
+	IncludeOrigin As String
+	
 	OptionExplicit As Integer
 End Type
 
@@ -484,6 +486,7 @@ Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, SVC, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
+Dim Shared As Integer WarningsAsErrors
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
@@ -578,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-09-28"
+Version = "0.94 2015-10-02"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -10443,7 +10446,7 @@ SUB InitCompiler
 	Dim As Integer T, Block, CD, FCB, IniNotSet, SettingsFileMode, FindTool, FindMsg
 	Dim As Integer SettingsFiles, CurrSettingsFile
 	
-	Dim As Integer AsmNotSet, ProgNotSet, OutNotSet, PresNotSet, VbsNotSet
+	Dim As Integer AsmNotSet, ProgNotSet, OutNotSet, PresNotSet, VbsNotSet, WarnErrorNotSet
 	Dim As Integer PauseNotSet, ReportNotSet
 	
 	'Detect GCBASIC install directory
@@ -10468,6 +10471,7 @@ SUB InitCompiler
 	PrgTool = 0
 	VBS = 0
 	PauseOnErr = 1
+	WarningsAsErrors = 0
 	PauseAfterCompile = 0
 	GCGB = 0
 	CompReportFormat = "html"
@@ -10480,6 +10484,7 @@ SUB InitCompiler
 	PresNotSet = -1
 	VbsNotSet = -1
 	PauseNotSet = -1
+	WarnErrorNotSet = -1
 	IniNotSet = -1
 	ReportNotSet = -1
 	
@@ -10505,6 +10510,10 @@ SUB InitCompiler
 		ElseIf ParamUpper = "/NP" Or ParamUpper = "-NP" Then
 			PauseOnErr = 0
 			PauseNotSet = 0
+			
+		ElseIf ParamUpper = "/WX" Or ParamUpper = "-WX" Then
+			WarningsAsErrors = -1
+			WarnErrorNotSet = 0
 			
 		'Great Cow Graphical BASIC Mode?
 		'(Alters the error listing format)
@@ -10714,6 +10723,14 @@ SUB InitCompiler
 									Select Case LCase(Left(MsgVal, 1))
 										Case "y", "t", "1": PauseOnErr = 1
 										Case "n", "f", "0": PauseOnErr = 0
+									End Select
+								End If
+								
+								Case "warningsaserrors"
+								If WarnErrorNotSet Then
+									Select Case LCase(Left(MsgVal, 1))
+										Case "y", "t", "1": WarningsAsErrors = -1
+										Case "n", "f", "0": WarningsAsErrors = 0
 									End Select
 								End If
 								
@@ -11541,7 +11558,7 @@ Sub LogOutputMessage(InMessage As String)
 	'Error if too many messages
 	If OutMessages >= MAX_OUTPUT_MESSAGES - 1 Then
 		'If too many warnings, just exit
-		If Right(InMessage, 1) = "W" Then Exit Sub
+		If Right(InMessage, 1) = "W" And Not WarningsAsErrors Then Exit Sub
 		
 		'If too many errors, error and quit
 		If OutMessages = (MAX_OUTPUT_MESSAGES - 1) Then
@@ -13537,7 +13554,13 @@ SUB WriteErrorLog
 			OutMessage(PD) = MessageType + OutMessage(PD)
 		END IF
 		
-	NEXT
+	Next
+	
+	If ERC = 0 And WRC > 0 And WarningsAsErrors Then
+		'No errors, only warnings, but treating warnings as errors
+		LogOutputMessage(Message("TypeError") + ": " + Message("WarningsAsErrors"))
+		ERC += 1
+	End If
 
 	'Display message
 	IF ERC = 1 THEN Temp = Message("Error")
