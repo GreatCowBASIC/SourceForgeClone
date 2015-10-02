@@ -26,7 +26,7 @@
 ' 17/6/2009: AVR support added
 ' 10/2/2013: Indirect call added
 ' 08/02/2013: added to new functions _dectobcd and _bcdtodecot
-' 26/09/2015: Added new methods LSR, LSL and IsNot - created by Chris Roper
+' 26/09/2015: Added new methods lslBit, lsrBit and isNotBit - created by Chris Roper
 
 'Misc settings
 
@@ -256,7 +256,7 @@ End Function
 ' BitOut is the BIT to SET/CLEAR
 ' BitIn and BitOut may be the same
 ' BitOut != BitIn
-Macro isNot(BitOut, BitIn)
+Macro isNotBit(BitOut, BitIn)
   If BitIn then
      BitOut = 0
   Else
@@ -265,7 +265,7 @@ Macro isNot(BitOut, BitIn)
 End Macro
 
 ' BitsOut = BitsIn << NumBits
-Macro LSL(BitsOut, BitsIn, NumBits)
+Macro lslBit(BitsOut, BitsIn, NumBits)
   BitsOut = BitsIn
   Repeat NumBits
     STATUS.C = 0
@@ -274,10 +274,19 @@ Macro LSL(BitsOut, BitsIn, NumBits)
 End Macro
 
 ' BitsOut = BitsIn >> NumBits
-Macro LSR(BitsOut, BitsIn, NumBits)
+Macro lsrBit(BitBitsOut, BitsIn, NumBits)
   BitsOut = BitsIn
   Repeat NumBits
     STATUS.C = 0
     Rotate BitsOut Right
   End Repeat
 End Macro
+ 
+'eqBit(BitOut, BitIn)
+macro equBit(BitOut, BitIn)
+  if BitIn then
+     BitOut = 1
+  else
+     BitOut = 0
+  end if
+End macro
