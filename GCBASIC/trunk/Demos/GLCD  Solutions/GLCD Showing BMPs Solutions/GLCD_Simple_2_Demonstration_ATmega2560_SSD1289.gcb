@@ -48,7 +48,7 @@
 
 
 Dim FColor as Word
-
+GLCDCLS SSD1289_Blue
 Wait 1 s
 GLCDPrint  75, 100, "GCBasic", SSD1289_Yellow, 2
 GLCDPrint  33, 130, "SSD1289 Driver", SSD1289_Yellow, 2
