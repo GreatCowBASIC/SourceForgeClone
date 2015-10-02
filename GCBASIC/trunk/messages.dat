@@ -1,6 +1,6 @@
 'English messages.dat for Great Cow BASIC
 'Original translation creator Hugh Considine
-'Translation last updated 19/7/2015 by Hugh Considine
+'Translation last updated 2/10/2015 by Hugh Considine
 
 'Common Messages
 AnyKey = "Press any key to continue"
@@ -62,7 +62,7 @@ End Block
 
 Startup = "Great Cow BASIC (%Version%)"
 Compiling = "Compiling %Filename% ..."
-NoFile = "Cannot find %Filename%!"
+NoFile = "Cannot find %Filename%"
 
 'Verbose mode messages
 FindSource = "Finding source files:"
@@ -231,6 +231,7 @@ FloatInDelay = "Found decimal point, but delays can only handle whole numbers"
 RepeatMissingCount = "No value given for Repeat"
 UndeclaredVar = "Variable %var% was not explicitly declared"
 MissingSubParam = "Missing value for parameter %param%"
+WarningsAsErrors = "Warnings generated and treated as errors"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"
