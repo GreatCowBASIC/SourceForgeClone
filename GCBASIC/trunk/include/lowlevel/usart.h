@@ -37,6 +37,7 @@
 ' 04/07/15:  Improved timing
 ' 31/7/2105: Fix Compile Error for 16F1705 1709  and other Pics - WMR
 '            See lines 311 - 320
+' 02/10/2015: Fix for missing SPBRG - mapped to SPBRGL
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -157,6 +158,18 @@ End Sub
 
 Sub InitUSART
 	#ifdef PIC
+            'added 02.10.2015 to resolve PIC devices without SPBRG define.  SPBRG needs to map to SPBRGL
+            'fixes the list of known devices as follows
+'                16f1454.dat
+'                16f1455.dat
+'                16f1458.dat
+'                16f1459.dat
+'                16f1508.dat
+'                16f1509.dat
+            #ifndef SPBRG
+                    #define SPBRG SPBRGL
+            #endif
+
 		#ifndef Bit(TXEN1)
 			'Set baud rate
 			SPBRG = SPBRGL_TEMP
