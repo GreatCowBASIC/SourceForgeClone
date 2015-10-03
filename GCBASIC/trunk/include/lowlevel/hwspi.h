@@ -311,3 +311,38 @@ Sub HWSPITransfer(In SPITxData, Out SPIRxData)
 	#endif
 
 End Sub
+
+
+'Sub to handle SPI data send - Master mode only
+Sub FastHWSPITransfer( In SPITxData )
+	'Master mode only
+	#ifdef PIC
+		#ifndef Var(SSPCON1)
+			#ifdef Var(SSPCON)
+				Dim SSPCON1 Alias SSPCON
+			#endif
+		#endif
+
+    'Clear WCOL
+    Set SSPCON1.WCOL Off
+
+    'Put byte to send into buffer
+    'Will start transfer
+    SSPBUF = SPITxData
+    'Same for master and slave
+    Wait While SSPSTAT.BF = Off
+    Set SSPSTAT.BF Off
+
+	#endif
+
+	#ifdef AVR
+		'Master mode only
+    Do
+      SPDR = SPITxData
+    Loop While SPSR.WCOL
+		'Read buffer
+		'Same for master and slave
+		Wait While SPSR.SPIF = Off
+	#endif
+
+End Sub
