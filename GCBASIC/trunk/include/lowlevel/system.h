@@ -324,13 +324,16 @@ Sub InitSys
 	
 	'Ensure all ports are set for digital I/O
 	'Turn off A/D
-	#IFDEF Var(ADCON0)
-		SET ADCON0.ADON OFF
+	#IF Var(ADCON0) OR Var(ADCON)
 		#IFDEF Bit(ADFM)
 			SET ADFM OFF
 		#ENDIF
 		'Switch off A/D
+		#ifdef NoVar(ADCON0)
+			Set ADCON.ADON Off
+		#endif
 		#IFDEF Var(ADCON0)
+			SET ADCON0.ADON OFF
 			#IF NoVar(ANSEL) AND NoVar(ANSELA) AND NoVar(ANSEL0)
 				#IFDEF NoBit(PCFG4)
 					#IFDEF NoVar(ADCON2)
