@@ -1,5 +1,6 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014 and 2015 Hugh Considine, Evan Venn and David Stephenson
+'    Copyright (C) 2015 Evan Venn
+
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation; either
@@ -18,7 +19,7 @@
 ' Supports ILI9341 controller only.
 
 'Changes
-'Development release not for production/use - untested
+' 04/10/2015:      Revised to add ReadID.           Evan R Venn
 
 '
 'Hardware settings
@@ -58,7 +59,7 @@
 #define ILI9341_RDMODE  0x0A
 #define ILI9341_RDMADCTL  0x0B
 #define ILI9341_RDPIXFMT  0x0C
-#define ILI9341_RDIMGFMT  0x0A
+#define ILI9341_RDIMGFMT  0x0D
 #define ILI9341_RDSELFDIAG  0x0F
 
 #define ILI9341_INVOFF  0x20
@@ -184,11 +185,7 @@ Sub InitGLCD_ILI9341
 		Set ILI9341_RST On
 		Wait 150 ms
 
-    repeat 3
-    	TFTDriver = ILI9341_ReadID
-    end Repeat
-
-	SendCommand_ILI9341(0xEF)
+  SendCommand_ILI9341(0xEF)
   SendData_ILI9341(0x03)
   SendData_ILI9341(0x80)
   SendData_ILI9341(0x02)
@@ -313,9 +310,207 @@ Sub InitGLCD_ILI9341
 
 End Sub
 
-Function ILI9341_ReadID
+
+'Read IC device code.
+'The 1st parameter means the IC version.
+'The 2rd and 3rd parameter mean the IC model name, should be 9341
+
+Function ILI9341_ReadID as long
+
+        SendCommand_ILI9341( 0xd9 )
+        'write data
+        SendData_ILI9341( 0x11 )
+        set ILI9341_CS OFF
+        set ILI9341_DC OFF
+        SPITransfer  0xd3,  ILI9341TempOut
+        set ILI9341_DC ON
+        SPITransfer  0x00,  SysCalcTempA
+        set ILI9341_CS ON
+
+        SendCommand_ILI9341( 0xd9 )
+        'write data
+        SendData_ILI9341( 0x12 )
+        set ILI9341_CS OFF
+        set ILI9341_DC OFF
+        SPITransfer  0xd3,  ILI9341TempOut
+        set ILI9341_DC ON
+        SPITransfer  0x00,  SysCalcTempB
+        set ILI9341_CS ON
+
+        SendCommand_ILI9341( 0xd9 )
+        'write data
+        SendData_ILI9341( 0x13 )
+        set ILI9341_CS OFF
+        set ILI9341_DC OFF
+        SPITransfer  0xd3,  ILI9341TempOut
+        set ILI9341_DC ON
+        SPITransfer  0x00,  SysCalcTempX
+        set ILI9341_CS ON
+        epwrite 2, ILI9341TempOut
+
+        'Rebuild result to the long variable and return
+        ILI9341_ReadID = SysCalcTempX
+        ILI9341_ReadID_H = SysCalcTempB
+        ILI9341_ReadID_U = SysCalcTempA
+
+
+
+
 
 End Function
+
+Sub DSTB_ILI9341( Optional In PowerMode = On  )
+
+    if PowerMode = Off Then
+
+       SendCommand_ILI9341( 0xb7 )
+       SendData_ILI9341(0x08)
+
+    Else
+
+       SendCommand_ILI9341( 0xb7 )
+       SendData_ILI9341(0b10110111)
+
+       repeat 2
+              set ILI9341_CS OFF
+              wait 100 us
+              set ILI9341_CS ON
+              wait 100 us
+       End Repeat
+       wait 1 ms
+       repeat 4
+              set ILI9341_CS OFF
+              wait 100 us
+              set ILI9341_CS ON
+              wait 100 us
+       End Repeat
+
+   Set ILI9341_CS On
+   Set ILI9341_DC On
+
+
+		'Reset display
+		Wait 50 ms
+    Set ILI9341_RST On
+		Wait 5 ms
+		'Reset sequence (lower line for at least 10 us)
+		Set ILI9341_RST Off
+		Wait 20 us
+		Set ILI9341_RST On
+		Wait 150 ms
+
+  SendCommand_ILI9341(0xEF)
+  SendData_ILI9341(0x03)
+  SendData_ILI9341(0x80)
+  SendData_ILI9341(0x02)
+
+  SendCommand_ILI9341(0xCF)
+  SendData_ILI9341(0x00)
+  SendData_ILI9341(0XC1)
+  SendData_ILI9341(0X30)
+
+  SendCommand_ILI9341(0xED)
+  SendData_ILI9341(0x64)
+  SendData_ILI9341(0x03)
+  SendData_ILI9341(0X12)
+  SendData_ILI9341(0X81)
+
+  SendCommand_ILI9341(0xE8)
+  SendData_ILI9341(0x85)
+  SendData_ILI9341(0x00)
+  SendData_ILI9341(0x78)
+
+  SendCommand_ILI9341(0xCB)
+  SendData_ILI9341(0x39)
+  SendData_ILI9341(0x2C)
+  SendData_ILI9341(0x00)
+  SendData_ILI9341(0x34)
+  SendData_ILI9341(0x02)
+
+  SendCommand_ILI9341(0xF7)
+  SendData_ILI9341(0x20)
+
+  SendCommand_ILI9341(0xEA)
+  SendData_ILI9341(0x00)
+  SendData_ILI9341(0x00)
+
+  SendCommand_ILI9341(ILI9341_PWCTR1)    'Power control
+  SendData_ILI9341(0x23)   'VRH[5:0]
+
+  SendCommand_ILI9341(ILI9341_PWCTR2)    'Power control
+  SendData_ILI9341(0x10)   'SAP[2:0];BT[3:0]
+
+  SendCommand_ILI9341(ILI9341_VMCTR1)    'VCM control
+  SendData_ILI9341(0x3e) '???????
+  SendData_ILI9341(0x28)
+
+  SendCommand_ILI9341(ILI9341_VMCTR2)    'VCM control2
+  SendData_ILI9341(0x86)  '--
+
+  SendCommand_ILI9341(ILI9341_MADCTL)    ' Memory Access Control
+  SendData_ILI9341(ILI9341_MADCTL_MX | ILI9341_MADCTL_BGR)
+
+  SendCommand_ILI9341(ILI9341_PIXFMT)
+  SendData_ILI9341(0x55)
+
+  SendCommand_ILI9341(ILI9341_FRMCTR1)
+  SendData_ILI9341(0x00)
+  SendData_ILI9341(0x18)
+
+  SendCommand_ILI9341(ILI9341_DFUNCTR)    ' Display Function Control
+  SendData_ILI9341(0x08)
+  SendData_ILI9341(0x82)
+  SendData_ILI9341(0x27)
+
+  SendCommand_ILI9341(0xF2)    ' 3Gamma Function Disable
+  SendData_ILI9341(0x00)
+
+  SendCommand_ILI9341(ILI9341_GAMMASET)    'Gamma curve selected
+  SendData_ILI9341(0x01)
+
+  SendCommand_ILI9341(ILI9341_GMCTRP1)    'Set Gamma
+  SendData_ILI9341(0x0F)
+  SendData_ILI9341(0x31)
+  SendData_ILI9341(0x2B)
+  SendData_ILI9341(0x0C)
+  SendData_ILI9341(0x0E)
+  SendData_ILI9341(0x08)
+  SendData_ILI9341(0x4E)
+  SendData_ILI9341(0xF1)
+  SendData_ILI9341(0x37)
+  SendData_ILI9341(0x07)
+  SendData_ILI9341(0x10)
+  SendData_ILI9341(0x03)
+  SendData_ILI9341(0x0E)
+  SendData_ILI9341(0x09)
+  SendData_ILI9341(0x00)
+
+  SendCommand_ILI9341(ILI9341_GMCTRN1)    'Set Gamma
+  SendData_ILI9341(0x00)
+  SendData_ILI9341(0x0E)
+  SendData_ILI9341(0x14)
+  SendData_ILI9341(0x03)
+  SendData_ILI9341(0x11)
+  SendData_ILI9341(0x07)
+  SendData_ILI9341(0x31)
+  SendData_ILI9341(0xC1)
+  SendData_ILI9341(0x48)
+  SendData_ILI9341(0x08)
+  SendData_ILI9341(0x0F)
+  SendData_ILI9341(0x0C)
+  SendData_ILI9341(0x31)
+  SendData_ILI9341(0x36)
+  SendData_ILI9341(0x0F)
+
+  SendCommand_ILI9341(ILI9341_SLPOUT)    'Exit Sleep
+  wait 120 ms
+  SendCommand_ILI9341(ILI9341_DISPON)    'Display on
+
+
+    End if
+
+
+End Sub
 
 'Subs
 '''Clears the GLCD screen
@@ -526,6 +721,7 @@ sub  SendCommand_ILI9341( IN ILI9341SendByte as byte )
      exit sub
   #endif
 
+  #ifndef ILI9341_HardwareSPI
   repeat 8
 
     if ILI9341SendByte.7 = ON  then
@@ -539,6 +735,7 @@ sub  SendCommand_ILI9341( IN ILI9341SendByte as byte )
 
   end repeat
   set ILI9341_CS ON;
+  #endif
 
 end Sub
 
@@ -556,7 +753,7 @@ sub  SendData_ILI9341( IN ILI9341SendByte as byte )
      exit sub
   #endif
 
-
+  #ifndef ILI9341_HardwareSPI
   repeat 8
 
     if ILI9341SendByte.7 = ON then
@@ -570,6 +767,7 @@ sub  SendData_ILI9341( IN ILI9341SendByte as byte )
 
   end Repeat
   set ILI9341_CS ON;
+  #endif
 
 end Sub
 
@@ -587,6 +785,7 @@ Sub SendWord_ILI9341(In ILI9341SendWord As Word)
      exit sub
   #endif
 
+  #ifndef ILI9341_HardwareSPI
   repeat 16
 
     if ILI9341SendWord.15 = ON then
@@ -600,6 +799,7 @@ Sub SendWord_ILI9341(In ILI9341SendWord As Word)
 
   end repeat
   set ILI9341_CS ON;
+  #endif
 End Sub
 
 

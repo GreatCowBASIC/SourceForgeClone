@@ -143,7 +143,6 @@
 
 
 
-
 #startup InitGLCD_ILI9340
 
 
@@ -154,7 +153,7 @@ Sub InitGLCD_ILI9340
 
 	'	 Mapped to global variables to same RAM
 	'	dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
-
+      #define InitGLCD_ILI9341 nop
 
 	'Setup code for ILI9340 controllers
 	#if GLCD_TYPE = GLCD_TYPE_ILI9340
@@ -344,8 +343,8 @@ Sub GLCDCLS_ILI9340 ( Optional In  GLCDBackground as word = GLCDBackground )
 
         #ifdef ILI9340_HardwareSPI
 '					Could use these as an alternative
-'        	FastHWSPITransfer  ILI9340SendWord_h
-'         FastHWSPITransfer  ILI9340SendWord
+'        	SPITransfer  ILI9340SendWord_h
+'         SPITransfer  ILI9340SendWord
 
           #ifdef PIC
             #ifndef Var(SSPCON1)
@@ -370,8 +369,8 @@ Sub GLCDCLS_ILI9340 ( Optional In  GLCDBackground as word = GLCDBackground )
             Set SSPSTAT.BF Off
           #endif
 					#ifdef AVR
-          	FastHWSPITransfer  ILI9340SendWord_h
-          	FastHWSPITransfer  ILI9340SendWord
+          	FastHWSPITransfer  ILI9341SendWord_h
+          	FastHWSPITransfer  ILI9341SendWord
 					#endif
 
         #endif
