@@ -27,6 +27,7 @@
 ' 10/2/2013: Indirect call added
 ' 08/02/2013: added to new functions _dectobcd and _bcdtodecot
 ' 26/09/2015: Added new methods lslBit, lsrBit and isNotBit - created by Chris Roper
+' 06/10/2015: FnLSR, FnLSL, FnEQUBit and FnNOTBit - created by Chris Roper
 
 'Misc settings
 
@@ -251,10 +252,8 @@ Function BcdToDec_GCB( SysCalcTempA as byte ) as byte
          BcdToDec_GCB = (SysCalcTempA/16)*10+SysCalcTempA%16
 End Function
 
-' Macro by Chris Roper
-' BitIn is the BIT to be Complimented
-' BitOut is the BIT to SET/CLEAR
-' BitIn and BitOut may be the same
+' Bitwise Functions and Macros by Chris Roper
+
 ' BitOut != BitIn
 Macro isNotBit(BitOut, BitIn)
   If BitIn then
@@ -281,7 +280,7 @@ Macro lsrBit(BitBitsOut, BitsIn, NumBits)
     Rotate BitsOut Right
   End Repeat
 End Macro
- 
+
 'eqBit(BitOut, BitIn)
 macro equBit(BitOut, BitIn)
   if BitIn then
@@ -290,3 +289,55 @@ macro equBit(BitOut, BitIn)
      BitOut = 0
   end if
 End macro
+
+' 06/10/15@08:41
+
+' Assign a Variable, Constant or Function to a Bit
+' Complimects SET Method and Addresses Port Glitch Issues
+macro SetWith(TargetBit, Source)
+  if Source then
+    TargetBit = 1
+  else
+    TargetBit = 0
+  end if
+end macro
+
+' BitsOut = BitsIn >> NumBits
+Function FnLSR(in SysLongTempA as long, in NumBits as byte) as long
+'  dim SysLongTempA as long
+'  SysLongTempA  = BitsIn
+  Repeat NumBits
+    STATUS.C = 0
+    Rotate SysLongTempA Right
+  End Repeat
+  FnLSR = SysLongTempA
+End Function
+
+' BitsOut = BitsIn << NumBits
+Function FnLSL(in SysLongTempA as long, in NumBits as byte) as long
+'  dim SysLongTempA as long
+'  SysLongTempA  = BitsIn
+  Repeat NumBits
+    STATUS.C = 0
+    Rotate SysLongTempA Left
+  End Repeat
+  FnLSL = SysLongTempA
+End Function
+
+' BitOut = BitIn
+Function FnEQUBit(in BitIn) as bit
+  If BitIn then
+     FnEQUBit = 1
+  Else
+     FnEQUBit = 0
+  End If
+end Function
+
+' BitOut != BitIn
+Function FnNOTBit(in BitIn) as bit
+  If BitIn then
+     FnNOTBit = 0
+  Else
+     FnNOTBit = 1
+  End If
+
