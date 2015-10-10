@@ -1,12 +1,12 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 10LF320
-'Generated 15/8/2014
+'Generated 11/10/2015
 'Format last revised: 14/11/2009
 
 [ChipData]
-Prog=262.144
+Prog=256
 EEPROM=0
-RAM=64
+RAM=32
 I/O=4
 ADC=3
 MaxMHz=16
@@ -24,7 +24,7 @@ LogicCell1Event:CLC1IE,CLC1IF
 NumericOscOverflow:NCO1IE,NCO1IF
 PORTBChange:IOCIE,IOCIF
 Timer0Overflow:TMR0IE,TMR0IF
-Timer2Overflow:TMR2IE,TMR2IF
+Timer2Match:TMR2IE,TMR2IF
 
 [Registers]
 INDF,0
@@ -436,10 +436,10 @@ SBOREN,BORCON,7
 _BOREN_SBODEN,BORCON,16379
 
 [FreeRAM]
-20:5F
+60:7F
 
 [NoBankRAM]
-20:5F
+70:7F
 
 [Pins-DIP]
 5,RA0(IO)
