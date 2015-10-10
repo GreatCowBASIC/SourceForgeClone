@@ -37,6 +37,7 @@
 ' 25/08/2015: Added redirection of TIMER2OVERFLOW to TIMER2MATCH for handling deprecated commands - ERV
 ' 25/08/2015: Added Functions for Timer8/10&12 - ERV
 ' 25/08/2015: Removed errors and improved handles timers and added Inittimer7- ERV
+' 10/10/2015: Added ifdef to protect StopTimer 1 error
 
 
 'Subroutines:
@@ -888,10 +889,11 @@ Sub StopTimer (In TMRNumber)
               Set TMR0ON off
            end if
         #endif
-
-		If TMRNumber = 1 Then
-			Set TMR1ON OFF
-		End If
+		#ifdef Var(T1CON)
+      If TMRNumber = 1 Then
+        Set TMR1ON OFF
+      End If
+    #endif
 		#ifdef Var(T2CON)
 			If TMRNumber = 2 Then
 				Set TMR2ON OFF
