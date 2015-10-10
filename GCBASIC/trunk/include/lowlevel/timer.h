@@ -38,6 +38,7 @@
 ' 25/08/2015: Added Functions for Timer8/10&12 - ERV
 ' 25/08/2015: Removed errors and improved handles timers and added Inittimer7- ERV
 ' 10/10/2015: Added ifdef to protect StopTimer 1 error
+' 10/10/2015: Change Stoptimer ifdef to T1CON to  TMR1ON etc. etc. TMR12ON
 
 
 'Subroutines:
@@ -889,52 +890,53 @@ Sub StopTimer (In TMRNumber)
               Set TMR0ON off
            end if
         #endif
-		#ifdef Var(T1CON)
+
+    #ifdef Bit(TMR1ON)
       If TMRNumber = 1 Then
         Set TMR1ON OFF
       End If
     #endif
-		#ifdef Var(T2CON)
+		#ifdef Var(TMR2ON)
 			If TMRNumber = 2 Then
 				Set TMR2ON OFF
 			End If
 		#endif
-		#ifdef Var(T3CON)
+		#ifdef Var(TMR3ON)
 			If TMRNumber = 3 Then
 				Set TMR3ON OFF
 			End If
 		#endif
-		#ifdef Var(T4CON)
+		#ifdef Var(TMR4ON)
 			If TMRNumber = 4 Then
 				Set TMR4ON OFF
 			End If
 		#endif
-		#ifdef Var(T5CON)
+		#ifdef Var(TMR5ON)
 			If TMRNumber = 5 Then
 				Set TMR5ON OFF
 			End If
 		#endif
-		#ifdef Var(T6CON)
+		#ifdef Var(TMR6ON)
 			If TMRNumber = 6 Then
 				Set TMR6ON OFF
 			End If
 		#endif
-        #ifdef Var(T7CON)
+        #ifdef Var(TMR7ON)
 			If TMRNumber = 7 Then
 				Set TMR7ON OFF
 			End If
 		#endif
-		#ifdef Var(T8CON)
+		#ifdef Var(TMR8ON)
 			If TMRNumber = 8 Then
 				Set TMR8ON OFF
 			End If
 		#endif
-		#ifdef Var(T10CON)
+		#ifdef Var(TMR10ON)
 			If TMRNumber = 10 Then
 				Set TMR10ON OFF
 			End If
 		#endif
-        #ifdef Var(T12CON)
+        #ifdef Var(TMR12ON)
 			If TMRNumber = 12 Then
 				Set TMR12ON OFF
 			End If
