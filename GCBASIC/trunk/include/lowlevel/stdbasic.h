@@ -324,20 +324,46 @@ Function FnLSL(in SysLongTempA as long, in NumBits as byte) as long
   FnLSL = SysLongTempA
 End Function
 
-' BitOut = BitIn
-Function FnEQUBit(in BitIn) as bit
-  If BitIn then
-     FnEQUBit = 1
-  Else
-     FnEQUBit = 0
-  End If
-end Function
+#ifdef AVR
+  #define FnEQUBit AVR_FnEQUBit
+  #define FnNOTBit AVR_FnNOTBit
+#endif
+' Please ensure you edit the four functions as a whole. Two are for AVR and two for Pic.
+    ' BitOut = BitIn
+    Function AVR_FnEQUBit(in BitIn)
+      If BitIn then
+         AVR_FnEQUBit = 1
+      Else
+         AVR_FnEQUBit = 0
+      End If
+    end Function
 
-' BitOut != BitIn
-Function FnNOTBit(in BitIn) as bit
-  If BitIn then
-     FnNOTBit = 0
-  Else
-     FnNOTBit = 1
-  End If
+    ' BitOut != BitIn
+    Function AVR_FnNOTBit(in BitIn)
+      If BitIn then
+      	 AVR_FnNOTBit = 0
+      Else
+      	 AVR_FnNOTBit = 1
+      End If
+    End Function
+
+
+    ' BitOut = BitIn
+    Function FnEQUBit(in BitIn) as bit
+      If BitIn then
+         FnEQUBit = 1
+      Else
+         FnEQUBit = 0
+      End If
+    end Function
+
+    ' BitOut != BitIn
+    Function FnNOTBit(in BitIn) as bit
+      If BitIn then
+         FnNOTBit = 0
+      Else
+         FnNOTBit = 1
+      End If
+
+		end Function
 
