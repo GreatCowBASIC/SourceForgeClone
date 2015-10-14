@@ -365,5 +365,5 @@ End Function
          FnNOTBit = 1
       End If
 
-		end Function
+    end Function
 

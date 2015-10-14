@@ -3,6 +3,7 @@
 '    Copyright (C) 2014 & 2015 Evan R. Venn & Jacques Erdemaal
 '    Version 1.1f
 '    Version 1.1g
+'    Version 1.1h
 
 
 '    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
@@ -12,6 +13,8 @@
 '    Moved defines ACK/NACK to sysen.ini to
 '
 '    Updated May 2015 - enhance hi2cwaitmssp
+'    Updated Oct 2015 - enhance hi2cwaitmssp
+
 '
 
 
@@ -410,24 +413,29 @@ End Sub
 ; Then, it clears SSPIF
 sub HI2CWaitMSSP
 
+		Dim HI2CWaitMSSPTimeout as byte
+		HI2CWaitMSSPTimeout = 0
+		HI2CWaitMSSPWait:
+    HI2CWaitMSSPTimeout++
+    if HI2CWaitMSSPTimeout < 255 then
+        #ifdef bit(SSP1IF)
+            ''Support for SSP1IF
+            if SSP1IF = 0 then goto HI2CWaitMSSPWait
+            SSP1IF = 0
+        #endif
+        #ifdef bit(SSPIF)
+            ''Support for SSPIF
+            if SSPIF = 0 then goto HI2CWaitMSSPWait
+            SSPIF = 0
+        #endif
 
-    #ifdef bit(SSP1IF)
-        if SSP1IF = 0 then goto $-1
-        SSP1IF = 0
-        exit sub
-    #endif
-    #ifdef bit(SSPIF)
-        if SSPIF = 0 then goto $-1
-        SSPIF = 0
-        exit sub
-    #endif
-
-    ' no int flag Exit
-    wait 1 us
-
-
-
-
+        #ifndef  bit(SSP1IF)
+          #ifndef  bit(SSPIF)
+            ' no int flag so wait a while and exit
+            wait 1 us
+          #endif
+        #endif
+    end if
 
 end sub
 

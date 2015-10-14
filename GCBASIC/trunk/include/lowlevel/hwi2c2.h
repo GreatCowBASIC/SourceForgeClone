@@ -1,6 +1,6 @@
 '    Hardware I2C2 routines for Great Cow BASIC
 '    Copyright (C) 2015 Evan R. Venn
-'    Version 1.0
+'    Version 1.1
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -312,15 +312,24 @@ End Sub
 ; Then, it clears SSPIF
 sub HI2C2WaitMSSP
 
+		' adapted for 18f - v0.94
+		Dim HI2CWaitMSSPTimeout as byte
+		HI2C2WaitMSSPTimeout = 0
+		HI2C2WaitMSSPWait:
+    HI2C2WaitMSSPTimeout++
+    if HI2C2WaitMSSPTimeout < 255 then
+        #ifdef bit(SSP2IF)
+            ''Support for SSP1IF
+            if SSP2IF = 0 then goto HI2C2WaitMSSPWait
+            SSP2IF = 0
+        #endif
 
-    #ifdef bit(SSP2IF)
-        if SSP2IF = 0 then goto $-1
-        SSP2IF = 0
-        exit sub
-    #endif
+        #ifndef  bit(SSP2IF)
+                    ' no int flag so wait a while and exit
+          wait 1 us
+        #endif
+    end if
 
-    ' no int flag Exit
-    wait 1 us
 
 end sub
 
