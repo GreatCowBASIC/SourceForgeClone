@@ -30,9 +30,10 @@
 ' 28/6/2014: Revised GLCDDrawString.  Xpos was always 1 extra pixel to right.
 ' 14/8/2014: Removed GLCDTimeDelay to improve timing and a tidy up.
 ' 1/11/2014: Revised to support single controller.
-'    
+'
 ' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 31/7/15	Added GLCDDirection test to invert display
+' 17/10/15 Corrected KS0108ClockDelay was KS0108_Clock_Delay and the other waits were not implemented - most odd. Erv
 'Hardware settings
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_KS0108"
@@ -72,40 +73,40 @@ Sub InitGLCD_KS0108
 		Dir GLCD_CS1 Out
 		Dir GLCD_CS2 Out
 		Dir GLCD_RESET Out
-		
+
 		'Reset
 		Set GLCD_RESET Off
 		Wait 1 ms
 		Set GLCD_RESET On
 		Wait 1 ms
-		
+
 		'Select both chips
 		Set GLCD_CS1 On
 		Set GLCD_CS2 On
-		
+
 		'Set on
 		Set GLCD_RS Off
 		GLCDWriteByte 63
 
 		'Set Z to 0
 		GLCDWriteByte 192
-		
+
 		'Deselect chips
 		Set GLCD_CS1 Off
 		Set GLCD_CS2 Off
-		
+
 		'Colours
 		GLCDBackground = 0
 		GLCDForeground = 1
                 GLCDFontWidth = 6
                 GLCDfntDefault = 0
 		GLCDfntDefaultsize = 1
-		
+
 	#endif
-	
+
 	'Clear screen
 	GLCDCLS_KS0108
-	
+
 End Sub
 
 
@@ -127,7 +128,7 @@ Sub GLCDCLS_KS0108
                                   Set GLCD_RS Off
 
                                   GLCDWriteByte b'10111000' Or CurrPage
-    			
+
                                   'Clear columns
                                   For CurrCol = 0 to 63
                                             'Select column
@@ -148,7 +149,7 @@ Sub GLCDCLS_KS0108
                     Set GLCD_CS1 OFF
                     Set GLCD_CS2 Off
 	#endif
-	
+
 End Sub
 
 '''Draws a filled box on the GLCD screen
@@ -170,7 +171,7 @@ Sub FilledBox_KS0108(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Lin
 		LineY1 = LineY2
 		LineY2 = GLCDTemp
 	End If
-	
+
 	#if GLCD_TYPE = GLCD_TYPE_KS0108
 		'Draw lines going across
 		For DrawLine = LineX1 To LineX2
@@ -200,7 +201,7 @@ Sub PSet_KS0108(In GLCDX, In GLCDY, In GLCDColour As Word)
 				GLCDY=63-GLCDY
 			end if
 		#endif
-		
+
 		'Select screen half
 		If GLCDX.6 = Off Then Set GLCD_CS2 On:Set GLCD_CS1 off
 		If GLCDX.6 = On Then Set GLCD_CS1 On: GLCDX -= 64: Set GLCD_CS2 off
@@ -209,7 +210,7 @@ Sub PSet_KS0108(In GLCDX, In GLCDY, In GLCDColour As Word)
 		CurrPage = GLCDY / 8
 		Set GLCD_RS Off
 		GLCDWriteByte b'10111000' Or CurrPage
-		
+
 		'Select column
 		Set GLCD_RS Off
 		GLCDWriteByte 64 Or GLCDX
@@ -219,7 +220,7 @@ Sub PSet_KS0108(In GLCDX, In GLCDY, In GLCDColour As Word)
 		'Read current data
 		Set GLCD_RS On
 		GLCDDataTemp = GLCDReadByte
-		
+
 		'Change data to set/clear pixel
 		GLCDBitNo = GLCDY And 7
 		If GLCDColour.0 = 0 Then
@@ -238,28 +239,28 @@ Sub PSet_KS0108(In GLCDX, In GLCDY, In GLCDColour As Word)
 		Else
 			GLCDDataTemp = GLCDDataTemp Or GLCDChange
 		End If
-		
+
 		'Select correct column again
 		Set GLCD_RS Off
 		GLCDWriteByte 64 Or GLCDX
 		'Write data back
 		Set GLCD_RS On
 		GLCDWriteByte GLCDDataTemp
-		
+
 		Set GLCD_CS1 Off
 		Set GLCD_CS2 Off
 	#endif
-	
+
 End Sub
 
 #define GLCDWriteByte GLCDWriteByte_KS0108
 '''Write byte to LCD
 '''@hide
 Sub GLCDWriteByte_KS0108 (In LCDByte)
-	
+
 	Dim GLCDSaveRS As Bit
 	Dim GLCDSaveCS2 As Bit
-	
+
 	'Wait until LCD is available
 	GLCDSaveRS = GLCD_RS
 	GLCDSaveCS2 = GLCD_CS2
@@ -270,10 +271,10 @@ Sub GLCDWriteByte_KS0108 (In LCDByte)
 	Wait Until GLCDReadByte.7 = Off
 	GLCD_RS = GLCDSaveRS
 	GLCD_CS2 = GLCDSaveCS2
-	
+
 	'Set LCD data direction
 	Set GLCD_RW Off
-	
+
 	'Set data pin directions
           #IFNDEF GLCD_LAT
               DIR GLCD_DB0 OUT
@@ -295,7 +296,7 @@ Sub GLCDWriteByte_KS0108 (In LCDByte)
               DIR _GLCD_DB6 OUT
               DIR _GLCD_DB7 OUT
 	#ENDIF
-	
+
 	'Set output data
 	GLCD_DB7 = LCDByte.7
 	GLCD_DB6 = LCDByte.6
@@ -309,7 +310,7 @@ Sub GLCDWriteByte_KS0108 (In LCDByte)
 	'Write
 	Wait KS0108WriteDelay us
 	Set GLCD_ENABLE On
-	Wait KS0108_Clock_Delay us
+	Wait KS0108ClockDelay us
 	Set GLCD_ENABLE Off
 	Wait KS0108WriteDelay us
 End Sub
@@ -318,7 +319,7 @@ End Sub
 '''Read byte from LCD
 '''@hide
 Function GLCDReadByte_KS0108
-	
+
 	'Set data pin directions
 	Dir GLCD_DB7 In
 	Dir GLCD_DB6 In
@@ -328,13 +329,13 @@ Function GLCDReadByte_KS0108
 	Dir GLCD_DB2 In
 	Dir GLCD_DB1 In
 	Dir GLCD_DB0 In
-	
+
 	'Set LCD data direction
 	Set GLCD_RW On
-	
+
 	'Read
 	Set GLCD_ENABLE On
-	Wait 3 us
+	Wait KS0108ReadDelay us
 	'Get input data
           ' corrected 7/05/2014
 	GLCDReadByte.7 = GLCD_DB7
@@ -346,6 +347,6 @@ Function GLCDReadByte_KS0108
 	GLCDReadByte.1 = GLCD_DB1
 	GLCDReadByte.0 = GLCD_DB0
 	Set GLCD_ENABLE Off
-	Wait 2 us
-	
+	Wait KS0108ReadDelay us
+
 End Function
