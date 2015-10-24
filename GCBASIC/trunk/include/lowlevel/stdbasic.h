@@ -28,6 +28,7 @@
 ' 08/02/2013: added to new functions _dectobcd and _bcdtodecot
 ' 26/09/2015: Added new methods lslBit, lsrBit and isNotBit - created by Chris Roper
 ' 06/10/2015: FnLSR, FnLSL, FnEQUBit and FnNOTBit - created by Chris Roper
+' 24/10/2015: Fix for AVR handling for FnEQUBit and FnNotBit
 
 'Misc settings
 
@@ -324,10 +325,15 @@ Function FnLSL(in SysLongTempA as long, in NumBits as byte) as long
   FnLSL = SysLongTempA
 End Function
 
-#ifdef AVR
-  #define FnEQUBit AVR_FnEQUBit
-  #define FnNOTBit AVR_FnNOTBit
-#endif
+#script
+
+    if AVR then
+      FnEQUBit = AVR_FnEQUBit
+      FnNOTBit = AVR_FnNOTBit
+	  end if
+
+#endscript
+
 ' Please ensure you edit the four functions as a whole. Two are for AVR and two for Pic.
     ' BitOut = BitIn
     Function AVR_FnEQUBit(in BitIn)
