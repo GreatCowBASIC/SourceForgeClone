@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-10-02"
+Version = "0.94 2015-10-27"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -4550,18 +4550,23 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				InLine = NewVarList(CV)
 				'Get size
 				Si = 1
+        'added error handling for arrays and processing of arrays using constants
 				IF INSTR(InLine, "(") <> 0 Then
 					If CountOccur( InLine, "(" ) <> CountOccur( InLine, ")" ) Then
 						SiStr = Message("BadVarName")
 						Replace SiStr, "%var%", InLine
 						LogError SiStr, Origin
-						goto process_next_line: 
+						goto process_next_line:
 					End If
 					SiStr = Mid(InLine, INSTR(InLine, "(") )
+
 					If IsCalc(SiStr) Then
 						Calculate SiStr
+            Si = VAL(SiStr)
+          Else
+          	Si = VAL(Mid(InLine, INSTR(InLine, "(") + 1))
 					End If
-					Si = VAL(SiStr)
+
 					InLine = Trim(Left(InLine, INSTR(InLine, "(") - 1))
 				End If
 
