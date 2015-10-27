@@ -4550,7 +4550,7 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				InLine = NewVarList(CV)
 				'Get size
 				Si = 1
-        'added error handling for arrays and processing of arrays using constants
+        'added error handling for arrays and processing of arrays using constant
 				IF INSTR(InLine, "(") <> 0 Then
 					If CountOccur( InLine, "(" ) <> CountOccur( InLine, ")" ) Then
 						SiStr = Message("BadVarName")
