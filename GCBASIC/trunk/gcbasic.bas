@@ -4551,10 +4551,17 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				'Get size
 				Si = 1
 				IF INSTR(InLine, "(") <> 0 Then
-        	SiStr = Mid(InLine, INSTR(InLine, "(") )
-    			Calculate SiStr
-
-					Si = VAL(Mid(InLine, INSTR(InLine, "(") + 1))
+					If CountOccur( InLine, "(" ) <> CountOccur( InLine, ")" ) Then
+						SiStr = Message("BadVarName")
+						Replace SiStr, "%var%", InLine
+						LogError SiStr, Origin
+						goto process_next_line: 
+					End If
+					SiStr = Mid(InLine, INSTR(InLine, "(") )
+					If IsCalc(SiStr) Then
+						Calculate SiStr
+					End If
+					Si = VAL(SiStr)
 					InLine = Trim(Left(InLine, INSTR(InLine, "(") - 1))
 				End If
 
@@ -4566,7 +4573,7 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				End If
 			Next
 		End If
-
+		process_next_line:
 		CurrLine = CurrLine->Next
 	Loop
 
