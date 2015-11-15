@@ -29,6 +29,7 @@
 ' 26/09/2015: Added new methods lslBit, lsrBit and isNotBit - created by Chris Roper
 ' 06/10/2015: FnLSR, FnLSL, FnEQUBit and FnNOTBit - created by Chris Roper
 ' 24/10/2015: Fix for AVR handling for FnEQUBit and FnNotBit
+' 01/11/2015: Fix for AVR handling for Fnlsl AND FNLSR
 
 'Misc settings
 
@@ -304,25 +305,25 @@ macro SetWith(TargetBit, Source)
 end macro
 
 ' BitsOut = BitsIn >> NumBits
-Function FnLSR(in SysLongTempA as long, in NumBits as byte) as long
-'  dim SysLongTempA as long
-'  SysLongTempA  = BitsIn
+Function FnLSR(in SysLongTempB as long, in NumBits as byte) as long
+'  dim SysLongTempB as long
+'  SysLongTempB  = BitsIn
   Repeat NumBits
-    STATUS.C = 0
-    Rotate SysLongTempA Right
+    Set C Off
+    Rotate SysLongTempB Right
   End Repeat
-  FnLSR = SysLongTempA
+  FnLSR = SysLongTempB
 End Function
 
 ' BitsOut = BitsIn << NumBits
-Function FnLSL(in SysLongTempA as long, in NumBits as byte) as long
-'  dim SysLongTempA as long
-'  SysLongTempA  = BitsIn
+Function FnLSL(in SysLongTempB as long, in NumBits as byte) as long
+'  dim SysLongTempB as long
+'  SysLongTempB  = BitsIn
   Repeat NumBits
-    STATUS.C = 0
-    Rotate SysLongTempA Left
+    Set C Off
+    Rotate SysLongTempB Left
   End Repeat
-  FnLSL = SysLongTempA
+  FnLSL = SysLongTempB
 End Function
 
 #script
