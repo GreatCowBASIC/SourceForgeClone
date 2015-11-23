@@ -616,7 +616,7 @@ SUB PreProcessor
 				If PreserveMode = 1 Then PreserveIn = ""
 			End If
 			If PreserveMode = 3 Then
-				PreserveIn = "Source:F" + Str(RF) + "L" + Str(LC) + "S" + Str(SLC * S) + "I" + Str(LCS)
+				PreserveIn = "Source:F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC * S) + "I" + Str(LCS)
 			End If
 			
 			'Remove leading and trailing spaces, capitalise line
