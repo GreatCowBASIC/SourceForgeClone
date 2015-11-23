@@ -149,7 +149,7 @@ Type DataTableType
 	CurrItem As LinkedListElement Pointer
 
 	Items As Integer
-	Item(65536) As Integer
+	Item(65536) As LongInt
 End Type
 
 Type ProgString
@@ -478,7 +478,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 
 'Initialise
 'Misc Vars
-DIM SHARED As Integer APC, DFC, FVLC, FRLC, FALC, SBC, SLC, IFC, WSC, FLC, DLC, SSC, SASC, POC
+DIM SHARED As Integer APC, DFC, FVLC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-10-27"
+Version = "0.94 2015-11-23"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7279,7 +7279,7 @@ Sub CompileTables
 	  				'Find last element in table that is non-zero
 	  				LastNonZeroElement = -1
 	  				For CurrElement = DataTable(PD).Items To 0 Step -1
-	  					If (DataTable(PD).Item(CurrElement) And 255 * 256 ^ CurrTableByte) <> 0 Then
+	  					If ((DataTable(PD).Item(CurrElement) Shr CurrTableByte * 8) And 255) <> 0 Then
 	  						LastNonZeroElement = CurrElement
 	  						Exit For
 	  					End If
