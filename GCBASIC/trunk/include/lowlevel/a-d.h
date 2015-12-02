@@ -24,6 +24,7 @@
 
 'Original code by Hugh Considine
 '18Fxx31 code by Kent Schafer
+'added ReadAD12 2/12/2015
 
 'Commands:
 'var = ReadAD(port)	Reads port, and returns value.
@@ -107,7 +108,7 @@
 macro LLReadAD (ADLeftAdjust)
 
 	#IFDEF PIC
-		
+
 		'Set up A/D
 		'Make necessary ports analog
 		'Code for PICs with older A/D (No ANSEL register)
@@ -115,7 +116,7 @@ macro LLReadAD (ADLeftAdjust)
 			#IFDEF NoVar(ANSEL0)
 				#IFDEF NoVar(ANSELA)
 					#IFDEF NoVar(ANSELB)
-				
+
 						#IFDEF NoBit(PCFG4)
 							#IFDEF NoVar(ADCON2)
 								#IFDEF NoBit(ANS0)
@@ -133,7 +134,7 @@ macro LLReadAD (ADLeftAdjust)
 									SET ANS1 OFF
 								#ENDIF
 							#ENDIF
-							
+
 							#IFDEF Var(ADCON2)
 								'Example: 18F4620
 								#IFDEF BIT(PCFG3)
@@ -144,7 +145,7 @@ macro LLReadAD (ADLeftAdjust)
 								#ENDIF
 							#ENDIF
 						#ENDIF
-						
+
 						'PICs with PCFG4 and higher use ADCON1 as an ANSEL type register
 						'Example: 18F1320
 						#IFDEF Bit(PCFG4)
@@ -159,11 +160,11 @@ macro LLReadAD (ADLeftAdjust)
 								decfsz ADTemp,F
 							Loop
 						#ENDIF
-					
+
 					'ANSELB/A
 					#ENDIF
 				#ENDIF
-				
+
 				'Code for 16F193x chips (and others?) with ANSELA/ANSELB/ANSELE registers
 				#IFDEF Var(ANSELA)
 					Select Case ADReadPort
@@ -173,7 +174,7 @@ macro LLReadAD (ADLeftAdjust)
 							Case 2: Set ANSELA.2 On
 							Case 3: Set ANSELA.3 On
 							Case 4: Set ANSELA.4 On
-							
+
 							Case 11: Set ANSELB.1 On
 							Case 10: Set ANSELB.2 On
 							Case 9: Set ANSELB.3 On
@@ -182,14 +183,14 @@ macro LLReadAD (ADLeftAdjust)
 							Case 5: Set ANSELB.6 On
 							Case 6: Set ANSELB.7 On
 						#ENDIF
-						
+
 						#IF ChipPins = 28 Or ChipPins = 40
 							Case 0: Set ANSELA.0 On
 							Case 1: Set ANSELA.1 On
 							Case 2: Set ANSELA.2 On
 							Case 3: Set ANSELA.3 On
 							Case 4: Set ANSELA.5 On
-							
+
 							#IFDEF Var(ANSELB)
 								Case 12: Set ANSELB.0 On
 								Case 10: Set ANSELB.1 On
@@ -198,7 +199,7 @@ macro LLReadAD (ADLeftAdjust)
 								Case 11: Set ANSELB.4 On
 								Case 13: Set ANSELB.5 On
 							#ENDIF
-							
+
 							#IFDEF Var(ANSELC)
 								Case 14: Set ANSELC.2 On
 								Case 15: Set ANSELC.3 On
@@ -207,7 +208,7 @@ macro LLReadAD (ADLeftAdjust)
 								Case 18: Set ANSELC.6 On
 								Case 19: Set ANSELC.7 On
 							#ENDIF
-							
+
 							#IFDEF Var(ANSELD)
 								Case 20: Set ANSELD.0 On
 								Case 21: Set ANSELD.1 On
@@ -218,21 +219,21 @@ macro LLReadAD (ADLeftAdjust)
 								Case 26: Set ANSELD.6 On
 								Case 27: Set ANSELD.7 On
 							#ENDIF
-							
+
 							#IFDEF Var(ANSELE)
 								Case 5: Set ANSELE.0 On
 								Case 6: Set ANSELE.1 On
 								Case 7: Set ANSELE.2 On
 							#ENDIF
 						#ENDIF
-						
+
 					End Select
 				#ENDIF
-				
+
 				'ANSEL0/ANSEL
 			#ENDIF
 		#ENDIF
-		
+
 		'Code for PICs with newer A/D (with ANSEL register)
 		#IFDEF Var(ANSEL)
 			#IFDEF Var(ANSELH)
@@ -248,7 +249,7 @@ macro LLReadAD (ADLeftAdjust)
 				Rotate AllANSEL Left
 				decfsz ADTemp,F
 			Loop
-			
+
 		#ENDIF
 		'Code for 18F4431, uses ANSEL0 and ANSEL1
 		#IFDEF Var(ANSEL0)
@@ -265,12 +266,12 @@ macro LLReadAD (ADLeftAdjust)
 				Rotate AllANSEL Left
 				decfsz ADTemp,F
 			Loop
-			
+
 		#ENDIF
-		
+
 		'Set Auto or Single Convert Mode
 		#IFDEF Bit(ACONV)
-			SET ACONV OFF  'Single shot mode 
+			SET ACONV OFF  'Single shot mode
 			SET ACSCH OFF  'Single channel CONVERSION
 			'GroupA
 			IF ADReadPort = 0 OR ADReadPort = 4 OR ADReadPort = 8 Then
@@ -292,9 +293,9 @@ macro LLReadAD (ADLeftAdjust)
 				SET ACMOD1 ON
 				SET ACMOD0 ON
 			END IF
-			
+
 		#ENDIF
-		
+
 		'Set conversion clock
 		#IFDEF Bit(ADCS0)
 			#IFDEF ADSpeed HighSpeed
@@ -314,7 +315,7 @@ macro LLReadAD (ADLeftAdjust)
 				SET ADCS0 ON
 			#ENDIF
 		#ENDIF
-		
+
 		'Choose port
 		#IFDEF Bit(CHS0)
 			SET ADCON0.CHS0 OFF
@@ -328,7 +329,7 @@ macro LLReadAD (ADLeftAdjust)
 					#ENDIF
 				#ENDIF
 			#ENDIF
-			
+
 			IF ADReadPort.0 On Then Set ADCON0.CHS0 On
 			IF ADReadPort.1 On Then Set ADCON0.CHS1 On
 			#IFDEF Bit(CHS2)
@@ -355,7 +356,7 @@ macro LLReadAD (ADLeftAdjust)
 				SET GASEL1 ON
 				SET GASEL0 OFF
 			END IF
-			'GROUP C SELECT BITS		
+			'GROUP C SELECT BITS
 			IF ADReadPort = 2 THEN
 				SET GCSEL1 OFF
 				SET GCSEL0 OFF
@@ -383,13 +384,13 @@ macro LLReadAD (ADLeftAdjust)
 				SET GDSEL0 ON
 			END IF
 		#ENDIF
-		
+
 		'Enable A/D
 		SET ADCON0.ADON ON
 
 		'Acquisition Delay
 		Wait AD_Delay
-		 
+
 		'Read A/D
 		#ifdef bit(GO_NOT_DONE)
 			SET ADCON0.GO_NOT_DONE ON
@@ -407,13 +408,13 @@ macro LLReadAD (ADLeftAdjust)
 				#ENDIF
 			#ENDIF
 		#endif
-		
+
 		'Switch off A/D
 		#IFDEF Var(ADCON0)
 			SET ADCON0.ADON OFF
 			#IFDEF NoVar(ANSEL)
 				#IFDEF NoVar(ANSELA)
-					
+
 					#IFDEF NoBit(PCFG4)
 						#IFDEF NoVar(ADCON2)
 							#IFDEF NoBit(ANS0)
@@ -429,7 +430,7 @@ macro LLReadAD (ADLeftAdjust)
 								SET ANS1 OFF
 							#ENDIF
 						#ENDIF
-						
+
 						#IFDEF Var(ADCON2)
 							#IFDEF BIT(PCFG3)
 								SET PCFG3 ON
@@ -439,7 +440,7 @@ macro LLReadAD (ADLeftAdjust)
 							#ENDIF
 						#ENDIF
 					#ENDIF
-					
+
 					'For 18F1320, which uses ADCON1 as an ANSEL register
 					#IFDEF Bit(PCFG4)
 						ADCON1 = 0
@@ -447,7 +448,7 @@ macro LLReadAD (ADLeftAdjust)
 				#ENDIF
 			#ENDIF
 		#ENDIF
-		
+
 		'Clear whatever ANSEL variants the chip has
 		#IFDEF Var(ANSEL)
 			ANSEL = 0
@@ -476,11 +477,11 @@ macro LLReadAD (ADLeftAdjust)
 		#IFDEF Var(ANSELE)
 			ANSELE = 0
 		#ENDIF
-		
+
 	#ENDIF
 
 	#IFDEF AVR
-	
+
 		'Select channel
 		#IFNDEF Bit(MUX5)
 			ADMUX = ADReadPort
@@ -508,7 +509,7 @@ macro LLReadAD (ADLeftAdjust)
 				Set ADMUX.ADLAR Off
 			End If
 		#endif
-		
+
 		'Select reference source
 		#ifndef Bit(REFS2)
 			If AD_REF_SOURCE = AD_REF_AVCC Then
@@ -529,7 +530,7 @@ macro LLReadAD (ADLeftAdjust)
 				Set REFS2 On
 			End If
 		#endif
-		
+
 		'Set conversion clock
 		#IFDEF Bit(ADPS2)
 			#IFDEF ADSpeed HighSpeed
@@ -545,10 +546,10 @@ macro LLReadAD (ADLeftAdjust)
 				SET ADPS1 On
 			#ENDIF
 		#ENDIF
-		
+
 		'Acquisition Delay
 		Wait AD_Delay
-		
+
 		'Take reading
 		Set ADEN On
 		'After turning on ADC, let internal Vref stabilise
@@ -558,9 +559,9 @@ macro LLReadAD (ADLeftAdjust)
 		Set ADSC On
 		Wait While ADSC On
 		Set ADEN Off
-		
+
 	#ENDIF
-	
+
 end macro
 
 function ReadAD(ADReadPort)
@@ -583,6 +584,7 @@ LLReadAD 1
 #ENDIF
 
 end function
+
 
 'Large ReadAD
 function ReadAD10(ADReadPort) As Word
@@ -611,7 +613,7 @@ LLReadAD 0
 	#IFDEF Var(ADRESH)
 		ReadAD10_H = ADRESH
 	#ENDIF
-	
+
 	'Put A/D format back to normal
 	#IFDEF Bit(ADFM)
 		SET ADFM OFF
@@ -624,16 +626,68 @@ LLReadAD 0
 
 end function
 
+'Larger ReadAD
+function ReadAD12(ADReadPort) As Word
+
+#IFDEF PIC
+
+	'Set up A/D 12 bit format
+    #IFDEF bit(CHSN3)   'For 16F family with 12Bit ADC
+        set CHSN0 ON
+        set CHSN1 ON
+        set CHSN2 ON
+        set CHSN3 ON
+    #ENDIF
+
+    #IFDEF bit(CHSN0)
+        #IFNDEF bit(CHSN3)  'For 18F Family with 12Bit ADC
+            set CHSN0 off
+            set CHSN1 off
+            set CHSN2 off
+        #ENDIF
+    #ENDIF
+
+  'Set up A/D format
+	#IFDEF Bit(ADFM)
+		SET ADFM ON
+	#ENDIF
+
+#ENDIF
+
+
+'Do conversion
+LLReadAD 0
+
+#IFDEF PIC
+	'Write output
+	#IFDEF NoVar(ADRESL)
+		ReadAD12 = ADRES
+	#ENDIF
+	#IFDEF Var(ADRESL)
+		ReadAD12 = ADRESL
+	#ENDIF
+	#IFDEF Var(ADRESH)
+		ReadAD12_H = ADRESH
+	#ENDIF
+
+	'Put A/D format back to normal
+	#IFDEF Bit(ADFM)
+		SET ADFM OFF
+	#ENDIF
+#ENDIF
+
+end function
+
 'This sub is deprecated
 sub ADFormat(ADReadFormat)
  SET ADFM OFF
- IF ADReadFormat.1 ON THEN SET ADFM ON  
+ IF ADReadFormat.1 ON THEN SET ADFM ON
 end sub
 
 'This sub is deprecated
 sub ADOff
 'Disable the A/D converter, and set all ports to digital.
-'This sub is deprecated, InitSys automatically turns off A/D 
+'This sub is deprecated, InitSys automatically turns off A/D
 
  SET ADCON0.ADON OFF
 #IFDEF NoBit(PCFG4)
