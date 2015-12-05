@@ -6285,7 +6285,7 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
 	'Find subroutine that contains array
 	CurrSubID = GetSubID(Origin)
 	CurrSub = Subroutine(CurrSubID)
-
+	
 	'Disable interrupt
 	'CurrLine = LinkedListInsert(CurrLine, "INTOFF")
 
@@ -6676,8 +6676,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					.Param(CD, 1) = ReplaceConstantsLine(.Param(CD, 1), 0)
 					.Param(CD, 2) = TypeOfValue(.Param(CD, 1), Subroutine(GetSubID(.Origin)))
 				End If
-				'Print , .Param(CD, 1), .Param(CD, 2)
-
+				
 				'Decide how to pass parameter
 				'C = 0: Copy variable
 				'C = 1: Copy constant value
@@ -6711,7 +6710,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					LogError Temp, .Origin
 					C = -1
 				End If
-
+				
 				'Pass by copying
 				If C = 0 OR C = 1 OR C = 2 THEN
 					'Calculate new origins
@@ -6790,7 +6789,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						BeforePos = LinkedListInsert(BeforePos, "SYSSTRINGPARAM" + Str(StringConstCount) + "=" + .Param(CD, 1) + .Origin)
 						.Param(CD, 1) = "SYSSTRINGPARAM" + Str(StringConstCount)
 						.Param(CD, 2) = "STRING"
-						AddVar("SYSSTRINGPARAM" + Str(StringConstCount), "STRING", 20, .Caller, "REAL", .Origin)
+						AddVar("SYSSTRINGPARAM" + Str(StringConstCount), "STRING", 20, Subroutine(0), "REAL", .Origin)
 						C = 3
 					End If
 				END IF
@@ -6887,7 +6886,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
 				CompileNextParam:
 			Next
-
+			
 			'Mark sub as required
 			.Called->Required = -1
 			'Mark file sub came from as used
