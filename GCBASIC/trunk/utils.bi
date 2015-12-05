@@ -1517,49 +1517,50 @@ Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
 	'If signatures match exactly, return highest possible value
 	If SubSig = CallSig Then
 		If Len(SubSig) <> 0 Then
-			Return 20 * Len(SubSig)
+			Return 100 * Len(SubSig)
 		Else
-			Return 20
+			Return 100
 		End If
 	End If
 	
 	'Calculate a match score
-	'If parameters don't match, 0, if they can be converted, 20 / intermediate sizes, if they match, 20.
+	'If parameters don't match, 0, if they can be converted, 100 / intermediate sizes, if they match, 100.
 	OutScore = 0
 	Do While Len(SubSig) > 0
 		CurrSub = Left(SubSig, InStr(SubSig, ":") - 1)
 		CurrCall = Left(CallSig, InStr(CallSig, ":") - 1)
-		'Print CurrSub, CurrCall
 		
 		'Deal with optional parameters
-		If CurrCall = "*" Then
+		If CurrCall = "" Then
 			If CurrSub = LCase(CurrSub) Then
 				'OutScore += 2
-				OutScore += 20
+				OutScore += 100
+				GoTo CheckNextParam
 			Else
 				Return 0 'Can't match if default parameter not specified 
 			End If
-		End If 
 		
-		'If parameter missing and not optional, can't match
-		If CurrCall = "" And CurrSub <> "" Then
-			Return 0
-		'If there is an extra parameter, can't match
 		ElseIf CurrCall <> "" And CurrSub = "" Then
 			Return 0
 		End If
 		
 		'Parameter in call matches that in sub
-		If UCase(CurrCall) = UCase(CurrSub) Then OutScore += 20 'was 2
+		If UCase(CurrCall) = UCase(CurrSub) Then
+			OutScore += 100 'was 2
+			GoTo CheckNextParam
+		End If
 		
 		'Parameter in call is of lower type than that in sub
 		If CastOrder(CurrCall) < CastOrder(CurrSub) Then
 			'OutScore += 1
-			OutScore += 20 / CastOrder(CurrSub) - CastOrder(CurrCall)
+			OutScore += 100 / (1 + CastOrder(CurrSub) - CastOrder(CurrCall))
+			GoTo CheckNextParam
 		End If
 		
 		'Parameter in call is of higher type than in sub, cannot convert
 		If CastOrder(CurrCall) > CastOrder(CurrSub) Then Return 0
+		
+		CheckNextParam:
 		
 		SubSig = Mid(SubSig, InStr(SubSig, ":") + 1)
 		CallSig = Mid(CallSig, InStr(CallSig, ":") + 1)
