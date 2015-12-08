@@ -400,6 +400,66 @@ Sub InitSys
 		#ENDIF
 	#ENDIF
 	
+
+  'For 18f devices
+  #IFDEF VAR(ANCON0)
+		#IFDEF BIT(ANSEL0)
+			Set ANSEL0 off
+		#ENDIF
+    #IFDEF BIT(ANSEL1)
+			Set ANSEL1 off
+		#ENDIF
+    #IFDEF BIT(ANSEL2)
+			Set ANSEL2 off
+		#ENDIF
+    #IFDEF BIT(ANSEL3)
+			Set ANSEL3 off
+		#ENDIF
+    #IFDEF BIT(ANSEL4)
+			Set ANSEL4 off
+		#ENDIF
+    #IFDEF BIT(ANSEL5)
+			Set ANSEL5 off
+		#ENDIF
+    #IFDEF BIT(ANSEL6)
+			Set ANSEL6 off
+		#ENDIF
+    #IFDEF BIT(ANSEL7)
+			Set ANSEL7 off
+		#ENDIF
+
+  #ENDIF
+
+  #IFDEF VAR(ANCON1)
+		#IFDEF BIT(ANSEL8)
+			Set ANSEL9 off
+		#ENDIF
+    #IFDEF BIT(ANSEL9)
+			Set ANSEL9 off
+		#ENDIF
+    #IFDEF BIT(ANSEL10)
+			Set ANSEL10 off
+		#ENDIF
+    #IFDEF BIT(ANSEL11)
+			Set ANSEL11 off
+		#ENDIF
+    #IFDEF BIT(ANSEL12)
+			Set ANSEL12 off
+		#ENDIF
+    #IFDEF BIT(ANSEL13)
+			Set ANSEL13 off
+		#ENDIF
+    #IFDEF BIT(ANSEL14)
+			Set ANSEL14 off
+		#ENDIF
+    #IFDEF BIT(ANSEL15)
+			Set ANSEL15 off
+		#ENDIF
+
+  #ENDIF
+
+
+
 	'Turn off comparator
 	#IFDEF Var(CMCON)
 		CMCON = 7
