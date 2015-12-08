@@ -886,6 +886,10 @@ sub SysCompEqualString
  subwf SysByteTempA, W
  btfss STATUS, Z
  return
+ 'Exit true if length = 0
+ movf SysByteTempA, F
+ btfsc STATUS, Z
+ goto SCEStrTrue
 
  'Check char-by-char
 SysStringComp:
@@ -924,6 +928,7 @@ SysStringComp:
  decfsz SysByteTempA, F
  goto SysStringComp
 
+SCEStrTrue:
  movlw TRUE
  movwf SysByteTempX
 
@@ -936,6 +941,10 @@ SysStringComp:
 		subwf INDF1, W
 		btfss STATUS, Z
 		return
+		'Check if empty
+		movf SysByteTempA, F
+		btfsc STATUS, Z
+		goto SCEStrTrue
 		
 		'Check each char, exit if not equal
 		SysStringComp:
@@ -953,6 +962,7 @@ SysStringComp:
 		decfsz SysByteTempA, F
 		goto SysStringComp
 		
+		SCEStrTrue:
 		comf SysByteTempX, F
 	#endif
 	
@@ -962,7 +972,10 @@ SysStringComp:
  movf INDF0, W
  cpfseq POSTINC1
  return
-
+ 'Check if empty
+ movf INDF0, F
+ bz SCEStrTrue
+ 
  'Check each char, exit if not equal
  movff POSTINC0, SysByteTempA
 SysStringComp:
@@ -975,6 +988,7 @@ SysStringComp:
  decfsz SysByteTempA, F
  goto SysStringComp
 
+SCEStrTrue:
  setf SysByteTempX
 #ENDIF
 
@@ -991,7 +1005,10 @@ SysStringComp:
  cpse SysReadA, SysReadA_H
  ret
  mov SysByteTempA, SysReadA
-
+ 'Check if length 0
+ tst SysReadA
+ breq SCEStrTrue
+ 
  'Check each char, exit if not equal
  SysStringComp:
 
@@ -1004,6 +1021,7 @@ SysStringComp:
  dec SysByteTempA
  brne SysStringComp
 
+SCEStrTrue:
  com SysByteTempX
 #ENDIF
 

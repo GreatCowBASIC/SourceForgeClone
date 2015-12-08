@@ -32,13 +32,15 @@
 ' 2/6/2013: Added In directive to HSerPrint(string)
 ' 10/7/2013: Added USART_TX_BLOCKING option, fixes for chips with 2 modules
 ' 29/9/2013: Fixes for ATmega32u4
-' 16/2/2104: Fixed HERPRINT Long Bug
+' 16/2/2014: Fixed HERPRINT Long Bug
 ' 28/6/2014: Changed HSerPrintCRLF to have a parameter... you can have lots of CRLF's
 ' 04/07/15:  Improved timing
-' 31/7/2105: Fix Compile Error for 16F1705 1709  and other Pics - WMR
+' 31/7/2015: Fix Compile Error for 16F1705 1709  and other Pics - WMR
 '            See lines 311 - 320
 ' 02/10/2015: Fix for missing SPBRG - mapped to SPBRGL
 ' 11/10/2015: Fixed bug for missing SPBRG - mapped to SPBRGL in script
+' 9/12/2015: Changed default USART_DELAY from 12 ms back to 1 ms - fix very slow USART default!
+'            Corrected dates above
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -54,7 +56,7 @@
 
 'To slow down print, set this delay:
 '(Setting to 0 ms will remove all delays)
-#define USART_DELAY 12 ms
+#define USART_DELAY 1 ms
 
 'Some wrappers for compatibility with Contributors USART routines
 #define HserPrintByte HSerPrint
