@@ -669,7 +669,11 @@ SUB AssembleProgram
 					ElseIf ModePIC Then
 						If ChipFamily = 16 Then
 							'Fix branches
-							If UCase(Left(DataSource, 2)) = "BN" Or UCase(Left(DataSource, 3)) = "BRA" Or UCase(Left(DataSource, 6)) = "RCALL " Then
+							If UCase(Left(DataSource, 3)) = "BRA" Or UCase(Left(DataSource, 6)) = "RCALL " Or _
+							   UCase(Left(DataSource, 3)) = "BC " Or UCase(Left(DataSource, 4)) = "BNC " Or _
+							   UCase(Left(DataSource, 3)) = "BN " Or UCase(Left(DataSource, 4)) = "BNN " Or _
+							   UCase(Left(DataSource, 3)) = "BZ " Or UCase(Left(DataSource, 4)) = "BNZ " Or _
+							   UCase(Left(DataSource, 4)) = "BOV " Or UCase(Left(DataSource, 5)) = "BNOV " Then
 								ParamValues(CD) = Str((MakeDec(ParamValues(CD)) - CurrentLine) / 2 - 1)
 							End If
 						End If
