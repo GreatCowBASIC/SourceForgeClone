@@ -22,6 +22,11 @@
 'COMMANDS UNUSABLE!
 '********************************************************************************
 
+;    12-12-15 by William Roth
+;
+;    Added support for PIC18F25K22 @ 32MHz and 64 MHz
+
+
 'Constants
 #define ON 1
 #define OFF 0
@@ -41,14 +46,15 @@
 '********************************************************************************
 'System initialisation routine
 Sub InitSys
-	
+
 	'Set up internal oscillator
 	#IFDEF Var(OSCCON)
 		#IFDEF Bit(FOSC4)
 			Set FOSC4 Off
 		#ENDIF
-		#if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
-			'Most chips:
+
+    #if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
+			      'Most chips:
 			#ifndef Bit(HFIOFS)
 				#IFDEF ChipMHz 8
 					OSCCON = OSCCON OR b'01110000'
@@ -78,10 +84,41 @@ Sub InitSys
 					OSCCON = OSCCON OR b'00010000'
 				#ENDIF
 			#endif
-			'10F32x chips:
-			#ifdef Bit(HFIOFS)
-				#IFDEF ChipMHz 16
-					OSCCON = OSCCON OR b'01110000'
+
+      '10F32x chips:
+      #ifdef Bit(HFIOFS)
+      	#IFDEF ChipMHz 64 'added for 18F25K22-WMR
+					Set IRCF2 On
+					Set IRCF1 On
+					Set IRCF0 On
+          #ifdef Bit(SPLLMULT)
+						Set SPLLMULT On
+					#endif
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
+          #ifdef Bit(PLLEN)
+						Set PLLEN On
+					#endif
+				#ENDIF
+
+      	#IFDEF ChipMHz 32 'added for 18F25K22 WMR
+					Set IRCF2 On
+					Set IRCF1 On
+					Set IRCF0 Off
+					#ifdef Bit(SPLLMULT)
+						Set SPLLMULT Off
+					#endif
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
+          #ifdef Bit(PLLEN)
+						Set PLLEN On
+					#endif
+				#ENDIF
+
+        #IFDEF ChipMHz 16
+        		OSCCON = OSCCON OR b'01110000'
 				#ENDIF
 				#IFDEF ChipMHz 8
 					OSCCON = OSCCON AND b'10001111'
@@ -109,11 +146,11 @@ Sub InitSys
 				#ENDIF
 			#endif
 		#endif
-		
+
 		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
-			#ifdef Bit(IRCF3)
-				#IFDEF ChipMHz 64
-					'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
+      #ifdef Bit(IRCF3)
+        #IFDEF ChipMHz 64
+				  'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
 					'OSCCON = OSCCON OR b'01111000'
 					Set IRCF3 On
 					Set IRCF2 On
@@ -163,7 +200,7 @@ Sub InitSys
 					#endif
 				#ENDIF
 				#IFDEF ChipMHz 16
-					'OSCCON = OSCCON OR b'01111000'
+          'OSCCON = OSCCON OR b'01111000'
 					Set IRCF3 On
 					Set IRCF2 On
 					Set IRCF1 On
@@ -251,30 +288,31 @@ Sub InitSys
 				#ENDIF
 			#endif
 			#ifndef Bit(IRCF3)
-				  #IFDEF ChipMHz 64
-					'OSCCON = OSCCON AND b'10001111'
+
+        #IFDEF ChipMHz 64
+          'OSCCON = OSCCON AND b'10001111'
 					'OSCCON = OSCCON OR  b'01100000'
 					Set IRCF2 On    '- WMR
 					Set IRCF1 On    '- WMR
 					Set IRCF0 On    ' -WMR
-          #ifdef Bit(SPLLEN) 
+          #ifdef Bit(SPLLEN)
             	Set SPLLEN On
 					#endif
           #ifdef Bit(PLLEN)   'Added for 18F14K22 and many others -WMR
-             	Set PLLEN On    'that use PLLEN instead of SPLLEN   
+             	Set PLLEN On    'that use PLLEN instead of SPLLEN
 					#endif              'for software control of the PLL
         #ENDIF
         #IFDEF ChipMHz 32
 					OSCCON = OSCCON AND b'10001111'
 					OSCCON = OSCCON OR  b'01100000'
-					#ifdef Bit(SPLLEN) 
+					#ifdef Bit(SPLLEN)
             	Set SPLLEN On
 					#endif
           #ifdef Bit(PLLEN) 'Added for 18F14K22 and amny others -WMR
-            	Set PLLEN On  'that use PLLEN instead of SPLLEN   
+            	Set PLLEN On  'that use PLLEN instead of SPLLEN
 					#endif            'for software control of the PLL
         #ENDIF
-				
+
         #IFDEF ChipMHz 16
 					OSCCON = OSCCON OR b'01110000'
 				#ENDIF
@@ -310,18 +348,18 @@ Sub InitSys
 				#ENDIF
 			#endif
 		#endif
-		
+
 	#ENDIF
-	
+
 	'Clear BSR on 18F chips
 	#IFDEF ChipFamily 16
 		BSR = 0
 	#ENDIF
-	
+
 	#IFDEF Var(TBLPTRU)
 		TBLPTRU = 0
 	#ENDIF
-	
+
 	'Ensure all ports are set for digital I/O
 	'Turn off A/D
 	#IF Var(ADCON0) OR Var(ADCON)
@@ -352,7 +390,7 @@ Sub InitSys
 							SET ANS1 OFF
 						#ENDIF
 					#ENDIF
-					
+
 					#IFDEF Var(ADCON2)
 						#IFDEF BIT(PCFG3)
 							SET PCFG3 ON
@@ -362,14 +400,14 @@ Sub InitSys
 						#ENDIF
 					#ENDIF
 				#ENDIF
-				
+
 				'For 18F1320, which uses ADCON1 as an ANSEL register
 				#IFDEF Bit(PCFG4)
 					ADCON1 = 0
 				#ENDIF
 			#ENDIF
 		#ENDIF
-		
+
 		'Clear whatever ANSEL variants the chip has
 		#IFDEF Var(ANSEL)
 			ANSEL = 0
@@ -399,7 +437,7 @@ Sub InitSys
 			ANSELE = 0
 		#ENDIF
 	#ENDIF
-	
+
 
   'For 18f devices
   #IFDEF VAR(ANCON0)
@@ -474,7 +512,7 @@ Sub InitSys
 		#ENDIF
 		C1ON = 0
 	#ENDIF
-	
+
 	'Set GPIO.2 to digital (clear T0CS bit)
 	#IFDEF ChipFamily 12
 		#IFDEF Bit(T0CS)
@@ -482,7 +520,7 @@ Sub InitSys
 			option
 		#ENDIF
 	#ENDIF
-	
+
 	'Turn off all ports
 	#IFDEF Var(GPIO)
 		GPIO = 0
@@ -517,7 +555,7 @@ Sub InitSys
 	#IFDEF Var(PORTJ)
 		PORTJ = 0
 	#ENDIF
-	
+
 End Sub
 
 '********************************************************************************
@@ -623,30 +661,30 @@ SysStringCopy:
 		movf INDF0, W
 		movwf SysCalcTempA
 		movwf INDF1
-		
+
 		goto SysCopyStringCheck
-		
+
 		'When appending, add length to counter
 		SysCopyStringPart:
 		movf INDF0, W
 		movwf SysCalcTempA
 		addwf SysStringLength, F
-		
+
 		SysCopyStringCheck:
 		'Exit if length = 0
 		movf SysCalcTempA,F
 		btfsc STATUS,Z
 		return
-		
+
 		SysStringCopy:
 			'Increment pointers
 			addfsr 0, 1
 			addfsr 1, 1
-			
+
 			'Copy character
 			movf INDF0, W
 			movwf INDF1
-		
+
 		decfsz SysCalcTempA, F
 		goto SysStringCopy
 	#endif
@@ -686,9 +724,9 @@ SysCopyStringPart:
  'SysStringB (Y) stores destination
  'SysStringLength is counter, keeps track of size of destination string
  'SysCalcTempA is loop counter
- 
+
  Dim SysReadA As Byte
- 
+
  'Get and copy length
  ld SysCalcTempA, X+
  st Y+, SysCalcTempA
@@ -791,41 +829,41 @@ SysStringRead:
   goto SysStringRead
 
  #endif
-	
+
 	#ifdef ChipFamily 15
-		
+
 		'Get length
 		call SysStringTables
 		movwf SysCalcTempA
 		movwf INDF1
-		
+
 		goto SysStringReadCheck
 		SysReadStringPart:
-		
+
 		'Get length
 		call SysStringTables
 		movwf SysCalcTempA
 		addwf SysStringLength,F
-		
+
 		'Check length
 		SysStringReadCheck:
 		'If length is 0, exit
 		movf SysCalcTempA,F
 		btfsc STATUS,Z
 		return
-		
+
 		'Copy
 		SysStringRead:
 			'Get char
 			call SysStringTables
-			
+
 			'Set char
 			addfsr 1,1
 			movwf INDF1
-			
+
 		decfsz SysCalcTempA, F
 		goto SysStringRead
-		
+
 	#endif
 
  #ifdef ChipFamily 16
@@ -993,7 +1031,7 @@ SCEStrTrue:
  movwf SysByteTempX
 
 #ENDIF
-	
+
 	#ifdef ChipFamily 15
 		'Check length matches
 		movf INDF0, W
@@ -1005,27 +1043,27 @@ SCEStrTrue:
 		movf SysByteTempA, F
 		btfsc STATUS, Z
 		goto SCEStrTrue
-		
+
 		'Check each char, exit if not equal
 		SysStringComp:
-			
+
 			'Move to next char
 			addfsr 0, 1
 			addfsr 1, 1
-			
+
 			'Compare, exit if <>
 			movf INDF0, W
 			subwf INDF1, W
 			btfss STATUS, Z
 			return
-		
+
 		decfsz SysByteTempA, F
 		goto SysStringComp
-		
+
 		SCEStrTrue:
 		comf SysByteTempX, F
 	#endif
-	
+
 #IFDEF ChipFamily 16
 
  'Check length matches
@@ -1035,7 +1073,7 @@ SCEStrTrue:
  'Check if empty
  movf INDF0, F
  bz SCEStrTrue
- 
+
  'Check each char, exit if not equal
  movff POSTINC0, SysByteTempA
 SysStringComp:
@@ -1053,10 +1091,10 @@ SCEStrTrue:
 #ENDIF
 
 #IFDEF AVR
-	
+
 	Dim SysReadA As Word
 	Dim SysByteTempA As Byte
-	
+
 	SysByteTempX = 0
 
  'Check length matches
@@ -1068,7 +1106,7 @@ SCEStrTrue:
  'Check if length 0
  tst SysReadA
  breq SCEStrTrue
- 
+
  'Check each char, exit if not equal
  SysStringComp:
 
@@ -1139,7 +1177,7 @@ sub SysMultSub
 	dim SysByteTempA as byte
 	dim SysByteTempB as byte
 	dim SysByteTempX as byte
-	
+
 	#IFDEF PIC
 		#IFDEF ChipFamily 12, 14, 15
 			clrf SysByteTempX
@@ -1155,14 +1193,14 @@ sub SysMultSub
 			btfss STATUS, Z
 			goto MUL8LOOP
 		#ENDIF
-		
+
 		#IFDEF ChipFamily 16
 			movf SysByteTempA, W
 			mulwf SysByteTempB
 			movff PRODL,SysByteTempX
 		#ENDIF
 	#ENDIF
-	
+
 	#IFDEF AVR
 		#IFNDEF HardwareMult
 			clr SysByteTempX
@@ -1183,21 +1221,21 @@ end sub
 
 '16 bit
 sub SysMultSub16
-	
+
 	dim SysWordTempA as word
 	dim SysWordTempB as word
 	dim SysWordTempX as word
-	
+
 	#IFDEF PIC
 		#IFDEF ChipFamily 12, 14, 15
 			dim SysDivMultA as word
 			dim SysDivMultB as word
 			dim SysDivMultX as word
-			
+
 			SysDivMultA = SysWordTempA
 			SysDivMultB = SysWordTempB
 			SysDivMultX = 0
-			
+
 			MUL16LOOP:
 				IF SysDivMultB.0 ON then SysDivMultX += SysDivMultA
 				set STATUS.C OFF
@@ -1205,45 +1243,45 @@ sub SysMultSub16
 				set STATUS.C off
 				rotate SysDivMultA left
 			if SysDivMultB > 0 then goto MUL16LOOP
-			
+
 			SysWordTempX = SysDivMultX
 		#ENDIF
-		
+
 		#IFDEF ChipFamily 16
 			'X = LowA * LowB
 			movf SysWordTempA, W
 			mulwf SysWordTempB
 			movff PRODL, SysWordTempX
 			movff PRODH, SysWordTempX_H
-			
+
 			'HighX += LowA * HighB
 			movf SysWordTempA, W
 			mulwf SysWordTempB_H
 			movf PRODL, W
 			addwf SysWordTempX_H, F
-			
+
 			'HighX += HighA * LowB
 			movf SysWordTempA_H, W
 			mulwf SysWordTempB
 			movf PRODL, W
 			addwf SysWordTempX_H, F
-			
+
 			'PRODL = HighA * HighB
 			movf SysWordTempA_H, F
 			mulwf SysWordTempB_H
 		#ENDIF
 	#ENDIF
-	
+
 	#IFDEF AVR
 		#IFNDEF HardwareMult
 			dim SysDivMultA as word
 			dim SysDivMultB as word
 			dim SysDivMultX as word
-			
+
 			SysDivMultA = SysWordTempA
 			SysDivMultB = SysWordTempB
 			SysDivMultX = 0
-			
+
 			MUL16LOOP:
 				IF SysDivMultB.0 ON then SysDivMultX += SysDivMultA
 				Set C Off
@@ -1251,71 +1289,71 @@ sub SysMultSub16
 				Set C Off
 				rotate SysDivMultA left
 			if SysDivMultB > 0 then goto MUL16LOOP
-			
+
 			SysWordTempX = SysDivMultX
 		#ENDIF
-		
+
 		#IFDEF HardwareMult
 			'Need to keep result in here because SysWordTempX[_H] gets overwritten by mul
 			dim SysDivMultX as word ' alias SysWordTempX_U, SysWordTempX_H
-			
+
 			'X = LowA * LowB
 			mul SysWordTempA, SysWordTempB
 			'movff PRODL, SysWordTempX
 			'movff PRODH, SysWordTempX_H
 			SysDivMultX = SysWordTempX
-			
+
 			'HighX += LowA * HighB
 			mul SysWordTempA, SysWordTempB_H
 			add SysDivMultX_H, SysWordTempX
-			
+
 			'HighX += HighA * LowB
 			mul SysWordTempA_H, SysWordTempB
 			add SysDivMultX_H, SysWordTempX
-			
+
 			'Copy result back
 			SysWordTempX = SysDivMultX
 		#ENDIF
 	#ENDIF
-	
+
 end sub
 
 sub SysMultSubInt
-	
+
 	Dim SysIntegerTempA, SysIntegerTempB, SysIntegerTempX As Integer
 	Dim SysSignByte As Byte
-	
+
 	'Make both inputs positive, decide output type
 	SysSignByte = SysIntegerTempA_H xor SysIntegerTempB_H
 	if SysIntegerTempA.15 then SysIntegerTempA = -SysIntegerTempA
 	if SysIntegerTempB.15 then SysIntegerTempB = -SysIntegerTempB
-	
+
 	'Call word multiply routine
 	SysMultSub16
-	
+
 	'Negate result if necessary
 	if SysSignByte.7 then SysIntegerTempX = -SysIntegerTempX
-	
+
 end sub
 
 '32 bit
 sub SysMultSub32
-	
+
 	dim SysLongTempA as long
 	dim SysLongTempB as long
 	dim SysLongTempX as long
-	
+
 	#IFDEF PIC
 		'Can't use normal SysDivMult variables for 32 bit, they overlap with
 		'SysLongTemp variables
 		dim SysLongDivMultA as long
 		dim SysLongDivMultB as long
 		dim SysLongDivMultX as long
-		
+
 		SysLongDivMultA = SysLongTempA
 		SysLongDivMultB = SysLongTempB
 		SysLongDivMultX = 0
-		
+
 		MUL32LOOP:
 			IF SysLongDivMultB.0 ON then SysLongDivMultX += SysLongDivMultA
 			set STATUS.C OFF
@@ -1323,20 +1361,20 @@ sub SysMultSub32
 			set STATUS.C off
 			rotate SysLongDivMultA left
 		if SysLongDivMultB > 0 then goto MUL32LOOP
-		
+
 		SysLongTempX = SysLongDivMultX
-		
+
 	#ENDIF
-	
+
 	#IFDEF AVR
 		dim SysLongDivMultA as long
 		dim SysLongDivMultB as long
 		dim SysLongDivMultX as long
-		
+
 		SysLongDivMultA = SysLongTempA
 		SysLongDivMultB = SysLongTempB
 		SysLongDivMultX = 0
-		
+
 		MUL32LOOP:
 			IF SysLongDivMultB.0 ON then SysLongDivMultX += SysLongDivMultA
 			Set C Off
@@ -1344,11 +1382,11 @@ sub SysMultSub32
 			Set C Off
 			rotate SysLongDivMultA left
 		if SysLongDivMultB > 0 then goto MUL32LOOP
-		
+
 		SysLongTempX = SysLongDivMultX
-		
+
 	#ENDIF
-	
+
 end sub
 
 sub SysMultSubSingle
@@ -1360,30 +1398,30 @@ end sub
 
 '8 bit
 sub SysDivSub
-	
+
 	#IFDEF PIC
 		dim SysByteTempA as byte
 		dim SysByteTempB as byte
 		dim SysByteTempX as byte
-		
+
 		#ifdef CheckDivZero TRUE
 			'Check for div/0
 			movf SysByteTempB, F
 			btfsc STATUS, Z
 			return
 		#endif
-		
+
 		'Main calc routine
 		SysByteTempX = 0
 		SysDivLoop = 8
 		SysDiv8Start:
-			
+
 			bcf STATUS, C
 			rlf SysByteTempA, F
 			rlf SysByteTempX, F
 			movf SysByteTempB, W
 			subwf SysByteTempX, F
-			
+
 			bsf SysByteTempA, 0
 			btfsc STATUS, C
 			goto Div8NotNeg
@@ -1391,12 +1429,12 @@ sub SysDivSub
 			movf SysByteTempB, W
 			addwf SysByteTempX, F
 		Div8NotNeg:
-		
+
 		decfsz SysDivLoop, F
 		goto SysDiv8Start
-		
+
 	#ENDIF
-	
+
 	#IFDEF AVR
 		#ifdef CheckDivZero TRUE
 			'Check for div/0
@@ -1405,7 +1443,7 @@ sub SysDivSub
 			ret
 			DIV8Cont:
 		#endif
-		
+
 		'Main calc routine
 		clr SysByteTempX
 		SysDivLoop = 8
@@ -1413,56 +1451,56 @@ sub SysDivSub
 			lsl SysByteTempA
 			rol SysByteTempX
 			asm sub SysByteTempX,SysByteTempB 'asm needed, or else sub will be used as start of sub
-			
+
 			sbr SysByteTempA,1
 			brsh Div8NotNeg
 			cbr SysByteTempA,1
 			add SysByteTempX,SysByteTempB
 		Div8NotNeg:
-		
+
 		dec SysDivLoop
 		brne SysDiv8Start
 	#ENDIF
-	
+
 end sub
 
 '16 bit
 sub SysDivSub16
-	
+
 	dim SysWordTempA as word
 	dim SysWordTempB as word
 	dim SysWordTempX as word
-	
+
 	dim SysDivMultA as word
 	dim SysDivMultB as word
 	dim SysDivMultX as word
-	
+
 	SysDivMultA = SysWordTempA
 	SysDivMultB = SysWordTempB
 	SysDivMultX = 0
-	
+
 	'Avoid division by zero
 	if SysDivMultB = 0 then
 		SysWordTempA = 0
 		exit sub
 	end if
-	
+
 	'Main calc routine
 	SysDivLoop = 16
 	SysDiv16Start:
-		
+
 		set C off
 		Rotate SysDivMultA Left
 		Rotate SysDivMultX Left
 		SysDivMultX = SysDivMultX - SysDivMultB
 		Set SysDivMultA.0 On
-		
+
 		#IFDEF PIC
 			If C Off Then
 				Set SysDivMultA.0 Off
 				SysDivMultX = SysDivMultX + SysDivMultB
 			End If
-			
+
 			decfsz SysDivLoop, F
 			goto SysDiv16Start
 		#ENDIF
@@ -1471,29 +1509,29 @@ sub SysDivSub16
 				Set SysDivMultA.0 Off
 				SysDivMultX = SysDivMultX + SysDivMultB
 			End If
-			
+
 			dec SysDivLoop
 			brne SysDiv16Start
 		#ENDIF
-		
+
 	SysWordTempA = SysDivMultA
 	SysWordTempX = SysDivMultX
-	
+
 end sub
 
 sub SysDivSubInt
-	
+
 	Dim SysIntegerTempA, SysIntegerTempB, SysIntegerTempX As Integer
 	Dim SysSignByte As Byte
-	
+
 	'Make both inputs positive, decide output type
 	SysSignByte = SysIntegerTempA_H xor SysIntegerTempB_H
 	If SysIntegerTempA.15 Then SysIntegerTempA = -SysIntegerTempA
 	If SysIntegerTempB.15 Then SysIntegerTempB = -SysIntegerTempB
-	
+
 	'Call word divide routine
 	SysDivSub16
-	
+
 	'Negate result if necessary
 	If SysSignByte.7 Then
 		SysIntegerTempA = -SysIntegerTempA
@@ -1504,43 +1542,43 @@ end sub
 
 '32 bit
 sub SysDivSub32
-	
+
 	dim SysLongTempA as long
 	dim SysLongTempB as long
 	dim SysLongTempX as long
-	
+
 	'#ifdef PIC
 		dim SysLongDivMultA as long
 		dim SysLongDivMultB as long
 		dim SysLongDivMultX as long
 	'#endif
-	
+
 	SysLongDivMultA = SysLongTempA
 	SysLongDivMultB = SysLongTempB
 	SysLongDivMultX = 0
-	
+
 	'Avoid division by zero
 	if SysLongDivMultB = 0 then
 		SysLongTempA = 0
 		exit sub
 	end if
-	
+
 	'Main calc routine
 	SysDivLoop = 32
 	SysDiv32Start:
-		
+
 		set C off
 		Rotate SysLongDivMultA Left
 		Rotate SysLongDivMultX Left
 		SysLongDivMultX = SysLongDivMultX - SysLongDivMultB
 		Set SysLongDivMultA.0 On
-		
+
 		#IFDEF PIC
 			If C Off Then
 				Set SysLongDivMultA.0 Off
 				SysLongDivMultX = SysLongDivMultX + SysLongDivMultB
 			End If
-			
+
 			decfsz SysDivLoop, F
 			goto SysDiv32Start
 		#ENDIF
@@ -1549,16 +1587,16 @@ sub SysDivSub32
 				Set SysLongDivMultA.0 Off
 				SysLongDivMultX = SysLongDivMultX + SysLongDivMultB
 			End If
-			
+
 			dec SysDivLoop
 			breq SysDiv32End
 			goto SysDiv32Start
 			SysDiv32End:
 		#ENDIF
-		
+
 	SysLongTempA = SysLongDivMultA
 	SysLongTempX = SysLongDivMultX
-	
+
 end sub
 
 sub SysDivSubSingle
@@ -1585,7 +1623,7 @@ end sub
 'Equal
 sub SysCompEqual
 	Dim SysByteTempA, SysByteTempB, SysByteTempX as byte
-	
+
 	#IFDEF ChipFamily 12,14,15
 		clrf SysByteTempX
 		movf SysByteTempA, W
@@ -1600,7 +1638,7 @@ sub SysCompEqual
 		cpfseq SysByteTempA
 		clrf SysByteTempX
 	#ENDIF
-	
+
 	#IFDEF AVR
 		clr SysByteTempX
 		cpse SysByteTempA, SysByteTempB
@@ -1610,136 +1648,136 @@ sub SysCompEqual
 end sub
 
 sub SysCompEqual16
-	
+
 	dim SysWordTempA as word
 	dim SysWordTempB as word
 	dim SysByteTempX as byte
-	
+
 	#IFDEF ChipFamily 12,14,15
 		clrf SysByteTempX
-		
+
 		'Test low, exit if false
 		movf SysWordTempA, W
 		subwf SysWordTempB, W
 		btfss STATUS, Z
 		return
-		
+
 		'Test high, exit if false
 		movf SysWordTempA_H, W
 		subwf SysWordTempB_H, W
 		btfss STATUS, Z
 		return
-		
+
 		comf SysByteTempX,F
 	#ENDIF
-	
+
 	#IFDEF ChipFamily 16
 		clrf SysByteTempX
-		
+
 		'Test low, exit if false
 		movf SysWordTempB, W
 		cpfseq SysWordTempA
 		return
-		
+
 		'Test high, exit if false
 		movf SysWordTempB_H, W
 		cpfseq SysWordTempA_H
 		return
-		
+
 		setf SysByteTempX
-		
+
 	#ENDIF
 	#IFDEF AVR
 		clr SysByteTempX
-		
+
 		cp SysWordTempA, SysWordTempB
 		brne SCE16False
-		
+
 		cp SysWordTempA_H, SysWordTempB_H
 		brne SCE16False
-		
+
 		com SysByteTempX
 		SCE16False:
 	#ENDIF
 end sub
 
 sub SysCompEqual32
-	
+
 	dim SysLongTempA as long
 	dim SysLongTempB as long
 	dim SysByteTempX as byte
-	
+
 	#IFDEF ChipFamily 12,14,15
 		clrf SysByteTempX
-		
+
 		'Test low, exit if false
 		movf SysLongTempA, W
 		subwf SysLongTempB, W
 		btfss STATUS, Z
 		return
-		
+
 		'Test high, exit if false
 		movf SysLongTempA_H, W
 		subwf SysLongTempB_H, W
 		btfss STATUS, Z
 		return
-		
+
 		'Test upper, exit if false
 		movf SysLongTempA_U, W
 		subwf SysLongTempB_U, W
 		btfss STATUS, Z
 		return
-		
+
 		'Test exp, exit if false
 		movf SysLongTempA_E, W
 		subwf SysLongTempB_E, W
 		btfss STATUS, Z
 		return
-		
+
 		comf SysByteTempX,F
 	#ENDIF
-	
+
 	#IFDEF ChipFamily 16
 		clrf SysByteTempX
-		
+
 		'Test low, exit if false
 		movf SysLongTempB, W
 		cpfseq SysLongTempA
 		return
-		
+
 		'Test high, exit if false
 		movf SysLongTempB_H, W
 		cpfseq SysLongTempA_H
 		return
-		
+
 		'Test upper, exit if false
 		movf SysLongTempB_U, W
 		cpfseq SysLongTempA_U
 		return
-		
+
 		'Test exp, exit if false
 		movf SysLongTempB_E, W
 		cpfseq SysLongTempA_E
 		return
-		
+
 		setf SysByteTempX
-		
+
 	#ENDIF
 	#IFDEF AVR
 		clr SysByteTempX
-		
+
 		cp SysLongTempA, SysLongTempB
 		brne SCE32False
-		
+
 		cp SysLongTempA_H, SysLongTempB_H
 		brne SCE32False
-		
+
 		cp SysLongTempA_U, SysLongTempB_U
 		brne SCE32False
-		
+
 		cp SysLongTempA_E, SysLongTempB_E
 		brne SCE32False
-		
+
 		com SysByteTempX
 		SCE32False:
 	#ENDIF
@@ -1752,7 +1790,7 @@ end sub
 'if A is 2 and B is 4, C is off
 sub SysCompLessThan
 	Dim SysByteTempA, SysByteTempB, SysByteTempX as byte
-	
+
 	#IFDEF ChipFamily 12,14,15
 		clrf SysByteTempX
 		bsf STATUS, C
@@ -1761,20 +1799,20 @@ sub SysCompLessThan
 		btfss STATUS, C
 		comf SysByteTempX,F
 	#ENDIF
-	
+
 	#IFDEF ChipFamily 16
 		setf SysByteTempX
 		movf SysByteTempB, W
 		cpfslt SysByteTempA
 		clrf SysByteTempX
 	#ENDIF
-	
+
 	#IFDEF AVR
 		clr SysByteTempX
 		cp SysByteTempA,SysByteTempB
 		brlo SCLTTrue
 		ret
-		
+
 		SCLTTrue:
 		com SysByteTempX
 	#ENDIF
@@ -1785,15 +1823,15 @@ Sub SysCompLessThan16
 		dim SysWordTempA as word
 		dim SysWordTempB as word
 		dim SysByteTempX as byte
-		
+
 		clrf SysByteTempX
-		
+
 		'Test High, exit if more
 		movf SysWordTempA_H,W
 		subwf SysWordTempB_H,W
 		btfss STATUS,C
 		return
-		
+
 		'Test high, exit true if less
 		movf SysWordTempB_H,W
 		subwf SysWordTempA_H,W
@@ -1810,32 +1848,32 @@ Sub SysCompLessThan16
 		subwf SysWordTempA,W
 		btfsc STATUS,C
 		return
-		
+
 		SCLT16True:
 		comf SysByteTempX,F
 	#ENDIF
-	
+
 	#IFDEF AVR
 		clr SysByteTempX
-		
+
 		'Test High, exit false if more
 		cp SysWordTempB_H,SysWordTempA_H
 		brlo SCLT16False
-		
+
 		'Test high, exit true if less
 		cp SysWordTempA_H,SysWordTempB_H
 		brlo SCLT16True
-		
+
 		'Test Low, exit if more or equal
 		cp SysWordTempA,SysWordTempB
 		brlo SCLT16True
 		ret
-		
+
 		SCLT16True:
 		com SysByteTempX
 		SCLT16False:
 	#ENDIF
-	
+
 End Sub
 
 Sub SysCompLessThan32
@@ -1843,9 +1881,9 @@ Sub SysCompLessThan32
 		dim SysLongTempA as long
 		dim SysLongTempB as long
 		dim SysByteTempX as byte
-		
+
 		clrf SysByteTempX
-		
+
 		'Test Exp, exit if more
 		movf SysLongTempA_E,W
 		subwf SysLongTempB_E,W
@@ -1859,7 +1897,7 @@ Sub SysCompLessThan32
 		#IFDEF ChipFamily 16
 			bnz SCLT32True
 		#ENDIF
-		
+
 		'Test Upper, exit if more
 		movf SysLongTempA_U,W
 		subwf SysLongTempB_U,W
@@ -1873,7 +1911,7 @@ Sub SysCompLessThan32
 		#IFDEF ChipFamily 16
 			bnz SCLT32True
 		#ENDIF
-		
+
 		'Test High, exit if more
 		movf SysLongTempA_H,W
 		subwf SysLongTempB_H,W
@@ -1887,58 +1925,58 @@ Sub SysCompLessThan32
 		#IFDEF ChipFamily 16
 			bnz SCLT32True
 		#ENDIF
-		
+
 		'Test Low, exit if more or equal
 		movf SysLongTempB,W
 		subwf SysLongTempA,W
 		btfsc STATUS,C
 		return
-		
+
 		SCLT32True:
 		comf SysByteTempX,F
 	#ENDIF
-	
+
 	#IFDEF AVR
 		clr SysByteTempX
-		
+
 		'Test Exp, exit false if more
 		cp SysLongTempB_E,SysLongTempA_E
 		brlo SCLT32False
 		'Test Exp, exit true not equal
 		brne SCLT32True
-		
+
 		'Test Upper, exit false if more
 		cp SysLongTempB_U,SysLongTempA_U
 		brlo SCLT32False
 		'Test Upper, exit true not equal
 		brne SCLT32True
-		
+
 		'Test High, exit false if more
 		cp SysLongTempB_H,SysLongTempA_H
 		brlo SCLT32False
 		'Test high, exit true not equal
 		brne SCLT32True
-		
+
 		'Test Low, exit if more or equal
 		cp SysLongTempA,SysLongTempB
 		brlo SCLT32True
 		ret
-		
+
 		SCLT32True:
 		com SysByteTempX
 		SCLT32False:
 	#ENDIF
-	
+
 End Sub
 
 'Returns true if A < B
 sub SysCompLessThanInt
-	
+
 	Dim SysIntegerTempA, SysIntegerTempB, SysDivMultA as Integer
-	
+
 	'Clear result
 	SysByteTempX = 0
-	
+
 	'Compare sign bits
 	'-A
 	If SysIntegerTempA.15 = On Then
@@ -1959,15 +1997,15 @@ sub SysCompLessThanInt
 			Exit Sub
 		End If
 	End If
-	
+
 	#IFDEF PIC
-		
+
 		'Test High, exit if more
 		movf SysIntegerTempA_H,W
 		subwf SysIntegerTempB_H,W
 		btfss STATUS,C
 		return
-		
+
 		'Test high, exit true if less
 		movf SysIntegerTempB_H,W
 		subwf SysIntegerTempA_H,W
@@ -1978,35 +2016,35 @@ sub SysCompLessThanInt
 		#IFDEF ChipFamily 16
 			bnc SCLTIntTrue
 		#ENDIF
-		
+
 		'Test Low, exit if more or equal
 		movf SysIntegerTempB,W
 		subwf SysIntegerTempA,W
 		btfsc STATUS,C
 		return
-		
+
 	SCLTIntTrue:
 		comf SysByteTempX,F
 	#ENDIF
-	
+
 	#IFDEF AVR
-		
+
 		'Test High, exit false if more
 		cp SysIntegerTempB_H,SysIntegerTempA_H
 		brlo SCLTIntFalse
-		
+
 		'Test high, exit true if less
 		cp SysIntegerTempA_H,SysIntegerTempB_H
 		brlo SCLTIntTrue
-		
+
 		'Test Low, exit if more or equal
 		cp SysIntegerTempA,SysIntegerTempB
 		brlo SCLTIntTrue
 		ret
-		
+
 	SCLTIntTrue:
 		com SysByteTempX
 	SCLTIntFalse:
 	#ENDIF
-	
+
 end sub
