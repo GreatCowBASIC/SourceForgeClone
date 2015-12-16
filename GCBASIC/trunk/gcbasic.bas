@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-12-08"
+Version = "0.94 2015-12-16"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3938,8 +3938,8 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 	Complex = 0
 	CondType = TypeOfValue(Condition, Subroutine(GetSubID(Origin)))
 	IF CountOccur(Condition, "';=~<>{}") = 0 THEN Complex = -1
-	IF CountOccur(Condition, "';=~<>{}+-*/&|#!") >= 2 THEN Complex = 1
-	IF CountOccur(Condition, "';+-*/&|#!") >= 1 THEN Complex = 1
+	IF CountOccur(Condition, "';=~<>{}+-*/%&|#!") >= 2 THEN Complex = 1
+	IF CountOccur(Condition, "';+-*/%&|#!") >= 1 THEN Complex = 1
 	If CondType <> "BIT" And CondType <> "BYTE" THEN Complex = 1
 	'PRINT Condition, GetSub(Origin), IsWord(Condition, GetSub(Origin))
 
