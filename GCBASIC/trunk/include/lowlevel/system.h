@@ -23,10 +23,9 @@
 '********************************************************************************
 
 ;    12-12-15 by William Roth
-;
 ;    Added support for PIC18F25K22 @ 32MHz and 64 MHz
-
-
+;    14-12-15
+;    Added support for PIC18F(L)xx20 Chips
 'Constants
 #define ON 1
 #define OFF 0
@@ -54,9 +53,47 @@ Sub InitSys
 		#ENDIF
 
     #if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
-			      'Most chips:
+		  'Most chips:
 			#ifndef Bit(HFIOFS)
-				#IFDEF ChipMHz 8
+
+        #IFDEF ChipMHz 64 'added for 18F(L)K20 -WMR
+					Set IRCF2 On
+					Set IRCF1 On
+					Set IRCF0 On
+          #ifdef Bit(SPLLMULT)
+						Set SPLLMULT On
+					#endif
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
+          #ifdef Bit(PLLEN)
+						Set PLLEN On
+					#endif
+				#ENDIF
+
+      	#IFDEF ChipMHz 32 'added for 18F(L)K20 -WMR
+					Set IRCF2 On
+					Set IRCF1 On
+					Set IRCF0 Off
+					#ifdef Bit(SPLLMULT)
+						Set SPLLMULT Off
+					#endif
+					#ifdef Bit(SPLLEN)
+						Set SPLLEN On
+					#endif
+          #ifdef Bit(PLLEN)
+						Set PLLEN On
+					#endif
+				#ENDIF
+
+        #IFDEF ChipMHz 16 'added for 18F(L)K20 -WMR
+          Set IRCF2 On
+					Set IRCF1 On
+					Set IRCF0 On
+        		'OSCCON = OSCCON OR b'01110000'
+				#ENDIF
+
+        #IFDEF ChipMHz 8
 					OSCCON = OSCCON OR b'01110000'
 				#ENDIF
 				#IFDEF ChipMHz 4
@@ -148,7 +185,9 @@ Sub InitSys
 		#endif
 
 		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
+
       #ifdef Bit(IRCF3)
+
         #IFDEF ChipMHz 64
 				  'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
 					'OSCCON = OSCCON OR b'01111000'
@@ -287,7 +326,8 @@ Sub InitSys
 					#endif
 				#ENDIF
 			#endif
-			#ifndef Bit(IRCF3)
+
+      #ifndef Bit(IRCF3)
 
         #IFDEF ChipMHz 64
           'OSCCON = OSCCON AND b'10001111'
