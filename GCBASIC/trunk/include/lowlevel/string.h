@@ -1,5 +1,5 @@
 '    String routines for the GCBASIC compiler
-'    Copyright (C) 2006 - 2013 Hugh Considine
+'    Copyright (C) 2006 - 2015 Hugh Considine, Evan Venn & Immo Freudenberg
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,8 @@
 ' The inverse of this function is chr() (from the function of the same name in Pascal), which takes a number and returns the corresponding character. Both functions are written very nicely in GCB.
 ' 22/12/2014: Add PAD function
 ' 1/6/2016: Add Fill function
+' 21/10/2016: Fixed Pad
+' 19/12/2015: Addes Str32 AND Val32 for string handling of 32 bit numbers.  Immo Freudenberg <immo-freudenberg@t-online.de>
 
 'Length/position
 Function Len (LenTemp())
@@ -119,7 +121,117 @@ Function Str(SysValTemp As Word) As String * 5
 
 End Function
 
+function Str32(SysValTemp As long) As String * 10
+'converts strings of 10 Digits to a long Var (32bit)
+'max in = # 4.294.967.295 (h FFFF FFFF)
+
+  SysCharCount = 0
+  'SysCalcTempX stores remainder after division
+  'has to be DIM'ed b/o issue in GCB
+   Dim SysCalcTempX As long
+
+  Str32 = ""
+
+   'thousand millions
+  IF SysValTemp >= 1000000000 then
+    SysStrData = SysValTemp / 1000000000
+    SysValTemp = SysCalcTempX
+    SysCharCount ++      ' first char.
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValHundredMillions
+  End If
+
+   'hundred millions
+  IF SysValTemp >= 100000000 then
+   _SysValHundredMillions:
+    SysStrData = SysValTemp / 100000000
+    SysValTemp = SysCalcTempX
+    SysCharCount ++      ' scnd char.
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValTenMillions
+  End If
+
+   'Ten millions
+  IF SysValTemp >= 10000000 then
+   _SysValTenMillions:
+    SysStrData = SysValTemp / 10000000
+    SysValTemp = SysCalcTempX
+    SysCharCount ++      ' third char.
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValMillions
+  End If
+
+   'one millions
+  IF SysValTemp >= 1000000 then
+   _SysValMillions:
+    SysStrData = SysValTemp / 1000000
+
+    SysValTemp = SysCalcTempX
+    SysCharCount ++
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValHundredThousands
+  End If
+
+   'hundred Thousands
+  IF SysValTemp >= 100000 then
+   _SysValHundredThousands:
+    SysStrData = SysValTemp / 100000
+    SysValTemp = SysCalcTempX
+    SysCharCount ++
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValTenThousands
+  End If
+
+  'Ten Thousands
+  IF SysValTemp >= 10000 then
+   _SysValTenThousands:
+    SysStrData = SysValTemp / 10000
+    SysValTemp = SysCalcTempX
+    SysCharCount ++
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValThousands
+  End If
+
+  'Thousands
+  IF SysValTemp >= 1000 then
+   _SysValThousands:
+    SysStrData = SysValTemp / 1000
+    SysValTemp = SysCalcTempX
+    SysCharCount ++
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValHundreds
+  End If
+
+  'Hundreds
+  IF SysValTemp >= 100 then
+   _SysValHundreds:
+    SysStrData = SysValTemp / 100
+    SysValTemp = SysCalcTempX
+    SysCharCount ++
+    Str32(SysCharCount) = SysStrData + 48
+    Goto _SysValTens
+  End If
+
+  'Tens
+  IF SysValTemp >= 10 Then
+   _SysValTens:
+    SysStrData = SysValTemp / 10
+    SysValTemp = SysCalcTempX
+    SysCharCount ++
+    Str32(SysCharCount) = SysStrData + 48
+  End If
+
+  'Ones
+  SysCharCount ++
+  Str32(SysCharCount) = SysValTemp + 48
+  SysValTemp = SysCalcTempX
+
+  Str32(0) = SysCharCount
+
+end function
+
 'String > Word
+#define Val16 Val
 Function Val(SysInString As String) As Word
   'Parse SysInString, convert to word
   'Stop parsing and exit on any non-number character
@@ -142,6 +254,18 @@ Function Val(SysInString As String) As Word
   Next
 
 End Function
+
+'String > Long
+Function Val32(SysInString as String) as Long
+'Converts a string to Long
+'max in = "4294967295" (#4.294.967.295)
+    Val32=0
+    SysCharCount = SysInString(0)          'length of input string
+    For SysStringTemp = 1 to SysCharCount
+        SysStrData = SysInString(SysStringTemp)
+        Val32 = Val32 * 10 + SysStrData - 48
+    Next
+end Function
 
 'Decimal > Hex
 Function Hex(In SysValTemp) As String * 3
@@ -391,7 +515,7 @@ End Function
 'str - String to be padded.
 'len - Length of str.
 'padchr - Pad character, which can be any string. The first character is used to pad new space in the output string.
-Function Pad ( in SysInString as string, SysStrLen, optional SysInString3 as string = " " ) As String
+Function Pad ( in SysInString as string, SysStrLen, optional in SysInString3 as string = " " ) As String
   'Check length of search and find strings
   'Exit if the find string cannot fit into the search string
   ' If SysInString(0) = 0 Then Exit Function
