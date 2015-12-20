@@ -16,8 +16,9 @@
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
 '    31st Aug 2015 Initial release
-'    1st Sept 2015 Minor correction to color and other parameters.	
-'				
+'    1st Sept 2015 Minor correction to color and other parameters.
+'    25h Oct 2015 Corrected INIT 	
+'
 'Notes:
 ' Supports SSD1289 controller only.
 
@@ -182,85 +183,119 @@ End Sub
 
 
 '''Initialises the device
-Sub InitGLCD_SSD1289 (Optional In Orientation_SSD1289 as Byte = PORTRAIT, Optional In GLCDBackground = SSD1289_BLACK)
+Sub InitGLCD_SSD1289
+
+	Dim Orientation_SSD1289 as Byte
+        Dim GLCDBackground as Byte
+        Orientation_SSD1289 = 4 'PORTRAIT
+
+        GLCDBackground = 0x0000 'SSD1289_BLACK
+        GLCDForeground = 0xffff
 
         Dim SSD1289_GLCD_WIDTH, SSD1289_GLCD_HEIGHT as Word
-        SSD1289_RST=1
-        Wait 5 ms
-        SSD1289_RST=0
-        Wait 15 ms
-        SSD1289_RST=1
-        Wait 15 ms
-        SSD1289_CS =0
-        Write_Command_Data_SSD1289 (0x0000,0x0001)
-        Write_Command_Data_SSD1289 (0x0003,0xA8A4)
-        Write_Command_Data_SSD1289 (0x000C,0x0000)
-        Write_Command_Data_SSD1289 (0x000D,0x800C)
-        Write_Command_Data_SSD1289 (0x000E,0x2B00)
-        Write_Command_Data_SSD1289 (0x001E,0x00B7)
-        Write_Command_Data_SSD1289 (0x0002,0x0600)
-        Write_Command_Data_SSD1289 (0x0010,0x0000)
-        Select Case Orientation_SSD1289
-           case LANDSCAPE_REV
-                SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
-                SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
-                Write_Command_Data_SSD1289 (0x0001,0x2B3F)
-                Write_Command_Data_SSD1289 (0x0011,0x6070)
-           case LANDSCAPE
-                SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
-                SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
-                Write_Command_Data_SSD1289 (0x0001,0x693F)
-                Write_Command_Data_SSD1289 (0x0011,0x6070)
-           case PORTRAIT_REV
-                SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
-                SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
-                Write_Command_Data_SSD1289 (0x0001,0x693F)
-                Write_Command_Data_SSD1289 (0x0011,0x6070)
-           case Else
-                SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
-                SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
-                Write_Command_Data_SSD1289 (0x0001,0x2B3F)
-                Write_Command_Data_SSD1289 (0x0011,0x6070)
-        end Select
-        Write_Command_Data_SSD1289 (0x0005,0x0000)
-        Write_Command_Data_SSD1289 (0x0006,0x0000)
-        Write_Command_Data_SSD1289 (0x0016,0xEF1C)
-        Write_Command_Data_SSD1289 (0x0017,0x0003)
-        Write_Command_Data_SSD1289 (0x0007,0x0233)
-        Write_Command_Data_SSD1289 (0x000B,0x0000)
-        Write_Command_Data_SSD1289 (0x000F,0x0000)
-        Write_Command_Data_SSD1289 (0x0041,0x0000)
-        Write_Command_Data_SSD1289 (0x0042,0x0000)
-        Write_Command_Data_SSD1289 (0x0048,0x0000)
-        Write_Command_Data_SSD1289 (0x0049,0x013F)
-        Write_Command_Data_SSD1289 (0x004A,0x0000)
-        Write_Command_Data_SSD1289 (0x004B,0x0000)
-        Write_Command_Data_SSD1289 (0x0044,0xEF95)
-        Write_Command_Data_SSD1289 (0x0045,0x0000)
-        Write_Command_Data_SSD1289 (0x0046,0x013F)
-        Write_Command_Data_SSD1289 (0x0030,0x0707)
-        Write_Command_Data_SSD1289 (0x0031,0x0204)
-        Write_Command_Data_SSD1289 (0x0032,0x0204)
-        Write_Command_Data_SSD1289 (0x0033,0x0502)
-        Write_Command_Data_SSD1289 (0x0034,0x0507)
-        Write_Command_Data_SSD1289 (0x0035,0x0204)
-        Write_Command_Data_SSD1289 (0x0036,0x0204)
-        Write_Command_Data_SSD1289 (0x0037,0x0502)
-        Write_Command_Data_SSD1289 (0x003A,0x0302)
-        Write_Command_Data_SSD1289 (0x003B,0x0302)
-        Write_Command_Data_SSD1289 (0x0023,0x0000)
-        Write_Command_Data_SSD1289 (0x0024,0x0000)
-        Write_Command_Data_SSD1289 (0x0025,0x8000)
-        Write_Command_Data_SSD1289 (0x004f,0x0000)
-        Write_Command_Data_SSD1289 (0x004e,0x0000)
-        Write_Command_SSD1289(0x0022)
-        SSD1289_CS =1
-        Wait 100 ms
-        GLCDCLS_SSD1289 GLCDBackground
-        GLCDCLS_SSD1289 GLCDBackground 'for sure
-        GLCDFontWidth = 6
-        'Default size
-        GLCDfntDefaultSize = 2
+
+
+            dir GLCD_WR   out
+            dir GLCD_CS   out
+            dir GLCD_RS   out
+            dir GLCD_RST  out
+            dir GLCD_DB0  out
+            dir GLCD_DB1  out
+            dir GLCD_DB2  out
+            dir GLCD_DB3  out
+            dir GLCD_DB4  out
+            dir GLCD_DB5  out
+            dir GLCD_DB6  out
+            dir GLCD_DB7  out
+            dir GLCD_DB8  out
+            dir GLCD_DB9  out
+            dir GLCD_DB10 out
+            dir GLCD_DB11 out
+            dir GLCD_DB12 out
+            dir GLCD_DB13 out
+            dir GLCD_DB14 out
+            dir GLCD_DB15 out
+
+            SSD1289_CS =1
+            SSD1289_RST=1
+            Wait 5 ms
+            SSD1289_RST=0
+            Wait 15 ms
+            SSD1289_RST=1
+            Wait 15 ms
+            SSD1289_CS =0
+
+            Write_Command_Data_SSD1289 (0x0000,0x0001)
+            Write_Command_Data_SSD1289 (0x0003,0xA8A4)
+            Write_Command_Data_SSD1289 (0x000C,0x0000)
+            Write_Command_Data_SSD1289 (0x000D,0x800C)
+            Write_Command_Data_SSD1289 (0x000E,0x2B00)
+            Write_Command_Data_SSD1289 (0x001E,0x00B7)
+            Write_Command_Data_SSD1289 (0x0002,0x0600)
+            Write_Command_Data_SSD1289 (0x0010,0x0000)
+            Select Case Orientation_SSD1289
+               case LANDSCAPE_REV
+                    SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
+                    SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
+                    Write_Command_Data_SSD1289 (0x0001,0x2B3F)
+                    Write_Command_Data_SSD1289 (0x0011,0x6070)
+               case LANDSCAPE
+                    SSD1289_GLCD_WIDTH = GLCD_HEIGHT-1
+                    SSD1289_GLCD_HEIGHT = GLCD_WIDTH-1
+                    Write_Command_Data_SSD1289 (0x0001,0x693F)
+                    Write_Command_Data_SSD1289 (0x0011,0x6070)
+               case PORTRAIT_REV
+                    SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
+                    SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
+                    Write_Command_Data_SSD1289 (0x0001,0x693F)
+                    Write_Command_Data_SSD1289 (0x0011,0x6070)
+               case Else
+                    SSD1289_GLCD_WIDTH = GLCD_WIDTH-1
+                    SSD1289_GLCD_HEIGHT = GLCD_HEIGHT-1
+                    Write_Command_Data_SSD1289 (0x0001,0x2B3F)
+                    Write_Command_Data_SSD1289 (0x0011,0x6070)
+            end Select
+            Write_Command_Data_SSD1289 (0x0005,0x0000)
+            Write_Command_Data_SSD1289 (0x0006,0x0000)
+            Write_Command_Data_SSD1289 (0x0016,0xEF1C)
+            Write_Command_Data_SSD1289 (0x0017,0x0003)
+            Write_Command_Data_SSD1289 (0x0007,0x0233)
+            Write_Command_Data_SSD1289 (0x000B,0x0000)
+            Write_Command_Data_SSD1289 (0x000F,0x0000)
+            Write_Command_Data_SSD1289 (0x0041,0x0000)
+            Write_Command_Data_SSD1289 (0x0042,0x0000)
+            Write_Command_Data_SSD1289 (0x0048,0x0000)
+            Write_Command_Data_SSD1289 (0x0049,0x013F)
+            Write_Command_Data_SSD1289 (0x004A,0x0000)
+            Write_Command_Data_SSD1289 (0x004B,0x0000)
+            Write_Command_Data_SSD1289 (0x0044,0xEF95)
+            Write_Command_Data_SSD1289 (0x0045,0x0000)
+            Write_Command_Data_SSD1289 (0x0046,0x013F)
+            Write_Command_Data_SSD1289 (0x0030,0x0707)
+            Write_Command_Data_SSD1289 (0x0031,0x0204)
+            Write_Command_Data_SSD1289 (0x0032,0x0204)
+            Write_Command_Data_SSD1289 (0x0033,0x0502)
+            Write_Command_Data_SSD1289 (0x0034,0x0507)
+            Write_Command_Data_SSD1289 (0x0035,0x0204)
+            Write_Command_Data_SSD1289 (0x0036,0x0204)
+            Write_Command_Data_SSD1289 (0x0037,0x0502)
+            Write_Command_Data_SSD1289 (0x003A,0x0302)
+            Write_Command_Data_SSD1289 (0x003B,0x0302)
+            Write_Command_Data_SSD1289 (0x0023,0x0000)
+            Write_Command_Data_SSD1289 (0x0024,0x0000)
+            Write_Command_Data_SSD1289 (0x0025,0x8000)
+            Write_Command_Data_SSD1289 (0x004f,0x0000)
+            Write_Command_Data_SSD1289 (0x004e,0x0000)
+            Write_Command_SSD1289(0x0022)
+            SSD1289_CS =1
+
+
+            GLCDFontWidth = 6
+            'Default size
+            GLCDfntDefaultSize = 2
+
+            GLCDCLS_SSD1289 GLCDBackground
+
 End Sub
 
 sub   GLCDRotate_SSD1289 ( In Orientation_SSD1289, Optional in GLCDBackground=GLCDBackground)
@@ -552,7 +587,7 @@ End Sub
 '''@param Color Optional color
 Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Long, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize)
 	Dim GLCDPrintLoc as Word
-          Dim SysCalcTempA As Long
+  Dim SysCalcTempA As Long
 	Dim SysPrintBuffer(10)
 	SysPrintBuffLen = 0
 	Do
@@ -561,6 +596,7 @@ Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Lo
 		SysPrintBuffer(SysPrintBuffLen) = GLCDValue %10
 		GLCDValue = SysCalcTempA
 	Loop While GLCDValue <> 0
+
 	'Display
 	GLCDPrintLoc = PrintLocX
 	For SysPrintTemp = SysPrintBuffLen To 1 Step -1

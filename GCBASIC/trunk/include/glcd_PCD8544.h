@@ -141,7 +141,7 @@ Sub InitGLCD_PCD8544
                               Dir PCD8544_CS Out
                               Dir PCD8544_DC Out
                               Dir PCD8544_RST Out
-          		
+
                               Dir PCD8544_DO Out
                               Dir PCD8544_SCK Out
                         #ENDIF
@@ -150,12 +150,12 @@ Sub InitGLCD_PCD8544
                               Dir _PCD8544_CS Out
                               Dir _PCD8544_DC Out
                               Dir _PCD8544_RST Out
-          		
+
                               Dir _PCD8544_DO Out
                               Dir _PCD8544_SCK Out
                         #ENDIF
 
-    		
+
                         'Reset ports
                         Set PCD8544_CS off
                         Set PCD8544_DC off
@@ -178,7 +178,7 @@ Sub InitGLCD_PCD8544
                         wait 10 us
                         PCD8544_CS = 0
 
-    		
+
     '	/*********SEE DATASHEET FOR ALL THIS********/
 
                         Write_Command_PCD8544(0x21);		 Activate Chip and H=1.
@@ -187,10 +187,10 @@ Sub InitGLCD_PCD8544
                         Write_Command_PCD8544(0x13);		 Adjust voltage bias.
                         Write_Command_PCD8544(0x20);		 Horizontal addressing and H=0.
                         Write_Command_PCD8544(0x09);		 Activate all segments.
-                        Clear_RAM_PCD8544();	           Erase all pixel on the DDRAM.
+                        Clear_RAM_PCD8544;		           Erase all pixel on the DDRAM.
                         Write_Command_PCD8544(0x08);		 Blank the Display.
                         Write_Command_PCD8544(0x0C);		 Display Normal.
-                        GOTO_Pixel_PCD8544(0,0);		 Cursor Home.	
+                        GOTO_Pixel_PCD8544(0,0);		 Cursor Home.
 
 
                         'Colours
@@ -204,7 +204,7 @@ Sub InitGLCD_PCD8544
 
 	'Clear screen
 	GLCDCLS
-	
+
 End Sub
 
 
@@ -305,7 +305,7 @@ Sub FilledBox_PCD8544(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Li
 		LineY1 = LineY2
 		LineY2 = GLCDTemp
 	End If
-	
+
 	#if GLCD_TYPE = GLCD_TYPE_PCD8544
 		'Draw lines going across
 		For DrawLine = LineX1 To LineX2
@@ -328,7 +328,7 @@ Sub PSet_PCD8544(In GLCDX, In GLCDY, In GLCDColour As Word)
                     PCD8544_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
                     PCD8544_BufferLocationCalc = GLCDX + PCD8544_BufferLocationCalc+1
 		GLCDDataTemp = PCD8544_BufferAlias(PCD8544_BufferLocationCalc)
-                    	
+
 		'Change data to set/clear pixel
 		GLCDBitNo = GLCDY And 7
 		If GLCDColour.0 = 0 Then
@@ -347,14 +347,14 @@ Sub PSet_PCD8544(In GLCDX, In GLCDY, In GLCDColour As Word)
 		Else
 			GLCDDataTemp = GLCDDataTemp Or GLCDChange
 		End If
-		
+
 		PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = GLCDDataTemp
                     Cursor_Position_PCD8544 ( GLCDX, GLCDY )
                     Write_Data_PCD8544 ( GLCDDataTemp )
               #endif
 
 	#endif
-	
+
 End Sub
 
 sub Write_Command_PCD8544(in  PCD8544SendByte)
@@ -435,7 +435,7 @@ sub Cursor_Position_PCD8544( in LocX, in LocY)
 end sub
 
 Sub SetPixel_PCD8544( SetPixelLocX , SetPixelLocY, Optional In LineColour as word = GLCDForeground )
-	
+
         row = SetPixelLocY / 8
         PCD8544_BufferLocationCalc = row * GLCD_WIDTH
         PCD8544_BufferLocationCalc = SetPixelLocX + PCD8544_BufferLocationCalc+1 ' Adjusted to the buffer start point
