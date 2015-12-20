@@ -1,0 +1,31 @@
+'''A most simple sample for GCGB and GCB.
+'''------------------------------------------------------------------------
+'''This program blinks the onboard LED of an Arduino UNO, NANO or PRO-MINI.
+'''
+'''This sample file can be adapted to any of the supported microprocessor
+'''by simply changing the #chip as follows: #chip 16f877a, 4
+'''
+'''To make your programmer/bootloader work, click menu
+''' GCBasic -> Edit AVR programmer batchfile
+'''or, for the a Microchip PIC
+'''
+'''To make your programmer/bootloader work, click menu
+''' GCBasic -> Edit PIC programmer batchfile
+'''
+'''Click button "view Demos" for more sample programs.
+'''
+'''************************************************************************
+
+' ----- Configuration
+  #chip mega328p, 16
+
+' ----- Main body of program commences here.
+  Do Forever
+
+     'Lighten Arduinos onboard LED for 100 milliseconds:
+     PulseOut PortB.5, 100 ms
+
+     'Then wait 900 milliseconds after LED goes off:
+     Wait 900 ms
+
+  Loop
