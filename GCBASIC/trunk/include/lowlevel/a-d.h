@@ -26,11 +26,24 @@
 '18Fxx31 code by Kent Schafer
 'added ReadAD12 2/12/2015
 
+'21/12/2015 'Added additional support for 16F178x - William Roth
+
+'    1) 16F178x Chips now default to single-ended ADC
+'       with VREF- set to Vss instead of differential channel
+'    2) ReadADx now returns correct value when changing between
+'       ReadAD, ReadAD10, and ReadAd12 in same program.
+'    3) Corrected CHSN Bits settings in RC_35 for 18F
+'    4) Moved CHSN Bit settings from ReadAD Functions to #Startup
+'       so that User CHSN bit settings in source are not overwritten
+'       when ReadAD function is called.
+
 'Commands:
 'var = ReadAD(port)	Reads port, and returns value.
 'ADFormat(type)		Choose Left or Right justified
 'ADOff			Set A/D converter off. Use if trouble is experienced when
 '			attempting to use ports in digital mode
+
+#startup SetCHSN
 
 #define Format_Left 0
 #define Format_Right 255
@@ -564,96 +577,143 @@ macro LLReadAD (ADLeftAdjust)
 
 end macro
 
-function ReadAD(ADReadPort)
+function ReadAD(ADReadPort) as integer
+ #IFDEF PIC
+
+     #IFDEF Bit(CHSN0)
+         ;set AD Result Mode to (default 12-bit)
+ 		    #IF Bit(ADRMD)      'Added for 16F178x -WMR
+ 				    SET ADRMD ON
+ 		    #ENDIF
+
+        #IFDEF Bit(ADFM)
+		  		  SET ADFM ON
+	  	  #ENDIF
+    #ENDIF
+
+  #ENDIF
+
 
 'Perform conversion
 LLReadAD 1
 
 'Write output
-#IFDEF PIC
-	#IFDEF Var(ADRESH)
-		ReadAD = ADRESH
-	#ENDIF
-	#IFDEF NoVar(ADRESH)
-		ReadAD = ADRES
-	#ENDIF
-#ENDIF
+ #IFDEF PIC
 
-#IFDEF AVR
-	ReadAD = ADCH
-#ENDIF
+    #IFNDEF bit(CHSN0) ' no 12-bit ADC
 
-end function
+        #IFDEF Var(ADRESH)
+		       ReadAD = ADRESH
+	      #ENDIF
+
+	      #IFDEF NoVar(ADRESH)
+		       ReadAD = ADRES
+	      #ENDIF
+    #ENDIF
+
+    #IFDEF Bit(CHSN0)  'Chip has 12-Bit ADC
+       'So we need to do 12-bit conversion then divide by 16
+       #IFDEF NoVar(ADRESL)
+		      ReadAD = ADRES
+	     #ENDIF
+
+	     #IFDEF Var(ADRESL)
+		       ReadAD = ADRESL
+	     #ENDIF
+
+	     #IFDEF Var(ADRESH)
+		       ReadAD_H = ADRESH
+	     #ENDIF
+
+	     'Put A/D format back to normal
+	     #IFDEF Bit(ADFM)
+		      SET ADFM OFF
+	     #ENDIF
+
+       ReadAD = ReadAD / 16
+
+    #ENDIF
+
+ #ENDIF
+
+ #IFDEF AVR
+	  ReadAD = ADCH
+ #ENDIF
+
+End Function
 
 
 'Large ReadAD
-function ReadAD10(ADReadPort) As Word
+function ReadAD10(ADReadPort) As Integer
 
-#IFDEF PIC
+	#IFDEF PIC
 	'Set up A/D format
-	#IFDEF Bit(ADFM)
-		SET ADFM ON
+			#IFDEF Bit(ADFM)
+					SET ADFM ON
+			#ENDIF
+
+      ;set AD Result Mode to 10-Bit
+  		#IF Bit(ADRMD)      ;Added for 16F178x
+    			SET ADRMD ON    ; WMR
+  		#ENDIF
 	#ENDIF
-#ENDIF
-#IFDEF AVR
-	Dim LLADResult As Word Alias ADCH, ADCL
-#ENDIF
+
+ 	#IFDEF AVR
+			Dim LLADResult As Word Alias ADCH, ADCL
+	#ENDIF
 
 'Do conversion
 LLReadAD 0
 
-#IFDEF PIC
-	'Write output
-	#IFDEF NoVar(ADRESL)
-		ReadAD10 = ADRES
-	#ENDIF
-	#IFDEF Var(ADRESL)
-		ReadAD10 = ADRESL
-	#ENDIF
-	#IFDEF Var(ADRESH)
-		ReadAD10_H = ADRESH
-	#ENDIF
+	#IFDEF PIC
+			'Write output
+			#IFDEF NoVar(ADRESL)
+				ReadAD10 = ADRES
+			#ENDIF
 
-	'Put A/D format back to normal
-	#IFDEF Bit(ADFM)
-		SET ADFM OFF
-	#ENDIF
-#ENDIF
+   		#IFDEF Var(ADRESL)
+					ReadAD10 = ADRESL
+			#ENDIF
 
-#IFDEF AVR
-	ReadAD10 = LLADResult
-#ENDIF
+  		#IFDEF Var(ADRESH)
+					ReadAD10_H = ADRESH
+			#ENDIF
+
+			'Put A/D format back to normal
+			#IFDEF Bit(ADFM)
+					SET ADFM OFF
+			#ENDIF
+
+     '18F PIC with 12=bit ADC do not support 10-bit result
+     ' Added DIV/4 to return 10 bit value
+     #IFNDEF Bit(CHSN3)
+        READAD10 = READAD10 / 4
+     #ENDIF
+
+  #ENDIF
+
+	#IFDEF AVR
+			ReadAD10 = LLADResult
+	#ENDIF
 
 end function
 
 'Larger ReadAD
-function ReadAD12(ADReadPort) As Word
+function ReadAD12(ADReadPort) As integer
 
-#IFDEF PIC
+	#IFDEF PIC
 
-	'Set up A/D 12 bit format
-    #IFDEF bit(CHSN3)   'For 16F family with 12Bit ADC
-        set CHSN0 ON
-        set CHSN1 ON
-        set CHSN2 ON
-        set CHSN3 ON
-    #ENDIF
+   'Set up A/D format
+			#IFDEF Bit(ADFM)
+		  		SET ADFM ON
+	  	#ENDIF
 
-    #IFDEF bit(CHSN0)
-        #IFNDEF bit(CHSN3)  'For 18F Family with 12Bit ADC
-            set CHSN0 off
-            set CHSN1 off
-            set CHSN2 off
-        #ENDIF
-    #ENDIF
+   'Set A/D Result Mode to 12-Bit  (16F178x) -WMR
+			#IFDEF Bit(ADRMD)
+      		SET ADRMD OFF
+    	#ENDIF
 
-  'Set up A/D format
-	#IFDEF Bit(ADFM)
-		SET ADFM ON
-	#ENDIF
-
-#ENDIF
-
+  #ENDIF
 
 'Do conversion
 LLReadAD 0
@@ -663,9 +723,11 @@ LLReadAD 0
 	#IFDEF NoVar(ADRESL)
 		ReadAD12 = ADRES
 	#ENDIF
+
 	#IFDEF Var(ADRESL)
 		ReadAD12 = ADRESL
 	#ENDIF
+
 	#IFDEF Var(ADRESH)
 		ReadAD12_H = ADRESH
 	#ENDIF
@@ -731,3 +793,35 @@ sub ADOff
  #ENDIF
 
 end sub
+
+sub SetCHSN
+ 'sets CHSN (Negative Channel) BITs for PICS
+ ' with 12-Bit differential ADC Modules
+ ' enables single-sided reads as default
+ ' Moved from ReadADx Functions to allow user to configure
+ ' CHSN bits in Source GCB file for differential operation. -WMR
+ #IFDEF PIC
+		#IFDEF bit(CHSN0)
+  				'set single-ended as default for PIC18F Chips -WMR
+ 				'default is OFF for these bits so this is redundant
+        #IFNDEF bit(CHSN3)  'PIC is 18F with 12-bit adc
+						set CHSN0 OFF
+    				set CHSN1 OFF
+    				set CHSN2 OFF
+    		#ENDIF
+
+        'set single-ended as default for PIC 16F178x Chips -WMR
+        #IFDEF bit(CHSN3)
+						Set ADNREF OFF   'Default
+            Set ADPREF0 OFF  'Default
+            SET ADPREF1 OFF  'Default
+
+            set CHSN0 ON
+						set CHSN1 ON
+						set CHSN2 ON
+						set CHSN3 ON
+				#ENDIF
+  	#ENDIF
+ #ENDIF
+
+End Sub
