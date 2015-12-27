@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.94 2015-12-16"
+Version = "0.94 2015-12-27"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2829,8 +2829,8 @@ Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As
 			IF Mid(TempData, T, 1) = "(" THEN BL = BL + 1
 			IF Mid(TempData, T, 1) = ")" THEN BL = BL - 1
 			IF BL = 0 THEN TempData = Left(TempData, T): EXIT FOR
-		NEXT
-
+		Next
+		
 		'Detect if whole sum is in brackets, remove brackets and try again if so
 		If Len(TempData) = Len(SUM) Then
 			SUM = Mid(Sum, 2, Len(Sum) - 2)
@@ -6908,7 +6908,7 @@ End Function
 Sub CompileSubCalls(CompSub As SubType Pointer)
 
 	Dim As String TempLine, LineFromFile, BeforeFn, FunctionName, FunctionParams, AfterFn
-	Dim As String FunctionType, Origin, TempVarName, TempData
+	Dim As String FunctionType, Origin, NewOrigin, TempVarName, TempData
 	Dim As Integer CD, DS, S, E, BL, FB, F, PD, FoundFunction, MatchScore, BetterMatch
 	Dim As Integer L, D, SL, Temp, UseTempVar, FunctionTypeID, CurrSub, FindMatch
 	Dim As Integer ParamsInBrackets
@@ -6921,8 +6921,9 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 
 	'Find functions
 	CurrLine = CompSub->CodeStart->Next
+	Origin = ""
 	Do While CurrLine <> 0
-
+		
 		'Check if startup sub is needed for the line because of a constant
 		DO WHILE INSTR(UCase(CurrLine->Value), ";STARTUP") <> 0
 			Temp = VAL(Mid(CurrLine->Value, INSTR(UCase(CurrLine->Value), ";STARTUP") + 8))
@@ -6935,11 +6936,16 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		For PD = 1 to 10
 			TempVarCount(PD) = 0
 		Next
-
+		
 		FindFunctionsAgain:
 		TempLine = CurrLine->Value
-		Origin = ""
-		IF INSTR(TempLine, ";?F") <> 0 THEN Origin = MID(TempLine, INSTR(TempLine, ";?F"))
+		NewOrigin = ""
+		IF INSTR(TempLine, ";?F") <> 0 Then
+			NewOrigin = MID(TempLine, INSTR(TempLine, ";?F"))
+			If NewOrigin <> "" Then
+				Origin = NewOrigin
+			End If
+		End If
 
 		'Don't check "ON " statements for functions
 		If UCASE(Left(TempLine, 3)) = "ON " Then Goto NextLineFunctions
@@ -6963,7 +6969,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 			END IF
 
 			'Have already dealt with line
-			If Origin = "" And Left(TempLine, 6) = " call " Then
+			If NewOrigin = "" And Left(TempLine, 6) = " call " Then
 				FoundFunction = 0
 			End If
 
@@ -7036,6 +7042,14 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 							End If
 						End If
 					Next
+					If BL > 0 Then
+						'Log error
+						LogError Message("BadBrackets"), Origin
+						'Add bracket to end, prevent crash in ProcessArrays
+						FunctionParams = Trim(AfterFn) + ")"
+						AfterFn = ""
+					End If
+					
 				Else
 					'Macro/Sub, parameters take up the rest of the line, brackets optional
 					FunctionParams = Trim(AfterFn)
@@ -7132,7 +7146,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		NextLineFunctions:
 		CurrLine = CurrLine->Next
 	Loop
-
+	
 	'Deal with any missed names
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
@@ -7146,7 +7160,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		End If
 		CurrLine = CurrLine->Next
 	Loop
-
+	
 End Sub
 
 Sub CompileTables
@@ -8655,14 +8669,13 @@ Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Ori
 			Replace InLineCopy, Temp, Temp + "("
 			InLineCopy = InLineCopy + ")"
 		END If
-
+		
 		'Get sub name
 		SubName = Left(InLineCopy, INSTR(InLineCopy, "(") - 1)
 
 		'Get sub parameters
-		TrimParams = Mid(InLineCopy, INSTR(InLineCopy, "(") + 1)
+		TrimParams =  Trim(Mid(InLineCopy, INSTR(InLineCopy, "(") + 1))
 		IF TrimParams = ")" THEN GOTO NoSubParams
-		TrimParams = Trim(TrimParams)
 		IF Right(TrimParams, 1) = ")" THEN TrimParams = RTrim(Left(TrimParams, LEN(TrimParams) - 1))
 
 		With NewSubCall
