@@ -1,5 +1,5 @@
 '    Analog to Digital conversion routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2013 Hugh Considine, Kent Schafer
+'    Copyright (C) 2006 - 2013, 2015 Hugh Considine, Kent Schafer, William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -26,31 +26,29 @@
 '18Fxx31 code by Kent Schafer
 'added ReadAD12 2/12/2015
 
-'21/12/2015 'Added additional support for 16F178x - William Roth
-'    1) ReadADx now returns correct values when changing between
-'       ReadAD, ReadAD10, and ReadAd12 in same program.
-'    2) Moved CHSN Bit settings from ReadAD Functions to #Startup
-'       so that User CHSN bit settings in source are not overwritten
-'       when ReadAD function is called.
-'    3) Differential ADC Reads are now supported by setting CHSN
-'       bits in GCB Source Code
-'    4) Negative ADC Values Supported for DIfferential ADC
-'    5) 8-Bit Differential Reads supported with negative nunbers
-'    6) NOTE: Negative numbers require user to declare
+'24/12/2015 - William Roth
+'   1) ReadADx now returns correct values when changing between
+'      ReadAD, ReadAD10, and ReadAd12 in same program.
+'   2) Added optional parameter In ReadADx function setup
+'      Negative AD Analog Port.
+'   3) Negative ADC Values Supported for Differential ADC
+'   4) 8-Bit Differential Reads supported with negative nunbers
+'   5) NOTE: Negative numbers require user to declare
 '       AD Read Variable as integer
 '-------------------------------------------------
+'27/12/2015 - William Roth
+'	Revised ReadAD and ReadAD10 for greater compatibility.  Revised at RC37
 
 'Commands:
-'var = ReadAD(port)	Reads port, and returns value.
+'var = ReadAD(port, optional port)	Reads port(s), and returns value.
 'ADFormat(type)		Choose Left or Right justified
 'ADOff			Set A/D converter off. Use if trouble is experienced when
-'			attempting to use ports in digital mode
+'attempting to use ports in digital mode
 
-#startup SetCHSN
 
 #define Format_Left 0
 #define Format_Right 255
-#define AD_SINGLE ' default
+#define SINGLE 255
 
 'Acquisition time. Can be reduced in some circumstances - see PIC manual for details
 #define AD_Delay 2 10us
@@ -62,7 +60,6 @@
 #define AD_VREF_DELAY 1 ms
 
 'added for differential ADC
-
 
 'Optimisation
 #define ADSpeed MediumSpeed
@@ -584,19 +581,25 @@ macro LLReadAD (ADLeftAdjust)
 
 end macro
 
-function ReadAD(ADReadPort) as integer
-
+function ReadAD(ADReadPort, in OPTIONAL ADN_PORT = 255) as integer
+ 'added optional ADN_PORT to support differential ADC
 
   #IFDEF PIC
-      #IFDEF Bit(ADFM)
-					SET ADFM ON
-			#ENDIF
+      #IFDEF Bit(CHSN0)
 
-      ;set AD Result Mode to 12-Bit
-  		#IFDEF Bit(ADRMD)      ;Added for 16F178x
+      	#IFDEF Bit(ADFM)
+						SET ADFM ON
+				#ENDIF
+
+      	;set AD Result Mode to 12-Bit
+  			#IFDEF Bit(ADRMD)      ;Added for 16F178x
     			SET ADRMD OFF      ; WMR
-  		#ENDIF
- #ENDIF
+  			#ENDIF
+
+         	configNegativeChannel
+
+      #ENDIF
+  #ENDIF
 
 '***************************************
 
@@ -648,20 +651,23 @@ End Function
 
 
 'Large ReadAD
-function ReadAD10(ADReadPort) As integer
+function ReadAD10(ADReadPort, OPTIONAL ADN_PORT = 255) As integer
 
 	#IFDEF PIC
-	'Set up A/D format
-			#IFDEF Bit(ADFM)
+	   	#IFDEF Bit(ADFM)
 					SET ADFM ON
 			#ENDIF
 
-      ;Set AD Result Mode to 10-Bit for 16F178x
-  		;Not supported by 18F66K80 Family
-      #IF Bit(ADRMD)
-    			SET ADRMD ON
-  		#ENDIF
-	#ENDIF
+
+     	#IFDEF Bit(CHSN0)
+      		;set AD Result Mode to 10-Bit
+  				#IFDEF Bit(ADRMD)      ;Added for 16F178x
+    					SET ADRMD ON      ; WMR
+  				#ENDIF
+         	configNegativeChannel
+      #ENDIF
+
+  #ENDIF
 
  	#IFDEF AVR
 			Dim LLADResult As Word Alias ADCH, ADCL
@@ -670,7 +676,7 @@ function ReadAD10(ADReadPort) As integer
 'Do conversion
 LLReadAD 0
 
-	#IFDEF PIC
+	 #IFDEF PIC
 			'Write output
 			#IFDEF NoVar(ADRESL)
 				ReadAD10 = ADRES
@@ -689,13 +695,13 @@ LLReadAD 0
 					SET ADFM OFF
 			#ENDIF
 
-     '18F PIC with 12=bit ADC do not support 10-bit result
-     ' Added DIV/4 to return 10 bit value -WMR
-     #IFNDEF Bit(CHSN3)
-        READAD10 = READAD10 / 4
-     #ENDIF
-
-  #ENDIF
+			#IFDEF Bit(CHSN0)'18F PIC with 12=bit ADC do not support 10-bit result
+     	' Added DIV/4 to return 10 bit value -WMR
+ 					#IFNDEF Bit(CHSN3)
+        	   READAD10 = READAD10 / 4
+        	#ENDIF
+			#ENDIF
+ 	#ENDIF
 
 	#IFDEF AVR
 			ReadAD10 = LLADResult
@@ -704,7 +710,7 @@ LLReadAD 0
 end function
 
 'Larger ReadAD
-function ReadAD12(ADReadPort) As integer
+function ReadAD12(ADReadPort, OPTIONAL ADN_PORT = 255) As integer
 
 	#IFDEF PIC
 
@@ -713,10 +719,14 @@ function ReadAD12(ADReadPort) As integer
 		  		SET ADFM ON
 	  	#ENDIF
 
-   'Set A/D Result Mode to 12-Bit  (16F178x) -WMR
+      'Set A/D Result Mode to 12-Bit  (16F178x) -WMR
 			#IFDEF Bit(ADRMD)
       		SET ADRMD OFF
     	#ENDIF
+
+      #IFDEF Bit(CHSN0)'Chip has Differential ADC Module
+         configNegativeChannel
+      #ENDIF
 
   #ENDIF
 
@@ -799,35 +809,44 @@ sub ADOff
 
 end sub
 
-sub SetCHSN
- 'sets CHSN (Negative Channel) BITs for PICS
- ' with 12-Bit differential ADC Modules
- ' enables single-sided reads as default
- ' Moved from ReadADx Functions to allow user to configure
- ' CHSN bits in Source GCB file for differential operation. -WMR
- #IFDEF PIC
+Sub ConfigNegativeChannel
+   'Sub added to support PICS with Differential ADC MOdule- WMR
 
-    #IFDEF bit(CHSN0)
-  				'set single-ended as default for PIC18F Chips -WMR
- 				'default is OFF for these bits so this is redundant
-        #IFNDEF bit(CHSN3)  'PIC is 18F with 12-bit adc
-						set CHSN0 OFF   'Default (Redundant)
-    				set CHSN1 OFF   'Default
-    				set CHSN2 OFF   'Defauly
-    		#ENDIF
+   #IFNDEF Bit(CHSN3) '18F
+        'Configure Negative A/D Channel
+        'Only AN0 - AN6 allowed
+       IF ADN_PORT >=0 and ADN_PORT <=6 then
+             N_CHAN = ADN_PORT + 1
+             ADCON1 = ADCON1 AND b'11111000' OR N_CHAN
+       END IF
 
-        'set single-ended as default for PIC 16F178x Chips -WMR
-        #IFDEF bit(CHSN3)
-						Set ADNREF OFF   'Default (Redundant)
-            Set ADPREF0 OFF  'Default
-            SET ADPREF1 OFF  'Default
+       IF ADN_PORT > 6  then
+            set CHSN2 OFF
+    	      set CHSN1 OFF
+    				set CHSN0 OFF
+       END IF
+   #ENDIF
 
-            set CHSN0 ON     'Necessary for 16F178x
-						set CHSN1 ON
-						set CHSN2 ON
-						set CHSN3 ON
-				#ENDIF
-  	#ENDIF
- #ENDIF
+   #IFDEF Bit(CHSN3) '16F178x
+      ' AN0 - AN13 and AN21 Allowed
+      'configure Negative A/D Channel
+			IF ADN_PORT >= 0 and ADN_PORT <= 13 then
+           N_CHAN = ADN_PORT
+           ADCON2 = ADCON2 AND b'11110000' OR N_CHAN
+      END IF
+
+      'exception for (16F1789) where AN21 = channel 14
+			IF ADN_PORT = 21 then
+           N_CHAN = 14
+           ADCON2 = ADCON2 AND b'11110000' OR N_CHAN
+			END IF
+
+      IF ADN_PORT > 13 and ADN_PORT <> 21 then
+          set CHSN3 ON
+    	    set CHSN2 ON
+    	    set CHSN1 ON
+          set CHSN0 ON
+      END IF
+   #ENDIF
 
 End Sub
