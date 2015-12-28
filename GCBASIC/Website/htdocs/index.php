@@ -42,7 +42,6 @@ GCBASIC</a><br>
 to&nbsp;Forum</a><br>
 <br>
 <a href="download.html">Downloads</a><br>
-<a href="update.html">Development News </a><br>
 <br>
 <a href="chips.html">Chips Supported</a><br>
 <a href="hardware.html">Hardware Drivers</a></td>
@@ -85,7 +84,42 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">2/04/2105<br><br></span><div style="margin-left: 40px;">
+<td><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><span style="font-weight: bold;">28/12/2105</span><br><div style="margin-left: 40px;">
+
+
+
+<p><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">The Great Cow Basic development team have
+published another release that further enhances the Great Cow Basic compiler
+capabilities. &nbsp;This release &nbsp;is callled v0.95</span><o:p></o:p></p>
+
+<ul><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Over 100
+changes, improvements and new functionality over the last release.<o:p></o:p></span></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Improved
+support for Microchip and Atmel 8-bit microprocessors with over 886 different
+processor types now supported.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Further
+improvements within the IDE to make programming as easy as possible including
+improved user interface, Help and Helpers.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">A
+release of Great Cow Graphical Basic User Interface that supports the review of
+the demonstration files and the new chip change configuration.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Over 300
+demonstration files that showcase the breadth and depth of Great Cow Basic
+capabilities.</span></li><ul><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">New vendor board examples including MicroChip boards<br></span></li></ul><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Support
+for a large set of supported hardware accessories.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">New I2C2
+and USART2 drivers</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">GLCD
+handling with four more types of GLCD supported.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">New
+scalable fonts with added support for extended fonts sets.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Increased
+support for microprocessor timers by supporting all the available microprocessor
+timers &#8211; this can be up to 7 separate timers.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">New
+support for HEFM memory and improved bitwise operations.</span><o:p></o:p></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Added
+&#8216;how to&#8217; </span><o:p></o:p></li><ul><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Create a
+Linux version of the Great Cow Basic Compiler.</span><o:p></o:p></li></ul><ul><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Handling
+the default Interrupt handlers.</span><o:p></o:p></li></ul><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Support for new Analog to Digital conversion.</span></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Improved PMW handling across a wider range of outputs and frequencies</span></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">Improved support for a wider range of programmers<br></span></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">And, lots more.... &nbsp;read the release notes or search the Help file.</span></li></ul><br>This release is brought to you by, in no specific order:<br><div style="margin-left: 40px;">Hugh
+Considine, Evan Venn, William Roth, Jacques Nilo, Theo Loermans,
+Dimitris Katsaounis, Chris Roper, Santiago, Avast and,of course, Frank
+Steinberg.<br><br>
+I am sure there are others. If I missed your name - please let us know, truly
+sorry.<o:p></o:p></div></div><div style="margin-left: 40px;">
+
+<p class="MsoNormal" style="margin: 0cm 0cm 14pt 75.75pt; text-indent: -18pt; line-height: normal;"><!--[if !supportLists]--><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;"><span style=""></span></span><o:p></o:p></p>
+</div><span style="font-weight: bold;">2/04/2105<br><br></span><div style="margin-left: 40px;">
 
 <p>We have posted a new Hot Release of the Great Cow Basic and Great
 Cow Graphical Basic<o:p></o:p></p>
