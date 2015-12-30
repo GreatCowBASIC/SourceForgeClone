@@ -84,7 +84,7 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><span style="font-weight: bold;">28/12/2105</span><br><div style="margin-left: 40px;">
+<td><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><span style="font-weight: bold;">28/12/2015</span><br><div style="margin-left: 40px;">
 
 
 
