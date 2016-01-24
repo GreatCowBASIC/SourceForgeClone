@@ -1,6 +1,6 @@
 '    Hardware I2C routines for Great Cow BASIC
 '    Copyright (C) 2010 Hugh Considine
-'    Copyright (C) 2014 & 2015 Evan R. Venn & Jacques Erdemaal
+'    Copyright (C) 2014 & 2015,2016 Evan R. Venn & Jacques Erdemaal
 '    Version 1.1f
 '    Version 1.1g
 '    Version 1.1h
@@ -14,6 +14,8 @@
 '
 '    Updated May 2015 - enhance hi2cwaitmssp
 '    Updated Oct 2015 - enhance hi2cwaitmssp
+'    Updated Jan 2016 - enhance hi2cwaitmssp
+
 
 '
 
@@ -411,6 +413,7 @@ End Sub
 ; This routine waits for the last I2C operation to complete.
 ; It does this by polling the SSPIF flag in PIR1.
 ; Then, it clears SSPIF
+;	Updated at v0.95.006
 sub HI2CWaitMSSP
 
 		Dim HI2CWaitMSSPTimeout as byte
@@ -422,11 +425,13 @@ sub HI2CWaitMSSP
             ''Support for SSP1IF
             if SSP1IF = 0 then goto HI2CWaitMSSPWait
             SSP1IF = 0
+            exit Sub
         #endif
         #ifdef bit(SSPIF)
             ''Support for SSPIF
             if SSPIF = 0 then goto HI2CWaitMSSPWait
             SSPIF = 0
+            exit Sub
         #endif
 
         #ifndef  bit(SSP1IF)
