@@ -45,6 +45,7 @@
 ' 18/12/2015: Repositioned functions
 ' 19/12/2015: Revised to support CREN2 and SPEN2
 '	07/01/2016:	Added AVR 4 channel USARTs
+' 24/01/2016: Added default value to comport
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -300,6 +301,10 @@ End Sub
 #startup InitUSART
 
 Sub InitUSART
+
+	'Set the default value for comport
+	comport = 1
+
 	#ifdef PIC
   	#If USART_BAUD_RATE Then
       #ifndef Bit(TXEN1)
