@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2015-12-27"
+Version = "0.95 2016-01-24"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -10477,10 +10477,7 @@ SUB InitCompiler
 	Dim As Integer PauseNotSet, ReportNotSet
 
 	'Detect GCBASIC install directory
-	Temp = COMMAND(0)
-	For T = LEN(Temp) to 1 Step -1
-		If Mid(Temp, T, 1) = "\" Or Mid(Temp, T, 1) = "/" Then ID = Left(Temp, T - 1): Exit For
-	Next
+	ID = ExePath
 	If ID = "" Or ID = "." THEN
 		ID = CURDIR
 		#IFDEF __FB_LINUX__
