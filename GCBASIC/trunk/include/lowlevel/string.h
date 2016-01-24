@@ -1,5 +1,5 @@
 '    String routines for the GCBASIC compiler
-'    Copyright (C) 2006 - 2015 Hugh Considine, Evan Venn & Immo Freudenberg
+'    Copyright (C) 2006 - 2016 Hugh Considine, Evan Venn & Immo Freudenberg
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@
 ' 1/6/2016: Add Fill function
 ' 21/10/2016: Fixed Pad
 ' 19/12/2015: Addes Str32 AND Val32 for string handling of 32 bit numbers.  Immo Freudenberg <immo-freudenberg@t-online.de>
+' 24/1/2016: Added LeftPad and correct PAD
 
 'Length/position
 Function Len (LenTemp())
@@ -229,6 +230,68 @@ function Str32(SysValTemp As long) As String * 10
   Str32(0) = SysCharCount
 
 end function
+
+'String/number conversion
+'Integer > String  -32767 to 32767
+'(Max output will be 6 characters)
+Function StrInteger(SysValTemp As Word) As String * 6
+
+  SysCharCount = 0
+  Dim SysCalcTempX As Word
+
+  if SysValTemp.15 = 1 Then
+  	SysCharCount += 1
+  	StrInteger(SysCharCount) = 0x2D
+    SysValTemp = 0xFFFF-SysValTemp
+  end if
+
+  'Ten Thousands
+  IF SysValTemp >= 10000 then
+    SysStrData = SysValTemp / 10000
+    SysValTemp = SysCalcTempX
+    SysCharCount += 1
+    StrInteger(SysCharCount) = SysStrData + 48
+    Goto SysValThousands
+  End If
+
+  'Thousands
+  IF SysValTemp >= 1000 then
+    SysValThousands:
+    SysStrData = SysValTemp / 1000
+    SysValTemp = SysCalcTempX
+    SysCharCount += 1
+    StrInteger(SysCharCount) = SysStrData + 48
+    Goto SysValHundreds
+  End If
+
+  'Hundreds
+  IF SysValTemp >= 100 then
+    SysValHundreds:
+    SysStrData = SysValTemp / 100
+    SysValTemp = SysCalcTempX
+    SysCharCount += 1
+    StrInteger(SysCharCount) = SysStrData + 48
+    Goto SysValTens
+  End If
+  'Tens
+  IF SysValTemp >= 10 Then
+    SysValTens:
+    SysStrData = SysValTemp / 10
+    SysValTemp = SysCalcTempX
+    SysCharCount += 1
+    StrInteger(SysCharCount) = SysStrData + 48
+  End If
+
+  'Ones
+  SysCharCount += 1
+  StrInteger(SysCharCount) = SysValTemp + 48
+  SysValTemp = SysCalcTempX
+
+  StrInteger(0) = SysCharCount
+
+
+End Function
+
 
 'String > Word
 #define Val16 Val
@@ -516,30 +579,36 @@ End Function
 'len - Length of str.
 'padchr - Pad character, which can be any string. The first character is used to pad new space in the output string.
 Function Pad ( in SysInString as string, SysStrLen, optional in SysInString3 as string = " " ) As String
-  'Check length of search and find strings
-  'Exit if the find string cannot fit into the search string
-  ' If SysInString(0) = 0 Then Exit Function
-  'Check it is not already at the correct length
-    'Input length too high?
-  If SysInString(0) <= SysStrLen Then
+  'Check length of SysInString
+  'If SysInString(0) = longer or equal SysStrLen then
+  'give back SysInString and exit function
+
+  If SysInString(0) < SysStrLen Then
     SysCharCount = SysInString(0)
+    'clear output string
+    Pad=""
       'Copy leftmost characters
       For SysStringTemp = 1 To SysCharCount
         Pad(SysStringTemp) = SysInString(SysStringTemp)
       Next
+
       For SysStringTemp = SysCharCount+1 to SysStrLen
         Pad(SysStringTemp) = SysInString3(1)
       Next
+      'set new length to PAD
+      Pad(0) = SysStrLen
   else
-      'Copy leftmost characters
-      For SysStringTemp = 1 To SysStrLen
+      'SysInString is equal or longer than SysStrLen
+      'give back old string; copy SysInString to Pad
+
+      For SysStringTemp = 1 To SysInString(0)
         Pad(SysStringTemp) = SysInString(SysStringTemp)
       Next
+      PAD(0) = SysInString(0)
   End If
 
-  Pad(0) = SysStrLen
+End Function?
 
-End Function
 
 
 'Fill(len,padchr )
@@ -558,3 +627,41 @@ Function Fill ( SysStrLen, optional SysInString3 as string = " " ) As String
 
 End Function
 
+'LeftPad(str,len,padchr )  @ Immo Freudenberg
+'Description
+'The LeftPad() function pads a specified string left
+'with a given string to its new length
+'exits with given value, when new length <= old length
+'Parameters
+'str - string to be padded
+'len - new length of string
+'padchr - Pad character, which can be any string
+'The first character is added left of incoming string
+Function LeftPad ( in SysInString as string, SysStrLen, optional in SysInString2 as string = " " ) As String
+
+  'check input length
+  'return if too short or equal SysStrLen
+  If SysStrLen > SysInString(0) Then
+
+     LeftPad = ""
+     LeftPad(0) = SysStrLen       'set string to new length
+     SysCharCount = SysStrLen - SysInString(0) 'diff-length To incoming string
+
+
+    'add sysInString2 to new String
+     for SysStringTemp = 1 to SysCharCount
+        LeftPad(sysStringTemp) = SysInString2(1)
+     Next
+
+     'add old content to new string
+     For SysStringTemp = 1 To sysInString(0)
+        LeftPad(sysCharCount + sysStringTemp) = SysInString(SysStringTemp)
+     Next
+
+  Else
+
+     LeftPad = SysInString
+
+  end if
+
+End Function

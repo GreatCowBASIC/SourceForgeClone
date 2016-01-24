@@ -1,7 +1,5 @@
 '    USART routines for Great Cow BASIC
-'    Copyright (C) 2009 - 2013, 2105 Hugh Considine and William Roth
-'			Mike Otte
-'			Evan R Venn
+'    Copyright (C) 2009 - 2013, 2015, 2016 Hugh Considine, William Roth, Evan Venn and Mike Otte
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -46,7 +44,7 @@
 ' 18/12/2015:Added new function.methods HSerReceive1, HSerReceive2, HSerReceiveFrom
 ' 18/12/2015: Repositioned functions
 ' 19/12/2015: Revised to support CREN2 and SPEN2
-
+'	07/01/2016:	Added AVR 4 channel USARTs
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -61,6 +59,12 @@
 '#define USART2_BAUD_RATE 9600
 '#define USART2_BLOCKING	'Usart 2 waits for byte to be received
 '#define USART2_TX_BLOCKING ' Usart 2 waits for empty Tx input so it won't overwrite
+'#define USART3_BAUD_RATE 9600
+'#define USART3_BLOCKING	'Usart 3 waits for byte to be received
+'#define USART3_TX_BLOCKING ' Usart 3 waits for empty Tx input so it won't overwrite
+'#define USART4_BAUD_RATE 9600
+'#define USART4_BLOCKING	'Usart 4 waits for byte to be received
+'#define USART4_TX_BLOCKING ' Usart 4 waits for empty Tx input so it won't overwrite
 
 '#define SerPrintCR  'prints a CR at the end of every print Sub
 '#define SerPrintLF  'prints a LF at the end of every print Sub
@@ -76,6 +80,9 @@
 '(Setting to 0 ms will remove all delays)
 #define USART_DELAY 1 ms
 
+'When Not using USART_BLOCKING the return value is defined by
+#define DefaultUsartReturnValue = 255
+
 'Some wrappers for compatibility with Contributors USART routines
 #define HserPrintByte HSerPrint
 
@@ -90,7 +97,7 @@ Sub HserPrintCRLF  ( Optional in HSerPrintCRLFCount = 1,Optional In comport =1 )
 			HSerSend(13,comport)
 			Wait USART_DELAY
 			HSerSend(10,comport)
-  			wait USART_DELAY
+			wait USART_DELAY
     end Repeat
 End Sub
 
@@ -107,7 +114,7 @@ End Sub
 		If Bit(RC2IF) Then
 			USART2HasData = "RC2IF = On"
 		End If
-
+' USART 1 baud calculation
 		If USART_BAUD_RATE Then
 			'Find best baud rate
 			If Bit(BRG16) Then
@@ -173,7 +180,7 @@ End Sub
 				BRGH_TEMP2 = 1
 				BRG16_TEMP2 = 1
 
-        If SPBRG_TEMP2 > 65535 Then
+				If SPBRG_TEMP2 > 65535 Then
            'If too high, try 16 bit /16 (H = 0, 16 = 1)
 					SPBRG_TEMP2 = ChipMHz / USART2_BAUD_RATE / 16 * 1000000 - 1
 					BRGH_TEMP2 = 0
@@ -195,12 +202,23 @@ End Sub
 		End If
 	End If
 	If AVR Then
+'AVR Usart has data flags setup
 		If Bit(RXC0) Then
 			USARTHasData = "RXC0 = On"
 		End If
 		If NoBit(RXC0) Then
 			USARTHasData = "RXC = On"
 		End If
+		If Bit(RXC1) Then
+			USART2HasData = "RXC1 = On"
+		End If
+		If Bit(RXC2) Then
+			USART3HasData = "RXC2 = On"
+		End If
+		If Bit(RXC3) Then
+			USART4HasData = "RXC3 = On"
+		End If
+'AVR USART 0 baud calc
 		If USART_BAUD_RATE Then
 			UBRR_TEMP = ChipMHz * 1000000 / (16 * USART_BAUD_RATE) - 1
 			U2X0_TEMP = 0
@@ -219,6 +237,63 @@ End Sub
 			UBRRL_TEMP = Int(UBRR_TEMP) And 255
 			UBRRH_TEMP = Int(UBRR_TEMP / 256)
 		End If
+'AVR USART 1 baud calc
+		If USART2_BAUD_RATE Then
+			UBRR2_TEMP = ChipMHz * 1000000 / (16 * USART2_BAUD_RATE) - 1
+			U2X02_TEMP = 0
+			'If using a high speed, use double speed mode
+			If UBRR2_TEMP < 16384 Then
+				UBRR2_TEMP = ChipMHz * 1000000 / (8 * USART2_BAUD_RATE) - 1
+				U2X02_TEMP = 1
+			End If
+
+			'Check that rate will work
+			If UBRR2_TEMP > 65535 Then
+				Error Msg(UsartBaudTooLow)
+			End If
+
+			'Get high and low bytes
+			UBRRL2_TEMP = Int(UBRR2_TEMP) And 255
+			UBRRH2_TEMP = Int(UBRR2_TEMP / 256)
+		End If
+'AVR USART 2 baud clac
+    If USART3_BAUD_RATE Then
+			UBRR3_TEMP = ChipMHz * 1000000 / (16 * USART3_BAUD_RATE) - 1
+			U2X03_TEMP = 0
+			'If using a high speed, use double speed mode
+			If UBRR3_TEMP < 16384 Then
+				UBRR3_TEMP = ChipMHz * 1000000 / (8 * USART3_BAUD_RATE) - 1
+				U2X03_TEMP = 1
+			End If
+
+			'Check that rate will work
+			If UBRR3_TEMP > 65535 Then
+				Error Msg(UsartBaudTooLow)
+			End If
+
+			'Get high and low bytes
+			UBRRL3_TEMP = Int(UBRR3_TEMP) And 255
+			UBRRH3_TEMP = Int(UBRR3_TEMP / 256)
+		End If
+'AVR USART 2 baud clac
+		If USART4_BAUD_RATE Then
+			UBRR4_TEMP = ChipMHz * 1000000 / (16 * USART4_BAUD_RATE) - 1
+			U2X04_TEMP = 0
+			'If using a high speed, use double speed mode
+			If UBRR4_TEMP < 16384 Then
+				UBRR4_TEMP = ChipMHz * 1000000 / (8 * USART4_BAUD_RATE) - 1
+				U2X04_TEMP = 1
+			End If
+
+			'Check that rate will work
+			If UBRR4_TEMP > 65535 Then
+				Error Msg(UsartBaudTooLow)
+			End If
+
+			'Get high and low bytes
+			UBRRL4_TEMP = Int(UBRR4_TEMP) And 255
+			UBRRH4_TEMP = Int(UBRR4_TEMP / 256)
+		End If
 	End If
 #endscript
 
@@ -226,48 +301,51 @@ End Sub
 
 Sub InitUSART
 	#ifdef PIC
-		#ifndef Bit(TXEN1)
-			'Set baud rate
-			SPBRG = SPBRGL_TEMP
-			#ifdef Bit(BRG16)
-				SPBRGH = SPBRGH_TEMP
-				BRG16 = BRG16_TEMP
-			#endif
-			BRGH = BRGH_TEMP
+  	#If USART_BAUD_RATE Then
+      #ifndef Bit(TXEN1)
+        'Set baud rate
+        SPBRG = SPBRGL_TEMP
+        #ifdef Bit(BRG16)
+          SPBRGH = SPBRGH_TEMP
+          BRG16 = BRG16_TEMP
+        #endif
+        BRGH = BRGH_TEMP
 
-			'Enable async mode
-			Set SYNC Off
-			Set SPEN On
+        'Enable async mode
+        Set SYNC Off
+        Set SPEN On
 
-			'Enable TX and RX
-			Set CREN On
-			Set TXEN On
-		#endif
-		#ifdef Bit(TXEN1)
-			'Set baud rate
-			SPBRG1 = SPBRGL_TEMP
-			#ifdef Bit(BRG16)
-				SPBRGH1 = SPBRGH_TEMP
-				BAUDCON1.BRG16 = BRG16_TEMP
+        'Enable TX and RX
+        Set CREN On
+        Set TXEN On
       #endif
+      #ifdef Bit(TXEN1)
+        'Set baud rate
+        SPBRG1 = SPBRGL_TEMP
+        #ifdef Bit(BRG16)
+          SPBRGH1 = SPBRGH_TEMP
+          BAUDCON1.BRG16 = BRG16_TEMP
+        #endif
 
-	;  Section added to support chips with TXSTA1 instead of TX1STA
-      #ifdef Var(TX1STA)
-      TX1STA.BRGH = BRGH_TEMP
+    ;  Section added to support chips with TXSTA1 instead of TX1STA
+        #ifdef Var(TX1STA)
+        TX1STA.BRGH = BRGH_TEMP
+        #endif
+
+        #ifdef  Var(TXSTA1)
+         TXSTA1.BRGH = BRGH_TEMP
+        #endif
+
+        'Enable async mode
+        Set SYNC1 Off
+        Set SPEN1 On
+
+        'Enable TX and RX
+        Set CREN1 On
+        Set TXEN1 On
       #endif
-
-      #ifdef  Var(TXSTA1)
-       TXSTA1.BRGH = BRGH_TEMP
-      #endif
-
-			'Enable async mode
-			Set SYNC1 Off
-			Set SPEN1 On
-
-			'Enable TX and RX
-			Set CREN1 On
-			Set TXEN1 On
-		#endif
+    #endif
+' PIC USART 2 Init
     #if USART2_BAUD_RATE Then
       #ifdef Bit(TXSTA2_TXEN)
 			'Set baud rate
@@ -307,84 +385,220 @@ Sub InitUSART
 	#endif
 
 	#ifdef AVR
+		#If USART_BAUD_RATE Then
+      'Set baud rate
+      #ifndef Bit(U2X0)
 
-		'Set baud rate
-		#ifndef Bit(U2X0)
-			#ifdef Bit(U2X1)
-				U2X1 = U2X0_TEMP
-				UBRR1L = UBRRL_TEMP
-				UBRR1H = UBRRH_TEMP
-			#endif
-			#ifndef Bit(U2X1)
-				U2X = U2X0_TEMP
-				UBRRL = UBRRL_TEMP
-				UBRRH = UBRRH_TEMP
-			#endif
-		#endif
-		#ifdef Bit(U2X0)
-			U2X0 = U2X0_TEMP
-			UBRR0L = UBRRL_TEMP
-			UBRR0H = UBRRH_TEMP
+        #ifndef Bit(U2X1)				'Check for second usart? why
+          U2X = U2X0_TEMP				'U2X in tiny2313 has one usart
+          UBRRL = UBRRL_TEMP
+          UBRRH = UBRRH_TEMP
+        #endif
+      #endif
+      #ifdef Bit(U2X0)
+        U2X0 = U2X0_TEMP				'U2X0 ex: mega328P
+        UBRR0L = UBRRL_TEMP
+        UBRR0H = UBRRH_TEMP
+      #endif
+
+      'Enable TX and RX
+      #ifndef Bit(RXEN0)
+        RXEN = On
+        TXEN = On
+      #endif
+      #ifdef Bit(RXEN0)
+        RXEN0 = On
+        TXEN0 = On
+      #endif
 		#endif
 
-		'Enable TX and RX
-		#ifndef Bit(RXEN0)
-			#ifdef Bit(RXEN1)
-				RXEN1 = On
-				TXEN1 = On
-			#endif
-			#ifndef Bit(RXEN1)
-				RXEN = On
-				TXEN = On
-			#endif
-		#endif
-		#ifdef Bit(RXEN0)
-			RXEN0 = On
-			TXEN0 = On
-		#endif
+    #If USART2_BAUD_RATE Then
+    		' set baud reg
+       #ifdef Bit(U2X1)				'Multiple port chips
+          U2X1 = U2X02_TEMP			'speed doubling bit ex:Mega 128,2560
+          UBRR1L = UBRRL2_TEMP		'baudrate register low
+          UBRR1H = UBRRH2_TEMP		'baudrate register h
+       #endif
+       'Enable TX and RX
+       #ifdef Bit(RXEN1)
+       	RXEN1 = On
+        TXEN1 = On
+       #endif
+    #endif
+
+    #If USART3_BAUD_RATE Then
+    		' set baud reg
+       #ifdef Bit(U2X2)				'Multiple port chips
+          U2X2 = U2X03_TEMP			'speed doubling bit ex:Mega 128,2560
+          UBRR2L = UBRRL3_TEMP		'baudrate register low
+          UBRR2H = UBRRH3_TEMP		'baudrate register h
+       #endif
+       'Enable TX and RX
+       #ifdef Bit(RXEN2)
+       	RXEN2 = On
+        TXEN2 = On
+       #endif
+    #endif
+
+    #If USART4_BAUD_RATE Then
+    		' set baud reg
+       #ifdef Bit(U2X3)				'Multiple port chips
+          U2X3 = U2X04_TEMP			'speed doubling bit ex:Mega 128,2560
+          UBRR3L = UBRRL4_TEMP		'baudrate register low
+          UBRR3H = UBRRH4_TEMP		'baudrate register h
+       #endif
+       'Enable TX and RX
+       #ifdef Bit(RXEN3)
+       	RXEN3 = On
+        TXEN3 = On
+       #endif
+    #endif
 
 	#endif
 End Sub
 
 sub HSerSend(In SerData, optional In comport = 1)
 	'Block before sending (if needed)
-
-
 	'Send byte
 	#ifdef PIC
-  	if comport = 1 Then
-    	HSerSendBlocker
-			#ifndef Var(TXREG1)
-				TXREG = SerData
-			#endif
-			#ifdef Var(TXREG1)
-				TXREG1 = SerData
-			#endif
-    end if
-    if comport = 2 Then
-    	HSerSendBlocker2
-      #ifndef Var(TXREG2)
-				TXREG2 = SerData
-			#endif
-			#ifdef Var(TX2REG)
-				TX2REG = SerData
-			#endif
-    end if
-	#endif
-	#ifdef AVR
-  	HSerSendBlocker
-		#ifndef Var(UDR0)
-			#ifdef Var(UDR1)
-				UDR1 = SerData
-			#endif
-			#ifndef Var(UDR1)
-				UDR = SerData
-			#endif
-		#endif
-		#ifdef Var(UDR0)
-			UDR0 = SerData
-		#endif
+  	#If USART_BAUD_RATE Then
+      if comport = 1 Then
+        'HSerSendBlocker
+        #ifdef USART_BLOCKING
+          #ifndef Bit(TX1IF)
+            Wait While TXIF = Off
+          #endif
+          #ifdef Bit(TX1IF)
+            Wait While TX1IF = Off
+          #endif
+        #endif
+        #ifdef USART_TX_BLOCKING
+          #ifndef Bit(TX1IF)
+            Wait While TXIF = Off
+          #endif
+          #ifdef Bit(TX1IF)
+            Wait While TX1IF = Off
+          #endif
+        #endif
+        #ifndef Var(TXREG1)
+          TXREG = SerData
+        #endif
+        #ifdef Var(TXREG1)
+          TXREG1 = SerData
+        #endif
+      end if
+    #endif
+    #If USART2_BAUD_RATE Then
+      if comport = 2 Then
+        #ifdef USART_BLOCKING     'Blocking TX and RX
+          #ifdef Bit(TX2IF)
+            Wait While TX2IF = Off
+          #endif
+        #endif
+        #ifdef USART_TX_BLOCKING     'TX blocking only
+          #ifdef Bit(TX2IF)
+            Wait While TX2IF = Off
+          #endif
+        #endif
+        #ifndef Var(TXREG2)		'? TX2REG
+          TXREG2 = SerData		'?
+        #endif
+        #ifdef Var(TX2REG)
+          TX2REG = SerData
+        #endif
 
+      end if
+    #endif
+	#endif
+
+	#ifdef AVR
+'AVR USART1 Send
+		#If USART_BAUD_RATE Then
+     if comport = 1 Then
+      'HSerSendBlocker		'comport 1 blocker
+      #ifdef USART_BLOCKING
+        #ifdef Bit(UDRE0)
+          Wait While UDRE0 = Off		'Blocking Both Transmit buffer empty ,ready for data
+        #endif
+        #ifndef Bit(UDRE0)
+					Wait While UDRE = Off
+				#endif
+      #endif
+      #ifdef  USART_TX_BLOCKING
+        #ifdef Bit(UDRE0)
+          Wait While UDRE0 = Off		'Blocking Transmit buffer empty ,ready for data
+        #endif
+        #ifndef Bit(UDRE0)
+					Wait While UDRE = Off
+				#endif
+      #endif
+      #ifdef Var(UDR)
+          UDR = SerData
+      #endif
+      '#ifndef Var(UDR0)
+      '	#ifdef Var(UDR1)
+      '		UDR1 = SerData		'? second comport
+      '	#endif
+      '#endif
+      #ifdef Var(UDR0)
+        UDR0 = SerData
+      #endif
+      End If
+		#endif
+'AVR USART 2 send
+	  #If USART2_BAUD_RATE Then
+      if comport = 2 Then
+        #ifdef USART2_BLOCKING
+          #ifdef Bit(UDRE1)				'comport 2 TX and Rxblocker
+            Wait While UDRE1 = Off		'Transmit buffer empty ,ready for data
+          #endif
+        #endif
+        #ifdef USART2_TX_BLOCKING
+          #ifdef Bit(UDRE1)				'comport 2 TX blocker
+            Wait While UDRE1 = Off		'Transmit buffer empty ,ready for data
+          #endif
+        #endif
+        #ifdef Var(UDR1)
+            UDR1 = SerData
+        #endif
+      End If
+    #endif
+'AVR USART 3 send
+    #If USART3_BAUD_RATE Then
+      if comport = 3 Then
+        #ifdef USART3_BLOCKING
+          #ifdef Bit(UDRE2)				'comport 3 TX and Rx blocker
+            Wait While UDRE2 = Off		'Transmit buffer empty ,ready for data
+          #endif
+        #endif
+        #ifdef USART3_TX_BLOCKING
+          #ifdef Bit(UDRE2)				'comport 3 TX blocker
+            Wait While UDRE2 = Off		'Transmit buffer empty ,ready for data
+          #endif
+        #endif
+        #ifdef Var(UDR2)
+            UDR2 = SerData
+        #endif
+      End If
+    #endif
+'AVR USART 4 send
+    #If USART4_BAUD_RATE Then
+      if comport = 4 Then
+        #ifdef USART4_BLOCKING
+          #ifdef Bit(UDRE3)				'comport 4 TX and RX  blocker
+            Wait While UDRE3 = Off		'Transmit buffer empty ,ready for data
+          #endif
+        #endif
+        #ifdef USART4_TX_BLOCKING
+          #ifdef Bit(UDRE3)				'comport 4 TX blocker
+            Wait While UDRE3 = Off		'Transmit buffer empty ,ready for data
+          #endif
+        #endif
+        #ifdef Var(UDR3)
+            UDR3 = SerData
+        #endif
+      End If
+    #endif
 	#endif
 end sub
 
@@ -418,84 +632,154 @@ End Function
 Sub HSerReceive(Out SerData)
 	'Needs comport to be set first
 	#ifdef PIC
-  	if comport = 1 Then
-    	'If set up to block, wait for data
-			#ifdef USART_BLOCKING
-			Wait Until USARTHasData
-			#endif
-			#ifndef Var(RCREG1)
-				'Get a bytes from FIFO
-				If USARTHasData Then
-					SerData = RCREG
-				End if
+  	#If USART_BAUD_RATE Then
+      if comport = 1 Then
+      	SerData = DefaultUsartReturnValue
+        'If set up to block, wait for data
+        #ifdef USART_BLOCKING
+        Wait Until USARTHasData
+        #endif
+        #ifndef Var(RCREG1)
+          'Get a bytes from FIFO
+          If USARTHasData Then
+            SerData = RCREG
+          End if
 
-				'Clear error
-				If OERR Then
-					Set CREN Off
-					Set CREN On
-				End If
-			#endif
+          'Clear error
+          If OERR Then
+            Set CREN Off
+            Set CREN On
+          End If
+        #endif
 
-			#ifdef Var(RCREG1)
-				'Get a bytes from FIFO
-				If USARTHasData Then
-					SerData = RCREG1
-				End if
+        #ifdef Var(RCREG1)
+          'Get a bytes from FIFO
+          If USARTHasData Then
+            SerData = RCREG1
+          End if
 
-				#ifdef bit(OERR1)
-				'Clear error
-					If OERR1 Then
-						Set CREN1 Off
-						Set CREN1 On
-					End If
+          #ifdef bit(OERR1)
+          'Clear error
+            If OERR1 Then
+              Set CREN1 Off
+              Set CREN1 On
+            End If
+          #endif
+          #Ifndef bit(OERR1) '  For Chips with RCREG1 but no OEER1
+            #IFDEF Bit(OERR)
+              IF OERR then
+                Set CREN off
+                Set CREN On
+              END IF
+            #ENDIF
+            #ENDIF
+        #endif
+      end if
+    #endif
+'PIC USART 2 receive
+    #If USART2_BAUD_RATE Then
+      if comport = 2 Then
+				SerData = DefaultUsartReturnValue
+        #ifdef USART2_BLOCKING
+        Wait Until USART2HasData
+        #endif
+        #ifdef Var(RC2REG)
+          'Get a bytes from FIFO
+          If USART2HasData Then
+            SerData = RC2REG
+          End if
+
+        #endif
+        #ifndef Var(RC2REG)
+          'Get a bytes from FIFO
+          If USART2HasData Then
+            SerData = RCREG2
+          End if
 				#endif
-				#Ifndef bit(OERR1) '  For Chips with RCREG1 but no OEER1
-					#IFDEF Bit(OERR)
-						IF OERR then
-							Set CREN off
-							Set CREN On
-						END IF
-          #ENDIF
-					#ENDIF
-			#endif
-    end if
-    if comport = 2 Then
-      #ifdef USART2_BLOCKING
-			Wait Until USART2HasData
-			#endif
-      #ifdef Var(RC2REG)
-				'Get a bytes from FIFO
-				If USART2HasData Then
-					SerData = RC2REG
-				End if
+        #ifdef bit(OERR2)
+          'Clear error
+            If OERR2 Then
+              Set CREN2 Off
+              Set CREN2 On
+            End If
+        #endif
 
-				#ifdef bit(OERR2)
-				'Clear error
-					If OERR2 Then
-						Set CREN2 Off
-						Set CREN2 On
-					End If
-				#endif
-
-			#endif
-    end if
+      end if
+    #endif
 	#endif
 
-
+'AVR USART 1 receive
 	#ifdef AVR
-		If USARTHasData Then
-			#ifndef Var(UDR0)
-				#ifdef Var(UDR1)
-					SerData = UDR1
-				#endif
-				#ifndef Var(UDR1)
-					SerData = UDR
-				#endif
-			#endif
-			#ifdef Var(UDR0)
-				SerData = UDR0
-			#endif
-		End If
+  	#If USART_BAUD_RATE Then
+      if comport = 1 Then
+      	SerData = DefaultUsartReturnValue
+        'If set up to block, wait for data
+        #ifdef USART_BLOCKING
+        Wait Until USARTHasData
+        #endif
+        If USARTHasData Then
+          #ifndef Var(UDR0)
+            #ifdef Var(UDR1)
+              SerData = UDR1
+            #endif
+            #ifndef Var(UDR1)
+              SerData = UDR
+            #endif
+          #endif
+          #ifdef Var(UDR0)
+            SerData = UDR0
+          #endif
+        End If
+      End If
+    #endif
+
+'AVR USART 2 receive
+    #If USART2_BAUD_RATE Then
+        if comport = 2 Then
+          SerData = DefaultUsartReturnValue
+          'If set up to block, wait for data
+          #ifdef USART2_BLOCKING
+          Wait Until USART2HasData
+          #endif
+          If USART2HasData Then
+            #ifdef Var(UDR1)
+              SerData = UDR1
+            #endif
+          End If
+        End If
+    #endif
+
+'AVR USART 3 receive
+    #If USART3_BAUD_RATE Then
+        if comport = 3 Then
+          SerData = DefaultUsartReturnValue
+          'If set up to block, wait for data
+          #ifdef USART3_BLOCKING
+          Wait Until USART3HasData
+          #endif
+          If USART3HasData Then
+            #ifdef Var(UDR2)
+              SerData = UDR2
+            #endif
+          End If
+        End If
+      #endif
+
+'AVR USART 4 receive
+    #If USART4_BAUD_RATE Then
+        if comport = 4 Then
+          SerData = DefaultUsartReturnValue
+          'If set up to block, wait for data
+          #ifdef USART4_BLOCKING
+          Wait Until USART4HasData
+          #endif
+          If USART4HasData Then
+            #ifdef Var(UDR3)
+              SerData = UDR3
+            #endif
+          End If
+        End If
+      #endif
 	#endif
 End Sub
 
@@ -552,7 +836,7 @@ sub HSerGetString (Out HSerString As String, optional In comport = 1)
 	Loop
 End Sub
 
-' GetChar, Getdec, gethex, getcmd
+
 sub HSerPrint (In PrintData As String, optional In comport = 1)
 	'PrintLen = LEN(PrintData$)
 	PrintLen = PrintData(0)
@@ -711,62 +995,4 @@ Sub HSerPrint (In SerPrintVal As Long, optional In comport = 1)
 	#ENDIF
 
 End Sub
-
-Macro HSerSendBlocker
-	#ifdef USART_BLOCKING
-		HSerSendBlockCheck
-	#endif
-	#ifndef USART_BLOCKING
-		#ifdef USART_TX_BLOCKING
-			HSerSendBlockCheck
-		#endif
-	#endif
-End Macro
-
-Macro HSerSendBlockCheck
-	'Delay until send buffer empty
-	#ifdef PIC
-		#ifndef Bit(TX1IF)
-			Wait While TXIF = Off
-		#endif
-		#ifdef Bit(TX1IF)
-			Wait While TX1IF = Off
-		#endif
-	#endif
-	#ifdef AVR
-		#ifndef Bit(UDRE0)
-			#ifdef Bit(UDRE1)
-				Wait While UDRE1 = Off
-			#endif
-			#ifndef Bit(UDRE1)
-				Wait While UDRE = Off
-			#endif
-		#endif
-		#ifdef Bit(UDRE0)
-			Wait While UDRE0 = Off
-		#endif
-	#endif
-End Macro
-
-Macro HSerSendBlocker2
-	#ifdef USART2_BLOCKING
-		HSerSendBlockCheck2
-	#endif
-	#ifndef USART2_BLOCKING
-		#ifdef USART2_TX_BLOCKING
-			HSerSendBlockCheck2
-		#endif
-	#endif
-End Macro
-
-Macro HSerSendBlockCheck2
-	'Delay until send buffer empty
-	#ifdef PIC
-
-		#ifdef Bit(TX2IF)
-			Wait While TX2IF = Off
-		#endif
-	#endif
-
-End Macro
 
