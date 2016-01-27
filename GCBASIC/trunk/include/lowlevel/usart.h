@@ -46,6 +46,8 @@
 ' 19/12/2015: Revised to support CREN2 and SPEN2
 '	07/01/2016:	Added AVR 4 channel USARTs
 ' 24/01/2016: Added default value to comport
+' 26/01/2016: Corrected USART2 operations
+
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -495,20 +497,20 @@ sub HSerSend(In SerData, optional In comport = 1)
     #endif
     #If USART2_BAUD_RATE Then
       if comport = 2 Then
-        #ifdef USART_BLOCKING     'Blocking TX and RX
+        #ifdef USART2_BLOCKING     'Blocking TX and RX
           #ifdef Bit(TX2IF)
             Wait While TX2IF = Off
           #endif
         #endif
-        #ifdef USART_TX_BLOCKING     'TX blocking only
+        #ifdef USART2_TX_BLOCKING     'TX blocking only
           #ifdef Bit(TX2IF)
             Wait While TX2IF = Off
           #endif
         #endif
-        #ifndef Var(TXREG2)		'? TX2REG
-          TXREG2 = SerData		'?
+        #ifdef Var(TXREG2)		' TX2REG
+          TXREG2 = SerData		'
         #endif
-        #ifdef Var(TX2REG)
+        #ifndef Var(TXREG2)
           TX2REG = SerData
         #endif
 
