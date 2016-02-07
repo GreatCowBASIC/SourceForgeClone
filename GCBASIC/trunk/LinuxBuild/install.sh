@@ -8,9 +8,9 @@ set -e
 myName=${0##*/}
 
 # Files containing Version and Release date
-VersionFile=../../../SynWrite/Settings/SynToolbars.ini
+VersionFile=../SynToolbars.ini
 ReleaseFile=gcbasic.bas
-VersionReleaseFile=../../VersionRelease.txt
+VersionReleaseFile=../VersionRelease.txt
 
 # Compiler vars
 CC=fbc
@@ -21,7 +21,7 @@ REQUIRES="gcbasic.bas assembly.bi preprocessor.bi utils.bi variables.bi"
 # Install vars
 exefile="gcbasic"
 installdir=/opt/GCBASIC
-rsyncexclude="--exclude=Sources --exclude=utils --exclude=docs"
+rsyncexclude="--exclude=Sources"
 
 #--- Subs ---
 usage()
@@ -69,7 +69,7 @@ setpath()
 # Used by install() internally. Can also be used externally as root.
 {
 	if [ ! -f /etc/profile ]; then
-		echo -e "Cannot set system environment to automatically add $installdir to PATH upon login. You'll need to do that manually.\n"
+		echo "Cannot set system environment to automatically add $installdir to PATH upon login. You'll need to do that manually."
 	else
 		if [ -z $(grep "$installdir" /etc/profile) ]
 		then
@@ -77,12 +77,11 @@ setpath()
 			echo "Your PATH should be automatically updated the next time you login."
 		fi
 	fi
-	echo "To use 'gcbasic' before your next login (ie. now), you'll need to ensure that '$installdir' is in your normal user (not root) path. Check if it's there with, 'echo \$PATH'. If it's not there, add it with, 'PATH=\$PATH:$installdir'."
+	echo -e "To use 'gcbasic' before your next login (ie. now), you'll need to ensure that '$installdir' is in your normal user (not root) path. Check if it's there with, 'echo \$PATH'. If it's not there, add it with, 'PATH=\$PATH:$installdir'.\n"
 }
 
 install()
-# Copy exefile and 'preprocess.awk' to GreatCowBasic directory, and
-# Sync with installdir.
+# Copy exefile to parent (GreatCowBasic) directory, and Sync with installdir.
 {
 	if [ `whoami` != "root" ]; then
 		echo "'$myName install' must be run as root."
@@ -100,17 +99,16 @@ install()
 		fi
 	fi
 
-	cp -p $exefile ../.. #compiled executable to GreatCowBasic
-	cd ../..
-	if [ -f ../G+Stools/preprocess.awk ]; then
-		cp -p ../G+Stools/preprocess.awk .
-	fi
+	cp -p $exefile .. #compiled executable to parent (GreatCowBasic) directory
+	cd ..
 	rsync -rv $rsyncexclude * $installdir #install
+	echo -e "\n"
 	if [ $? -eq 0 ]; then
-		echo -e "\n*** Installed successfully to $installdir !\n"
+		echo -e "*** Installed successfully to $installdir !\n"
 		echo -e "Check there for some helper shell scripts (*.sh). You can check the GCBASIC version number and release date with, 'gcbasic /version'.\n"
 		setpath
-		echo -e "\nWe hope you enjoy using GCBASIC. Please let us know if you need any help:\nhttp://sourceforge.net/p/gcbasic/discussion/\n"
+		echo -e "To view the local HTML help files, point your web browser to $installdir/Help/index.html\n\n"
+		echo -e "We hope you enjoy using GCBASIC. Please let us know if you need any help:\nhttp://sourceforge.net/p/gcbasic/discussion/\n"
 	else	echo -e "\nThere was a problem during install. Please manually copy the contents of the GreatCowBasic directory to $installdir, and add $installdir to your PATH.\n"
 	fi
 }
