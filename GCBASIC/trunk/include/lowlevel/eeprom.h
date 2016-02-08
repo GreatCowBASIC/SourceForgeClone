@@ -52,10 +52,10 @@ sub EPWrite(In EEAddress, In EEDataValue)
 	#ifdef Var(EEDAT)
 		Dim EEDataValue Alias EEDAT
 	#endif
-	
+
 	'Disable interrupt
 	IntOff
-	
+
 	'Select data memory
 	#IFDEF Bit(EEPGD)
 		SET EECON1.EEPGD OFF
@@ -63,21 +63,21 @@ sub EPWrite(In EEAddress, In EEDataValue)
 	#IFDEF Bit(CFGS)
 		Set EECON1.CFGS OFF
 	#ENDIF
-	
+
 	'Start write
 	SET EECON1.WREN ON
 	EECON2 = 0x55
 	EECON2 = 0xAA
 	SET EECON1.WR ON
 	SET EECON1.WREN OFF
-	
+
 	'Wait for write to complete
 	WAIT WHILE EECON1.WR ON
 	SET EECON1.WREN OFF
-	
+
 	'Restore interrupt
 	IntOn
- 
+
 #ENDIF
 
 #IFDEF AVR
@@ -91,7 +91,7 @@ sub EPWrite(In EEAddress, In EEDataValue)
 		#ENDIF
 	#ENDIF
 	Dim EEDataValue Alias EEDR
-	
+
 	'Enable write
 	#IFDEF Bit(EEMWE)
 		Set EECR.EEMWE On
@@ -112,16 +112,16 @@ sub EPWrite(In EEAddress, In EEDataValue)
 			Wait Until EECR.EEPE Off
 		#ENDIF
 	#ENDIF
-	
+
 #ENDIF
- 
+
 end sub
 
 'EPRead made into system subroutine
 'Constant added to allow it to still be referred to as EPRead
 #define EPRead SysEPRead
 sub SysEPRead(In EEAddress, Out EEDataValue)
- 
+
 #IFDEF PIC
 	'Variable alias
 	#IFNDEF Var(EEADRH)
@@ -136,10 +136,10 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
 	#ifdef Var(EEDAT)
 		Dim EEDataValue Alias EEDAT
 	#endif
-	
+
 	'Disable interrupt
 	IntOff
-	
+
 	'Select data memory
 	#IFDEF Bit(EEPGD)
 		SET EECON1.EEPGD OFF
@@ -147,10 +147,10 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
 	#IFDEF Bit(CFGS)
 		Set EECON1.CFGS OFF
 	#ENDIF
-	
+
 	'Read
 	SET EECON1.RD ON
-	
+
 	'Restore interrupt
 	IntOn
 #ENDIF
@@ -166,11 +166,11 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
 		#ENDIF
 	#ENDIF
 	Dim EEDataValue Alias EEDR
-	
+
 	'Start read
 	Set EECR.EERE On
-	
-#ENDIF	
+
+#ENDIF
 
 end sub
 
@@ -185,10 +185,10 @@ function ReadEP(EEAddress)
 		Dim EEAddress As Word Alias EEADRH, EEADR
 	#ENDIF
 	Dim EEDataValue Alias EEDATA
-	
+
 	'Disable interrupt
 	IntOff
-	
+
 	'Select data memory
 	#IFDEF Bit(EEPGD)
 		SET EECON1.EEPGD OFF
@@ -196,10 +196,10 @@ function ReadEP(EEAddress)
 	#IFDEF Bit(CFGS)
 		Set EECON1.CFGS OFF
 	#ENDIF
-	
+
 	'Read
 	SET EECON1.RD ON
-	
+
 	'Restore interrupt
 	IntOn
 #ENDIF
@@ -215,44 +215,44 @@ function ReadEP(EEAddress)
 		#ENDIF
 	#ENDIF
 	Dim EEDataValue Alias EEDR
-	
+
 	'Start read
 	Set EECR.EERE On
 #ENDIF
-	
-end sub
+
+end function
 
 sub ProgramWrite(In EEAddress, In EEDataWord)
 
 #IFDEF PIC
 	Dim EEAddress As Word Alias EEADRH, EEADR
 	Dim EEDataWord As Word Alias EEDATH, EEDATA
-	
+
 	'Disable Interrupt
 	IntOff
-	
+
 	'Select program memory
 	SET EECON1.EEPGD ON
 	#IFDEF Bit(CFGS)
 		Set EECON1.CFGS OFF
 	#ENDIF
-	
+
 	'Enable write
 	SET EECON1.WREN ON
 	#ifdef bit(FREE)
 		SET EECON1.FREE OFF
 	#endif
-	
+
 	'Write enable code
 	EECON2 = 0x55
 	EECON2 = 0xAA
-	
+
 	'Start write, wait for it to finish
 	SET EECON1.WR ON
 	NOP
 	NOP
 	SET EECON1.WREN OFF
-	
+
 	'Enable Interrupt
 	IntOn
 #ENDIF
@@ -262,37 +262,37 @@ end sub
 sub ProgramRead(In EEAddress, Out EEDataWord)
 	Dim EEAddress As Word Alias EEADRH, EEADR
 	Dim EEDataWord As Word Alias EEDATH, EEDATA
-	
+
 	'Disable Interrupt
 	IntOff
-	
+
 	'Select program memory
 	SET EECON1.EEPGD ON
 	#IFDEF Bit(CFGS)
 		Set EECON1.CFGS OFF
 	#ENDIF
-	
+
 	'Start read, wait for it to finish
 	SET EECON1.RD ON
 	NOP
 	NOP
-	
+
 	'Enable interrupt
 	IntOn
 end sub
 
 sub ProgramErase(In EEAddress)
 	Dim EEAddress As Word Alias EEADRH, EEADR
-	
+
 	'Disable Interrupt
 	IntOff
-	
+
 	'Select program memory
 	SET EECON1.EEPGD ON
 	#IFDEF Bit(CFGS)
 		Set EECON1.CFGS OFF
 	#ENDIF
-	
+
 	SET EECON1.WREN ON
 	#ifdef bit(FREE)
 		SET EECON1.FREE ON
@@ -306,7 +306,7 @@ sub ProgramErase(In EEAddress)
 		SET EECON1.FREE OFF
 	#endif
 	SET EECON1.WREN OFF
-	
+
 	'Enable interrupt
 	IntOn
 end sub

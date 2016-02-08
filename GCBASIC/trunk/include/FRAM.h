@@ -161,7 +161,7 @@ Sub fram_rd_deviceID( IN fram_device, out deviceID_1, out deviceID_2, out device
       I2CSTOP
 
 
-End Function
+End Sub
 
 
 Sub fram_sleep( in fram_device   )
@@ -180,7 +180,7 @@ Sub fram_sleep( in fram_device   )
       I2CSend ( 0x86  )
       I2CSTOP
 
-End Function
+End Sub
 
 
 sub fram_wake ( in fram_device  )

@@ -15,7 +15,22 @@ if [ $# -ne 1 ]; then
 fi
 
 if [ -f $installdir/preprocess.awk ]; then
-	$proc -f $installdir/preprocess.awk $1
+	# process any header files newer than current HEX file
+	out_name=$(basename $1 | cut -d. -f1).hex # Note HEX suffix
+	if [ -f $out_name ]; then
+		find . -type f -name '*.h' -newer $out_name | while IFS= read h; do
+			$proc -v NoHeaderMessage=1 -f $installdir/preprocess.awk "$h"
+			if [ $? -eq 2 ]; then
+				echo ""
+				echo "Fatal error executing:"
+				echo "	$proc -f $installdir/preprocess.awk $h"
+				exit
+			fi
+		done
+	fi
+
+	# process current source file
+	$proc -v NoHeaderMessage=1 -f $installdir/preprocess.awk $1
 	if [ $? -eq 2 ]; then
 		echo ""
 		echo "Fatal error executing:"

@@ -45,7 +45,7 @@
 'Serial Port Settings
 #define RecALow IR_In = On
 #define RecAHigh IR_In = Off
-#define SendAHigh PWMOn 
+#define SendAHigh PWMOn
 #define SendALow PWMOff
 
 'Misc Settings
@@ -95,7 +95,7 @@ function Message
 	'Checksum
 	SerReceive(1, LegoTemp)
 	SerReceive(1, LegoTemp)
-end sub
+end function
 
 '''Send an opcode using the standard RCX IR protocol
 '''@param LegoArray Array of data to send. Complements and checksum are calculated.
@@ -140,7 +140,7 @@ sub ReceiveOpcode(LegoArray(), Out LegoByteCount)
 	LegoArray(1) = LegoCommand
 	LegoParams = LegoCommand AND 7
 	LegoByteCount = LegoParams + 1
-	
+
 	'Parameters
 	for LegoByte = 1 to LegoParams
 		SerReceive(1, LegoTemp)
@@ -148,7 +148,7 @@ sub ReceiveOpcode(LegoArray(), Out LegoByteCount)
 		LegoChecksum = LegoChecksum + LegoTemp
 		SerReceive(1, LegoTemp)
 	next
-	
+
 	'Checksum
 	SerReceive(1, LegoTemp)
 	LegoChecksum = LegoChecksum - LegoTemp
@@ -198,7 +198,7 @@ sub SendLNPAdd(In LNPPort, In LNPAddress, In LNPArray(), In LNPByteCount)
 	SerSend(1, LNPTemp)
 	LNPChecksum = LNPTemp + LNPChecksum
 
-	'Source 
+	'Source
 	LNPTemp = OwnLNPPort
 	LNPTemp = (Swap4(LNPTemp) and 0xf0)+(OwnLNPAddress and 0x0f)
 	SerSend(1, LNPTemp)

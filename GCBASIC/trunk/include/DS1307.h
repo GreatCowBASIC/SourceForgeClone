@@ -187,7 +187,7 @@ sub DS1307_SetClock(in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date, in 
     HI2CSend(0)                      ;begin with address 0
     HI2CSend(DecToBcd(DS_Sec))       ;then set the seven
     HI2CSend(DecToBcd(DS_Min))       ;consecutive values
-    HI2CSend(DecToBcd(DS_Hour)
+    HI2CSend(DecToBcd(DS_Hour))
     HI2CSend(DecToBcd(DS_DOW))
     HI2CSend(DecToBcd(DS_Date))
     HI2CSend(DecToBcd(DS_Month))
@@ -201,7 +201,7 @@ sub DS1307_SetClock(in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW, in DS_Date, in 
     I2CSend(0)                      ;begin with address 0
     I2CSend(DecToBcd(DS_Sec))       ;then set the seven
     I2CSend(DecToBcd(DS_Min))       ;consecutive values
-    I2CSend(DecToBcd(DS_Hour)
+    I2CSend(DecToBcd(DS_Hour))
     I2CSend(DecToBcd(DS_DOW))
     I2CSend(DecToBcd(DS_Date))
     I2CSend(DecToBcd(DS_Month))
