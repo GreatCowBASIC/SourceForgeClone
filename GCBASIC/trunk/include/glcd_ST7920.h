@@ -28,7 +28,7 @@
 ' 09/5/2014: Remove more silly variable names. No functional changes
 ' 09/5/2014: Fixed circle and line to ensure cross device compatibility
 ' 11/5/2014: Revided to expose old line drawing routines
-'    
+'
 ' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 '
 'Hardware settings
@@ -108,7 +108,7 @@ Sub InitGLCD_ST7920
                                Wait 50 ms
                         #ENDIF
 
-    		
+
                         wait 10 ms
                         Wait until GLCDReady_ST7920
 
@@ -126,7 +126,7 @@ Sub InitGLCD_ST7920
                         wait 1 ms
                         WriteCommand_ST7920(0x56)
                         wait 1 ms
-                        WriteByte_ST7920(0x36
+                        WriteByte_ST7920(0x36)
                         wait 5 10us
                         WriteByte_ST7920(0x0c)
                         wait 5 10us
@@ -214,7 +214,7 @@ Sub InitGLCD_ST7920
                         'Turn off cursor
                         WriteCommand_ST7920(b'00001100')
                         wait 5 10us
-    		
+
                         'Clear screen
                         GLCD_TYPE_ST7920_GRAPHICS_MODE = false
                         GLCDCLS
@@ -229,7 +229,7 @@ Sub InitGLCD_ST7920
 
 	'Clear screen
 	GLCDCLS
-	
+
 End Sub
 
 
@@ -272,21 +272,21 @@ Sub GLCDPrint_ST7920(In PrintLocX, In PrintLocY, In LCDValue As Long)
 	Dim SysCalcTempA As Long
 	Dim SysPrintBuffer(10)
 	SysPrintBuffLen = 0
-	
+
 	Do
 		'Divide number by 10, remainder into buffer
 		SysPrintBuffLen += 1
 		SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
 		LCDValue = SysCalcTempA
 	Loop While LCDValue <> 0
-	
+
 	'Display
 	GLCDPrintLoc = PrintLocX
 	For SysPrintTemp = SysPrintBuffLen To 1 Step -1
 		GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48
 		GLCDPrintLoc += GLCDFontWidth
 	Next
-	
+
 End Sub
 
 
@@ -354,7 +354,7 @@ Sub FilledBox_ST7920(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Lin
 		LineY1 = LineY2
 		LineY2 = GLCDTemp
 	End If
-	
+
           #if GLCD_TYPE = GLCD_TYPE_ST7920
 		'Draw lines going across
 		For DrawLine = LineX1 To LineX2
@@ -436,7 +436,7 @@ Sub PSet_ST7920(In GLCDX, In GLCDY, In GLCDColour As Word)
 		Else
 			GLCDDataTempWord =  GLCDDataTempWord  Or  GLCDChangeWord
 		End If
-		
+
                     ' Locate again for the write operation
                      SET GLCD_RS OFF
                      WriteByte_ST7920( SysCalcPositionY )
@@ -445,7 +445,7 @@ Sub PSet_ST7920(In GLCDX, In GLCDY, In GLCDColour As Word)
                      hbyte= GLCDDataTempWord / 256
                      SET GLCD_RS ON
                      WriteByte_ST7920(hbyte)
-                     WriteByte_ST7920( GLCDDataTempWord & 0x00FF )	
+                     WriteByte_ST7920( GLCDDataTempWord & 0x00FF )
 	#endif
 
 End Sub
@@ -475,8 +475,8 @@ end sub
 '''  Make sure the screen is void of text before using this function.
 sub GLCDEnableGraphics_ST7920
     #if GLCD_TYPE = GLCD_TYPE_ST7920
-'	WriteCommand_ST7920(0x30)'		
-'	WriteCommand_ST7920(0x34)'			// Switch to extended instruction mode.	
+'	WriteCommand_ST7920(0x30)'
+'	WriteCommand_ST7920(0x34)'			// Switch to extended instruction mode.
 	WriteCommand_ST7920(0x36)'
           '// Enable graphics mode.
           GLCD_TYPE_ST7920_GRAPHICS_MODE  = true
@@ -487,7 +487,7 @@ end sub
 '''  Disable Graphics Mode on the ST9720 GLCD and return to text mode.
 sub GLCDDisableGraphics_ST7920
     #if GLCD_TYPE = GLCD_TYPE_ST7920
-'	WriteByte_ST7920(0x30)'		
+'	WriteByte_ST7920(0x30)'
 '         WriteByte_ST7920(0x34)'			// Switch to extended instruction mode.
 	WriteCommand_ST7920(0x30)'			// Graphics and extended instruction mode turned off.
           GLCD_TYPE_ST7920_GRAPHICS_MODE  = false
@@ -563,7 +563,7 @@ Sub WriteByte_ST7920( In GLCDByte )
 			set GLCD_RW OFF 'Write mode
 		#ENDIF
 	#ENDIF
-	
+
 	#IFDEF GLCD_IO 8
 		'Set data port to output, and write a value to it
                     #IFNDEF GLCD_LAT
@@ -588,7 +588,7 @@ Sub WriteByte_ST7920( In GLCDByte )
                         wait ST7920WriteDelay us
 		#ENDIF
 	#ENDIF
-	
+
 end sub
 
 
@@ -754,7 +754,7 @@ sub GLCDClearGraphics_ST7920
 		for PrintLocX = 0 to 7
 			WriteData_ST7920(0x00)
 			WriteData_ST7920(0x00)
-	          next          	
+	          next
 	next
 
 end sub
@@ -771,7 +771,8 @@ function gReaddata_ST7920 ( in xUnit, in yBit ) as word
 
     gReaddata_ST7920  = (gReaddata_ST7920*256)+GLCDReadByte_ST7920
 
-end Sub
+end Function
+
 
 '''Draws a horizontal line on the GLCD screen
 '''@param X0 Starting X point of line
@@ -844,7 +845,7 @@ sub Lineh_ST7920( in X0, in Y0, in xDots, Optional In GLCDColour As Word = GLCDF
                     hbyte= NewData / 256
                     SET GLCD_RS ON
                     WriteByte_ST7920(hbyte)
-                    WriteByte_ST7920( NewData & 0x00FF )	
+                    WriteByte_ST7920( NewData & 0x00FF )
 
    next
 end Sub
@@ -928,7 +929,7 @@ end sub
 '''Read byte from LCD
 '''@hide
 Function GLCDReadByte_ST7920
-	
+
 	#IFNDEF GLCD_NO_RW
 		#IFDEF GLCD_IO 4,8
 			wait until GLCDReady_ST7920
@@ -938,13 +939,13 @@ Function GLCDReadByte_ST7920
 
 	'Set data pin directions
           #IFNDEF GLCD_LAT
-            Dir GLCD_DATA_PORT In	
+            Dir GLCD_DATA_PORT In
           #endif
 
           #IFDEF GLCD_LAT
-            Dir _GLCD_DATA_PORT In	
+            Dir _GLCD_DATA_PORT In
           #endif
-	
+
           set GLCD_RW ON
           Set GLCD_RS ON
 	Set GLCD_ENABLE On
@@ -973,14 +974,14 @@ function GLCDReady_ST7920
                         set GLCD_RW OFF 'Write mode
                         exit function
               #ENDIF
-    	
+
               #IFNDEF GLCD_NO_RW
 
                         #IFDEF GLCD_IO 4,8
 
                                   GLCDReady_ST7920 = FALSE
                                   GLCD_RSTemp = GLCD_RS
-    			
+
                                   SET GLCD_RW ON
                                   SET GLCD_RS OFF
                                   set GLCD_DATA_PORT.7 off
@@ -988,7 +989,7 @@ function GLCDReady_ST7920
                                   SET GLCD_Enable ON
 
                                   #IFDEF GLCD_IO 8
-    				
+
                                             #IFNDEF GLCD_LAT
                                                    dir GLCD_DATA_PORT.7 IN
 
