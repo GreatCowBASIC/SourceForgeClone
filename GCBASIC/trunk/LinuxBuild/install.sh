@@ -99,8 +99,9 @@ install()
 		fi
 	fi
 
-	cp -p $exefile .. #compiled executable to parent (GreatCowBasic) directory
+	cp -p $exefile .. #Copy compiled executable to parent (GreatCowBasic) directory
 	cd ..
+	chmod +x *.sh # Set scripts as executable
 	rsync -rv $rsyncexclude * $installdir #install
 	echo -e "\n"
 	if [ $? -eq 0 ]; then
