@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -e # Halt on error
 
 # Great Cow Basic generic Linux installer, Version 0.1
 # NOT to be used on any other operating system (eg. Windows).
@@ -13,9 +13,7 @@ ReleaseFile=gcbasic.bas
 VersionReleaseFile=../VersionRelease.txt
 
 # Compiler vars
-CC=fbc
-ARCH=`uname -p`
-CC_FLAGS="-exx -v -arch $ARCH gcbasic.bas"
+CC="fbc -exx -v -arch native gcbasic.bas" # Compile Command
 REQUIRES="gcbasic.bas assembly.bi preprocessor.bi utils.bi variables.bi"
 
 # Install vars
@@ -54,13 +52,22 @@ build()
 	echo -e "Version: $Version\nRelease: $Release\n" > $VersionReleaseFile
 
 	echo -e "\nCompiling GCBASIC Version $Version, Release $Release\n"
-	$CC $CC_FLAGS
+	$CC
 	if [ $? -ne 0 ]; then
-		echo "There was an error executing: $CC $CC_FLAGS"
+		echo "There was an error executing: $CC"
 	else
-		echo -e "\nCompiled successfully."
+		echo -e "\nCompiled successfully.\n"
+		set +e # Do not halt on error
+		existing=`which $exefile 2>/dev/null` # Is there an existing gcbasic found in the PATH?
+		set -e # Resume halt on error
+		if [[ $? -eq 0  && $existing != "$installdir/$exefile" ]] ; then
+			[ -f $VersionReleaseFile ] && cat $VersionReleaseFile
+			echo "Note: You already have a version of gcbasic installed at '$existing'."
+			echo "This could cause usage confusion between the two versions."
+			echo -e "You may wish to delete or rename the existing version before trying to use this version.\n"
+		fi
 		echo "Continue with '$myName install' (as root)"
-		echo "Example: 'sudo $myName install'"
+		echo -e "Example: 'sudo $myName install'\n"
 	fi
 }
 

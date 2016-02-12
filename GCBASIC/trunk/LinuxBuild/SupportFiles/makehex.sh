@@ -14,11 +14,15 @@ if [ $# -ne 1 ]; then
 	exit
 fi
 
-if [ -f $installdir/preprocess.awk ]; then
+if [ -f $installdir/preprocess.awk ]; then # We need preprocess.awk to do any preprocessing
+
 	# process any header files newer than current HEX file
-	out_name=$(basename $1 | cut -d. -f1).hex # Note HEX suffix
-	if [ -f $out_name ]; then
-		find . -type f -name '*.h' -newer $out_name | while IFS= read h; do
+	# ! There can be only one dot in the filename, or this will fail
+	out_name=$(basename "$1" | cut -d. -f1).hex # Note HEX suffix
+
+	if [ -f "$out_name" ]; then # If there is no current HEX file, don't bother.
+		# Check installed header files
+		find $installdir -type f -name '*.h' -newer "$out_name" | while IFS= read h; do
 			$proc -v NoHeaderMessage=1 -f $installdir/preprocess.awk "$h"
 			if [ $? -eq 2 ]; then
 				echo ""
@@ -27,10 +31,22 @@ if [ -f $installdir/preprocess.awk ]; then
 				exit
 			fi
 		done
+
+		# Check header files in current working directory
+		find . -type f -name '*.h' -newer "$out_name" | while IFS= read h; do
+			$proc -v NoHeaderMessage=1 -f $installdir/preprocess.awk "$h"
+			if [ $? -eq 2 ]; then
+				echo ""
+				echo "Fatal error executing:"
+				echo "	$proc -f $installdir/preprocess.awk $h"
+				exit
+			fi
+		done
+
 	fi
 
 	# process current source file
-	$proc -v NoHeaderMessage=1 -f $installdir/preprocess.awk $1
+	$proc -v NoHeaderMessage=1 -f $installdir/preprocess.awk "$1"
 	if [ $? -eq 2 ]; then
 		echo ""
 		echo "Fatal error executing:"
@@ -44,7 +60,7 @@ fi
 ##  Call GCBasic to make an asm-file and assembling to hex-file:
 
 ##  --- edit command below (don't delete /NP) -----------------
-gcbasic /NP /K:A /A:GCASM $1
+gcbasic /NP /K:A /A:GCASM "$1"
 
 ##  --- edit END ----------------------------------------------
 

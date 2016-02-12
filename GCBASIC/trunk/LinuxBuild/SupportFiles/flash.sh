@@ -2,7 +2,7 @@
 ##  Adapted for use on Linux from flashAVR.bat and flashPIC.bat. Not to be used on Windows.
 ##  WARNING: Not tested!
 ##  You can adapt this file to your needs including removing the .sh extension for convenience.
-## In this script, $1 gets replaced with whatever you enter for <hexfile> on the command line. $2 gets replaced with the value entered for <chipmodel>.
+## In this script, "$1" gets replaced with whatever you enter for <hexfile> on the command line. $2 gets replaced with the value entered for <chipmodel>.
 
 ## Be sure to uncomment/edit the appropriate flash command line for your programmer.
 
@@ -29,65 +29,68 @@ fi
 ## *** For AVR ***
 
 ##  Call AVRdude for USBASP programmer - moderate speed (187.5 kHz) for 1 MHz devices:
-avrdude -B 5 -c USBasp -P Usb -p AT$2 -U flash:w:$1:i
+#avrdude -B 5 -c usbasp -P /dev/cuaa0 -p $2 -U flash:w:"$1":i
 
 ##  Call AVRdude for USBASP programmer - fastest mode (1500 kHz):
- # avrdude -B 0.5 -c USBasp -P Usb -p AT$2 -U flash:w:$1:i
+ # avrdude -B 0.5 -c usbasp -P /dev/cuaa0 -p $2 -U flash:w:"$1":i
 
 ##  Call AVRdude for STK500v2 programmer:
- # avrdude -c STK500v2 -P Com4 -p AT$2 -U flash:w:$1:i
+ # avrdude -c stk500v2 -P com4 -p $2 -U flash:w:"$1":i
 
 ##  Call AVRdude for DASA3 programmer:
- # avrdude -i 1 -c DASA3 -P Com1 -p AT$2 -U flash:w:$1:i
+ # avrdude -i 1 -c dasa3 -P com1 -p $2 -U flash:w:"$1":i
 
 ## Call AVRdude for Arduino_Uno bootloader:
- # avrdude -c Arduino -P Com5 -b 115200 -p AT$2 -U flash:w:$1:i
+avrdude -c arduino -P /dev/ttyUSB0 -b 115200 -p $2 -U flash:w:"$1":i
 
 ## Call AVRdude for Arduino_Pro_Mini bootloader:
- # avrdude -c Arduino -P Com6 -b 57600 -p AT$2 -U flash:w:$1:i
+ # avrdude -c arduino -P com6 -b 57600 -p $2 -U flash:w:"$1":i
 
 ##  Call AVRdude for Arduino_Mega2560 bootloader:
- # avrdude -c Wiring -P Com7 -b 115200 -p AT$2 -U flash:w:$1:i
+ # avrdude -c wiring -P com7 -b 115200 -p $2 -U flash:w:"$1":i
 
 ## Call for Digispark bootloader:
 ## Replace the command name appropriately, and
 ## remove the '#' from the next three lines
  # Echo "ReInsert Digispark USB now"
- # "micronucleus.exe" -run  $1
+ # "micronucleus.exe" -run  "$1"
  # timeout 5 > nul
 
-## *** For PIC ***
+
+ ## *** For PIC ***
+## ! Not tested. Be sure to edit the commands appropriately. You may need to add or remove double-quotes around the $ variables.
+
 ## Call uploader for TinyBootLoader+ bootloader:
- # TinyMultiBootloader+ $1 exit
+ # TinyMultiBootloader+ "$1" exit
 
 ##  Call PICpgm-programming software:
- # picpgm -p $1
- # picpgm -delay 1 -if "5PiP" -port COM1 -pic PIC$2 -p $1
- # picpgm -delay 1 -if "JDM Programmer" -port COM1 -pic PIC$2 -p $1
- # picpgm -delay 1 -if "FT232Board-Programmer" -port USB -pic PIC$2 -p $1
- # picpgm -delay 1 -if "FT232Adapter-Programmer" -port USB -pic PIC$2 -p $1
+ # picpgm -p "$1"
+ # picpgm -delay 1 -if "5PiP" -port COM1 -pic PIC$2 -p "$1"
+ # picpgm -delay 1 -if "JDM Programmer" -port COM1 -pic PIC$2 -p "$1"
+ # picpgm -delay 1 -if "FT232Board-Programmer" -port USB -pic PIC$2 -p "$1"
+ # picpgm -delay 1 -if "FT232Adapter-Programmer" -port USB -pic PIC$2 -p "$1"
 
 ##  Call PicKit2 command-line programming Software leaving power on the chip
 ##  and always exit with MCLR on. Optionally #ove -r for MCLR off
- #pk2cmd -bPicKit2 -pPIC$2 -f$1 -m -j -t -r
+ #pk2cmd -bPicKit2 -pPIC$2 -f"$1" -m -j -t -r
 
 ##  Call PicKit2 command-line programming Software without leaving the power on the chip
 ##  and always exit with MCLR on. Optionally #ove -r for MCLR off
- # pk2cmd -bPicKit2 -pPIC$2 -f$1 -m -r
+ # pk2cmd -bPicKit2 -pPIC$2 -f"$1" -m -r
 
 ##  Call PicKit3 command-line programming software:
 ##  note, that the Java Runtime Environment (jre) has to be installed!
- # java -jar ipecmd.jar -TPPK3 -P$2 -M -F$1
+ # java -jar ipecmd.jar -TPPK3 -P$2 -M -F"$1"
 
 ##  Use PicKit3 Integrated Programming Environment GUI (IPE):
 ##  note, that IPE must run and a programmer and a PIC is connected!
- #  IPE-Pusher $1 0
+ #  IPE-Pusher "$1" 0
 
 ##  Call uploader for diolan bootloader:
- #  picboot -r $1
+ #  picboot -r "$1"
 
 ##  Call MicroBrn K150 programming software:
- # microbrn $1 $2 /f /Q 1
+ # microbrn "$1" $2 /f /Q 1
 
 ##  --- End of your code. ------------------------------------
 
