@@ -58,6 +58,12 @@ If ChipEEPROM = 0 And Var(PMDATH) And Bit(LWLO) Then
         HEFLASH_ROWSIZE = 32
     End If
 End If
+
+if NoVar(PMDATH) And NoBit(LWLO) Then
+	Warning "This is probably NOT a microprocessor with HFEM capabilities"
+  Warning "Subsequent error messages may be related to lack of HFEM capabilities"
+end if
+
 #endscript
 '''@hide
 function FLASH_read(in FlashAddress as word) as word
