@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-01-24"
+Version = "0.95 2016-02-15"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7711,6 +7711,19 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 				DestTemp = "LAT" + Right(Temp, 1) + Mid(DestTemp, InStr(DestTemp, ","))
 			End If
 		End If
+		
+		'Record setting of individual OPTION_REG bits (PIC12x5/16x5)
+		If ChipFamily = 12 Then
+			Temp = UCase(Left(DestTemp, INSTR(DestTemp, ",") - 1))
+			If Temp = "OPTION_REG" And Not HasSFR(Temp) Then
+				For CD = 1 To PinDirShadows
+					If PinDirShadow(CD) = Temp Then GoTo OptionShadowFound
+				Next
+				PinDirShadows += 1
+				PinDirShadow(PinDirShadows) = Temp
+				OptionShadowFound:
+			End If
+		End If
 
 		'Add var that contains bit
 		IF INSTR(DestTemp, ",") Then
@@ -9069,11 +9082,14 @@ Sub FixSinglePinSet
 	'Need to cache W into TRISIO before tris
 	'Also need to copy TRISIO into tris after bcf/bsf on TRISIO
 	'Need to operate on every subroutine
+	
+	'Also need to fix OPTION in the same way
 
-	Dim As Integer CurrSub, NextSamePort, SearchPos, FoundPos
+	Dim As Integer CurrSub, NextSamePort, SearchPos, FoundPos, AddedShadows
 	Dim As LinkedListElement Pointer CurrLine
 	Dim As String Port, NextPort, TrisPort
 	Dim As SubType Pointer InitSys
+	AddedShadows = 0
 
 	'12 bit PIC only
 	If ChipFamily <> 12 Then Exit Sub
@@ -9119,6 +9135,49 @@ Sub FixSinglePinSet
 							'Add caching instructions
 							AddVar("TRIS" + TrisPort, "BYTE", 1, 0, "REAL", "")
 						End If
+						
+					'Find option
+					ElseIf Trim(CurrLine->Value) = "option" Then
+						
+						'Check if shadow needed
+						FoundPos = -1
+						For SearchPos = 1 To PinDirShadows
+							If PinDirShadow(SearchPos) = "OPTION_REG" Then
+								FoundPos = SearchPos
+								Exit For
+							End If
+						Next
+
+						If FoundPos <> -1 Then
+							'Set buffer
+							LinkedListInsert(CurrLine->Prev, " movwf OPTION_REG" + TrisPort)
+
+							'Add caching instructions
+							AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "")
+						End If
+
+					'Find bcf/bsf OPTION_REG
+					ElseIf Left(CurrLine->Value, 16) = " bsf OPTION_REG," Or Left(CurrLine->Value, 16) = " bcf OPTION_REG," Then
+						'Print "Found single dir set:", CurrLine->Value
+
+						'If there is a block of dir commands, get last one for same port
+						Do
+							NextSamePort = 0
+
+							'Is there another line?
+							If CurrLine->Next <> 0 Then
+								'Is the next line an option setting instruction?
+								If Left(CurrLine->Next->Value, 16) = " bsf OPTION_REG," Or Left(CurrLine->Next->Value, 16) = " bcf OPTION_REG," Then
+									CurrLine = CurrLine->Next
+									NextSamePort = -1
+								End If
+							End If
+						Loop While NextSamePort
+						
+						'Add caching instructions
+						AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "")
+						CurrLine = LinkedListInsert(CurrLine, " movf OPTION_REG,W")
+						CurrLine = LinkedListInsert(CurrLine, " option")
 
 					'Find bcf/bsf TRISx
 					ElseIf Left(CurrLine->Value, 9) = " bsf TRIS" Or Left(CurrLine->Value, 9) = " bcf TRIS" Then
@@ -9188,9 +9247,14 @@ Sub FixSinglePinSet
 				Loop
 
 				'Add buffer setting code
-				CurrLine = LinkedListInsert(CurrLine, " movlw 255")
 				For SearchPos = 1 To PinDirShadows
-					CurrLine = LinkedListInsert(CurrLine, " movwf TRIS" + PinDirShadow(SearchPos))
+					If PinDirShadow(SearchPos) <> "OPTION_REG" Then
+						If AddedShadows = 0 Then
+							CurrLine = LinkedListInsert(CurrLine, " movlw 255")
+						End If
+						AddedShadows += 1
+						CurrLine = LinkedListInsert(CurrLine, " movwf TRIS" + PinDirShadow(SearchPos))
+					End If
 				Next
 
 			End If
@@ -9483,6 +9547,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 
 	Dim As String InLine, Temp, BitName
 	Dim As String VarName, VarType, VarBit, Status, VarNameOld, VarBitOld
+	Dim As Integer FindShadow
 
 	Dim As LinkedListElement Pointer OutList, CurrLine
 
@@ -9560,6 +9625,18 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 		If UseChipOutLatches And Left(VarName, 4) = "PORT" And Len(VarName) = 5 Then
 			If HasSFR(VarName) Then
 				VarName = "LAT" + Right(VarName, 1)
+			End If
+		End If
+		
+		'Record individual setting of OPTION bits
+		If ChipFamily = 12 Then
+			If VarName = "OPTION_REG" And Not HasSFR(VarName) Then
+				For FindShadow = 1 To PinDirShadows
+					If PinDirShadow(FindShadow) = VarName Then GoTo OptionShadowFound
+				Next
+				PinDirShadows += 1
+				PinDirShadow(PinDirShadows) = VarName
+				OptionShadowFound:
 			End If
 		End If
 
