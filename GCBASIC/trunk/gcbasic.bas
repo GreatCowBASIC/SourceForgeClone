@@ -9150,7 +9150,7 @@ Sub FixSinglePinSet
 
 						If FoundPos <> -1 Then
 							'Set buffer
-							LinkedListInsert(CurrLine->Prev, " movwf OPTION_REG" + TrisPort)
+							LinkedListInsert(CurrLine->Prev, " movwf OPTION_REG")
 
 							'Add caching instructions
 							AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "")
