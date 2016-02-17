@@ -1,6 +1,6 @@
 '    Timer control routines for Great Cow BASIC
 '    Copyright (C) 2006-2016 Hugh Considine, Evan Venn and William Roth
-'    Release v0.95.004.2b Beta 5  (Candidate 2b)
+'    Release v0.95.006
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation; either
@@ -71,7 +71,8 @@
 ' 15/01/2016  All Timers share TMRSource, TMRPres and TMRPost (Save Memory)
 ' 15/01/2016  Added (AVR)shadow variable TMRx_TMP for each timer
 ' 18/01/2016  Corrected Typo AVR inittimer4
-'
+' 15/02/2015  Added InitTimer0 support for baseline Pics with
+'             with non-addressable / write only option_reg - WMR
 '
 '***********************************************************
 
@@ -996,19 +997,39 @@ Sub InitTimer0(In TMRSource, In TMRPres)
        'Re-Use TMRPres as T0CON Temp_register
        'Keep T0CON 7:6 and write bits 2:0 from TMRPres
        'Bits 5,4 & 3 will be cleared!
-        TMRPres = (OPTION_REG AND 192) OR TMRPres
+        #IFNDEF ChipFamily 12
+           TMRPres = (OPTION_REG AND 192) OR TMRPres
 
-        IF TMRSource = EXT then
-          Set TMRPres.5 ON   'EXT
-        ELSE
-          Set TMRPres.5 OFF  'OSC
-        END IF
+           IF TMRSource = EXT then
+              Set TMRPres.5 ON   'EXT
+           ELSE
+              Set TMRPres.5 OFF  'OSC
+           END IF
+          'Now Write the OPTION_REG
+           OPTION_REG = TMRPres
+        #ENDIF
 
-        ' WDT is never used for timer0 (PSA bit always OFF)
-        ' clrwdt     (remarked out)
+        'Added For baseline Chips with write only option_reg
+        #IFDEF ChipFamily 12
+           'option_reg (var) defaults to 'b11000111'
 
-        'Now Write the OPTION_REG
-         OPTION_REG = TMRPres
+           TMRPRes = (OPTION_REG and 192) or TMRPres
+
+           if TMRSource = EXT then
+              Set TMRPres.5 ON
+           Else
+              Set TMRPres.5 Off
+           End if
+
+          OPTION_REG = TMRPres ' maintian option_reg (Var)
+
+          clrwdt               'clear watchdog timer
+          clrw                 'Clear "W" to zero
+          addwf	tmrpres,W      'Add tmrpres to "W"
+          option               'write "W" to option_reg
+
+        #EndIF
+
      #endif
 
      'If Timer0 is 16-bit capable

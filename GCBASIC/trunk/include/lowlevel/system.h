@@ -1,5 +1,5 @@
 '    System routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2015 Hugh Considine
+'    Copyright (C) 2006 - 2016 Hugh Considine, Evan Venn and William Roth
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@
 ;    Added support for PIC18F25K22 @ 32MHz and 64 MHz
 ;    14-12-15
 ;    Added support for PIC18F(L)xx20 Chips
+;    Added support for family 12 Chips and option_reg
 'Constants
 #define ON 1
 #define OFF 0
@@ -536,8 +537,6 @@ Sub InitSys
 
   #ENDIF
 
-
-
 	'Turn off comparator
 	#IFDEF Var(CMCON)
 		CMCON = 7
@@ -556,8 +555,9 @@ Sub InitSys
 	'Set GPIO.2 to digital (clear T0CS bit)
 	#IFDEF ChipFamily 12
 		#IFDEF Bit(T0CS)
-			movlw b'11001111'
+			movlw b'11000111'
 			option
+      option_reg = b'11000111'
 		#ENDIF
 	#ENDIF
 
