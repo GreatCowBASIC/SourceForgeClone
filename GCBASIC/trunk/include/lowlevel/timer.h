@@ -1,6 +1,6 @@
 '    Timer control routines for Great Cow BASIC
 '    Copyright (C) 2006-2016 Hugh Considine, Evan Venn and William Roth
-'    Release v0.95.006
+'    Release v0.95.004.2b Beta 5  (Candidate 2b)
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation; either
@@ -576,6 +576,13 @@ Sub StartTimer(In TMRNumber)
         End If
      #endif
 
+      #ifdef Var(TCCR2A)
+        If TMRNumber = 2 Then
+          TCCR2 = TCCR2 And 248 Or TMR2_TMP
+        End If
+     #endif
+
+
      #ifdef Var(TCCR3B)
         If TMRNumber = 3 Then
           TCCR3B = TCCR3B And 248 Or TMR3_TMP
@@ -957,6 +964,12 @@ Sub StopTimer (In TMRNumber)
      #endif
 
      #ifdef Var(TCCR2B)
+        If TMRNumber = 2 Then
+          TCCR2B = TCCR2B And 248
+        End If
+     #endif
+
+     #ifdef Var(TCCR2A)
         If TMRNumber = 2 Then
           TCCR2B = TCCR2B And 248
         End If
