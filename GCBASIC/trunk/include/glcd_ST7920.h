@@ -30,6 +30,7 @@
 ' 11/5/2014: Revided to expose old line drawing routines
 '
 ' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 19/2/16	Revised to ensure compatibility with old code and the help file!	
 '
 'Hardware settings
 'Type
@@ -224,7 +225,7 @@ Sub InitGLCD_ST7920
               GLCDForeground = 1
               GLCDFontWidth = 6
               GLCDfntDefault = 0
-	      GLCDfntDefaultsize = 1
+	            GLCDfntDefaultsize = 1
           #ENDIF
 
 	'Clear screen
@@ -473,6 +474,7 @@ end sub
 '*******************************************************************************/
 '''Enables Graphics Mode on the ST7920 GLCD.
 '''  Make sure the screen is void of text before using this function.
+#define ST7920GLCDEnableGraphics GLCDEnableGraphics_ST7920
 sub GLCDEnableGraphics_ST7920
     #if GLCD_TYPE = GLCD_TYPE_ST7920
 '	WriteCommand_ST7920(0x30)'
@@ -485,6 +487,7 @@ end sub
 
 
 '''  Disable Graphics Mode on the ST9720 GLCD and return to text mode.
+#define ST7920GLCDDisableGraphics GLCDDisableGraphics_ST7920
 sub GLCDDisableGraphics_ST7920
     #if GLCD_TYPE = GLCD_TYPE_ST7920
 '	WriteByte_ST7920(0x30)'
