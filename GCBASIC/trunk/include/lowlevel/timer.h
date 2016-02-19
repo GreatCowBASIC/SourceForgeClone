@@ -73,7 +73,8 @@
 ' 18/01/2016  Corrected Typo AVR inittimer4
 ' 15/02/2015  Added InitTimer0 support for baseline Pics with
 '             with non-addressable / write only option_reg - WMR
-'
+' 18/02/2015  Added correct prescales for AVR with TCCR2A register -Wmr
+' 18/02/2015  Added/corrected TCCR2A setting in Stop/starttimer -Wmr
 '***********************************************************
 
 'Subroutines:
@@ -313,6 +314,7 @@
     PS_1_16384 = 15
   end if
 
+  'needs work- "some" AVR with TCCR2 also support 1:32 and 1:128
   if var(TCCR2) then
     PS_2_0 = 0              ' no clock source
     PS_2_1 = 1
@@ -332,6 +334,19 @@
     PS_2_256 = 6
     PS_2_1024 = 7
   end if
+
+  '// "ALL" AVR with TCCR2A support these prescales - WMR
+  if var(TCCR2A) then
+    PS_2_0 = 0              ' no clock source
+    PS_2_1 = 1
+    PS_2_8 = 2
+    PS_2_32 = 3
+    PS_2_64 = 4
+    PS_2_128 = 5
+    PS_2_256 = 6
+    PS_2_1024 = 7
+  end if
+
 
 #endscript
 
@@ -578,7 +593,7 @@ Sub StartTimer(In TMRNumber)
 
       #ifdef Var(TCCR2A)
         If TMRNumber = 2 Then
-          TCCR2 = TCCR2 And 248 Or TMR2_TMP
+          TCCR2A = TCCR2A And 248 Or TMR2_TMP
         End If
      #endif
 
@@ -971,7 +986,7 @@ Sub StopTimer (In TMRNumber)
 
      #ifdef Var(TCCR2A)
         If TMRNumber = 2 Then
-          TCCR2B = TCCR2B And 248
+          TCCR2A = TCCR2A And 248
         End If
      #endif
 
