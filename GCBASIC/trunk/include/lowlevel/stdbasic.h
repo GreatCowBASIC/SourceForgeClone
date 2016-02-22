@@ -254,48 +254,48 @@ Function BcdToDec_GCB( SysCalcTempA as byte ) as byte
          BcdToDec_GCB = (SysCalcTempA/16)*10+SysCalcTempA%16
 End Function
 
-' Bitwise Functions and Macros by Chris Roper
-
-' BitOut != BitIn
-Macro isNotBit(BitOut, BitIn)
-  If BitIn then
-     BitOut = 0
-  Else
-     BitOut = 1
-  End If
-End Macro
-
-' BitsOut = BitsIn << NumBits
-Macro lslBit(BitsOut, BitsIn, NumBits)
-  BitsOut = BitsIn
-  Repeat NumBits
-    STATUS.C = 0
-    Rotate BitsOut Left
-  End Repeat
-End Macro
-
-' BitsOut = BitsIn >> NumBits
-Macro lsrBit(BitBitsOut, BitsIn, NumBits)
-  BitsOut = BitsIn
-  Repeat NumBits
-    STATUS.C = 0
-    Rotate BitsOut Right
-  End Repeat
-End Macro
-
-'eqBit(BitOut, BitIn)
-macro equBit(BitOut, BitIn)
-  if BitIn then
-     BitOut = 1
-  else
-     BitOut = 0
-  end if
-End macro
+'' Bitwise Functions and Macros by Chris Roper
+'
+'' BitOut != BitIn
+'Macro isNotBit(BitOut, BitIn)
+'  If BitIn then
+'     BitOut = 0
+'  Else
+'     BitOut = 1
+'  End If
+'End Macro
+'
+'' BitsOut = BitsIn << NumBits
+'Macro lslBit(BitsOut, BitsIn, NumBits)
+'  BitsOut = BitsIn
+'  Repeat NumBits
+'    STATUS.C = 0
+'    Rotate BitsOut Left
+'  End Repeat
+'End Macro
+'
+'' BitsOut = BitsIn >> NumBits
+'Macro lsrBit(BitBitsOut, BitsIn, NumBits)
+'  BitsOut = BitsIn
+'  Repeat NumBits
+'    STATUS.C = 0
+'    Rotate BitsOut Right
+'  End Repeat
+'End Macro
+'
+''eqBit(BitOut, BitIn)
+'macro equBit(BitOut, BitIn)
+'  if BitIn then
+'     BitOut = 1
+'  else
+'     BitOut = 0
+'  end if
+'End macro
 
 ' 06/10/15@08:41
 
 ' Assign a Variable, Constant or Function to a Bit
-' Complimects SET Method and Addresses Port Glitch Issues
+' Compliments SET Method and Addresses Port Glitch Issues
 macro SetWith(TargetBit, Source)
   if Source then
     TargetBit = 1
