@@ -71,10 +71,11 @@
 ' 15/01/2016  All Timers share TMRSource, TMRPres and TMRPost (Save Memory)
 ' 15/01/2016  Added (AVR)shadow variable TMRx_TMP for each timer
 ' 18/01/2016  Corrected Typo AVR inittimer4
-' 15/02/2015  Added InitTimer0 support for baseline Pics with
+' 15/02/2016  Added InitTimer0 support for baseline Pics with
 '             with non-addressable / write only option_reg - WMR
-' 18/02/2015  Added correct prescales for AVR with TCCR2A register -Wmr
-' 18/02/2015  Added/corrected TCCR2A setting in Stop/starttimer -Wmr
+' 18/02/2016  Added correct prescales for AVR with TCCR2A register -Wmr
+' 18/02/2016  Added/corrected TCCR2A setting in Stop/starttimer -Wmr
+' 22/02/2016  Corrected TCCR2A error - Wmr
 '***********************************************************
 
 'Subroutines:
@@ -335,18 +336,19 @@
     PS_2_1024 = 7
   end if
 
-  '// "ALL" AVR with TCCR2A support these prescales - WMR
+  '// "ALL" AVR with TCCR2A and no TCCR2B support these prescales - WMR
   if var(TCCR2A) then
-    PS_2_0 = 0              ' no clock source
-    PS_2_1 = 1
-    PS_2_8 = 2
-    PS_2_32 = 3
-    PS_2_64 = 4
-    PS_2_128 = 5
-    PS_2_256 = 6
-    PS_2_1024 = 7
+     If noVar(TCCR2B) then
+        PS_2_0 = 0              ' no clock source
+        PS_2_1 = 1
+        PS_2_8 = 2
+        PS_2_32 = 3
+        PS_2_64 = 4
+        PS_2_128 = 5
+        PS_2_256 = 6
+        PS_2_1024 = 7
+     End if
   end if
-
 
 #endscript
 
