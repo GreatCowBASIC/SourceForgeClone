@@ -545,7 +545,7 @@ Dim Shared ProgMemPage(MAX_PROG_PAGES) As ProgMemPageType: ProgMemPages = 0
 Dim Shared IntOscSpeed(20) As Double: IntOscSpeeds = 0
 Dim Shared FileConverter(50) As FileConverterType: FileConverters = 0
 Dim Shared AttemptedCallList As LinkedListElement Pointer
-Dim Shared OutConfig(4) As String
+Dim Shared OutConfig(16) As String
 Dim Shared PinDirections As LinkedListElement Pointer
 Dim Shared PinDirShadow(20) As String
 
@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-02-15"
+Version = "0.95 2016-02-24"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
