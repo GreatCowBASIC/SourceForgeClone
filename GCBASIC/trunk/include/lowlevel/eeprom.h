@@ -1,5 +1,5 @@
 '    EEPROM routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2013 Hugh Considine
+'    Copyright (C) 2006 - 2016 Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,20 @@
 ' 17/6/2008: Altered to make EPRead a system sub, to allow use in ReadTable
 ' 19/4/2009: Bugfixes for AVR, allow EEPE instead of EEWE
 ' 4/3/2013: Corrections for PIC16F1847 (EEDAT instead of EEDATA)
+' 23/2/2016: Use EEDATL instead of EEDATA (16F1825, possibly others)
+
+'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
+#script
+	If Var(EEDATA) Then
+		EEDATL_REF = EEDATA
+	End If
+	If Var(EEDAT) Then
+		EEDATL_REF = EEDAT
+	End If
+	If Var(EEDATL) Then
+		EEDATL_REF = EEDATL
+	End If
+#endscript
 
 sub EPWrite(In EEAddress, In EEDataValue)
 
@@ -46,11 +60,8 @@ sub EPWrite(In EEAddress, In EEDataValue)
 	#IFDEF Var(EEADRH)
 		Dim EEAddress As Word Alias EEADRH, EEADR
 	#ENDIF
-	#IFNDEF Var(EEDAT)
-		Dim EEDataValue Alias EEDATA
-	#endif
-	#ifdef Var(EEDAT)
-		Dim EEDataValue Alias EEDAT
+	#ifdef EEDATL_REF
+		Dim EEDataValue Alias EEDATL_REF
 	#endif
 
 	'Disable interrupt
@@ -130,11 +141,8 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
 	#IFDEF Var(EEADRH)
 		Dim EEAddress As Word Alias EEADRH, EEADR
 	#ENDIF
-	#IFNDEF Var(EEDAT)
-		Dim EEDataValue Alias EEDATA
-	#endif
-	#ifdef Var(EEDAT)
-		Dim EEDataValue Alias EEDAT
+	#ifdef EEDATL_REF
+		Dim EEDataValue Alias EEDATL_REF
 	#endif
 
 	'Disable interrupt
@@ -184,7 +192,9 @@ function ReadEP(EEAddress)
 	#IFDEF Var(EEADRH)
 		Dim EEAddress As Word Alias EEADRH, EEADR
 	#ENDIF
-	Dim EEDataValue Alias EEDATA
+	#ifdef EEDATL_REF
+		Dim EEDataValue Alias EEDATL_REF
+	#endif
 
 	'Disable interrupt
 	IntOff
@@ -226,8 +236,8 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
 
 #IFDEF PIC
 	Dim EEAddress As Word Alias EEADRH, EEADR
-	Dim EEDataWord As Word Alias EEDATH, EEDATA
-
+	Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+	
 	'Disable Interrupt
 	IntOff
 
@@ -261,7 +271,7 @@ end sub
 
 sub ProgramRead(In EEAddress, Out EEDataWord)
 	Dim EEAddress As Word Alias EEADRH, EEADR
-	Dim EEDataWord As Word Alias EEDATH, EEDATA
+	Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
 
 	'Disable Interrupt
 	IntOff
