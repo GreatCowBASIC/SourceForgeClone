@@ -11,54 +11,730 @@
     </td>
     <td align="right" >
       <font face="Arial"  size="2" >
-        <a href="serreceive.htm">Previous</a>&nbsp;&nbsp;<a href="hserprint.htm">Next</a>
+        <a href="serreceive.htm">Previous</a>&nbsp;&nbsp;<a href="hsergetnum.htm">Next</a>
       </font>
     </td>
   </tr></table>
-<hr><div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Introduction</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These subroutines allow GCBASIC programs to communicate more easily 
-using RS232.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These hardware-based routines are intended for use on microcontrollers 
-with built in RS232 modules - normally referred to in datasheets as 
-USART or UART modules. To use these, the RS232 data lines must be 
-connected to the pins on the microcontroller used by the serial module. If 
-the RS232 lines are connected elsewhere, or the microcontroller has no 
-RS232 module, then the software based routines must be used.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Relevant Constants</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These constants affect the operation of the hardware RS232 routines:</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><table border="1"  width="576"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+<hr><div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Introduction</b></span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Great Cow Basic support programs to communicate easily using RS232.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Great Cow Basic included microprocessor hardware-based serial routines 
+are intended for use on microcontrollers with built in serial 
+communications modules - normally referred to in datasheets as USART 
+or UART modules.&nbsp; Check the microcontroller data sheet for the defined 
+transmit and receive (TX/Rx) pins.&nbsp; Make sure your program sets the Tx 
+pin direction to Out and the Rx pin direction to In respectively.&nbsp; If the 
+RS232 lines are connected elsewhere, or the microcontroller has no 
+USART module, then the Great Cow Basic software based RS232 
+routines must be used.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Initialization of the USART module is handled automatically from your 
+program by defining the chip, speed, and the baudrate.&nbsp; The baudrate 
+generator values are calculated and set,&nbsp; usart is set to asynchronous, 
+usart is enabled , the receive and transmit&nbsp; are enabled. See the table 
+below.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Example:</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#define USART_BAUD_RATE 9600</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Great Cow Basic serial routines support 1 and 2 USARTs on Microchip 
+microprocessors and 1,2,3 and 4 USARTs on AVRs </span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The following table explains the methods that can be implemented when 
+using the Great Cow Basic serial routines.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><blockquote><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
     <tr>
-    <td valign="top"  width="183"  style="border: solid #010101 1px;" >
-    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Constant Name</b></span></font><font color="#010101" ></font></div>
+    <td valign="top"  width="137"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Command</b></span></font><font color="#010101" ></font></div>
     </td>
-    <td valign="top"  width="183"  style="border: solid #010101 1px;" >
-    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    <td valign="top"  width="146"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Parameters</b></span></font><font color="#010101" ></font></div>
     </td>
-    <td valign="top"  width="183"  style="border: solid #010101 1px;" >
-    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Default Value</b></span></font><font color="#010101" ></font></div>
+    <td valign="top"  width="538"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Example</b></span></font><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially print numbers and strings.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  height="74"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Hserprint</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  height="74"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Number_constant, 
+    or, number_variable 
+    or string [,optional 
+    usart address]</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The optional usart 
+    address is 
+    microprocessor 
+    specific buy can be 
+    1, 2, 3 or 4.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  height="74"  style="border: solid #010101 1px;" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This subroutine prints a variable value to usart 1. No additional parameter 
+    for the usart number is used.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>Hserprint ( mynum )</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To print a variable value to usart 2. Note the additional parameter for the 
+    usart address.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>Hserprint ( mynum, 2 )</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  height="12"  style="border: solid #010101 1px;" >
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially receive characters as numbers.&nbsp; </span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  height="74"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>HserGetNum</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  height="74"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Number_variable 
+    [,optional usart 
+    address]</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The optional usart 
+    address is 
+    microprocessor 
+    specific buy can be 
+    1, 2, 3 or 4.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  height="74"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This subroutine ensures that the characters received are numbers.&nbsp; When 
+    a carriage return (CR or ASCII code 13) is received this signifies the end of 
+    the character stream. Defaults to usart1.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive number characters use.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HserGetNum ( mynum&nbsp;&nbsp; )</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive number characters via usart2 use.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HserGetNum ( mynum, 2 )</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  style="border: solid #010101 1px;" >
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially receive characters as a string.&nbsp; </span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>HserGetString</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >User_string_variable [,optional usart 
+    address]</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The optional usart 
+    address is 
+    microprocessor 
+    specific buy can be 
+    1, 2, 3 or 4.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This subroutine ensures that the characters treated as a string.&nbsp; When a 
+    carriage return (CR or ASCII code 13) is received this signifies the end of 
+    the character stream. Great Cow Basic will determine the default buffering 
+    size for strings. See&nbsp;</span></font><a href="http://gcbasic.sourceforge.net/help/variables.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>here&nbsp;</u></b></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >for more help&nbsp;on string sizes. Defaults to usart1.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive a string use.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HserGetString ( mystring ) </b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To a string via usart2 use.</span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:0mm; margin-right:-2mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HserGetString ( mystring, 2 )</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  style="border: solid #010101 1px;" >
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially receive a character using a subroutine.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>HSerReceive</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >byte_variable</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This subroutine handles the incoming characters as raw ASCII values.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The subroutine receives a single byte value in the range of 0 to 255.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The subroutine can receive a byte from usart 1, 2, 3 or 4.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The public variable <b>comport</b>&nbsp; can be set before the use of this method to 
+    select the desired usart address.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >If &lsquo;#define USART_BLOCKING&rsquo; is defined then this methods will wait until it 
+    a byte is received.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >If &lsquo;#define USART_BLOCKING&rsquo; is NOT defined then the method will returns 
+    ASCII value received or the method will return the value of 255 to indicate 
+    not ASCII data was received.&nbsp; You can change the value returned by 
+    setting redefining &lsquo;#define DefaultUsartReturnValue = [0-255]&rsquo;.&nbsp; When 
+    &lsquo;#define USART_BLOCKING&rsquo; is NOT defined&nbsp; this method becomes a non-
+    blocking method which allows for the testing and handling of incoming 
+    ASCII data within the user program.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value in blocking mode use. Defaults to usart1</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#define USART_BLOCKING</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HSerReceive (user_number_variable)</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value via usart 3 using blocking mode use</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#define USART_BLOCKING</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>Comport = 3</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HSerReceive ( user_number_variable)</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value use in non-blocking mode use. Ensure 
+    #define USART_BLOCKING is NOT defined. This method fefaults to usart1</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HSerReceive (user_number_variable)</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value via usart 4 using non-blocking mode use. 
+    Ensure #define USART_BLOCKING is NOT defined. </span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>Comport = 4</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>HSerReceive ( user_number_variable, 4 )</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  style="border: solid #010101 1px;" >
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially receive a character using a function from usart1.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>HSerReceive</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >byte_variable</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This function handles the incoming characters as raw ASCII values.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function receives a single byte value in the range of 0 to 255.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function can return only a byte value from usart 1.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The blocking and non-blocking mode and the methods are the same as 
+    shown in the previous method.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value via usart 1 using blocking mode use</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#define USART_BLOCKING</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceive</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value use in non-blocking mode use. Ensure 
+    #define USART_BLOCKING is NOT defined. </span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceive</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  style="border: solid #010101 1px;" >
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially receive a character using a function specifically via usart1.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>HSerReceive1</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >none</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This function handles the incoming characters as raw ASCII values.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function receives a single byte value in the range of 0 to 255.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function can return only a byte value from usart 1.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The blocking and non-blocking mode and the methods are the same as 
+    shown in the previous method.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value via usart 1 using blocking mode use</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#define USART_BLOCKING</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceive1</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value use in non-blocking mode use. Ensure 
+    #define USART_BLOCKING is NOT defined. </span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceive1</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  style="border: solid #010101 1px;" >
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially receive a character using a function specifically via usart2</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>HSerReceive2</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >none</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This function handles the incoming characters as raw ASCII values.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function receives a single byte value in the range of 0 to 255.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function can receive only a byte value from usart 2.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The blocking and non-blocking mode and the methods are the same as 
+    shown in the previous method.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value via usart 2 using blocking mode use</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#define USART_BLOCKING</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceive2</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value use in non-blocking mode use. Ensure 
+    #define USART_BLOCKING is NOT defined. </span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceive2</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="851"  style="border: solid #010101 1px;" >
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Serially receive a character using a function from either usart ports using a parameter to select the usart.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="866"  cellpadding="6"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="137"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>HSerReceiveFrom</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="146"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Usart_address</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="538"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This function handles the incoming characters as raw ASCII values.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function return a single byte value in the range of 0 to 255.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The function can receive only a byte value from usart 1 and usart 2</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The blocking and non-blocking mode and the methods are the same as 
+    shown in the previous method.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value via usart 1 using blocking mode use</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#define USART_BLOCKING</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&hellip;.</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>Chosen_usart = 1</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceiveFrom ( Chosen_usart )</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To receive an ASCII byte value use in non-blocking mode use. Ensure 
+    #define USART_BLOCKING is NOT defined. </span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>Chosen_usart = 2</b></span></font><font color="#010101" ></font></div>
+    <div align="left"  style="margin-left:13mm; margin-right:-2mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>user_number_variable = HSerReceiveFrom ( Chosen_usart )</b></span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font color="#010101" ></font></div>
+    </td></tr></table></blockquote><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Relevant Constants</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These constants affect the operation of the Great Cow BASIC hardware 
+RS232 routines:</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><blockquote><table border="1"  width="579"  cellpadding="1"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="190"  height="9"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Constant Name</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="9"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="9"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Default Value</b></span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
-    <td valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <td valign="top"  width="190"  height="9"  style="border: solid #010101 1px;" >
     <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART_BAUD_RATE</span></font><font color="#010101" ></font></div>
     </td>
-    <td valign="top"  width="183"  style="border: solid #010101 1px;" >
+    <td valign="top"  width="187"  height="9"  style="border: solid #010101 1px;" >
     <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Baud rate (in bps) for the 
     routines to operate at.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >PIC or AVR</span></font><font color="#010101" ></font></div>
     </td>
-    <td valign="top"  width="183"  style="border: solid #010101 1px;" >
-    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >N/A</span></font><font color="#010101" ></font></div>
+    <td valign="top"  width="187"  height="9"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No defualt, must enter a 
+    baud. Any Baud can be 
+    used , not just the 
+    common ones.</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
-    <td valign="top"  width="183"  height="187"  style="border: solid #010101 1px;" >
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
     <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART_BLOCKING</span></font><font color="#010101" ></font></div>
     </td>
-    <td valign="top"  width="183"  height="187"  style="border: solid #010101 1px;" >
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >If &ldquo;#define&rdquo;d, this constant 
+    will cause the USART 
+    routines to delay until 
+    data can be sent or 
+    received.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >PIC or AVR</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART_TX_BLOCKING</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
     <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >If set, this constant will 
     cause the USART 
     routines to delay until 
-    data can be sent or 
-    received. If not set, then 
-    the data will be buffered 
-    and send by the 
-    hardware when possible.</span></font><font color="#010101" ></font></div>
+    data has been sent.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >PIC or AVR</span></font><font color="#010101" ></font></div>
     </td>
-    <td valign="top"  width="183"  height="187"  style="border: solid #010101 1px;" >
-    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Not set</span></font><font color="#010101" ></font></div>
-    </td></tr></table><div align="left" ><font color="#010101" ></font></div>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART2_BAUD_RATE</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Baud rate (in bps) for the 
+    second USART to operate 
+    at.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >PIC or AVR</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No defualt, must enter a 
+    baud. Any Baud can be 
+    used , not just the 
+    common ones</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART2_BLOCKING</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;PIC or AVR</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART2_TX_BLOCKING</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;PIC or AVR</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART3_BAUD_RATE</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Baud rate (in bps) for the 
+    second USART to operate 
+    at</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >FOR AVR ONLY.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No defualt, must enter a 
+    baud. Any Baud can be 
+    used , not just the 
+    common ones</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART3_BLOCKING</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;FOR AVR ONLY</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART3_TX_BLOCKING</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;FOR AVR ONLY</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART4_BAUD_RATE</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Baud rate (in bps) for the 
+    second USART to operate 
+    at. FOR AVR ONLY</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No defualt, must enter a 
+    baud. Any Baud can be 
+    used , not just the 
+    common ones</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART4_BLOCKING</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;FOR AVR ONLY</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USART4_TX_BLOCKING</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;FOR AVR ONLY</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SerPrintCR</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Causes a Carriage return 
+    to be sent after every 
+    HserPrint automatically.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.n</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="190"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SerPrintLF</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Causes a LineFeed to be 
+    sent after every HserPrint. 
+    Some communications 
+    require both CR and LF</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="187"  height="147"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >No parameter needed. 
+    Use &ldquo;#defining&rdquo; it 
+    implement the action.</span></font><font color="#010101" ></font></div>
+    </td></tr></table></blockquote><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Notes:&nbsp;</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >An additional delay may be required in programs to ensure the USART 
+buffer is empty before the end of the program.&nbsp; If you do not include a 
+delay,&nbsp;typically&nbsp;100 ms, you may lose a few bytes as the microcomputer 
+goes to sleep at the end of the user program.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >USARTs transmit inverted signals intended to be used with interface chips like 
+the MAX232 signal converter.&nbsp; Some of the Microchip microprocessors support 
+inversion of these Tx or Rx signals with parameter bits.&nbsp; If non-inverted signals 
+are needed then an alternative is to the Great Cow BASIC software RS232 
+routines.</span></font><font color="#010101" ></font></div>
 
 </html>

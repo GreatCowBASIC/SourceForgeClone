@@ -1,0 +1,493 @@
+<html><head>
+   <title>Color Support</title>
+   <meta name="generator"  content="HelpMaker.net" >
+   <meta name="keywords"  content="Keyad Overview," ></head>
+<body bgcolor="FFFCEA" >
+<table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
+  <tr>
+    <td align="left" >
+      <div align="left" ><font face="Arial"  color="#010101"  size="4" ><span style="font-size:14pt" >Color Support</span></font><font color="#010101" ></font></div>
+
+    </td>
+    <td align="right" >
+      <font face="Arial"  size="2" >
+        <a href="st7920greaddata.htm">Previous</a>&nbsp;&nbsp;<a href="fonts.htm">Next</a>
+      </font>
+    </td>
+  </tr></table>
+<hr><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The Great Cow Basic GLCD drivers support color.&nbsp; The following drivers 
+support color.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:-6mm; " ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >1.&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:-6mm; " ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >2.&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SDD1289</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:-6mm; " ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >3.&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >These GLCD specific commands support color drivers as a parameter 
+of color.&nbsp; If a&nbsp; GLCD specific command is not passed a color parameter 
+then the current GLCDForeground color will be used.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Device Specific Colors.</b></span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;&nbsp;&nbsp;&nbsp;Each device supports colors as shown below:</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>ILI9340</b></span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><blockquote><table border="1"  width="456"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Base Color</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Addressable Color</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Default</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Black</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_BLACK&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDBackground</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Red</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_RED&nbsp;&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Green</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_GREEN&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Blue</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_BLUE&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>White</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_WHITE&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDForeground</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Purple</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_PURPLE&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Yellow</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_YELLOW&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Cyan</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_CYAN&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Dark Gray</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_D_GRAY&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Ligh Gray</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_L_GRAY&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Silver</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_SILVER&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Maroon</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_MAROON&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Olive</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_OLIVE&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Lime</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_LIME&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Aqua</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_AQUA&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Teal</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_TEAL&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Navy</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_NAVY&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Fuchsia</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ILI9340_FUCHSIA </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr></table></blockquote><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>SSD1289</b></span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><blockquote><table border="1"  width="456"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Base Color</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Addressable Color</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Default</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Black</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_BLACK&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDBackground</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Red</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_RED&nbsp;&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Green</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_GREEN&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Blue</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_BLUE&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>White</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_WHITE&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDForeground</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Purple</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_PURPLE&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Yellow</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_YELLOW&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Cyan</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_CYAN&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Dark Gray</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_D_GRAY&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Ligh Gray</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_L_GRAY&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Silver</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_SILVER&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Maroon</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_MAROON&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Olive</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_OLIVE&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Lime</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_LIME&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Aqua</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_AQUA&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Teal</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_TEAL&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Navy</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_NAVY&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Fuchsia</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SSD1289_FUCHSIA </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr></table></blockquote><div align="left" ><font color="#010101" ></font></div><font color="#010101" ></font><br><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>ST7735</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><blockquote><table border="1"  width="456"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Base Color</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Addressable Color</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Default</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Black</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_BLACK&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDForeground</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Red</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_RED&nbsp;&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Green</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_GREEN&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Blue</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_BLUE&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>White</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_WHITE&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDBackground</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Magenta</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_MAGENTA&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Yellow</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_YELLOW&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="123"  height="21"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Cyan</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="171"  height="21"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >ST7735_CYAN&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="135"  height="21"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr></table></blockquote><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font color="#010101" ></font></div><font color="#010101" ></font><br><div align="left" ><font color="#010101" ></font></div>
+
+</html>

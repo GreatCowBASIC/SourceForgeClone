@@ -1,0 +1,73 @@
+==== Timer Overview
+
+Great Cow BASIC supports methods to set, clear, read, start and stop the microcontroller timers.
+
+Great Cow BASIC supports the following timers.
+
+----
+    Timer 0
+    Timer 1
+    Timer 2
+    Timer 3
+    Timer 4
+    Timer 5
+    Timer 6
+    Timer 7
+    Timer 8
+    Timer 10
+    Timer 12
+----
+
+Not all of these timers available on all microcontrollers. For example,
+if a microcontroller has three timers, then typically only `Timer0`,
+`Timer1` and `Timer2` will be available.
+
+Please refer to the datasheet for your microcontroller to determine the supported
+timers and if a specific timer is 8-bit or 16-bit.
+
+*Calculating a Timer Prescaler:*
+
+To initialise and change the timers you may have to change the Prescaler.
+
+A Prescaler is an electronic counting circuit used to reduce a high frequency electrical signal to a lower frequency by integer division.
+The prescaler takes the basic timer clock frequency and divides it by some value before being processed by the timer, according to how the Prescaler register(s) are configured.
+The prescaler values that may be configured might be limited to a few fixed values, see the timer specfic page in this Help file or refer to the datasheet.
+
+To use a Prescaler some simple integer maths is required, however, when calculating the Prescaler there is often be a tradeoff between resolution, where a high resolution requires a high clock frequency and range where a high clock frequency willl cause the timer to overflow more quickly.
+For example, achieving 1 us resolution and a 1 sec maximum period using a 16-bit timer may require some clever thinking when using 8-bit timers.
+Please ask for advice via the Great Cow BASIC forum, or, search for some of the many great resources on the internet to calculate a Prescaler value.
+
+*Common Langauge:*
+
+Using timers has the following terms /common langauge.  This following paragraph is intended to explain the common language.
+
+The Oscillator (OSC) is the system clock, this can be sourced from an internal or external source, OSC is same the as microcontroller Mhz.
+This is called the the Frequency of the OSCillator (FOSC) or the System Clock.
+
+On a Microchip PIC microcontroller, one machine code instruction is executed for every four system clock pulses. +
+This means that instructions are executed at a frequency of FOSC/4. +
+The Microchip PIC datasheets call this FOSC/4 or FOSC4. +
+All Microchip PIC timer prescales are based on the FOSC/4, not the FOSC or the System Clock. +
+As Prescale are based upon FOSC/4,  you must use FOSC/4 in your timer calculations to get the results you expect. +
+All Prescale and Postscale values are integer numbers.
+
+On Atmel AVR microcontroller, most machine code instructions will execute in a single clock pulse.
+
+*Timer differences between Microchip PIC and Atmel AVR microcontrollers:*
+
+Initialising a timer for a Microchip PIC microcontroller may not operate as expected when using the same code for an Atmel AVR microcontroller by simply changing the `#chip` definition.
+You *must* recalculate the Prescaler of a timer when moving timer parameters between Microchip PIC and Atmel AVR microcontrollers.
+And, of course, the same when moving timer parameters between Atmel AVR and Microchip PIC microcontrollers.
+
+*Timer Best Practices:*
+
+Initialising microcontrollers with very limited RAM using Great Cow BASIC needs carefull consideration.
+RAM may be need to be optimised by using ASM to control the timers.
+You can use Great Cow BASIC to create the timer related Great Cow BASIC ASM code then manually edit the Great Cow BASIC ASM to optmise RAM usage.
+Add your revised and optimised ASM back into your program and then remove the no longer required calls the the Great Cow BASIC methods.
+If you need advice on this subject please ask for advice via the Great Cow BASIC forum.
+
+{empty} +
+{empty} +
+{empty} +
+{empty} +

@@ -1,0 +1,244 @@
+==== InitTimer4
+
+*Syntax: (MicroChip PIC)*
+[subs="quotes"]
+----
+    InitTimer4 _prescaler_, _postscaler_
+----
+
+*Syntax: (Atmel AVR)*
+[subs="quotes"]
+----
+    InitTimer4 _source_, _prescaler_
+----
+
+
+*Command Availability:*
+
+Available on all microcontrollers with a Timer 4 module.
+
+`InitTimer4` will set up timer 4, according to the settings given.
+
+{empty} +
+{empty} +
+
+*Explanation:(MicroChip PIC)*
+
+Parameters for this timer are detailed in the table below:
+
+[cols=2, options="header,autowidth"]
+
+|===
+
+|Parameter
+|Description
+
+|`_prescaler_`
+|The value of the prescaler for this specific timer.  See the tables below for permitted values.
+
+|`_postscaler_`
+|The value of the postscaler for this specific timer.  See the tables below for permitted values.
+|===
+
+{empty} +
+{empty} +
+
+`prescaler` can be one of the following settings:
+
+[cols="^1,1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Secondary GCB Constant*
+|*Constant Equates +
+to value*
+
+|1:1
+|`PS4_1`
+|`PS4_1/1`
+|0
+
+|1:4
+|`PS4_4`
+|`PS4_1/4`
+|1
+
+|1:16
+|`PS4_16`
+|`PS4_1/16`
+|2
+
+|1:64
+|`PS4_64`
+|`PS4_1/64`
+|3
+
+|===
+
+Note that a 1:64 prescale is only avaialable on certain midrange microcontrollers.
+Please refer to the datasheet to determine if a 1:64 prescale is supported by a
+spectific microcontroller.
+
+{empty} +
+{empty} +
+
+{empty} +
+{empty} +
+
+`_postscaler_` slows the rate of the interrupt generation (or WDT reset) from a
+counter/timer by dividing it down.
+
+On Microchip PIC microcontroller one of the following constants where the Postscaler Rate Select bits are in the range of 1 to 16.
+
+[cols="^1,^1", options="header,autowidth"]
+|===
+|*Postcaler Value*
+|*Use Numeric Constant*
+
+
+|1:1 Postscaler
+|0
+
+|1:2 Postscaler
+|1
+
+|1:3 Postscaler
+|2
+
+|1:4 Postscaler
+|3
+
+|1:5 Postscaler
+|4
+
+|1:6 Postscaler
+|5
+
+|1:7 Postscaler
+|6
+
+|1:8 Postscaler
+|7
+
+|1:9 Postscaler
+|8
+
+|1:10 Postscaler
+|9
+
+|1:11 Postscaler
+|10
+
+|1:12 Postscaler
+|11
+
+|1:13 Postscaler
+|12
+
+|1:14 Postscaler
+|13
+
+|1:15 Postscaler
+|14
+
+|1:16 Postscaler
+|15
+
+|===
+
+
+{empty} +
+{empty} +
+
+*Explanation:(Atmel AVR)*
+
+`InitTimer4` will set up timer 4, according to the settings given.
+
+`source` can be one of the following settings:
+Parameters for this timer are detailed in the table below:
+
+[cols=2, options="header,autowidth"]
+
+|===
+
+|Parameter
+|Description
+
+|`_source_`
+|The clock source for this specific timer. Can be either `Osc` or `Ext` where`Osc` is an internal oscillator and `Ext` is an external oscillator.
+
+|===
+
+{empty} +
+{empty} +
+
+
+`prescaler` for Atmel AVR Timer 4 can be selected from the table below.  
+
+Prescaler Rate Select bits are in the range of 1 to 1024
+
+[cols="^1,1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Secondary GCB Constant*
+|*Constant Equates +
+to value*
+
+|1:1
+|`PS_1`
+|`PS_4_1`
+|1
+
+|1:8
+|`PS_8`
+|`PS_4_8`
+|2
+
+|1:64
+|`PS_64`
+|`PS_4_64`
+|3
+
+|1:256
+|`PS_256`
+|`PS4_256`
+|4
+
+|1:1024
+|`PS_1024`
+|`PS_4_1024`
+|5
+
+|===
+{empty} +
+{empty} +
+{empty} +
+
+
+*Example:*
+
+This code uses Timer 4 and On Interrupt to generate a 1ms pulse 20 ms.
+----
+    #chip 18F25K80, 8
+    #config OSC =INTIO2
+
+    #DEFINE PIN3 PORTA.1
+    DIR PIN3 OUT
+
+    #Define Match_Val PR4  'PR4 is the timer 2 match register
+    Match_Val = 154        'Interrupt afer 154 Timer ticks (~20ms)
+
+    On interrupt timer4Match call PulsePin3  'Interrupt on match
+    Inittimer4 PS4_16, 15 'Prescale 1:64 /Postscale 1:16 (15)
+    Starttimer 4
+
+    Do
+       'Waiting for interrupt on match val of 154
+    Loop
+
+    Sub PulsePin3
+       pulseout Pin3, 1 ms
+    End Sub    
+----
+

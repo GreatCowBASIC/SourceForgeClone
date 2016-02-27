@@ -1,0 +1,28 @@
+<html><head>
+   <title>DS18B20 Overview</title>
+   <meta name="generator"  content="HelpMaker.net" >
+   <meta name="keywords"  content="PWM Overview," ></head>
+<body bgcolor="FFFCEA" >
+<table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
+  <tr>
+    <td align="left" >
+      <div align="left" ><font face="Arial"  size="4" ><span style="font-size:14pt" >DS18B20</span></font><font color="#010101" ></font></div>
+
+    </td>
+    <td align="right" >
+      <font face="Arial"  size="2" >
+        <a href="displayvalue.htm">Previous</a>&nbsp;&nbsp;<a href="readdigitaltemp.htm">Next</a>
+      </font>
+    </td>
+  </tr></table>
+<hr><div align="left" ><font face="Arial"  color="#292526" ><span style="font-size:12pt" >The DS18B20 is a 1-Wire digital temperature sensor from Maxim IC. The 
+sensor reports degrees C with 9 to 12-bit precision from&nbsp; -55C to 125C (+/-
+0.5C). </span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#292526" ><span style="font-size:12pt" >Each sensor has a unique 64-Bit Serial number etched into it.&nbsp; This allows for 
+a number of sensors to be used on one data bus. This sensor is used in 
+many data-logging and temperature control projects.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#292526" ><span style="font-size:12pt" >Reading the temperature from a DS18B20 takes up to 750ms. </span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#292526" ><span style="font-size:12pt" >To use the DS18B20 driver the following is required to added to the 
+GCBASIC source file.</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>#include &lt;DS18B20.h&gt;</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><div align="left" ><font face="Arial" ><span style="font-size:12pt" >Note the GCBASIC commands do not work with the older DS1820 or 
+DS18S20 as they have a different internal resolution. These commands are 
+not designed to be used with parasitically powered DS18B20 sensors, the 5V 
+pin of the sensor must</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div>
+
+</html>

@@ -1,0 +1,219 @@
+==== PCD8544 Controllers
+
+See below for an example of using the PCD844 GLCD display device. This
+section contains the relevant information for this type of device.
+
+The Great Cow BASIC constants for control of the connectivity are shown
+in the table below. The only connectivity option the serial mode where
+connection between the microcontroller and the GLCD to control the data
+bus is managed the data in and data out lines.
+
+To use the PCD8544 drivers simply include the following:
+----
+    #include <glcd.h>
+    #DEFINE GLCD_TYPE GLCD_TYPE_PCD8544
+----
+
+The Great Cow BASIC constants for control display characteristics are shown in the table below.
+
+
+[cols=3, options="header,autowidth"]
+|===
+|*Constants*
+|*Controls*
+|*Options*
+
+|`GLCD_TYPE`
+|`GLCD_TYPE_PCD8544`
+|
+
+|`GLCD_DATA_PORT`
+|Not Available for this controller
+|Not applicable
+
+|`GLCD_DC`
+|Specifies the output pin that is connected to Data/Command IO pin on the
+GLCD.
+|Required
+
+|`GLCD_CS`
+|Specifies the output pin that is connected to Chip Select (CS) on the
+GLCD.
+|Required
+
+|`GLCD_Reset`
+|Specifies the output pin that is connected to Reset pin on the GLCD.
+|Required
+
+|`GLCD_D0`
+|Specifies the output pin that is connected to Data Out (GLCD in) pin on
+the GLCD.
+|Required
+
+|`GLCD_SCK`
+|Specifies the output pin that is connected to Clock (CLK) pin on the
+GLCD.
+|Required
+
+|`GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY`
+|Specifies that the display controller will operate in text mode and BMP
+draw mode only. +
+For microcontrollers with less then 1kb of RAM this will be set be
+default.
+|Optional
+
+|`PCD8544ClockDelay`
+|Specifies the clock delay, if required for slower microcontroller,
+|Optional. Set to 0 as the default value
+
+|`PCD8544WriteDelay`
+|Specifies the write delay, if required for slower microcontroller,
+|Optional. Set to 0 as the default value
+|===
+The Great Cow BASIC constants for control display characteristics are
+shown in the table below.
+[cols="1,1,^1", options="header,autowidth"]
+|===
+|*Constants*
+|*Controls*
+|*Default*
+
+|`GLCD_WIDTH`
+|The width parameter of the GLCD
+|160
+
+|`GLCD_HEIGHT`
+|The height parameter of the GLCD
+|128
+
+|`GLCDFontWidth`
+|Specifies the font width of the Great Cow BASIC font set.
+|6
+|===
+The Great Cow BASIC commands supported for this GLCD are shown in the
+table below.
+[cols=3, options="header,autowidth"]
+|===
+|*Command*
+|*Purpose*
+|*Example*
+
+|`GLCDCLS`
+|Clear screen of GLCD
+|`GLCDCLS`
+
+|`GLCDPrint`
+|Print string of characters on GLCD using GCB font set
+|`GLCDPrint( Xposition, Yposition, Stringvariable )`
+
+|`GLCDDrawChar`
+|Print character on GLCD using GCB font set
+|`GLCDDrawChar( Xposition, Yposition, CharCode )`
+
+|`GLCDDrawString`
+|Print characters on GLCD using GCB font set
+|`GLCDDrawString( Xposition, Yposition, Stringvariable )`
+
+|`Box`
+|Draw a box on the GLCD to a specific size
+|`Box ( Xposition1, Yposition1, Xposition2, Yposition2, [Optional In
+LineColour as 0 or 1] )`
+
+|`FilledBox`
+|Draw a box on the GLCD to a specific size that is filled with the
+foreground colour.
+|`FilledBox (Xposition1, Yposition1, Xposition2, Yposition2, [Optional In
+LineColour 0 or 1] )`
+
+|`Line`
+|Draw a line on the GLCD to a specific length that is filled with the
+specific attribute.
+|`Line ( Xposition1, Yposition1, Xposition2, Yposition2, [Optional In
+LineColour 0 or 1] )`
+
+|`PSet`
+|Set a pixel on the GLCD at a specific position that is set with the
+specific attribute.
+|`PSet(Xposition, Yposition, Pixel Colour 0 or 1)`
+
+|`GLCDWriteByte`
+|Set a byte value to the controller, see the datasheet for usage.
+|`GLCDWriteByte ( LCDByte)`
+
+|`GLCDReadByte`
+|Read a byte value from the controller, see the datasheet for usage.
+|`bytevariable = GLCDReadByte`
+|===
+*For a PCD8544 datasheet, please refer
+https://www.google.co.uk/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CCMQFjAA&url=https%3A%2F%2Fwww.sparkfun.com%2Fdatasheets%2FLCD%2FMonochrome%2FNokia5110.pdf&ei=bmjDVKePM83datDIgYgH&usg=AFQjCNFa7N9WMhSg849oXejlfP3FRvQqpA&sig2=ZFpG-ubTxvrBRAV4dRvhVw[here] +
+
+This example shows how to drive a PCD8544 based Graphic LCD module with
+the built in commands of Great Cow BASIC.
+
+Example:
+----
+    #chip 16lf1939,32
+    #config Osc = INT, MCLRE_ON, PLLEN_Off, CLKOUTEN_OFF
+
+        #include <glcd.h>
+
+        #DEFINE GLCD_TYPE GLCD_TYPE_PCD8544
+
+          ' Pin mappings for SPI for Nokia 3310 Device
+              #define GLCD_DO portc.5
+              #define GLCD_SCK portc.3
+              #define GLCD_DC portc.2
+              #define GLCD_CS portc.1
+              #define GLCD_RESET portc.0
+
+
+          GLCDCLS
+
+          DO forever
+             for CCount = 31 to 127
+                  GLCDPrint (0, 0, "PrintStr")
+                  GLCDDrawString (0, 9, "DrawStr")
+                  GLCDPrint ( 44 ,  21, "     ")
+                  GLCDPrint ( 44 ,  29, "     ") ' word value
+                  GLCDPrint ( 44 ,  37, "   ") ' Byte value
+
+                  outstring = hex( longNumber_U)
+                  GLCDPrint ( 44 , 21,outstring )
+                  outstring = hex( longNumber_H)
+                  GLCDPrint ( 55 , 21, outstring)
+                  outstring = hex( longNumber)
+                  GLCDPrint ( 67 , 21,  outstring )
+                  GLCDPrint ( 44 , 29, mid( str(wordNumber),1, 6))
+                  GLCDPrint ( 44 , 37, byteNumber)
+
+                  box 46,9,57,19
+                  GLCDDrawChar(48, 9, CCount )
+                  outString = str( CCount )
+                  ' draw a box to overwrite existing strings
+                  FilledBox(58,9,GLCD_WIDTH-1,17,GLCDBackground )
+                  GLCDDrawString(58, 9, outString )
+
+                   box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
+                   box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH- 1, GLCD_HEIGHT-1
+                   filledbox 2,30,6,38, wordNumber
+                   Circle( 25,30,8,1)            ;center
+                   FilledCircle( 25,30,4,longNumber xor 1) ;center
+
+                   line 0,  GLCD_HEIGHT-1 , GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1
+                   line  GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1 ,0, (GLCD_HEIGHT /2) +1
+
+
+                  longNumber = longNumber + 7
+                  wordNumber = wordNumber + 3
+                  byteNumber++
+              NEXT
+          LOOP
+
+      end
+----
+*See also*
+<<_glcdcls,GLCDCLS>>, <<_glcddrawchar,GLCDDrawChar>>,
+<<_glcdprint,GLCDPrint>>, <<_glcdreadbyte,GLCDReadByte>>, <<_glcdwritebyte,GLCDWriteByte>>,
+<<_pset,Pset>>
+
+Supported in <GLCD.H> and <glcd_PCD8544.h>

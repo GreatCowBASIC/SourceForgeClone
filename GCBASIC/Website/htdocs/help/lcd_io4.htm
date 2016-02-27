@@ -1,0 +1,162 @@
+<html><head>
+   <title>LCD_IO 4</title>
+   <meta name="generator"  content="HelpMaker.net" >
+   <meta name="keywords"  content="LCD Overview," ></head>
+<body bgcolor="FFFCEA" >
+<table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
+  <tr>
+    <td align="left" >
+      <div align="left" ><font face="Arial"  color="#010101"  size="4" ><span style="font-size:14pt" >LCD_IO 4</span></font><font color="#010101" ></font></div>
+
+    </td>
+    <td align="right" >
+      <font face="Arial"  size="2" >
+        <a href="lcd_io2_74xx174.htm">Previous</a>&nbsp;&nbsp;<a href="lcd_io8.htm">Next</a>
+      </font>
+    </td>
+  </tr></table>
+<hr><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Using connection mode 4:</b></span></font><font color="#010101" ></font><br><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To use connection mode 4 the R/W, RS, Enable control lines and the highest 
+4 data lines (DB4 through DB7) must be connected to the microprocessor.&nbsp; </span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Relevant Constants:</b></span></font><font color="#010101" ></font><br><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specific constants are used to control settings for the Liquid Crystal Display 
+routines included with GCBASIC.&nbsp; To set these constants the main program 
+should specific constants to support the connection mode using #define.</span></font><font color="#010101" ></font><br><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Constants required for connection mode 4.</span></font><font color="#010101" ></font><br><font color="#010101" ></font><br><table border="1"  width="576"  cellpadding="2"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Constant Name</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Default Value</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_IO</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Must be <b>4</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >4</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_RS</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the output pin 
+    that is connected to 
+    Register Select on the 
+    LCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  height="93"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_RW</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  height="93"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the output pin 
+    that is connected to 
+    Read/Write on the LCD. 
+    The R/W pin can be 
+    disabled*.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  height="93"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b><i>Must be set </i></b><i>(use 
+    LCD_NO_RW if R/W is 
+    disabled)</i></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_Enable</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the output pin 
+    that is connected to 
+    Enable on the LCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB4</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 4 of the 
+    LCD data bus</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB5</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 5 of the 
+    LCD data bus</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB6</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 6 of the 
+    LCD data bus</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_DB7</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Output pin used to 
+    interface with bit 7 of the 
+    LCD data bus</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b><i>Must be set</i></b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >LCD_LAT</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Drives the port with LATx 
+    support.&nbsp;&nbsp; Resolves 
+    issues with faster Mhz 
+    and the Microchip 
+    read/write/modify feature. 
+    See example below.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="top"  width="185"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Optional</span></font><font color="#010101" ></font></div>
+    </td></tr></table><br><br><font color="#010101" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >*The R/W pin can be disabled by setting the <b>LCD_NO_RW </b>constant. If this is 
+done, there is no need for the R/W line to be connected to the chip, and no 
+need for the LCD_RW constant to be set. Ensure that the R/W line on the 
+LCD is connected to ground if not used!</span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >For a code example download </span></font><a href="http://gcbasic.sourceforge.net/library/DEMO%20CODE/Demo%20code%20for%20lcd/Demo%20mode%204.gcb" target="_blank"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>Four Wire LCD Example</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" > </span></font><font color="#010101" ></font><br><font color="#010101" ></font><br><font face="Arial" ><span style="font-size:12pt" >Also see for further code examples see </span></font><a href="http://sourceforge.net/projects/gcbasic/files/Demonstration%20Files/LCD%20Solutions/" target="_blank"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>Four Wire LCD Solutions</u></span></font></a><font color="#010101" ></font><br><font color="#010101" ></font><br><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >See the separate sections of the Help file for the specifics of each 
+Connection Mode.&nbsp; </span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" >Also see </span></font><a href="lcd_i00.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>LCD_IO 0</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >, </span></font><a href="lcd_io1.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>LCD_IO 1</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >, </span></font><a href="lcd_io2.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>LCD_IO 2</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >, </span></font><a href="lcd_io4.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>LCD_IO 4</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >, </span></font><a href="lcd_io8.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>LCD_IO 8</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >, </span></font><a href="lcd_io10.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>LCD_IO 10</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" > 
+or </span></font><a href="lcd_io12.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>LCD_IO 12</u></span></font></a><font color="#010101" ></font></div>
+
+</html>

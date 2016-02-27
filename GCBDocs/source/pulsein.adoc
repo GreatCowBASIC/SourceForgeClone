@@ -1,0 +1,25 @@
+==== PulseIn
+
+*Syntax:*
+[subs="quotes"]
+----
+    PulseIn __pin__, __variable__, __time units__
+----
+
+*Command Availability:*
+
+Available on all microcontrollers.
+
+*Explanation:*
+
+The `PulseIn` command will monitor the specified pin when the pin is high, and then measure the high time. It will store the time in the variable.
+
+*Example:*
+----
+    #chip 12F629, 4
+    #config INTRC_OSC_NOCLKOUT
+
+    Dir GPIO.0 In
+
+    Pulsein GPIO.0, TimeResult, 1 sec
+----

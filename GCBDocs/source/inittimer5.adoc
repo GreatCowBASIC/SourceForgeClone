@@ -1,0 +1,124 @@
+==== InitTimer5
+
+*Syntax:*
+[subs="quotes"]
+----
+InitTimer5 _source_, _prescaler_
+----
+*Command Availability:*
+
+Available on all microcontrollers with a Timer 5 module.
+
+*Explanation:*
+
+`InitTimer5` will set up timer 5.
+
+Parameters are required as detailed in the table below:
+
+[cols=2, options="header,autowidth"]
+
+|===
+
+|Parameter
+|Description
+
+|`_source_`
+|The clock source for this specific timer. Can be either `Osc`, `Ext` or `ExtOsc` where: +
+`Osc` is an internal oscillator. +
+`Ext` is an external oscillator. +
+`ExtOsc` is an external oscillator and only available on a Microchip PIC microcontroller.
+
+|`_prescaler_`
+|The value of the prescaler for this specific timer.  See the tables below for permitted vales for Microchip PIC or the Atmel AVR microcontrollers.
+
+|===
+
+When the timer overflows an interrupt event will be generated.
+This interrupt event can be used in conjunction with `On Interrupt` to run a section of code when the interrupt event occurs.
+{empty} +
+{empty} +
+{empty} +
+{empty} +
+*Microchip PIC microcontrollers:*
+
+On Microchip PIC microcontrollers `_prescaler_` must be one of the following constants:
+
+[cols="^1,1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Secondary GCB Constant*
+|*Constant Equates +
+to value*
+
+|1:1
+|`PS5_1`
+|`PS5_1/1`
+|0
+
+|1:2
+|`PS5_2`
+|`PS5_1/2`
+|16
+
+|1:4
+|`PS5_4`
+|`PS5_1/4`
+|32
+
+|1:8
+|`PS5_8`
+|`PS5_1/8`
+|48
+
+|===
+
+These correspond to a prescaler of between 1:2 and 1:8 of the oscillator (FOSC/4)
+speed. The prescaler will apply to either the oscillator or the external
+clock input.
+{empty} +
+{empty} +
+{empty} +
+{empty} +
+*Atmel AVR microcontrollers:*
+
+On the majority of Atmel AVR microcontrollers  `_prescaler_` must be one of the following constants:
+
+The prescaler will only apply when the timer is driven from the `Osc` the internal oscillator - the prescaler has no effect when the external clock source is specified.
+
+[cols="^1,1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Secondary GCB Constant*
+|*Constant Equates +
+to value*
+
+|1:1
+|`PS_1`
+|`PS_1_1`
+|1
+
+|1:8
+|`PS_8`
+|`PS_1_8`
+|2
+
+|1:64
+|`PS_64`
+|`PS_1_64`
+|3
+
+|1:256
+|`PS_256`
+|`PS1_256`
+|4
+
+|1:1024
+|`PS_1024`
+|`PS_1_1024`
+|5
+
+|===
+
+*Supported in <TIMER.H>*
