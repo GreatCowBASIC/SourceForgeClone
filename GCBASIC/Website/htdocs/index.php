@@ -84,7 +84,34 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><span style="font-weight: bold;">28/12/2015</span><br><div style="margin-left: 40px;">
+<td><span style="font-weight: bold;">27/2/2016<br><br></span><p style="margin-left: 40px;"><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">The Great Cow Basic development team have
+published another release that further enhances the Great Cow Basic compiler
+capabilities. &nbsp;This release &nbsp;is callled v0.95.006</span><o:p></o:p></p>
+
+<ul style="margin-left: 40px;" type="disc"><li class="MsoNormal" style="">Added support for Linux
+     distribution.</li><li class="MsoNormal" style="">All new Help File(s) with
+     lots of changes and improvements. Support for HTML, Web, PDF, XML and many more.</li><li class="MsoNormal" style="">Hardware I2C has been
+     improved by removed a delay from MSSPWAIT when the event had been
+     correctly detected.<o:p></o:p></li><li class="MsoNormal" style="">Added optional Microchip
+     PIC check to device during programming.<o:p></o:p></li><li class="MsoNormal" style="">Revised default USART port
+     in the initialisation routines.<o:p></o:p></li><li class="MsoNormal" style="">Revised drivers for
+     18f13k22dat, 18f14k22dat and 18f14k22lindat chips.<o:p></o:p></li><li class="MsoNormal" style="">Corrected clock speeds
+     supported by internal oscillator on 18Fxx20 and 18Fxx23 chips.<o:p></o:p></li><li class="MsoNormal" style="">Changed compiler install
+     location detection to support Linus distribution.<o:p></o:p></li><li class="MsoNormal" style="">Updated library to provide
+     warning when not HEFM is used on non HEFM microprocessors.<o:p></o:p></li><li class="MsoNormal" style="">Updated Pickit chip
+     programming data file. See the Pickit folders for the many different .dat
+     files.<o:p></o:p></li><li class="MsoNormal" style="">Changed compiler to allow
+     for setting of individual OPTION_REG bits on 12-bit core PIC
+     (10F2xx/12F5x/16F5x chips).<o:p></o:p></li><li class="MsoNormal" style="">Makehex batchfile Further
+     enhanced to MakeHexbat to minimise testing of non archived files.<o:p></o:p></li><li class="MsoNormal" style="">Timer support improved to
+     include supports for ChipFamily12 timers .&nbsp;<o:p></o:p></li><li class="MsoNormal" style="">Timer support improved for
+     huge list of AVR chips to support timer2 that use register TCCR2A. See
+     release note for details.<o:p></o:p></li><li class="MsoNormal" style="">Fixed EEProm.h Fix to
+     EEPROM routines for PIC microcontrollers with EEDATL register instead of
+     EEDAT or EEDATA. <o:p></o:p></li><li class="MsoNormal" style="">Changed the compiler to
+     support in compiler to handle 12F/16F PIC microcontrollers with more than
+     4 configuration words.<o:p></o:p></li></ul>
+<br><br><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><span style="font-weight: bold;">28/12/2015</span><br><div style="margin-left: 40px;">
 
 
 
