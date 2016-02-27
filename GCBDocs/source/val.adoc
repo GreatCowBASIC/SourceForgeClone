@@ -1,0 +1,64 @@
+==== Val
+
+*Syntax:*
+[subs="quotes"]
+----
+    var = Val(__string__)
+----
+*Command Availability:*
+
+Available on all microcontrollers
+
+*Explanation:*
+
+The `Val` function will extract a number from a string variable, and store it in a word variable. One potential use is reading numbers that are sent in ASCII format over a serial connection.
+
+*Example:*
+----
+    'Program for an RS232 controlled dimmer
+    'Set chip model
+    #chip 16F1936
+
+    'Set up hardware serial connection
+    #define USART_BAUD_RATE 9600
+    #define USART_BLOCKING
+
+    'Set pin directions for USART and PWM
+
+    'Variable for output level
+    Dim OutputLevel As Word
+
+    'Variables for received bytes
+    Dim DataIn As String
+    DataInCount = 0
+
+    'Main Loop
+    Do
+        'Get serial byte
+        Wait Until USARTHasData
+        HSerReceive InByte
+
+        'Process latest byte
+        'Enter key?
+        If InByte = 13 Then
+            'Convert output level to numeric variable
+            OutputLevel = Val(DataIn)
+
+            'Output
+            HPWM 1, 32, OutputLevel
+
+            'Clear output buffer for next command
+            DataIn = ""
+            DataInCount = 0
+        End If
+
+        'Number?
+        If InByte >= 48 and InByte <= 57 Then
+            'Add to end of DataIn string
+            DataInCount += 1
+            DataIn(DataInCount) = InByte
+            DataIn(0) = DataInCount
+        End If
+    Loop
+----
+*See Also* <<_hex,Hex>>, <<_str,Str>>

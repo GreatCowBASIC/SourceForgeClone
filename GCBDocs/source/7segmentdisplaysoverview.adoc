@@ -1,0 +1,86 @@
+==== 7 Segment Displays Overview
+
+*Introduction*
+
+The 7 segment display routines make it easier for Great Cow BASIC programs to
+display numbers and letters on 7 segment LED displays.
+[subs="specialcharacters,quotes"]
+There are two ways that the 7 segment display routines can be set up.
+One option is to connect the wires from the display/s in a particular
+order, and then to set the DisplayPort_n_ and DispSelect_n_ constants.
+The other option is to connect the display/s in whatever way is easiest,
+and then set the `DISP_SEG_x` and `DISP_SEL_x` constants. The first option
+(setting `DisplayPort__x__` and `DispSelect__n__`) will generate slightly more
+efficient code.
+
+The default for 7 segment displays is to be connected to a common
+parallel bus with a Common Cathode, see the section
+<<_common_cathode,Common Cathode>> for an example of the Great Cow BASIC code to
+control this configuration, and, see the section
+<<_common_anode,Common Anode>> for an example of the Great Cow BASIC code to
+control this configuration.
+
+Configuration for `DISP_SEG_x` and `DISP_SEL_x` is shown in the next table.  The constants in the left hand column *must* be defined.
+[cols=3, options="header,autowidth"]
+|===
+|*Constant Name*
+|*Controls*
+|*Default Value*
+|`DISP_SEG_x`
+|Controls the output ping used to control segment x of the displays.
+There are 7 of these constants, named `DISP_SEG_A` through `DISP_SEG_G`. One
+must be set for each segment.
+|Mandated.
+|`DISP_SEG_DOT`
+|Specifies the output pin used to control the decimal point on the
+displays.
+|Mandated.
+|`DISP_SEL_x`
+|The command used to select display _n_. Used to control addressing pins
+when several displays are multiplexed. +
+Instead of setting `DISP_SEL_x`, it is possible to set `DispSelect__n__`
+and use these in conjunction with `DISP_SEG_x`.
+|Mandated if `DISP_SEL_x` is used.
+|===
+
+
+Configuration using `DisplayPort__n__` and `DispSelect__n__`  method is shown in the next table.  The constants in the left hand column *must* be defined.
+
+[cols=2, options="header,autowidth"]
+|===
+|*Constant Name*
+|*Controls*
+
+|`DisplayPort__n__`
+|Controls the output port used to control display _n_. _n_is A, B, C or
+D, corresponding to displays 1, 2, 3 and 4, respectively.
+
+|`DispSelect__n__`
+|The command used to select display _n_. Used to control addressing pins
+when several displays are multiplexed.
+
+|===
+
+To set up the routines in this way, the 7 segment display(s) must be connected as
+follows:
+[cols="^1,^1", options="header,autowidth"]
+|===
+|*Microcontroller port pin*
+|*Display Segment*
+|0
+|A
+|1
+|B
+|2
+|C
+|3
+|D
+|4
+|E
+|5
+|F
+|6
+|G
+|===
+*Also, see* <<_displaychar,DisplayChar>>,
+<<_displayvalue,DisplayValue>>

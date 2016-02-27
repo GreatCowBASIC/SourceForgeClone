@@ -1,0 +1,57 @@
+==== Common Cathode
+
+This is a Common Cathode 7 Segment display example.
+
+
+*Example:*
+----
+    'Chip model
+    #chip 16f1783,8
+
+    #define DISP_SEG_A PORTC.0
+    #define DISP_SEG_B PORTC.1
+    #define DISP_SEG_C PORTC.2
+    #define DISP_SEG_D PORTC.3
+    #define DISP_SEG_E PORTC.4
+    #define DISP_SEG_F PORTC.5
+    #define DISP_SEG_G PORTC.6
+    ' see below for a typical usage pf the SEG_DOT
+    '#define DISP_SEG_DOT PortC.7
+
+    #define Disp_Sel_1 PortA.1
+    #define Disp_Sel_2 PortA.2
+    #define Disp_Sel_3 PortA.3
+
+    dim count as word
+    dim number as word
+
+    Main:
+    For count = 0 to 999
+        number = count
+        Num2 = 0
+        Num3 = 0
+        If number >= 100 Then
+          Num3 = number / 100
+          number = SysCalcTempX
+        End if
+        If number >= 10 Then
+          Num2 = number / 10
+          number = SysCalcTempX
+        end if
+        Num1 = number
+        Repeat 10
+          DisplayValue 1, Num1
+          wait 5 ms
+          DisplayValue 2, Num2
+          wait 5 ms
+          DisplayValue 3, Num3
+          Set PortC.7 On     'A manually inserted dp (SEG_DOT), like in a voltage reading
+        wait 5 ms
+        Set PortC.7 Off
+        end Repeat
+    Next
+    Goto Main
+----
+*Also, see*
+<<_7_segment_displays_overview,7 Degment Display Overview>>,
+<<_displaychar,DisplayChar>>, <<_displayvalue,DisplayValue>>

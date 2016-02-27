@@ -1,0 +1,243 @@
+<html><head>
+   <title>SSD1306 Controllers</title>
+   <meta name="generator"  content="HelpMaker.net" >
+   <meta name="keywords"  content="Keyad Overview," ></head>
+<body bgcolor="FFFCEA" >
+<table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
+  <tr>
+    <td align="left" >
+      <div align="left" ><font face="Arial"  size="4" ><span style="font-size:14pt" >SSD1306 Controllers</span></font><font color="#010101" ></font></div>
+
+    </td>
+    <td align="right" >
+      <font face="Arial"  size="2" >
+        <a href="sdd1289controllers.htm">Previous</a>&nbsp;&nbsp;<a href="st7735controllers.htm">Next</a>
+      </font>
+    </td>
+  </tr></table>
+<hr><font face="Arial"  color="#010101" ><span style="font-size:12pt" >See below for an example of using the SSD1306 GLCD.&nbsp;&nbsp; This section 
+contains the relevant information for this type of device.</span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The Great Cow Basic constants for control of the connectivity are shown in 
+the table below.&nbsp; The only connectivity option is I2C BUS.&nbsp; I2C is the 
+connectivity between the microcomputer and the GLCD to control the data 
+bus. </span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >To use the SSD1306 drivers simply include the following.&nbsp; The I2C 
+setup/configuration commands must be included.</span></font><font color="#010101" ></font><br><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>#include &lt;glcd.h&gt;</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>; ----- Define GLCD Hardware settings</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&nbsp; #define GLCD_TYPE GLCD_TYPE_SSD1306</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&nbsp; #define GLCD_I2C_Address 0x78</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>; ----- Define Hardware settings</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&nbsp; ' Define I2C settings</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&nbsp; #define HI2C_BAUD_RATE 400</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&nbsp; #define HI2C_DATA</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>&nbsp; HI2CMode Master</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><font color="#010101" ></font><br><table border="1"  width="726"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="175"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Constants</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left"  style="margin-left:0mm; margin-right:3mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Options</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCD_TYPE </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCD_TYPE_SSD1306</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCD_I2C_Address</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >I2C address of the GLCD.&nbsp; </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td></tr></table><br><br><font color="#010101" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The Great Cow Basic constants for control display characteristics are shown 
+in the table below.</span></font><font color="#010101" ></font><br><font color="#010101" ></font><br><table border="1"  width="553"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="175"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Constants</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Default</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCD_WIDTH </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The width parameter of 
+    the GLCD</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >128</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCD_HEIGHT </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The height parameter of 
+    the GLCD</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >64</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDFontWidth </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the font width 
+    of the Great Cow Basic 
+    font set.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >6</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GLCDfntDefaultsize</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Specifies the font size of 
+    the Great Cow Basic 
+    font set.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >1. <b>Note</b>: This display 
+    does not support 
+    scalable fonts</span></font><font color="#010101" ></font></div>
+    </td></tr></table><font color="#010101" ></font><br><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The Great Cow Basic specific commands for this GLCD are shown in the 
+table below.</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><table border="1"  width="744"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="447"  height="20"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Command</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="20"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Purpose</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="447"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Cursor_Position_SSD1306( in LocX as byte, in LocY as byte )</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >'Takes raw pixel positions and 
+    translates to XY char positions as</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >X coordinate of pixel, </span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Y coordinate of pixel</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="447"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Stopscroll_SSD1306</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Stops all scrolling</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="447"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Startscrollright_SSD1306 ( start , stop [,scrollspeed] )</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Activate a right handed scroll for rows 
+    start through stop</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Hint, the display is 16 rows tall. To 
+    scroll the whole display, execute:</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >startscrollright_SSD1306(0x00, 0x0F)</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Parameters are Start row, End row, 
+    optionally Scrollspeed</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="447"  height="20"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Startscrollleft_SSD1306 ( start , stop [,scrollspeed] )</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="20"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Activate a left handed scroll for rows 
+    start through stop</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Hint, the display is 16 rows tall. To 
+    scroll the whole display, execute:</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >startscrollleft_SSD1306(0x00, 0x0F)</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Parameters are Start row, End row, 
+    optionally Scrollspeed</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="447"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Startscrolldiagright_SSD1306 ( start , stop [,scrollspeed] )</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Activate a diagright handed scroll for 
+    rows start through stop</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Hint, the display is 16 rows tall. To 
+    scroll the whole display, execute:</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >startscrolldiagright_SSD1306(0x00, 
+    0x0F)</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Parameters are Start row, End row, 
+    optionally Scrollspeed</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="447"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Startscrolldiagleft_SSD1306 ( start , stop [,scrollspeed] )</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Activate a diagleft handed scroll for 
+    rows start through stop</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Hint, the display is 16 rows tall. To 
+    scroll the whole display, execute:</span></font><font color="#010101" ></font></div>
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >startscrolldiagleft_SSD1306(0x00, 
+    0x0F)</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Parameters are Start row, End row, 
+    optionally Scrollspeed</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="447"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >SetContrast_SSD1306 ( in dim_state )</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="279"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Sets the constrast to select 1 out of 
+    256 contrast steps. Contrast increases 
+    as the value increases.</span></font><font color="#010101" ></font></div>
+    <div align="left" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Parameter is dim value</span></font><font color="#010101" ></font></div>
+    </td></tr></table><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><font face="Arial"  color="#010101" ><span style="font-size:12pt" >For a SSD1306 datasheet, please refer </span></font><a href="http://gcbasic.sourceforge.net/library/DISPLAY/SSD1306.pdf"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>here.</u></span></font></a><font color="#010101" ></font><br><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This example shows how to drive a SSD1306 based Graphic LCD module 
+with the built in commands of Great Cow Basic.&nbsp;&nbsp; </span></font><font color="#010101" ></font><br><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >; ----- Configuration</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; #chip mega328p,16</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; #include &lt;glcd.h&gt;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >; ----- Define Hardware settings</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; ' Define I2C settings</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; #define HI2C_BAUD_RATE 400</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; #define HI2C_DATA</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; HI2CMode Master</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >; ----- Define GLCD Hardware settings</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; #define GLCD_TYPE GLCD_TYPE_SSD1306</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; #define GLCD_I2C_Address 0x78</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDCLS</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDPrint 0, 0, &quot;Great Cow Basic&quot;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDPrint (0, 16, &quot;Anobium 2015&quot;)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; wait 3 s</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDCLS</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; ' Prepare the static components of the screen</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDPrint ( 0,&nbsp;&nbsp; 0, &quot;PrintStr&quot;) 
+; Print some text</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDPrint ( 64,&nbsp; 0, &quot;@&quot;) </span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >; Print some more text</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDPrint ( 72,&nbsp; 0, ChipMhz) 
+; Print chip speed</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDPrint ( 86, 0, &quot;Mhz&quot;) 
+; Print some text</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; GLCDDrawString( 0,8,&quot;DrawStr&quot;) 
+; Draw some text</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1 
+; Draw a box</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1 
+; Draw a box</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; Circle( 44,41,15) 
+; Draw a circle</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; line 64,31,0,31 
+; Draw a line</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; DO forever</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp; for CCount = 31 to 127</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDPrint ( 64 ,&nbsp; 36,&nbsp; hex(longNumber_E ) ) 
+; Print a HEX string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDPrint ( 76 ,&nbsp; 36,&nbsp; hex(longNumber_U ) ) 
+; Print a HEX string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDPrint ( 88 ,&nbsp; 36,&nbsp; hex(longNumber_H ) ) 
+; Print a HEX string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDPrint ( 100 ,&nbsp; 36, hex(longNumber&nbsp;&nbsp; ) ) 
+; Print a HEX string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDPrint ( 112 ,&nbsp; 36, &quot;h&quot; ) 
+; Print a HEX string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDPrint ( 64 ,&nbsp; 44, pad(str(wordNumber), 5 ) ) 
+; Print a padded string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDPrint ( 64 ,&nbsp; 52, pad(str(byteNumber), 3 ) ) 
+; Print a padded string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; box (46,9,56,19) 
+; Draw a Box</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDDrawChar(48, 9, CCount ) 
+; Draw a character</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; outString = str( CCount ) 
+; Prepare a string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GLCDDrawString(64, 9, pad(outString,3) ) 
+; Draw a string</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; filledbox 3,43,11,51, wordNumber 
+; Draw a filled box</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FilledCircle( 44,41,9, longNumber xor 1) 
+; Draw a filled box</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; line 0,63,64,31 
+; Draw a line</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" > 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; Do some simple maths</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; longNumber = longNumber + 7 : wordNumber = wordNumber 
++ 3 : byteNumber++</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NEXT</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; LOOP</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp; end</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>See also&nbsp; </b></span></font><a href="glcdcls.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDCLS</u></b></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>, </b></span></font><a href="glcddrawchar.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDDrawChar</u></b></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>, </b></span></font><a href="glcdprint.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDPrint</u></b></span></font></a><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Supported in &lt;GLCD.H&gt;</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ></font><font color="#010101" ></font></div>
+
+</html>

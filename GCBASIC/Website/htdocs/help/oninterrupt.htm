@@ -6,25 +6,25 @@
 <table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
   <tr>
     <td align="left" >
-      <div align="left" ><font face="Arial"  color="#010101"  size="4" ><span style="font-size:14pt" >On Interrupt</span></font><font color="#010101" ></font></div>
+      <div align="left" ><font face="Arial"  size="4" ><span style="font-size:14pt" >On Interrupt</span></font><font color="#010101" ></font></div>
 
     </td>
     <td align="right" >
       <font face="Arial"  size="2" >
-        <a href="inton.htm">Previous</a>&nbsp;&nbsp;<a href="relevantconstantskeys.htm">Next</a>
+        <a href="inton.htm">Previous</a>&nbsp;&nbsp;<a href="onintteruptthedefaulthandler.htm">Next</a>
       </font>
     </td>
   </tr></table>
-<hr><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Syntax:&nbsp;&nbsp;&nbsp;&nbsp;</b></span></font><font color="#010101" ></font></div><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;&nbsp;&nbsp;&nbsp;On Interrupt <i>event</i> Call <i>handler</i></span></font><font color="#010101" ></font></div><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;&nbsp;&nbsp;&nbsp;On Interrupt <i>event</i> Ignore</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Command Availability:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Available on PIC and AVR microcontrollers with interrupt support.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" ><b>Explanation:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >On Interrupt will add code to call the subroutine <i>handler</i> whenever the 
+<hr><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" ><b>Syntax:&nbsp;&nbsp;&nbsp;&nbsp;</b></span></font><font color="#010101" ></font></div><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;&nbsp;&nbsp;&nbsp;On Interrupt <i>event</i> Call <i>handler</i></span></font><font color="#010101" ></font></div><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >&nbsp;&nbsp;&nbsp;&nbsp;On Interrupt <i>event</i> Ignore</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Command Availability:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Available on PIC and AVR microcontrollers with interrupt support.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Explanation:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >On Interrupt will add code to call the subroutine <i>handler</i> whenever the 
 interrupt <i>event</i> occurs. When Call is specified, GCBASIC will enable 
 the interrupt, and call the interrupt handler when it occurs. When 
 Ignore is specified, GCBASIC will disable the interrupt handler and 
 prevent it from being called when the event occurs. If the event occurs 
-while the handler is disabled, then the handler will be called as soon as 
-it is re-enabled. The only way to prevent this from happening is to 
+while the handler is disabled, then the handler will be called as soon 
+as it is re-enabled. The only way to prevent this from happening is to 
 manually clear the flag bit for the interrupt.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >There are many possible interrupt events that can occur, and the 
-events vary greatly from chip to chip. GCBASIC will display an error if a 
-given chip cannot support the specified event.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >In some cases, On Interrupt will not be able to set or clear the interrupt 
+events vary greatly from chip to chip. GCBASIC will display an error if 
+a given chip cannot support the specified event.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >In some cases, On Interrupt will not be able to set or clear the interrupt 
 flag and/or enable bits. If this is the case, GCBASIC will display a 
 warning. You will need to consult the chip datasheet and use the Set 
 command to manually set/clear the flag and enable bits, both at the 
@@ -33,22 +33,15 @@ will not be called for that event. However, it will still be called for any
 events not dealt with by On Interrupt.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Events:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >GCBASIC supports the events shown on the table below. Some events 
 are only implemented on a few specialised chips. Events in </span></font><font face="Arial"  color="#808080" ><span style="font-size:12pt" >grey</span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" > are 
 supported by PICs and AVRs, events in </span></font><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" >blue</span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" > are only supported by 
-some PICs, and events in </span></font><font face="Arial"  color="#ff0000" ><span style="font-size:12pt" >red</span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" > are only supported by AVRs.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Note that GCBASIC doesn't fully support all of the hardware which can 
+some PICs, and events in </span></font><font face="Arial"  color="#ff0000" ><span style="font-size:12pt" >red</span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" > are only supported by AVRs.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Note that GCBASIC doesn't fully support all of the hardware which can 
 generate interrupts - some work may be required with various system 
-variables to control the unsupported peripherals.</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><table border="1"  width="528"  cellpadding="1"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+variables to control the supported peripheral.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><table border="1"  width="528"  cellpadding="1"  cellspacing="0"  style="border-collapse: collapse; border: none" >
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" ><b>Event Name</b></span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" ><b>Description</b></span></font><font color="#010101" ></font></div>
-    </td></tr>
-    <tr>
-    <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >ActiveClockTuning</span></font><font color="#010101" ></font></div>
-    </td>
-    <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial" ><span style="font-size:10pt" >An Active Clock Tuning module event has occurred</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -214,13 +207,6 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >ChargeTimeMeasurement</span></font><font color="#010101" ></font></div>
-    </td>
-    <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial" ><span style="font-size:10pt" >A Charge Time Measurement Unit event occurred</span></font><font color="#010101" ></font></div>
-    </td></tr>
-    <tr>
-    <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#808080" ><span style="font-size:10pt" >Comp0Change</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
@@ -239,13 +225,6 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The output of comparator 2 has changed</span></font><font color="#010101" ></font></div>
-    </td></tr>
-    <tr>
-    <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >COG</span></font><font color="#010101" ></font></div>
-    </td>
-    <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial" ><span style="font-size:10pt" >The Complementary Output Generator caused an interrupt</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -331,13 +310,6 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The pins on port GPIO have changed</span></font><font color="#010101" ></font></div>
-    </td></tr>
-    <tr>
-    <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >HardwareLimitTimer</span></font><font color="#010101" ></font></div>
-    </td>
-    <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial" ><span style="font-size:10pt" >Hardware Limit Timer event occurred</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -458,8 +430,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The counter for Power Stage Controller 0 matches the value in 
-    a compare register, the value of the counter has been captured, 
-    or a synchronisation error has occurred</span></font><font color="#010101" ></font></div>
+    a compare register, the value of the counter has been 
+    captured, or a synchronisation error has occurred</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -474,8 +446,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The counter for Power Stage Controller 1 matches the value in 
-    a compare register, the value of the counter has been captured, 
-    or a synchronisation error has occurred</span></font><font color="#010101" ></font></div>
+    a compare register, the value of the counter has been 
+    captured, or a synchronisation error has occurred</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -490,8 +462,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The counter for Power Stage Controller 2 matches the value in 
-    a compare register, the value of the counter has been captured, 
-    or a synchronisation error has occurred</span></font><font color="#010101" ></font></div>
+    a compare register, the value of the counter has been 
+    captured, or a synchronisation error has occurred</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -566,12 +538,22 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The SSP2/MSSP2 module has finished sending or receiving</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
+    <td align="center"  valign="middle"  width="146"  height="17"  style="border-left:solid #010101 0px; border-right:solid #010101 0px; border-top:solid #010101 1px; border-bottom:solid #010101 1px" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="374"  height="17"  style="border-left:solid #010101 0px; border-right:solid #010101 0px; border-top:solid #010101 1px; border-bottom:solid #010101 1px" >
+    <div align="center" ><br>
+    </div>
+    <font color="#010101" >
+    <div align="center" ></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >Timer0Capture</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP0 has caused the value of Timer 0 
-    to be captured in the ICR0 register</span></font><font color="#010101" ></font></div>
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP0 has caused the value of Timer 
+    0 to be captured in the ICR0 register</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -601,8 +583,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >Timer1Capture</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP1 has caused the value of Timer 1 
-    to be captured in the ICR1 register</span></font><font color="#010101" ></font></div>
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP1 has caused the value of Timer 
+    1 to be captured in the ICR1 register</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -679,8 +661,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >Timer3Capture</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP3 has caused the value of Timer 3 
-    to be captured in the ICR3 register</span></font><font color="#010101" ></font></div>
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP3 has caused the value of Timer 
+    3 to be captured in the ICR3 register</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -718,8 +700,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >Timer4Capture</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP4 has caused the value of Timer 4 
-    to be captured in the ICR4 register</span></font><font color="#010101" ></font></div>
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP4 has caused the value of Timer 
+    4 to be captured in the ICR4 register</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -781,8 +763,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >Timer5Capture</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP5 has caused the value of Timer 5 
-    to be captured in the ICR5 register</span></font><font color="#010101" ></font></div>
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An input event on the pin ICP5 has caused the value of Timer 
+    5 to be captured in the ICR5 register</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -816,12 +798,77 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     (OCR5C)</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
-    <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >Timer5Overflow</span></font><font color="#010101" ></font></div>
     </td>
-    <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Timer 5 has overflowed</span></font><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="528"  cellpadding="1"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td align="center"  valign="middle"  width="523"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for specific functionality. Methods are available for the 
+    following </span></font><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="528"  cellpadding="1"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer6Overflow</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
     </td></tr>
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer7Overflow</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer8Overflow</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer8Match</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer10Overflow</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer10Match</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer12Overflow</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td align="center"  valign="middle"  width="145"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#0000ff" ><span style="font-size:10pt" >Timer12Match</span></font><font color="#010101" ></font></div>
+    </td>
+    <td align="center"  valign="middle"  width="373"  height="16"  style="border: solid #010101 1px;" >
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >Please refer to datasheet for the specific register.</span></font><font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="528"  cellpadding="1"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td align="center"  valign="middle"  width="524"  height="33"  style="border-left:solid #010101 0px; border-right:solid #010101 0px; border-top:solid #010101 1px; border-bottom:solid #010101 0px" >
+    <div align="center" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr></table><table border="1"  width="528"  cellpadding="1"  cellspacing="0"  style="border-collapse: collapse; border: none" >
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >TWIConnect</span></font><font color="#010101" ></font></div>
@@ -835,8 +882,8 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     <div align="center" ><font face="Arial"  color="#ff0000" ><span style="font-size:10pt" >TWIReady</span></font><font color="#010101" ></font></div>
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
-    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The TWI has finished the previous transmission and is ready to 
-    send or receive more data</span></font><font color="#010101" ></font></div>
+    <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >The TWI has finished the previous transmission and is ready 
+    to send or receive more data</span></font><font color="#010101" ></font></div>
     </td></tr>
     <tr>
     <td align="center"  valign="middle"  width="145"  height="17"  style="border: solid #010101 1px;" >
@@ -979,8 +1026,17 @@ variables to control the unsupported peripherals.</span></font><font color="#010
     </td>
     <td align="center"  valign="middle"  width="373"  height="17"  style="border: solid #010101 1px;" >
     <div align="center" ><font face="Arial"  color="#010101" ><span style="font-size:10pt" >An interrupt has been generated by the Watchdog Timer</span></font><font color="#010101" ></font></div>
-    </td></tr></table><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Example:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >'This program increments a counter every time Timer1 overflows</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#chip 16F877A, 20</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >'LCD connection settings</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_IO 4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_DB4 PORTD.4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_DB5 PORTD.5</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_DB6 PORTD.6</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_DB7 PORTD.7</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_RS PORTD.0 </span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_RW PORTD.1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define LCD_Enable PORTD.2</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >InitTimer1 Osc, PS1_1/8</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >StartTimer 1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >CounterValue = 0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >Wait 100 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >Print &quot;Int Test&quot;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >On Interrupt Timer1Overflow Call IncCounter</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >Do</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;CLS</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;Print CounterValue</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;Wait 100 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >Loop</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >Sub IncCounter</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;CounterValue ++</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >End Sub</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" ><b>For more help, see&nbsp; </b></span></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The </span></font><a href="inittimer0.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>InitTimer0</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" > article contains an example of using 
+    </td></tr></table><div align="left" ><br><font color="#010101" ></font></div><font color="#010101" ></font><br><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>Example 1:</b></span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >'This program increments a counter every time Timer1 overflows</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#chip 16F877A, 20</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >'LCD connection settings</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_IO 4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_DB4 PORTD.4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_DB5 PORTD.5</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_DB6 PORTD.6</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_DB7 PORTD.7</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_RS PORTD.0 </span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_RW PORTD.1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >#define LCD_Enable PORTD.2</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >InitTimer1 Osc, PS1_1/8</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >StartTimer 1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >CounterValue = 0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >Wait 100 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >Print &quot;Int Test&quot;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >On Interrupt Timer1Overflow Call IncCounter</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >Do</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;CLS</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;Print CounterValue</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;Wait 100 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >Loop</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >Sub IncCounter</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;CounterValue ++</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >End Sub</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" ><b>Example 2:</b></span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" ><b>&nbsp;</b> #chip 16f690, 4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; #define LED1 PortA.0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; #define LED2 PortA.1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; dir LED1 out</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; dir LED2 out</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; dim TenthSeconds as byte</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; On Interrupt Timer1Overflow Call IncCounter</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; InitTimer1 Osc, PS1_1/2</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; StartTimer 1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; Set LED1 On</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; isNotBit ( LED2 , LED1 )</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; TenthSeconds = 0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; Do Forever</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp; If TenthSeconds = 30 Then</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isNotBit ( LED1 , LED1 ) 'Toggle the Led</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; isNotBit ( LED2 , LED1 ) 'Toggle the Led</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TenthSeconds = 0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp; End if</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp; ' Add more code here, an example follows that displas the 
+current tenth second count on a serial termminal.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp; ' Serial communications defaults to 62500 bps</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >'&nbsp;&nbsp;&nbsp; if oldValue &lt;&gt; TenthSeconds Then</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >'&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;HSerPrint TenthSeconds</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >'&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; HSerPrint &quot;:&quot;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; oldValue = TenthSeconds</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >'&nbsp;&nbsp;&nbsp; end if</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; Loop</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;End</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; Sub IncCounter</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><div align="left" ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetTimer 1, timerEventValue</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Increment the counter</span></font><font color="#010101" ></font></div><div align="left" ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TenthSeconds += 1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp; end sub</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;' Scripts are executed after the #define's have been 
+processed and before the main processing commences.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp; #script</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' Timer1 will overflow after 131.07 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' We need it to overflow after 100.00ms, so the timer1 
+must have a value loaded into it</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' Need to load TMR1H, TMR1L with value that they will 
+have after 31.07 ms - then it will count to 131.07, thus taking 
+100.00 ms</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' timerEventValue = 65535 * (31.07 / 131.07) = 15535</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' Simply use SetTimer 15535, or, caclulate the value 
+using a script</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' This script creates a constant called timerEventValue, 
+equates to #define timerEventValue &lt;value&gt;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; timerEventValue = int( 65535 * (31.07 / 131.07) )</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'warning timerEventValue</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >&nbsp; #endscript</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" >This demonstration will provide a 3 sec alternate LED flash.&nbsp; The 
+oscilloscope screen save below shows one of the LED ports.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><img src="oninterrupt1.JPG"  width="400"  height="240"  border="0"  alt="graphic" ><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>For more help, see&nbsp; </b>The </span></font><a href="inittimer0.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>InitTimer0</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" > article contains 
+an example of using 
 Timer 0 and On Interrupt to generate a Pulse Width Modulation signal to 
-control a motor.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" ><b>See also </b></span></font><a href="intoff.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>IntOff</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >, </span></font><a href="inton.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>IntOn</u></span></font></a><font color="#010101" ></font></div>
+control a motor.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" ><b>See also </b></span></font><a href="intoff.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>IntOff</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" >, </span></font><a href="inton.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>IntOn</u></span></font></a><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ></font>
 
 </html>

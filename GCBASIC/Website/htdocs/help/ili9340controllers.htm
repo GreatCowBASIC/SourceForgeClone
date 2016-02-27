@@ -1,0 +1,318 @@
+<html><head>
+   <title>ILI9340 Controllers</title>
+   <meta name="generator"  content="HelpMaker.net" >
+   <meta name="keywords"  content="Keyad Overview," ></head>
+<body bgcolor="FFFCEA" >
+<table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
+  <tr>
+    <td align="left" >
+      <div align="left" ><font face="Arial"  color="#010101"  size="4" ><span style="font-size:14pt" >ILI9340 Controllers</span></font><font color="#010101" ></font></div>
+
+    </td>
+    <td align="right" >
+      <font face="Arial"  size="2" >
+        <a href="keypaddata.htm">Previous</a>&nbsp;&nbsp;<a href="ks0108controllers.htm">Next</a>
+      </font>
+    </td>
+  </tr></table>
+<hr><font face="Arial" ><span style="font-size:12pt" >See below for an example of using the ILI9340 GLCD.&nbsp;&nbsp; This section contains 
+the relevant information for this type of device.</span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font face="Arial" ><span style="font-size:12pt" >The Great Cow Basic constants for control of the connectivity are shown in 
+the table below.&nbsp; The only connectivity option the serial mode where 
+connection between the microcomputer and the GLCD to control the data bus 
+is managed the data in and data out lines.&nbsp; </span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font face="Arial" ><span style="font-size:12pt" >To use the ILI9340 drivers simply include the following:</span></font><font color="#010101" ></font><br><font color="#010101" ></font><br><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" ><b>#include &lt;glcd.h&gt;</b></span></font><font color="#010101" ></font></div><font face="Courier New" ><span style="font-size:10pt" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #DEFINE GLCD_TYPE GLCD_TYPE_ILI9340</b></span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font color="#010101" ></font><br><table border="1"  width="726"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="175"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Constants</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Options</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_TYPE </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_TYPE_ILI9340</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  style="border: solid #010101 1px;" >
+    <div align="left" >&nbsp;<font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_DATA_PORT</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Not Available for this controller.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  height="19"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Not applicable.</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_DC</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the output pin that is 
+    connected to Data/Command IO pin on 
+    the GLCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_CS </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the output pin that is 
+    connected to Chip Select (CS)&nbsp; on the 
+    GLCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_Reset</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the output pin that is 
+    connected to Reset pin on the GLCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_DI </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the output pin that is 
+    connected to Data In (GLCD out) pin on 
+    the GLCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Optional</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  height="15"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_D0</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  height="15"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the output pin that is 
+    connected to Data Out (GLCD in) pin on 
+    the GLCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  height="15"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="175"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCD_SLK</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="287"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the output pin that is 
+    connected to Clock (CLK) pin on the 
+    GLCD.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="237"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Required</span></font><font color="#010101" ></font></div>
+    </td></tr></table><br><br><font color="#010101" ></font><font face="Arial" ><span style="font-size:12pt" >The Great Cow Basic constants for control display characteristics are shown 
+in the table below.</span></font><font color="#010101" ></font><br><font color="#010101" ></font><br><table border="1"  width="553"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="189"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Constants</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="162"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Controls</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  height="29"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Default</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="189"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >ILI9340_GLCD_WIDTH </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="162"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >The width parameter 
+    of the GLCD</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >320</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="189"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >ILI9340_GLCD_HEIGHT </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="162"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >The height parameter 
+    of the GLCD</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >240</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="189"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDFontWidth </span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="162"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the font 
+    width of the Great 
+    Cow Basic font set.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >6</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="189"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDfntDefaultsize</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="162"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Specifies the font size 
+    of the Great Cow 
+    Basic font set.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >2</span></font><font color="#010101" ></font></div>
+    </td></tr></table><font color="#010101" ></font><br><div align="left" ><font face="Arial" ><span style="font-size:12pt" >The Great Cow Basic commands supported for this GLCD are shown in the 
+table below.</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><table border="1"  width="553"  cellpadding="3"  cellspacing="0"  style="border-collapse: collapse; border: none" >
+    <tr>
+    <td valign="top"  width="171"  height="20"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Command</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  height="20"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Purpose</b></span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  height="20"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Example</b></span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDCLS</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Clear screen of GLCD</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDCLS</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  height="50"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDPrint</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  height="50"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Print string of characters 
+    on GLCD using GCB font 
+    set</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  height="50"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDPrint( Xposition, 
+    Yposition, Stringvariable 
+    )</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  height="55"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDDrawChar</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  height="55"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Print character on GLCD 
+    using GCB font set</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  height="55"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDDrawChar( 
+    Xposition, Yposition, 
+    CharCode )</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDDrawString</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Print characters on 
+    GLCD using GCB font 
+    set</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  height="18"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >GLCDDrawString( 
+    Xposition, Yposition, 
+    Stringvariable )</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Box</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Draw a box on the GLCD 
+    to a specific size</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Box ( Xposition1, 
+    Yposition1, Xposition2, 
+    Yposition2,&nbsp; [Optional In 
+    LineColour as 0 or 1] )</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >FilledBox</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Draw a box on the GLCD 
+    to a specific size that is 
+    filled with the foreground 
+    colour.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >FilledBox (Xposition1, 
+    Yposition1, Xposition2, 
+    Yposition2,&nbsp; [Optional In 
+    LineColour 0 or 1] )</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Line</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Draw a line on the GLCD 
+    to a specific length that 
+    is filled with the specific 
+    attribute.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Line ( Xposition1, 
+    Yposition1, Xposition2, 
+    Yposition2,&nbsp; [Optional In 
+    LineColour 0 or 1] )</span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >PSet</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Set a pixel on the GLCD 
+    at a specific position that 
+    is set with the specific 
+    attribute.</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >PSet(Xposition, 
+    Yposition, Pixel Colour 0 
+    or 1) </span></font><font color="#010101" ></font></div>
+    </td></tr>
+    <tr>
+    <td valign="top"  width="171"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Rotate</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="180"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Sets the rotation of the 
+    display</span></font><font color="#010101" ></font></div>
+    </td>
+    <td valign="top"  width="175"  style="border: solid #010101 1px;" >
+    <div align="left" ><font face="Arial" ><span style="font-size:12pt" >Rotate LANDSCAPE</span></font><font color="#010101" ></font></div>
+    </td></tr></table><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><font face="Arial" ><span style="font-size:12pt" >For a ILI9340 datasheet, please refer </span></font><a href="http://gcbasic.sourceforge.net/library/DISPLAY/ILI9340.pdf" target="_blank"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>here.</u></span></font></a><font color="#010101" ></font><br><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><font face="Arial" ><span style="font-size:12pt" >This example shows how to drive a ILI9340 based Graphic LCD module with 
+the built in commands of Great Cow Basic.&nbsp; </span></font><font color="#010101" ></font><br><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><font color="#010101" ></font></div><div align="left" ><font face="Arial" ><span style="font-size:12pt" >Example:</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >;Chip Settings</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#chip 16F1937,32</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#config Osc = INT, VCAPEN_OFF, MCLRE_ON, PLLEN_ON, 
+CLKOUTEN_OFF</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >#include &lt;glcd.h&gt;</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >'Defines for ILI9340 </span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define GLCD_TYPE GLCD_TYPE_ILI9340</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >'Pin mappings for ILI9340</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define GLCD_DC porta.0</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define GLCD_CS porta.1</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define GLCD_RESET porta.2</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define GLCD_DI porta.3</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define GLCD_DO porta.4</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#define GLCD_SCK porta.5</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Courier New" ><span style="font-size:10pt" >GLCDPrint(0, 0, &quot;Test of the ILI9340 Device&quot;)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >end</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ><br></font></div><font color="#010101" ><div align="left"  style="margin-left:13mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>See also&nbsp; </b></span></font><a href="initglcd.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>InitGLCD</u></b></span></font></a><font face="Arial" ><span style="font-size:12pt" ><b>, </b></span></font><a href="glcdcls.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDCLS</u></b></span></font></a><font face="Arial" ><span style="font-size:12pt" ><b>, </b></span></font><a href="glcddrawchar.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDDrawChar</u></b></span></font></a><font face="Arial" ><span style="font-size:12pt" ><b>, </b></span></font><a href="glcdprint.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDPrint</u></b></span></font></a><font face="Arial" ><span style="font-size:12pt" ><b>, </b></span></font><a href="glcdreadbyte.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDReadByte</u></b></span></font></a><font face="Arial" ><span style="font-size:12pt" ><b>, </b></span></font><a href="glcdwritebyte.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>GLCDWriteByte</u></b></span></font></a><font face="Arial" ><span style="font-size:12pt" >, </span></font><a href="pset.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><b><u>Pset</u></b></span></font></a><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" >Supported in &lt;GLCD.H&gt;</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div>
+
+</html>

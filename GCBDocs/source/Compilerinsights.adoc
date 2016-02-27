@@ -1,0 +1,20 @@
+== Compiler Insights
+
+This section will provide some insights into what the compiler does
+
+*How does the compiler cope with read only registers in the Chip Family 12 range?*
+
+Within this chip range the Option register is a write only register. Reading the register is not permitted.
+
+Great Cow BASIC needs to update this when the user wants to change the configuration - the Sleep process is an example of a user change.
+
+The compiler handles this by the creation of the Option_reg byte variable. This byte is created by the compiler to manage the required write process.
+
+The Option_reg variable is a cache that compiler will create if any bits of option_reg have been set manually.
+
+If the user changes any of the bits in a program, then the compiler will find any uses of the option instruction and insert a "movwf OPTION_REG" immediately before the option instruction to cache the value in the buffer.
+
+If Option_reg bits aren't set individually anywhere, then option_reg doesn't get created, and nothing special is done with the option instruction.
+
+Essentially the compiler maintains a special variable and manages the whole process without the user being aware.
+

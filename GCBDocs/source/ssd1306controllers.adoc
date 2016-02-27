@@ -1,0 +1,168 @@
+==== SSD1306 Controllers
+
+See below for an example of using the SSD1306 GLCD.   This section contains the relevant information for this type of device.
+
+The Great Cow BASIC constants for control of the connectivity are shown in the table below.
+The only connectivity option is I2C BUS.  I2C is the connectivity between the microcontroller and the GLCD to control the data bus.
+
+To use the SSD1306 drivers simply include the following.  The I2C setup/configuration commands must be included.
+----
+    #include <glcd.h>
+
+    ; ----- Define GLCD Hardware settings
+    #define GLCD_TYPE GLCD_TYPE_SSD1306
+    #define GLCD_I2C_Address 0x78
+
+    ; ----- Define Hardware settings
+    ' Define I2C settings
+    #define HI2C_BAUD_RATE 400
+    #define HI2C_DATA
+    HI2CMode Master
+----
+
+The Great Cow BASIC constants for control display characteristics are shown in the table below.
+
+
+[cols="2,4,4", options="header,autowidth"]
+|===
+|*Constants*
+|*Controls*
+|*Options*
+
+|`GLCD_TYPE`
+|`GLCD_TYPE_SSD1306`
+|Required
+
+|`GLCD_I2C_Address`
+|I2C address of the GLCD.
+|Required
+|===
+The Great Cow BASIC constants for control display characteristics are shown in the table below.
+[cols="1,1,^1", options="header,autowidth"]
+|===
+|*Constants*
+|*Controls*
+|*Default*
+
+|`GLCD_WIDTH`
+|The width parameter of the GLCD
+|`128`
+|`GLCD_HEIGHT`
+|The height parameter of the GLCD
+|`64`
+|`GLCDFontWidth`
+|Specifies the font width of the Great Cow BASIC font set.
+|`6`
+|===
+
+The Great Cow BASIC specific commands for this GLCD are shown in the table below.
+[cols="1,1", options="header,autowidth"]
+|===
+|Command
+|Purpose
+
+|`Cursor_Position_SSD1306( in LocX as byte, in LocY as byte )`
+|Takes raw pixel positions and translates to XY char positions as +
+X coordinate of pixel, +
+Y coordinate of pixel
+
+|`Stopscroll_SSD1306`
+|Stops all scrolling
+
+|`Startscrollright_SSD1306 ( start , stop [,scrollspeed] )`
+|Activate a right handed scroll for rows start through stop
+Hint, the display is 16 rows tall. To scroll the whole display, execute: +
+`startscrollright_SSD1306(0x00, 0x0F)` +
+Parameters are `Start row`, `End row`, optionally `Scrollspeed`
+
+|`Startscrollleft_SSD1306 ( start , stop [,scrollspeed] )`
+|Activate a left handed scroll for rows start through stop
+Hint, the display is 16 rows tall. To scroll the whole display, execute: +
+`startscrollleft_SSD1306(0x00, 0x0F)` +
+Parameters are `Start row`, `End row`, optionally `Scrollspeed`
+
+|`Startscrolldiagright_SSD1306 ( start , stop [,scrollspeed] )`
+|Activate a diagright handed scroll for rows start through stop
+Hint, the display is 16 rows tall. To scroll the whole display, execute: +
+`startscrolldiagright_SSD1306(0x00, 0x0F)` +
+Parameters are `Start row`, `End row`, optionally `Scrollspeed`
+
+|`Startscrolldiagleft_SSD1306 ( start , stop [,scrollspeed] )`
+|Activate a diagleft handed scroll for rows start through stop
+Hint, the display is 16 rows tall. To scroll the whole display, execute: +
+`startscrolldiagleft_SSD1306(0x00, 0x0F)` +
+Parameters are `Start row`,`End row`, optionally `Scrollspeed`
+
+|`SetContrast_SSD1306 ( in dim_state )`
+|Sets the constrast to select 1 out of 256 contrast steps. Contrast increases as the value increases. +
+Parameter is dim value
+|===
+For a SSD1306 datasheet, please refer http://gcbasic.sourceforge.net/library/DISPLAY/SSD1306.pdf[here].
+
+This example shows how to drive a SSD1306 based Graphic LCD module with the built in commands of Great Cow BASIC.
+----
+; ----- Configuration
+    #chip mega328p,16
+    #include <glcd.h>
+
+    ; ----- Define Hardware settings
+    ' Define I2C settings
+    #define HI2C_BAUD_RATE 400
+    #define HI2C_DATA
+    HI2CMode Master
+
+    ; ----- Define GLCD Hardware settings
+    #define GLCD_TYPE GLCD_TYPE_SSD1306
+    #define GLCD_I2C_Address 0x78
+
+    GLCDCLS
+    GLCDPrint 0, 0, "Great Cow BASIC"
+    GLCDPrint (0, 16, "Anobium 2015")
+
+    wait 3 s
+    GLCDCLS
+
+    ' Prepare the static components of the screen
+    GLCDPrint ( 0,   0, "PrintStr") ; Print some text
+    GLCDPrint ( 64,  0, "@")
+    ; Print some more text
+    GLCDPrint ( 72,  0, ChipMhz) ; Print chip speed
+    GLCDPrint ( 86, 0, "Mhz") ; Print some text
+    GLCDDrawString( 0,8,"DrawStr") ; Draw some text
+    box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1 ; Draw a box
+    box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1 ; Draw a box
+    Circle( 44,41,15) ; Draw a circle
+    line 64,31,0,31 ; Draw a line
+
+    DO forever
+       for CCount = 31 to 127
+            GLCDPrint ( 64 ,  36,  hex(longNumber_E ) ) ; Print a HEX string
+            GLCDPrint ( 76 ,  36,  hex(longNumber_U ) ) ; Print a HEX string
+            GLCDPrint ( 88 ,  36,  hex(longNumber_H ) ) ; Print a HEX string
+            GLCDPrint ( 100 ,  36, hex(longNumber   ) ) ; Print a HEX string
+            GLCDPrint ( 112 ,  36, "h" ) ; Print a HEX string
+
+            GLCDPrint ( 64 ,  44, pad(str(wordNumber), 5 ) ) ; Print a padded string
+            GLCDPrint ( 64 ,  52, pad(str(byteNumber), 3 ) ) ; Print a padded string
+
+            box (46,9,56,19) ; Draw a Box
+            GLCDDrawChar(48, 9, CCount ) ; Draw a character
+            outString = str( CCount ) ; Prepare a string
+            GLCDDrawString(64, 9, pad(outString,3) ) ; Draw a string
+
+            filledbox 3,43,11,51, wordNumber ; Draw a filled box
+
+            FilledCircle( 44,41,9, longNumber xor 1) ; Draw a filled box
+            line 0,63,64,31 ; Draw a line
+
+            ; Do some simple maths
+            longNumber = longNumber + 7 : wordNumber = wordNumber + 3 : byteNumber++
+        NEXT
+    LOOP
+    end
+----
+*For more help, see*
+<<_glcdcls,GLCDCLS>>,
+<<_glcddrawchar,GLCDDrawChar>>, <<_glcdprint,GLCDPrint>>
+
+Supported in <GLCD.H>

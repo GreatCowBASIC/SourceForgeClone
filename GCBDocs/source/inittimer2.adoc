@@ -1,0 +1,332 @@
+==== InitTimer2
+
+*Syntax: (MicroChip PIC)*
+[subs="quotes"]
+----
+    InitTimer2 _prescaler_, _postscaler_
+----
+
+*Syntax: (Atmel AVR)*
+[subs="quotes"]
+----
+    InitTimer2 _source_, _prescaler_
+----
+
+
+*Command Availability:*
+
+Available on all microcontrollers with a Timer 2 module.
+
+`InitTimer2` will set up timer 2, according to the settings given.
+
+{empty} +
+{empty} +
+
+*Explanation:(MicroChip PIC)*
+
+Parameters for this timer are detailed in the table below:
+
+[cols=2, options="header,autowidth"]
+
+|===
+
+|Parameter
+|Description
+
+|`_prescaler_`
+|The value of the prescaler for this specific timer.  See the tables below for permitted values.
+
+|`_postscaler_`
+|The value of the postscaler for this specific timer.  See the tables below for permitted values.
+|===
+
+{empty} +
+{empty} +
+
+
+`prescaler` can be one of the following settings:
+
+[cols="^1,1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Secondary GCB Constant*
+|*Constant Equates +
+to value*
+
+|1:1
+|`PS2_1`
+|`PS2_1/1`
+|0
+
+|1:4
+|`PS2_4`
+|`PS2_1/4`
+|1
+
+|1:16
+|`PS2_16`
+|`PS2_1/16`
+|2
+
+|1:64
+|`PS2_64`
+|`PS2_1/64`
+|3
+
+|===
+
+Note that a 1:64 prescale is only avaialable on certain midrange microcontrollers.
+Please refer to the datasheet to determine if a 1:64 prescale is supported by a
+spectific microcontroller.
+
+{empty} +
+{empty} +
+
+`_postscaler_` slows the rate of the interrupt generation (or WDT reset) from a
+counter/timer by dividing it down.
+
+On Microchip PIC microcontroller one of the following constants where the Postscaler Rate Select bits are in the range of 1 to 16.
+
+[cols="^1,^1", options="header,autowidth"]
+|===
+|*Postcaler Value*
+|*Use Numeric Constant*
+
+
+|1:1 Postscaler
+|0
+
+|1:2 Postscaler
+|1
+
+|1:3 Postscaler
+|2
+
+|1:4 Postscaler
+|3
+
+|1:5 Postscaler
+|4
+
+|1:6 Postscaler
+|5
+
+|1:7 Postscaler
+|6
+
+|1:8 Postscaler
+|7
+
+|1:9 Postscaler
+|8
+
+|1:10 Postscaler
+|9
+
+|1:11 Postscaler
+|10
+
+|1:12 Postscaler
+|11
+
+|1:13 Postscaler
+|12
+
+|1:14 Postscaler
+|13
+
+|1:15 Postscaler
+|14
+
+|1:16 Postscaler
+|15
+
+|===
+
+
+{empty} +
+{empty} +
+
+*Explanation:(Atmel AVR)*
+
+`InitTimer2` will set up timer 2, according to the settings given.
+
+`source` can be one of the following settings:
+Parameters for this timer are detailed in the table below:
+
+[cols=2, options="header,autowidth"]
+
+|===
+
+|Parameter
+|Description
+
+|`_source_`
+|The clock source for this specific timer. Can be either `Osc` or `Ext` where`Osc` is an internal oscillator and `Ext` is an external oscillator.
+
+|===
+
+{empty} +
+{empty} +
+
+
+`prescaler` for Atmel AVR Timer 2 is chip specific and can be selected from one of the two
+tables shown below.  Please refer to the datasheet determine which table to use and which
+prescales within that table are supported by a specific Atmel AVR microcontroller.
+
+Table1: Prescaler Rate Select bits are in the range of 1 to 1024
+
+[cols="^1,1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Secondary GCB Constant*
+|*Constant Equates +
+to value*
+
+|1:1
+|`PS_1`
+|`PS_2_1`
+|1
+
+|1:8
+|`PS_8`
+|`PS_2_8`
+|2
+
+|1:64
+|`PS_64`
+|`PS_2_64`
+|3
+
+|1:256
+|`PS_256`
+|`PS2_256`
+|4
+
+|1:1024
+|`PS_1024`
+|`PS_2_1024`
+|5
+
+|===
+{empty} +
+{empty} +
+{empty} +
+
+Table 2: Prescaler Rate Select bits are in the range of 1 to 16384
+
+[cols="^1,1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Secondary GCB Constant*
+|*Constant Equates +
+to value*
+|1:1
+|`PS_2_1`
+|`none`
+|1
+
+|1:2
+|`PS_2_2`
+|`none`
+|2
+
+|1:4
+|`PS_2_4`
+|`none`
+|3
+
+|1:8
+|`PS_2_8`
+|`none`
+|4
+
+|1:16
+|`PS_2_16`
+|`none`
+|5
+
+|1:32
+|`PS_2_32`
+|`none`
+|6
+
+|1:64
+|`PS_2_64`
+|`none`
+|7
+
+|1:128
+|`PS_2_128`
+|`none`
+|8
+
+|1:256
+|`PS_2_256`
+|`none`
+|9
+
+|1:512
+|`PS_2_512`
+|`none`
+|10
+
+|1:1024
+|`PS_2_1024`
+|`none`
+|11
+
+|1:2048
+|`PS_2_2048`
+|`none`
+|12
+
+|1:4096
+|`PS_2_4096`
+|`none`
+|13
+
+|1:8192
+|`PS_2_8192`
+|`none`
+|14
+
+|1:16384
+|`PS_2_16384`
+|`none`
+|15
+
+|===
+
+{empty} +
+{empty} +
+*Example:*
+
+This code uses Timer 2 and On Interrupt to flash an LED every 200 timer ticks.
+----
+    #chip 16F1788, 8
+    #config OSC = INTOSC
+
+    #DEFINE LED PORTA.1
+    DIR LED OUT
+
+    #Define Match_Val PR2 'PR2 is the timer 2 match register
+    Match_Val = 200       'Interrupt afer 200 timer ticks
+
+    On interrupt timer2Match call FlashLED  'Interrupt on match
+    Inittimer2 PS2_64, 15 'Prescale 1:64 /Postscale 1:16 (15)
+    Starttimer 2
+
+    Do
+      ' Wating for interrupt on match val of 100
+    Loop
+
+    'This sub will be called when Timer 2 matches "Match_Val" (PR2)
+    SUB FlashLED
+        pulseout LED, 5 ms
+    END SUB
+----
+

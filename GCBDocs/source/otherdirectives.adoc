@@ -1,0 +1,57 @@
+=== Other directives
+
+The built-in `#defines` used to support `#IFDEF` etc are as follows:
+
+[cols=3, options="header,autowidth"]
+|===
+|*Directive*
+|*Description*
+|*Returns*
+
+|`ChipMHz`
+|String
+|The microcontroller clock speed
+
+|`ChipName`
+|Number
+|The microcontroller type
+
+|`ChipNameStr`
+|String
+|The microcontroller name
+
+|`ChipRAM`
+|Number
+|The RAM size
+
+|`ChipFamily`
+|Number
+|12, 14 or 16 depending on instruction width
+
+|`Var()`
+|Function
+|True if a variable or bit is declared/not declared in the currently selected microcontroller
+
+|`NoVar()`
+|Function
+|True if a variable or bit is declared/not declared in the currently selected microcontroller
+
+|`Bit()`
+|Function
+|True if a variable or bit is declared/not declared in the currently selected microcontroller
+
+|`NoBit()`
+|Function
+|True if a variable or bit is declared/not declared in the currently selected microcontroller
+
+|`Allof`
+|`AllOf(define1, define2, …)`
+|True if all of or one of the listed defines is declared:
+
+|`OneOf`
+|`OneOf(define1, define2, …)`
+|True if all of or one of the listed defines is declared:
+
+|===
+
+

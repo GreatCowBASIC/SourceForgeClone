@@ -1,0 +1,19 @@
+=== Inputs/Outputs
+
+*About Inputs and Outputs*
+
+Most general purpose pins on a microcontroller can function in one of
+two modes: input mode, or output mode.
+
+When acting as an input, the pin will be placed in high impedance state.
+The microcontroller will then sense the pin, and the program can read
+the state of the pin and make decisions based on it.
+
+When in output mode, the microcontroller will connect the pin to either
+Vcc (the positive supply), or Vss (ground, or the negative supply). The
+program can then set the state of the pin.
+
+Great Cow BASIC will attempt to determine the direction of each pin, and set it
+appropriately. However, if the pin is read from and written to, then
+then pin must be configured to input / output mode by the program, using
+the appropriate <<_dir,Dir>> commands.

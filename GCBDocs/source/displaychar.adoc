@@ -1,0 +1,36 @@
+==== DisplayChar
+
+*Syntax:*
+[subs="quotes"]
+----
+    DisplayChar (_display, character_)
+----
+*Command Availability:*
+
+Available on all microcontrollers.
+
+*Explanation:*
+
+This command will display the given ASCII character on a seven segment
+LED display.
+`_display_` is the number of the display to use. +
+`_character_` is the ASCII character to be shown.
+
+This example below is a Common Cathode configuration.
+
+*Example:*
+----
+    'This program will show "Hello" on a LED display
+    'The display should be connected to PORTB
+
+    #chip 16F877A, 20
+    #define DisplayPortA PORTB
+
+    Dim Message As String
+    Message = "Hello "
+    For Counter = 1 to 6
+        DisplayChar DISP_SEL_1, Message(Counter)
+        Wait 250 ms
+    Next
+----
+*Also, see* <<_7_segment_displays_overview,7 Degment Display Overview>>, <<_displayvalue,DisplayValue>>

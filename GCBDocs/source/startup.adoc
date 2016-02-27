@@ -1,0 +1,15 @@
+=== #startup
+
+*Syntax:*
+[subs="quotes"]
+----
+  #startup _SubName_
+----
+*Explanation:*
+
+`#startup` is used in include files to automatically insert initialization routines. If a define or subroutine from the file is used in the program, then the specified subroutine will be called.
+
+*Note:*
+Limitations on this directive are:
+ . `startup` may only occur once within a source file.
+ . No parameters can be specified for the subroutine that is specificed.

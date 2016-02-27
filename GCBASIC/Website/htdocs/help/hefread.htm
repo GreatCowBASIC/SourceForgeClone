@@ -1,0 +1,25 @@
+<html><head>
+   <title>HEFRead</title>
+   <meta name="generator"  content="HelpMaker.net" >
+   <meta name="keywords"  content="," ></head>
+<body bgcolor="FFFCEA" >
+<table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
+  <tr>
+    <td align="left" >
+      <div align="left" ><font face="Arial"  color="#010101"  size="4" ><span style="font-size:14pt" >HEFMRead</span></font><font color="#010101" ></font></div>
+
+    </td>
+    <td align="right" >
+      <font face="Arial"  size="2" >
+        <a href="hefwrite.htm">Previous</a>&nbsp;&nbsp;<a href="do.htm">Next</a>
+      </font>
+    </td>
+  </tr></table>
+<hr><div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Syntax:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial" ><span style="font-size:12pt" >HEFRead(HEFaddress, HEFDataValue)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ></font><font face="Arial" ><span style="font-size:12pt" >HEFaddress is the HEFM <u>relative</u> location in the whole HEFM area 
+(i.e. a number generally comprised between 0 and 127)</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial" ><span style="font-size:12pt" >HEFDataValue is the byte data being retrieved </span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ><br></font></div><font color="#010101" ><div align="left" ></font><font face="Arial" ><span style="font-size:12pt" ><b>Command availability:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial" ><span style="font-size:12pt" >Available on specific Microchip MCUs only. Check your datasheet.</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Explanation:</b></span></font><font color="#010101" ></font></div><div align="justify"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >This subroutine reads information from the HEFM given its relative 
+number in the whole HEFM area. It is the equivalent of the EPRead 
+subroutine for EEPROM. </span></font><font color="#010101" ></font></div><div align="justify"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The subroutine will compute the row number and the offset in the row 
+from HEFaddress and HEFLASH_ROWSIZE. It will then call the 
+HEFreadBlock subroutine to retrieve the byte data. </span></font><font color="#010101" ></font></div><div align="justify"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><br></div><font color="#010101" ><div align="justify"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ></font><font color="#010101" ></font></div><div align="left" ><font face="Arial" ><span style="font-size:12pt" ><b>Example:</b></span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >#chip 16F1509, 8</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >; The following example stores in the byte variable &ldquo;value&rdquo; the</span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" >; HEFM byte variable located in row 1 at offset 2 </span></font><font color="#010101" ></font></div><div align="left"  style="margin-left:12mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New" ><span style="font-size:10pt" ><b>HEFRead</b>(34,value)&nbsp;&nbsp;&nbsp;&nbsp; </span></font><font color="#010101" ></font></div>
+
+</html>

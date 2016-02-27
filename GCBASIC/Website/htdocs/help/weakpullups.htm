@@ -1,0 +1,52 @@
+<html><head>
+   <title>Weak Pullups</title>
+   <meta name="generator"  content="HelpMaker.net" >
+   <meta name="keywords"  content="," ></head>
+<body bgcolor="FFFCEA" >
+<table width="100%"  border="0"  cellspacing="0"  cellpadding="2"  bgcolor="C0C0C0" >
+  <tr>
+    <td align="left" >
+      <div align="left" ><font face="Arial"  size="4" ><span style="font-size:14pt" >Weak Pullups</span></font><font color="#010101" ></font></div>
+
+    </td>
+    <td align="right" >
+      <font face="Arial"  size="2" >
+        <a href="poke.htm">Previous</a>&nbsp;&nbsp;<a href="abs.htm">Next</a>
+      </font>
+    </td>
+  </tr></table>
+<hr><font face="Arial"  color="#010101" ><span style="font-size:12pt" >'Weak pullups' provide a method to </span></font><font face="Arial" ><span style="font-size:12pt" >within many microcontrollers such as the </span></font><a href="http://atmel.com/avr"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>Atmel AVR</u></span></font></a><font face="Arial" ><span style="font-size:12pt" > and </span></font><a href="http://microchip.com/"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>Microchip PIC</u></span></font></a><font face="Arial" ><span style="font-size:12pt" > parts to support internal/selectable pull-ups for 
+convenience and reduced parts count. </span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font face="Arial" ><span style="font-size:12pt" >If you require &ldquo;weak pull-ups,&rdquo; these internal pullups can provide a simple 
+solution.&nbsp; If you need your weak pull-ups to exactly control current (rare for 
+most PIC applications), then you should consider 10k 10k resistors (5V/10K = 
+500uA)&nbsp; Why? If you review in the microprocessor data sheet, there is no 
+resistance given for the weak pull-ups. That is because they are not &ldquo;weak 
+pull-resistors&rdquo; they are &ldquo;weak pull-ups,&rdquo; consisting of what appear to be high-
+resistance channel pFETs.&nbsp; Their channel resistance will vary with 
+temperature and between parts; not easy to characterize. The data sheet 
+gives a current range for the internals as 50-400uA (at 5V). </span></font><font color="#010101" ></font><br><font color="#010101" ></font><br><div align="left" ><font face="Arial"  color="#010101" ><span style="font-size:12pt" >PORTs can have an individually controlled weak internal pull-up. When set, 
+each bit of the appropiate microchip register enables the corresponding pin 
+pull-up. There is a master bit within a specific register bit that enables pull-
+ups on all pins which also have their corresponding weak pull bit set.&nbsp;&nbsp; Also 
+when set, there is a weak pull register bit to disable all weak pull-ups. </span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The weak pull-up is automatically turned off when the port pin is configured 
+as an output. The pull-ups are disabled on a Power-on Reset.</span></font><font color="#010101" ></font></div><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Each specific microprocessor has different registers/bits for this functionality. 
+You should review the datasheet for the method for a specific 
+microprocessor.</span></font><font color="#010101" ></font></div><div align="left" ><font color="#010101" ></font></div><font face="Arial"  color="#010101" ><span style="font-size:12pt" >The following code demonstrates how to set the weak pull-ups available on 
+port B of an 18F25K20. </span></font><font color="#010101" ></font><br><br><br><font color="#010101" ></font><font color="#010101" ></font><br><p style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >'A program to show the use of weak pulled-ups on portb.<br>
+'Set chip model<br>
+#chip 18F25k20,16 'at 16 MHz<br>
+'Switch Low-Volt-Programming:<br>
+#config LVP = Off<br>
+#config MCLR = Off</span></font><font color="#010101" ></font><br><p style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" ><b>Set RBPU = 0 'enabling Port B pullups in general.<br>
+SET WPUB1 = 1 'portb.1 pulled up<br>
+Set WPUB2 = 1 'portb.2<br>
+Set WPUB3 = 1 'portb.3<br>
+Set WPUB4 = 1 'portb.4</b></span></font><font color="#010101" ></font><br><p style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >Dir Portb in<br>
+Dir Portc out</span></font><font color="#010101" ></font><br><p style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >do</span></font><font color="#010101" ></font><br><p style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >&nbsp;&nbsp;&nbsp;&nbsp;portc.1 = portb.1 'in pin 22, out pin 12<br>
+&nbsp;&nbsp;&nbsp;&nbsp;portc.2 = portb.2 'in pin 23, out pin 13<br>
+&nbsp;&nbsp;&nbsp;&nbsp;portc.3 = portb.3 'in pin 24, out pin 14<br>
+&nbsp;&nbsp;&nbsp;&nbsp;portc.4 = portb.4 'in pin 25, out pin 15</span></font><font color="#010101" ></font><br><p style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >loop 'jump back to the start of the program</span></font><font color="#010101" ></font><br><p style="margin-left:25mm; margin-right:0mm; text-indent:0mm; " ><font face="Courier New"  color="#010101" ><span style="font-size:10pt" >'main line ends here<br>
+end</span></font><font color="#010101" ></font><br><div align="left" ><br></div><font color="#010101" ><div align="left" ></font><font face="Arial"  color="#010101" ><span style="font-size:12pt" >Also, see </span></font><a href="i2cslavehardware.htm"><font face="Arial"  color="#0000ff" ><span style="font-size:12pt" ><u>I2C Slave Hardware</u></span></font></a><font face="Arial"  color="#010101" ><span style="font-size:12pt" > for an example using 
+a 16F microcomputer.</span></font><font color="#010101" ></font></div>
+
+</html>
