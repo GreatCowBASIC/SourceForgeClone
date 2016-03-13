@@ -2769,7 +2769,9 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 
 	'CompileDim (CompSub)
 
+	'Split any lines at : (these may be inserted through constants)
 	SplitLines (CompSub)
+	'Compile calls to other subroutines, insert macros
 	CompileSubCalls (CompSub)
 
 	'Compile DIMs again, in case any come through from macros
@@ -6581,7 +6583,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
 	Dim As Integer CD, C, F, L, S, AF, StringConstCount, RP, ParamIsFn, LocOfFn, ST
 	Dim As String Temp, SendOrigin, ReceiveOrigin, SourceArray, DestArray
-	Dim As String ArrayHandler, SourceArrayHandler, TempData, GenName
+	Dim As String ArrayHandler, SourceArrayHandler, TempData, NextLine, GenName
 	Dim As String CallCmd, MacroLineOrigin, SourceFunction
 	Dim As LinkedListElement Pointer BeforeCode, AfterCode, BeforePos, AfterPos
 	Dim As VariableType Pointer SourcePtr, SourceArrayPtr
@@ -6629,10 +6631,22 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						Replace (TempData, .Called->Name, Chr(31) + Str((*InCall).CalledID) + Chr(31))
 					Loop
 				End If
-				'Insert line
+				'Insert line (or lines, divided by :)
 				If TempData <> "" Then
+					
+					Do While InStr(TempData, ":") <> 0
+						NextLine = Trim(Mid(TempData, InStr(TempData, ":") + 1))
+						'If line is label, : should be last character
+						If NextLine <> "" Then
+							CurrPos = LinkedListInsert(CurrPos, Trim(Left(TempData, InStr(TempData, ":") - 1)) + MacroLineOrigin)
+							TempData = NextLine
+						End If
+					Loop
+					
 					'Append insertion origin
-					CurrPos = LinkedListInsert(CurrPos, TempData + MacroLineOrigin)
+					If TempData <> "" Then
+						CurrPos = LinkedListInsert(CurrPos, TempData + MacroLineOrigin)
+					End If
 				End If
 				MacroLine = MacroLine->Next
 			Loop
@@ -14637,6 +14651,7 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
 
 
 
