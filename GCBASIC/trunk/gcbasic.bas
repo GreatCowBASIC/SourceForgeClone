@@ -482,7 +482,7 @@ DIM SHARED As Integer APC, DFC, FVLC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, 
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
-Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave
+Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, SVC, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
@@ -581,7 +581,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-02-24"
+Version = "0.95 2016-03-13"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -12466,16 +12466,11 @@ SUB ReadChipData
 			TempData = Trim(Mid(InLine, INSTR(InLine, "=") + 1))
 
 			Select Case Trim(Left(InLine, INSTR(InLine, "=") - 1))
-				Case "configwords": ConfWords = VAL(TempData)
-				Case "ram": ChipRam = VAL(TempData)
-				Case "family": ChipFamily = VAL(TempData)
-				Case "pins": ChipPins = Val(TempData)
-				Case "psp": PSP = VAL(TempData)
-				Case "maxaddress": MemSize = VAL(TempData)
 				Case "prog": ChipProg = VAL(TempData)
-				Case "hardwaremult":
-					HMult = 0: If TempData = "y" Then HMult = -1
 				Case "eeprom": ChipEEPROM = Val(TempData)
+				Case "ram": ChipRam = VAL(TempData)
+				Case "i/o": ChipIO = Val(TempData)
+				Case "adc": ChipADC = Val(TempData)
 				Case "maxmhz": ChipMaxSpeed = Val(TempData)
 				Case "intosc"
 					'ChipIntOsc = Val(TempData)
@@ -12491,6 +12486,17 @@ SUB ReadChipData
 							IntOscSpeed(IntOscSpeeds) = Val(TempData)
 						End If
 					End If
+				Case "pins": ChipPins = Val(TempData)
+				Case "family": ChipFamily = Val(TempData)
+				Case "configwords": ConfWords = VAL(TempData)
+				Case "psp": PSP = VAL(TempData)
+				Case "maxaddress": MemSize = VAL(TempData)
+				
+				Case "hardwaremult":
+					HMult = 0: If TempData = "y" Then HMult = -1
+				
+				
+				
 			End Select
 
 		'Interrupts
