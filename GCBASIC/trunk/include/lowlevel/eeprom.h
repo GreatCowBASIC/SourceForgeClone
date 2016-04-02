@@ -36,6 +36,7 @@
 ' 19/4/2009: Bugfixes for AVR, allow EEPE instead of EEWE
 ' 4/3/2013: Corrections for PIC16F1847 (EEDAT instead of EEDATA)
 ' 23/2/2016: Use EEDATL instead of EEDATA (16F1825, possibly others)
+' 16/3/16: Added supported for NVMADRH:NVMADRL
 
 'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 #script
@@ -45,14 +46,23 @@
 	If Var(EEDAT) Then
 		EEDATL_REF = EEDAT
 	End If
-	If Var(EEDATL) Then
+
+  If Var(EEDATL) Then
 		EEDATL_REF = EEDATL
 	End If
+
+  If var(NVMADRH) Then
+  	EPWrite = NVMADR_EPWrite
+    EPRead  = NVMADR_EPRead
+  End If
+
+
 #endscript
 
 sub EPWrite(In EEAddress, In EEDataValue)
 
 #IFDEF PIC
+
 	'Variable alias
 	#IFNDEF Var(EEADRH)
 		Dim EEAddress Alias EEADR
@@ -64,8 +74,11 @@ sub EPWrite(In EEAddress, In EEDataValue)
 		Dim EEDataValue Alias EEDATL_REF
 	#endif
 
-	'Disable interrupt
-	IntOff
+		dim IntState as bit
+    IntState = GIE
+  'Disable interrupt
+	 GIE = 0
+	'IntOff
 
 	'Select data memory
 	#IFDEF Bit(EEPGD)
@@ -87,7 +100,8 @@ sub EPWrite(In EEAddress, In EEDataValue)
 	SET EECON1.WREN OFF
 
 	'Restore interrupt
-	IntOn
+'	IntOn
+	GIE = IntState
 
 #ENDIF
 
@@ -134,6 +148,7 @@ end sub
 sub SysEPRead(In EEAddress, Out EEDataValue)
 
 #IFDEF PIC
+
 	'Variable alias
 	#IFNDEF Var(EEADRH)
 		Dim EEAddress Alias EEADR
@@ -237,7 +252,7 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
 #IFDEF PIC
 	Dim EEAddress As Word Alias EEADRH, EEADR
 	Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
-	
+
 	'Disable Interrupt
 	IntOff
 
@@ -320,3 +335,58 @@ sub ProgramErase(In EEAddress)
 	'Enable interrupt
 	IntOn
 end sub
+
+'  Section: Data EEPROM Module APIs
+
+Sub NVMADR_EPWrite( SysEEAddress  , in EEData)
+
+    dim IntState as bit
+    IntState = GIE
+    'Disable interrupt
+
+    Dim SysEEPromAddress As Word
+    SysEEPromAddress = SysEEAddress + 0x7000
+		NVMADRH =SysEEPromAddress_h
+    NVMADRL =SysEEPromAddress
+
+    NVMDATL = EEData
+    NVMREGS = 1
+    FREE = 0
+    WREN = 1
+
+    GIE = 0
+
+    NVMCON2 = 0x55
+    NVMCON2 = 0xAA
+    WR = 1
+    ' Wait for write to complete
+    NOP			' NOPs may be required for latency at high frequencies
+    NOP
+    NOP
+    NOP
+    NOP
+    wait while WR = 1
+    WREN = 0
+    'Restore interrupt
+    '	IntOn
+    GIE = IntState
+
+end sub
+
+Sub NVMADR_EPRead( SysEEAddress  , out EEDataValue )
+
+		Dim SysEEPromAddress As Word
+    SysEEPromAddress = SysEEAddress + 0x7000
+		NVMADRH =SysEEPromAddress_h
+    NVMADRL =SysEEPromAddress
+
+    NVMREGS = 1
+    RD = 1
+    NOP			' NOPs may be required for latency at high frequencies
+    NOP
+		NOP			' NOPs may be required for latency at high frequencies
+    NOP
+    EEDataValue = NVMDATL
+
+End Sub
+

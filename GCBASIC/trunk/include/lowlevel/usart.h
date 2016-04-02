@@ -47,7 +47,7 @@
 '	07/01/2016:	Added AVR 4 channel USARTs
 ' 24/01/2016: Added default value to comport
 ' 26/01/2016: Corrected USART2 operations
-
+' 08/03/2016: Correct for 16f18855 SYNC_TX1STA to SYNC mapping
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -108,6 +108,12 @@ End Sub
 'Also sets constants to check if byte received
 #script
 	If PIC Then
+
+  	'Added to resolve new chip bit mapping
+    If bit(SYNC_TX1STA) then
+				SYNC = SYNC_TX1STA
+    end if
+
 		If Bit(RC1IF) Then
 			USARTHasData = "RC1IF = On"
 		End If
