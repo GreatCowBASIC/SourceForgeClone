@@ -1,5 +1,5 @@
 '    Analog to Digital conversion routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2013, 2015 Hugh Considine, Kent Schafer, William Roth, Evan Venn
+'    Copyright (C) 2006 - 2013, 2016 Hugh Considine, Kent Schafer, William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -38,6 +38,23 @@
 '-------------------------------------------------
 '27/12/2015 - William Roth
 '	Revised ReadAD and ReadAD10 for greater compatibility.  Revised at RC37
+'6/3/2016 - Evan Venn
+' Revised ReadAD, ReadAD10 and ReadAD12 for ADPCH
+'	Corrected typo in LLREADAD
+
+'7/3/2016 - William Roth
+'Added IFDEF's to prevent unnecessary select case code from compiling when
+
+'AD Channel is not used. New Define "USE_ADx" where x is AD Channel
+'Set to USE_AD0 FALSE to optimise the code.
+' This can be changed if desired.
+
+' Example:  #define USE_AD9
+' This will save about 200 bytes
+'8/3/2016 revised to USE_ADx support by default.
+
+'14/3/2016 - Added spport for 16F168xx Chips
+'See new section starting at line 637 for details
 
 'Commands:
 'var = ReadAD(port, optional port)	Reads port(s), and returns value.
@@ -105,6 +122,49 @@
 #define AN25 25
 #define AN26 26
 #define AN27 27
+#define AN28 28
+#define AN29 39
+#define AN30 30
+#define AN31 31
+#define AN32 32
+#define AN33 33
+#define AN34 34
+
+#define ANA0 AN0
+#define ANA1 AN1
+#define ANA2 AN2
+#define ANA3 AN3
+#define ANA4 AN4
+#define ANA5 AN5
+#define ANA6 AN6
+#define ANA7 AN7
+#define ANB0 AN8
+#define ANB1 AN9
+#define ANB2 AN10
+#define ANB3 AN11
+#define ANB4 AN12
+#define ANB5 AN13
+#define ANB6 AN14
+#define ANB7 AN15
+#define ANC0 AN16
+#define ANC1 AN17
+#define ANC2 AN18
+#define ANC3 AN19
+#define ANC4 AN20
+#define ANC5 AN21
+#define ANC6 AN22
+#define ANC7 AN23
+#define AND0 AN24
+#define AND1 AN25
+#define AND2 AN26
+#define AND3 AN27
+#define AND4 AN28
+#define AND5 AN29
+#define AND6 AN30
+#define AND7 AN31
+#define ANE0 AN32
+#define ANE1 AN33
+#define ANE2 AN34
 
 'AVR style
 #define ADC0 0
@@ -122,285 +182,620 @@
 #define ADC12 12
 #define ADC13 13
 
+#define USE_AD0 TRUE
+#define USE_AD1 TRUE
+#define USE_AD2 TRUE
+#define USE_AD2 TRUE
+#define USE_AD3 TRUE
+#define USE_AD4 TRUE
+#define USE_AD5 TRUE
+#define USE_AD6 TRUE
+#define USE_AD7 TRUE
+#define USE_AD8 TRUE
+#define USE_AD9 TRUE
+#define USE_AD10 TRUE
+#define USE_AD11 TRUE
+#define USE_AD12 TRUE
+#define USE_AD13 TRUE
+#define USE_AD14 TRUE
+#define USE_AD15 TRUE
+#define USE_AD16 TRUE
+#define USE_AD17 TRUE
+#define USE_AD18 TRUE
+#define USE_AD19 TRUE
+#define USE_AD20 TRUE
+#define USE_AD21 TRUE
+#define USE_AD22 TRUE
+#define USE_AD23 TRUE
+#define USE_AD24 TRUE
+#define USE_AD25 TRUE
+#define USE_AD26 TRUE
+#define USE_AD27 TRUE
+#define USE_AD28 TRUE
+#define USE_AD29 TRUE
+#define USE_AD30 TRUE
+#define USE_AD31 TRUE
+#define USE_AD32 TRUE
+#define USE_AD33 TRUE
+#define USE_AD34 TRUE
+
+'16f1688x
+#define USE_ADA0 TRUE
+#define USE_ADA1 TRUE
+#define USE_ADA2 TRUE
+#define USE_ADA3 TRUE
+#define USE_ADA4 TRUE
+#define USE_ADA5 TRUE
+#define USE_ADA6 TRUE
+#define USE_ADA7 TRUE
+#define USE_ADB0 TRUE
+#define USE_ADB1 TRUE
+#define USE_ADB2 TRUE
+#define USE_ADB3 TRUE
+#define USE_ADB4 TRUE
+#define USE_ADB5 TRUE
+#define USE_ADB6 TRUE
+#define USE_ADB7 TRUE
+#define USE_ADC0 TRUE
+#define USE_ADC1 TRUE
+#define USE_ADC2 TRUE
+#define USE_ADC3 TRUE
+#define USE_ADC4 TRUE
+#define USE_ADC5 TRUE
+#define USE_ADC6 TRUE
+#define USE_ADC7 TRUE
+#define USE_ADD0 TRUE
+#define USE_ADD1 TRUE
+#define USE_ADD2 TRUE
+#define USE_ADD3 TRUE
+#define USE_ADD4 TRUE
+#define USE_ADD5 TRUE
+#define USE_ADD6 TRUE
+#define USE_ADD7 TRUE
+#define USE_ADE0 TRUE
+#define USE_ADE1 TRUE
+#define USE_ADE2 TRUE
+
+
+
 macro LLReadAD (ADLeftAdjust)
 
 	#IFDEF PIC
+      'Set up A/D
+      'Make necessary ports analog
+      'Code for PICs with older A/D (No ANSEL register)
+    #IFDEF NoVar(ADCON3)  ' is not 16F188xx
 
-		'Set up A/D
-		'Make necessary ports analog
-		'Code for PICs with older A/D (No ANSEL register)
-		#IFDEF NoVar(ANSEL)
-			#IFDEF NoVar(ANSEL0)
-				#IFDEF NoVar(ANSELA)
-					#IFDEF NoVar(ANSELB)
+      #IFDEF NoVar(ANSEL)
+        #IFDEF NoVar(ANSEL0)
+          #IFDEF NoVar(ANSELA)
+            #IFDEF NoVar(ANSELB)
 
-						#IFDEF NoBit(PCFG4)
-							#IFDEF NoVar(ADCON2)
-								#IFDEF NoBit(ANS0)
-									'Example: 16F877A
-									#IFDEF Bit(PCFG3)
-										SET PCFG3 OFF
-									#ENDIF
-									SET PCFG2 OFF
-									SET PCFG1 OFF
-									SET PCFG0 OFF
-								#ENDIF
-								'Example: 10F220
-								#IFDEF Bit(ANS0)
-									SET ANS0 OFF
-									SET ANS1 OFF
-								#ENDIF
-							#ENDIF
+              #IFDEF NoBit(PCFG4)
+                #IFDEF NoVar(ADCON2)
+                  #IFDEF NoBit(ANS0)
+                    'Example: 16F877A
+                    #IFDEF Bit(PCFG3)
+                      SET PCFG3 OFF
+                    #ENDIF
+                    SET PCFG2 OFF
+                    SET PCFG1 OFF
+                    SET PCFG0 OFF
+                  #ENDIF
+                  'Example: 10F220
+                  #IFDEF Bit(ANS0)
+                    SET ANS0 OFF
+                    SET ANS1 OFF
+                  #ENDIF
+                #ENDIF
 
-							#IFDEF Var(ADCON2)
-								'Example: 18F4620
-								#IFDEF BIT(PCFG3)
-									SET PCFG3 OFF
-									SET PCFG2 OFF
-									SET PCFG1 OFF
-									SET PCFG0 OFF
-								#ENDIF
-							#ENDIF
-						#ENDIF
+                #IFDEF Var(ADCON2)
+                  'Example: 18F4620
+                  #IFDEF BIT(PCFG3)
+                    SET PCFG3 OFF
+                    SET PCFG2 OFF
+                    SET PCFG1 OFF
+                    SET PCFG0 OFF
+                  #ENDIF
+                #ENDIF
+              #ENDIF
 
-						'PICs with PCFG4 and higher use ADCON1 as an ANSEL type register
-						'Example: 18F1320
-						#IFDEF Bit(PCFG4)
-							'Some 18F8xxxx chips have error in chip definition
-							'They claim to have PCFG4, but actually don't, can spot them by presence of ADCON2
-							Dim AllANSEL As Byte Alias ADCON1
-							AllANSEL = 0
-							ADTemp = ADReadPort + 1
-							Set C On
-							Do
-								Rotate AllANSEL Left
-								decfsz ADTemp,F
-							Loop
-						#ENDIF
+              'PICs with PCFG4 and higher use ADCON1 as an ANSEL type register
+              'Example: 18F1320
+              #IFDEF Bit(PCFG4)
+                'Some 18F8xxxx chips have error in chip definition
+                'They claim to have PCFG4, but actually don't, can spot them by presence of ADCON2
+                Dim AllANSEL As Byte Alias ADCON1
+                AllANSEL = 0
+                ADTemp = ADReadPort + 1
+                Set C On
+                Do
+                  Rotate AllANSEL Left
+                  decfsz ADTemp,F
+                Loop
+              #ENDIF
 
-					'ANSELB/A
-					#ENDIF
-				#ENDIF
+            'ANSELB/A
+            #ENDIF
+          #ENDIF
 
-				'Code for 16F193x chips (and others?) with ANSELA/ANSELB/ANSELE registers
-				#IFDEF Var(ANSELA)
-					Select Case ADReadPort
-						#IF ChipPins = 18
-							Case 0: Set ANSELA.0 On
-							Case 1: Set ANSELA.1 On
-							Case 2: Set ANSELA.2 On
-							Case 3: Set ANSELA.3 On
-							Case 4: Set ANSELA.4 On
+          'Code for 16F193x chips (and others?) with ANSELA/ANSELB/ANSELE registers
+          #IFDEF Var(ANSELA)
+            Select Case ADReadPort
 
-							Case 11: Set ANSELB.1 On
-							Case 10: Set ANSELB.2 On
-							Case 9: Set ANSELB.3 On
-							Case 8: Set ANSELB.4 On
-							Case 7: Set ANSELB.5 On
-							Case 5: Set ANSELB.6 On
-							Case 6: Set ANSELB.7 On
-						#ENDIF
+              #IF ChipPins = 18
 
-						#IF ChipPins = 28 Or ChipPins = 40
-							Case 0: Set ANSELA.0 On
-							Case 1: Set ANSELA.1 On
-							Case 2: Set ANSELA.2 On
-							Case 3: Set ANSELA.3 On
-							Case 4: Set ANSELA.5 On
+                #ifdef USE_AD0 TRUE
+                  Case 0: Set ANSELA.0 On
+                #endif
+                #ifdef USE_AD1 TRUE
+                  Case 1: Set ANSELA.1 On
+                #endif
+                #ifdef USE_AD2 TRUE
+                  Case 2: Set ANSELA.2 On
+                #endif
+                #ifdef USE_AD3 TRUE
+                  Case 3: Set ANSELA.3 On
+                #endif
+                #ifdef USE_AD4 TRUE
+                  Case 4: Set ANSELA.4 On
+                #endif
+                #ifdef USE_AD11 TRUE
+                  Case 11: Set ANSELB.1 On
+                #endif
+                #ifdef USE_AD10 TRUE
+                  Case 10: Set ANSELB.2 On
+                #endif
+                #ifdef USE_AD9 TRUE
+                  Case 9: Set ANSELB.3 On
+                #endif
+                #ifdef USE_AD8 TRUE
+                  Case 8: Set ANSELB.4 On
+                #endif
+                #ifdef USE_AD7 TRUE
+                  Case 7: Set ANSELB.5 On
+                #endif
+                #ifdef USE_AD5 TRUE
+                  Case 5: Set ANSELB.6 On
+                #endif
+                #ifdef USE_AD6 TRUE
+                  Case 6: Set ANSELB.7 On
+                #endif
+              #ENDIF
 
-							#IFDEF Var(ANSELB)
-								Case 12: Set ANSELB.0 On
-								Case 10: Set ANSELB.1 On
-								Case 8: Set ANSELB.2 On
-								Case 9: Set ANSELB.3 On
-								Case 11: Set ANSELB.4 On
-								Case 13: Set ANSELB.5 On
-							#ENDIF
+              #IF ChipPins = 28 Or ChipPins = 40
 
-							#IFDEF Var(ANSELC)
-								Case 14: Set ANSELC.2 On
-								Case 15: Set ANSELC.3 On
-								Case 16: Set ANSELC.4 On
-								Case 17: Set ANSELC.5 On
-								Case 18: Set ANSELC.6 On
-								Case 19: Set ANSELC.7 On
-							#ENDIF
+                #Ifdef USE_AD0 TRUE
+                  Case 0: Set ANSELA.0 On
+                #endif
+                #Ifdef USE_AD1 TRUE
+                  Case 1: Set ANSELA.1 On
+                #endif
+                #Ifdef USE_AD2 TRUE
+                  Case 2: Set ANSELA.2 On
+                #endif
+                #Ifdef USE_AD3 TRUE
+                  Case 3: Set ANSELA.3 On
+                #endif
+                #Ifdef USE_AD4 TRUE
+                  Case 4: Set ANSELA.5 On
+                #endif
 
-							#IFDEF Var(ANSELD)
-								Case 20: Set ANSELD.0 On
-								Case 21: Set ANSELD.1 On
-								Case 22: Set ANSELD.2 On
-								Case 23: Set ANSELD.3 On
-								Case 24: Set ANSELD.4 On
-								Case 25: Set ANSELD.5 On
-								Case 26: Set ANSELD.6 On
-								Case 27: Set ANSELD.7 On
-							#ENDIF
+                #IFDEF Var(ANSELB)
 
-							#IFDEF Var(ANSELE)
-								Case 5: Set ANSELE.0 On
-								Case 6: Set ANSELE.1 On
-								Case 7: Set ANSELE.2 On
-							#ENDIF
-						#ENDIF
+                  #Ifdef USE_AD12 TRUE
+                     Case 12: Set ANSELB.0 On
+                  #endif
 
-					End Select
-				#ENDIF
+                  #Ifdef USE_AD10 TRUE
+                    Case 10: Set ANSELB.1 On
+                  #endif
 
-				'ANSEL0/ANSEL
-			#ENDIF
-		#ENDIF
+                  #Ifdef USE_AD8 TRUE
+                    Case 8: Set ANSELB.2 On
+                  #endif
 
-		'Code for PICs with newer A/D (with ANSEL register)
-		#IFDEF Var(ANSEL)
-			#IFDEF Var(ANSELH)
-				Dim AllANSEL As Word Alias ANSELH, ANSEL
-			#ENDIF
-			#IFDEF NoVar(ANSELH)
-				Dim AllANSEL As Byte Alias ANSEL
-			#ENDIF
-			AllANSEL = 0
-			ADTemp = ADReadPort + 1
-			Set C On
-			Do
-				Rotate AllANSEL Left
-				decfsz ADTemp,F
-			Loop
+                  #Ifdef USE_AD9 TRUE
+                    Case 9: Set ANSELB.3 On
+                  #endif
 
-		#ENDIF
-		'Code for 18F4431, uses ANSEL0 and ANSEL1
-		#IFDEF Var(ANSEL0)
-			#IFDEF Var(ANSEL1)
-				Dim AllANSEL As Word Alias ANSEL1, ANSEL0
-			#ENDIF
-			#IFDEF NoVar(ANSEL1)
-				Dim AllANSEL As Byte Alias ANSEL0
-			#ENDIF
-			AllANSEL = 0
-			ADTemp = ADReadPort + 1
-			Set C On
-			Do
-				Rotate AllANSEL Left
-				decfsz ADTemp,F
-			Loop
+                  #Ifdef USE_AD11 TRUE
+                    Case 11: Set ANSELB.4 On
+                  #endif
 
-		#ENDIF
+                  #Ifdef USE_AD13 TRUE
+                    Case 13: Set ANSELB.5 On
+                  #endif
 
-		'Set Auto or Single Convert Mode
-		#IFDEF Bit(ACONV)
-			SET ACONV OFF  'Single shot mode
-			SET ACSCH OFF  'Single channel CONVERSION
-			'GroupA
-			IF ADReadPort = 0 OR ADReadPort = 4 OR ADReadPort = 8 Then
-				SET ACMOD1 OFF
-				SET ACMOD0 OFF
-			END IF
-			'GroupB
-			IF ADReadPort = 1 OR ADReadPort = 5 Then
-				SET ACMOD1 OFF
-				SET ACMOD0 ON
-			END IF
-			'GroupC
-			IF ADReadPort = 2 OR ADReadPort = 6 Then
-				SET ACMOD1 ON
-				SET ACMOD0 OFF
-			END IF
-			'GroupD
-			IF ADReadPort = 3 OR ADReadPort = 7 Then
-				SET ACMOD1 ON
-				SET ACMOD0 ON
-			END IF
+                #ENDIF
 
-		#ENDIF
+                #IFDEF Var(ANSELC)
 
-		'Set conversion clock
-		#IFDEF Bit(ADCS0)
-			#IFDEF ADSpeed HighSpeed
-				SET ADCS1 OFF
-				SET ADCS0 OFF
-			#ENDIF
-			#IFDEF ADSpeed MediumSpeed
-				SET ADCS1 OFF
-				SET ADCS0 ON
-			#ENDIF
-			#IFDEF ADSpeed LowSpeed
-				SET ADCS1 ON
-				SET ADCS0 ON
-			#ENDIF
-			#IFDEF ADSpeed InternalClock
-				SET ADCS1 ON
-				SET ADCS0 ON
-			#ENDIF
-		#ENDIF
+                  #Ifdef USE_AD14 TRUE
+                    Case 14: Set ANSELC.2 On
+                  #endif
+                  #Ifdef USE_AD15 TRUE
+                    Case 15: Set ANSELC.3 On
+                  #endif
+                  #Ifdef USE_AD16 TRUE
+                    Case 16: Set ANSELC.4 On
+                  #endif
+                  #Ifdef USE_AD17 TRUE
+                    Case 17: Set ANSELC.5 On
+                  #endif
+                  #Ifdef USE_AD18 TRUE
+                    Case 18: Set ANSELC.6 On
+                  #endif
+                  #Ifdef USE_AD19 TRUE
+                    Case 19: Set ANSELC.7 On
+                  #endif
+                #ENDIF
 
-		'Choose port
-		#IFDEF Bit(CHS0)
-			SET ADCON0.CHS0 OFF
-			SET ADCON0.CHS1 OFF
-			#IFDEF Bit(CHS2)
-				SET ADCON0.CHS2 OFF
-				#IFDEF Bit(CHS3)
-					SET ADCON0.CHS3 OFF
-					#IFDEF Bit(CHS4)
-						SET ADCON0.CHS4 OFF
-					#ENDIF
-				#ENDIF
-			#ENDIF
+                #IFDEF Var(ANSELD)
+                  #Ifdef USE_AD20 TRUE
+                    Case 20: Set ANSELD.0 On
+                  #endif
+                  #Ifdef USE_AD21 TRUE
+                    Case 21: Set ANSELD.1 On
+                  #endif
+                  #Ifdef USE_AD22 TRUE
+                    Case 22: Set ANSELD.2 On
+                  #endif
+                  #Ifdef USE_AD23 TRUE
+                    Case 23: Set ANSELD.3 On
+                  #endif
+                  #Ifdef USE_AD24 TRUE
+                    Case 24: Set ANSELD.4 On
+                  #endif
+                  #Ifdef USE_AD25 TRUE
+                    Case 25: Set ANSELD.5 On
+                  #endif
+                  #Ifdef USE_AD26 TRUE
+                    Case 26: Set ANSELD.6 On
+                  #endif
+                  #Ifdef USE_AD27 TRUE
+                    Case 27: Set ANSELD.7 On
+                  #endif
+                #ENDIF
 
-			IF ADReadPort.0 On Then Set ADCON0.CHS0 On
-			IF ADReadPort.1 On Then Set ADCON0.CHS1 On
-			#IFDEF Bit(CHS2)
-				IF ADReadPort.2 On Then Set ADCON0.CHS2 On
-				#IFDEF Bit(CHS3)
-					If ADReadPort.3 On Then Set ADCON0.CHS3 On
-					#IFDEF Bit(CHS4)
-						If ADReadPort.4 On Then Set ADCON0.CHS4 On
-					#ENDIF
-				#ENDIF
-			#ENDIF
-		#ENDIF
-		#IFDEF BIT(GASEL0)
-			'GROUP A SELECT BITS
-			IF ADReadPort = 0 THEN
-				SET GASEL1 OFF
-				SET GASEL0 OFF
-			END IF
-			IF ADReadPort = 4 THEN
-				SET GASEL1 OFF
-				SET GASEL0 ON
-			END IF
-			IF ADReadPort = 8 THEN
-				SET GASEL1 ON
-				SET GASEL0 OFF
-			END IF
-			'GROUP C SELECT BITS
-			IF ADReadPort = 2 THEN
-				SET GCSEL1 OFF
-				SET GCSEL0 OFF
-			END IF
-			IF ADReadPort = 6 THEN
-				SET GCSEL1 OFF
-				SET GCSEL0 ON
-			END IF
-			'GROUP B SELECT BITS
-			IF ADReadPort = 1 THEN
-				SET GBSEL1 OFF
-				SET GBSEL0 OFF
-			END IF
-			IF ADReadPort = 5 THEN
-				SET GBSEL1 OFF
-				SET GBSEL0 ON
-			END IF
-			'GROUP D SELECT BITS
-			IF ADReadPort = 3 THEN
-				SET GDSEL1 OFF
-				SET GDSEL0 OFF
-			END IF
-			IF ADReadPort = 7 THEN
-				SET GDSEL1 OFF
-				SET GDSEL0 ON
-			END IF
-		#ENDIF
+                #IFDEF Var(ANSELE)
+
+                  #Ifdef USE_AD5 TRUE
+                    Case 5: Set ANSELE.0 On
+                  #endif
+                  #Ifdef USE_AD6 TRUE
+                    Case 6: Set ANSELE.1 On
+                  #endif
+                  #Ifdef USE_AD7 TRUE
+                    Case 7: Set ANSELE.2 On
+                  #endif
+                #ENDIF
+              #ENDIF
+            End Select
+
+          #ENDIF
+
+          'ANSEL0/ANSEL
+        #ENDIF
+      #ENDIF
+
+      'Code for PICs with newer A/D (with ANSEL register)
+      #IFDEF Var(ANSEL)
+        #IFDEF Var(ANSELH)
+          Dim AllANSEL As Word Alias ANSELH, ANSEL
+        #ENDIF
+        #IFDEF NoVar(ANSELH)
+          Dim AllANSEL As Byte Alias ANSEL
+        #ENDIF
+        AllANSEL = 0
+        ADTemp = ADReadPort + 1
+        Set C On
+        Do
+          Rotate AllANSEL Left
+          decfsz ADTemp,F
+        Loop
+
+      #ENDIF
+      'Code for 18F4431, uses ANSEL0 and ANSEL1
+      #IFDEF Var(ANSEL0)
+        #IFDEF Var(ANSEL1)
+          Dim AllANSEL As Word Alias ANSEL1, ANSEL0
+        #ENDIF
+        #IFDEF NoVar(ANSEL1)
+          Dim AllANSEL As Byte Alias ANSEL0
+        #ENDIF
+        AllANSEL = 0
+        ADTemp = ADReadPort + 1
+        Set C On
+        Do
+          Rotate AllANSEL Left
+          decfsz ADTemp,F
+        Loop
+
+      #ENDIF
+
+
+     'Set Auto or Single Convert Mode
+      #IFDEF Bit(ACONV)
+        SET ACONV OFF  'Single shot mode
+        SET ACSCH OFF  'Single channel CONVERSION
+        'GroupA
+        IF ADReadPort = 0 OR ADReadPort = 4 OR ADReadPort = 8 Then
+          SET ACMOD1 OFF
+          SET ACMOD0 OFF
+        END IF
+        'GroupB
+        IF ADReadPort = 1 OR ADReadPort = 5 Then
+          SET ACMOD1 OFF
+          SET ACMOD0 ON
+        END IF
+        'GroupC
+        IF ADReadPort = 2 OR ADReadPort = 6 Then
+          SET ACMOD1 ON
+          SET ACMOD0 OFF
+        END IF
+        'GroupD
+        IF ADReadPort = 3 OR ADReadPort = 7 Then
+          SET ACMOD1 ON
+          SET ACMOD0 ON
+        END IF
+
+      #ENDIF
+      'Set conversion clock
+      #IFDEF Bit(ADCS0)
+        #IFDEF ADSpeed HighSpeed
+          SET ADCS1 OFF
+          SET ADCS0 OFF
+        #ENDIF
+        #IFDEF ADSpeed MediumSpeed
+          SET ADCS1 OFF
+          SET ADCS0 ON
+        #ENDIF
+        #IFDEF ADSpeed LowSpeed
+          SET ADCS1 ON
+          SET ADCS0 ON
+        #ENDIF
+        #IFDEF ADSpeed InternalClock
+          SET ADCS1 ON
+          SET ADCS0 ON
+        #ENDIF
+      #ENDIF
+
+      'Choose port
+      #IFDEF Bit(CHS0)
+        SET ADCON0.CHS0 OFF
+        SET ADCON0.CHS1 OFF
+        #IFDEF Bit(CHS2)
+          SET ADCON0.CHS2 OFF
+          #IFDEF Bit(CHS3)
+            SET ADCON0.CHS3 OFF
+            #IFDEF Bit(CHS4)
+              SET ADCON0.CHS4 OFF
+            #ENDIF
+          #ENDIF
+        #ENDIF
+
+        IF ADReadPort.0 On Then Set ADCON0.CHS0 On
+        IF ADReadPort.1 On Then Set ADCON0.CHS1 On
+        #IFDEF Bit(CHS2)
+          IF ADReadPort.2 On Then Set ADCON0.CHS2 On
+          #IFDEF Bit(CHS3)
+            If ADReadPort.3 On Then Set ADCON0.CHS3 On
+            #IFDEF Bit(CHS4)
+              If ADReadPort.4 On Then Set ADCON0.CHS4 On
+            #ENDIF
+          #ENDIF
+        #ENDIF
+      #ENDIF
+
+      #IFDEF BIT(GASEL0)
+        'GROUP A SELECT BITS
+        IF ADReadPort = 0 THEN
+          SET GASEL1 OFF
+          SET GASEL0 OFF
+        END IF
+        IF ADReadPort = 4 THEN
+          SET GASEL1 OFF
+          SET GASEL0 ON
+        END IF
+        IF ADReadPort = 8 THEN
+          SET GASEL1 ON
+          SET GASEL0 OFF
+        END IF
+        'GROUP C SELECT BITS
+        IF ADReadPort = 2 THEN
+          SET GCSEL1 OFF
+          SET GCSEL0 OFF
+        END IF
+        IF ADReadPort = 6 THEN
+          SET GCSEL1 OFF
+          SET GCSEL0 ON
+        END IF
+        'GROUP B SELECT BITS
+        IF ADReadPort = 1 THEN
+          SET GBSEL1 OFF
+          SET GBSEL0 OFF
+        END IF
+        IF ADReadPort = 5 THEN
+          SET GBSEL1 OFF
+          SET GBSEL0 ON
+        END IF
+        'GROUP D SELECT BITS
+        IF ADReadPort = 3 THEN
+          SET GDSEL1 OFF
+          SET GDSEL0 OFF
+        END IF
+        IF ADReadPort = 7 THEN
+          SET GDSEL1 OFF
+          SET GDSEL0 ON
+        END IF
+      #ENDIF
+
+     #ENDIF
+
+     '***  'Special section for 16F1688x Chips ***
+     #IFDEF Var(ADCON3)  ' then must be 16F1688x
+
+'       'Configure ANSELA/B/C/D for 16F1885x
+        Select Case ADReadPort
+
+            #ifdef USE_ADA0 TRUE
+              Case 0: Set ANSELA.0 On
+            #endif
+            #ifdef USE_ADA1 TRUE
+              Case 1: Set ANSELA.1 On
+            #endif
+            #ifdef USE_ADA2 TRUE
+              Case 2: Set ANSELA.2 On
+            #endif
+            #ifdef USE_ADA3 TRUE
+              Case 3: Set ANSELA.3 On
+            #endif
+            #ifdef USE_ADA4 TRUE
+              Case 4: Set ANSELA.4 ON
+            #endif
+            #ifdef USE_ADA5 TRUE
+              Case 5: Set ANSELA.5 On
+            #endif
+            #ifdef USE_ADA6 TRUE
+              Case 6: Set ANSELA.6 On
+            #endif
+            #ifdef USE_ADA7 TRUE
+              Case 7: Set ANSELA.7 On
+            #endif
+
+            #ifdef USE_ADB0 TRUE
+              Case 8: Set ANSELB.0 On
+            #endif
+            #ifdef USE_ADB1 TRUE
+              Case 9: Set ANSELB.1 On
+            #endif
+            #ifdef USE_ADB2 TRUE
+              Case 10: Set ANSELB.2 On
+            #endif
+            #ifdef USE_ADB3 TRUE
+              Case 11: Set ANSELB.3 On
+            #endif
+             #Ifdef USE_ADB4 TRUE
+              Case 12: Set ANSELB.4 On
+            #endif
+            #Ifdef USE_ADB5 TRUE
+              Case 13: Set ANSELB.5 On
+            #endif
+            #Ifdef USE_ADB6 TRUE
+              Case 14: Set ANSELB.6 On
+            #endif
+            #Ifdef USE_ADB7 TRUE
+              Case 15: Set ANSELB.7 On
+            #endif
+
+            #Ifdef USE_ADC0 TRUE
+              Case 16: Set ANSELC.0 On
+            #endif
+            #Ifdef USE_ADC1 TRUE
+              Case 17: Set ANSELC.1 On
+            #endif
+            #Ifdef USE_ADC2 TRUE
+              Case 18: Set ANSELC.2 On
+            #endif
+            #Ifdef USE_ADC3 TRUE
+              Case 19: Set ANSELC.3 On
+            #endif
+            #Ifdef USE_ADC4 TRUE
+              Case 20: Set ANSELC.4 On
+            #endif
+            #Ifdef USE_ADC5 TRUE
+              Case 21: Set ANSELC.5 On
+            #endif
+            #Ifdef USE_ADC6 TRUE
+              Case 22: Set ANSELC.6 On
+            #endif
+            #Ifdef USE_ADC7 TRUE
+              Case 23: Set ANSELC.7 On
+            #endif
+
+            #IFDEF Var(ANSELD)
+
+                #Ifdef USE_ADD0 TRUE
+                  Case 24: Set ANSELD.0 On
+                #endif
+                #Ifdef USE_ADD1 TRUE
+                  Case 25: Set ANSELD.1 On
+                #endif
+                #Ifdef USE_ADD2 TRUE
+                  Case 26: Set ANSELD.2 On
+                #endif
+                #Ifdef USE_ADD3 TRUE
+                  Case 27: Set ANSELD.3 On
+                #endif
+                #Ifdef USE_ADD4 TRUE
+                  Case 28: Set ANSELD.4 On
+                #endif
+                #Ifdef USE_ADD5 TRUE
+                  Case 29: Set ANSELD.5 On
+                #endif
+                #Ifdef USE_ADD6 TRUE
+                  Case 30: Set ANSELD.6 On
+                #endif
+                #Ifdef USE_ADD7 TRUE
+                  Case 31: Set ANSELD.7 On
+                #endif
+            #ENDIF
+
+            #IFDEF Var(ANSELE)
+
+              #Ifdef USE_AD32 TRUE
+                Case 32: Set ANSELE.0 On
+              #endif
+              #Ifdef USE_AD33 TRUE
+                Case 33: Set ANSELE.1 On
+              #endif
+              #Ifdef USE_AD34 TRUE
+                Case 34: Set ANSELE.2 On
+              #endif
+            #ENDIF
+        End Select
+        '*** ANSEL Bits are now set ***
+
+       'Set voltage reference
+       'ADREF = 0  'Default = 0 /Vref+ = Vdd/ Vref-  = Vss
+
+        'Configure AD clock defaults
+        Set ADCS off 'Clock source = FOSC/ADCLK
+        ADCLK = 1 ' default to FOSC/2
+
+        'Conversion Clock Speed
+        #IFDEF ADSpeed HighSpeed
+         Set ADCS OFF   ' ADCON0.4
+         ADCLK = 1      ' FOSC/2
+        #ENDIF
+
+        #IFDEF ADSpeed MediumSpeed
+         SET ADCS OFF  'ADCON0.4
+         ADCLK = 15    'FOSC/16
+
+        #ENDIF
+
+        #IFDEF ADSpeed LowSpeed
+         SET ADCS OFF  ' ADCON0.4
+         ADCLK = 31    ' FOSC/32
+        #ENDIF
+
+        #IFDEF ADSpeed InternalClock
+          SET ADCS ON 'ADCLK has no effect
+        #ENDIF
+
+       'Result formatting
+        if ADLeftadjust = 0 then
+           Set ADCON0.2 ON     '10-bit
+        Else
+           Set ADCON.2 off     '8-bit
+        End if
+
+       'Select Channel
+        ADCPH = ADReadPort  'Configure AD read Channel
+
+     #ENDIF   'End of 16F188x Section
 
 		'Enable A/D
 		SET ADCON0.ADON ON
@@ -411,9 +806,11 @@ macro LLReadAD (ADLeftAdjust)
 		'Read A/D
 		#ifdef bit(GO_NOT_DONE)
 			SET ADCON0.GO_NOT_DONE ON
-			Wait While ADCON0.GO_NOT_DONE ON
+			nop
+    	Wait While ADCON0.GO_NOT_DONE ON
 		#endif
-		#ifndef bit(GO_NOT_DONE)
+
+    #ifndef bit(GO_NOT_DONE)
 			#IFDEF Bit(GO_DONE)
 				SET ADCON0.GO_DONE ON
 				Wait While ADCON0.GO_DONE ON
@@ -496,6 +893,7 @@ macro LLReadAD (ADLeftAdjust)
 		#ENDIF
 
 	#ENDIF
+
 
 	#IFDEF AVR
 
@@ -599,6 +997,11 @@ function ReadAD(ADReadPort, in OPTIONAL ADN_PORT = 255) as integer
          	configNegativeChannel
 
       #ENDIF
+
+      'for 16F1885x and possibly future others
+      #IFDEF VAR(ADPCH)
+      		ADPCH = ADReadPort
+      #ENDIF
   #ENDIF
 
 '***************************************
@@ -667,6 +1070,11 @@ function ReadAD10(ADReadPort, OPTIONAL ADN_PORT = 255) As integer
          	configNegativeChannel
       #ENDIF
 
+      #IFDEF VAR(ADPCH)
+      		ADPCH = ADReadPort
+      #ENDIF
+
+
   #ENDIF
 
  	#IFDEF AVR
@@ -727,6 +1135,11 @@ function ReadAD12(ADReadPort, OPTIONAL ADN_PORT = 255) As integer
       #IFDEF Bit(CHSN0)'Chip has Differential ADC Module
          configNegativeChannel
       #ENDIF
+
+      #IFDEF VAR(ADPCH)
+      		ADPCH = ADReadPort
+      #ENDIF
+
 
   #ENDIF
 

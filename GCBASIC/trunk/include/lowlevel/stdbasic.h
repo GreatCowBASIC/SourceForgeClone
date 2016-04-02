@@ -30,7 +30,7 @@
 ' 06/10/2015: FnLSR, FnLSL, FnEQUBit and FnNOTBit - created by Chris Roper
 ' 24/10/2015: Fix for AVR handling for FnEQUBit and FnNotBit
 ' 01/11/2015: Fix for AVR handling for Fnlsl AND FNLSR
-
+' 11/3/2016: Add LOCKPPS and UNLOCKPPS
 'Misc settings
 
 'Bit rate delays
@@ -68,6 +68,26 @@ Sub IndCall(In SysCallAdr As Word)
 		ijmp
 	#endif
 End Sub
+
+macro UNLOCKPPS
+    dim IntState as bit
+    IntState = GIE
+    GIE = 0
+    PPSLOCK = 0x55
+    PPSLOCK = 0xAA
+    PPSLOCKED = 0x00 	'unlock PPS
+
+end macro
+
+
+macro LOCKPPS
+
+    PPSLOCK = 0x55
+    PPSLOCK = 0xAA
+    PPSLOCKED = 0x01  'lock PPS
+		GIE = IntState
+
+end macro
 
 'Direct memory access
 Sub Poke (In MemAdr As Word, In MemData)

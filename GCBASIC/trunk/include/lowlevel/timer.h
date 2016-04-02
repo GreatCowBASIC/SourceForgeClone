@@ -294,6 +294,56 @@
   #define PS_5_256 4
   #define PS_5_1024 5
 
+
+	'support 16f18855 series 8/16 bit timers
+  #define   TMR0_CLC1 			0xE0
+  #define   TMR0_SOSC 			0xC0
+  #define   TMR0_LFINTOSC 		0x80
+  #define   TMR0_HFINTOSC 		0x60
+  #define   TMR0_FOSC4 			0x40
+  #define   TMR0_T0CKIPPS_Inverted 	0x20
+  #define   TMR0_T0CKIPPS_True 		0
+
+  #define 	TMR0_T0ASYNC 		0x10
+
+  #define	TMR0_T016BIT		0x10
+
+  #define PRE0_1 = 0
+  #define PRE0_2 = 1
+  #define PRE0_4 = 2
+  #define PRE0_8 = 3
+  #define PRE0_16 = 4
+  #define PRE0_32 = 5
+  #define PRE0_64 = 6
+  #define PRE0_128 = 7
+  #define PRE0_256 = 8
+  #define PRE0_512 = 9
+  #define PRE0_1024 = 10
+  #define PRE0_2048 = 11
+  #define PRE0_4096 = 12
+  #define PRE0_8192 = 13
+  #define PRE0_16384 = 14
+  #define PRE0_32768 = 15
+
+  #define POST0_1 = 0
+  #define POST0_2 = 1
+  #define POST0_3 = 2
+  #define POST0_4 = 3
+  #define POST0_5 = 4
+  #define POST0_6 = 5
+  #define POST0_7 = 6
+  #define POST0_8 = 7
+  #define POST0_9 = 8
+  #define POST0_10 = 9
+  #define POST0_11 = 10
+  #define POST0_12 = 11
+  #define POST0_13 = 12
+  #define POST0_14 = 13
+  #define POST0_15 = 14
+  #define POST0_16 = 15
+	'end if support 16f18855 series 8/16 bit timers
+
+
 #script
 
   if var(TCNT1) then  '05/01/2016 added for ATtiny15/25/45/85/216/461/861
@@ -336,7 +386,7 @@
     PS_2_1024 = 7
   end if
 
-  '// "ALL" AVR with TCCR2A and no TCCR2B support these prescales - WMR
+  '' "ALL" AVR with TCCR2A and no TCCR2B support these prescales - WMR
   if var(TCCR2A) then
      If noVar(TCCR2B) then
         PS_2_0 = 0              ' no clock source
@@ -504,6 +554,11 @@ Sub StartTimer(In TMRNumber)
      #ifdef bit(TMR0ON)
         IF TMRNumber = 0 then Set TMR0ON on
      #endif
+
+     #ifdef bit(T0EN)
+        IF TMRNumber = 0 then Set T0EN on
+     #endif
+
 
      #ifdef bit(TMR1ON)
         IF TMRNumber = 1 then Set TMR1ON on
@@ -771,6 +826,7 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
            #endif
            TMR0L = TMRValue
         #endif
+
      End If
 
      #ifdef Var(T1CON)
@@ -913,6 +969,12 @@ Sub StopTimer (In TMRNumber)
          If TMRNumber = 0 Then Set TMR0ON off
      #endif
 
+     #ifdef bit(T0EN)
+         If TMRNumber = 0 Then Set T0EN off
+     #endif
+
+
+
      #ifdef Bit(TMR1ON)
          If TMRNumber = 1 Then Set TMR1ON OFF
      #endif
@@ -1012,6 +1074,54 @@ Sub StopTimer (In TMRNumber)
   #endif
 End Sub
 
+Sub InitTimer0(In TMRSource, In TMRPres, in TMRPost )
+'Equate to 			 bit5						T0CON1			T0CON0
+
+     'Assumed for code below Timer0 is 16-bit capable as we have been passed three parameters
+     'Set prescaler
+     #ifdef  Var(T0CON1)
+
+        'Re-Use TMRPres as T0CON1 Temp register
+         'Keep T0CON1 7:4 and write bits 3:0 to  register
+         'Bits therefore will be cleared!
+          TMRPres = (T0CON1 And 240 ) OR TMRPres
+
+          'Set the Source bit
+          IF TMRSource <> OSC  THEN
+             SET TMRPost.5 ON
+          ELSE
+             SET TMRPost.5 OFF
+          END IF
+
+          'Write the TOCON register
+           T0CON1 = TMRPres
+     #endif
+
+     'Assumed for code below Timer0 is 16-bit capable
+     'Set Postscaler
+     #ifdef  Var(T0CON0)
+         'Re-Use TMRPostas T0CON0 Temp register
+         'Keep T0CON0 7:5	 and write bits 5:0 to register
+         'Bits therefore will be cleared!
+          TMRPost = (T0CON0 And 224) OR TMRPost
+
+
+
+       'Set TO16BIT
+        #ifdef TMR0_16BIT
+            Set TMRPost.4 ON '16-bit Timer0
+        #endif
+
+        #IFNDEF TMR0_16BIT
+           Set TMRPost.4 OFF '8-bit Timer0
+        #endif
+
+          'Write the TOCON register
+           T0CON0 = TMRPost
+     #endif
+
+
+End Sub
 
 Sub InitTimer0(In TMRSource, In TMRPres)
 
@@ -1022,6 +1132,34 @@ Sub InitTimer0(In TMRSource, In TMRPres)
      ' * TMRPres, TMRSource & TMRPost now shared *
 
      if TMRPRes > 7 then TMRPRes = 0 'failsafe
+
+     'If Timer0 is 16-bit capable
+     #ifdef  Var(T0CON0)
+         'Re-Use TMRPres as T0CON Temp register
+         'Keep T0CON0 7 and write bits 2:0 from TMRPres
+         'Bits 5,4 & 3 will be cleared!
+          TMRPres = (T0CON0 And 128) OR TMRPres
+
+          'Set the Source bit
+        IF TMRSource <> OSC  THEN
+           SET TMRPres.5 ON
+        ELSE
+           SET TMRPres.5 OFF
+        END IF
+
+       'Set TO8BIT (T0CON.6)
+        #ifdef TMR0_16BIT
+        	 Set TMRPres.4 OFF '16-bit Timer0
+        #endif
+
+        #IFNDEF TMR0_16BIT
+           Set TMRpres.4 ON  '8-bit Timer0
+        #endif
+
+          'Write the TOCON register
+           T0CON0 = TMRPres
+     #endif
+
 
      #Ifndef Var(T0CON) 'Timer0 uses OPTION_REG
        'Re-Use TMRPres as T0CON Temp_register
@@ -1481,3 +1619,4 @@ Sub InitTimer12 (In TMRPres, In TMRPost)
      #endif
   #endif
 End Sub
+
