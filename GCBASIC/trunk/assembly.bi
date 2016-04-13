@@ -16,7 +16,7 @@
 '	along with this program; if not, write to the Free Software
 '	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 '
-'If you have any questions about the source code, please email me: hconsidine@internode.on.net
+'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
 Sub AsmOptimiser (CompSub As SubType Pointer)

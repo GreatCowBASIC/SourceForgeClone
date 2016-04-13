@@ -16,7 +16,7 @@
 '	along with this program; if not, write to the Free Software
 '	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 '
-'If you have any questions about the source code, please email me: hconsidine@internode.on.net
+'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
 'Windows API
@@ -855,13 +855,13 @@ FUNCTION IsConst (DataSource As String) As Integer
 	
 	Dim As String Temp
 
-	Temp = Trim(DelType(DataSource))
+	Temp = UCase(Trim(DelType(DataSource)))
 	IF Left(Temp, 1) = "-" THEN Temp = Mid(Temp, 2)
 	
 	IsConst = 0
 	IF Trim(Temp) = Trim(Str(VAL(Temp))) THEN IsConst = -1
-	IF INSTR(LCase(Temp), "b'") <> 0 THEN IsConst = -1
-	IF INSTR(LCase(Temp), "0x") <> 0 THEN IsConst = -1
+	IF Left(Temp, 2) = "B'" THEN IsConst = -1
+	IF Left(Temp, 2) = "0X" THEN IsConst = -1
 	
 	IF INSTR(Temp, "@") <> 0 THEN IsConst = -1
 	If INSTR(Temp, ";STRING") <> 0 Then IsConst = -1

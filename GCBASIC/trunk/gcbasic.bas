@@ -15,7 +15,7 @@
 '	along with this program; if not, write to the Free Software
 '	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 '
-'If you have any questions about the source code, please email me: hconsidine@internode.on.net
+'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
 'Array sizes
@@ -44,6 +44,11 @@ Type ProgLineMeta
 
 	AsmCommand As Integer 'Index of asm instruction on line. -1 if none.
 
+End Type
+
+Type ConstMeta
+	Value As String
+	Startup As String
 End Type
 
 Type SourceFileType
@@ -427,6 +432,7 @@ Declare Function HasSFRBit(BitName As String) As Integer
 Declare Sub MakeSFR (UserVar As String, SFRAddress As Integer)
 
 'Subs in preprocessor.bi
+Declare Sub AddConstant(ConstName As String, ConstName As String, ConstStartup As String = "")
 Declare Function CheckSysVarDef(ConditionIn As String) As String
 Declare Sub LoadTableFromFile(DataTable As DataTableType Pointer)
 DECLARE SUB PrepareBuiltIn ()
@@ -478,7 +484,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 
 'Initialise
 'Misc Vars
-DIM SHARED As Integer APC, DFC, FVLC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
+DIM SHARED As Integer APC, FVLC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
@@ -504,7 +510,7 @@ DIM SHARED ASMPROG(60000) As String: ASPC = 0
 Dim Shared Subroutine(10000) As SubType Pointer: SBC = 0
 
 'Processing Arrays
-DIM SHARED gcDEF(1000, 1 TO 3) As String: DFC = 0
+DIM SHARED Constants As LinkedListElement Pointer
 Dim Shared SourceFile(100) As SourceFileType: SourceFiles = 0
 DIM SHARED TempData(300) As String
 DIM SHARED CheckTemp(300) As String
@@ -581,7 +587,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-03-13"
+Version = "0.95 2016-04-13"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -617,6 +623,7 @@ ChipConfigCode = NewCodeSection
 AttemptedCallList = LinkedListCreate
 ConfigSettings = LinkedListCreate
 PinDirections = LinkedListCreate
+Constants = LinkedListCreate
 
 'Load files and tidy them up
 PreProcessor
@@ -663,7 +670,6 @@ IF Not ErrorsFound THEN
 		PRINT SPC(5); Message("DataRead")
 		PRINT SPC(10); Message("InLines") + Str(MainProgramSize)
 		PRINT SPC(10); Message("Vars") + Str(FVLC)
-		PRINT SPC(10); Message("Consts") + Str(DFC)
 		PRINT SPC(10); Message("Subs") + Str(SBC)
 		PRINT SPC(5); Message("ChipUsage")
 		Temp = Message("UsedProgram")
@@ -4552,7 +4558,8 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				InLine = NewVarList(CV)
 				'Get size
 				Si = 1
-        'added error handling for arrays and processing of arrays using constant
+				
+				'added error handling for arrays and processing of arrays using constant
 				IF INSTR(InLine, "(") <> 0 Then
 					If CountOccur( InLine, "(" ) <> CountOccur( InLine, ")" ) Then
 						SiStr = Message("BadVarName")
@@ -4564,9 +4571,9 @@ Sub CompileDim (CurrSub As SubType Pointer)
 
 					If IsCalc(SiStr) Then
 						Calculate SiStr
-            Si = VAL(SiStr)
-          Else
-          	Si = VAL(Mid(InLine, INSTR(InLine, "(") + 1))
+						Si = VAL(SiStr)
+					Else
+						Si = VAL(Mid(InLine, INSTR(InLine, "(") + 1))
 					End If
 
 					InLine = Trim(Left(InLine, INSTR(InLine, "(") - 1))

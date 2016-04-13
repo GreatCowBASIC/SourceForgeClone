@@ -16,7 +16,7 @@
 '	along with this program; if not, write to the Free Software
 '	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 '
-'If you have any questions about the source code, please email me: hconsidine@internode.on.net
+'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
 Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0)
@@ -27,6 +27,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Dim As Integer CurrFile, ALC
 	Dim As VariableType Pointer VarFound
 	Dim As SubType Pointer VarSub, MainSub
+	Dim As LinkedListElement Pointer SearchConstPos
 	
 	VarName = VarNameIn
 	VarType = VarTypeIn
@@ -84,14 +85,15 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		VarSize = -1
 		
 		'Check for StringSize constant
-		FOR CL = 1 TO DFC
-			ConstName = UCase(gcDEF(CL, 1))
-			IF ConstName = "STRINGSIZE" THEN
-				TempSize = Val(gcDEF(CL, 2))
+		SearchConstPos = Constants->Next
+		Do While SearchConstPos <> 0
+			IF UCase(SearchConstPos->Value) = "STRINGSIZE" THEN
+				TempSize = MakeDec(CPtr(ConstMeta Pointer, SearchConstPos->MetaData)->Value)
 				If TempSize > 0 Or TempSize < ChipRam Then VarSize = TempSize
-				Exit For
-			END IF
-		NEXT
+				Exit Do
+			END If
+			SearchConstPos = SearchConstPos->Next
+		Loop
 		
 		'Defaults
 		If VarSize = -1 Then
