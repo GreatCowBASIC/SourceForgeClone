@@ -16,8 +16,23 @@
 '	along with this program; if not, write to the Free Software
 '	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 '
-'If you have any questions about the source code, please email me: hconsidine@internode.on.net
+'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
+
+Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As String = "")
+	'Add a new constant to the list of constants
+	
+	Dim Meta As ConstMeta Pointer
+	Meta = Callocate(SizeOf(ConstMeta))
+	
+	Meta->Value = ConstValue
+	Meta->Startup = ConstStartup
+	
+	Dim NewListElement As LinkedListElement Pointer
+	NewListElement = LinkedListInsert(Constants, ConstName)
+	NewListElement->MetaData = Meta
+	
+End Sub
 
 Function CheckSysVarDef(ConditionIn As String) As String
 	'Checks a condition from #ifdef or If in script
@@ -136,30 +151,30 @@ Sub PrepareBuiltIn
 	
 	'Constants set by compiler
 	'Set chip config defines for #IFDEF and #SCRIPT use
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPNAME": gcDEF(DFC, 2) = ChipName
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIP_" + ChipName: gcDEF(DFC, 2) = ""
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPMHZ": gcDEF(DFC, 2) = Str(ChipMhz)
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPFAMILY": gcDEF(DFC, 2) = Str(ChipFamily)
-	DFC = DFC + 1: gcDEF(DFC, 1) = "OSC": gcDEF(DFC, 2) = OSCType
+	AddConstant("CHIPNAME", ChipName)
+	AddConstant("CHIP_" + ChipName, "")
+	AddConstant("CHIPMHZ", Str(ChipMhz))
+	AddConstant("CHIPFAMILY", Str(ChipFamily))
+	AddConstant("OSC", OSCType)
 	
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPWORDS": gcDEF(DFC, 2) = Str(ChipProg)
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPEEPROM": gcDEF(DFC, 2) = Str(ChipEEPROM)
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPRAM": gcDEF(DFC, 2) = Str(ChipRam)
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPIO": gcDEF(DFC, 2) = Str(ChipIO)
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPADC": gcDEF(DFC, 2) = Str(ChipADC)
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPPINS": gcDEF(DFC, 2) = Str(ChipPins)
-	If ModePIC Then DFC = DFC + 1: gcDEF(DFC, 1) = "PIC": gcDEF(DFC, 2) = ""
+	AddConstant("CHIPWORDS", Str(ChipProg))
+	AddConstant("CHIPEEPROM", Str(ChipEEPROM))
+	AddConstant("CHIPRAM", Str(ChipRam))
+	AddConstant("CHIPIO", Str(ChipIO))
+	AddConstant("CHIPADC", Str(ChipADC))
+	AddConstant("CHIPPINS", Str(ChipPins))
+	If ModePIC Then AddConstant("PIC", "")
 	If ModeAVR Then
-		DFC = DFC + 1: gcDEF(DFC, 1) = "AVR": gcDEF(DFC, 2) = ""
-		If HMult Then DFC = DFC + 1: gcDEF(DFC, 1) = "HARDWAREMULT": gcDEF(DFC, 2) = ""
+		AddConstant("AVR", "")
+		If HMult Then AddConstant("HARDWAREMULT", "")
 	End If
-	If ModeZ8 Then DFC = DFC + 1: gcDEF(DFC, 1) = "Z8": gcDEF(DFC, 2) = ""
+	If ModeZ8 Then AddConstant("Z8", "")
 	
 	'Constant to give chip name as string
 	SSC = SSC + 1
 	StringStore(SSC).Value = ChipName
 	StringStore(SSC).Used = 0
-	DFC = DFC + 1: gcDEF(DFC, 1) = "CHIPNAMESTR": gcDEF(DFC, 2) = ";STRING" + Str(SSC) + ";"
+	AddConstant("CHIPNAMESTR", ";STRING" + Str(SSC) + ";")
 	
 	'Constants to provide information on RAM banks
 	Dim As String TempData
@@ -169,8 +184,8 @@ Sub PrepareBuiltIn
 		Min = VAL("&h" + Left(TempData, INSTR(TempData, ":") - 1))
 		Max = VAL("&h" + Mid(TempData, INSTR(TempData, ":") + 1))
 		'Print "Bank " + Str(Min \ 128) + " starts 0x" + Hex(Min) + " ends 0x" + Hex(Max)
-		DFC += 1: gcDEF(DFC, 1) = "CHIPBANK_" + Str(Min \ 128) + "_START": gcDEF(DFC, 2) = Str(Min)
-		DFC += 1: gcDEF(DFC, 1) = "CHIPBANK_" + Str(Min \ 128) + "_END": gcDEF(DFC, 2) = Str(Max)
+		AddConstant("CHIPBANK_" + Str(Min \ 128) + "_START", Str(Min))
+		AddConstant("CHIPBANK_" + Str(Min \ 128) + "_END", Str(Max))
 	Next
 	
 	'Delay subs
@@ -434,21 +449,15 @@ Sub PrepareBuiltIn
 		If Not HasSFR("GPIO") Then
 			'If there's a PORTA, set GPIO to PORTA
 			If HasSFR("PORTA") Then
-				DFC = DFC + 1
-				gcDEF(DFC, 1) = "GPIO"
-				gcDEF(DFC, 2) = "PORTA"
+				AddConstant "GPIO", "PORTA"
 				
 			'If there's a PORTB, set GPIO to PORTB
 			ElseIf HasSFR("PORTB") Then
-				DFC = DFC + 1
-				gcDEF(DFC, 1) = "GPIO"
-				gcDEF(DFC, 2) = "PORTB"
+				AddConstant "GPIO", "PORTB"
 				
 			'If there's a PORTC, set GPIO to PORTC
 			ElseIf HasSFR("PORTC") Then
-				DFC = DFC + 1
-				gcDEF(DFC, 1) = "GPIO"
-				gcDEF(DFC, 2) = "PORTB"
+				AddConstant "GPIO", "PORTC"
 				
 			'Let's hope none have PORTD as their only port!
 			End If
@@ -463,7 +472,7 @@ SUB PreProcessor
 	Dim As String Origin, Temp, DataSource, PreserveIn, DSOld, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
 	Dim As String TempFile, LastTableOrigin, NewFNType
-	Dim As LinkedListElement Pointer CurrPos, MainCurrPos
+	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 	
 	Dim As String LineToken(100)
 	
@@ -761,14 +770,13 @@ SUB PreProcessor
 							End If
 							
 							T = 0
-							FOR CE = 1 TO DFC
-								IF ConstName = gcDEF(CE, 1) THEN T = 1: EXIT FOR
-							NEXT
+							SearchPos = Constants->Next
+							Do While SearchPos <> 0
+								IF ConstName = SearchPos->Value Then T = 1: EXIT Do
+								SearchPos = SearchPos->Next
+							Loop
 							IF T = 0 THEN
-								DFC = DFC + 1
-								gcDEF(DFC, 1) = ConstName
-								gcDEF(DFC, 2) = "SYSBITVAR" + Str(INT(BVC / 8)) + "." + Str(BVC MOD 8) 'Str(BVC-INT(BVC/8)*8)
-								gcDEF(DFC, 3) = Str(RF)
+								AddConstant(ConstName, "SYSBITVAR" + Str(INT(BVC / 8)) + "." + Str(BVC MOD 8), Str(RF))
 								CheckConstName ConstName, Origin
 								'Define the variable
 								AddVar "SYSBITVAR" + Str(INT(BVC / 8)), "BYTE", 1, 0, "REAL", Origin
@@ -1189,14 +1197,13 @@ LoadNextFile:
 				
 				'Check to see if define exists
 				T = 0
-				FOR CE = 1 TO DFC
-					IF ConstName = gcDEF(CE, 1) THEN T = 1: EXIT FOR
-				NEXT
+				SearchPos = Constants->Next
+				Do While SearchPos <> 0
+					IF ConstName = SearchPos->Value THEN T = 1: EXIT Do
+					SearchPos = SearchPos->Next
+				Loop
 				IF T = 0 THEN
-					DFC = DFC + 1
-					gcDEF(DFC, 1) = ConstName
-					gcDEF(DFC, 2) = Value
-					gcDEF(DFC, 3) = TempFile
+					AddConstant(ConstName, Value, TempFile)
 					CheckConstName ConstName, Origin
 				END IF
 			
@@ -1338,7 +1345,7 @@ SUB RemIfDefs
 	Dim As Integer ForceMain, IL, DelMode, PMode, SV, FV, ConstFound, RecDetect
 	Dim As Integer FC, DC, VF, SD, CheckValue, VC, TV, CD, EV, CurrSub
 	
-	Dim As LinkedListElement Pointer CurrLine, StartDel, EndDel, CurrPos
+	Dim As LinkedListElement Pointer CurrLine, StartDel, EndDel, CurrPos, SearchConstPos
 	
 	'Need to scan through main program and all subs
 	For CurrSub = 0 To SBC
@@ -1456,9 +1463,11 @@ SUB RemIfDefs
 							'Search
 							VF = 0
 							FOR SD = 1 to DC
-								FOR FC = 1 TO DFC
-									IF gcDEF(FC, 1) = TempData(SD) THEN VF = VF + 1: EXIT FOR
-								NEXT
+								SearchConstPos = Constants->Next
+								Do While SearchConstPos <> 0
+									IF SearchConstPos->Value = TempData(SD) THEN VF = VF + 1: EXIT Do
+									SearchConstPos = SearchConstPos->Next
+								Loop
 							NEXT
 		   
 							'Decide outcome
@@ -1480,9 +1489,11 @@ SUB RemIfDefs
 						'Don't check value, just see if constant exists
 						IF CheckValue = 0 THEN
 							DelMode = 1
-							FOR FC = 1 TO DFC
-								IF gcDEF(FC, 1) = Cmd THEN DelMode = 2: EXIT FOR
-							NEXT
+							SearchConstPos = Constants->Next
+							Do While SearchConstPos <> 0
+								IF SearchConstPos->Value = Cmd THEN DelMode = 2: EXIT Do
+								SearchConstPos = SearchConstPos->Next
+							Loop
 							GOTO IfDefProcessed
 						END IF
 						
@@ -1499,11 +1510,15 @@ SUB RemIfDefs
 						
 						'Replace names of test constants with values
 						FOR SD = 1 TO VC
-							TV = 0
-							FOR FV = 1 TO DFC
-								IF UCase(TempData(SD)) = UCase(gcDEF(FV, 1)) THEN TV = FV: EXIT FOR
-							NEXT
-							IF TV <> 0 THEN TempData(SD) = gcDEF(FV, 2)
+							
+							Do While SearchConstPos <> 0
+								IF SearchConstPos->Value = UCase(TempData(SD)) Then
+									TempData(SD) = CPtr(ConstMeta Pointer, SearchConstPos->MetaData)->Value
+									Exit Do
+								End If
+								SearchConstPos = SearchConstPos->Next
+							Loop
+							
 						NEXT
 						
 						'TVar = Cmd
@@ -1639,30 +1654,36 @@ End SUB
 Function ReplaceConstantsLine (ByRef DataSourceIn As String, IncludeStartup As Integer) As String
 	
 	Dim As String ConstName, RCmd, DSUppercase, ConstFile, DataSource, Startup
-	Dim As Integer CL, SCC, SearchStart
+	Dim As Integer SCC, SearchStart
+	Dim As LinkedListElement Pointer SearchConstPos
+	Dim As ConstMeta Pointer Meta
 	
 	ConstReplaced = 0
 	DataSource = DataSourceIn
 	DSUppercase = UCase(DataSource)
 	Startup = ""
 	
-	For CL = 1 TO DFC
-		ConstName = gcDEF(CL, 1)
+	SearchConstPos = Constants->Next
+	Do While SearchConstPos <> 0
+		ConstName = SearchConstPos->Value
 		IF InStr(DSUppercase, ConstName) <> 0 THEN
-			RCmd = gcDEF(CL, 2)
+			Meta = SearchConstPos->MetaData
+			RCmd = Meta->Value
 			WholeReplace DataSource, ConstName, RCmd
 			
 			If DSUppercase <> UCase(DataSource) Then
 				ConstReplaced = -1
-				If gcDEF(CL, 3) <> "" AndAlso InStr(Startup, gcDEF(CL, 3)) = 0 THEN
+				If Meta->Startup <> "" AndAlso InStr(Startup, Meta->Startup) = 0 THEN
 					If IncludeStartup Then
-						Startup = Startup + ";STARTUP" + gcDEF(CL, 3)
+						Startup = Startup + ";STARTUP" + Meta->Startup
 					End If
 				End If
 				DSUppercase = UCase(DataSource)
 			END IF
-		END IF
-	NEXT
+		END If
+		
+		SearchConstPos = SearchConstPos->Next
+	Loop
 	
 	Return DataSource + Startup
 End Function
@@ -1674,7 +1695,7 @@ SUB RunScripts
 	Dim As String OutVar, Value, Origin
 	Dim As Integer PD, ReadScript, CondFalse, TL, FC, CD
 	Dim As Integer CurrSub, IsError
-	Dim As LinkedListElement Pointer CurrLine
+	Dim As LinkedListElement Pointer CurrLine, SearchConstPos
 	
 	Dim As LinkedListElement Pointer ScriptCode, ScriptCodePos
 	
@@ -1736,9 +1757,11 @@ SUB RunScripts
 				Condition = Mid(CO, 4)
 				IF INSTR(Condition, "THEN") <> 0 THEN Condition = Left(Condition, INSTR(Condition, "THEN") - 1)
 				Condition = Trim(Condition)
-				FOR FC = 1 TO DFC
-					IF gcDEF(FC, 1) = Condition THEN CondFalse = 0: EXIT FOR
-				Next
+				SearchConstPos = Constants->Next
+				Do While SearchConstPos <> 0
+					IF SearchConstPos->Value = Condition THEN CondFalse = 0: EXIT Do
+					SearchConstPos = SearchConstPos->Next
+				Loop
 			End If
 			
 			If CondFalse Then
@@ -1811,15 +1834,18 @@ SUB RunScripts
 			
 			'Write the data to the output
 			FC = 0
-			For CD = 1 TO DFC
-				If UCase(gcDEF(CD, 1)) = UCase(OutVar) Then FC = CD: Exit For
-			Next
+			SearchConstPos = Constants->Next
+			Do While SearchConstPos <> 0
+				IF SearchConstPos->Value = UCase(OutVar) Then
+					FC = 1
+					CPtr(ConstMeta Pointer, SearchConstPos->MetaData)->Value = Trim(Value)
+					EXIT Do
+				End If
+				SearchConstPos = SearchConstPos->Next
+			Loop
+			
 			If FC = 0 Then
-				DFC += 1
-				gcDEF(DFC, 1) = OutVar
-				gcDEF(DFC, 2) = Trim(Value)
-			Else
-				gcDEF(FC, 2) = Trim(Value)
+				AddConstant(OutVar, Trim(Value))
 			End If
 		End If
 		
