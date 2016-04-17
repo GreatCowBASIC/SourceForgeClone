@@ -587,7 +587,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-13"
+Version = "0.95 2016-04-17"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -4462,7 +4462,7 @@ ComplexCondition:
 End Function
 
 Sub CompileDim (CurrSub As SubType Pointer)
-	Dim As String VarName, VarType, VarAlias, VarFixedLocIn, Origin, InLine, SiStr
+	Dim As String VarName, VarType, VarAlias, VarFixedLocIn, Origin, InLine, SiStr, Temp
 	Dim As Integer PD, IsAlias, Si, CD, VarFixedLoc, NewVarCount
 	Dim As LinkedListElement Pointer CurrLine
 
@@ -4578,7 +4578,18 @@ Sub CompileDim (CurrSub As SubType Pointer)
 
 					InLine = Trim(Left(InLine, INSTR(InLine, "(") - 1))
 				End If
-
+				
+				'Check variable name
+				If IsConst(VarName) THEN
+					Temp = Message("BadVarName")
+					If Left(VarName, 7) = ";STRING" Then
+						Replace Temp, "%var%", Chr(34) + GetString(VarName, 0) + Chr(34)
+					Else
+						Replace Temp, "%var%", VarName						
+					End If
+					LogError Temp, Origin
+				END If
+				
 				'Add var
 				If IsAlias Then
 					AddVar(InLine, VarType, Si, CurrSub, "ALIAS:" + VarAlias, Origin, , -1)
