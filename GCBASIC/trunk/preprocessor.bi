@@ -469,15 +469,16 @@ END SUB
 
 SUB PreProcessor
 
-	Dim As String Origin, Temp, DataSource, PreserveIn, DSOld, CurrentSub, StringTemp, SubName
+	Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
-	Dim As String TempFile, LastTableOrigin, NewFNType
+	Dim As String TempFile, LastTableOrigin, NewFNType, CurrChar, CodeTemp, OtherChar
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 	
 	Dim As String LineToken(100)
 	
 	Dim As Integer T, T2, ICCO, CE, PD, RF, S, LC, LCS, SID, CD, SL, NR
 	Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro
+	Dim As Integer CurrCharPos, ReadType
 	Dim As Single CurrPerc, PercAdd, PercOld
 	
 	CurrentSub = ""
@@ -514,7 +515,7 @@ SUB PreProcessor
 				DO WHILE NOT EOF(1)
 					LINE INPUT #1, Temp
 					LC += 1
-					Temp = Trim(Temp)
+					Temp = Trim(Temp, Any Chr(9) + " ")
 					IF Left(UCase(Temp), 8) = "#INCLUDE" THEN
 						IF INSTR(Temp, Chr(34)) <> 0 THEN
 							Temp = Mid(Temp, INSTR(Temp, Chr(34)) + 1)
@@ -631,38 +632,128 @@ SUB PreProcessor
 				PreserveIn = "Source:F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC * S) + "I" + Str(LCS)
 			End If
 			
-			'Remove leading and trailing spaces, capitalise line
-			DSOld = DataSource
-			DO WHILE INSTR(DataSource, Chr(9)) <> 0: Replace DataSource, Chr(9), " ": LOOP
-			DataSource = UCase(Trim(DataSource))
+			'Extract strings, and remove comments with ; and '
+			'Also process H' and B'
+			'Convert tabs to spaces
+			
+			'0 = standard, 1 = string, 2 = inside binary or hex, 3 = comment
+			ReadType = 0
+			CodeTemp = ""
+			StringTemp = ""
+			CurrCharPos = 1
+			Do While CurrCharPos <= Len(DataSource)
+				CurrChar = Mid(DataSource, CurrCharPos, 1)
+				
+				If CurrChar = """" Then
+					'Start or end of string
+					If ReadType = 0 Then
+						ReadType = 1
+						CurrChar = "" 'Don't append
+						StringTemp = ""
+						
+					ElseIf ReadType = 1 Then
+						'Is next character another double quote? If so, include it
+						'Allows "" to represent a " in a string
+						If Mid(DataSource, CurrCharPos + 1, 1) = Chr(34) Then
+							CurrCharPos += 1 'Skip next char
+						Else
+							'End of string found
+							ReadType = 0
+							CurrChar = "" 'Don't append to code!
+							
+							'Store string
+							'Check for duplicates
+							SID = 0
+							FOR CD = 1 to SSC
+								If StringStore(CD).Value = StringTemp THEN SID = CD: EXIT FOR
+							NEXT
+							
+							If SID = 0 Then
+								SSC = SSC + 1
+								StringStore(SSC).Value = StringTemp
+								StringStore(SSC).Used = 0
+								SID = SSC
+							End If
+							
+							'Add reference to string to line
+							CodeTemp += ";STRING" + Str(SID) + ";"
+						End If
+					End If
+					
+				ElseIf CurrChar = "'" Then
+					'Comment, or possibly part of binary/hex constant
+					If ReadType = 0 Then
+						OtherChar = LCase(Mid(DataSource, CurrCharPos - 1, 1))
+						If OtherChar = "b" Or OtherChar = "h" Then
+							ReadType = 2
+						Else
+							ReadType = 3
+						End If
+						
+					ElseIf ReadType = 2 Then
+						ReadType = 0
+					End If
+					
+				ElseIf CurrChar = ";" Then
+					'If this occurs outside of a string, it means comment start
+					If ReadType <> 1 Then ReadType = 3
+				End If
+				
+				Select Case ReadType
+					Case 0, 2:
+						'Append char to code line
+						'Replace tabs with spaces
+						If Asc(CurrChar) = 9 Then CurrChar = " "
+						'Prevent multiple spaces
+						If CurrChar <> " " Or Right(CodeTemp, 1) <> " " Then
+							CodeTemp += CurrChar
+						End If
+						
+					Case 1:
+						'Append char to string
+						StringTemp += CurrChar
+						
+					Case 3:
+						'If in a comment, there's nothing else to read here
+						Exit Do
+				End Select
+				
+				CurrCharPos += 1
+			Loop
+			
+			'If line ended while in a string, a string wasn't properly terminated
+			If ReadType = 1 Then
+				'Generate warning
+				Temp = ";?F" + Str(RF) + "L" + Str(LC) + "S0" + "I" + Str(LCS) + "?"
+				LogWarning(Message("NoClosingQuote"), Temp)
+				
+				'Store string
+				'Check for duplicates
+				SID = 0
+				FOR CD = 1 to SSC
+					If StringStore(CD).Value = StringTemp THEN SID = CD: EXIT FOR
+				NEXT
+				
+				If SID = 0 Then
+					SSC = SSC + 1
+					StringStore(SSC).Value = StringTemp
+					StringStore(SSC).Used = 0
+					SID = SSC
+				End If
+				
+				'Add reference to string to line
+				CodeTemp += ";STRING" + Str(SID) + ";"
+				
+			End If
+			
+			'Put trimmed uppercase code line with comments and strings removed back into DataSource for code below
+			DataSource = UCase(Trim(CodeTemp))
+			'Add to count of loaded lines (main program only)
 			If RF <= ICCO Then
 				If DataSource <> "" Then
 					MainProgramSize += 1
 				End If
 			End If
-			
-			'Remove comments
-			IF INSTR(DataSource, "'") > INSTR(DataSource, "B'") Then
-				DO WHILE INSTR(DataSource, "B'") <> 0
-					Replace DataSource, "B'", "%B%"
-					Replace DataSource, "'", "%S"
-				LOOP
-			End If
-			
-			IF INSTR(DataSource, "'") > INSTR(DataSource, "H'") Then
-				DO WHILE INSTR(DataSource, "H'") <> 0
-					Replace DataSource, "H'", "%H%"
-					Replace DataSource, "'", "%S"
-				LOOP
-			End If
-			
-			'Trim line of comments when string is present
-			If INSTR(DataSource, "'") <> 0 AND INSTR(DataSource, Chr(34)) <> 0 AND INSTR(DataSource, "'") < INSTR(DataSource, Chr(34)) Then
-				DataSource = Trim(Left(DataSource, INSTR(DataSource, "'") - 1))
-				DSOld = Trim(Left(DSOld, INSTR(DSOld, "'") - 1))
-			End If
-			'Remove comments started with ;
-			IF INSTR(DataSource, ";") > 1 THEN DataSource = Left(DataSource, INSTR(DataSource, ";") - 1)
 			
 			'Only load line if it is valid
 			T = 0
@@ -672,57 +763,6 @@ SUB PreProcessor
 			IF DataSource = "REM" THEN T = 1
 			IF DataSource = "" THEN T = 1
 			IF Left(DataSource, 8) = "#INCLUDE" THEN T = 1
-			
-			'Extract strings
-			IF T <> 1 THEN
-				DO WHILE INSTR(DSOld, Chr(34)) <> 0
-					StringTemp = Mid(DSOld, INSTR(DSOld, Chr(34)) + 1)
-					If InStr(StringTemp, Chr(34)) = 0 Then
-						Temp = ";?F" + Str(RF) + "L" + Str(LC) + "S0" + "I" + Str(LCS) + "?"
-						LogError(Message("NoClosingQuote"), Temp)
-						
-						Replace DataSource, Chr(34) + StringTemp, Chr(34) + StringTemp + Chr(34)
-						Replace DSOld, Chr(34) + StringTemp, Chr(34) + StringTemp + Chr(34)
-						
-					Else
-						StringTemp = Left(StringTemp, INSTR(StringTemp, Chr(34)) - 1)
-					End If
-					
-					'Check for duplicates
-					SID = 0
-					FOR CD = 1 to SSC
-						If StringStore(CD).Value = StringTemp THEN SID = CD: EXIT FOR
-					NEXT
-					
-					IF SID = 0 THEN
-						SSC = SSC + 1
-						StringStore(SSC).Value = StringTemp
-						StringStore(SSC).Used = 0
-						Replace DataSource, Chr(34) + StringTemp + Chr(34), ";STRING" + Str(SSC) + ";"
-						Replace DSOld, Chr(34) + StringTemp + Chr(34), ";STRING" + Str(SSC) + ";"
-					Else
-						Replace DataSource, Chr(34) + StringTemp + Chr(34), ";STRING" + Str(SID) + ";"
-						Replace DSOld, Chr(34) + StringTemp + Chr(34), ";STRING" + Str(SID) + ";"
-					END IF
-				LOOP
-			END IF
-			
-			'Trim line of all comments
-			IF INSTR(DataSource, "'") > 1 THEN DataSource = Left(DataSource, INSTR(DataSource, "'") - 1)
-			
-			DO WHILE INSTR(DataSource, "%B%") <> 0
-				Replace DataSource, "%B%", "B'"
-				Replace DataSource, "%S", "'"
-			LOOP
-			DO WHILE INSTR(DataSource, "%H%") <> 0
-				Replace DataSource, "%H%", "H'"
-				Replace DataSource, "%S", "'"
-			LOOP
-			DataSource = RTrim(DataSource)
-			
-			'Remove any tabs and double spaces
-			DO WHILE INSTR(DataSource, Chr(9)) <> 0: Replace DataSource, Chr(9), " ": LOOP
-			DO WHILE INSTR(DataSource, "  ") <> 0: Replace DataSource, "  ", " ": LOOP
 			
 			'Load line
 			IF T = 0 THEN
