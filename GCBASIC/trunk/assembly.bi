@@ -1033,6 +1033,7 @@ SUB AssembleProgram
 		IF ChipFamily <> 16 THEN CL = CL * 2
 		If PD = 1 Then OA = CL
 		NewRecordData = Trim(Mid(Prog(PD), INSTR(Prog(PD), ":") + 1))
+		Do While LEN(NewRecordData) < 4: NewRecordData = "0" + NewRecordData: Loop
 		
 		IF OIR >= 16 OR OA < (CL - 2) Or OA > CL THEN
 			'Save record, add new one

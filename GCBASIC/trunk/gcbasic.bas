@@ -587,7 +587,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-17"
+Version = "0.95 2016-04-20"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -8605,6 +8605,8 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String) As Intege
 		If InStr(Config, "INTIO2") <> 0 Then Return -1
 		If InStr(Config, "IRCIO67") <> 0 Then Return -1
 		If InStr(Config, "IRC") <> 0 Then Return -1
+		If InStr(Config, "HFINT32") <> 0 Then Return -1
+		
 	End If
 
 	'No match found
@@ -10138,6 +10140,7 @@ Sub GetEqConfig
 		CurrLoc = LinkedListInsert(CurrLoc, "EXTRC")
 		CurrLoc = LinkedListInsert(CurrLoc, "INTRC")
 		CurrLoc = LinkedListInsert(CurrLoc, "INTIO")
+		CurrLoc = LinkedListInsert(CurrLoc, "RSTOSC")
 
 		'BODEN/BOREN/BOD/BOR
 		CurrLoc = LinkedListCreate
