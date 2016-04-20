@@ -61,12 +61,20 @@ Module Program
 		'Get list of files to compare
 		Try
 			Files1 = FindChipFiles(SourceDir1)
+			If Files1.Count = 0 Then
+				Console.WriteLine("Error: Check that " + SourceDir1 + " is a valid folder")
+				Exit Sub
+			End If
 		Catch
 			Console.WriteLine("Error: Check that " + SourceDir1 + " is a valid folder")
 			Exit Sub
 		End Try
 		Try
 			Files2 = FindChipFiles(SourceDir2)
+			If Files2.Count = 0 Then
+				Console.WriteLine("Error: Check that " + SourceDir2 + " is a valid folder")
+				Exit Sub
+			End If
 		Catch
 			Console.WriteLine("Error: Check that " + SourceDir2 + " is a valid folder")
 			Exit Sub
@@ -86,7 +94,7 @@ Module Program
 				Dim Chip1, Chip2 As ChipInfo
 				
 				'Get data for chip 1, check for loading issues
-				Chip1 = New ChipInfo(SourceDir1, CurrChip)
+				Chip1 = New ChipInfo(Files1.Item(CurrChip), CurrChip, Update)
 				If Not Update Then
 					If Chip1.ChipNotValid Then
 						Console.WriteLine(Chip1.ChipName + ": Chip 1 not valid")
@@ -96,7 +104,7 @@ Module Program
 				End If
 				
 				'Get data for chip 2, check for loading issues
-				Chip2 = New ChipInfo(SourceDir2, CurrChip)
+				Chip2 = New ChipInfo(Files2.Item(CurrChip), CurrChip)
 				If Chip2.ChipNotValid Then
 					Console.WriteLine(Chip2.ChipName + ": Chip 2 not valid")
 				Else If Chip2.ChipSuspect Then
@@ -210,7 +218,13 @@ Module Program
 			If Not Chip1.SFRVarBits.ContainsKey(CurrBit) Then
 				If Not Update Then Console.WriteLine(Chip1.ChipName + ": Bit " + CurrBit + " only in 2")
 			Else If Not Chip2.SFRVarBits.ContainsKey(CurrBit) Then
-				Console.WriteLine(Chip1.ChipName + ": Bit " + CurrBit + " only in 1")
+				'If updating, ignore bits that are an SFR name then a number. These probably aren't used.
+				If Not Update Or _
+				   Not Char.IsDigit(CurrBit.Substring(CurrBit.Length - 1, 1)) Or _
+				   Not Chip2.SFRVars.ContainsKey(CurrBit.Substring(0, CurrBit.Length - 1)) Then
+					
+					Console.WriteLine(Chip1.ChipName + ": Bit " + CurrBit + " only in 1")
+				End If
 			Else
 				'Compare var bit
 				Bit1 = Chip1.SFRVarBits(CurrBit)
@@ -345,11 +359,20 @@ Module Program
 		Dim OutList As New Dictionary(Of String, String)(StringComparer.CurrentCultureIgnoreCase)
 		
 		Dim Dir As New DirectoryInfo(SearchDir)
-		For Each File As FileInfo In Dir.GetFiles("*.dat")
-			If Not File.Name.Contains("core") Then
+		If Dir.Exists Then
+			'Found a valid directory
+			For Each File As FileInfo In Dir.GetFiles("*.dat")
+				If Not File.Name.Contains("core") Then
+					OutList.Add(File.Name.Substring(0, File.Name.Length - 4), File.FullName)
+				End If
+			Next
+		Else
+			'Is it a file?
+			Dim File As New FileInfo(SearchDir)
+			If File.Exists Then
 				OutList.Add(File.Name.Substring(0, File.Name.Length - 4), File.FullName)
 			End If
-		Next
+		End If
 		
 		Return OutList
 	End Function

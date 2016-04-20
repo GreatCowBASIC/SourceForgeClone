@@ -150,6 +150,7 @@ Imports System.IO
 		
 		Public Dim ChipNotValid As Boolean 'File definitely not usable
 		Public Dim ChipSuspect As Boolean 'File may not be usable
+		Private Dim LoadSilently As Boolean
 		
 		'Misc chip data
 		Public Dim ADCInputs As Integer
@@ -182,16 +183,20 @@ Imports System.IO
 		
 		Private Sub LogWarning(ErrorMessage As String)
 			ChipSuspect = True
-			Console.WriteLine(ChipName + ":" + ErrorMessage)
+			If Not LoadSilently Then
+				Console.WriteLine(ChipName + ":" + ErrorMessage)
+			End If
 		End Sub
 		
 		Private Sub LogError(ErrorMessage As String)
 			'MessageBox.Show(ErrorMessage, "Great Cow Graphical BASIC", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1)
 			ChipNotValid = True
-			Console.WriteLine(ChipName + ":" + ErrorMessage)
+			If Not LoadSilently Then
+				Console.WriteLine(ChipName + ":" + ErrorMessage)
+			End If
 		End Sub
 		
-		Public Sub New(SourceDir As String, ChipName As String)
+		Public Sub New(ChipFile As String, ChipName As String, Optional LoadSilently As Boolean = False)
 			Dim TempData, OpName, OpData, CurrentSection, ChipDataFile, PinName As String
 			'Dim NewSetting As ChipConfigOption
 			
@@ -199,13 +204,10 @@ Imports System.IO
 			'Should load DIP if possible, if not then load whatever else there is
 			Dim PinsDipLoaded As Boolean = False
 			
-			If Not SourceDir.EndsWith("\") Then
-				SourceDir += "\"
-			End If
-			
 			'Initialise
 			Me.ChipName = ChipName
-			ChipDataFile = SourceDir + ChipName.ToLower + ".dat"
+			Me.LoadSilently = LoadSilently
+			ChipDataFile = ChipFile
 	    	NoConfig = 0
 	    	ChipNotValid = False
 	    	InterruptList = New Dictionary(Of String, ChipInterrupt)(StringComparer.CurrentCultureIgnoreCase)
@@ -229,7 +231,7 @@ Imports System.IO
 		    	Dim ReadFile As New StreamReader(ChipDataFile)
 		    	Do While ReadFile.Peek() <> -1
 		    		TempData = ReadFile.ReadLine().Trim
-		    		If TempData <> "" Then
+		    		If TempData <> "" And Not TempData.StartsWith("'") Then
 		    			'Has current section changed?
 		    			If TempData.IndexOf("[") <> -1 Then
 		    				CurrentSection = TempData.ToUpper
