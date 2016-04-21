@@ -1276,6 +1276,156 @@ FUNCTION ShortName (NameIn As String) As String
 
 END Function
 
+Function HashMapCreate As HashMap Pointer
+	'Create new hash map
+	Dim As HashMap Pointer OutMap
+	OutMap = Callocate(SizeOf(HashMap))
+	
+	Return OutMap
+End Function
+
+Sub HashMapDestroy(Map As HashMap Pointer)
+	Dim CurrBucket As Integer
+	
+	If Map = 0 Then Exit Sub
+	
+	'Clear every bucket
+	For CurrBucket = 0 To HASH_MAP_BUCKETS
+		If Map->Buckets(CurrBucket) <> 0 Then
+			LinkedListDeleteList(Map->Buckets(CurrBucket), 0)
+		End If
+	Next
+	
+	'Deallocate map
+	DeAllocate Map
+End Sub
+
+Function HashMapCalcHash(Key As String) As Integer
+	'Calculate hash
+	Dim As Integer HashOut, CurrChar
+	
+	HashOut = 0
+	For CurrChar = 1 To Len(Key)
+		HashOut = HashOut + (Asc(Key, CurrChar) And Not 32) * 59 * CurrChar Mod 621
+	Next
+	
+	Return HashOut Mod HASH_MAP_BUCKETS
+End Function
+
+Function HashMapGet(Map As HashMap Pointer, Key As String) As Any Pointer
+	Dim Bucket As Integer
+	Dim CurrItem As LinkedListElement Pointer
+	
+	If Map = 0 Then Return 0
+	
+	'If nothing in the appropriate bucket, item isn't in the map
+	Bucket = HashMapCalcHash(Key)
+	If Map->Buckets(Bucket) = 0 Then
+		Return 0
+	End If
+	
+	'Look in the bucket
+	CurrItem = Map->Buckets(Bucket)->Next
+	Do While CurrItem <> 0
+		If CurrItem->Value = Key Then
+			Return CurrItem->MetaData
+		End If
+		CurrItem = CurrItem->Next
+	Loop
+	
+	'Item not in bucket
+	Return 0
+End Function
+
+Function HashMapGetStr(Map As HashMap Pointer, Key As String) As String
+	Dim As String Pointer TempStr
+	
+	TempStr = HashMapGet(Map, Key)
+	If TempStr = 0 Then
+		Return ""
+	Else
+		Return *TempStr
+	EndIf
+End Function
+
+Function HashMapSet(Map As HashMap Pointer, Key As String, Value As String, ReplaceExisting As Integer = -1) As Integer
+	
+	Dim As String Pointer TempStr
+	TempStr = Callocate(SizeOf(String))
+	*TempStr = Value
+	
+	Return HashMapSet(Map, Key, TempStr, ReplaceExisting)
+	
+End Function
+
+Function HashMapSet(Map As HashMap Pointer, Key As String, Value As Any Pointer, ReplaceExisting As Integer = -1) As Integer
+	'Returns -1 if set succeeded, or 0 if it did not (duplicate key and not replacing)
+	Dim Bucket As Integer
+	Dim As LinkedListElement Pointer CurrElement, NewElement
+	
+	If Map = 0 Then Return 0
+	
+	'Get bucket to put item in
+	Bucket = HashMapCalcHash(Key)
+	If Map->Buckets(Bucket) = 0 Then
+		Map->Buckets(Bucket) = LinkedListCreate
+	End If
+	
+	'Put new item in bucket
+	CurrElement = Map->Buckets(Bucket)->Next
+	'Is item with same key in bucket? If so, update
+	Do While CurrElement <> 0
+		If CurrElement->Value = Key Then
+			If ReplaceExisting Then
+				CurrElement->MetaData = Value
+				Return -1
+			End If
+			Return 0
+		End If
+		CurrElement = CurrElement->Next
+	Loop
+	'Item wasn't in the bucket, so add it
+	NewElement = LinkedListInsert(Map->Buckets(Bucket), Value)
+	NewElement->Value = Key
+	
+	Return -1
+End Function
+
+Function HashMapToList(Map As HashMap Pointer, Sorted As Integer = 0) As LinkedListElement Pointer
+	'Copy items from hashmap to a linked list
+	'Sorted flag should be set to -1 to sort alphabetically by key
+	Dim As LinkedListElement Pointer NewList, InsertLoc, BucketLoc
+	Dim As Integer CurrBucket
+	
+	NewList = LinkedListCreate
+	InsertLoc = NewList
+	
+	For CurrBucket = 0 To HASH_MAP_BUCKETS - 1
+		If Map->Buckets(CurrBucket) <> 0 Then
+			'Found bucket, copy contents
+			BucketLoc = Map->Buckets(CurrBucket)->Next
+			Do While BucketLoc <> 0
+				If Sorted Then
+					'Find location to insert at
+					InsertLoc = NewList
+					Do While InsertLoc->Next <> 0
+						InsertLoc = InsertLoc->Next
+						If InsertLoc->Value > BucketLoc->Value Then
+							InsertLoc = InsertLoc->Prev
+							Exit Do
+						End If
+					Loop
+				End If
+				InsertLoc = LinkedListInsert(InsertLoc, BucketLoc->Value)
+				InsertLoc->MetaData = BucketLoc->MetaData
+				BucketLoc = BucketLoc->Next
+			Loop
+		End If
+	Next
+	
+	Return NewList
+End Function
+
 Function LinkedListCreate As LinkedListElement Pointer
 	
 	Dim As LinkedListElement Pointer NewElement

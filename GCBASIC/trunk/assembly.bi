@@ -19,6 +19,21 @@
 'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
+Sub AddAsmSymbol(SymName As String, SymValue As String)
+	Dim As String Temp
+	
+	'Add symbol to symbol table
+	If Not HashMapSet(ASMSymbols, SymName, SymValue, 0) Then
+		'Generate error if can't due to conflict
+		If HashMapGetStr(ASMSymbols, SymName) <> SymValue Then
+			Temp = Message("DupDef")
+			Replace Temp, "%var%", UCase(SymName)
+			LogError "GCASM: " + Temp
+		End If
+	End If
+	
+End Sub
+
 Sub AsmOptimiser (CompSub As SubType Pointer)
 	
 	Dim As String Temp, BranchLine, NewBranch, OldBranch, ClearVar, OtherParam, VarName, RegName
@@ -340,8 +355,10 @@ SUB AssembleProgram
 	
 	Dim As String ParamValues(100)
 	Dim As Integer ParamWasLabel(100)
-	Dim As Integer PValueCount, CurrentLine
+	Dim As String ParamElement(100)
+	Dim As Integer PValueCount, CurrentLine, ParamElements, ElementNo
 	
+	Dim As LinkedListElement Pointer AsmSymbolList, CurrItem
 	Dim As String Prog(60000)
 	
 	'Clear compiled program
@@ -358,22 +375,6 @@ SUB AssembleProgram
 	If VBS = 1 Then Print SPC(5); Message("SymbolTable")
 	BuildAsmSymbolTable
 	
-	'Check for duplicate symbols
-	FOR PD = 1 to ASMSym
-		FOR CD = PD TO ASMSym
-			IF ASMSymbols(PD, 1) = ASMSymbols(CD, 1) AND CD <> PD THEN
-				IF ASMSymbols(PD, 2) <> ASMSymbols(CD, 2) THEN
-					Temp = Message("DupDef")
-					Replace Temp, "%var%", ASMSymbols(PD, 1)
-					LogError "GCASM: " + Temp
-					ASMSymbols(PD, 1) = ""
-					GOTO CheckNextSymbol
-				End IF
-			END IF
-		NEXT
-		CheckNextSymbol:
-	NEXT
-	
 	'Convert asm > binary > hex
 	IF VBS = 1 Then Print SPC(5); Message("MachineCode");
 	PercOld = 0
@@ -385,28 +386,15 @@ SUB AssembleProgram
 	Print #1, "GCASM List File (GCBASIC " + Version + ")"
 	Print #1, ""
 	Print #1, "Symbols:"
-	For PD = 1 To ASMSym
-		Print #1, ASMSymbols(PD, 1) + " " + Chr(9) + "EQU " + Chr(9) + AsmSymbols(PD, 2)
-	Next
+	AsmSymbolList = HashMapToList(ASMSymbols, -1)
+	CurrItem = AsmSymbolList->Next
+	Do While CurrItem <> 0
+		Print #1, CurrItem->Value + " " + Chr(9) + "EQU " + Chr(9) + *CPtr(String Pointer, CurrItem->MetaData)
+		CurrItem = CurrItem->Next
+	Loop
 	Print #1, ""
 	Print #1, "Code:"
 	Print #1, "Loc" + Chr(9) + "Obj Code" + Chr(9) + "Original Assembly"
-	
-	'Having saved to list file, sort symbol table by length
-	Dim As Integer StartPos, SearchPos, FirstPos
-	For StartPos = 1 To AsmSym
-		'Find first symbol name in unsorted part of list
-		FirstPos = StartPos
-		For SearchPos = StartPos + 1 To AsmSym
-			If Len(AsmSymbols(SearchPos, 1)) > Len(AsmSymbols(FirstPos, 1)) Then
-				FirstPos = SearchPos	
-			End If
-		Next
-		'Move first unsorted item into first place of unsorted list
-		'(Swap with first unsorted location)
-		Swap AsmSymbols(StartPos, 1), AsmSymbols(FirstPos, 1)
-		Swap AsmSymbols(StartPos, 2), AsmSymbols(FirstPos, 2)
-	Next
 	
 	'Convert line at a time
 	CurrentLine = 0
@@ -441,11 +429,9 @@ SUB AssembleProgram
 			'Special Cases
 			If CurrCmd = 0 Then
 				IF Left(DataSource, 8) = "BANKSEL " THEN
-					B = 0
 					Temp = UCase(Trim(Mid(DataSource, 8)))
-					FOR FB = 1 TO ASMSym
-						IF Temp = ASMSymbols(FB, 1) THEN B = VAL(ASMSymbols(FB, 2)): Exit For
-					NEXT
+					B = Val(HashMapGetStr(ASMSymbols, Temp))
+					
 					IF ChipFamily = 12 Or ChipFamily = 14 THEN
 						B = (B AND 384) / 128
 						RepeatBanksel = 0
@@ -486,9 +472,7 @@ SUB AssembleProgram
 					Temp = Trim(Mid(DataSource, 8))
 					IF Temp = "$" THEN B = CurrentLine
 					IF B = 0 THEN
-						FOR FB = 1 TO ASMSym
-							IF Temp = ASMSymbols(FB, 1) THEN B = VAL(ASMSymbols(FB, 2)): Exit FOR
-						NEXT
+						B = Val(HashMapGetStr(ASMSymbols, Temp))
 					END IF
 					
 					If ChipFamily <> 15 Then
@@ -524,9 +508,7 @@ SUB AssembleProgram
 					Temp = Trim(Mid(DataSource, 9))
 					IF Temp = "$" THEN B = CurrentLine
 					IF B = 0 THEN
-						FOR FB = 1 TO ASMSym
-							IF Temp = ASMSymbols(FB, 1) THEN B = VAL(ASMSymbols(FB, 2)): Exit FOR
-						NEXT
+						B = Val(HashMapGetStr(ASMSymbols, Temp))
 					END IF
 					
 					IF B < 256 Then DataSource = " bcf STATUS,IRP"
@@ -626,27 +608,30 @@ SUB AssembleProgram
 						WholeReplace ParamValues(CD), "PC", Str(CurrentLine)
 					End If
 					'Replace symbols
-					Do
-						KeepReplacing = 0
-						FOR FB = 1 TO ASMSym
-							Do While InStr(UCase(ParamValues(CD)), UCase(Trim(ASMSymbols(FB, 1)))) <> 0
-								If WholeINSTR(ParamValues(CD), ASMSymbols(FB, 1)) <> 2 Then
-									Replace ParamValues(CD), ASMSymbols(FB, 1), Chr(27)
-								Else
-									If IsConst(ASMSymbols(FB, 2)) Then
-										WholeReplace ParamValues(CD), ASMSymbols(FB, 1), Str(MakeDec(ASMSymbols(FB, 2)))
+					ParamValue = HashMapGetStr(ASMSymbols, ParamValues(CD))
+					If ParamValue <> "" Then
+						ParamValues(CD) = ParamValue
+					ElseIf Not IsConst(ParamValues(CD)) Then
+						Do
+							KeepReplacing = 0
+							
+							GetTokens(ParamValues(CD), ParamElement(), ParamElements, , -1)
+							
+							ParamValues(CD) = ""
+							For ElementNo = 1 To ParamElements
+								If Not IsDivider(ParamElement(ElementNo)) Then
+									ParamValue = HashMapGetStr(ASMSymbols, ParamElement(ElementNo))
+									If ParamValue <> "" Then
+										ParamElement(ElementNo) = ParamValue
 										ParamWasLabel(CD) = -1
-									Else
-										WholeReplace ParamValues(CD), ASMSymbols(FB, 1), ASMSymbols(FB, 2)
-										KeepReplacing = -1
-										ParamWasLabel(CD) = -1
+										If Not IsConst(ParamValue) Then	KeepReplacing = -1
 									End If
 								End If
-							Loop
-							Do While INSTR(ParamValues(CD), Chr(27)) <> 0: Replace ParamValues(CD), Chr(27), ASMSymbols(FB, 1): Loop
+								ParamValues(CD) += ParamElement(ElementNo)
+							Next
 							
-						Next
-					Loop While KeepReplacing
+						Loop While KeepReplacing
+					End If
 					
 					'Some AVR only operations
 					If ModeAVR Then
@@ -1154,64 +1139,56 @@ Sub BuildAsmSymbolTable
 	Dim As Integer PD, CSB, RP1, CurrentLocation, DT, OrgLocation, SS, CS
 	Dim As Integer DataBlockSize, DataSize, DWC, RSC, CurrCmd, DWIC, T
 	
+	ASMSymbols = HashMapCreate
+	
 	If ModePIC Then
-		ASMSym = 6
-		ASMSymbols(1, 1) = "W": ASMSymbols(1, 2) = "0"
-		ASMSymbols(2, 1) = "F": ASMSymbols(2, 2) = "1"
-		ASMSymbols(3, 1) = "A": ASMSymbols(3, 2) = "0"
-		ASMSymbols(4, 1) = "B": ASMSymbols(4, 2) = "1"
-		ASMSymbols(5, 1) = "ACCESS": ASMSymbols(5, 2) = "0"
-		ASMSymbols(6, 1) = "BANKED": ASMSymbols(6, 2) = "1"
+		AddAsmSymbol("W", "0")
+		AddAsmSymbol("F", "1")
+		AddAsmSymbol("A", "0")
+		AddAsmSymbol("B", "1")
+		AddAsmSymbol("ACCESS", "0")
+		AddAsmSymbol("BANKED", "1")
+		
 	ElseIf ModeAVR Then
-		ASMSym = 10
 		'Need to do X after X+ and -X
-		ASMSymbols(1, 1) = "X+": ASMSymbols(1, 2) = "29"
-		ASMSymbols(2, 1) = "-X": ASMSymbols(2, 2) = "30"
-		ASMSymbols(3, 1) = "X": ASMSymbols(3, 2) = "28"
+		AddAsmSymbol("X+", "29")
+		AddAsmSymbol("-X", "30")
+		AddAsmSymbol("X", "28")
 		
-		ASMSymbols(4, 1) = "Y+": ASMSymbols(4, 2) = "25"
-		ASMSymbols(5, 1) = "-Y": ASMSymbols(5, 2) = "26"
-		ASMSymbols(6, 1) = "Y": ASMSymbols(6, 2) = "8"
+		AddAsmSymbol("Y+", "25")
+		AddAsmSymbol("-Y", "26")
+		AddAsmSymbol("Y", "8")
 		
-		ASMSymbols(7, 1) = "rZ": ASMSymbols(7, 2) = "0"
-		ASMSymbols(8, 1) = "Z+": ASMSymbols(8, 2) = "17"
-		ASMSymbols(9, 1) = "-Z": ASMSymbols(9, 2) = "18"
+		AddAsmSymbol("rZ", "0")
+		AddAsmSymbol("Z+", "17")
+		AddAsmSymbol("-Z", "18")
 		
-		'ASMSymbols(10, 1) = "RAMEND": ASMSymbols(10, 2) = STR(ChipRam + 95)
 		Temp = MemRanges(MRC)
 		Temp = "&H" + Trim(Mid(Temp, InStr(Temp, ":") + 1))
-		ASMSymbols(10, 1) = "RAMEND": ASMSymbols(10, 2) = STR(Val(Temp) - 1)
+		HashMapSet(ASMSymbols, "RAMEND", STR(Val(Temp) - 1))
 	End If
-		
+	
 	'SFRs
 	FOR PD = 1 to SVC
-		ASMSym = ASMSym + 1
-		ASMSymbols(ASMSym, 1) = Trim(UCase(SysVars(PD).Name))
-		ASMSymbols(ASMSym, 2) = Trim(Str(SysVars(PD).Location))
+		AddAsmSymbol(Trim(UCase(SysVars(PD).Name)), Trim(Str(SysVars(PD).Location)))
 	NEXT
 		
 	'SFR bits
 	FOR PD = 1 to SVBC
-		ASMSym = ASMSym + 1
-		ASMSymbols(ASMSym, 1) = Trim(UCase(SysVarBits(PD).Name))
-		ASMSymbols(ASMSym, 2) = Trim(Str(SysVarBits(PD).Location))
+		AddAsmSymbol(Trim(UCase(SysVarBits(PD).Name)), Trim(Str(SysVarBits(PD).Location)))
 	NEXT
 	
 	'User variables
 	FOR PD = 1 to FVLC
 		With FinalVarList(PD)
-			ASMSym = ASMSym + 1
-			ASMSymbols(ASMSym, 1) = UCase(.Name)
-			ASMSymbols(ASMSym, 2) = .Value
+			AddAsmSymbol(UCase(.Name), .Value)
 		End With
 	NEXT
 	'User register variables (AVR only)
 	If ModeAVR Then
 		FOR PD = 1 to FRLC
 			With FinalRegList(PD)
-				ASMSym = ASMSym + 1
-				ASMSymbols(ASMSym, 1) = .Name
-				ASMSymbols(ASMSym, 2) = .Value
+				AddAsmSymbol(UCase(.Name), .Value)
 			End With
 		NEXT
 	End If
@@ -1219,18 +1196,14 @@ Sub BuildAsmSymbolTable
 	FOR PD = 1 to FALC
 		With FinalAliasList(PD)
 			If Not HasSFR(.Value) Then
-				ASMSym += 1
-				ASMSymbols(ASMSym, 1) = UCase(.Name)
-				ASMSymbols(ASMSym, 2) = .Value
+				AddAsmSymbol(UCase(.Name), .Value)
 			End If
 		End With
 	NEXT
 	
 	'Symbols from compiler
 	For PD = 1 To ToAsmSymbols
-		ASMSym += 1
-		ASMSymbols(ASMSym, 1) = ToAsmSymbol(PD, 1)
-		ASMSymbols(ASMSym, 2) = ToAsmSymbol(PD, 2) 
+		AddAsmSymbol(ToAsmSymbol(PD, 1), ToAsmSymbol(PD, 2))
 	Next
 	
 	'Labels
@@ -1410,9 +1383,7 @@ Sub BuildAsmSymbolTable
 			'If nothing else, then line is label
 			If CurrCmd <> 999 THEN
 				IF Right(ASMProg(PD), 1) = ":" Then ASMProg(PD) = Left(ASMProg(PD), LEN(ASMProg(PD)) - 1)
-				ASMSym = ASMSym + 1
-				ASMSymbols(ASMSym, 1) = UCase(ASMProg(PD))
-				ASMSymbols(ASMSym, 2) = Str(CurrentLocation)
+				AddAsmSymbol(UCase(ASMProg(PD)), Str(CurrentLocation))
 				IF INSTR(ASMProg(PD), " ") <> 0 THEN
 					Temp = Message("BadSymbol")
 					Replace Temp, "%symbol%", ASMProg(PD)
@@ -1421,23 +1392,6 @@ Sub BuildAsmSymbolTable
 			END IF
 		END IF
 	NEXT
-	
-	'Sort symbol table alphabetically
-	'Use selection sort
-	Dim As Integer StartPos, SearchPos, FirstPos
-	For StartPos = 1 To AsmSym
-		'Find first symbol name in unsorted part of list
-		FirstPos = StartPos
-		For SearchPos = StartPos + 1 To AsmSym
-			If AsmSymbols(SearchPos, 1) < AsmSymbols(FirstPos, 1) Then
-				FirstPos = SearchPos	
-			End If
-		Next
-		'Move first unsorted item into first place of unsorted list
-		'(Swap with first unsorted location)
-		Swap AsmSymbols(StartPos, 1), AsmSymbols(FirstPos, 1)
-		Swap AsmSymbols(StartPos, 2), AsmSymbols(FirstPos, 2)
-	Next
 	
 End Sub
 
