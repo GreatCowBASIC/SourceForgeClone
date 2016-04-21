@@ -20,6 +20,8 @@
 
 'Array sizes
 #Define MAX_PROG_PAGES 20
+'Number of buckets to use in hash maps - increasing makes operations faster but uses more RAM
+#Define HASH_MAP_BUCKETS 500
 
 'Type for sections of code returned from subs
 Type LinkedListElement
@@ -28,6 +30,10 @@ Type LinkedListElement
 	MetaData As Any Pointer
 	Prev As LinkedListElement Pointer
 	Next As LinkedListElement Pointer
+End Type
+
+Type HashMap
+	Buckets(HASH_MAP_BUCKETS) As LinkedListElement Pointer
 End Type
 
 'Meta data for program line
@@ -415,6 +421,7 @@ Declare Sub WriteCompilationReport
 DECLARE SUB WriteErrorLog
 
 'Subs in assembly.bi
+Declare Sub AddAsmSymbol(SymName As String, SymValue As String)
 Declare Sub AsmOptimiser (CompSub As SubType Pointer)
 DECLARE FUNCTION AsmTidy (DataSource As String) As String
 DECLARE SUB AssembleProgram
@@ -453,6 +460,14 @@ Declare Function GetString(StringName As String, UsedInProgram As Integer = -1) 
 Declare Sub GetTokens(InData As String, OutArray() As String, ByRef OutSize As Integer, DivChar As String = "", IncludeDividers As Integer = 0)
 Declare Function GetTypeLetter(InType As String) As String
 Declare Function GetTypeSize(InType As String) As Integer
+Declare Function HashMapCreate As HashMap Pointer
+Declare Function HashMapCalcHash(Key As String) As Integer
+Declare Sub HashMapDestroy(Map As HashMap Pointer)
+Declare Function HashMapGet(Map As HashMap Pointer, Key As String) As Any Pointer
+Declare Function HashMapGetStr(Map As HashMap Pointer, Key As String) As String
+Declare Function HashMapSet OverLoad (Map As HashMap Pointer, Key As String, Value As String, ReplaceExisting As Integer = -1) As Integer
+Declare Function HashMapSet OverLoad (Map As HashMap Pointer, Key As String, Value As Any Pointer, ReplaceExisting As Integer = -1) As Integer
+Declare Function HashMapToList(Map As HashMap Pointer, Sorted As Integer = 0) As LinkedListElement Pointer
 DECLARE FUNCTION IsCalc (Temp As String) As Integer
 Declare FUNCTION IsCalcDivider (Temp As String) As Integer
 DECLARE FUNCTION IsConst (Temp As String) As Integer
@@ -468,6 +483,7 @@ Declare Function ReplaceToolVariables(InData As String, FNExtension As String = 
 DECLARE SUB SCICONV (STemp As String)
 Declare Function ShortFileName(InName As String) As String
 DECLARE FUNCTION ShortName (NameIn As String) As String
+Declare Function LinkedListCreate As LinkedListElement Pointer
 Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewLine As String) As LinkedListElement Pointer
 Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewData As Any Pointer) As LinkedListElement Pointer
 Declare Function LinkedListInsertList (Location As LinkedListElement Pointer, NewList As LinkedListElement Pointer, NewListEndIn As LinkedListElement Pointer = 0) As LinkedListElement Pointer
@@ -500,7 +516,7 @@ Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows
 Dim Shared As Single ChipMhz, ChipMaxSpeed, StartTime, FileConverters
 
 'Assembler vars
-DIM SHARED As Integer ASPC, ASMCC, ASMSym, ToAsmSymbols
+DIM SHARED As Integer ASPC, ASMCC, ToAsmSymbols
 
 'Code Array
 Dim Shared CompilerOutput As CodeSection Pointer
@@ -531,8 +547,7 @@ DIM SHARED ConfigMask(20) As Integer
 DIM SHARED DataTable(100) As DataTableType: DataTables = 0
 DIM SHARED Messages(1 TO 2, 200) As String: MSGC = 0
 DIM SHARED ASMCommands (200) As ASMCommand: ASMCC = 0
-DIM SHARED ASMSymbols(10000, 1 TO 2) As String: ASMSym = 0
-Dim Shared AsmSymbolList As LinkedListElement Pointer
+DIM SHARED ASMSymbols As HashMap Pointer
 Dim Shared ToAsmSymbol(500, 1 To 2) As String: ToAsmSymbols = 0
 DIM SHARED FinalVarList(8000) As VariableListElement: FVLC = 0
 DIM Shared FinalRegList(100) As VariableListElement: FRLC = 0
@@ -587,7 +602,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-20"
+Version = "0.95 2016-04-21"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2819,6 +2834,7 @@ Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As
 
 	Dim As String TempData, InBrackets, OutTemp
 	Dim As Integer T, BL, BC
+	Dim As LinkedListElement Pointer FindLine
 
 	If OutList = 0 Then
 		OutList = NewCodeSection
@@ -2862,6 +2878,17 @@ Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As
 	CalcOps OutList, SUM, AV, "+-", Origin
 	CalcOps OutList, SUM, AV, "=~<>{}", Origin
 	CalcOps OutList, SUM, AV, "&|!#", Origin
+	
+	'Re-add asm calculations
+	FindLine = OutList->CodeList
+	Do While FindLine <> 0
+		TempData = UCase(FindLine->Value)
+		IF INSTR(TempData, "SYSASMCALC") <> 0 Then
+			T = VAL(Mid(TempData, INSTR(TempData, "SYSASMCALC") + 10))
+			Replace FindLine->Value, "SYSASMCALC" + Str(T), CalcAtAsm(T)
+		End If
+		FindLine = FindLine->Next
+	Loop
 
 End Sub
 
@@ -8244,18 +8271,7 @@ SUB CompileVars (CompSub As SubType Pointer)
 						END If
 					End If
 				End If
-
-				'Re-add asm calculations
-				FindLine = NewCode
-				Do While FindLine <> 0
-					Temp = UCase(FindLine->Value)
-					IF INSTR(Temp, "SYSASMCALC") <> 0 Then
-						T = VAL(Mid(Temp, INSTR(Temp, "SYSASMCALC") + 10))
-						Replace FindLine->Value, "SYSASMCALC" + Str(T), CalcAtAsm(T)
-					End If
-					FindLine = FindLine->Next
-				Loop
-
+				
 				'Write the assembly code
 				If NewCode->Next <> 0 Then
 					CurrLine = LinkedListDelete(CurrLine)
