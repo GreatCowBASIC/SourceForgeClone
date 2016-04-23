@@ -21,7 +21,7 @@
 'Array sizes
 #Define MAX_PROG_PAGES 20
 'Number of buckets to use in hash maps - increasing makes operations faster but uses more RAM
-#Define HASH_MAP_BUCKETS 500
+#Define HASH_MAP_BUCKETS 512
 
 'Type for sections of code returned from subs
 Type LinkedListElement
@@ -41,7 +41,7 @@ Type ProgLineMeta
 	RequiredBank As Integer 'Bank chip needs for this icon, -1 if N/A
 	VarInBank As String 'Variable in the bank that is to be changed to
 
-	IsAutoPageSel As Integer 'Set to -1 if line is automatically added pagsel
+	IsAutoPageSel As Integer 'Set to -1 if line is automatically added pagesel
 
 	'List of commands that lead to this one
 	PrevCommands As LinkedListElement Pointer
@@ -116,8 +116,7 @@ Type SubType
 	Overloaded As Integer
 
 	'Variables in subroutine
-	Variable(2000) As VariableType
-	Variables As Integer
+	Variables As HashMap
 	VarsRead As Integer
 
 	'Flags
@@ -360,6 +359,7 @@ Declare Function GetMetaData(CurrLine As LinkedListElement Pointer) As ProgLineM
 Declare Function GetPinDirection(PinNameIn As String) As PinDirType Pointer
 Declare Function GetRealIOName(InName As String) As String
 Declare Function GetRegisterLoc(RegName As String) As Integer
+Declare Function GetSysVar(VarName As String) As SysVarType Pointer
 DECLARE FUNCTION GetSub(Origin As String) As String
 Declare Function GetSubFullName(SubIndex As Integer) As String
 Declare FUNCTION GetSubID(Origin As String) As Integer
@@ -430,6 +430,7 @@ Declare FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As Int
 Declare Function IsASMConst (DataSource As String) As Integer
 
 'Subs in variables.bi
+Declare Function AddFinalVar(VarName As String, VarLoc As String, VarIsArray As Integer = 0) As Integer
 Declare Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0)
 DECLARE SUB AllocateRAM
 Declare Function CalcAliasLoc(LocationIn As String) As Integer
@@ -488,7 +489,7 @@ Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointe
 Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewData As Any Pointer) As LinkedListElement Pointer
 Declare Function LinkedListInsertList (Location As LinkedListElement Pointer, NewList As LinkedListElement Pointer, NewListEndIn As LinkedListElement Pointer = 0) As LinkedListElement Pointer
 Declare Function LinkedListAppend (ListIn As LinkedListElement Pointer, NewList As LinkedListElement Pointer, NewListEndIn As LinkedListElement Pointer = 0) As LinkedListElement Pointer
-Declare Function LinkedListDelete (Location As LinkedListElement Pointer) As LinkedListElement Pointer
+Declare Function LinkedListDelete (Location As LinkedListElement Pointer, DeleteMeta As Integer = -1) As LinkedListElement Pointer
 Declare Function LinkedListDeleteList (StartLoc As LinkedListElement Pointer, EndLoc As LinkedListElement Pointer) As LinkedListElement Pointer
 Declare Sub LinkedListPrint(StartNode As LinkedListElement Pointer)
 Declare Function LinkedListSize(StartNode As LinkedListElement Pointer) As Integer
@@ -500,13 +501,13 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 
 'Initialise
 'Misc Vars
-DIM SHARED As Integer APC, FVLC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
+DIM SHARED As Integer APC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
-DIM SHARED As Integer VBS, SVC, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
+DIM SHARED As Integer VBS, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
 Dim Shared As Integer WarningsAsErrors
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
@@ -530,7 +531,7 @@ DIM SHARED Constants As LinkedListElement Pointer
 Dim Shared SourceFile(100) As SourceFileType: SourceFiles = 0
 DIM SHARED TempData(300) As String
 DIM SHARED CheckTemp(300) As String
-Dim SHARED SysVars(1000) As SysVarType
+Dim SHARED SysVars As HashMap Pointer
 DIM SHARED SysVarBits(8000) As SysVarType '1 - name, 2 - location, 3 - var
 DIM SHARED FILE(300) As String
 Redim SHARED FreeMem(1) As Integer
@@ -549,7 +550,7 @@ DIM SHARED Messages(1 TO 2, 200) As String: MSGC = 0
 DIM SHARED ASMCommands (200) As ASMCommand: ASMCC = 0
 DIM SHARED ASMSymbols As HashMap Pointer
 Dim Shared ToAsmSymbol(500, 1 To 2) As String: ToAsmSymbols = 0
-DIM SHARED FinalVarList(8000) As VariableListElement: FVLC = 0
+DIM SHARED FinalVarList As HashMap Pointer
 DIM Shared FinalRegList(100) As VariableListElement: FRLC = 0
 DIM Shared FinalAliasList(8000) As VariableListElement: FALC = 0
 DIM SHARED PreserveCode(60000) As String: PCC = 0
@@ -602,7 +603,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-21"
+Version = "0.95 2016-04-23"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -639,6 +640,8 @@ AttemptedCallList = LinkedListCreate
 ConfigSettings = LinkedListCreate
 PinDirections = LinkedListCreate
 Constants = LinkedListCreate
+
+SysVars = HashMapCreate
 
 'Load files and tidy them up
 PreProcessor
@@ -684,7 +687,6 @@ IF Not ErrorsFound THEN
 		PRINT Message("Summary")
 		PRINT SPC(5); Message("DataRead")
 		PRINT SPC(10); Message("InLines") + Str(MainProgramSize)
-		PRINT SPC(10); Message("Vars") + Str(FVLC)
 		PRINT SPC(10); Message("Subs") + Str(SBC)
 		PRINT SPC(5); Message("ChipUsage")
 		Temp = Message("UsedProgram")
@@ -751,22 +753,24 @@ End If
 End
 
 SUB Add18FBanks(CompSub As SubType Pointer)
-	Dim As String TempData, VarName
+	Dim As String TempData, First8, VarName
 	Dim As Integer PD, ConstFound, FC
 
 	Dim As LinkedListElement Pointer CurrLine
 
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
-		TempData = LCase(CurrLine->Value)
+		TempData = UCase(CurrLine->Value)
+		First8 = Left(TempData, 8)
 
-		IF INSTR(TempData, "movff") = 0 AND INSTR(TempData, "lfsr") = 0 AND INSTR(TempData, "retfie") = 0 AND INSTR(TempData, ",access") = 0 AND INSTR(TempData, ", access") = 0 AND TempData <> "" AND Left(TempData, 1) <> ";" THEN
-			TempData = Trim(UCase(CurrLine->Value))
+		IF INSTR(First8, "MOVFF") = 0 AND INSTR(First8, "LFSR") = 0 AND INSTR(First8, "RETFIE") = 0 AND INSTR(TempData, ",ACCESS") = 0 AND INSTR(TempData, ", ACCESS") = 0 AND TempData <> "" AND Left(TempData, 1) <> ";" THEN
+			TempData = Trim(TempData)
 			VarName = Mid(TempData, INSTR(TempData, " ") + 1)
-			IF INSTR(VarName, ",") <> 0 THEN VarName = Left(VarName, INSTR(VarName, ",") - 1)
-			VarName = UCase(Trim(VarName))
 			TempData = Left(TempData, INSTR(TempData, " ") - 1)
 			IF INSTR(TempData, "F") <> 0 THEN
+				IF INSTR(VarName, ",") <> 0 THEN VarName = Left(VarName, INSTR(VarName, ",") - 1)
+				VarName = Trim(VarName)
+				
 				'Check if the variable being accessed is a SFR, and add banking mode
 				If IsInAccessBank(VarName) Then
 					CurrLine->Value = CurrLine->Value + ",ACCESS"
@@ -791,6 +795,10 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 	Dim As LinkedListElement Pointer CurrLine, LabelList, LabelListPos, LabelLoc, BankList, BankListLoc, PrintLoc
 	Dim As LinkedListElement Pointer RealNextLine
 	Dim As ProgLineMeta Pointer CurrMeta, DestMeta
+	Dim As String LineToken(100)
+	Dim As Integer LineTokens, CurrToken
+	Dim As SysVarType Pointer FoundSFR
+	Dim As VariableListElement Pointer FoundFinalVar
 
 	'Get bank size
 	Select Case ChipFamily
@@ -836,58 +844,59 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 			'If line operates on file registers, check var usage
 			OtherData = UCase(Trim(TempData))
 			IF INSTR(OtherData, " ") <> 0 THEN OtherData = Left(OtherData, INSTR(OtherData, " ") - 1)
-			IF INSTR(OtherData, "F") <> 0 And WholeINSTR(TempData, "lfsr") <> 2 And WholeINSTR(TempData, "movff") <> 2 THEN
-
-				'Check for SFRs outside of Bank 0
-				For FindVar = 1 TO SVC
-					If WholeINSTR(TempData, SysVars(FindVar).Name) = 2 Then
+			IF INSTR(OtherData, "F") <> 0 And WholeINSTR(TempData, "lfsr") <> 2 And WholeINSTR(TempData, "movff") <> 2 Then
+				
+				'Split line into tokens
+				GetTokens(TempData, LineToken(), LineTokens)
+				For CurrToken = 1 To LineTokens
+					'Check for SFRs outside of Bank 0
+					FoundSFR = GetSysVar(UCase(LineToken(CurrToken)))
+					
+					If FoundSFR <> 0 Then
 						'Found an SFR
 
 						'18F code: check for SFRs outside of access bank
 						If ChipFamily = 16 Then
-							If Not IsNonBanked(SysVars(FindVar).Location) Then
-								Bank = SysVars(FindVar).Location And BankMask
-								VarInBank = SysVars(FindVar).Name
+							If Not IsNonBanked(FoundSFR->Location) Then
+								Bank = FoundSFR->Location And BankMask
+								VarInBank = FoundSFR->Name
 							End If
 
 						'16F1 code: Don't need bank selection for 12 core registers on 16F1xxx
 						ElseIf ChipFamily = 15 Then
-							If (SysVars(FindVar).Location And Not BankMask) >= 12 Then
-								Bank = SysVars(FindVar).Location And BankMask
-								VarInBank = SysVars(FindVar).Name
+							If (FoundSFR->Location And Not BankMask) >= 12 Then
+								Bank = FoundSFR->Location And BankMask
+								VarInBank = FoundSFR->Name
 							End If
 
 						'Other PIC code: assume always need bank selection (unless dealing with STATUS, PCL, FSR or INDF)
 						Else
-							Select Case UCase(SysVars(FindVar).Name)
+							Select Case UCase(FoundSFR->Name)
 								Case "STATUS", "PCL", "FSR", "INDF", "PCLATH", "INTCON"
 									Bank = -1
 								Case Else
-									Bank = SysVars(FindVar).Location And BankMask
-									VarInBank = SysVars(FindVar).Name
+									Bank = FoundSFR->Location And BankMask
+									VarInBank = FoundSFR->Name
 							End Select
 
 						End If
 						GoTo RequiredBankFound
 					End If
-				Next
-
-				'Check for user vars outside of bank 0
-				TempData = Trim(UCase(TempData))
-				FOR FindVar = 1 TO FVLC
-					With FinalVarList(FindVar)
-						VarName = UCase(Trim(.Name))
-						IF WholeINSTR(TempData, VarName) = 2 Then
+					
+					'Check for user vars outside of bank 0
+					FoundFinalVar = HashMapGet(FinalVarList, UCase(LineToken(CurrToken)))
+					IF FoundFinalVar <> 0 Then
+						With *FoundFinalVar
 							'Have found a variable, is banking needed?
-							IF Not .IsArray AND Not IsRegister(VarName) Then
+							IF Not .IsArray AND Not IsRegister(.Name) Then
 								Bank = VAL(.Value) AND BankMask
-								VarInBank = VarName
+								VarInBank = .Name
+								GoTo RequiredBankFound
 							End If
-							Exit For
-						End If
-					End With
+						End With
+					End If
 				Next
-
+				
 				RequiredBankFound:
 			End If
 		End If
@@ -10458,7 +10467,13 @@ Function GetRegisterLoc(RegName As String) As Integer
 
 End Function
 
-FUNCTION GetSub(Origin As String) As String
+Function GetSysVar(VarName As String) As SysVarType Pointer
+	'Look up system variable in hash map
+	Return CPtr(SysVarType Pointer, HashMapGet(SysVars, VarName))
+	
+End Function
+
+Function GetSub(Origin As String) As String
 	Dim As String Temp
 	Dim As Integer T
 
@@ -11114,35 +11129,33 @@ SUB InitCompiler
 
 END SUB
 
-Function IsArray (VarName As String, CurrSub As SubType Pointer) As Integer
+Function IsArray (VarNameIn As String, CurrSub As SubType Pointer) As Integer
 	IsArray = 0
-	Dim As Integer PD
-
+	Dim As VariableType Pointer FoundVar
+	Dim As String VarName
+	'If () after variable name, remove and check variable
+	VarName = Trim(UCase(VarNameIn))
+	If Right(VarName, 2) = "()" Then
+		VarName = RTrim(Left(VarName, Len(VarName) - 2))
+	End If
+	
 	'Array var?
-	FOR PD = 1 TO CurrSub->Variables
-		With CurrSub->Variable(PD)
-			IF .Size > 1 THEN
-				IF WholeINSTR(UCase(VarName), UCase(.Name)) = 2 THEN
-					IsArray = -1
-					Exit Function
-				End If
-			END IF
-		End With
-	NEXT
-
+	FoundVar = HashMapGet(@(CurrSub->Variables), VarName)
+	If FoundVar <> 0 Then
+		If FoundVar->Size > 1 Then
+			Return -1
+		End If
+	End If
+	
 	'Main sub
-	FOR PD = 1 TO Subroutine(0)->Variables
-		With Subroutine(0)->Variable(PD)
-			IF .Size > 1 THEN
-				IF WholeINSTR(UCase(VarName), UCase(.Name)) = 2 THEN
-					IsArray = -1
-					Exit Function
-				End If
-			END IF
-		End With
-	Next
-
-END FUNCTION
+	FoundVar = HashMapGet(@(Subroutine(0)->Variables), VarName)
+	If FoundVar <> 0 Then
+		If FoundVar->Size > 1 Then
+			Return -1
+		End If
+	End If
+	
+End FUNCTION
 
 Function IsNonBanked(Location As Integer) As Integer
 	'Returns -1 if the location does not require banking
@@ -11172,6 +11185,7 @@ Function IsInAccessBank(VarNameIn As String) As Integer
 	'Check if a specified variable is located in the access bank
 	Dim As Integer FindVar
 	Dim As String VarName
+	Dim As SysVarType Pointer FoundVar
 
 	'18F only at this stage
 	If ChipFamily <> 16 Then Return 0
@@ -11181,12 +11195,11 @@ Function IsInAccessBank(VarNameIn As String) As Integer
 	'Check for SFRs and Registers
 	'Need to get location, then check if it is a non-banked location
 	'Search system variable list
-	For FindVar = 1 To SVC
-		If UCase(Trim((SysVars(FindVar).Name))) = VarName Then
-			Return IsNonBanked(SysVars(FindVar).Location)
-		End If
-	Next
-
+	FoundVar = GetSysVar(VarName)
+	If FoundVar <> 0 Then
+		Return IsNonBanked(FoundVar->Location)
+	End If
+	
 	'Check if the variable being accessed is a SFR
 	If IsRegister(VarNameIn) Then
 		Return -1
@@ -11217,48 +11230,45 @@ End Function
 Function IsIOReg (RegNameIn As String) As Integer
 	Dim RegName As String
 	Dim As Integer SD
-
+	Dim As SysVarType Pointer FoundVar
+	
 	'Check if a register is in the IO space
 	RegName = TRIM(UCASE(RegNameIn))
 
 	'Search, return true if found
-	For SD = 1 to SVC
-		If SysVars(SD).Name = RegName Then
-			If ModePIC Then
+	FoundVar = GetSysVar(RegName)
+	If FoundVar <> 0 Then
+		If ModePIC Then
+			Return -1
+		ElseIf ModeAVR Then
+			If FoundVar->Location > 63 Then
+				Return 0
+			Else
 				Return -1
-			ElseIf ModeAVR Then
-				If SysVars(SD).Location > 63 Then
-					Return 0
-				Else
+			End If
+		End If
+	End If
+	
+	'Check aliases
+	'May have an alias to an IO register
+	Dim As String Source, Temp
+	Dim As Integer CurrSub
+	Dim As VariableType Pointer FoundUserVar
+	Source = Trim(UCase(RegName))
+	Temp = ""
+	For CurrSub = 0 To SBC
+		FoundUserVar = HashMapGet(@(Subroutine(CurrSub)->Variables), Source)
+		If FoundUserVar <> 0 THEN
+			'Have found an alias?
+			Temp = FoundUserVar->Alias
+			If Temp <> "" Then
+				If InStr(Temp, ",") <> 0 Then Temp = Trim(Left(Temp, InStr(Temp, ",") - 1))
+				If IsIOReg(Temp) Then
 					Return -1
 				End If
 			End If
 		End If
-	Next
-
-	'Check aliases
-	'May have an alias to an IO register
-	Dim As String Source, Temp
-	Dim As Integer CurrSub, PD
-	Source = Trim(UCase(RegName))
-	Temp = ""
-	For CurrSub = 0 To SBC
-		FOR PD = 1 TO Subroutine(CurrSub)->Variables
-			If UCase(Subroutine(CurrSub)->Variable(PD).Name) = Source THEN
-				'Have found an alias?
-				Temp = Subroutine(CurrSub)->Variable(PD).Alias
-				If Temp <> "" Then
-					If InStr(Temp, ",") <> 0 Then Temp = Trim(Left(Temp, InStr(Temp, ",") - 1))
-					If IsIOReg(Temp) Then
-						Return -1
-					Else
-						GoTo CheckNextSub
-					End If
-				End If
-			End If
-		Next
-
-		CheckNextSub:
+		
 	Next
 
 	Return 0
@@ -11267,44 +11277,45 @@ End Function
 Function IsLowIOReg (RegNameIn As String) As Integer
 	Dim RegName As String
 	Dim As Integer SD
-
+	Dim As SysVarType Pointer FoundVar
+	
 	'Check if a register is in the IO space
 	RegName = TRIM(UCASE(RegNameIn))
 
 	'Search, return true if found
-	For SD = 1 to SVC
-		If SysVars(SD).Name = RegName Then
-			If ModePIC Then
+	FoundVar = GetSysVar(RegName)
+	If FoundVar <> 0 Then
+		If ModePIC Then
+			Return -1
+		ElseIf ModeAVR Then
+			If FoundVar->Location > 31 Then
+				Return 0
+			Else
 				Return -1
-			ElseIf ModeAVR Then
-				If SysVars(SD).Location > 31 Then
-					Return 0
-				Else
-					Return -1
-				End If
 			End If
 		End If
-	Next
+	End If
 
 	'Check aliases
 	'May have an alias to a low IO register
 	Dim As String Source, Temp
-	Dim As Integer CurrSub, PD
+	Dim As Integer CurrSub
+	Dim As VariableType Pointer FoundUserVar
 	Source = Trim(UCase(RegName))
 	Temp = ""
 	For CurrSub = 0 To SBC
-		FOR PD = 1 TO Subroutine(CurrSub)->Variables
-			If UCase(Subroutine(CurrSub)->Variable(PD).Name) = Source THEN
-				Temp = Subroutine(CurrSub)->Variable(PD).Alias
-				'Have found an alias?
-				If Temp <> "" Then
-					If InStr(Temp, ",") <> 0 Then Temp = Trim(Left(Temp, InStr(Temp, ",") - 1))
-					Return IsLowIOReg(Temp)
-				End If
+		FoundUserVar = HashMapGet(@(Subroutine(CurrSub)->Variables), Source)
+		If FoundUserVar <> 0 THEN
+			'Have found an alias?
+			Temp = FoundUserVar->Alias
+			If Temp <> "" Then
+				If InStr(Temp, ",") <> 0 Then Temp = Trim(Left(Temp, InStr(Temp, ",") - 1))
+				Return IsLowIOReg(Temp)
 			End If
-		Next
+		End If
+		
 	Next
-
+	
 	Return 0
 End Function
 
@@ -11345,7 +11356,8 @@ End Function
 
 Function IsRegister (VarName As String) As Integer
 	Dim As String Temp, Source, SourceLowByte
-	Dim As Integer PD, CurrSub, MinAliasSize
+	Dim As Integer CurrSub, MinAliasSize
+	Dim As VariableType Pointer FoundVar
 
 	'System vars that are always registers
 	'SysTemp vars are only registers on AVR, no room to be registers on PIC
@@ -11384,14 +11396,13 @@ Function IsRegister (VarName As String) As Integer
 	Source = Trim(UCase(VarName))
 	Temp = ""
 	For CurrSub = 0 To SBC
-		FOR PD = 1 TO Subroutine(CurrSub)->Variables
-			IF UCase(Subroutine(CurrSub)->Variable(PD).Name) = Source THEN
-				Temp = Subroutine(CurrSub)->Variable(PD).Pointer
-				If Left(Temp, 8) = "REGISTER" Then
-					Return -1
-				End If
-			END IF
-		Next
+		FoundVar = HashMapGet(@(Subroutine(CurrSub)->Variables), Source)
+		IF FoundVar <> 0 THEN
+			Temp = FoundVar->Pointer
+			If Left(Temp, 8) = "REGISTER" Then
+				Return -1
+			End If
+		END IF
 	Next
 
 	'Check aliases
@@ -11408,16 +11419,17 @@ Function IsRegister (VarName As String) As Integer
 	End If
 	Temp = ""
 	For CurrSub = 0 To SBC
-		FOR PD = 1 TO Subroutine(CurrSub)->Variables
-			If UCase(Subroutine(CurrSub)->Variable(PD).Name) = SourceLowByte THEN
-				Temp = Subroutine(CurrSub)->Variable(PD).Alias
-				'Have found an alias?
-				If Temp <> "" Then
-					If InStr(Temp, ",") <> 0 Then Temp = Trim(Left(Temp, InStr(Temp, ",") - 1))
-					Return IsRegister(Temp)
-				End If
+		FoundVar = HashMapGet(@(Subroutine(CurrSub)->Variables), SourceLowByte)
+		
+		If FoundVar <> 0 THEN
+			Temp = FoundVar->Alias
+			'Have found an alias?
+			If Temp <> "" Then
+				If InStr(Temp, ",") <> 0 Then Temp = Trim(Left(Temp, InStr(Temp, ",") - 1))
+				Return IsRegister(Temp)
 			End If
-		Next
+		End If
+		
 	Next
 
 	Return 0
@@ -11453,8 +11465,9 @@ End Function
 FUNCTION IsWord (InData As String, CurrentSub As Integer) As Integer
 
 	Dim As String Temp, SubParam
-	Dim As Integer PD, T, FindFn
+	Dim As Integer T, FindFn
 	Dim As SubType Pointer CurrSub, MainSub
+	Dim As VariableType Pointer FoundVar
 	CurrSub = Subroutine(CurrentSub)
 	MainSub = Subroutine(0)
 
@@ -11477,27 +11490,22 @@ FUNCTION IsWord (InData As String, CurrentSub As Integer) As Integer
 	If Not CurrSub->VarsRead Then CompileDim(CurrSub)
 
 	'Check for local word var
-	FOR PD = 1 TO CurrSub->Variables
-		With CurrSub->Variable(PD)
-			IF WholeINSTR(UCase(InData), UCase(.Name)) = 2 THEN
-				IF UCase(.Type) = "WORD" Then
-					Return -1
-				Else
-					'It's not a word in this sub, ignore global type
-					Return 0
-				End If
-			END IF
-		End With
-	Next
+	FoundVar = HashMapGet(@(CurrSub->Variables), UCase(InData))
+	IF FoundVar <> 0 THEN
+		IF UCase(FoundVar->Type) = "WORD" Then
+			Return -1
+		Else
+			'It's not a word in this sub, ignore global type
+			Return 0
+		End If
+	END IF
+	
 
 	'Check for global word var
-	FOR PD = 1 TO MainSub->Variables
-		With MainSub->Variable(PD)
-			IF WholeINSTR(UCase(InData), UCase(.Name)) = 2 THEN
-				IF UCase(.Type) = "WORD" Then Return -1
-			END IF
-		End With
-	Next
+	FoundVar = HashMapGet(@(MainSub->Variables), UCase(InData))
+	IF FoundVar <> 0 Then
+		If UCase(FoundVar->Type) = "WORD" Then Return -1
+	End If
 
 	Return 0
 END FUNCTION
@@ -12107,30 +12115,28 @@ SUB ProcessArrays (CompSub As SubType Pointer)
 	Dim As String InLine, Origin, Temp, AV, ArrayName, ArrayType, ArrayPosition
 	Dim As String ArrayHandler, AppendArrayPosition
 	Dim As String NewCode(20)
-	Dim As Integer ATV, ArraysInLine, CD, LastArray, AF, SS, UseTempVar
+	Dim As Integer ATV, ArraysInLine, CD, SS, UseTempVar
 	Dim As Integer ArrayDir, L, P, ArrayPointer, NCO, MarkBlock
-	Dim As LinkedListElement Pointer CurrLine, NewCodeList, NewCodeLine
+	Dim As LinkedListElement Pointer CurrLine, NewCodeList, NewCodeLine, LastArray, ArrayFound
 
 	Dim As SubType Pointer MainSub
 	MainSub = Subroutine(0)
 
 	'Combine local arrays and global arrays into single list
-	Dim As VariableType Pointer Variable(MainSub->Variables + CompSub->Variables)
-	Dim As Integer Variables
-	Variables = 0
-	For CD = 1 To MainSub->Variables
-		If MainSub->Variable(CD).Size > 1 Then
-			Variables += 1
-			Variable(Variables) = @(MainSub->Variable(CD))
+	Dim As LinkedListElement Pointer Variables, CurrVarLoc
+	Dim As VariableType Pointer CurrVar
+	Variables = HashMapToList(@(MainSub->Variables))
+	LinkedListInsertList(Variables, HashMapToList(@(CompSub->Variables)))
+	CurrVarLoc = Variables->Next
+	Do While CurrVarLoc <> 0
+		'Remove any single element variables
+		CurrVar = CurrVarLoc->MetaData
+		If CurrVar->Size < 2 Then
+			CurrVarLoc = LinkedListDelete(CurrVarLoc, 0)
 		End If
-	Next
-	For CD = 1 To CompSub->Variables
-		If CompSub->Variable(CD).Size > 1 Then
-			Variables += 1
-			Variable(Variables) = @(CompSub->Variable(CD))
-		End If
-	Next
-
+		CurrVarLoc = CurrVarLoc->Next
+	Loop
+	
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
 		InLine = CurrLine->Value
@@ -12159,8 +12165,10 @@ SUB ProcessArrays (CompSub As SubType Pointer)
 		ArraysInLine = 0
 		Temp = InLine
 		'Local arrays
-		FOR CD = 1 TO Variables
-			With *Variable(CD)
+		CurrVarLoc = Variables->Next
+		Do While CurrVarLoc <> 0
+			CurrVar = CurrVarLoc->MetaData
+			With *CurrVar
 				If .Size > 1 Then
 					Do While WholeINSTR(Temp, .Name) = 2 AND INSTR(Temp, "(") <> 0
 						ArraysInLine += 1
@@ -12169,29 +12177,35 @@ SUB ProcessArrays (CompSub As SubType Pointer)
 					Loop
 				END IF
 			End With
-		Next
+			
+			CurrVarLoc = CurrVarLoc->Next
+		Loop
 
 		'Does the line contain an array?
-		LastArray = 1
+		LastArray = Variables->Next
 CheckArrayAgain:
-		AF = 0
-		FOR CD = LastArray TO Variables
-			With *Variable(CD)
+		ArrayFound = 0
+		CurrVarLoc = LastArray
+		Do While CurrVarLoc <> 0
+			CurrVar = CurrVarLoc->MetaData
+			With *CurrVar
 				If .Size > 1 Then
 					IF WholeINSTR(InLine, .Name) = 2 AND INSTR(InLine, "(") <> 0 THEN
 						IF WholeINSTR(InLine, .Name + "()") = 2 THEN
-							AF = 0
+							ArrayFound = 0
 						Else
-							AF = CD
-							EXIT FOR
+							ArrayFound = CurrVarLoc
+							EXIT Do
 						End If
 					END IF
 				END IF
 			End With
-		NEXT
+			
+			CurrVarLoc = CurrVarLoc->Next
+		Loop
 
 		'Show error if array has not been found but brackets have
-		IF AF = 0 AND INSTR(InLine, "(") <> 0 AND INSTR(InLine, "()") = 0 AND INSTR(InLine, "$") = 0 AND Left(InLine, 6) <> " retlw" THEN
+		IF ArrayFound = 0 AND INSTR(InLine, "(") <> 0 AND INSTR(InLine, "()") = 0 AND INSTR(InLine, "$") = 0 AND Left(InLine, 6) <> " retlw" THEN
 			InLine = Left(InLine, INSTR(InLine, "(") - 1)
 			'Get name of just array/function
 			FOR SS = LEN(InLine) TO 1 STEP -1
@@ -12213,10 +12227,11 @@ CheckArrayAgain:
 		END IF
 
 		'Array has been found, so generate code to access it
-		IF AF <> 0 THEN
+		IF ArrayFound <> 0 THEN
 
 			'Get array type
-			With *Variable(AF)
+			CurrVar = ArrayFound->MetaData
+			With *CurrVar
 				ArrayName = .Name
 				ArrayType = .Type
 			End With
@@ -12276,11 +12291,11 @@ CheckArrayAgain:
 				ArrayPosition = Left(ArrayPosition, Len(ArrayPosition) - 1)
 
 				'Get array type (real/pointer)
-				IF Variable(AF)->Pointer = "REAL" THEN
+				IF CurrVar->Pointer = "REAL" THEN
 					ArrayHandler = "@" + ArrayName
 					ArrayPointer = 0
 				END IF
-				IF Variable(AF)->Pointer = "POINTER" THEN
+				IF CurrVar->Pointer = "POINTER" THEN
 					ArrayHandler = "Sys" + ArrayName + "Handler"
 					ArrayPointer = -1
 				END If
@@ -12391,7 +12406,7 @@ CheckArrayAgain:
 			End If
 
 			'Check the line again to see if it contains another array
-			LastArray = AF
+			LastArray = ArrayFound
 			GoTo CheckArrayAgain
 		END IF
 
@@ -12477,10 +12492,11 @@ End Function
 
 SUB ReadChipData
 	Dim As String TempData, TempList(20)
-	Dim As String ReadDataMode, ChipDataFile, InLine
+	Dim As String ReadDataMode, ChipDataFile, InLine, SFRName
 	Dim As String PinName, PinDir
 	Dim As PinDirType Pointer PinDirData
 	Dim As Integer TDC, CW, PD, FirstSFR, FindSFR
+	Dim As Integer SFRLoc
 	Dim As ConfigSetting Pointer ThisSetting
 	Dim As LinkedListElement Pointer CurrLoc
 
@@ -12501,7 +12517,9 @@ SUB ReadChipData
 		WriteErrorLog
 		END
 	End If
-
+	
+	FirstSFR = &HFFFF
+	
 	ReadDataMode = ""
 	DO WHILE NOT EOF(1)
 		LINE INPUT #1, InLine
@@ -12592,10 +12610,17 @@ SUB ReadChipData
 
 		'Registers
 		ElseIf ReadDataMode = "[registers]" AND INSTR(InLine, ",") <> 0 THEN
-			SVC = SVC + 1
 			InLine = UCase(InLine)
-			SysVars(SVC).Name = Trim(Left(InLine, INSTR(InLine, ",") - 1))
-			SysVars(SVC).Location = Val(Trim(Mid(InLine, INSTR(InLine, ",") + 1)))
+			SFRName = Trim(Left(InLine, INSTR(InLine, ",") - 1))
+			SFRLoc = Val(Trim(Mid(InLine, INSTR(InLine, ",") + 1)))
+			MakeSFR(SFRName, SFRLoc)
+			
+			'On 18F, need to find lowest SFR location
+			If ChipFamily = 16 Then
+				If SFRLoc < FirstSFR Then
+					FirstSFR = SFRLoc
+				End If
+			End If
 
 		'Bits
 		' 1 = name 3 = parent
@@ -12739,12 +12764,6 @@ SUB ReadChipData
 				Case 16:
 					'Guess where SFR access bank starts
 					'Not earlier than 0xF60, but can be later (0xF80 on 18F2620, for example)
-					FirstSFR = &HFFFF
-					For FindSFR = 1 To SVC
-						If SysVars(FindSFR).Location < FirstSFR Then
-							FirstSFR = SysVars(FindSFR).Location
-						End If
-					Next
 					If FirstSFR < &HF60 Then FirstSFR = &HF60
 
 					NoBankLocs = 2
@@ -13175,30 +13194,31 @@ Sub TidyProgram
 			End If
 		End With
 	Next
+	
 End Sub
 
 Sub TidySubroutine(CompSub As SubType Pointer)
-
+	
 	'Fix function calls
 	FixFunctions(CompSub)
-
+	
 	'Enable/disable interrupts as needed
 	CompileIntOnOff (CompSub)
-
+	
 	'Set Bank
 	AddBankCommands(CompSub)
-
+	
 	'Perform some simple ASM optimisations
 	AsmOptimiser(CompSub)
-
+	
 	'Add banking mode to 18F commands
-	If ChipFamily = 16 THEN
+	If ChipFamily = 16 Then
 		Add18FBanks(CompSub)
 	End If
 
 	'Tidy up IFs
-	OptimiseIf (CompSub)
-
+	OptimiseIF (CompSub)
+	
 End Sub
 
 Function TranslateFile(InFile As String) As String
@@ -13294,6 +13314,7 @@ Sub WriteAssembly
 	Dim As String Temp, VarDecLine, AddedBits, BitName
 	Dim As Integer PD, AddSFR, FindSREG
 	Dim As LinkedListElement Pointer CurrLine
+	Dim As LinkedListElement Pointer VarList
 
 	'Write .ASM program
 	OPEN OFI FOR OUTPUT AS #1
@@ -13350,50 +13371,17 @@ Sub WriteAssembly
 			End If
 		Next
 
-	ElseIf ModeZ8 Then
-		PRINT #1, ";Set up the assembler options (Chip type, clock source, other bits and pieces)"
-		PRINT #1, AsmTidy(" CPU = " + ChipName)
-		Print #1, ""
-
-		'List registers and bits, no .inc file available for assembler
-		Print #1, ";Special function registers"
-		For PD = 1 To SVC
-
-			AddSFR = -1
-			Temp = UCase(SysVars(PD).Name)
-			If Left(Temp, 1) = "R" And IsConst(Mid(Temp, 2)) Then AddSFR = 0
-			If Temp = "SPH" Then AddSFR = 0
-			If Temp = "SPL" Then AddSFR = 0
-			If Temp = "FLAGS" Then AddSFR = 0
-			If Temp = "RP" Then AddSFR = 0
-
-			If AddSFR Then Print #1, AsmTidy(SysVars(PD).Name + " EQU " + Str(SysVars(PD).Location))
-		Next
-		Print #1, ""
-		Print #1, ";Ram end"
-		Print #1, AsmTidy("RAMEND EQU " + Mid(MemRanges(MRC), InStr(MemRanges(MRC), ":") + 1) + "h")
-		Print #1, ""
-		Print #1, ";Special function register bits"
-		'For PD = 1 To SVC
-		'	Print #1, AsmTidy(SysVars(PD, 1) + " EQU " + SysVars(PD, 2))
-		'Next
-
-		Print #1, AsmTidy(" ORG 0")
-		Temp = " DB (%FF"
-		If OutConfig(1) <> "" Then Temp += "&" + OutConfig(1)
-		Temp += "), (%FF"
-		If OutConfig(2) <> "" Then Temp += "&" + OutConfig(2)
-		Print #1, Temp + ")"
-
 	End If
 	PRINT #1, ""
-
-	IF FVLC > 0 THEN
+	
+	VarList = HashMapToList(FinalVarList, -1)
+	IF VarList <> 0 AndAlso VarList->Next <> 0 THEN
 		PRINT #1, Star80
 		PRINT #1, ""
 		PRINT #1, ";Set aside memory locations for variables"
-		FOR PD = 1 TO FVLC
-			With FinalVarList(PD)
+		CurrLine = VarList->Next
+		Do While CurrLine <> 0
+			With *CPtr(VariableListElement Pointer, CurrLine->MetaData)
 				If ModePIC Or ModeZ8 Then
 					VarDecLine = .Name + " EQU " + .Value
 				ElseIf ModeAVR Then
@@ -13403,7 +13391,8 @@ Sub WriteAssembly
 				End If
 			End With
 			PRINT #1, AsmTidy(VarDecLine)
-		NEXT
+			CurrLine = CurrLine->Next
+		Loop
 		PRINT #1, ""
 	END IF
 	PRINT #1, Star80
@@ -14295,7 +14284,8 @@ FUNCTION TypeOfVar (VarName As String, CurrSub As SubType Pointer) As String
 
 	Dim As String Temp, TempType, Source
 	Dim As String GlobalType, LocalType
-	Dim As Integer PD, SubLoc
+	Dim As Integer SubLoc
+	Dim As VariableType Pointer FoundVar
 	Dim As SubType Pointer MainSub
 	Dim As Single TempValue
 
@@ -14362,14 +14352,10 @@ FUNCTION TypeOfVar (VarName As String, CurrSub As SubType Pointer) As String
 		If Not CurrSub->VarsRead Then CompileDim(CurrSub)
 
 		'Search var list
-		FOR PD = 1 TO CurrSub->Variables
-			With CurrSub->Variable(PD)
-				IF UCase(.Name) = UCase(VarName) Then
-					LocalType = Trim(UCase(.Type))
-					Exit For
-				End If
-			End With
-		Next
+		FoundVar = HashMapGet(@(CurrSub->Variables), UCase(VarName))
+		If FoundVar <> 0 Then
+			LocalType = Trim(UCase(FoundVar->Type))
+		End If
 	End If
 
 	'Permanent calculation vars
@@ -14383,14 +14369,10 @@ FUNCTION TypeOfVar (VarName As String, CurrSub As SubType Pointer) As String
 	End If
 
 	'Get global type
-	For PD = 1 To MainSub->Variables
-		With MainSub->Variable(PD)
-			IF UCase(.Name) = UCase(VarName) Then
-				GlobalType = Trim(UCase(.Type))
-				Exit For
-			End If
-		End With
-	Next
+	FoundVar = HashMapGet(@(MainSub->Variables), UCase(VarName))
+	If FoundVar <> 0 Then
+		GlobalType = Trim(UCase(FoundVar->Type))
+	End If
 
 	'Get highest of local and global type
 	If CastOrder(LocalType) > CastOrder(GlobalType) Then
@@ -14648,8 +14630,9 @@ End Sub
 
 FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As VariableType Pointer
 	Dim As String ArrayName
-	Dim As Integer FA, LO
+	Dim As Integer LO
 	Dim As SubType Pointer MainSub
+	Dim As VariableType Pointer FoundVar
 	MainSub = Subroutine(0)
 
 	'Tidy name
@@ -14658,15 +14641,17 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	If INSTR(ArrayNameIn, "$") <> 0 Then ArrayName = RTrim(Left(ArrayNameIn, INSTR(ArrayNameIn, "$") - 1))
 
 	'Search local variables
-	FOR FA = 1 TO CurrSub->Variables
-		IF ArrayName = UCase(CurrSub->Variable(FA).Name) THEN Return @(CurrSub->Variable(FA))
-	NEXT
-
+	FoundVar = HashMapGet(@(CurrSub->Variables), ArrayName)
+	If FoundVar <> 0 Then
+		Return FoundVar
+	End If
+	
 	'Search global variables
 	If MainSub <> CurrSub Then
-		FOR FA = 1 TO MainSub->Variables
-			IF ArrayName = UCase(MainSub->Variable(FA).Name) THEN Return @(MainSub->Variable(FA))
-		Next
+		FoundVar = HashMapGet(@(MainSub->Variables), ArrayName)
+		If FoundVar <> 0 Then
+			Return FoundVar
+		End If
 	End If
 
 	'Check if variable is a function result
@@ -14677,9 +14662,9 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 			If .IsFunction Then
 				'Have found function, add a var and then return it
 				AddVar ArrayNameIn, .ReturnType, 1, 0, "REAL", ""
-				FOR FA = 1 TO MainSub->Variables
-					IF ArrayName = UCase(MainSub->Variable(FA).Name) THEN Return @(MainSub->Variable(FA))
-				Next
+				FoundVar = HashMapGet(@(MainSub->Variables), ArrayName)
+				
+				Return FoundVar
 			End If
 		End With
 	End If

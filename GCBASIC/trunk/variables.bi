@@ -19,6 +19,23 @@
 'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
+Function AddFinalVar(VarName As String, VarLoc As String, VarIsArray As Integer = 0) As Integer
+	'Add new item to FinalVarList
+	'Returns:
+	' 0 on success
+	' 1 if variable list not ready
+	If FinalVarList = 0 Then Return 1
+	
+	Dim As VariableListElement Pointer NewVar
+	NewVar = Callocate(SizeOf(VariableListElement))
+	NewVar->Name = VarName
+	NewVar->Value = VarLoc
+	NewVar->IsArray = VarIsArray
+	
+	HashMapSet(FinalVarList, VarName, NewVar)
+	Return 0
+End Function
+
 Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0)
 	
 	Dim As String VarName, VarType, VarPointer, Origin, Temp, VarAlias, ConstName
@@ -29,7 +46,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Dim As SubType Pointer VarSub, MainSub
 	Dim As LinkedListElement Pointer SearchConstPos
 	
-	VarName = VarNameIn
+	VarName = UCase(VarNameIn)
 	VarType = VarTypeIn
 	VarSize = VarSizeIn
 	VarPointer = VarPointerIn
@@ -214,19 +231,10 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	END If
 	
 	'Check to see if the var is a SFR
-	FOR PD = 1 TO SVC
-		IF UCase(VarName) = UCase(Trim(SysVars(PD).Name)) THEN Exit Sub
-	Next
+	If GetSysVar(UCase(VarName)) <> 0 Then Exit Sub
 	
 	'Check to see if var exists
-	VarFound = 0
-	'Check for local vars
-	For PD = 1 to VarSub->Variables
-		If UCase(Trim(VarName)) = UCase(Trim(VarSub->Variable(PD).Name)) Then
-			VarFound = @(VarSub->Variable(PD))
-			Exit For
-		End If
-	Next
+	VarFound = HashMapGet(@(VarSub->Variables), UCase(Trim(VarName)))
 	
 	'If variable not found, make a new one
 	If VarFound = 0 Then
@@ -251,13 +259,14 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		Next
 		
 		With *VarSub
-			.Variables += 1
-			VarFound = @(.Variable(.Variables))
-			VarFound->Name = VarName
+			VarFound = Callocate(SizeOf(VariableType))
+			VarFound->Name = UCase(VarName)
 			VarFound->Size = VarSize
 			VarFound->FixedLocation = -1
 			VarFound->FixedSize = VarFixedSize
 			VarFound->Alias = ""
+			
+			HashMapSet(@(VarSub->Variables), UCase(VarName), VarFound)
 		End With
 	End If
 	
@@ -328,12 +337,18 @@ SUB AllocateRAM
 	Dim As Integer SV, ListSorted, PD, SkipVar, CD, ArraySize, SR, VLC
 	Dim As Integer HighReg, AD, VarSize, ED, FreeStart, FreeSize
 	Dim As String OccursInSub(50)
-	Dim As Integer OccursInSubs, CurrSub, SubVar, SearchVarList, VarListLoc
+	Dim As Integer OccursInSubs, CurrSub, SearchVarList
 	Dim As Integer CurrByte, SRStart, SREnd, SRDir, UnallocatedVars, AllocAttempts
 	Dim As Integer UseLinear, CurrBlockSize
 	Dim As Integer RegisterUsed(32)
 	
 	Dim As LinkedListElement Pointer CurrLine
+	
+	Dim As HashMap Variables
+	Dim As LinkedListElement Pointer SubVars, SubVarLoc
+	Dim As VariableType Pointer SubVar, FinalVar, SearchVar
+	
+	Dim As LinkedListElement Pointer AllVarsUnsorted, AllVars, CurrVarItem, InsertPos
 	
 	'Testing: is call tree known here? Seems to be
 	'DisplayCallTree
@@ -358,103 +373,70 @@ SUB AllocateRAM
 	Next
 	
 	'Copy all variables from all used subs into a single list
-	Dim As VariableType Variables(5000)
-	Dim As Integer VarCount
 	For CurrSub = 0 To SBC
 		'If sub is required, get its variables
 		With *Subroutine(CurrSub)
 			If .Required Then
-				For SubVar = 1 To .Variables
+				SubVars = HashMapToList(@(Subroutine(CurrSub)->Variables))
+				SubVarLoc = SubVars->Next
+				
+				Do While SubVarLoc <> 0
 					'Check to see if variable with same name already added
-					VarListLoc = 0
-					For SearchVarList = 1 To VarCount
-						If UCase(Trim(.Variable(SubVar).Name)) = UCase(Trim(Variables(SearchVarList).Name)) Then
-							VarListLoc = SearchVarList
-							GoTo SubVarFound
-						End If
-					Next
-					SubVarFound:
+					SubVar = SubVarLoc->MetaData
+					FinalVar = HashMapGet(@Variables, UCase(Trim(SubVar->Name)))
+					
 					'Var not found, create a new one
-					If VarListLoc = 0 Then
-						VarCount += 1
-						VarListLoc = VarCount
-						Variables(VarListLoc).Name = .Variable(SubVar).Name
-						Variables(VarListLoc).Type = .Variable(SubVar).Type
-						Variables(VarListLoc).Size = .Variable(SubVar).Size
-						Variables(VarListLoc).Pointer = .Variable(SubVar).Pointer
-						Variables(VarListLoc).Alias = .Variable(SubVar).Alias
-						Variables(VarListLoc).Origin = .Variable(SubVar).Origin
-						Variables(VarListLoc).FixedLocation = .Variable(SubVar).FixedLocation
-						Variables(VarListLoc).FixedSize = .Variable(SubVar).FixedSize
-						Variables(VarListLoc).Location = -1
+					If FinalVar = 0 Then
+						HashMapSet(@Variables, UCase(Trim(SubVar->Name)), SubVar)
+						'Mark location as unknown - must be assigned
+						SubVar->Location = -1
 						
 					'Apply new settings to existing variable
 					Else
 						'Type
-						If CastOrder(Variables(VarListLoc).Type) < CastOrder(.Variable(SubVar).Type) Then
-							Variables(VarListLoc).Type = .Variable(SubVar).Type
+						If CastOrder(FinalVar->Type) < CastOrder(SubVar->Type) Then
+							FinalVar->Type = SubVar->Type
 						End If
 						'Size
 						'Do not copy if smaller size is fixed
-						If Not Variables(VarListLoc).FixedSize And .Variable(SubVar).FixedSize Then
+						If Not FinalVar->FixedSize And SubVar->FixedSize Then
 							'Existing found is not fixed, new one is, use new size
-							Variables(VarListLoc).Size = .Variable(SubVar).Size
-						ElseIf Variables(VarListLoc).FixedSize And Not .Variable(SubVar).FixedSize Then
+							FinalVar->Size = SubVar->Size
+						ElseIf FinalVar->FixedSize And Not SubVar->FixedSize Then
 							'Existing found is fixed, new one is not fixed, use existing
 							
 						Else
 							'Both fixed size, use larger
 							'Or neither fixed, use larger
-							If Variables(VarListLoc).Size < .Variable(SubVar).Size Then
-								Variables(VarListLoc).Size = .Variable(SubVar).Size
+							If FinalVar->Size < SubVar->Size Then
+								FinalVar->Size = SubVar->Size
 							End If
 						End If
 						
 						'Pointer
-						If Variables(VarListLoc).Pointer = "" And .Variable(SubVar).Pointer <> "" Then
-							Variables(VarListLoc).Pointer = .Variable(SubVar).Pointer
+						If FinalVar->Pointer = "" And SubVar->Pointer <> "" Then
+							FinalVar->Pointer = SubVar->Pointer
 						End If
 						'Alias
-						If (CountOccur(Variables(VarListLoc).Alias, ",") < CountOccur(.Variable(SubVar).Alias, ",")) Or _
-							(Variables(VarListLoc).Alias = "" And .Variable(SubVar).Alias <> "") Then
-							Variables(VarListLoc).Alias = .Variable(SubVar).Alias
+						If (CountOccur(FinalVar->Alias, ",") < CountOccur(SubVar->Alias, ",")) Or _
+							(FinalVar->Alias = "" And SubVar->Alias <> "") Then
+							FinalVar->Alias = SubVar->Alias
 						End If
 						'Fixed Location
-						If Variables(VarListLoc).FixedLocation = -1 And .Variable(SubVar).FixedLocation <> -1 Then
-							Variables(VarListLoc).FixedLocation = .Variable(SubVar).FixedLocation
+						If FinalVar->FixedLocation = -1 And SubVar->FixedLocation <> -1 Then
+							FinalVar->FixedLocation = SubVar->FixedLocation
 						End If
 						'Origin
-						If Variables(VarListLoc).Origin = "" And .Variable(SubVar).Origin <> "" Then
-							Variables(VarListLoc).Origin = .Variable(SubVar).Origin
+						If FinalVar->Origin = "" And SubVar->Origin <> "" Then
+							FinalVar->Origin = SubVar->Origin
 						End If
 					End If
-				Next
+					
+					SubVarLoc = SubVarLoc->Next
+				Loop
 			End If
 		End With
 	Next
-	
-	'Sort var list by size, name
-	ListSorted = 0
-	Do While ListSorted = 0
-		ListSorted = 1
-		For PD = 1 to VarCount - 1
-			'If non fixed variable is before fixed, swap
-			If Variables(PD).FixedLocation = -1 And Variables(PD + 1).FixedLocation <> -1 Then
-				Swap Variables(PD), Variables(PD + 1)
-				ListSorted = 0
-			End If
-			'If smaller variable is before larger, swap
-			If Variables(PD).FixedLocation = Variables(PD + 1).FixedLocation And Variables(PD).Size < Variables(PD + 1).Size Then
-				Swap Variables(PD), Variables(PD + 1)
-				ListSorted = 0
-			End If
-			'If name of second should be before name of first, swap
-			If Variables(PD).FixedLocation = Variables(PD + 1).FixedLocation And Variables(PD).Size = Variables(PD + 1).Size And Variables(PD).Name > Variables(PD + 1).Name Then
-				Swap Variables(PD), Variables(PD + 1)
-				ListSorted = 0
-			End If
-		Next
-	Loop
 	
 	'Mark all registers as available (AVR)
 	If ModeAVR Then
@@ -463,11 +445,48 @@ SUB AllocateRAM
 		Next
 	End If
 	
+	'Put all variables into a list
+	AllVarsUnsorted = HashMapToList(@Variables, -1)
+	AllVars = LinkedListCreate
+	
+	'Sort list into correct order
+	' - Fixed location variables must be before movable ones
+	' - Larger variables should be before smaller ones
+	' - Variables should be in alphabetical order
+	CurrVarItem = AllVarsUnsorted->Next
+	Do While CurrVarItem <> 0
+		'Find where to put the item
+		FinalVar = CurrVarItem->MetaData
+		InsertPos = AllVars
+		Do While InsertPos->Next <> 0
+			InsertPos = InsertPos->Next
+			SearchVar = InsertPos->MetaData
+			
+			If FinalVar->FixedLocation <> -1 And SearchVar->FixedLocation = -1 Then InsertPos = InsertPos->Prev: Exit Do
+			If (FinalVar->FixedLocation = -1) = (SearchVar->FixedLocation = -1) Then
+				If FinalVar->Size > SearchVar->Size Then InsertPos = InsertPos->Prev: Exit Do
+				If FinalVar->Size = SearchVar->Size Then
+					If FinalVar->Name < SearchVar->Name Then InsertPos = InsertPos->Prev: Exit Do
+				End If
+			End If
+		Loop
+		LinkedListInsert(InsertPos, FinalVar)
+		
+		CurrVarItem = CurrVarItem->Next
+	Loop
+	
+	'Create final variable list
+	FinalVarList = HashMapCreate
+	
 	'Allocate common (non-banked) RAM or register space to system variables
 	Dim As Integer DesiredLoc, RegBytesLocated, FinalRegLoc
 	RegCount = 0
-	For PD = 1 To VarCount
-		With Variables(PD)
+	'For PD = 1 To VarCount
+	CurrVarItem = AllVars->Next
+	Do While CurrVarItem <> 0
+		FinalVar = CurrVarItem->MetaData
+		
+		With *FinalVar
 			IF Left(.Pointer, 8) = "REGISTER" And .Location = -1 Then
 				If ModePIC Then
 					'We have a register
@@ -481,9 +500,7 @@ SUB AllocateRAM
 						'Or the location otherwise
 						If DesiredLoc <> -1 Then
 							FinalRegLoc = NoBankLoc(1).StartLoc + DesiredLoc
-							FVLC += 1
-							FinalVarList(FVLC).Name = GetByte(.Name, CurrByte)
-							FinalVarList(FVLC).Value = Str(FinalRegLoc)
+							AddFinalVar(GetByte(.Name, CurrByte), Str(FinalRegLoc))
 							If .Location = -1 Then
 								.Location = FinalRegLoc
 							End If 
@@ -549,7 +566,9 @@ SUB AllocateRAM
 				End If	
 			End If
 		End With
-	Next
+		
+		CurrVarItem = CurrVarItem->Next
+	Loop
 	
 	'Allocate RAM to single element vars and arrays
 	Dim AliasList(10) As String
@@ -563,23 +582,23 @@ SUB AllocateRAM
 		UnallocatedVars = 0
 		AllocAttempts += 1
 		
-		FOR PD = 1 TO VarCount
-			With Variables(PD)
+		CurrVarItem = AllVars->Next
+		Do While CurrVarItem <> 0
+			FinalVar = CurrVarItem->MetaData
+			With *FinalVar
 				
 				'Don't try allocating RAM to high byte of alias
 				If InStr(.Name, "_") <> 0 Then
 					'Get name of full variable
 					TempData = UCase(Left(.Name, InStr(.Name, "_") - 1))
 					'Does it match an alias?
-					For CD = 1 To VarCount
-						If Variables(CD).Alias <> "" Then
-							If TempData = UCase(Variables(CD).Name) Then
-								'Name of current var matches name of alias, don't allocate
-								.Location = 0
-								Exit For
-							End If
+					SubVar = HashMapGet(@Variables, TempData)
+					If SubVar <> 0 Then
+						If SubVar->Alias <> "" Then
+							'Name of current var matches name of alias, don't allocate
+							.Location = 0
 						End If
-					Next
+					End If
 				End If
 				
 				'Don't allocate RAM twice
@@ -797,16 +816,11 @@ SUB AllocateRAM
 								End If
 								If .Size > 1 Or LCase(.Type) = "string" Then
 									'For an array, need to name first location only
-									FVLC += 1
-									FinalVarList(FVLC).Name = .Name
-									FinalVarList(FVLC).Value = Str(.Location)
-									FinalVarList(FVLC).IsArray = -1
+									AddFinalVar(.Name, Str(.Location), -1)
 								Else
 									'For a scalar, need to name every byte
 									For CurrByte = 0 To VarSize - 1
-										FVLC += 1
-										FinalVarList(FVLC).Name = GetByte(.Name, CurrByte)
-										FinalVarList(FVLC).Value = Str(VarLoc(SR + CurrByte))
+										AddFinalVar(GetByte(.Name, CurrByte), Str(VarLoc(SR + CurrByte)))
 									Next
 								End If
 															
@@ -827,16 +841,11 @@ SUB AllocateRAM
 								.Location = .FixedLocation
 								If .Size > 1 Then
 									'For an array, need to name first location only
-									FVLC += 1
-									FinalVarList(FVLC).Name = .Name
-									FinalVarList(FVLC).Value = Str(.FixedLocation)
-									FinalVarList(FVLC).IsArray = -1
+									AddFinalVar(.Name, Str(.FixedLocation), -1)
 								Else
 									'For a scalar, need to name every byte
 									For CurrByte = 0 To VarSize - 1
-										FVLC += 1
-										FinalVarList(FVLC).Name = GetByte(.Name, CurrByte)
-										FinalVarList(FVLC).Value = Str(.FixedLocation + CurrByte)
+										AddFinalVar(GetByte(.Name, CurrByte), Str(.FixedLocation + CurrByte))
 									Next
 								End If
 								TempData = Message("WarningFixedLocBad")
@@ -859,30 +868,13 @@ SUB AllocateRAM
 				End If
 			End With
 			
-		NextVarAdd:
-		NEXT
+			
+			NextVarAdd:
+			CurrVarItem = CurrVarItem->Next
+		Loop
 	Loop
 	
 	'Display error here if UnallocatedVars = -1
-	
-	'Sort FinalVarList, remove duplicates
-	PD = 0
-	Do While PD < FVLC
-		PD = PD + 1
-		CD = PD
-		Do While CD < FVLC
-			CD = CD + 1
-			If UCase(Trim(FinalVarList(CD).Name)) = UCase(Trim(FinalVarList(PD).Name)) Then
-				'Print "Duplicate variable: " + FinalVarList(CD).Name
-				For ED = CD TO FVLC
-					FinalVarList(ED).Name = FinalVarList(ED + 1).Name
-					FinalVarList(ED).Value = FinalVarList(ED + 1).Value
-					FinalVarList(ED).IsArray = FinalVarList(ED + 1).IsArray
-				Next
-				FVLC -= 1
-			End If
-		Loop
-	Loop
 	
 	'Create FinalRegList on AVR
 	If ModeAVR Then
@@ -897,7 +889,7 @@ SUB AllocateRAM
 			Next
 		End If
 	End If
-
+	
 END SUB
 
 Function CalcAliasLoc(LocationIn As String) As Integer
@@ -912,6 +904,8 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 	
 	Dim As String LineToken(100), OutTemp
 	Dim As Integer FC, LineTokens, CurrToken
+	Dim As SysVarType Pointer TempVar
+	Dim As VariableListElement Pointer FinalVar
 	
 	'Print "Location: " + LocationIn
 	
@@ -928,20 +922,18 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 			LineToken(CurrToken) = UCase(LineToken(CurrToken))
 			
 			'Check if LocationIn is SFR
-			FOR FC = 1 TO SVC
-				IF UCase(SysVars(FC).Name) = LineToken(CurrToken) Then
-					LineToken(CurrToken) = Str(SysVars(FC).Location)
-					GoTo AliasConstReplaced
-				End If
-			Next
+			TempVar = GetSysVar(LineToken(CurrToken))
+			If TempVar <> 0 Then
+				LineToken(CurrToken) = Str(TempVar->Location)
+				GoTo AliasConstReplaced
+			End If
 			
 			'Check if LocationIn is a variable
-			For FC = 1 To FVLC
-				If UCase(FinalVarList(FC).Name) = LineToken(CurrToken) Then
-					LineToken(CurrToken) = FinalVarList(FC).Value
-					GoTo AliasConstReplaced
-				End If
-			Next
+			FinalVar = HashMapGet(FinalVarList, LineToken(CurrToken))
+			If FinalVar <> 0 Then
+				LineToken(CurrToken) = FinalVar->Value
+				GoTo AliasConstReplaced
+			End If
 			
 			'If we reach this point, there is a variable name still lurking
 			Return -1
@@ -978,9 +970,7 @@ Function HasSFR(SFRName As String) As Integer
 	
 	'Search system variable list to find register
 	TidiedName = UCase(Trim(SFRName))
-	For PD = 1 To SVC
-		If UCase(Trim((SysVars(PD).Name))) = TidiedName Then Return -1 
-	Next
+	If GetSysVar(TidiedName) <> 0 Then Return -1
 	
 	Return 0
 End Function
@@ -998,10 +988,15 @@ Function HasSFRBit(BitName As String) As Integer
 End Function
 
 Sub MakeSFR (UserVar As String, SFRAddress As Integer)
-	
 	'Make UserVar an SFR, assign location
-	SVC += 1
-	SysVars(SVC).Name = UserVar
-	SysVars(SVC).Location = SFRAddress
+	
+	'Create new sysvar
+	Dim As SysVarType Pointer NewVar
+	NewVar = Callocate(SizeOf(SysVarType))
+	
+	NewVar->Name = UserVar
+	NewVar->Location = SFRAddress
+	
+	HashMapSet(SysVars, UserVar, NewVar)
 	
 End Sub
