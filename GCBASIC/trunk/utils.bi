@@ -1302,12 +1302,14 @@ End Sub
 
 Function HashMapCalcHash(Key As String) As Integer
 	'Calculate hash
-	Dim As Integer HashOut, CurrChar
+	Dim As UInteger HashOut, CurrChar
 	
-	HashOut = 0
+	HashOut = 2166136261
 	For CurrChar = 1 To Len(Key)
-		HashOut = HashOut + (Asc(Key, CurrChar) And Not 32) * 59 * CurrChar Mod 621
+		HashOut = (HashOut XOR Asc(Key, CurrChar)) * 16777619
 	Next
+	
+	HashOut = (HashOut Shr 16) Xor HashOut
 	
 	Return HashOut Mod HASH_MAP_BUCKETS
 End Function
@@ -1546,7 +1548,7 @@ Function LinkedListAppend (ListIn As LinkedListElement Pointer, NewList As Linke
 	Return NewListEnd
 End Function
 
-Function LinkedListDelete (Location As LinkedListElement Pointer) As LinkedListElement Pointer
+Function LinkedListDelete (Location As LinkedListElement Pointer, DeleteMeta As Integer = -1) As LinkedListElement Pointer
 	'Removes Location from the list
 	'Returns the list element before Location
 	Dim As LinkedListElement Pointer OldPrev, OldNext
@@ -1560,7 +1562,7 @@ Function LinkedListDelete (Location As LinkedListElement Pointer) As LinkedListE
 		If .Next <> 0 Then
 			.Next->Prev = OldPrev
 		End If
-		If .MetaData <> 0 Then
+		If .MetaData <> 0 And DeleteMeta Then
 			DeAllocate .MetaData
 		End If
 	End With

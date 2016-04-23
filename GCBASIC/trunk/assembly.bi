@@ -580,7 +580,7 @@ SUB AssembleProgram
 				End If
 				
 				'Get command
-				ParamValue = Trim(DataSource)
+				ParamValue = UCase(Trim(DataSource))
 				IF INSTR(ParamValue, " ") = 0 Then
 					ParamValue = ""
 				Else
@@ -608,13 +608,16 @@ SUB AssembleProgram
 						WholeReplace ParamValues(CD), "PC", Str(CurrentLine)
 					End If
 					'Replace symbols
-					ParamValue = HashMapGetStr(ASMSymbols, ParamValues(CD))
-					If ParamValue <> "" Then
-						ParamValues(CD) = ParamValue
-					ElseIf Not IsConst(ParamValues(CD)) Then
-						Do
-							KeepReplacing = 0
+					Do
+						KeepReplacing = 0
+						ParamValue = HashMapGetStr(ASMSymbols, ParamValues(CD))
+						If ParamValue <> "" Then
+							ParamValues(CD) = ParamValue
+							If Not IsConst(ParamValue) Then	KeepReplacing = -1
 							
+						ElseIf Not IsConst(ParamValues(CD)) Then
+							
+							ParamElements = 0
 							GetTokens(ParamValues(CD), ParamElement(), ParamElements, , -1)
 							
 							ParamValues(CD) = ""
@@ -629,9 +632,8 @@ SUB AssembleProgram
 								End If
 								ParamValues(CD) += ParamElement(ElementNo)
 							Next
-							
-						Loop While KeepReplacing
-					End If
+						End If
+					Loop While KeepReplacing
 					
 					'Some AVR only operations
 					If ModeAVR Then
@@ -1139,6 +1141,9 @@ Sub BuildAsmSymbolTable
 	Dim As Integer PD, CSB, RP1, CurrentLocation, DT, OrgLocation, SS, CS
 	Dim As Integer DataBlockSize, DataSize, DWC, RSC, CurrCmd, DWIC, T
 	
+	Dim As LinkedListElement Pointer TempList, CurrItem
+	Dim As SysVarType Pointer TempVar
+	
 	ASMSymbols = HashMapCreate
 	
 	If ModePIC Then
@@ -1169,9 +1174,14 @@ Sub BuildAsmSymbolTable
 	End If
 	
 	'SFRs
-	FOR PD = 1 to SVC
-		AddAsmSymbol(Trim(UCase(SysVars(PD).Name)), Trim(Str(SysVars(PD).Location)))
-	NEXT
+	TempList = HashMapToList(SysVars)
+	CurrItem = TempList->Next
+	Do While CurrItem <> 0
+		TempVar = CurrItem->MetaData
+		AddAsmSymbol(Trim(UCase(TempVar->Name)), Trim(Str(TempVar->Location)))
+		
+		CurrItem = CurrItem->Next
+	Loop
 		
 	'SFR bits
 	FOR PD = 1 to SVBC
@@ -1179,18 +1189,22 @@ Sub BuildAsmSymbolTable
 	NEXT
 	
 	'User variables
-	FOR PD = 1 to FVLC
-		With FinalVarList(PD)
+	TempList = HashMapToList(FinalVarList)
+	CurrItem = TempList->Next
+	Do While CurrItem <> 0
+		With *CPtr(VariableListElement Pointer, CurrItem->MetaData)
 			AddAsmSymbol(UCase(.Name), .Value)
 		End With
-	NEXT
+		CurrItem = CurrItem->Next
+	Loop
+	
 	'User register variables (AVR only)
 	If ModeAVR Then
 		FOR PD = 1 to FRLC
 			With FinalRegList(PD)
 				AddAsmSymbol(UCase(.Name), .Value)
 			End With
-		NEXT
+		Next
 	End If
 	'Alias variables
 	FOR PD = 1 to FALC
