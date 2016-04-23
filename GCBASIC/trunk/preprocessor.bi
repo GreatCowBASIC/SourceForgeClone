@@ -155,7 +155,7 @@ Sub PrepareBuiltIn
 	AddConstant("CHIP_" + ChipName, "")
 	AddConstant("CHIPMHZ", Str(ChipMhz))
 	AddConstant("CHIPFAMILY", Str(ChipFamily))
-	AddConstant("OSC", OSCType)
+	AddConstant("CHIPOSC", OSCType)
 	
 	AddConstant("CHIPWORDS", Str(ChipProg))
 	AddConstant("CHIPEEPROM", Str(ChipEEPROM))
