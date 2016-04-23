@@ -249,14 +249,11 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		End If
 		
 		'Is variable name used for an SFR bit (this will cause confusion)
-		For PD = 1 To SVBC
-			If VarName = SysVarBits(PD).Name Then
-				Temp = Message("WarningNameUsedSystem")
-				Replace Temp, "%name%", VarName
-				LogWarning Temp, Origin
-				Exit For
-			End If
-		Next
+		If HasSFRBit(VarName) Then
+			Temp = Message("WarningNameUsedSystem")
+			Replace Temp, "%name%", VarName
+			LogWarning Temp, Origin
+		End If
 		
 		With *VarSub
 			VarFound = Callocate(SizeOf(VariableType))
@@ -953,13 +950,12 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 End Function
 
 Function GetWholeSFR(BitName As String) As String
-	Dim As Integer FSFR
+	Dim As SysVarType Pointer FoundVar
+	FoundVar = HashMapGet(SysVarBits, UCase(BitName))
 	
-	For FSFR = 1 to SVBC
-		If UCASE(SysVarBits(FSFR).Name) = UCASE(BitName) Then
-			Return UCASE(SysVarBits(FSFR).Parent + "." + BitName)
-		End If
-	Next
+	If FoundVar <> 0 Then
+		Return UCASE(FoundVar->Parent + "." + BitName)
+	End If
 	
 	Return UCASE(BitName)
 End Function
@@ -976,15 +972,9 @@ Function HasSFR(SFRName As String) As Integer
 End Function
 
 Function HasSFRBit(BitName As String) As Integer
-	Dim As Integer FSFR
 	
-	For FSFR = 1 to SVBC
-		If UCASE(SysVarBits(FSFR).Name) = UCASE(BitName) Then
-			Return -1
-		End If
-	Next
+	Return HashMapGet(SysVarBits, BitName) <> 0
 	
-	Return 0
 End Function
 
 Sub MakeSFR (UserVar As String, SFRAddress As Integer)

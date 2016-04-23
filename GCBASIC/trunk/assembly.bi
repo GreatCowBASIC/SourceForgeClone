@@ -1182,11 +1182,18 @@ Sub BuildAsmSymbolTable
 		
 		CurrItem = CurrItem->Next
 	Loop
+	LinkedListDelete(TempList, 0)
 		
 	'SFR bits
-	FOR PD = 1 to SVBC
-		AddAsmSymbol(Trim(UCase(SysVarBits(PD).Name)), Trim(Str(SysVarBits(PD).Location)))
-	NEXT
+	TempList = HashMapToList(SysVarBits)
+	CurrItem = TempList->Next
+	Do While CurrItem <> 0
+		TempVar = CurrItem->MetaData
+		AddAsmSymbol(Trim(UCase(TempVar->Name)), Trim(Str(TempVar->Location)))
+		
+		CurrItem = CurrItem->Next
+	Loop
+	LinkedListDelete(TempList, 0)
 	
 	'User variables
 	TempList = HashMapToList(FinalVarList)

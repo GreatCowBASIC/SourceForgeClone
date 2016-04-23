@@ -769,6 +769,51 @@ Sub GetTokens(InData As String, OutArray() As String, ByRef OutSize As Integer, 
 	
 End Sub
 
+Function GetElements(InData As String, DivChar As String = "", IncludeDividers As Integer = 0) As LinkedListElement Pointer
+	
+	'Return list of tokens from InData
+	'DivChar is list of characters that separate tokens
+	
+	Dim As Integer GetChar, DivMode, CharIsDiv
+	Dim As String CurrToken, CurrChar
+	Dim As LinkedListElement Pointer OutList, CurrPos
+	
+	OutList = LinkedListCreate
+	CurrPos = OutList
+	
+	DivMode = 0
+	If DivChar = "" Then DivMode = 1
+	
+	CurrToken = ""
+	For GetChar = 1 To Len(InData)
+		CurrChar = Mid(InData, GetChar, 1)
+		CharIsDiv = 0
+		If DivMode = 0 Then
+			If InStr(DivChar, CurrChar) <> 0 Then CharIsDiv = -1
+		Else
+			If IsDivider(CurrChar) Then CharIsDiv = -1
+		End If
+		
+		If CharIsDiv Then
+			If CurrToken <> "" Then
+				CurrPos = LinkedListInsert(CurrPos, Trim(CurrToken))
+			End If
+			If IncludeDividers Then
+				CurrPos = LinkedListInsert(CurrPos, CurrChar)
+			End If
+			CurrToken = ""
+		Else
+			CurrToken += CurrChar
+		End If
+	Next
+	
+	If CurrToken <> "" Then
+		CurrPos = LinkedListInsert(CurrPos, Trim(CurrToken))
+	End If
+	
+	Return OutList
+End Function
+
 Function GetTypeLetter(InType As String) As String
 	Select Case UCase(InType)
 		Case "BIT", "BYTE", "WORD", "INTEGER", "LONG", "FLOAT", "STRING": Return UCase(InType) + ":"

@@ -1448,10 +1448,7 @@ SUB RemIfDefs
 							Temp = Left(Temp, INSTR(Temp, ")") - 1)
 							
 							'Search for bit in list
-							ConstFound = 0
-							FOR FC = 1 TO SVBC
-								IF SysVarBits(FC).Name = Temp THEN ConstFound = 1: EXIT FOR
-							NEXT
+							ConstFound = HasSFRBit(Temp)
 							
 							'Set DelMode appropriately
 							If FV = 0 Then
