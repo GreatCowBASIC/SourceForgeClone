@@ -457,6 +457,7 @@ DECLARE SUB Calculate (SUM As String)
 DECLARE FUNCTION CountOccur (Source As String, Search As String, SearchWhole As Integer = 0) As Integer
 Declare Function DelType (InString As String) As String
 DECLARE FUNCTION GetByte (DataSource As String, BS As Integer) As String
+Declare Function GetElements(InData As String, DivChar As String = "", IncludeDividers As Integer = 0) As LinkedListElement Pointer
 Declare Function GetString(StringName As String, UsedInProgram As Integer = -1) As String
 Declare Sub GetTokens(InData As String, OutArray() As String, ByRef OutSize As Integer, DivChar As String = "", IncludeDividers As Integer = 0)
 Declare Function GetTypeLetter(InType As String) As String
@@ -507,7 +508,7 @@ DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, Int
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
-DIM SHARED As Integer VBS, SVBC, MSGC, PreserveMode, ConstReplaced, SubCalls
+DIM SHARED As Integer VBS, MSGC, PreserveMode, ConstReplaced, SubCalls
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
 Dim Shared As Integer WarningsAsErrors
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
@@ -532,7 +533,7 @@ Dim Shared SourceFile(100) As SourceFileType: SourceFiles = 0
 DIM SHARED TempData(300) As String
 DIM SHARED CheckTemp(300) As String
 Dim SHARED SysVars As HashMap Pointer
-DIM SHARED SysVarBits(8000) As SysVarType '1 - name, 2 - location, 3 - var
+DIM SHARED SysVarBits As HashMap Pointer
 DIM SHARED FILE(300) As String
 Redim SHARED FreeMem(1) As Integer
 Redim SHARED VarLoc(1) As Integer
@@ -642,6 +643,7 @@ PinDirections = LinkedListCreate
 Constants = LinkedListCreate
 
 SysVars = HashMapCreate
+SysVarBits = HashMapCreate
 
 'Load files and tidy them up
 PreProcessor
@@ -1906,9 +1908,11 @@ End Sub
 
 Sub AddSysVarBits (CompSub As SubType Pointer)
 	Dim As String TempData, BitName
-	Dim As Integer PD, T, SV
+	Dim As Integer PD, T, SV, LineChanged
 
 	Dim As LinkedListElement Pointer CurrLine
+	Dim As LinkedListElement Pointer LineElements, CurrElement
+	Dim As SysVarType Pointer CurrVar
 
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
@@ -1928,22 +1932,35 @@ Sub AddSysVarBits (CompSub As SubType Pointer)
 		IF Left(TempData, 11) = "WAIT UNTIL " THEN T = 1
 		IF Left(TempData, 11) = "WAIT WHILE " THEN T = 1
 		IF T = 0 THEN GOTO AddNextLineBits
-
-		FOR SV = 1 TO SVBC
-			BitName = SysVarBits(SV).Name
-			IF WholeINSTR(UCase(TempData), UCase(BitName)) = 2 THEN
-				If Instr(UCase(TempData), "." + UCase(BitName)) = 0 Then
-					'Print "Found bit " + BitName + " in " + CurrLine->Value
-					'PRINT DataSource
-					IF UCase(BitName) <> "DIR" AND Left(TempData, 4) <> "DIR " THEN
-						Replace CurrLine->Value, BitName, SysVarBits(SV).Parent + "." + BitName
-						GOTO AddNextLineBits
-					END If
+		
+		LineElements = GetElements(TempData, , -1)
+		LineChanged = 0
+		CurrElement = LineElements->Next
+		Do While CurrElement <> 0
+			CurrVar = HashMapGet(SysVarBits, CurrElement->Value)
+			If CurrVar <> 0 Then
+				'Found SFR bit, should have . before it, or else we need to add it
+				If CurrElement->Prev->Value <> "." Then
+					IF UCase(CurrElement->Value) <> "DIR" AND Left(TempData, 4) <> "DIR " Then
+						LinkedListInsert(CurrElement->Prev, CurrVar->Parent + ".")
+						LineChanged = -1
+					End If
 				End If
-			END IF
-		NEXT
-
-AddNextLineBits:
+			End If
+			
+			CurrElement = CurrElement->Next
+		Loop
+		
+		If LineChanged Then
+			CurrLine->Value = ""
+			CurrElement = LineElements->Next
+			Do While CurrElement <> 0
+				CurrLine->Value = CurrLine->Value + CurrElement->Value
+				CurrElement = CurrElement->Next
+			Loop
+		End If
+		
+		AddNextLineBits:
 		CurrLine = CurrLine->Next
 	Loop
 
@@ -2788,11 +2805,11 @@ Sub CompileProgram
 	If ChipFamily = 12 Then
 		FixSinglePinSet
 	End If
-
+	
 End Sub
 
 Sub CompileSubroutine(CompSub As SubType Pointer)
-
+	
 	If VBS = 1 Then
 		Print Spc(10); CompSub->Name
 	End If
@@ -5641,7 +5658,7 @@ SUB CompileOn (CompSub As SubType Pointer)
 								FlagBit = GetWholeSFR(.FlagBit)
 								Replace EnableBit, ".", ","
 								Replace FlagBit, ".", ","
-
+								
 								CurrLine->Value = "SET " + GetWholeSFR(.EnableBit) + " 1"
 								If .Handler = "" Then
 									If .FlagBit = "" Then
@@ -12498,6 +12515,7 @@ SUB ReadChipData
 	Dim As Integer TDC, CW, PD, FirstSFR, FindSFR
 	Dim As Integer SFRLoc
 	Dim As ConfigSetting Pointer ThisSetting
+	Dim As SysVarType Pointer NewSysVar
 	Dim As LinkedListElement Pointer CurrLoc
 
 	'Get filename
@@ -12626,12 +12644,13 @@ SUB ReadChipData
 		' 1 = name 3 = parent
 		' In file: name, parent, location
 		ElseIf ReadDataMode = "[bits]" AND INSTR(InLine, ",") <> 0 THEN
-			SVBC = SVBC + 1
+			NewSysVar = Callocate(SizeOf(SysVarType))
 			InLine = UCase(InLine)
-			SysVarBits(SVBC).Name = Trim(Left(InLine, INSTR(InLine, ",") - 1))
+			NewSysVar->Name = Trim(Left(InLine, INSTR(InLine, ",") - 1))
 			TempData = Trim(Mid(InLine, INSTR(InLine, ",") + 1))
-			SysVarBits(SVBC).Parent = Trim(Left(TempData, INSTR(TempData, ",") - 1))
-			SysVarBits(SVBC).Location = Val(Trim(Mid(TempData, INSTR(TempData, ",") + 1)))
+			NewSysVar->Parent = Trim(Left(TempData, INSTR(TempData, ",") - 1))
+			NewSysVar->Location = Val(Trim(Mid(TempData, INSTR(TempData, ",") + 1)))
+			HashMapSet(SysVarBits, NewSysVar->Name, NewSysVar)
 
 		'FreeRAM
 		ElseIf ReadDataMode = "[freeram]" AND INSTR(InLine, ":") <> 0 THEN
@@ -12858,12 +12877,7 @@ SUB ReadChipData
 	'Check for presence of High FSR bit
 	HighFSR = 0
 	If ChipFamily = 12 Or ChipFamily = 14 Then
-		FOR PD = 1 TO SVBC
-			If SysVarBits(PD).Name = "IRP" Then
-				HighFSR = -1
-				Exit For
-			End If
-		Next
+		HighFSR = HasSFRBit("IRP")
 	End If
 
 	'Check for LAT registers
@@ -13315,6 +13329,7 @@ Sub WriteAssembly
 	Dim As Integer PD, AddSFR, FindSREG
 	Dim As LinkedListElement Pointer CurrLine
 	Dim As LinkedListElement Pointer VarList
+	Dim As SysVarType Pointer SysVar
 
 	'Write .ASM program
 	OPEN OFI FOR OUTPUT AS #1
@@ -13360,16 +13375,21 @@ Sub WriteAssembly
 		PRINT #1, ".INCLUDE " + Chr(34) + Temp + "def.inc" + Chr(34)
 		Print #1, ""
 		Print #1, ";SREG bit names (for AVR Assembler compatibility, GCBASIC uses different names)"
-		For FindSREG = 1 To SVBC
-			If UCASE(SysVarBits(FindSREG).Parent) = "SREG" Then
+		VarList = HashMapToList(SysVarBits, -1)
+		CurrLine = VarList->Next
+		Do While CurrLine <> 0
+			SysVar = CurrLine->MetaData
+			If UCASE(SysVar->Parent) = "SREG" Then
 				'Get letter of bit (C, Z, etc)
-				BitName = Right(SysVarBits(FindSREG).Name, 1)
+				BitName = Right(SysVar->Name, 1)
 				If InStr(AddedBits, BitName) = 0 Then
-					Print #1, "#define " + BitName + " " + Str(SysVarBits(FindSREG).Location)
+					Print #1, "#define " + BitName + " " + Str(SysVar->Location)
 				End If
 				AddedBits += BitName
 			End If
-		Next
+			CurrLine = CurrLine->Next
+		Loop
+		LinkedListDelete(VarList, 0)
 
 	End If
 	PRINT #1, ""
