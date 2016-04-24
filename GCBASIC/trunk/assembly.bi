@@ -349,7 +349,7 @@ SUB AssembleProgram
 	Dim As Integer PRC, KeepReplacing, AW, PB, FP, PVT, TBT, HT, PV
 	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, DataBlockSize
 	Dim As LongInt CL, OA, FRA, CHA
-	Dim As Integer CurrCmd
+	Dim As AsmCommand Pointer CurrCmd
 	
 	Dim As Single CurrPerc, PercAdd, PercOld
 	
@@ -591,9 +591,9 @@ SUB AssembleProgram
 				
 				'Get parameters
 				GetTokens (ParamValue, ParamValues(), PValueCount, ",")
-				PRC = ASMCommands(CurrCmd).Params
-				If ASMCommands(CurrCmd).Params > PValueCount Then
-					For CD = PValueCount + 1 To ASMCommands(CurrCmd).Params
+				PRC = CurrCmd->Params
+				If CurrCmd->Params > PValueCount Then
+					For CD = PValueCount + 1 To CurrCmd->Params
 						ParamValues(CD) = "0"
 					Next
 				End If
@@ -641,7 +641,7 @@ SUB AssembleProgram
 					If ModeAVR Then
 						'Correct address for br* and rjmp/rcall instructions
 						If UCase(Left(DataSource, 2)) = "BR" Or UCase(Left(DataSource, 4)) = "RJMP" OR UCase(Left(DataSource, 5)) = "RCALL" Then
-							If LCase(AsmCommands(CurrCmd).Param(CD)) = "k" Then
+							If LCase(CurrCmd->Param(CD)) = "k" Then
 								'Calculate value
 								If IsCalc(ParamValues(CD)) Then Calculate ParamValues(CD)
 								ParamValues(CD) = Trim(ParamValues(CD))
@@ -674,17 +674,17 @@ SUB AssembleProgram
 				NEXT
 				
 				'Get command binary, and add in parameters
-				Cmd = ASMCommands(CurrCmd).Word(1)
+				Cmd = CurrCmd->Word(1)
 				'IF VAL(ASMCommanDataSource(T, 2)) = 2 THEN Cmd = Cmd + ":" + ASMCommanDataSource(T, 4)
 				If ChipFamily = 16 And Left(UCase(DataSource), 5) <> "LFSR " THEN
-					 With ASMCommands(CurrCmd)
+					 With *CurrCmd
 						For AW = 2 To .Words
 							Cmd = .Word(AW) + ":" + Cmd
 						Next
 					End With
 				END IF
 				If ChipFamily <> 16 Or Left(UCase(DataSource), 5) = "LFSR " THEN
-					With ASMCommands(CurrCmd)
+					With *CurrCmd
 						For AW = 2 To .Words
 							Cmd = Cmd + ":" + .Word(AW)
 						Next
@@ -695,7 +695,7 @@ SUB AssembleProgram
 					
 					'Count the number of bits available to store the parameter
 					PB = 0
-					CurrentParam = ASMCommands(CurrCmd).Param(CD)
+					CurrentParam = CurrCmd->Param(CD)
 					FOR FP = 1 TO LEN(Cmd)
 						IF Mid(Cmd, FP, 1) = CurrentParam THEN
 							If FP > 1 And Cmd = "'" Then Exit For
@@ -1145,7 +1145,8 @@ Sub BuildAsmSymbolTable
 	
 	Dim As String Temp, RomData, NewData, NDTemp
 	Dim As Integer PD, CSB, RP1, CurrentLocation, DT, OrgLocation, SS, CS
-	Dim As Integer DataBlockSize, DataSize, DWC, RSC, CurrCmd, DWIC, T
+	Dim As Integer DataBlockSize, DataSize, DWC, RSC, DWIC, T, FoundDirective
+	Dim As AsmCommand Pointer CurrCmd
 	
 	Dim As LinkedListElement Pointer TempList, CurrItem, AsmLine
 	Dim As SysVarType Pointer TempVar
@@ -1248,12 +1249,14 @@ Sub BuildAsmSymbolTable
 	AsmLine = AsmProg->Next
 	Do While AsmLine <> 0
 		CurrCmd = IsASM(AsmLine->Value)
+		FoundDirective = 0
+		
 		'Blank line
 		If AsmLine->Value = "" Then
 		
 		'Assembly instruction
 		ElseIf CurrCmd <> 0 THEN 
-			DT = ASMCommands(CurrCmd).Words
+			DT = CurrCmd->Words
 			If ChipFamily = 16 THEN DT = DT * 2
 			AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 			CurrentLocation = CurrentLocation + DT
@@ -1270,7 +1273,7 @@ Sub BuildAsmSymbolTable
 					Replace Temp, "%loc%", Str(OrgLocation)
 					LogError("GCASM:" + Temp, "")
 				End If
-				CurrCmd = 999
+				FoundDirective = -1
 				AsmLine->Value = ""
 				
 			'BANKSEL/PAGESEL directives
@@ -1287,23 +1290,23 @@ Sub BuildAsmSymbolTable
 						CurrentLocation += 1
 					End If
 				End If
-				CurrCmd = 999
+				FoundDirective = -1
 				
 			ElseIF Left(AsmLine->Value, 9) = "BANKISEL " THEN
 				AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 				CurrentLocation += 1
-				CurrCmd = 999
+				FoundDirective = -1
 				
 			ElseIF Left(AsmLine->Value, 8) = "PAGESEL " THEN
 				If ChipFamily = 15 Then
 					AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 					CurrentLocation += 1
-					CurrCmd = 999
+					FoundDirective = -1
 					
 				Else
 					AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 					CurrentLocation += PCUpper
-					CurrCmd = 999
+					FoundDirective = -1
 					
 				End If
 				
@@ -1402,14 +1405,14 @@ Sub BuildAsmSymbolTable
 				
 				AsmLine->Value = Str(CurrentLocation) + ":RAW " + Mid(NewData, 2)
 				CurrentLocation += DataSize
-				CurrCmd = 999
+				FoundDirective = -1
 			END IF
 			
 			'EQU directive
-			IF INSTR(AsmLine->Value, " EQU ") <> 0 THEN CurrCmd = 999: AsmLine->Value = ""
+			IF INSTR(AsmLine->Value, " EQU ") <> 0 THEN FoundDirective = -1: AsmLine->Value = ""
 			
 			'If nothing else, then line is label
-			If CurrCmd <> 999 THEN
+			If CurrCmd = 0 And FoundDirective = 0 THEN
 				IF Right(AsmLine->Value, 1) = ":" Then AsmLine->Value = Left(AsmLine->Value, LEN(AsmLine->Value) - 1)
 				AddAsmSymbol(UCase(AsmLine->Value), Str(CurrentLocation))
 				IF INSTR(AsmLine->Value, " ") <> 0 THEN
@@ -1425,40 +1428,38 @@ Sub BuildAsmSymbolTable
 	
 End Sub
 
-FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As Integer
-	
+FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
 	'Returns 0 if instruction is not assembly
-	'Returns instruction list index if it is asm
+	'Returns instruction if it is asm
 	
 	Dim As String Temp, Params
-	Dim As Integer T, CloseMatch
+	Dim As Integer CurrChar
+	Dim As AsmCommand Pointer FoundCmd, SearchCmd
 	
-	Temp = Trim(LCase(DataSource))
+	Temp = Trim(UCase(DataSource))
 	If INSTR(Temp, " ") <> 0 Then
-		Params = Trim(Mid(Temp, InStr(Temp, " ") + 1))
 		If ParamCount = -1 Then
-			ParamCount = 1 + CountOccur(Params, ",")
+			ParamCount = 1
+			For CurrChar = 1 To Len(Temp)
+				If Mid(Temp, CurrChar, 1) = "," Then ParamCount += 1
+			Next
 		End If
 		Temp = Trim(Left(Temp, INSTR(Temp, " ") - 1))
 	End If
 	If ParamCount = -1 Then ParamCount = 0
 	
-	CloseMatch = 0
-	FOR T = 1 to ASMCC
-		With ASMCommands(T)
-			If .Cmd = Temp Then
-				If .Params = ParamCount Then
-					Return T
-				Else
-					CloseMatch = T
-				End If
+	FoundCmd = HashMapGet(ASMCommands, Temp)
+	If FoundCmd <> 0 AndAlso FoundCmd->Params <> ParamCount Then
+		SearchCmd = FoundCmd->Alternative
+		Do While SearchCmd <> 0
+			If SearchCmd->Params = ParamCount Then
+				Return SearchCmd
 			End If
-		End With
-	NEXT
+			SearchCmd = SearchCmd->Alternative
+		Loop
+	End If
 	
-	'PRINT DataSource, "Not ASM"
-	
-	Return CloseMatch
+	Return FoundCmd
 END FUNCTION
 
 Function IsASMConst (DataSource As String) As Integer
