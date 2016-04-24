@@ -102,15 +102,12 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		VarSize = -1
 		
 		'Check for StringSize constant
-		SearchConstPos = Constants->Next
-		Do While SearchConstPos <> 0
-			IF UCase(SearchConstPos->Value) = "STRINGSIZE" THEN
-				TempSize = MakeDec(CPtr(ConstMeta Pointer, SearchConstPos->MetaData)->Value)
-				If TempSize > 0 Or TempSize < ChipRam Then VarSize = TempSize
-				Exit Do
-			END If
-			SearchConstPos = SearchConstPos->Next
-		Loop
+		Dim As ConstMeta Pointer StringSizeConst
+		StringSizeConst = HashMapGet(Constants, "STRINGSIZE")
+		If StringSizeConst <> 0 Then
+			TempSize = MakeDec(StringSizeConst->Value)
+			If TempSize > 0 Or TempSize < ChipRam Then VarSize = TempSize
+		End If
 		
 		'Defaults
 		If VarSize = -1 Then
@@ -973,7 +970,7 @@ End Function
 
 Function HasSFRBit(BitName As String) As Integer
 	
-	Return HashMapGet(SysVarBits, BitName) <> 0
+	Return HashMapGet(SysVarBits, UCase(BitName)) <> 0
 	
 End Function
 

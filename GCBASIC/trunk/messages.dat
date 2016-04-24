@@ -1,6 +1,6 @@
 'English messages.dat for Great Cow BASIC
 'Original translation creator Hugh Considine
-'Translation last updated 2/10/2015 by Hugh Considine
+'Translation last updated 2016-04-24 by Hugh Considine
 
 'Common Messages
 AnyKey = "Press any key to continue"
@@ -250,6 +250,7 @@ WarningFixedLocBad = "Memory location specified for %var% may be invalid"
 WarningNameUsedSystem = "Variable name %name% is used for a system bit on the current chip"
 WarningTableFileNotFound = "Could not load %table% from %file%: File not found"
 WarningBadOption = "Unrecognised compiler option: %option%"
+WarningTimerConst = "Deprecated timer prescaler constant found. Replace PSn_1/x constants with PSn_x"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."

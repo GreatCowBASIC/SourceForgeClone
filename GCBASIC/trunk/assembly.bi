@@ -321,9 +321,9 @@ Function AsmTidy (DataSource As String) As String
 			IF Left(UCase(DSTemp), 3) = "DT " OR Left(UCase(DSTemp), 3) = "DW " THEN DSTemp = UCase(Left(DSTemp, 3)) + Mid(DSTemp, 4)
 			If Left(UCase(DSTemp), 4) = ".DB " Then DSTemp = Mid(DSTemp, 2)
 			If Left(UCase(DSTemp), 5) = ".ORG " Then DSTemp = Mid(DSTemp, 2)
-			If ModePIC Or (Left(DSTemp, 1) <> "." And Left(DSTemp, 1) <> "#") Then ASPC += 1: ASMProg(ASPC) = DSTemp
+			If ModePIC Or (Left(DSTemp, 1) <> "." And Left(DSTemp, 1) <> "#") Then AsmProgLoc = LinkedListInsert(AsmProgLoc, DSTemp)
 		Else
-			ASPC += 1: ASMProg(ASPC) = ""
+			AsmProgLoc = LinkedListInsert(AsmProgLoc, "")
 		END IF
 	END IF
 
@@ -358,8 +358,9 @@ SUB AssembleProgram
 	Dim As String ParamElement(100)
 	Dim As Integer PValueCount, CurrentLine, ParamElements, ElementNo
 	
-	Dim As LinkedListElement Pointer AsmSymbolList, CurrItem
+	Dim As LinkedListElement Pointer AsmLine, AsmSymbolList, CurrItem
 	Dim As String Prog(60000)
+	Dim As LinkedListElement Pointer HexRecords, CurrHexRecord
 	
 	'Clear compiled program
 	APC = 0
@@ -379,7 +380,7 @@ SUB AssembleProgram
 	IF VBS = 1 Then Print SPC(5); Message("MachineCode");
 	PercOld = 0
 	CurrPerc = 0.5
-	PercAdd = 1 / (ASPC) * 100
+	PercAdd = 1 / LinkedListSize(AsmProg) * 100
 	
 	'Open list file
 	Open ReplaceToolVariables("%filename%", "lst") For Output As #1
@@ -398,7 +399,8 @@ SUB AssembleProgram
 	
 	'Convert line at a time
 	CurrentLine = 0
-	FOR PD = 1 TO ASPC
+	AsmLine = AsmProg->Next
+	Do While AsmLine <> 0
 		
 		'Show percentage assembled
 		IF VBS = 1 THEN
@@ -411,7 +413,7 @@ SUB AssembleProgram
 		End If
 		
 		'Get the line
-		DataSource = ASMProg(PD)
+		DataSource = AsmLine->Value
 		RepeatBanksel = 0
 		IF INSTR(DataSource, ":") <> 0 THEN
 			CurrentLine = Val(Left(DataSource, INSTR(DataSource, ":") - 1))
@@ -423,7 +425,7 @@ SUB AssembleProgram
 			
 			'Get current line for list file
 			Dim As String DebugInput, DebugOutput, DebugLoc
-			DebugInput = Mid(AsmProg(PD), InStr(AsmProg(PD), ":") + 1)
+			DebugInput = Mid(AsmLine->Value, InStr(AsmLine->Value, ":") + 1)
 			DebugOutput = ""
 			
 			'Special Cases
@@ -441,14 +443,14 @@ SUB AssembleProgram
 							CurrentLine = CurrentLine + 1
 							DataSource = "BCF STATUS,RP1"
 							IF (B AND 2) > 0 THEN DataSource = "BSF STATUS,RP1"
-							ASMProg(PD) = DataSource
+							AsmLine->Value = DataSource
 							CurrCmd = IsASM(DataSource)
 						END IF
 						If RepeatBanksel = 1 THEN
 							IF RP1 = 0 THEN RepeatBanksel = 2
 							DataSource = "BCF STATUS,RP0"
 							IF (B AND 1) > 0 THEN DataSource = "BSF STATUS,RP0"
-							ASMProg(PD) = DataSource
+							AsmLine->Value = DataSource
 							CurrCmd = IsASM(DataSource)
 						END IF
 					
@@ -457,13 +459,13 @@ SUB AssembleProgram
 						B = (B AND 3968) / 128
 						'Print B
 						DataSource = "MOVLB " + Trim(Str(B))
-						ASMProg(PD) = DataSource
+						AsmLine->Value = DataSource
 						CurrCmd = IsASM(DataSource)
 						
 					ElseIf ChipFamily = 16 THEN
 						B = (B AND 65280) / 256
 						DataSource = "MOVLB " + Str(B)
-						ASMProg(PD) = DataSource
+						AsmLine->Value = DataSource
 						CurrCmd = IsASM(DataSource)
 					END IF
 					
@@ -484,21 +486,21 @@ SUB AssembleProgram
 							CurrentLine = CurrentLine + 1
 							DataSource = "BCF PCLATH,4"
 							IF (B AND 2) > 0 THEN DataSource = "BSF PCLATH,4"
-							ASMProg(PD) = DataSource
+							AsmLine->Value = DataSource
 							CurrCmd = IsASM(DataSource)
 						END IF
 						If RepeatPagesel = 1 THEN
 							If PCUpper = 1 THEN RepeatPagesel = 2
 							DataSource = "BCF PCLATH,3"
 							IF (B AND 1) > 0 THEN DataSource = "BSF PCLATH,3"
-							ASMProg(PD) = DataSource
+							AsmLine->Value = DataSource
 							CurrCmd = IsASM(DataSource)
 						END If
 					
 					Else
 						B = (B And 65280) / 256
 						DataSource = "MOVLP " + Str(B)
-						ASMProg(PD) = DataSource
+						AsmLine->Value = DataSource
 						CurrCmd = IsASM(DataSource)
 						
 					End If
@@ -821,7 +823,7 @@ SUB AssembleProgram
 					HTemp = "0" + HTemp
 				Loop
 				DebugOutput = DebugOutput + HTemp + " "
-				DebugLoc = Hex(Val(AsmProg(PD)))
+				DebugLoc = Hex(Val(AsmLine->Value))
 				Do While Len(DebugLoc) < 6
 					DebugLoc = "0" + DebugLoc
 				Loop 
@@ -841,7 +843,8 @@ SUB AssembleProgram
 			Print #1, ""
 		END If
 		
-	NEXT
+		AsmLine = AsmLine->Next
+	Loop
 	PRINT
 	
 	'Close list file
@@ -1007,7 +1010,8 @@ SUB AssembleProgram
 	
 	'Prepare hex records
 	'Dim As Single OA, FRA
-	HRC = 0
+	HexRecords = LinkedListCreate
+	CurrHexRecord = HexRecords
 	OA = 0
 	OIR = 0
 	RCC = 0
@@ -1053,13 +1057,13 @@ SUB AssembleProgram
 				End If
 				DO WHILE LEN(HexContents) < 2: HexContents = "0" + HexContents: LOOP
 				If ModePIC Then 
-					HRC = HRC + 1: ASMProg(HRC) = ":02000004" + HexAddress + HexContents
+					CurrHexRecord = LinkedListInsert(CurrHexRecord, ":02000004" + HexAddress + HexContents)
 				ElseIf ModeAVR Then
-					HRC = HRC + 1: ASMProg(HRC) = ":02000002" + HexAddress + HexContents
+					CurrHexRecord = LinkedListInsert(CurrHexRecord, ":02000002" + HexAddress + HexContents)
 				End IF
 			END IF
 			
-			HRC = HRC + 1: ASMProg(HRC) = ":" + RecSize + Address + RecType + HRTemp + RecCheck
+			CurrHexRecord = LinkedListInsert(CurrHexRecord, ":" + RecSize + Address + RecType + HRTemp + RecCheck)
 			
 			HRTemp = Mid(NewRecordData, 3, 2) + Mid(NewRecordData, 1, 2)
 			RCC = VAL("&H" + Mid(NewRecordData, 3, 2)) + VAL("&H" + Mid(NewRecordData, 1, 2))
@@ -1108,13 +1112,13 @@ SUB AssembleProgram
 		End If
 		DO WHILE LEN(HexContents) < 2: HexContents = "0" + HexContents: LOOP
 		If ModePIC Then 
-			HRC = HRC + 1: ASMProg(HRC) = ":02000004" + HexAddress + HexContents
+			CurrHexRecord = LinkedListInsert(CurrHexRecord, ":02000004" + HexAddress + HexContents)
 		ElseIf ModeAVR Then
-			HRC = HRC + 1: ASMProg(HRC) = ":02000002" + HexAddress + HexContents
+			CurrHexRecord = LinkedListInsert(CurrHexRecord, ":02000002" + HexAddress + HexContents)
 		End IF
 	END IF
 	
-	HRC = HRC + 1: ASMProg(HRC) = ":" + RecSize + Address + RecType + HRTemp + RecCheck
+	CurrHexRecord = LinkedListInsert(CurrHexRecord, ":" + RecSize + Address + RecType + HRTemp + RecCheck)
 	
 	'Write hex file	
 	'HFI = OFI
@@ -1126,9 +1130,11 @@ SUB AssembleProgram
 	ElseIf ModeAVR Then
 		PRINT #1, ":020000020000FC"
 	End If
-	FOR PD = 1 TO HRC
-		PRINT #1, ASMProg(PD)
-	NEXT
+	CurrHexRecord = HexRecords->Next
+	Do While CurrHexRecord <> 0
+		PRINT #1, CurrHexRecord->Value
+		CurrHexRecord = CurrHexRecord->Next
+	Loop
 	PRINT #1, ":00000001FF"
 	Close
 	
@@ -1141,7 +1147,7 @@ Sub BuildAsmSymbolTable
 	Dim As Integer PD, CSB, RP1, CurrentLocation, DT, OrgLocation, SS, CS
 	Dim As Integer DataBlockSize, DataSize, DWC, RSC, CurrCmd, DWIC, T
 	
-	Dim As LinkedListElement Pointer TempList, CurrItem
+	Dim As LinkedListElement Pointer TempList, CurrItem, AsmLine
 	Dim As SysVarType Pointer TempVar
 	
 	ASMSymbols = HashMapCreate
@@ -1239,23 +1245,24 @@ Sub BuildAsmSymbolTable
 		End If
 	End If
 	CurrentLocation = 0
-	FOR PD = 1 to ASPC
-		CurrCmd = IsASM(ASMProg(PD))
+	AsmLine = AsmProg->Next
+	Do While AsmLine <> 0
+		CurrCmd = IsASM(AsmLine->Value)
 		'Blank line
-		If AsmProg(PD) = "" Then
+		If AsmLine->Value = "" Then
 		
 		'Assembly instruction
 		ElseIf CurrCmd <> 0 THEN 
 			DT = ASMCommands(CurrCmd).Words
 			If ChipFamily = 16 THEN DT = DT * 2
-			ASMProg(PD) = Str(CurrentLocation) + ":" + ASMProg(PD)
+			AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 			CurrentLocation = CurrentLocation + DT
 		
 		'Not instruction
 		Else
 			'ORG directive
-			IF Left(ASMProg(PD), 4) = "ORG " Then
-				OrgLocation = MakeDec(Mid(ASMProg(PD), 4))
+			IF Left(AsmLine->Value, 4) = "ORG " Then
+				OrgLocation = MakeDec(Mid(AsmLine->Value, 4))
 				If OrgLocation >= CurrentLocation Then
 					CurrentLocation = OrgLocation
 				Else
@@ -1264,11 +1271,11 @@ Sub BuildAsmSymbolTable
 					LogError("GCASM:" + Temp, "")
 				End If
 				CurrCmd = 999
-				ASMProg(PD) = ""
+				AsmLine->Value = ""
 				
 			'BANKSEL/PAGESEL directives
-			ElseIF Left(ASMProg(PD), 8) = "BANKSEL " THEN
-				ASMProg(PD) = Str(CurrentLocation) + ":" + ASMProg(PD)
+			ElseIF Left(AsmLine->Value, 8) = "BANKSEL " THEN
+				AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 				If ChipFamily = 16 Then
 					CurrentLocation += 2
 				ElseIf ChipFamily = 15 Then
@@ -1282,30 +1289,30 @@ Sub BuildAsmSymbolTable
 				End If
 				CurrCmd = 999
 				
-			ElseIF Left(ASMProg(PD), 9) = "BANKISEL " THEN
-				ASMProg(PD) = Str(CurrentLocation) + ":" + ASMProg(PD)
+			ElseIF Left(AsmLine->Value, 9) = "BANKISEL " THEN
+				AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 				CurrentLocation += 1
 				CurrCmd = 999
 				
-			ElseIF Left(ASMProg(PD), 8) = "PAGESEL " THEN
+			ElseIF Left(AsmLine->Value, 8) = "PAGESEL " THEN
 				If ChipFamily = 15 Then
-					ASMProg(PD) = Str(CurrentLocation) + ":" + ASMProg(PD)
+					AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 					CurrentLocation += 1
 					CurrCmd = 999
 					
 				Else
-					ASMProg(PD) = Str(CurrentLocation) + ":" + ASMProg(PD)
+					AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
 					CurrentLocation += PCUpper
 					CurrCmd = 999
 					
 				End If
 				
 			'Data embedding instructions
-			ElseIf Left(ASMProg(PD), 3) = "DW " OR Left(ASMProg(PD), 3) = "DB " Or Left(ASMProg(PD), 3) = "DE " THEN
+			ElseIf Left(AsmLine->Value, 3) = "DW " OR Left(AsmLine->Value, 3) = "DB " Or Left(AsmLine->Value, 3) = "DE " THEN
 				
 				DataBlockSize = 1
-				If (ChipFamily = 14 Or ChipFamily = 15) And Left(ASMProg(PD), 3) = "DE " Then DataBlockSize = 2
-				ROMData = Trim(Mid(ASMProg(PD), 4))
+				If (ChipFamily = 14 Or ChipFamily = 15) And Left(AsmLine->Value, 3) = "DE " Then DataBlockSize = 2
+				ROMData = Trim(Mid(AsmLine->Value, 4))
 				DataSize = 0
 				DWC = 0
 				RSC = 0
@@ -1393,26 +1400,28 @@ Sub BuildAsmSymbolTable
 					END IF
 				Loop
 				
-				ASMProg(PD) = Str(CurrentLocation) + ":RAW " + Mid(NewData, 2)
+				AsmLine->Value = Str(CurrentLocation) + ":RAW " + Mid(NewData, 2)
 				CurrentLocation += DataSize
 				CurrCmd = 999
 			END IF
 			
 			'EQU directive
-			IF INSTR(ASMProg(PD), " EQU ") <> 0 THEN CurrCmd = 999: ASMProg(PD) = ""
+			IF INSTR(AsmLine->Value, " EQU ") <> 0 THEN CurrCmd = 999: AsmLine->Value = ""
 			
 			'If nothing else, then line is label
 			If CurrCmd <> 999 THEN
-				IF Right(ASMProg(PD), 1) = ":" Then ASMProg(PD) = Left(ASMProg(PD), LEN(ASMProg(PD)) - 1)
-				AddAsmSymbol(UCase(ASMProg(PD)), Str(CurrentLocation))
-				IF INSTR(ASMProg(PD), " ") <> 0 THEN
+				IF Right(AsmLine->Value, 1) = ":" Then AsmLine->Value = Left(AsmLine->Value, LEN(AsmLine->Value) - 1)
+				AddAsmSymbol(UCase(AsmLine->Value), Str(CurrentLocation))
+				IF INSTR(AsmLine->Value, " ") <> 0 THEN
 					Temp = Message("BadSymbol")
-					Replace Temp, "%symbol%", ASMProg(PD)
+					Replace Temp, "%symbol%", AsmLine->Value
 					LogError Temp
 				END IF
 			END IF
-		END IF
-	NEXT
+		END If
+		
+		AsmLine = AsmLine->Next
+	Loop
 	
 End Sub
 
