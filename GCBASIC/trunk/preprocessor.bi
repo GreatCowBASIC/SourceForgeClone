@@ -19,7 +19,7 @@
 'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
-Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As String = "")
+Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As String = "", ReplaceExisting As Integer = -1)
 	'Add a new constant to the list of constants
 	
 	Dim Meta As ConstMeta Pointer
@@ -28,10 +28,7 @@ Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As Strin
 	Meta->Value = ConstValue
 	Meta->Startup = ConstStartup
 	
-	Dim NewListElement As LinkedListElement Pointer
-	NewListElement = LinkedListInsert(Constants, ConstName)
-	NewListElement->MetaData = Meta
-	
+	HashMapSet(Constants, ConstName, Meta, ReplaceExisting)
 End Sub
 
 Function CheckSysVarDef(ConditionIn As String) As String
@@ -472,6 +469,7 @@ SUB PreProcessor
 	Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
 	Dim As String TempFile, LastTableOrigin, NewFNType, CurrChar, CodeTemp, OtherChar
+	Dim As String DataSourceOld
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 	
 	Dim As String LineToken(100)
@@ -809,13 +807,8 @@ SUB PreProcessor
 								Value = ""
 							End If
 							
-							T = 0
-							SearchPos = Constants->Next
-							Do While SearchPos <> 0
-								IF ConstName = SearchPos->Value Then T = 1: EXIT Do
-								SearchPos = SearchPos->Next
-							Loop
-							IF T = 0 THEN
+							'If constant doesn't exist, add
+							IF HashMapGet(Constants, ConstName) = 0 THEN
 								AddConstant(ConstName, "SYSBITVAR" + Str(INT(BVC / 8)) + "." + Str(BVC MOD 8), Str(RF))
 								CheckConstName ConstName, Origin
 								'Define the variable
@@ -832,6 +825,25 @@ SUB PreProcessor
 				IF Left(DataSource, 14) = "WORD FUNCTION " THEN
 					FName = Trim(Mid(DataSource, 15))
 					DataSource = "FUNCTION " + FName + " AS WORD"
+				End If
+				
+				'PIC timer prescaler constant workarounds
+				DataSourceOld = DataSource
+				ReplaceAll DataSource, "PS0_1/", "PS0_"
+				ReplaceAll DataSource, "PS1_1/", "PS1_"
+				ReplaceAll DataSource, "PS2_1/", "PS2_"
+				ReplaceAll DataSource, "PS3_1/", "PS3_"
+				ReplaceAll DataSource, "PS4_1/", "PS4_"
+				ReplaceAll DataSource, "PS5_1/", "PS5_"
+				ReplaceAll DataSource, "PS6_1/", "PS6_"
+				ReplaceAll DataSource, "PS7_1/", "PS7_"
+				ReplaceAll DataSource, "PS8_1/", "PS8_"
+				ReplaceAll DataSource, "PS10_1/", "PS10_"
+				ReplaceAll DataSource, "PS12_1/", "PS12_"
+				If DataSourceOld <> DataSource Then
+					'Code to show warning - enable later if any problems found with this workaround
+					Temp = Message("WarningTimerConst")
+					'LogWarning(Temp, ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?")
 				End If
 				
 				'Check/fix binary and hex notation
@@ -1236,13 +1248,7 @@ LoadNextFile:
 				End If
 				
 				'Check to see if define exists
-				T = 0
-				SearchPos = Constants->Next
-				Do While SearchPos <> 0
-					IF ConstName = SearchPos->Value THEN T = 1: EXIT Do
-					SearchPos = SearchPos->Next
-				Loop
-				IF T = 0 THEN
+				IF HashMapGet(Constants, ConstName) = 0 THEN
 					AddConstant(ConstName, Value, TempFile)
 					CheckConstName ConstName, Origin
 				END IF
@@ -1381,11 +1387,11 @@ End Sub
 
 SUB RemIfDefs
 	'Remove IFDEFs for which the condition is false
-	Dim As String Temp, TVar, Value, Cmd, OldCmd, UTemp
+	Dim As String Temp, TVar, Value, Cmd, OldCmd
 	Dim As Integer ForceMain, IL, DelMode, PMode, SV, FV, ConstFound, RecDetect
 	Dim As Integer FC, DC, VF, SD, CheckValue, VC, TV, CD, EV, CurrSub
-	
-	Dim As LinkedListElement Pointer CurrLine, StartDel, EndDel, CurrPos, SearchConstPos
+	Dim As ConstMeta Pointer FoundConst
+	Dim As LinkedListElement Pointer CurrLine, StartDel, EndDel, CurrPos', SearchConstPos
 	
 	'Need to scan through main program and all subs
 	For CurrSub = 0 To SBC
@@ -1395,21 +1401,20 @@ SUB RemIfDefs
 		Do While CurrLine <> 0
 			
 	RemIfDef:
-				Temp = CurrLine->Value
-				UTemp = UCase(Temp)
+				Temp = UCase(CurrLine->Value)
 				DelMode = 0 '1 if condition tests false, 2 if true
 				PMode = 0 '0 if IFDEF, 1 if IFNDEF, 2 if IF
 				
-				IF (Left(UTemp, 7) = "#IFDEF " OR Left(UTemp, 8) = "#IFNDEF " Or Left(UTemp, 4) = "#IF ") AND IL = 0 THEN
+				IF (Left(Temp, 7) = "#IFDEF " OR Left(Temp, 8) = "#IFNDEF " Or Left(Temp, 4) = "#IF ") AND IL = 0 THEN
 					
 					IF INSTR(Temp, ";") <> 0 THEN Temp = Left(Temp, INSTR(Temp, ";") - 1)
 					StartDel = CurrLine
 	  
 					'Read condition
-					If Left(UTemp, 4) = "#IF " Then
+					If Left(Temp, 4) = "#IF " Then
 						Cmd = Trim(Mid(Temp, 5))
 						PMode = 2
-					ElseIf Left(UTemp, 7) = "#IFDEF " Then
+					ElseIf Left(Temp, 7) = "#IFDEF " Then
 						Cmd = Trim(Mid(Temp, 8))
 						PMode = 0
 					Else
@@ -1466,10 +1471,6 @@ SUB RemIfDefs
 							Temp = Mid(Cmd, INSTR(Cmd, "(") + 1)
 							Temp = Left(Temp, INSTR(Temp, ")") - 1)
 							
-							'ConstFound = 0
-							'FOR FC = 1 TO SVC
-							'	IF SysVars(FC, 1) = Temp THEN ConstFound = 1: EXIT FOR
-							'NEXT
 							ConstFound = HasSFR(Temp)
 							
 							'Set DelMode appropriately
@@ -1487,7 +1488,7 @@ SUB RemIfDefs
 							
 							'Get list of defines to search for
 							Temp = Mid(Cmd, INSTR(Cmd, "(") + 1)
-							Temp = Left(Temp, INSTR(Temp, ")") - 1)
+							Temp = UCase(Left(Temp, INSTR(Temp, ")") - 1))
 							DC = 0
 							DO WHILE INSTR(Temp, ",")
 								DC = DC + 1
@@ -1500,11 +1501,9 @@ SUB RemIfDefs
 							'Search
 							VF = 0
 							FOR SD = 1 to DC
-								SearchConstPos = Constants->Next
-								Do While SearchConstPos <> 0
-									IF SearchConstPos->Value = TempData(SD) THEN VF = VF + 1: EXIT Do
-									SearchConstPos = SearchConstPos->Next
-								Loop
+								If HashMapGet(Constants, TempData(SD)) <> 0 Then
+									VF = VF + 1
+								End If
 							NEXT
 		   
 							'Decide outcome
@@ -1526,11 +1525,9 @@ SUB RemIfDefs
 						'Don't check value, just see if constant exists
 						IF CheckValue = 0 THEN
 							DelMode = 1
-							SearchConstPos = Constants->Next
-							Do While SearchConstPos <> 0
-								IF SearchConstPos->Value = Cmd THEN DelMode = 2: EXIT Do
-								SearchConstPos = SearchConstPos->Next
-							Loop
+							If HashMapGet(Constants, Cmd) <> 0 Then
+								DelMode = 2
+							End If
 							GOTO IfDefProcessed
 						END IF
 						
@@ -1547,27 +1544,18 @@ SUB RemIfDefs
 						
 						'Replace names of test constants with values
 						FOR SD = 1 TO VC
-							
-							Do While SearchConstPos <> 0
-								IF SearchConstPos->Value = UCase(TempData(SD)) Then
-									TempData(SD) = CPtr(ConstMeta Pointer, SearchConstPos->MetaData)->Value
-									Exit Do
-								End If
-								SearchConstPos = SearchConstPos->Next
-							Loop
-							
-						NEXT
+							FoundConst = HashMapGet(Constants, TempData(SD))
+							IF FoundConst <> 0 Then
+								TempData(SD) = UCase(FoundConst->Value)
+							End If
+						Next
 						
-						'TVar = Cmd
-						'ReplaceConstantsLine TVar
-						'IF INSTR(TVar, ";") <> 0 THEN TVar = Left(TVar, INSTR(TVar, ";") - 1)
-						'TVar = UCase(TVar)
 						TVar = UCase(ReplaceConstantsLine(Cmd, 0))
 						
 						'Compare real and test values
 						DelMode = 1
 						FOR SD = 1 TO VC
-							IF UCase(TempData(SD)) = TVar THEN DelMode = 2: EXIT FOR
+							IF TempData(SD) = TVar THEN DelMode = 2: EXIT FOR
 						Next
 					End If
 					
@@ -1626,8 +1614,8 @@ END SUB
 
 SUB ReplaceConstants
 	
-	Dim As String Origin, SourceData, TempData, LeftSection
-	Dim As Integer RepCount, CurrSub
+	Dim As String Origin, SourceData, LeftSection
+	Dim As Integer CurrSub
 	Dim As LinkedListElement Pointer CurrLine
 	Dim As Single CurrPerc, PercAdd, PercOld
 	PercOld = 0
@@ -1649,37 +1637,13 @@ SUB ReplaceConstants
 		
 		CurrLine = Subroutine(CurrSub)->CodeStart->Next
 		Do While CurrLine <> 0
-			'Print "Getting Line"
 			SourceData = CurrLine->Value
-			'Print "Got Line: " + SourceData
 			
 			LeftSection = ""
 			IF Left(SourceData, 3) = "ON " THEN LeftSection = "ON ": SourceData = Mid(SourceData, 4)
-			
-			RepCount = 0
-			Do
 				
-				'Attempt to replace constants in line
-				TempData = ReplaceConstantsLine(SourceData, -1)
-				
-				'Check if constants were replaced
-				ConstReplaced = 0
-				If TempData <> SourceData Then
-					ConstReplaced = -1
-					SourceData = TempData
-					
-					RepCount += 1
-					'Prevent recursion from crashing compiler
-					If RepCount > 100 Then
-						Origin = ""
-						IF INSTR(SourceData, ";?F") <> 0 THEN Origin = Mid(SourceData, INSTR(SourceData, ";?F"))
-						If INSTR(Origin, ";STARTUP") <> 0 Then Origin = Left(Origin, INSTR(Origin, ";STARTUP") - 1)
-						LogError Message("RecursiveDefine"), Origin
-						TempData = SourceData
-					End If
-				End If
-				
-			Loop While ConstReplaced
+			'Attempt to replace constants in line
+			SourceData = ReplaceConstantsLine(SourceData, -1)
 			
 			CurrLine->Value = LeftSection + SourceData
 			CurrLine = CurrLine->Next
@@ -1690,37 +1654,63 @@ End SUB
 
 Function ReplaceConstantsLine (ByRef DataSourceIn As String, IncludeStartup As Integer) As String
 	
-	Dim As String ConstName, RCmd, DSUppercase, ConstFile, DataSource, Startup
-	Dim As Integer SCC, SearchStart
-	Dim As LinkedListElement Pointer SearchConstPos
+	Dim As String DataSource, Startup, Origin
+	Dim As Integer LineChanged, RepCount
+	Dim As LinkedListElement Pointer LineElements, CurrElement
 	Dim As ConstMeta Pointer Meta
 	
-	ConstReplaced = 0
-	DataSource = DataSourceIn
-	DSUppercase = UCase(DataSource)
+	RepCount = 0
+	LineChanged = 0
 	Startup = ""
 	
-	SearchConstPos = Constants->Next
-	Do While SearchConstPos <> 0
-		ConstName = SearchConstPos->Value
-		IF InStr(DSUppercase, ConstName) <> 0 THEN
-			Meta = SearchConstPos->MetaData
-			RCmd = Meta->Value
-			WholeReplace DataSource, ConstName, RCmd
+	'Get all elements from line
+	LineElements = GetElements(DataSourceIn, , -1)
+	
+	'Check each one to see if it is a constant
+	CurrElement = LineElements->Next
+	Do While CurrElement <> 0
+		Meta = HashMapGet(Constants, UCase(CurrElement->Value))
+		If Meta <> 0 Then
+			'Found constant, replace
 			
-			If DSUppercase <> UCase(DataSource) Then
-				ConstReplaced = -1
+			RepCount += 1
+			'Prevent recursion from crashing compiler
+			If RepCount > 100 Then
+				Origin = ""
+				IF INSTR(DataSourceIn, ";?F") <> 0 THEN Origin = Mid(DataSourceIn, INSTR(DataSourceIn, ";?F"))
+				If INSTR(Origin, ";STARTUP") <> 0 Then Origin = Left(Origin, INSTR(Origin, ";STARTUP") - 1)
+				LogError Message("RecursiveDefine"), Origin
+				CurrElement = LinkedListDelete(CurrElement)
+				
+			Else
+				CurrElement = LinkedListDelete(CurrElement)
+				LinkedListInsertList(CurrElement, GetElements(Meta->Value, , -1))
+				LineChanged = -1
+				
 				If Meta->Startup <> "" AndAlso InStr(Startup, Meta->Startup) = 0 THEN
 					If IncludeStartup Then
 						Startup = Startup + ";STARTUP" + Meta->Startup
 					End If
 				End If
-				DSUppercase = UCase(DataSource)
-			END IF
-		END If
-		
-		SearchConstPos = SearchConstPos->Next
+			End If
+			
+		End If
+		CurrElement = CurrElement->Next
 	Loop
+	
+	'Update line
+	If LineChanged Then
+		DataSource = ""
+		CurrElement = LineElements->Next
+		Do While CurrElement <> 0
+			DataSource = DataSource + CurrElement->Value
+			CurrElement = CurrElement->Next
+		Loop
+	Else
+		DataSource = DataSourceIn
+	End If
+	
+	LinkedListDeleteList(LineElements, 0)
 	
 	Return DataSource + Startup
 End Function
@@ -1794,11 +1784,9 @@ SUB RunScripts
 				Condition = Mid(CO, 4)
 				IF INSTR(Condition, "THEN") <> 0 THEN Condition = Left(Condition, INSTR(Condition, "THEN") - 1)
 				Condition = Trim(Condition)
-				SearchConstPos = Constants->Next
-				Do While SearchConstPos <> 0
-					IF SearchConstPos->Value = Condition THEN CondFalse = 0: EXIT Do
-					SearchConstPos = SearchConstPos->Next
-				Loop
+				If HashMapGet(Constants, Condition) <> 0 Then
+					CondFalse = 0
+				End If
 			End If
 			
 			If CondFalse Then
@@ -1870,20 +1858,7 @@ SUB RunScripts
 			Loop
 			
 			'Write the data to the output
-			FC = 0
-			SearchConstPos = Constants->Next
-			Do While SearchConstPos <> 0
-				IF SearchConstPos->Value = UCase(OutVar) Then
-					FC = 1
-					CPtr(ConstMeta Pointer, SearchConstPos->MetaData)->Value = Trim(Value)
-					EXIT Do
-				End If
-				SearchConstPos = SearchConstPos->Next
-			Loop
-			
-			If FC = 0 Then
-				AddConstant(OutVar, Trim(Value))
-			End If
+			AddConstant(OutVar, Trim(Value), , -1)
 		End If
 		
 		'May have been forced to 0 by missing end if

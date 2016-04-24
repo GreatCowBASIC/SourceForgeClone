@@ -76,6 +76,8 @@
 ' 18/02/2016  Added correct prescales for AVR with TCCR2A register -Wmr
 ' 18/02/2016  Added/corrected TCCR2A setting in Stop/starttimer -Wmr
 ' 22/02/2016  Corrected TCCR2A error - Wmr
+' 24/04/2016: Removed PSn_1/x constants - no longer valid syntax - HC
+
 '***********************************************************
 
 'Subroutines:
@@ -430,14 +432,6 @@
 ''0: stop timer
 
 'Timer 0 prescales (PIC)
-#define PS0_1/2 0
-#define PS0_1/4 1
-#define PS0_1/8 2
-#define PS0_1/16 3
-#define PS0_1/32 4
-#define PS0_1/64 5
-#define PS0_1/128 6
-#define PS0_1/256 7
 #define PS0_2 0
 #define PS0_4 1
 #define PS0_8 2
@@ -448,100 +442,60 @@
 #define PS0_256 7
 
 'Timer 1 prescales
-#define PS1_1/1 0
-#define PS1_1/2 16
-#define PS1_1/4 32
-#define PS1_1/8 48
 #define PS1_1 0
 #define PS1_2 16
 #define PS1_4 32
 #define PS1_8 48
 
 'Timer 2 prescales
-#define PS2_1/1 0
-#define PS2_1/4 1
-#define PS2_1/16 2
-#define PS2_1/64 3  'Added WMR
 #define PS2_1 0
 #define PS2_4 1
 #define PS2_16 2
 #define PS2_64 3    'Added WMR
 
 'Timer 3 prescales
-#define PS3_1/1 0
-#define PS3_1/2 16
-#define PS3_1/4 32
-#define PS3_1/8 48
 #define PS3_1 0
 #define PS3_2 16
 #define PS3_4 32
 #define PS3_8 48
 
 'Timer 4 prescales
-#define PS4_1/1 0
-#define PS4_1/4 1
-#define PS4_1/16 2
-#define PS4_1/64 3
 #define PS4_1 0
 #define PS4_4 1
 #define PS4_16 2
 #define PS4_64 3
 
 'Timer 5 prescales
-#define PS5_1/1 0
-#define PS5_1/2 16
-#define PS5_1/4 32
-#define PS5_1/8 48
 #define PS5_1 0
 #define PS5_2 16
 #define PS5_4 32
 #define PS5_8 48
 
 'Timer 6 prescales
-#define PS6_1/1 0
-#define PS6_1/4 1
-#define PS6_1/16 2
-#define PS6_1/64 3
 #define PS6_1 0
 #define PS6_4 1
 #define PS6_16 2
 #define PS6_64 3
 
 'Timer 7 prescales -wmr
-#define PS7_1/1 0
-#define PS7_1/2 16
-#define PS7_1/4 32
-#define PS7_1/8 48
 #define PS7_1 0
 #define PS7_2 16
 #define PS7_4 32
 #define PS7_8 48
 
 'Timer 8 prescales -wmr
-#define PS8_1/1 0
-#define PS8_1/4 1
-#define PS8_1/16 2
-#define PS8_1/64 3
 #define PS8_1 0
 #define PS8_4 1
 #define PS8_16 2
 #define PS8_64 3
 
 'Timer 10 prescales -wmr
-#define PS10_1/1 0
-#define PS10_1/4 1
-#define PS10_1/16 2
-#define PS10_1/64 3
 #define PS10_1 0
 #define PS10_4 1
 #define PS10_16 2
 #define PS10_64 3
 
 'Timer 12 prescales -wmr
-#define PS12_1/1 0
-#define PS12_1/4 1
-#define PS12_1/16 2
-#define PS12_1/64 3
 #define PS12_1 0
 #define PS12_4 1
 #define PS12_16 2

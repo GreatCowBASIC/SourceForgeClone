@@ -1,5 +1,5 @@
 '	GCBASIC - A BASIC Compiler for microcontrollers
-'	Copyright (C) 2006 - 2015 Hugh Considine
+'	Copyright (C) 2006 - 2016 Hugh Considine
 '
 '	This program is free software; you can redistribute it and/or modify
 '	it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ Type ProgLineMeta
 	NextCommands As LinkedListElement Pointer
 
 	AsmCommand As Integer 'Index of asm instruction on line. -1 if none.
+	LineSize As Integer 'Size of line in words.
 
 End Type
 
@@ -440,7 +441,7 @@ Declare Function HasSFRBit(BitName As String) As Integer
 Declare Sub MakeSFR (UserVar As String, SFRAddress As Integer)
 
 'Subs in preprocessor.bi
-Declare Sub AddConstant(ConstName As String, ConstName As String, ConstStartup As String = "")
+Declare Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As String = "", ReplaceExisting As Integer = -1)
 Declare Function CheckSysVarDef(ConditionIn As String) As String
 Declare Sub LoadTableFromFile(DataTable As DataTableType Pointer)
 DECLARE SUB PrepareBuiltIn ()
@@ -508,7 +509,7 @@ DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, Int
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
-DIM SHARED As Integer VBS, MSGC, PreserveMode, ConstReplaced, SubCalls
+DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
 Dim Shared As Integer WarningsAsErrors
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
@@ -518,17 +519,17 @@ Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows
 Dim Shared As Single ChipMhz, ChipMaxSpeed, StartTime, FileConverters
 
 'Assembler vars
-DIM SHARED As Integer ASPC, ASMCC, ToAsmSymbols
+DIM SHARED As Integer ASMCC, ToAsmSymbols
 
 'Code Array
 Dim Shared CompilerOutput As CodeSection Pointer
-DIM SHARED ASMPROG(60000) As String: ASPC = 0
+DIM SHARED As LinkedListElement Pointer AsmProg, AsmProgLoc
 
 'Sub arrays
 Dim Shared Subroutine(10000) As SubType Pointer: SBC = 0
 
 'Processing Arrays
-DIM SHARED Constants As LinkedListElement Pointer
+DIM SHARED Constants As HashMap Pointer
 Dim Shared SourceFile(100) As SourceFileType: SourceFiles = 0
 DIM SHARED TempData(300) As String
 DIM SHARED CheckTemp(300) As String
@@ -604,7 +605,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-23"
+Version = "0.95 2016-04-24"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -640,7 +641,9 @@ ChipConfigCode = NewCodeSection
 AttemptedCallList = LinkedListCreate
 ConfigSettings = LinkedListCreate
 PinDirections = LinkedListCreate
-Constants = LinkedListCreate
+Constants = HashMapCreate
+AsmProg = LinkedListCreate
+AsmProgLoc = AsmProg
 
 SysVars = HashMapCreate
 SysVarBits = HashMapCreate
@@ -11768,12 +11771,15 @@ Sub OptimiseCalls
 	'This routine is AVR and PIC18F compatible only
 	If ChipFamily <> 16 And Not ModeAVR Then Exit Sub
 
-	Dim As LinkedListElement Pointer CurrLine, LabelList, LabelListPos
+	Dim As LinkedListElement Pointer CurrLine
+	Dim As ProgLineMeta Pointer CurrMeta
+	Dim As HashMap Pointer Labels
+	Dim As Integer Pointer LabelPos
 	Dim As String JumpTarget, ProperCmd, CheckTarget, NextLine, TempLoc
 	Dim As Integer IsRelative, UseRelative, IsJump, LineSize, CurrLinePos
 	Dim As Integer JumpSize, IsFirstLine
 	Dim As Integer CallChanged, ProgramScans
-
+	
 	ProgramScans = 0
 	Do
 		'Get list of labels and locations in program
@@ -11781,21 +11787,25 @@ Sub OptimiseCalls
 		ProgramScans += 1
 		CurrLine = CompilerOutput->CodeList->Next
 		CurrLinePos = 0
-		LabelList = LinkedListCreate
-		LabelListPos = LabelList
+		Labels = HashMapCreate
 		Do While CurrLine <> 0
-
+			
+			CurrMeta = GetMetaData(CurrLine)
+			
 			LineSize = CalcLineSize(CurrLine->Value, 1)
+			CurrMeta->LineSize = LineSize
 			If LineSize = 0 Then
 				If ModeAVR Then
 					If Right(CurrLine->Value, 1) = LabelEnd Then
-						LabelListPos = LinkedListInsert(LabelListPos, UCase(Left(CurrLine->Value, Len(CurrLine->Value) - 1)))
-						LabelListPos->NumVal = CurrLinePos
+						LabelPos = Callocate(SizeOf(Integer))
+						*LabelPos = CurrLinePos
+						HashMapSet(Labels, UCase(Left(CurrLine->Value, Len(CurrLine->Value) - 1)), LabelPos)
 					End If
 				ElseIf ChipFamily = 16 Then
 					If CurrLine->Value <> "" And Left(CurrLine->Value, 1) <> ";" And Left(CurrLine->Value, 1) <> " " And Left(CurrLine->Value, 9) <> "PRESERVE " Then
-						LabelListPos = LinkedListInsert(LabelListPos, UCase(CurrLine->Value))
-						LabelListPos->NumVal = CurrLinePos
+						LabelPos = Callocate(SizeOf(Integer))
+						*LabelPos = CurrLinePos
+						HashMapSet(Labels, UCase(CurrLine->Value), LabelPos)
 					End If
 				End If
 				If Left(CurrLine->Value, 5) = ".ORG " Then
@@ -11807,12 +11817,14 @@ Sub OptimiseCalls
 
 			CurrLine = CurrLine->Next
 		Loop
-
+		
 		'Check program, make changes where needed
 		CurrLine = CompilerOutput->CodeList->Next
 		CurrLinePos = 0
 		Do While CurrLine <> 0
-
+			
+			CurrMeta = GetMetaData(CurrLine)
+			
 			'Get current position
 			If CurrLinePos = 0 Then
 				IsFirstLine = -1
@@ -11880,18 +11892,13 @@ Sub OptimiseCalls
 						UseRelative = 0
 
 					Else
-						LabelListPos = LabelList->Next
-						Do While LabelListPos <> 0
-							If LabelListPos->Value = CheckTarget Then
-								JumpSize = Abs(LabelListPos->NumVal - CurrLinePos)
-								'Print CurrLine->Value, CurrLinePos, JumpSize
-								If (ModeAVR And JumpSize < 2048) Or (ChipFamily = 16 And JumpSize < 1024) Then
-									UseRelative = -1
-								End If
-								Exit Do
+						LabelPos = HashMapGet(Labels, CheckTarget)
+						If LabelPos <> 0 Then
+							JumpSize = Abs(*LabelPos - CurrLinePos)
+							If (ModeAVR And JumpSize < 2048) Or (ChipFamily = 16 And JumpSize < 1024) Then
+								UseRelative = -1
 							End If
-							LabelListPos = LabelListPos->Next
-						Loop
+						End If
 					End If
 
 				End If
@@ -11927,19 +11934,19 @@ Sub OptimiseCalls
 						End If
 					End If
 					CurrLine->Value = ProperCmd + JumpTarget
+					CurrMeta->LineSize = CalcLineSize(CurrLine->Value, 1)
 				End If
 
 			End If
 
-			CurrLinePos += CalcLineSize(CurrLine->Value, 1)
+			CurrLinePos += CurrMeta->LineSize
 			CurrLine = CurrLine->Next
 			IsFirstLine = 0
 		Loop
 
-		DeAllocate LabelList
+		HashMapDestroy(Labels)
 	Loop While CallChanged
 	'Print "Optimised calls in "; ProgramScans; " attempts"
-
 End Sub
 
 SUB OptimiseIF (CompSub As SubType Pointer = 0)
