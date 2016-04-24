@@ -584,7 +584,7 @@ SUB AllocateRAM
 				'Don't try allocating RAM to high byte of alias
 				If InStr(.Name, "_") <> 0 Then
 					'Get name of full variable
-					TempData = UCase(Left(.Name, InStr(.Name, "_") - 1))
+					TempData = UCase(Left(.Name, InStrRev(.Name, "_") - 1))
 					'Does it match an alias?
 					SubVar = HashMapGet(@Variables, TempData)
 					If SubVar <> 0 Then

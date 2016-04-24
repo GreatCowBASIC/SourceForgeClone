@@ -192,6 +192,8 @@ Type AsmCommand
 	Cmd As String
 	Params As Integer
 	Param(25) As String
+	
+	Alternative As AsmCommand Pointer 'Need this to allow for multiple commands with same name
 End Type
 
 Type ConfigOp
@@ -290,7 +292,7 @@ DECLARE SUB AddSysVarBits (CompSub As SubType Pointer)
 Declare SUB BuildMemoryMap
 DECLARE SUB CalcConfig
 DECLARE Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As String, OriginIn As String)
-Declare Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Integer = -1, GotoPos As Integer = -1) As Integer
+Declare Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As AsmCommand Pointer = 0, GotoPos As AsmCommand Pointer = 0) As Integer
 Declare Sub CalcSubSize(CurrSub As SubType Pointer)
 DECLARE FUNCTION CastOrder (InType As String) As Integer
 Declare Sub CheckConstName (ConstName As String, Origin As String)
@@ -427,7 +429,7 @@ Declare Sub AsmOptimiser (CompSub As SubType Pointer)
 DECLARE FUNCTION AsmTidy (DataSource As String) As String
 DECLARE SUB AssembleProgram
 Declare Sub BuildAsmSymbolTable
-Declare FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As Integer
+Declare FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
 Declare Function IsASMConst (DataSource As String) As Integer
 
 'Subs in variables.bi
@@ -519,7 +521,7 @@ Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows
 Dim Shared As Single ChipMhz, ChipMaxSpeed, StartTime, FileConverters
 
 'Assembler vars
-DIM SHARED As Integer ASMCC, ToAsmSymbols
+DIM SHARED As Integer ToAsmSymbols
 
 'Code Array
 Dim Shared CompilerOutput As CodeSection Pointer
@@ -549,7 +551,7 @@ DIM SHARED DefCONFIG(200) As String: DCOC = 0
 DIM SHARED ConfigMask(20) As Integer
 DIM SHARED DataTable(100) As DataTableType: DataTables = 0
 DIM SHARED Messages(1 TO 2, 200) As String: MSGC = 0
-DIM SHARED ASMCommands (200) As ASMCommand: ASMCC = 0
+DIM SHARED ASMCommands As HashMap Pointer
 DIM SHARED ASMSymbols As HashMap Pointer
 Dim Shared ToAsmSymbol(500, 1 To 2) As String: ToAsmSymbols = 0
 DIM SHARED FinalVarList As HashMap Pointer
@@ -647,6 +649,7 @@ AsmProgLoc = AsmProg
 
 SysVars = HashMapCreate
 SysVarBits = HashMapCreate
+ASMCommands = HashMapCreate
 
 'Load files and tidy them up
 PreProcessor
@@ -2444,15 +2447,16 @@ SearchForOpAgain:
 
 END SUB
 
-Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Integer, GotoPos As Integer) As Integer
+Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As AsmCommand Pointer, GotoPos As AsmCommand Pointer) As Integer
 	'Calculates the size in words of an assembly code line
 	'CallPos is the location of the call instruction in the instruction list
 
-	Dim As Integer InstSize, InstIndex, PresPos, TempDataCount, CalledSub, CalledSubPage
+	Dim As Integer InstSize, PresPos, TempDataCount, CalledSub, CalledSubPage
 	Dim As String CurrLineVal, TempData(20), NextCallTarget
 	Dim As Integer RestorePage, NextCalledSub, NextCalledSubPage
 	Dim As SubType Pointer GotoSub
-
+	Dim As AsmCommand Pointer InstIndex
+	
 	Dim As String ROMData, Temp
 	Dim As Integer DataBlockSize, RSC, DWIC, SS
 
@@ -2580,7 +2584,7 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Int
 		End If
 
 	Else
-		InstSize = AsmCommands(InstIndex).Words
+		InstSize = InstIndex->Words
 	End If
 
 	Return InstSize
@@ -2588,20 +2592,25 @@ End Function
 
 Sub CalcSubSize(CurrSub As SubType Pointer)
 
-	Dim As Integer FinalSize, CallPos, GotoPos, ThisSubPage, RetPos
+	Dim As Integer FinalSize, ThisSubPage
 	Dim As LinkedListElement Pointer CurrLine, NextLine
 	Dim As String NextLineValue
-
+	Dim As AsmCommand Pointer CallPos, GotoPos, RetPos
+	
 	'Get the position of call instruction, saves work later
 	CallPos = IsASM("call")
 
 	'Get the position of return instruction
 	If ModePIC Then
-		RetPos = IsASM("return")
+		If ChipFamily = 12 Then
+			RetPos = IsASM("retlw")
+		Else
+			RetPos = IsASM("return")
+		End If
 		GotoPos = IsASM("goto")
 	ElseIf ModeAVR Or ModeZ8 Then
 		RetPos = IsASM("ret")
-		GotoPos = -1
+		GotoPos = 0
 	EndIf
 
 	'Add page selection commands to sub so that size is accurate
@@ -2633,7 +2642,7 @@ Sub CalcSubSize(CurrSub As SubType Pointer)
 
 	'Add size of return
 	If Not CurrSub->NoReturn Then
-		FinalSize += AsmCommands(RetPos).Words
+		FinalSize += RetPos->Words
 	End If
 
 	CurrSub->HexSize = FinalSize
@@ -2816,9 +2825,7 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 	If VBS = 1 Then
 		Print Spc(10); CompSub->Name
 	End If
-
-	'CompileDim (CompSub)
-
+	
 	'Split any lines at : (these may be inserted through constants)
 	SplitLines (CompSub)
 	'Compile calls to other subroutines, insert macros
@@ -8834,9 +8841,10 @@ End Sub
 
 Sub FindAssembly (CompSub As SubType Pointer)
 	Dim As String Temp, CalledSub
-	Dim As Integer PD, T, CallPos, RCallPos
+	Dim As Integer PD
 	Dim As LinkedListElement Pointer CurrLine
-
+	Dim As AsmCommand Pointer CallPos, RCallPos, ThisCmdPos
+	
 	CallPos = IsASM("call")
 	RCallPos = IsASM("rcall")
 
@@ -8849,13 +8857,13 @@ Sub FindAssembly (CompSub As SubType Pointer)
 			CurrLine->Value = " " + LCase(Left(CurrLine->Value, LEN(Temp))) + Mid(CurrLine->Value, LEN(Temp) + 1)
 			IF INSTR(CurrLine->Value, ";?") <> 0 THEN CurrLine->Value = RTrim(Left(CurrLine->Value, INSTR(CurrLine->Value, ";?") - 1))
 		Else
-			T = IsASM(CurrLine->Value)
-			If T <> 0 AND Left(CurrLine->Value, 1) <> " " THEN
-				Temp = Trim(ASMCommands(T).Syntax)
+			ThisCmdPos = IsASM(CurrLine->Value)
+			If ThisCmdPos <> 0 AND Left(CurrLine->Value, 1) <> " " THEN
+				Temp = Trim(ThisCmdPos->Syntax)
 				IF InStr(Temp, " ") <> 0 THEN Temp = Trim(Left(Temp, INSTR(Temp, " ") - 1))
 
 				'Record calls
-				If T = CallPos Or T = RCallPos Then
+				If ThisCmdPos = CallPos Or ThisCmdPos = RCallPos Then
 					CalledSub = Trim(Mid(CurrLine->Value, LEN(Temp) + 1))
 					IF InStr(CalledSub, ";?") <> 0 THEN CalledSub = RTrim(Left(CalledSub, INSTR(CalledSub, ";?") - 1))
 					RequestSub(CompSub, CalledSub, "")
@@ -12524,6 +12532,7 @@ SUB ReadChipData
 	Dim As ConfigSetting Pointer ThisSetting
 	Dim As SysVarType Pointer NewSysVar
 	Dim As LinkedListElement Pointer CurrLoc
+	Dim As AsmCommand Pointer NewAsmCommand, FindAsmCommand
 
 	'Get filename
 #IFDEF __FB_LINUX__
@@ -12839,9 +12848,10 @@ SUB ReadChipData
 		InLine = Trim(UCase(InLine))
 		IF InLine <> "" AND Left(InLine, 1) <> "'" THEN
 			DO WHILE INSTR(InLine, Chr(9)) <> 0: Replace InLine, Chr(9), " ": LOOP
-
-			ASMCC += 1
-			With AsmCommands(ASMCC)
+			
+			NewAsmCommand = Callocate(SizeOf(AsmCommand))
+			
+			With *NewAsmCommand
 
 				'Get syntax and number of words
 				.Syntax = Trim(Left(InLine, INSTR(InLine, ";") - 1))
@@ -12862,7 +12872,7 @@ SUB ReadChipData
 				End If
 
 				'Get command name
-				.Cmd = Trim(LCase(.Syntax))
+				.Cmd = Trim(UCase(.Syntax))
 				If INSTR(.Cmd, " ") <> 0 THEN .Cmd = Trim(Left(.Cmd, INSTR(.Cmd, " ") - 1))
 
 				'Get parameters
@@ -12876,8 +12886,21 @@ SUB ReadChipData
 				GetTokens (ParamName, .Param(), .Params, ",")
 
 			End With
-
-		END IF
+			
+			'Is command with same name already in hashmap?
+			FindAsmCommand = HashMapGet(ASMCommands, NewAsmCommand->Cmd)
+			If FindAsmCommand <> 0 Then
+				'Yes, so add new command to existing one
+				Do While FindAsmCommand->Alternative <> 0
+					FindAsmCommand = FindAsmCommand->Alternative
+				Loop
+				FindAsmCommand->Alternative = NewAsmCommand
+			Else
+				'No, so add to map normally
+				HashMapSet(ASMCommands, NewAsmCommand->Cmd, NewAsmCommand)
+			End If
+			
+		END If
 	Loop
 	CLOSE
 
@@ -13006,7 +13029,7 @@ Function RequestSub(Requester As SubType Pointer, SubNameIn As String, SubSigIn 
 	Dim As Integer CurrSub, BestMatchPos, BestMatch, ThisMatch, InReqList
 	Dim As String SubName, SubSig
 	Dim As LinkedListElement Pointer ReqListPos, ReqListData
-
+	
 	SubName = UCase(Trim(SubNameIn))
 	BestMatchPos = -1
 	BestMatch = -1
@@ -13031,12 +13054,12 @@ Function RequestSub(Requester As SubType Pointer, SubNameIn As String, SubSigIn 
 			Else
 				Subroutine(CurrSub)->Required = -1
 				RecordSubCall(Requester, Subroutine(CurrSub))
-
+				
 				Return CurrSub
 			End If
 		End If
 	Next
-
+	
 	If BestMatch <> -1 Then
 		Subroutine(BestMatchPos)->Required = -1
 		RecordSubCall(Requester, Subroutine(BestMatchPos))
