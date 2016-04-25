@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16F1705
-'Generated 21/12/2014
+'Generated 25/4/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -10,7 +10,7 @@ RAM=1024
 I/O=12
 ADC=8
 MaxMHz=32
-IntOsc=16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+IntOsc=32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
 Pins=14
 Family=15
 ConfigWords=2
@@ -23,6 +23,7 @@ CCP1:CCP1IE,CCP1IF
 CCP2:CCP2IE,CCP2IF
 Comp1Change:C1IE,C1IF
 Comp2Change:C2IE,C2IF
+ComplementaryGenerator:COGIE,COGIF
 ExtInt0:INTE,INTF
 LogicCell1Event:CLC1IE,CLC1IF
 LogicCell2Event:CLC2IE,CLC2IF
@@ -33,11 +34,12 @@ SSP1Ready:SSP1IE,SSP1IF
 Timer0Overflow:TMR0IE,TMR0IF
 Timer1Gate:TMR1GIE,TMR1GIF
 Timer1Overflow:TMR1IE,TMR1IF
-Timer2Overflow:TMR2IE,TMR2IF
-Timer4Overflow:TMR4IE,TMR4IF
+Timer2Match:TMR2IE,TMR2IF
+Timer4Match:TMR4IE,TMR4IF
 Timer6Match:TMR6IE,TMR6IF
 UsartRX1Ready:RCIE,RCIF
 UsartTX1Ready:TXIE,TXIF
+ZeroCrossDetect:ZCDIE,ZCDIF
 
 [Registers]
 INDF0,0
@@ -439,6 +441,7 @@ CHS2,ADCON0,4
 CHS3,ADCON0,5
 CHS4,ADCON0,6
 GO,ADCON0,1
+ADNREF,ADCON1,2
 ADFM,ADCON1,7
 ADPREF0,ADCON1,0
 ADPREF1,ADCON1,1

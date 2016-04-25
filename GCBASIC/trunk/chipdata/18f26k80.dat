@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F26K80
-'Generated 12/1/2015
+'Generated 25/4/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -10,7 +10,7 @@ RAM=3648
 I/O=24
 ADC=8
 MaxMHz=64
-IntOsc=64, 32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.031
+IntOsc=16, 8, 4, 2, 1, 0.5, 0.25, 0.125
 Pins=28
 Family=16
 PSP=0
@@ -49,10 +49,10 @@ SSP1Ready:SSPIE,SSPIF
 Timer0Overflow:TMR0IE,TMR0IF
 Timer1Gate:TMR1GIE,TMR1GIF
 Timer1Overflow:TMR1IE,TMR1IF
-Timer2Overflow:TMR2IE,TMR2IF
+Timer2Match:TMR2IE,TMR2IF
 Timer3Gate:TMR3GIE,TMR3GIF
 Timer3Overflow:TMR3IE,TMR3IF
-Timer4Overflow:TMR4IE,TMR4IF
+Timer4Match:TMR4IE,TMR4IF
 UsartRX1Ready:RC1IE,RC1IF
 UsartRX2Ready:RC2IE,RC2IF
 UsartTX1Ready:TX1IE,TX1IF
@@ -3724,7 +3724,7 @@ SOSCSEL=DIG
 127
 127
 255
-141
+137
 145
 255
 15

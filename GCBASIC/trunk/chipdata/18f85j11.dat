@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F85J11
-'Generated 15/8/2014
+'Generated 25/4/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -32,7 +32,7 @@ SSP1Collision:BCLIE,BCLIF
 SSP1Ready:SSPIE,SSPIF
 Timer0Overflow:TMR0IE,TMR0IF
 Timer1Overflow:TMR1IE,TMR1IF
-Timer2Overflow:TMR2IE,TMR2IF
+Timer2Match:TMR2IE,TMR2IF
 Timer3Overflow:TMR3IE,TMR3IF
 UsartRX1Ready:RC1IE,RC1IF
 UsartRX2Ready:RC2IE,RC2IF
@@ -1286,6 +1286,7 @@ STVREN=ON
 WAIT=OFF
 WDTEN=ON
 WDTPS=32768
+XINST=OFF
 
 [ConfigMask]
 225

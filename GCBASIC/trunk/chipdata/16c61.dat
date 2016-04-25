@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C61
-'Generated 31/1/2010
+'Generated 25/4/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -82,7 +82,14 @@ RBIF,INTCON,0
 11,RB5(IO)
 12,RB6(IO)
 13,RB7(IO)
-0,RC0(IO),RC1(IO),RC2(IO),RC3(IO),RC4(IO),RC5(IO),RC6(IO),RC7(IO)
+0,RC0(IO),T1CKI(I),T1OSCI(I)
+0,RC1(IO),T1OSCO(O)
+0,RC2(IO),CCP1(IO)
+0,RC3(IO)
+0,RC4(IO)
+0,RC5(IO)
+0,RC6(IO)
+0,RC7(IO)
 16,OSC1
 15,OSC2
 5,Vss
