@@ -251,6 +251,7 @@ WarningNameUsedSystem = "Variable name %name% is used for a system bit on the cu
 WarningTableFileNotFound = "Could not load %table% from %file%: File not found"
 WarningBadOption = "Unrecognised compiler option: %option%"
 WarningTimerConst = "Deprecated timer prescaler constant found. Replace PSn_1/x constants with PSn_x"
+WarningVolatileBit = "Invalid volatile option bit %bit%"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."

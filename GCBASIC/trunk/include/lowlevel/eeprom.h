@@ -73,12 +73,9 @@ sub EPWrite(In EEAddress, In EEDataValue)
 	#ifdef EEDATL_REF
 		Dim EEDataValue Alias EEDATL_REF
 	#endif
-
-		dim IntState as bit
-    IntState = GIE
-  'Disable interrupt
-	 GIE = 0
-	'IntOff
+	
+	'Disable interrupt
+	IntOff
 
 	'Select data memory
 	#IFDEF Bit(EEPGD)
@@ -100,8 +97,7 @@ sub EPWrite(In EEAddress, In EEDataValue)
 	SET EECON1.WREN OFF
 
 	'Restore interrupt
-'	IntOn
-	GIE = IntState
+	IntOn
 
 #ENDIF
 
