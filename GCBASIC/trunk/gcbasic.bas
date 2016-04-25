@@ -131,7 +131,10 @@ Type SubType
 
 	'Call tree
 	CallList As LinkedListElement Pointer
-
+	
+	'Assembly bit variable used to save IntOn/IntOff state 
+	IntStateSaveVar As String
+	
 	'Original BASIC size (for compilation report)
 	OriginalLOC As Integer
 
@@ -511,7 +514,7 @@ DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, Int
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
-DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls
+DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
 Dim Shared As Integer WarningsAsErrors
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
@@ -574,6 +577,7 @@ Dim Shared AttemptedCallList As LinkedListElement Pointer
 Dim Shared OutConfig(16) As String
 Dim Shared PinDirections As LinkedListElement Pointer
 Dim Shared PinDirShadow(20) As String
+Dim Shared GlitchFreeOutputs As HashMap Pointer
 
 Dim Shared As String Star80
 
@@ -607,7 +611,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-24"
+Version = "0.95 2016-04-25"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -629,6 +633,7 @@ WSC = 0 'Wait Until/While loops
 DLC = 0 'Do loops
 SCT = 0 'Select Case
 USDelaysInaccurate = 0 'Set if variable len US delays will be wrong
+IntOnOffCount = 0 'Count IntOn/IntOff
 
 'Show startup messages, and read COMMAND
 StartTime = Timer
@@ -646,6 +651,7 @@ PinDirections = LinkedListCreate
 Constants = HashMapCreate
 AsmProg = LinkedListCreate
 AsmProgLoc = AsmProg
+GlitchFreeOutputs = HashMapCreate
 
 SysVars = HashMapCreate
 SysVarBits = HashMapCreate
@@ -1397,16 +1403,17 @@ Sub AddMainInitCode
 			If HasSFRBit("PEIE") Then
 				CurrLine = LinkedListInsert(CurrLine, " bsf INTCON,PEIE")
 			End If
-			CurrLine = LinkedListInsert(CurrLine, " clrf SysIntOffCount")
-
 		ElseIf ModeAVR Then
-			CurrLine = LinkedListInsert(CurrLine, " clr SysValueCopy")
-			CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
 			CurrLine = LinkedListInsert(CurrLine, " sei")
 
 		ElseIf ModeZ8 Then
 			CurrLine = LinkedListInsert(CurrLine, " ei")
 
+		End If
+		
+		'Ensure interrupts stay on - need int state save set when interrupts enabled in main
+		If Subroutine(0)->IntStateSaveVar <> "" Then
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("1", Subroutine(0)->IntStateSaveVar, "S0"))
 		End If
 	End If
 
@@ -1652,10 +1659,7 @@ Sub AddInterruptCode
 			SubStart = .CodeStart
 		End With
 		CurrLine = SubStart
-
-		'Add variable to store int on/off count
-		AddVar "SysIntOffCount", "BYTE", 1, 0, "REAL", ""
-
+		
 		'Add context save code
 		If AutoContextSave Then
 			AddVar "SysW", "BYTE", 1, 0, "REAL", ""
@@ -1681,7 +1685,6 @@ Sub AddInterruptCode
 				Else
 					CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
 				End If
-				CurrLine = LinkedListInsert(CurrLine, " incf SysIntOffCount,F")
 				CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
 				SaveVarPos = SaveVars->Next
 				Do While SaveVarPos <> 0
@@ -1698,7 +1701,6 @@ Sub AddInterruptCode
 				CurrLine = LinkedListInsert(CurrLine, " movff WREG,SysW")
 				CurrLine = LinkedListInsert(CurrLine, " movff STATUS,SysSTATUS")
 				CurrLine = LinkedListInsert(CurrLine, " movff BSR,SysBSR")
-				CurrLine = LinkedListInsert(CurrLine, " incf SysIntOffCount,F")
 				CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
 				SaveVarPos = SaveVars->Next
 				Do While SaveVarPos <> 0
@@ -1732,7 +1734,6 @@ Sub AddInterruptCode
 					CurrLine = LinkedListInsert(CurrLine, " movwf " + SaveVarPos->Value)
 					SaveVarPos = SaveVarPos->Next
 				Loop
-				CurrLine = LinkedListInsert(CurrLine, " clrf SysIntOffCount")
 				If ChipFamily = 15 Then
 					AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
 					CurrLine = LinkedListInsert(CurrLine, " movf SysBSR,W")
@@ -1750,7 +1751,6 @@ Sub AddInterruptCode
 					CurrLine = LinkedListInsert(CurrLine, " movff Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
 					SaveVarPos = SaveVarPos->Next
 				Loop
-				CurrLine = LinkedListInsert(CurrLine, " clrf SysIntOffCount")
 				CurrLine = LinkedListInsert(CurrLine, " movff SysW,WREG")
 				CurrLine = LinkedListInsert(CurrLine, " movff SysSTATUS,STATUS")
 				CurrLine = LinkedListInsert(CurrLine, " movff SysBSR,BSR")
@@ -1769,10 +1769,7 @@ Sub AddInterruptCode
 	ElseIf ModeAVR Then
 		'On AVR, need to add subs for context save/restore, and set up vectors to
 		'call correct handlers
-
-		'Add variable to store int on/off count
-		AddVar "SysIntOffCount", "BYTE", 1, 0, "REAL", ""
-
+		
 		If AutoContextSave Then
 			'Add variables
 			AddVar("SaveSysValueCopy", "BYTE", 1, 0, "REAL", "")
@@ -1810,12 +1807,6 @@ Sub AddInterruptCode
 				CurrLine = LinkedListInsert(CurrLine, " sts Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
 				SaveVarPos = SaveVarPos->Next
 			Loop
-			CurrLine = LinkedListInsert(CurrLine, ";Prevent interrupt from being re-enabled")
-			'CurrLine = LinkedListInsert(CurrLine, " clr SysValueCopy")
-			'CurrLine = LinkedListInsert(CurrLine, " inc SysValueCopy")
-			CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,1")
-			CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
-			'Compile the sub
 			CompileSubroutine(Subroutine(SBC))
 
 			'Create context restore sub
@@ -1830,9 +1821,6 @@ Sub AddInterruptCode
 			End With
 			CurrLine = SubStart
 			'Add context restore code
-			CurrLine = LinkedListInsert(CurrLine, ";Allow interrupt to be re-enabled")
-			CurrLine = LinkedListInsert(CurrLine, " clr SysValueCopy")
-			CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
 			'Restore all registers
 			CurrLine = LinkedListInsert(CurrLine, ";Restore registers")
 			SaveVarPos = SaveVars->Next
@@ -2809,6 +2797,15 @@ Sub CompileProgram
 
 	'Add context save/restore and int handlers to Interrupt
 	AddInterruptCode
+	
+	
+	'Compile IntOn/IntOff
+	'(Need to compile here, after all On Interrupt commands in all subs have been found, but before AddMainInitCode)
+	For CurrSub = 0 To SBC
+		If .Subroutine(CurrSub)->Required Then
+			CompileIntOnOff (Subroutine(CurrSub))
+		End If
+	Next
 
 	'Add initialise code to start of main
 	AddMainInitCode
@@ -5498,53 +5495,50 @@ Sub CompileIntOnOff (CompSub As SubType Pointer)
 	Dim As String LineTemp, TempData, Origin
 	Dim NewCode(10) As String
 	Dim As LinkedListElement Pointer CurrLine
-
+	
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
 		LineTemp = CurrLine->Value
 		IF LEFT(LineTemp, 5) = "INTON" Or LEFT(LineTemp, 6) = "INTOFF" THEN
-
 			Origin = ""
 			IF INSTR(LineTemp, ";?F") <> 0 THEN
 				Origin = Mid(LineTemp, INSTR(LineTemp, ";?F"))
 				LineTemp = RTRIM(LEFT(LineTemp, INSTR(LineTemp, ";?F") - 1))
 			END IF
 			If LineTemp <> "INTON" And LineTemp <> "INTOFF" Then Continue Do
-
+			
 			If SysInt Or UserInt Then
+				
+				'Get status save variable to use (if not already found)
+				If CompSub->IntStateSaveVar = "" Then
+					CompSub->IntStateSaveVar = "SYSINTSTATESAVE" + Str(IntOnOffCount \ 8) + "." + Str(IntOnOffCount Mod 8)
+					IntOnOffCount += 1
+					
+				End If
+				
 				CurrLine = LinkedListDelete(CurrLine)
 
 				If ModePIC Then
 					If LineTemp = "INTON" Then
-						'Check if SysIntOffCount is 0
-						CurrLine = LinkedListInsert(CurrLine, " movf SysIntOffCount,F")
-						'If not 0, dec
-						CurrLine = LinkedListInsert(CurrLine, " btfss STATUS,Z")
-						CurrLine = LinkedListInsert(CurrLine, " decf SysIntOffCount,F")
-						'If is 0, enable int
-						CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
-						CurrLine = LinkedListInsert(CurrLine, " bsf INTCON,GIE")
-
+						'Restore state
+						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(CompSub->IntStateSaveVar, "INTCON.GIE", Origin))
 					Else
+						'Save state
+						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("INTCON.GIE", CompSub->IntStateSaveVar, Origin))
+						'Turn off interrupt
 						CurrLine = LinkedListInsert(CurrLine, " bcf INTCON,GIE")
-						CurrLine = LinkedListInsert(CurrLine, " incf SysIntOffCount,F")
-
 					End If
 
 				ElseIf ModeAVR Then
 					If LineTemp = "INTON" Then
-						CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy,SysIntOffCount")
-						CurrLine = LinkedListInsert(CurrLine, " cpi SysValueCopy, 0")
-						CurrLine = LinkedListInsert(CurrLine, " breq PC + 4")
-						CurrLine = LinkedListInsert(CurrLine, " dec SysValueCopy")
-						CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
-						CurrLine = LinkedListInsert(CurrLine, " brne PC + 2")
+						'Restore state
+						CurrLine = LinkedListInsertList(CurrLine, CompileConditions(CompSub->IntStateSaveVar + "=1", "TRUE", Origin))
 						CurrLine = LinkedListInsert(CurrLine, " sei")
 					Else
+						'Save state
+						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("SREG.I", CompSub->IntStateSaveVar, Origin))
+						'Turn off interrupt
 						CurrLine = LinkedListInsert(CurrLine, " cli")
-						CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy,SysIntOffCount")
-						CurrLine = LinkedListInsert(CurrLine, " inc SysValueCopy")
-						CurrLine = LinkedListInsert(CurrLine, " sts SysIntOffCount,SysValueCopy")
 					End If
 
 				End If
@@ -7552,8 +7546,10 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 	Dim As String LTemp, HTemp, UTemp, ETemp, STemp, Source, ReferencedSub
 	Dim As Integer CurrentSub, DestSub, CurrVarByte, LastConst, ThisConst
 	Dim As Integer DestReg, DestIO, SourceReg, SourceIO, L, H, U, E, CD
+	Dim As Integer RequiresGlitchFree, DestVarBitNo
 	Dim As LongInt S
 	Dim As PinDirType Pointer CurrPinDir
+	Dim As SysVarType Pointer SysVarBit
 
 	Dim As LinkedListElement Pointer CurrLine, OutList
 	OutList = LinkedListCreate
@@ -7610,12 +7606,12 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 	If Source = Dest Then
 		Return OutList
 	End If
-
+	
 	DestReg = IsRegister(Dest)
 	DestIO = IsIOReg(Dest)
 	SourceReg = IsRegister(Source)
 	SourceIO = IsIOReg(Source)
-
+	
 	'Record reads and writes (for auto pin direction setting)
 	If DType = "BIT" Or DType = "BYTE" Then
 		'If writing to a pin/port, record it
@@ -7796,44 +7792,76 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 	'Copy to bit
 	Case "BIT":
 		DestTemp = FixBit(Dest, Origin)
-
 		If InStr(DestTemp, ".") <> 0 Then Replace DestTemp, ".", ","
-
+		
+		'Split dest into var and bit, get source
+		Dim As String DestVarName, DestVarBit
+		If InStr(DestTemp, ",") <> 0 Then
+			DestVarName = Trim(Left(DestTemp, InStr(DestTemp, ",") - 1))
+			DestVarBit = Trim(Mid(DestTemp, InStr(DestTemp, ",") + 1))
+		Else
+			Print "Internal error in CompileVarSet bit > bit: " + DestTemp
+		End If
+		
+		'Glitch free output needed?
+		DestVarBitNo = -1
+		If IsConst(DestVarBit) Then
+			DestVarBitNo = MakeDec(DestVarBit)
+		Else
+			SysVarBit = HashMapGet(SysVarBits, DestVarBit)
+			If SysVarBit <> 0 Then
+				DestVarBitNo = SysVarBit->Location
+			End If
+		End If
+		RequiresGlitchFree = 0
+		If DestVarBitNo <> -1 Then
+			RequiresGlitchFree = HashMapGet(GlitchFreeOutputs, DestVarName + "." + Str(DestVarBitNo)) <> 0
+		End If
+		
 		'Redirect PORTx writes to LATx
 		If UseChipOutLatches And Left(DestTemp, 4) = "PORT" And Mid(DestTemp, 6, 1) = "," Then
-			Temp = Left(DestTemp, INSTR(DestTemp, ",") - 1)
-			If HasSFR(Temp) Then
-				DestTemp = "LAT" + Right(Temp, 1) + Mid(DestTemp, InStr(DestTemp, ","))
+			If HasSFR(DestVarName) Then
+				DestTemp = "LAT" + Right(DestVarName, 1) + Mid(DestTemp, InStr(DestTemp, ","))
 			End If
 		End If
 		
 		'Record setting of individual OPTION_REG bits (PIC12x5/16x5)
 		If ChipFamily = 12 Then
-			Temp = UCase(Left(DestTemp, INSTR(DestTemp, ",") - 1))
-			If Temp = "OPTION_REG" And Not HasSFR(Temp) Then
+			If DestVarName = "OPTION_REG" And Not HasSFR(DestVarName) Then
 				For CD = 1 To PinDirShadows
-					If PinDirShadow(CD) = Temp Then GoTo OptionShadowFound
+					If PinDirShadow(CD) = DestVarName Then GoTo OptionShadowFound
 				Next
 				PinDirShadows += 1
-				PinDirShadow(PinDirShadows) = Temp
+				PinDirShadow(PinDirShadows) = DestVarName
 				OptionShadowFound:
 			End If
 		End If
 
 		'Add var that contains bit
-		IF INSTR(DestTemp, ",") Then
-			Temp = Left(DestTemp, INSTR(DestTemp, ",") - 1)
-			AddVar Temp, "BYTE", 1, 0, "REAL", Origin
+		IF INSTR(DestTemp, ",") <> 0 Then
+			AddVar DestVarName, "BYTE", 1, 0, "REAL", Origin
 		End If
-
+		
 		Select Case SType
 		'bit > bit
-		Case "BIT":
-
+			Case "BIT":
+			SourceTemp = FixBit(Source, Origin)
+			IF INSTR(SourceTemp, ".") <> 0 Then
+				Temp = Left(SourceTemp, InStr(SourceTemp, ".") - 1)
+				AddVar Temp, "BYTE", 1, 0, "REAL", Origin
+			End If
+			
 			If ModePIC Then
-				SourceTemp = FixBit(Source, Origin): If INSTR(SourceTemp, ".") <> 0 Then Replace SourceTemp, ".", ","
-
-				CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+				If INSTR(SourceTemp, ".") <> 0 Then Replace SourceTemp, ".", ","
+				If RequiresGlitchFree Then
+					ILC += 1
+					CurrLine = LinkedListInsert(CurrLine, " btfsc " + SourceTemp)
+					CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
+					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+				Else
+					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+				End If
 				ILC += 1
 				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
 				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
@@ -7841,25 +7869,15 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 
 			ElseIf ModeAVR Then
-
-				'Print "Bit set " + DestTemp + " to value of " + SourceTemp
-
-				'Split dest into var and bit, get source
-				Dim As String DestVarName, DestVarBit
-				SourceTemp = FixBit(Source, Origin)
-				If InStr(DestTemp, ",") <> 0 Then
-					DestVarName = Trim(Left(DestTemp, InStr(DestTemp, ",") - 1))
-					DestVarBit = Trim(Mid(DestTemp, InStr(DestTemp, ",") + 1))
-				Else
-					Print "Internal error in CompileVarSet bit > bit: " + DestTemp
-				End If
-
 				If IsRegister(DestVarName) Then
 					CurrLine = LinkedListInsert(CurrLine, " cbr " + DestVarName + ",1<<" + DestVarBit)
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
 					CurrLine = LinkedListInsert(CurrLine, " sbr " + DestVarName + ",1<<" + DestVarBit)
 
 				ElseIf IsLowIOReg(DestVarName) Then
+					If RequiresGlitchFree Then
+						CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=0", "TRUE", Origin))
+					End If
 					CurrLine = LinkedListInsert(CurrLine, " cbi " + DestVarName + "," + DestVarBit)
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
 					CurrLine = LinkedListInsert(CurrLine, " sbi " + DestVarName + "," + DestVarBit)
@@ -7886,13 +7904,22 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 		'byte > bit / word > bit / integer > bit
 			Case "BYTE", "WORD", "INTEGER", "LONG":
 			If ModePIC Then
-				CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+				If Not RequiresGlitchFree Then
+					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+				End If
 				CurrLine = LinkedListInsert(CurrLine, " movf " + Source + ",F")
 				ILC += 1
 				CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
 				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
 				CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
 				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+				If RequiresGlitchFree Then
+					ILC += 1
+					CurrLine = LinkedListInsert(CurrLine, " btfss STATUS,Z")
+					CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
+					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+				End If
 			ElseIf ModeAVR Then
 
 			End If
@@ -12540,17 +12567,29 @@ SUB ReadChipData
 #ELSE
 	ChipDataFile = ID + "\chipdata\" + ChipName + ".dat"
 #ENDIF
-
-	IF VBS = 1 THEN PRINT SPC(10); ChipDataFile
-
-	IF ChipFamily = 16 THEN ConfWords = 0
-
+	
 	'Check that the chip data is present
 	If OPEN(ChipDataFile For Input As #1) <> 0 Then
+		'Chip file not found. If ChipName contains LF, try loading F file
+		If InStr(LCase(ChipName), "lf") <> 0 Then
+			TempData = ChipName
+			Replace TempData, "lf", "f"
+			
+			#IFDEF __FB_LINUX__
+				ChipDataFile = ID + "/chipdata/" + LCase(TempData) + ".dat"
+			#ELSE
+				ChipDataFile = ID + "\chipdata\" + TempData + ".dat"
+			#EndIf
+			If Open(ChipDataFile For Input As #1) = 0 Then GoTo ChipDataFileOpened
+		End If
+		
+		'Chip data still not found, show error and quit
 		LogError Message("ChipNotSupported")
 		WriteErrorLog
 		END
 	End If
+	ChipDataFileOpened:
+	IF VBS = 1 THEN PRINT SPC(10); ChipDataFile
 	
 	FirstSFR = &HFFFF
 	
@@ -12916,52 +12955,97 @@ SUB ReadChipData
 	ElseIf Not (HasSFR("LATA") OrElse HasSFR("LATB") OrElse HasSFR("LATC")) Then
 		UseChipOutLatches = 0
 	End If
-
+	
+	'Ensure GIE is switched in glitch free mode
+	If ModePIC Then
+		NewSysVar = HashMapGet(SysVarBits, "GIE")
+		If NewSysVar <> 0 Then
+			HashMapSet(GlitchFreeOutputs, NewSysVar->Parent + "." + Str(NewSysVar->Location), "y") 
+		End If
+	End If
+	
 End Sub
 
 Sub ReadOptions(OptionsIn As String)
 	'Process #option statements
 
-	Dim As String OutMessage, OptionElement(100)
-	Dim As Integer OptionElements, CurrElement, SkipNext
-
+	Dim As String OutMessage, VolatileVar
+	Dim As LinkedListElement Pointer OptionElements, CurrElement
+	Dim As String VarName, VarBit
+	Dim As SysVarType Pointer SysVarBit
+	Dim As Integer VarBitNo
+	
 	'Set defaults
 	Bootloader = 0
 
 	'Get settings
-	GetTokens(OptionsIn, OptionElement(), OptionElements)
-	SkipNext = 0
-	For CurrElement = 1 To OptionElements
-		If SkipNext Then
-			SkipNext = 0
-
-		Else
-			'Get bootloader setting
-			If OptionElement(CurrElement) = "BOOTLOADER" Then
-				If OptionElements > CurrElement Then
-					If IsConst(OptionElement(CurrElement + 1)) Then
-						Bootloader = MakeDec(OptionElement(CurrElement + 1))
-						SkipNext = -1
-					End If
+	OptionElements = GetElements(OptionsIn, " ,")
+	CurrElement = OptionElements->Next
+	Do While CurrElement <> 0
+		
+		'Get bootloader setting
+		If CurrElement->Value = "BOOTLOADER" Then
+			If CurrElement->Next <> 0 Then
+				If IsConst(CurrElement->Next->Value) Then
+					Bootloader = MakeDec(CurrElement->Next->Value)
+					CurrElement = CurrElement->Next
 				End If
-
-			'Disable automatic use of output latches?
-			ElseIf OptionElement(CurrElement) = "NOLATCH" Then
-				UseChipOutLatches = 0
-
-			'Disable automatic interrupt context save/restore?
-			ElseIf OptionElement(CurrElement) = "NOCONTEXTSAVE" Then
-				AutoContextSave = 0
-
-			'Unrecognised option
-			Else
-				OutMessage = Message("WarningBadOption")
-				Replace OutMessage, "%option%", OptionElement(CurrElement)
-				LogWarning(OutMessage, "")
 			End If
-		End If
 
-	Next
+		'Disable automatic use of output latches?
+		ElseIf CurrElement->Value = "NOLATCH" Then
+			UseChipOutLatches = 0
+
+		'Disable automatic interrupt context save/restore?
+		ElseIf CurrElement->Value = "NOCONTEXTSAVE" Then
+			AutoContextSave = 0
+			
+		'Volatile bit?
+		ElseIf CurrElement->Value = "VOLATILE" Then
+			If CurrElement->Next <> 0 Then
+				VolatileVar = ReplaceConstantsLine(CurrElement->Next->Value, 0)
+				
+				'Split dest into var and bit, get source
+				VarName = ""
+				If InStr(VolatileVar, ".") <> 0 Then
+					VarName = Trim(Left(VolatileVar, InStr(VolatileVar, ".") - 1))
+					VarBit = Trim(Mid(VolatileVar, InStr(VolatileVar, ".") + 1))
+					
+					'Get name for map
+					VarBitNo = -1
+					If IsConst(VarBit) Then
+						VarBitNo = MakeDec(VarBit)
+					Else
+						SysVarBit = HashMapGet(SysVarBits, VarBit)
+						If SysVarBit <> 0 Then
+							VarBitNo = SysVarBit->Location
+						End If
+					End If
+					If VarBitNo <> -1 Then
+						HashMapSet(GlitchFreeOutputs, VarName + "." + Str(VarBitNo), "y")
+					Else
+						OutMessage = Message("WarningVolatileBit")
+						Replace OutMessage, "%bit%", VolatileVar
+						LogWarning OutMessage, ""
+					End If
+				Else
+					OutMessage = Message("WarningVolatileBit")
+					Replace OutMessage, "%bit%", VolatileVar
+					LogWarning OutMessage, ""
+				End If
+				
+				CurrElement = CurrElement->Next
+			End If
+
+		'Unrecognised option
+		Else
+			OutMessage = Message("WarningBadOption")
+			Replace OutMessage, "%option%", CurrElement->Value
+			LogWarning(OutMessage, "")
+		End If
+		
+		CurrElement = CurrElement->Next
+	Loop
 
 End Sub
 
@@ -13245,9 +13329,6 @@ Sub TidySubroutine(CompSub As SubType Pointer)
 	
 	'Fix function calls
 	FixFunctions(CompSub)
-	
-	'Enable/disable interrupts as needed
-	CompileIntOnOff (CompSub)
 	
 	'Set Bank
 	AddBankCommands(CompSub)
@@ -14325,6 +14406,8 @@ Function NewSubroutine(SubName As String) As SubType Pointer
 		.Name = SubName
 		.CodeStart = LinkedListCreate
 		.CallList = LinkedListCreate
+		
+		.IntStateSaveVar = ""
 	End With
 
 	Return OutSub

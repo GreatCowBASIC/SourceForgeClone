@@ -811,8 +811,6 @@ SUB PreProcessor
 							IF HashMapGet(Constants, ConstName) = 0 THEN
 								AddConstant(ConstName, "SYSBITVAR" + Str(INT(BVC / 8)) + "." + Str(BVC MOD 8), Str(RF))
 								CheckConstName ConstName, Origin
-								'Define the variable
-								AddVar "SYSBITVAR" + Str(INT(BVC / 8)), "BYTE", 1, 0, "REAL", Origin
 							END IF
 							
 							BVC = BVC + 1
