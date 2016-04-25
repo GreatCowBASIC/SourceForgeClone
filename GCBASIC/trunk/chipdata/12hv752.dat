@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 12HV752
-'Generated 15/8/2014
+'Generated 25/4/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -29,7 +29,7 @@ PORTBChange:IOCIE,IOCIF
 Timer0Overflow:T0IE,T0IF
 Timer1Gate:TMR1GIE,TMR1GIF
 Timer1Overflow:TMR1IE,TMR1IF
-Timer2Overflow:TMR2IE,TMR2IF
+Timer2Match:TMR2IE,TMR2IF
 
 [Registers]
 INDF,0

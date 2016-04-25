@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16CR76
-'Generated 15/8/2014
+'Generated 25/4/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -26,7 +26,7 @@ PORTBChange:RBIE,RBIF
 SSP1Ready:SSPIE,SSPIF
 Timer0Overflow:T0IE,T0IF
 Timer1Overflow:TMR1IE,TMR1IF
-Timer2Overflow:TMR2IE,TMR2IF
+Timer2Match:TMR2IE,TMR2IF
 UsartRX1Ready:RCIE,RCIF
 UsartTX1Ready:TXIE,TXIF
 
