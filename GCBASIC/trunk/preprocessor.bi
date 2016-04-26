@@ -922,6 +922,7 @@ SUB PreProcessor
 					CurrPos = Subroutine(SBC)->CodeStart
 					With *Subroutine(SBC)
 						.SourceFile = RF	'Source file
+						.Origin = ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?"
 						
 						'Function or macro?
 						.IsMacro = FoundMacro
@@ -933,7 +934,7 @@ SUB PreProcessor
 							If InStr(.ReturnType, "*") <> 0 Then
 								.ReturnType = Trim(Left(.ReturnType, InStr(.ReturnType, "*") - 1))
 							End If
-							AddVar .Name, NewFNType, 1, Subroutine(SBC), "REAL", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?", , -1
+							AddVar .Name, NewFNType, 1, Subroutine(SBC), "REAL", .Origin, , -1
 						End If
 						
 						'Is sub overloaded?
@@ -970,13 +971,13 @@ SUB PreProcessor
 						For T = 1 To .ParamCount
 							With .Params(T)
 								If .Type = "STRING" Then
-									AddVar .Name, .Type, 1, Subroutine(SBC), "POINTER", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?"
+									AddVar .Name, .Type, 1, Subroutine(SBC), "POINTER", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?", , -1
 								ElseIf Instr(.Type, "()") <> 0 Then
 									Temp = .Type
 									Replace Temp, "()", ""
-									AddVar .Name, Temp, 2, Subroutine(SBC), "POINTER", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?"
+									AddVar .Name, Temp, 2, Subroutine(SBC), "POINTER", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?", , -1
 								Else
-									AddVar .Name, .Type, 1, Subroutine(SBC), "REAL", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?"
+									AddVar .Name, .Type, 1, Subroutine(SBC), "REAL", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?", , -1
 								End If
 							End With
 						Next

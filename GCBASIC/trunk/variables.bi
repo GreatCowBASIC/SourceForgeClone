@@ -53,12 +53,6 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Origin = OriginIn
 	VarSub = VarSubIn
 	MainSub = Subroutine(0)
-	'Find file that variable was added in
-	If InStr(Origin, "F") <> 0 Then
-		CurrFile = Val(Mid(Origin, InStr(Origin, "F") + 1))
-	Else
-		CurrFile = 0
-	End If
 	
 	'Do this to prevent null pointer access
 	If VarSub = 0 Then
@@ -66,7 +60,12 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		VarSub = MainSub
 	End If
 	
-	'Print VarName, VarSub, Origin
+	'Find file that variable was added in
+	If InStr(Origin, "F") <> 0 Then
+		CurrFile = Val(Mid(Origin, InStr(Origin, "F") + 1))
+	Else
+		CurrFile = VarSub->SourceFile
+	End If
 	
 	'If VarName is a constant, exit
 	If IsConst(VarName) Then Exit Sub
