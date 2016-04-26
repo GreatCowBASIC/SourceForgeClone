@@ -316,6 +316,8 @@ End Function
 
 ' Assign a Variable, Constant or Function to a Bit
 ' Compliments SET Method and Addresses Port Glitch Issues
+' Note: Now deprecated - use #option volatile TargetBit and normal GCBASIC
+' Set command or assignment operator.
 macro SetWith(TargetBit, Source)
   if Source then
     TargetBit = 1
@@ -346,36 +348,8 @@ Function FnLSL(in SysLongTempB as long, in NumBits as byte) as long
   FnLSL = SysLongTempB
 End Function
 
-#script
-
-    if AVR then
-      FnEQUBit = AVR_FnEQUBit
-      FnNOTBit = AVR_FnNOTBit
-	  end if
-
-#endscript
-
-' Please ensure you edit the four functions as a whole. Two are for AVR and two for Pic.
     ' BitOut = BitIn
-    Function AVR_FnEQUBit(in BitIn)
-      If BitIn then
-         AVR_FnEQUBit = 1
-      Else
-         AVR_FnEQUBit = 0
-      End If
-    end Function
-
-    ' BitOut != BitIn
-    Function AVR_FnNOTBit(in BitIn)
-      If BitIn then
-      	 AVR_FnNOTBit = 0
-      Else
-      	 AVR_FnNOTBit = 1
-      End If
-    End Function
-
-
-    ' BitOut = BitIn
+	'Note: Now deprecated. Improvements to compiler should allow correct handling of bit values
     Function FnEQUBit(in BitIn) as bit
       If BitIn then
          FnEQUBit = 1
@@ -385,6 +359,7 @@ End Function
     end Function
 
     ' BitOut != BitIn
+	'Note: Now deprecated. Compiler built-in Not operator now supports bit values.
     Function FnNOTBit(in BitIn) as bit
       If BitIn then
          FnNOTBit = 0
@@ -393,4 +368,3 @@ End Function
       End If
 
     end Function
-
