@@ -120,7 +120,15 @@ Imports System.Windows.Forms
 			
 			'Initialise
 			Me.ChipName = ChipName
+			'Find file to load
 			ChipDataFile = MainForm.InstallDir + MainForm.FilenameChipDir + ChipName.ToLower + ".dat"
+	    	If Not File.Exists(ChipDataFile) Then
+	    		'If chip has LF in the name, try loading file for F chip
+	    		If ChipName.ToLower.Contains("lf") Then
+	    			ChipDataFile = MainForm.InstallDir + MainForm.FilenameChipDir + ChipName.ToLower.Replace("lf", "f") + ".dat"
+	    		End If
+	    	End If
+	    	
 	    	NoConfig = 0
 	    	ChipNotValid = False
 	    	ConfigSettings = New List(Of ChipConfigOption)
@@ -268,7 +276,7 @@ Imports System.Windows.Forms
 				
 				ReadFile.Close
 				
-			Catch
+			Catch Ex As Exception
 				'If chip model isn't valid, show error once and set error flag
 				If Not ChipNotValid Then
 					MessageBox.Show("The chip model currently selected for this program is not valid. Please check that the model of chip is correct.", "Great Cow Graphical BASIC", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1)
