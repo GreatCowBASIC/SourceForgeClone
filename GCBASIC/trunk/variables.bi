@@ -42,7 +42,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Dim As String AliasList(16)
 	Dim As Integer VarSize, CL, TempSize, PD, VarSearchStart, T, VarFixedSize
 	Dim As Integer CurrFile, ALC
-	Dim As VariableType Pointer VarFound
+	Dim As VariableType Pointer VarFound, MainVarFound
 	Dim As SubType Pointer VarSub, MainSub
 	Dim As LinkedListElement Pointer SearchConstPos
 	
@@ -63,7 +63,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	'Do this to prevent null pointer access
 	If VarSub = 0 Then
 		'Print "Internal error in AddVar"
-		VarSub = Subroutine(0)
+		VarSub = MainSub
 	End If
 	
 	'Print VarName, VarSub, Origin
@@ -232,6 +232,23 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	
 	'Check to see if var exists
 	VarFound = HashMapGet(@(VarSub->Variables), UCase(Trim(VarName)))
+	If VarSub = MainSub Then
+		MainVarFound = VarFound
+	Else
+		MainVarFound = HashMapGet(@(MainSub->Variables), UCase(Trim(VarName)))
+	End If
+	
+	'If this variable or main variable are bit, add to main
+	'Bit in main sub, so remove from this sub and exit
+	If MainVarFound <> 0 Then
+		If MainVarFound->Type = "BIT" And MainVarFound->ExplicitDeclaration Then
+			'Bit found in main, remove from current sub
+			If VarFound <> 0 And VarFound <> MainVarFound Then
+				HashMapDelete(@(VarSub->Variables), UCase(Trim(VarName)))
+			End If
+			Exit Sub
+		End If
+	End If
 	
 	'If variable not found, make a new one
 	If VarFound = 0 Then
@@ -255,9 +272,11 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		With *VarSub
 			VarFound = Callocate(SizeOf(VariableType))
 			VarFound->Name = UCase(VarName)
+			VarFound->Type = UCase(VarType)
 			VarFound->Size = VarSize
 			VarFound->FixedLocation = -1
 			VarFound->FixedSize = VarFixedSize
+			VarFound->ExplicitDeclaration = ExplicitDeclaration
 			VarFound->Alias = ""
 			
 			HashMapSet(@(VarSub->Variables), UCase(VarName), VarFound)
@@ -265,7 +284,8 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	End If
 	
 	'Choose Type
-	If CastOrder(VarFound->Type) > CastOrder(VarType) Then VarType = VarFound->Type
+	'Explicit declarations override implicit ones - so manually added bits override automatically added bytes
+	If CastOrder(VarFound->Type) > CastOrder(VarType) Or (VarFound->ExplicitDeclaration And Not ExplicitDeclaration) Then VarType = VarFound->Type
 	
 	'Choose Size
 	If (VarSize = 1 And VarFound->Size <> 1) Or (VarSize <> 1 And VarFound->Size = 1) Then
@@ -310,6 +330,9 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	'Choose location
 	If VarFound->FixedLocation <> -1 Then FixedLocation = VarFound->FixedLocation
 	
+	'Explicitely defined?
+	If VarFound->ExplicitDeclaration Then ExplicitDeclaration = VarFound->ExplicitDeclaration
+	
 	'Apply new settings
 	'Print VarName, VarType, VarSubOut, VarAlias
 	With *VarFound
@@ -320,7 +343,20 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		.Alias = VarAlias
 		.Origin = Origin
 		.FixedLocation = FixedLocation
+		.ExplicitDeclaration = ExplicitDeclaration
+		
+		If .Type = "BIT" And .BitVarLocation = "" Then
+			.BitVarLocation = "SYSBITVAR" + Str(INT(BVC / 8)) + "." + Str(BVC MOD 8)
+			BVC = BVC + 1
+		End If
 	End With
+	
+	'If variable is bit, need to move to main
+	If VarFound->Type = "BIT" And VarFound->ExplicitDeclaration Then
+		HashMapDelete(@(VarSub->Variables), UCase(VarName), 0)
+		HashMapSet(@(MainSub->Variables), UCase(VarName), VarFound)
+		Exit Sub
+	End If
 	
 END Sub
 
@@ -388,7 +424,9 @@ SUB AllocateRAM
 					'Apply new settings to existing variable
 					Else
 						'Type
-						If CastOrder(FinalVar->Type) < CastOrder(SubVar->Type) Then
+						'Explicit declarations override implicit ones
+						If (CastOrder(FinalVar->Type) < CastOrder(SubVar->Type) And FinalVar->ExplicitDeclaration = SubVar->ExplicitDeclaration) Or _
+						    (SubVar->ExplicitDeclaration And Not FinalVar->ExplicitDeclaration) Then
 							FinalVar->Type = SubVar->Type
 						End If
 						'Size
@@ -419,6 +457,10 @@ SUB AllocateRAM
 						'Fixed Location
 						If FinalVar->FixedLocation = -1 And SubVar->FixedLocation <> -1 Then
 							FinalVar->FixedLocation = SubVar->FixedLocation
+						End If
+						'Explicit declaration
+						If SubVar->ExplicitDeclaration Then
+							FinalVar->ExplicitDeclaration = SubVar->ExplicitDeclaration
 						End If
 						'Origin
 						If FinalVar->Origin = "" And SubVar->Origin <> "" Then
@@ -451,6 +493,7 @@ SUB AllocateRAM
 	Do While CurrVarItem <> 0
 		'Find where to put the item
 		FinalVar = CurrVarItem->MetaData
+		
 		InsertPos = AllVars
 		Do While InsertPos->Next <> 0
 			InsertPos = InsertPos->Next
@@ -754,6 +797,9 @@ SUB AllocateRAM
 					'Pointers get no RAM at present
 					ElseIf .Pointer = "POINTER" Then
 						
+					'Bit variables don't get allocated, their parent should be
+					ElseIf .Type = "BIT" Then
+						
 					Else
 						'Variable isn't alias, isn't register, so must be normal RAM variable or array
 						
@@ -948,10 +994,18 @@ End Function
 
 Function GetWholeSFR(BitName As String) As String
 	Dim As SysVarType Pointer FoundVar
-	FoundVar = HashMapGet(SysVarBits, UCase(BitName))
+	Dim As VariableType Pointer FoundUserVar
 	
+	'Find SFR var bit
+	FoundVar = HashMapGet(SysVarBits, UCase(BitName))
 	If FoundVar <> 0 Then
 		Return UCASE(FoundVar->Parent + "." + BitName)
+	End If
+	
+	'Also deal with bit variables (which are all stored in main)
+	FoundUserVar = HashMapGet(@(Subroutine(0)->Variables), BitName)
+	If FoundUserVar <> 0 Then
+		Return UCASE(FoundUserVar->BitVarLocation)
 	End If
 	
 	Return UCASE(BitName)

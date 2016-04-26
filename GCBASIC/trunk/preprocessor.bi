@@ -933,7 +933,7 @@ SUB PreProcessor
 							If InStr(.ReturnType, "*") <> 0 Then
 								.ReturnType = Trim(Left(.ReturnType, InStr(.ReturnType, "*") - 1))
 							End If
-							AddVar .Name, NewFNType, 1, Subroutine(SBC), "REAL", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?"
+							AddVar .Name, NewFNType, 1, Subroutine(SBC), "REAL", ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?", , -1
 						End If
 						
 						'Is sub overloaded?

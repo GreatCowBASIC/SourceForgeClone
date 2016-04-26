@@ -1359,6 +1359,29 @@ Function HashMapCalcHash(Key As String) As Integer
 	Return HashOut Mod HASH_MAP_BUCKETS
 End Function
 
+Sub HashMapDelete(Map As HashMap Pointer, Key As String, DeleteMeta As Integer = -1)
+	Dim Bucket As Integer
+	Dim CurrItem As LinkedListElement Pointer
+	
+	If Map = 0 Then Exit Sub
+	
+	'If nothing in the appropriate bucket, item isn't in the map
+	Bucket = HashMapCalcHash(Key)
+	If Map->Buckets(Bucket) = 0 Then
+		Exit Sub
+	End If
+	
+	'Look in the bucket
+	CurrItem = Map->Buckets(Bucket)->Next
+	Do While CurrItem <> 0
+		If CurrItem->Value = Key Then
+			LinkedListDelete(CurrItem, DeleteMeta)
+			Exit Sub
+		End If
+		CurrItem = CurrItem->Next
+	Loop
+End Sub
+
 Function HashMapGet(Map As HashMap Pointer, Key As String) As Any Pointer
 	Dim Bucket As Integer
 	Dim CurrItem As LinkedListElement Pointer
