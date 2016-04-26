@@ -78,7 +78,9 @@ Type VariableType
 
 	FixedLocation As Integer
 	Location As Integer
+	BitVarLocation As String
 	IsSharedBank As Integer
+	ExplicitDeclaration As Integer
 
 	FixedSize As Integer
 
@@ -329,7 +331,7 @@ Declare Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListEle
 Declare Sub CompileSubCalls (CompSub As SubType Pointer)
 DECLARE SUB CompileTables
 DECLARE SUB CompileVars (CompSub As SubType Pointer)
-Declare Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As LinkedListElement Pointer
+Declare Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, InvertBitCopy As Integer = 0) As LinkedListElement Pointer
 DECLARE SUB CompileWait (CompSub As SubType Pointer)
 Declare Function CompileWholeArray (InLine As String, Origin As String) As LinkedListElement Pointer
 Declare Function ConfigNameMatch(ConfigIn As String, ConfigNameIn As String) As Integer
@@ -471,6 +473,7 @@ Declare Function GetTypeSize(InType As String) As Integer
 Declare Function HashMapCreate As HashMap Pointer
 Declare Function HashMapCalcHash(Key As String) As Integer
 Declare Sub HashMapDestroy(Map As HashMap Pointer)
+Declare Sub HashMapDelete(Map As HashMap Pointer, Key As String, DeleteMeta As Integer = -1)
 Declare Function HashMapGet(Map As HashMap Pointer, Key As String) As Any Pointer
 Declare Function HashMapGetStr(Map As HashMap Pointer, Key As String) As String
 Declare Function HashMapSet OverLoad (Map As HashMap Pointer, Key As String, Value As String, ReplaceExisting As Integer = -1) As Integer
@@ -611,7 +614,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-25"
+Version = "0.95 2016-04-26"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1662,13 +1665,13 @@ Sub AddInterruptCode
 		
 		'Add context save code
 		If AutoContextSave Then
-			AddVar "SysW", "BYTE", 1, 0, "REAL", ""
-			AddVar "SysSTATUS", "BYTE", 1, 0, "REAL", ""
+			AddVar "SysW", "BYTE", 1, 0, "REAL", "", , -1
+			AddVar "SysSTATUS", "BYTE", 1, 0, "REAL", "", , -1
 
 			'Variables to store registers
 			SaveVarPos = SaveVars->Next
 			Do While SaveVarPos <> 0
-				AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "")
+				AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "", , -1)
 				SaveVarPos = SaveVarPos->Next
 			Loop
 			If ChipFamily = 14 Or ChipFamily = 15 Then
@@ -1678,7 +1681,7 @@ Sub AddInterruptCode
 				CurrLine = LinkedListInsert(CurrLine, " swapf STATUS,W")
 				CurrLine = LinkedListInsert(CurrLine, " movwf SysSTATUS")
 				If ChipFamily = 15 Then
-					AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
+					AddVar "SysBSR", "BYTE", 1, 0, "REAL", "", , -1
 					CurrLine = LinkedListInsert(CurrLine, " movf BSR,W")
 					CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
 					CurrLine = LinkedListInsert(CurrLine, " movwf SysBSR")
@@ -1696,7 +1699,7 @@ Sub AddInterruptCode
 					CurrLine = LinkedListInsert(CurrLine, " clrf PCLATH")
 				End If
 			ElseIf ChipFamily = 16 Then
-				AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
+				AddVar "SysBSR", "BYTE", 1, 0, "REAL", "", , -1
 				CurrLine = LinkedListInsert(CurrLine, ";Save Context")
 				CurrLine = LinkedListInsert(CurrLine, " movff WREG,SysW")
 				CurrLine = LinkedListInsert(CurrLine, " movff STATUS,SysSTATUS")
@@ -1772,13 +1775,13 @@ Sub AddInterruptCode
 		
 		If AutoContextSave Then
 			'Add variables
-			AddVar("SaveSysValueCopy", "BYTE", 1, 0, "REAL", "")
-			AddVar("SaveSREG", "BYTE", 1, 0, "REAL", "")
+			AddVar("SaveSysValueCopy", "BYTE", 1, 0, "REAL", "", , -1)
+			AddVar("SaveSREG", "BYTE", 1, 0, "REAL", "", , -1)
 
 			'Variables to store registers
 			SaveVarPos = SaveVars->Next
 			Do While SaveVarPos <> 0
-				AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "")
+				AddVar("Save" + SaveVarPos->Value, "BYTE", 1, 0, "REAL", "", , -1)
 				SaveVarPos = SaveVarPos->Next
 			Loop
 
@@ -2327,10 +2330,7 @@ SearchForOpAgain:
 			Exit For
 		End If
 	Next
-	'Color 14
-	'Print SUM, V1, Act, V2
-	'Color 7
-
+	
 	'Check syntax
 	CalcIsBad = 0
 	If V1 = "" And Not UnaryMode Then
@@ -3344,7 +3344,7 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 		BitName = V1
 		Replace BitName, ".", ","
 
-		AddVar "SysByteTempX", "Byte", 1, Subroutine(SourceSub), "REAL", Origin
+		AddVar "SysByteTempX", "Byte", 1, Subroutine(SourceSub), "REAL", Origin, , -1
 		If ModePIC Then
 			CurrLine = LinkedListInsert(CurrLine, " clrf SysByteTempX")
 			If TestFor = 1 Then
@@ -3372,9 +3372,9 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 		CalcVarType = CalcType
 		If CalcVarType = "BIT" Then CalcVarType = "BYTE"
 		'Declare SysCalcTempA, SysCalcTempB and SysCalcTempX
-		AddVar "Sys" + CalcVarType + "TempA", CalcType, 1, Subroutine(SourceSub), "REAL", Origin
-		AddVar "Sys" + CalcVarType + "TempB", CalcType, 1, Subroutine(SourceSub), "REAL", Origin
-		AddVar "SysByteTempX", "BYTE", 1, Subroutine(SourceSub), "REAL", Origin
+		AddVar "Sys" + CalcVarType + "TempA", CalcType, 1, Subroutine(SourceSub), "REAL", Origin, , -1
+		AddVar "Sys" + CalcVarType + "TempB", CalcType, 1, Subroutine(SourceSub), "REAL", Origin, , -1
+		AddVar "SysByteTempX", "BYTE", 1, Subroutine(SourceSub), "REAL", Origin, , -1
 
 		'Copy values
 '		If Act = ">" Or Act = "}" Then
@@ -3758,10 +3758,10 @@ FUNCTION CompileCalcMult (OutList As CodeSection Pointer, V1 As String, Act As S
 	End If
 
 	'Declare variables needed for calculation
-	AddVar "Sys" + CalcType + "TempA", CalcType, 1, 0, "REAL", Origin
-	AddVar "Sys" + CalcType + "TempB", CalcType, 1, 0, "REAL", Origin
-	AddVar "Sys" + CalcType + "TempX", CalcType, 1, 0, "REAL", Origin
-	IF Act = "/" OR Act = "%" THEN AddVar "SysDivLoop", "BYTE", 1, 0, "REAL", Origin
+	AddVar "Sys" + CalcType + "TempA", CalcType, 1, 0, "REAL", Origin, , -1
+	AddVar "Sys" + CalcType + "TempB", CalcType, 1, 0, "REAL", Origin, , -1
+	AddVar "Sys" + CalcType + "TempX", CalcType, 1, 0, "REAL", Origin, , -1
+	IF Act = "/" OR Act = "%" THEN AddVar "SysDivLoop", "BYTE", 1, 0, "REAL", Origin, , -1
 
 	'Copy parameters
 	CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V1, "Sys" + CalcType + "TempA", Origin))
@@ -3803,7 +3803,7 @@ END FUNCTION
 Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As String, Origin As String, Answer As String) As String
 
 	Dim As String V1O, V2O, V1Type, V2Type, CalcType, DestType, AV, R1, R2, AVH, SNT
-	Dim As String Temp, Ovr
+	Dim As String Temp, Ovr, OldCalcType
 	Dim As Integer SourceSub, DestSub, CD, CurrVarByte
 	Dim As LinkedListElement Pointer CurrLine, NewCode
 	CurrLine = OutList->CodeEnd
@@ -3832,20 +3832,37 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 		Replace Temp, "%type%", V2Type
 		LogError Temp, Origin
 	End If
-
-	'Convert bit vars to byte
-	If V2Type = "BIT" And Not IsConst(V2) Then
-		V2Type = "BYTE"
-		V2O = V2
-		V2 = GetCalcVar("BYTE")
-		CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2O, V2, Origin))
-	End If
-
+	
 	'Get output var
 	AV = Answer
-
+	OldCalcType = CalcType
+	
+	'Deal with bit variable input
+	'Convert bit vars to byte
+	If V2Type = "BIT" And Not IsConst(V2) Then
+		'If answer is also a bit and operation is NOT, use copy with invert
+		If DestType = "BIT" And Act = "!" And V2 <> AV Then
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2, AV, Origin, -1))
+			OutList->CodeEnd = CurrLine
+			Return AV
+		Else
+			If V2 = AV Then
+				V2Type = "BYTE"
+				V2O = V2
+				V2 = GetCalcVar("BYTE")
+				AV = V2
+				DestType = "BYTE"
+				CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2O, V2, Origin))
+			Else
+				V2Type = "BYTE"
+				V2O = V2
+				V2 = GetCalcVar("BYTE")
+				CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2O, V2, Origin))
+			End If
+		End If
+	End If
+	
 	'If V2 is constant, produce constant result
-	'Print "Unary: ", Act, V2, " > ", AV
 	If IsConst(V2) And InStr(V2, "@") = 0 Then
 		IF Act = "!" THEN
 			If CalcType = "BYTE" Then Return Trim(Str((NOT MakeDec(V2)) AND 255))
@@ -3944,9 +3961,16 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 
 			If ModeAVR Then
 				'Copy result to output variable
-				NewCode = CompileVarSet(R2, "[byte]" + GetByte(AV, CurrVarByte), Origin)
-				CurrLine = LinkedListInsertList(CurrLine, NewCode)
-				FreeCalcVar R2
+				If OldCalcType = "BIT" Then
+					NewCode = CompileVarSet(R2, Answer, Origin)
+					CurrLine = LinkedListInsertList(CurrLine, NewCode)
+					FreeCalcVar R2
+					AV = Answer
+				Else
+					NewCode = CompileVarSet(R2, "[byte]" + GetByte(AV, CurrVarByte), Origin)
+					CurrLine = LinkedListInsertList(CurrLine, NewCode)
+					FreeCalcVar R2
+				End If
 			End If
 
 		Next
@@ -4189,7 +4213,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 						CurrLine = LinkedListInsert(CurrLine, Cmd + VarName + "," + BI)
 
 					ElseIf IsIOReg(VarName) Then
-						AddVar BitTestTemp, "BYTE", 1, CurrSub, "REAL", Origin
+						AddVar BitTestTemp, "BYTE", 1, CurrSub, "REAL", Origin, , -1
 						CurrLine = LinkedListInsert(CurrLine, " in " + BitTestTemp + "," + VarName)
 						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN
 							Cmd = " sbrs " + BitTestTemp + ","
@@ -4201,7 +4225,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 						CurrLine = LinkedListInsert(CurrLine, Cmd + BI)
 
 					Else
-						AddVar BitTestTemp, "BYTE", 1, CurrSub, "REAL", Origin
+						AddVar BitTestTemp, "BYTE", 1, CurrSub, "REAL", Origin, , -1
 						CurrLine = LinkedListInsert(CurrLine, " lds " + BitTestTemp + "," + VarName)
 						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN
 							Cmd = " sbrs " + BitTestTemp + ","
@@ -4240,7 +4264,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 					'Use recursion, easier!
 					'Otherwise, same algorithm as PIC: clr, if, com, if, com, test
 					'clear w, xor if each var set
-					AddVar "SysCalcTempX", "BYTE", 1, CurrSub, "REAL", Origin
+					AddVar "SysCalcTempX", "BYTE", 1, CurrSub, "REAL", Origin, , -1
 					CurrLine = LinkedListInsert(CurrLine, " clr SysCalcTempX")
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V1 + " = 1", "TRUE", Origin))
 					CurrLine = LinkedListInsert(CurrLine, " com SysCalcTempX")
@@ -4300,7 +4324,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 					R1 = V1
 				Else
 					R1 = "SysCalcTempA"
-					AddVar R1, "BYTE", 1, CurrSub, "REAL", Origin
+					AddVar R1, "BYTE", 1, CurrSub, "REAL", Origin, , -1
 					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V1, "SysCalcTempA", Origin))
 				End If
 				'ElseIf IsIOReg(V1) Then
@@ -4321,14 +4345,14 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 					R2 = V2
 				ElseIf IsIOReg(V2) Then
 					R2 = "SysCalcTempB"
-					AddVar R2, "BYTE", 1, CurrSub, "REAL", Origin
+					AddVar R2, "BYTE", 1, CurrSub, "REAL", Origin, , -1
 					CurrLine = LinkedListInsert(CurrLine, " in SysCalcTempB," + V2)
 				ElseIf IsConst(V2) Then
 					R2 = Str(MakeDec(V2))
 					R2Literal = -1
 				Else
 					R2 = "SysCalcTempB"
-					AddVar R2, "BYTE", 1, CurrSub, "REAL", Origin
+					AddVar R2, "BYTE", 1, CurrSub, "REAL", Origin, , -1
 					CurrLine = LinkedListInsert(CurrLine, " lds SysCalcTempB," + V2)
 					AddVar V2, "BYTE", 1, CurrSub, "REAL", Origin
 				End If
@@ -4413,7 +4437,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 							CurrLine = LinkedListInsert(CurrLine, " movlw " + Str(MakeDec(V1)))
 						End If
 						CurrLine = LinkedListInsert(CurrLine, " movwf SysIFTemp")
-						V1 = "SysIFTemp": AddVar V1, "BYTE", 1, 0, "REAL", Origin
+						V1 = "SysIFTemp": AddVar V1, "BYTE", 1, 0, "REAL", Origin, , -1
 					END If
 
 					IF IsConst(V2) THEN Cmd = " movlw " + Str(MakeDec(V2))
@@ -4452,7 +4476,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 							CurrLine = LinkedListInsert(CurrLine, " movlw " + Str(MakeDec(V1)))
 						End If
 						CurrLine = LinkedListInsert(CurrLine, " movwf SysIFTemp")
-						V1 = "SysIFTemp": AddVar V1, "BYTE", 1, 0, "REAL", Origin
+						V1 = "SysIFTemp": AddVar V1, "BYTE", 1, 0, "REAL", Origin, , -1
 					END If
 
 					IF IsConst(V2) Then
@@ -5919,7 +5943,7 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 			  					If CurrTableByte > TableBytes Then
 			  						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("0", "[BYTE]" + GetByte(OutVar, CurrTableByte - 1), Origin))
 			  					Else
-					  				AddVar("SysByteTempX", "BYTE", 1, CompSub, "REAL", Origin)
+					  				AddVar("SysByteTempX", "BYTE", 1, CompSub, "REAL", Origin, , -1)
 					  				If LargeTable Then
 										AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
 										CurrLine = LinkedListInsert(CurrLine, "[word]SysStringA=" + TableLoc)
@@ -6009,7 +6033,7 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 			If RepNone = 0 Then
 				RPLC += 1
 				RVN += 1
-				AddVar "SysRepeatTemp" + Str(RVN), RepValType, 1, CompSub, "REAL", Origin
+				AddVar "SysRepeatTemp" + Str(RVN), RepValType, 1, CompSub, "REAL", Origin, , -1
 			End If
 
 			'Pseudo code:
@@ -6408,7 +6432,7 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
 			CurrLine = LinkedListInsert(CurrLine, " clr SysStringLength")
 			CurrLine = LinkedListInsert(CurrLine, " ld SysValueCopy, Y+") 'Need to pre-increment Y pointer
 		End If
-		AddVar "SysStringLength", "BYTE", 1, 0, "REAL", Origin
+		AddVar "SysStringLength", "BYTE", 1, 0, "REAL", Origin, , -1
 	End If
 
 	'Set string
@@ -6437,7 +6461,7 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
 			StringStore(ST).Used = -1
 			If ModePIC Then
 				If ChipFamily <> 16 Then
-					AddVar "SysStringA", "WORD", 1, 0, "REAL", Origin
+					AddVar "SysStringA", "WORD", 1, 0, "REAL", Origin, , -1
 					CurrLine = LinkedListInsert(CurrLine, " movlw low " + SourceTable)
 					CurrLine = LinkedListInsert(CurrLine, " movwf SysStringA")
 					If ChipFamily = 15 Then
@@ -6453,7 +6477,7 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
 					CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRH")
 				End If
 			ElseIf ModeAVR Then
-				AddVar "SysReadA", "WORD", 1, 0, "REAL", Origin
+				AddVar "SysReadA", "WORD", 1, 0, "REAL", Origin, , -1
 				CurrLine = LinkedListInsert(CurrLine, " ldi SysReadA,low(" + SourceTable + "<<1)")
 				CurrLine = LinkedListInsert(CurrLine, " ldi SysReadA_H,high(" + SourceTable + "<<1)")
 			End If
@@ -6623,7 +6647,19 @@ SUB CompileSet (CompSub As SubType Pointer)
 
 			'Delete line from program, will add asm later
 			CurrLine = LinkedListDelete(CurrLine)
-
+			
+			'Do we have a bit by itself?
+			If Tokens = 3 Then
+				VarName = GetWholeSFR(Token(2))
+				If InStr(VarName, ".") <> 0 Then
+					'Found valid bit, correct command
+					Tokens = 4
+					Token(4) = Token(3)
+					Token(2) = Left(VarName, InStr(VarName, ".") - 1)
+					Token(3) = Mid(VarName, InStr(VarName, ".") + 1)
+				End If
+			End If
+			
 			'Get var/port and bit
 			If Tokens = 4 Then
 				VarName = Token(2)
@@ -6863,7 +6899,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						IF SourcePtr = 0 THEN AddVar DestArray, "BYTE", 2, .Called, "POINTER", .Origin
 						'Set handler name
 						ArrayHandler = "Sys" + DestArray + "Handler"
-						AddVar ArrayHandler, "WORD", 1, 0, "REAL", .Origin 'Make handler global
+						AddVar ArrayHandler, "WORD", 1, 0, "REAL", .Origin, , -1 'Make handler global
 						'Copy reference
 						ST = VAL(Mid(.Param(CD, 1), 8))
 						StringStore(ST).Used = -1
@@ -6878,7 +6914,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						BeforePos = LinkedListInsert(BeforePos, "SYSSTRINGPARAM" + Str(StringConstCount) + "=" + .Param(CD, 1) + .Origin)
 						.Param(CD, 1) = "SYSSTRINGPARAM" + Str(StringConstCount)
 						.Param(CD, 2) = "STRING"
-						AddVar("SYSSTRINGPARAM" + Str(StringConstCount), "STRING", 20, Subroutine(0), "REAL", .Origin)
+						AddVar("SYSSTRINGPARAM" + Str(StringConstCount), "STRING", 20, Subroutine(0), "REAL", .Origin, , -1)
 						C = 3
 					End If
 				END IF
@@ -6929,7 +6965,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
 					'Set handler name
 					ArrayHandler = "Sys" + DestArray + "Handler"
-					AddVar ArrayHandler, "WORD", 1, 0, "REAL", .Origin 'Make handler global
+					AddVar ArrayHandler, "WORD", 1, 0, "REAL", .Origin, , -1 'Make handler global
 
 					'May need to hide function names in array names
 					Do While InStr(SourceArray, .Called->Name) <> 0
@@ -6969,7 +7005,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 							BeforePos = LinkedListInsert(BeforePos, " ldi SysValueCopy,high(" + SourceArray + ")")
 							BeforePos = LinkedListInsert(BeforePos, " sts " + ArrayHandler + "_H,SysValueCopy")
 						End If
-						AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+						AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 					End If
 				END IF
 
@@ -7077,11 +7113,11 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 						UseTempVar = -1
 						TempVarCount(FunctionTypeID) += 1
 						TempVarName = "SysFn" + FunctionType + Str(TempVarCount(FunctionTypeID))
-						AddVar TempVarName, FunctionType, 1, CompSub, "REAL", Origin
+						AddVar TempVarName, FunctionType, 1, CompSub, "REAL", Origin, , -1
 					End If
 					'Add a variable for the function result
-					AddVar Subroutine(CurrSub)->Name, FunctionType, 1, Subroutine(CurrSub), "REAL", Origin
-					AddVar Subroutine(CurrSub)->Name, FunctionType, 1, CompSub, "REAL", Origin
+					AddVar Subroutine(CurrSub)->Name, FunctionType, 1, Subroutine(CurrSub), "REAL", Origin, , -1
+					AddVar Subroutine(CurrSub)->Name, FunctionType, 1, CompSub, "REAL", Origin, , -1
 				End If
 
 				'If line starts with call or GOSUB, remove call
@@ -7280,8 +7316,8 @@ Sub CompileTables
  		TableSub->Required = 0
  		TableSub->NoReturn = -1
 
- 		AddVar "StringPointer", "BYTE", 1, Subroutine(0), "REAL", ""
- 		AddVar "SysStringA", "WORD", 1, Subroutine(0), "REAL", ""
+ 		AddVar "StringPointer", "BYTE", 1, Subroutine(0), "REAL", "", , -1
+ 		AddVar "SysStringA", "WORD", 1, Subroutine(0), "REAL", "", , -1
 
  		If ModePIC And ChipFamily <> 16 Then
  			If ChipFamily = 12 Then
@@ -7389,9 +7425,9 @@ Sub CompileTables
 
 					If ModePIC Then
 		   				If LargeTable Then
-		   					AddVar "SysStringA", "WORD", 1, Subroutine(0), "REAL", ""
+		   					AddVar "SysStringA", "WORD", 1, Subroutine(0), "REAL", "", , -1
 		   				Else
-		   					AddVar "SysStringA", "BYTE", 1, Subroutine(0), "REAL", ""
+		   					AddVar "SysStringA", "BYTE", 1, Subroutine(0), "REAL", "", , -1
 		   				End If
 
 		   				If ChipFamily = 12 THEN
@@ -7526,11 +7562,11 @@ Sub CompileTables
 						If Temp <> "" Then CurrLine = LinkedListInsert(CurrLine, " .DB " + Temp)
 
 						If LargeTable Then
-							AddVar "SysStringA", "WORD", 1, 0, "REAL", ""
+							AddVar "SysStringA", "WORD", 1, 0, "REAL", "", , -1
 						Else
-							AddVar "SysStringA", "BYTE", 1, 0, "REAL", ""
+							AddVar "SysStringA", "BYTE", 1, 0, "REAL", "", , -1
 						End If
-						AddVar "SysReadA", "WORD", 1, 0, "REAL", ""
+						AddVar "SysReadA", "WORD", 1, 0, "REAL", "", , -1
 					End If
 
 		 		Next
@@ -7540,9 +7576,9 @@ Sub CompileTables
 
 END SUB
 
-Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As LinkedListElement Pointer
+Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, InvertBitCopy As Integer = 0) As LinkedListElement Pointer
 
-	Dim As String SType, DType, Temp, DestTemp, SourceTemp, CSource
+	Dim As String SType, DType, Temp, DestTemp, SourceTemp, CSource, SCastType
 	Dim As String LTemp, HTemp, UTemp, ETemp, STemp, Source, ReferencedSub
 	Dim As Integer CurrentSub, DestSub, CurrVarByte, LastConst, ThisConst
 	Dim As Integer DestReg, DestIO, SourceReg, SourceIO, L, H, U, E, CD
@@ -7559,7 +7595,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 	Source = SourceIn
 	CurrentSub = GetSubID(Origin)
 	IF INSTR(Origin, "D") <> 0 Then DestSub = GetDestSub(Origin) Else DestSub = CurrentSub
-
+	
 	'Get types
 	If Instr(Source, "[") <> 0 And InStr(Source, "]") <> 0 Then
 		'Remove cast from source name
@@ -7567,11 +7603,20 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 		If Left(Source, 1) <> "[" Then
 			LogWarning(Message("WarningCastBadPlace"), Origin)
 		End If
-		SType = Mid(Source, InStr(Source, "[") + 1)
+		SCastType = Mid(Source, InStr(Source, "[") + 1)
 		Source = Left(Source, InStr(Source, "[") - 1)
-		Source = Source + Mid(SType, InStr(SType, "]") + 1)
-		SType = UCase(Left(SType, InStr(SType, "]") - 1))
-		If IsConst(Source) Then SType = "CONST"
+		Source = Source + Mid(SCastType, InStr(SCastType, "]") + 1)
+		SCastType = UCase(Left(SCastType, InStr(SCastType, "]") - 1))
+		If IsConst(Source) Then
+			SType = "CONST"
+			
+		Else
+			'Do not allow cast to increase source type - this causes problems
+			SType = TypeOfVar(Source, Subroutine(CurrentSub))
+			If CastOrder(SCastType) <= CastOrder(SType) Then
+				SType = SCastType
+			End If
+		End If
 
 	Else
 		SType = TypeOfVar(Source, Subroutine(CurrentSub))
@@ -7712,7 +7757,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 					End If
 				ElseIf ModeAVR Then
 					If DestReg Then
-						AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+						AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 						CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy," + STemp)
 						CurrLine = LinkedListInsert(CurrLine, " mov " + GetByte(Dest, CurrVarByte) + ",SysValueCopy")
 					Else
@@ -7721,7 +7766,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 						'If no ldi is present, will have just a mov later
 						If LastConst = -1 Or LastConst <> ThisConst Then
 							CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy," + STemp)
-							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 							LastConst = ThisConst
 						End If
 						If DestIO Then
@@ -7757,11 +7802,11 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 						ElseIf SourceIO Then
 							CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy," + GetByte(Source, CurrVarByte))
 							CurrLine = LinkedListInsert(CurrLine, " out " + GetByte(Dest, CurrVarByte) + ",SysValueCopy")
-							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 						Else
 							CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + GetByte(Source, CurrVarByte))
 							CurrLine = LinkedListInsert(CurrLine, " out " + GetByte(Dest, CurrVarByte) + ",SysValueCopy")
-							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 						End If
 					Else
 						If SourceReg Then
@@ -7769,11 +7814,11 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 						ElseIf SourceIO Then
 							CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy," + GetByte(Source, CurrVarByte))
 							CurrLine = LinkedListInsert(CurrLine, " sts " + GetByte(Dest, CurrVarByte) + ",SysValueCopy")
-							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 						Else
 							CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + GetByte(Source, CurrVarByte))
 							CurrLine = LinkedListInsert(CurrLine, " sts " + GetByte(Dest, CurrVarByte) + ",SysValueCopy")
-							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+							AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 						End If
 					End If
 				End If
@@ -7857,46 +7902,88 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 					ILC += 1
 					CurrLine = LinkedListInsert(CurrLine, " btfsc " + SourceTemp)
 					CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
-					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					End If
 					CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 				Else
-					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					End If
 				End If
 				ILC += 1
 				CurrLine = LinkedListInsert(CurrLine, " btfss " + SourceTemp)
 				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
-				CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+				If InvertBitCopy Then
+					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+				Else
+					CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+				End If
 				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 
 			ElseIf ModeAVR Then
 				If IsRegister(DestVarName) Then
-					CurrLine = LinkedListInsert(CurrLine, " cbr " + DestVarName + ",1<<" + DestVarBit)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " sbr " + DestVarName + ",1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cbr " + DestVarName + ",1<<" + DestVarBit)
+					End If
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
-					CurrLine = LinkedListInsert(CurrLine, " sbr " + DestVarName + ",1<<" + DestVarBit)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cbr " + DestVarName + ",1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " sbr " + DestVarName + ",1<<" + DestVarBit)
+					End If
 
 				ElseIf IsLowIOReg(DestVarName) Then
 					If RequiresGlitchFree Then
 						CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=0", "TRUE", Origin))
 					End If
-					CurrLine = LinkedListInsert(CurrLine, " cbi " + DestVarName + "," + DestVarBit)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " sbi " + DestVarName + "," + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cbi " + DestVarName + "," + DestVarBit)
+					End If
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
-					CurrLine = LinkedListInsert(CurrLine, " sbi " + DestVarName + "," + DestVarBit)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cbi " + DestVarName + "," + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " sbi " + DestVarName + "," + DestVarBit)
+					End If
 
 				ElseIf LCase(DestVarName) = "sreg" Then
-					CurrLine = LinkedListInsert(CurrLine, " cl" + LCase(Left(DestVarBit, 1)))
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " se" + LCase(Left(DestVarBit, 1)))
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cl" + LCase(Left(DestVarBit, 1)))
+					End If
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
-					CurrLine = LinkedListInsert(CurrLine, " se" + LCase(Left(DestVarBit, 1)))
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cl" + LCase(Left(DestVarBit, 1)))
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " se" + LCase(Left(DestVarBit, 1)))
+					End If
 
 				Else
 					CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + DestVarName)
-
-					CurrLine = LinkedListInsert(CurrLine, " cbr SysValueCopy,1<<" + DestVarBit)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " sbr SysValueCopy,1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cbr SysValueCopy,1<<" + DestVarBit)
+					End If
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + "=1", "TRUE", Origin))
-					CurrLine = LinkedListInsert(CurrLine, " sbr SysValueCopy,1<<" + DestVarBit)
-
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cbr SysValueCopy,1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " sbr SysValueCopy,1<<" + DestVarBit)
+					End If
 					CurrLine = LinkedListInsert(CurrLine, " sts " + DestVarName + ",SysValueCopy")
 					If Not IsIOReg(DestVarName) Then AddVar DestVarName, "BYTE", 1, 0, "REAL", Origin
-					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 				End If
 
 			End If
@@ -7905,23 +7992,93 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 			Case "BYTE", "WORD", "INTEGER", "LONG":
 			If ModePIC Then
 				If Not RequiresGlitchFree Then
-					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					End If
 				End If
-				CurrLine = LinkedListInsert(CurrLine, " movf " + Source + ",F")
 				ILC += 1
-				CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
+				CurrLine = LinkedListInsert(CurrLine, " btfss " + Source +",0")
 				CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
-				CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+				If InvertBitCopy Then
+					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+				Else
+					CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+				End If
 				CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 				If RequiresGlitchFree Then
 					ILC += 1
-					CurrLine = LinkedListInsert(CurrLine, " btfss STATUS,Z")
+					CurrLine = LinkedListInsert(CurrLine, " btfsc " + Source +",0")
 					CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
-					CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
+					End If
 					CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
 				End If
 			ElseIf ModeAVR Then
+				SourceTemp = Source
+				If IsRegister(DestVarName) Then
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " sbr " + DestVarName + ",1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cbr " + DestVarName + ",1<<" + DestVarBit)
+					End If
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + ".0~0", "TRUE", Origin))
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cbr " + DestVarName + ",1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " sbr " + DestVarName + ",1<<" + DestVarBit)
+					End If
 
+				ElseIf IsLowIOReg(DestVarName) Then
+					If RequiresGlitchFree Then
+						CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + ".0=0", "TRUE", Origin))
+					End If
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " sbi " + DestVarName + "," + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cbi " + DestVarName + "," + DestVarBit)
+					End If
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + ".0~0", "TRUE", Origin))
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cbi " + DestVarName + "," + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " sbi " + DestVarName + "," + DestVarBit)
+					End If
+
+				ElseIf LCase(DestVarName) = "sreg" Then
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " se" + LCase(Left(DestVarBit, 1)))
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cl" + LCase(Left(DestVarBit, 1)))
+					End If
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + ".0~0", "TRUE", Origin))
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cl" + LCase(Left(DestVarBit, 1)))
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " se" + LCase(Left(DestVarBit, 1)))
+					End If
+
+				Else
+					CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + DestVarName)
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " sbr SysValueCopy,1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " cbr SysValueCopy,1<<" + DestVarBit)
+					End If
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(SourceTemp + ".0~0", "TRUE", Origin))
+					If InvertBitCopy Then
+						CurrLine = LinkedListInsert(CurrLine, " cbr SysValueCopy,1<<" + DestVarBit)
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " sbr SysValueCopy,1<<" + DestVarBit)
+					End If
+					CurrLine = LinkedListInsert(CurrLine, " sts " + DestVarName + ",SysValueCopy")
+					If Not IsIOReg(DestVarName) Then AddVar DestVarName, "BYTE", 1, 0, "REAL", Origin
+					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
+				End If
 			End If
 
 		'single > bit
@@ -7992,7 +8149,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(Source + "=1", "TRUE", Origin))
 					CurrLine = LinkedListInsert(CurrLine, " inc SysValueCopy")
 					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("SysValueCopy", Dest, Origin))
-					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 				End If
 			End If
 
@@ -8048,7 +8205,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(Source + "=1", "TRUE", Origin))
 					CurrLine = LinkedListInsert(CurrLine, " inc SysValueCopy")
 					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("SysValueCopy", Dest, Origin))
-					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 				End If
 			End If
 
@@ -8108,7 +8265,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String) As
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(Source + "=1", "TRUE", Origin))
 					CurrLine = LinkedListInsert(CurrLine, " inc SysValueCopy")
 					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("SysValueCopy", Dest, Origin))
-					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+					AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 				End If
 			End If
 
@@ -9051,11 +9208,20 @@ Function FixBit (InBit As String, Origin As String) As String
 
 	Dim As String DivChar, VarName, VarType, VarBit, Temp
 	Dim As Integer B
-
+	Dim As VariableType Pointer FoundUserVar
+	
 	'Get dividing character
 	DivChar = "."
 	IF INSTR(InBit, ".") = 0 AND INSTR(InBit, ",") <> 0 Then DivChar = ","
-
+	
+	'Deal with bit variables (which are all stored in main)
+	If InStr(InBit, DivChar) = 0 Then
+		FoundUserVar = HashMapGet(@(Subroutine(0)->Variables), InBit)
+		If FoundUserVar <> 0 Then
+			InBit = UCASE(FoundUserVar->BitVarLocation)
+		End If
+	End If
+	
 	'Exit if not a bit
 	IF INSTR(InBit, DivChar) = 0 Then Return Inbit
 
@@ -9247,7 +9413,7 @@ Sub FixSinglePinSet
 							LinkedListInsert(CurrLine->Prev, " movwf TRIS" + TrisPort)
 
 							'Add caching instructions
-							AddVar("TRIS" + TrisPort, "BYTE", 1, 0, "REAL", "")
+							AddVar("TRIS" + TrisPort, "BYTE", 1, 0, "REAL", "", , -1)
 						End If
 						
 					'Find option
@@ -9267,7 +9433,7 @@ Sub FixSinglePinSet
 							LinkedListInsert(CurrLine->Prev, " movwf OPTION_REG")
 
 							'Add caching instructions
-							AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "")
+							AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "", , -1)
 						End If
 
 					'Find bcf/bsf OPTION_REG
@@ -9289,7 +9455,7 @@ Sub FixSinglePinSet
 						Loop While NextSamePort
 						
 						'Add caching instructions
-						AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "")
+						AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "", , -1)
 						CurrLine = LinkedListInsert(CurrLine, " movf OPTION_REG,W")
 						CurrLine = LinkedListInsert(CurrLine, " option")
 
@@ -9332,7 +9498,7 @@ Sub FixSinglePinSet
 							End If
 
 							'Add caching instructions
-							AddVar("TRIS" + Port, "BYTE", 1, 0, "REAL", "")
+							AddVar("TRIS" + Port, "BYTE", 1, 0, "REAL", "", , -1)
 							CurrLine = LinkedListInsert(CurrLine, " movf TRIS" + Port + ",W")
 							CurrLine = LinkedListInsert(CurrLine, " tris " + TrisPort)
 
@@ -9436,7 +9602,7 @@ Function GenerateArrayPointerSet(DestVar As String, DestPtr As Integer, CurrSub 
 		ArrayType = 0
 	ElseIF ArrayPtr->Pointer = "POINTER" THEN
 		ArrayHandler = "Sys" + ArrayName + "Handler"
-		AddVar ArrayHandler, "WORD", 1, CurrSub, "REAL", Origin
+		AddVar ArrayHandler, "WORD", 1, CurrSub, "REAL", Origin, , -1
 		ArrayType = 1
 	Else
 		Print "Unknown array type, "; ArrayPtr->Name; " is "; ArrayPtr->Pointer
@@ -9458,7 +9624,7 @@ Function GenerateArrayPointerSet(DestVar As String, DestPtr As Integer, CurrSub 
 			Else
 				WholePtrVar = "SysStringC"
 			End If
-			AddVar WholePtrVar, "WORD", 1, 0, "REAL", Origin 'Needs to be global
+			AddVar WholePtrVar, "WORD", 1, 0, "REAL", Origin, , -1 'Needs to be global
 			DestPtrL = GetByte(WholePtrVar, 0)
 			DestPtrH = GetByte(WholePtrVar, 1)
 		End If
@@ -9470,7 +9636,7 @@ Function GenerateArrayPointerSet(DestVar As String, DestPtr As Integer, CurrSub 
 		Else
 			WholePtrVar = "SysStringA"
 		End If
-		AddVar WholePtrVar, "WORD", 1, 0, "REAL", Origin 'Needs to be global
+		AddVar WholePtrVar, "WORD", 1, 0, "REAL", Origin, , -1 'Needs to be global
 		DestPtrL = GetByte(WholePtrVar, 0)
 		DestPtrH = GetByte(WholePtrVar, 1)
 	ElseIf ModeZ8 Then
@@ -9775,14 +9941,14 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 			CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy," + VarName)
 			CurrLine = LinkedListInsert(CurrLine, Temp + "SysValueCopy,1<<" + VarBit)
 			CurrLine = LinkedListInsert(CurrLine, " out " + VarName + ",SysValueCopy")
-			AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+			AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 
 		Else
 			Temp = " sbr ": IF Status = "0" THEN Temp = " cbr "
 			CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + VarName)
 			CurrLine = LinkedListInsert(CurrLine, Temp + "SysValueCopy,1<<" + VarBit)
 			CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + ",SysValueCopy")
-			AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", ""
+			AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 			AddVar VarName, "BYTE", 1, 0, "REAL", Origin
 		End If
 
@@ -12376,7 +12542,7 @@ CheckArrayAgain:
 					If UseTempVar Then
 						ATV = ATV + 1
 						AV = "SysArrayTemp" + Str(ATV)
-						AddVar AV, ArrayType, 1, CompSub, "REAL", Origin
+						AddVar AV, ArrayType, 1, CompSub, "REAL", Origin, , -1
 					Else
 						If ChipFamily = 12 Or ChipFamily = 14 Then AV = "INDF"
 						If ChipFamily = 15 Or ChipFamily = 16 Then AV = "INDF0"
@@ -12384,7 +12550,7 @@ CheckArrayAgain:
 					End If
 					WholeReplace InLine, "[1]" + Temp, AV
 					CurrLine->Value = InLine + Origin
-					If ArrayPointer Then AddVar ArrayHandler, "WORD", 1, 0, "REAL", Origin
+					If ArrayPointer Then AddVar ArrayHandler, "WORD", 1, 0, "REAL", Origin, , -1
 
 					'Get position to set
 					If IsConst(ArrayPosition) And MakeDec(ArrayPosition) = 0 Then
@@ -12437,7 +12603,7 @@ CheckArrayAgain:
 						End If
 
 					ElseIf ModeAVR Then
-						AddVar "SysStringA", "WORD", 1, 0, "REAL", Origin
+						AddVar "SysStringA", "WORD", 1, 0, "REAL", Origin, , -1
 						If ArrayPointer = 0 Then
 							NewCodeLine = LinkedListInsert(NewCodeLine, "SysStringA = @" + ArrayName + AppendArrayPosition + Origin)
 						Else
@@ -13235,7 +13401,7 @@ Function SetStringPointers (V1 As String, V2 As String, CurrSub As SubType Point
 	End If
 	'If V2 is a string, put it into a temp array
 	If INSTR(UCase(V2), ";STRING") <> 0 Then
-		AddVar("SysTempArray", "STRING", 20, 0, "REAL", Origin)
+		AddVar("SysTempArray", "STRING", 20, 0, "REAL", Origin, , -1)
 		'CSC += 1: TempData(CSC) = "SYSTEMPARRAY()=" + V2
 		CurrLine = LinkedListInsert(CurrLine, "SYSTEMPARRAY()=" + V2)
 		V2 = "SYSTEMPARRAY"
@@ -14794,7 +14960,7 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 		With *Subroutine(LO)
 			If .IsFunction Then
 				'Have found function, add a var and then return it
-				AddVar ArrayNameIn, .ReturnType, 1, 0, "REAL", ""
+				AddVar ArrayNameIn, .ReturnType, 1, 0, "REAL", "", , -1
 				FoundVar = HashMapGet(@(MainSub->Variables), ArrayName)
 				
 				Return FoundVar
