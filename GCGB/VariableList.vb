@@ -55,7 +55,7 @@ Imports System.Collections.Generic
 					OutData = "Dim " + Name + "(" + Length + ")"
 				Else
 					OutData = "Dim " + Name + " As " + Type
-					If Length <> "" Then
+					If Length <> "" And Type.ToLower = "string" Then
 						OutData += " * " + Length
 					End If
 				End If
