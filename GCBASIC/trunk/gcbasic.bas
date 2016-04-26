@@ -111,6 +111,8 @@ End Type
 Type SubType
 	Name As String
 	SourceFile As Integer
+	Origin As String
+	
 	IsMacro As Integer
 	IsFunction As Integer
 	ReturnType As String
@@ -310,7 +312,7 @@ DECLARE FUNCTION CompileCalcCondition(CodeSection As CodeSection Pointer, V1 As 
 DECLARE FUNCTION CompileCalcLogic(CodeSection As CodeSection Pointer, V1 As String, Act As String, V2 As String, Origin As String, Answer As String) As String
 DECLARE FUNCTION CompileCalcMult(CodeSection As CodeSection Pointer, V1 As String, Act As String, V2 As String, Origin As String, Answer As String) As String
 Declare Function CompileCalcUnary(CodeSection As CodeSection Pointer, Act As String, V2 As String, Origin As String, AnswerIn As String) As String
-Declare Function CompileConditions (Condition As String, IfTrue As String, Origin As String) As LinkedListElement Pointer
+Declare Function CompileConditions (Condition As String, IfTrue As String, Origin As String, CompSub As SubType Pointer = 0) As LinkedListElement Pointer
 DECLARE Sub CompileDim (CurrSub As SubType Pointer)
 DECLARE SUB CompileDir (CompSub As SubType Pointer)
 DECLARE SUB CompileDo (CompSub As SubType Pointer)
@@ -3989,7 +3991,7 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 
 End Function
 
-Function CompileConditions (Condition As String, IfTrue As String, Origin As String) As LinkedListElement Pointer
+Function CompileConditions (Condition As String, IfTrue As String, Origin As String, CompSub As SubType Pointer = 0) As LinkedListElement Pointer
 
 	Dim As String V1, V2, Op, R1, R2, Temp, Cmd, BI, VarName, Sum, Reg, CondType
 	Dim As Integer PD, Complex, Value1, Value2, OutVal, R2Literal, T, S, WD
@@ -4010,7 +4012,11 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 		Condition = Left(Condition, INSTR(Condition, ";?F") - 1)
 	END If
 	Condition = Trim(Condition)
-	CurrSub = Subroutine(GetSubID(Origin))
+	If CompSub <> 0 Then
+		CurrSub = CompSub
+	Else
+		CurrSub = Subroutine(GetSubID(Origin))
+	End If
 	'IF Origin = "" THEN PRINT "No Origin!", Condition
 
 	'Trim extra brackets on Condition
@@ -4266,9 +4272,9 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 					'clear w, xor if each var set
 					AddVar "SysCalcTempX", "BYTE", 1, CurrSub, "REAL", Origin, , -1
 					CurrLine = LinkedListInsert(CurrLine, " clr SysCalcTempX")
-					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V1 + " = 1", "TRUE", Origin))
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V1 + " = 1", "TRUE", Origin, CurrSub))
 					CurrLine = LinkedListInsert(CurrLine, " com SysCalcTempX")
-					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V2 + "=1", "TRUE", Origin))
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V2 + "=1", "TRUE", Origin, CurrSub))
 					CurrLine = LinkedListInsert(CurrLine, " com SysCalcTempX")
 					'If W is 0, variables are equal (inverted 0 or 2 times)
 					IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN Cmd = " sbrs SysCalcTempX,0"
@@ -4287,20 +4293,22 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 			IF Not IsConst(V1) Then
 				If ModePIC Then
 					If TypeOfValue(V1, CurrSub) = "BIT" Then
+						AddVar "SYSCALCTEMPA", "BYTE", 1, CurrSub, "REAL", Origin, , -1
 						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V1, "SysCalcTempA", Origin))
 						V1 = "SysCalcTempA"
 					End If
 				End If
-				AddVar V1, "BYTE", 1, 0, "REAL", Origin
+				AddVar V1, "BYTE", 1, CurrSub, "REAL", Origin
 			End If
 			IF NOT IsConst(V2) Then
 				If ModePIC Then
 					If TypeOfValue(V2, CurrSub) = "BIT" Then
+						AddVar "SYSCALCTEMPB", "BYTE", 1, CurrSub, "REAL", Origin, , -1
 						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2, "SysCalcTempB", Origin))
 						V2 = "SysCalcTempB"
 					End If
 				End If
-				AddVar V2, "BYTE", 1, 0, "REAL", Origin
+				AddVar V2, "BYTE", 1, CurrSub, "REAL", Origin
 			End If
 
 			'Remove any casts
@@ -6586,8 +6594,8 @@ SUB CompileSelect (CompSub As SubType Pointer)
 					IF Condition <> "ELSE" THEN
 						IF CountOccur(Condition, "';=~<>{}") = 0 THEN Condition = "=" + Condition
 						Condition = SelectValue + Condition
-
-						NewCode = CompileConditions(Condition, "FALSE", Origin)
+						
+						NewCode = CompileConditions(Condition, "FALSE", Origin, CompSub)
 						FindCase = LinkedListInsertList(FindCase, NewCode)
 						If ModePIC Then
 							FindCase = LinkedListInsert(FindCase, " goto SysSelect" + Str(SCT) + "Case" + Str(CC + 1))
