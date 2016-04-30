@@ -357,7 +357,7 @@ Declare Function GenerateAutoPinDir As LinkedListElement Pointer
 Declare Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As String) As LinkedListElement Pointer
 Declare Function GenerateExactDelay(ByVal Cycles As Integer) As LinkedListElement Pointer
 Declare Function GenerateVectorCode As LinkedListElement Pointer
-Declare Function GetCalcType(VT1 As String, Act As String, VT2 As String) As String
+Declare Function GetCalcType(VT1 As String, Act As String, VT2 As String, AnswerType As String) As String
 Declare Function GetCalcVar (VarTypeIn As String) As String
 Declare Function GetCalledSubs(CurrSub As SubType Pointer, ExistingList As LinkedListElement Pointer = 0) As LinkedListElement Pointer
 DECLARE FUNCTION GetDestSub(Origin As String) As Integer
@@ -616,7 +616,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-26"
+Version = "0.95 2016-04-30"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2240,7 +2240,7 @@ END SUB
 Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As String, OriginIn As String)
 
 	Dim As String Origin, Temp
-	Dim As String Answer, ActN, AnswerIn, V1, V2, TypeV1, TypeV2, CalcType, Act
+	Dim As String Answer, ActN, AnswerIn, V1, V2, TypeV1, TypeV2, CalcType, TypeAV, Act
 	Dim As Integer NeverLast, UnaryMode, SearchStart, CalcisBad, OpPos, SD, SO
 	Dim As Integer CalcStart, CalcEnd, LastCalc, NextSame, PD
 
@@ -2367,7 +2367,8 @@ SearchForOpAgain:
 	TypeV1 = TypeOfValue(V1, Subroutine(GetSubID(Origin)))
 	TypeV2 = TypeOfValue(V2, Subroutine(GetSubID(Origin)))
 	If UnaryMode Then TypeV1 = ""
-	CalcType = GetCalcType(TypeV1, Act, TypeV2)
+	TypeAV = TypeOfValue(AV, Subroutine(GetDestSub(Origin)))
+	CalcType = GetCalcType(TypeV1, Act, TypeV2, TypeAV)
 	'Print V1, Act, V2, CalcType, AV
 
 	'Decide output variable
@@ -5919,10 +5920,10 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 			  					Else
 									If LargeTable Then
 										AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsert(CurrLine, "[word]SysStringA=" + TableLoc)
+										CurrLine = LinkedListInsert(CurrLine, "[WORD]SYSSTRINGA=" + TableLoc + Origin)
 									Else
 										AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsert(CurrLine, "[byte]SysStringA=" + TableLoc)
+										CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=" + TableLoc + Origin)
 									End If
 
 					  				CurrLine = LinkedListInsert(CurrLine, " call " + GetByte(TableName, CurrTableByte - 1))
@@ -5954,11 +5955,11 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 					  				AddVar("SysByteTempX", "BYTE", 1, CompSub, "REAL", Origin, , -1)
 					  				If LargeTable Then
 										AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsert(CurrLine, "[word]SysStringA=" + TableLoc)
+										CurrLine = LinkedListInsert(CurrLine, "[WORD]SYSSTRINGA=" + TableLoc + Origin)
 									Else
 										AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsert(CurrLine, "[byte]SysStringA=" + TableLoc)
-									End If
+										CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=" + TableLoc + Origin)
+					  				End If
 					  				CurrLine = LinkedListInsert(CurrLine, " call " + GetByte(TableName, CurrTableByte - 1))
 					  				CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("SysByteTempX", "[BYTE]" + GetByte(OutVar, CurrTableByte - 1), Origin))
 			  					End If
@@ -10171,7 +10172,7 @@ Function GenerateVectorCode As LinkedListElement Pointer
 	Return OutList
 End Function
 
-Function GetCalcType(VT1 As String, Act As String, VT2 As String) As String
+Function GetCalcType(VT1 As String, Act As String, VT2 As String, AnswerType As String) As String
 	'Decide which type a calculation returns
 
 	'Comparision operations return byte
@@ -10181,14 +10182,18 @@ Function GetCalcType(VT1 As String, Act As String, VT2 As String) As String
 	If Act = ">" Then Return "BYTE"
 	If Act = "{" Then Return "BYTE"
 	If Act = "}" Then Return "BYTE"
-
+	
 	'Negate returns at least an integer
 	If Act = "-" And VT1 = "" And CastOrder(VT2) < CastOrder("INTEGER") Then Return "INTEGER"
-
-	'Other types return highest of two operands
-	If CastOrder(VT1) > CastOrder(VT2) Then Return VT1
-	Return VT2
-
+	
+	'Multiply, divide and remainder operations return highest of two operands
+	If Act = "*" Or Act = "/" Or Act = "%" Then
+		If CastOrder(VT1) > CastOrder(VT2) Then Return VT1
+		Return VT2
+	End If
+	
+	'Other operations return answer type
+	Return AnswerType
 End Function
 
 Function GetCalcVar (VarTypeIn As String) As String
