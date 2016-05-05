@@ -616,7 +616,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-04-30"
+Version = "0.95 2016-05-05"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -12605,7 +12605,7 @@ CheckArrayAgain:
 								NewCodeLine = LinkedListInsert(NewCodeLine, " lfsr 0," + ArrayName + "+" + ArrayPosition)
 							Else
 								NewCodeLine = LinkedListInsert(NewCodeLine, " lfsr 0," + ArrayName)
-								NewCodeLine = LinkedListInsert(NewCodeLine, "AFSR0 = AFSR0 +" + ArrayPosition)
+								NewCodeLine = LinkedListInsert(NewCodeLine, "AFSR0 = AFSR0 +" + ArrayPosition + Origin)
 							End If
 						Else
 							NewCodeLine = LinkedListInsert(NewCodeLine, "AFSR0 = " + ArrayHandler + AppendArrayPosition + Origin)
