@@ -354,7 +354,6 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	If VarFound->Type = "BIT" And VarFound->ExplicitDeclaration Then
 		HashMapDelete(@(VarSub->Variables), UCase(VarName), 0)
 		HashMapSet(@(MainSub->Variables), UCase(VarName), VarFound)
-		Exit Sub
 	End If
 	
 END Sub

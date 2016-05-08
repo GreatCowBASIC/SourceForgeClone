@@ -616,7 +616,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-05-05"
+Version = "0.95 2016-05-09"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2369,13 +2369,15 @@ SearchForOpAgain:
 	If UnaryMode Then TypeV1 = ""
 	TypeAV = TypeOfValue(AV, Subroutine(GetDestSub(Origin)))
 	CalcType = GetCalcType(TypeV1, Act, TypeV2, TypeAV)
-	'Print V1, Act, V2, CalcType, AV
-
+	'Print V1, Act, V2, CalcType, AV, Origin
+	
 	'Decide output variable
 	If CalcStart = 1 And CalcEnd = LEN(SUM) And AV <> "" And (Not NeverLast) Then
 		AnswerIn = AV
 		LastCalc = -1
 	Else
+		'If CalcType is BIT, get BYTE variable
+		If CalcType = "BIT" Then CalcType = "BYTE"
 		AnswerIn = GetCalcVar(CalcType)
 		LastCalc = 0
 	End If
@@ -3375,8 +3377,8 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 		CalcVarType = CalcType
 		If CalcVarType = "BIT" Then CalcVarType = "BYTE"
 		'Declare SysCalcTempA, SysCalcTempB and SysCalcTempX
-		AddVar "Sys" + CalcVarType + "TempA", CalcType, 1, Subroutine(SourceSub), "REAL", Origin, , -1
-		AddVar "Sys" + CalcVarType + "TempB", CalcType, 1, Subroutine(SourceSub), "REAL", Origin, , -1
+		AddVar "Sys" + CalcVarType + "TempA", CalcVarType, 1, Subroutine(SourceSub), "REAL", Origin, , -1
+		AddVar "Sys" + CalcVarType + "TempB", CalcVarType, 1, Subroutine(SourceSub), "REAL", Origin, , -1
 		AddVar "SysByteTempX", "BYTE", 1, Subroutine(SourceSub), "REAL", Origin, , -1
 
 		'Copy values
@@ -10187,12 +10189,13 @@ Function GetCalcType(VT1 As String, Act As String, VT2 As String, AnswerType As 
 	If Act = "-" And VT1 = "" And CastOrder(VT2) < CastOrder("INTEGER") Then Return "INTEGER"
 	
 	'Multiply, divide and remainder operations return highest of two operands
-	If Act = "*" Or Act = "/" Or Act = "%" Then
+	'Also return highest of two input types if no answer type
+	If Act = "*" Or Act = "/" Or Act = "%" Or AnswerType = "" Then
 		If CastOrder(VT1) > CastOrder(VT2) Then Return VT1
 		Return VT2
 	End If
 	
-	'Other operations return answer type
+	'Other operations return answer type if known
 	Return AnswerType
 End Function
 
@@ -11563,7 +11566,7 @@ Function IsLowRegister(VarName As String) As Integer
 	If Not ModeAVR Then Return 0
 
 	'If we have an alias, get the real name
-	RealName = VarName
+	RealName = UCase(VarName)
 	SearchAliasAgain:
 	For CurrItem = 1 To FALC
 		If RealName = FinalAliasList(CurrItem).Name Then
@@ -11571,6 +11574,7 @@ Function IsLowRegister(VarName As String) As Integer
 			GoTo SearchAliasAgain 'May have a nested alias
 		End If
 	Next
+	RealName = UCase(RealName)
 
 	'Is it low?
 	For CurrItem = 1 To FRLC
@@ -14687,7 +14691,8 @@ FUNCTION TypeOfVar (VarName As String, CurrSub As SubType Pointer) As String
 	End If
 
 	'Get highest of local and global type
-	If CastOrder(LocalType) > CastOrder(GlobalType) Then
+	'(Unless type in main sub is BIT, then it is a bit)
+	If CastOrder(LocalType) > CastOrder(GlobalType) And GlobalType <> "BIT" Then
 		Return LocalType
 	Else
 		Return GlobalType
