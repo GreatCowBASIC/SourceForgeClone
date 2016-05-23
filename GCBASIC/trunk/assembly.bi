@@ -349,7 +349,7 @@ SUB AssembleProgram
 	Dim As Integer PRC, KeepReplacing, AW, PB, FP, PVT, TBT, HT, PV
 	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, DataBlockSize
 	Dim As LongInt CL, OA, FRA, CHA
-	Dim As AsmCommand Pointer CurrCmd
+	Dim As AsmCommand Pointer CurrCmd, LDSLoc, STSLoc
 	
 	Dim As Single CurrPerc, PercAdd, PercOld
 	
@@ -370,6 +370,12 @@ SUB AssembleProgram
 		'Should banksel set 1 or 2 STATUS bits?
 		RP1 = HasSFRBit("RP1")
 		If MemSize <= 256 Then RP1 = 0 'If 256 or less addresses, there is no RP1
+	End If
+	
+	'Get index of LDS and STS commands (AVR)
+	If ModeAVR Then
+		LDSLoc = IsASM("lds", 0)
+		STSLoc = IsASM("sts", 0)
 	End If
 	
 	'Build symbol table
@@ -614,9 +620,16 @@ SUB AssembleProgram
 						KeepReplacing = 0
 						ParamValue = HashMapGetStr(ASMSymbols, ParamValues(CD))
 						If ParamValue <> "" Then
+							If Not IsConst(ParamValue) Then	
+								KeepReplacing = -1
+							Else
+								'On AVR, need to add 32 to SFR addresses for LDS/STS
+								If ModeAVR And ((CD = 2 And CurrCmd = LDSLoc) Or (CD = 1 And CurrCmd = STSLoc)) Then
+									If IsIOReg(ParamValues(CD)) Then ParamValue = Str(Val(ParamValue) + 32)
+								End If
+							End If
 							ParamValues(CD) = ParamValue
-							If Not IsConst(ParamValue) Then	KeepReplacing = -1
-							
+						
 						ElseIf Not IsConst(ParamValues(CD)) Then
 							
 							ParamElements = 0
