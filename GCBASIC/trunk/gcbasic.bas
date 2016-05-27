@@ -616,7 +616,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-05-23"
+Version = "0.95 2016-05-27"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7370,7 +7370,24 @@ Sub CompileTables
 	   			'Table on high end, can use dw and then read with tblrd
 	 				Else
 						PCC += 1
-						PreserveCode(PCC) = Chr(8) + " dw " + STR(LEN(Source) * 256 + LEN(Source)) + "," + CHR(34) + Source + CHR(34)
+						'PreserveCode(PCC) = Chr(8) + " dw " + STR(LEN(Source) * 256 + LEN(Source)) + "," + CHR(34) + Source + CHR(34)
+						PreserveCode(PCC) = Chr(8) + " dw " + STR(LEN(Source) * 256 + LEN(Source))
+						ThisItem = ""
+						For SP = 1 TO LEN(Source)
+							Temp = Mid(Source, SP, 1)
+							If Temp = "\" Or Temp = Chr(34) Then
+								If ThisItem <> "" Then
+									PreserveCode(PCC) += "," + Chr(34) + ThisItem + Chr(34)
+									ThisItem = ""
+								End If
+								PreserveCode(PCC) += "," + Str(Asc(Temp))
+							Else
+								ThisItem += Temp
+							End If
+						Next
+						If ThisItem <> "" Then
+							PreserveCode(PCC) += "," + Chr(34) + ThisItem + Chr(34)
+						End If
 						CurrLine = LinkedListInsert(CurrLine, "PRESERVE " + Str(PCC))
 	 				End If
 
