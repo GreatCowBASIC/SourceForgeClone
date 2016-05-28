@@ -115,8 +115,10 @@
 #define CopyScratch  72       '0x48 (72)
 			'Protocol for copying Scratchpad TH and TL
 			'registers to EEPROM
-#define RecallE2 187 	'0xB8 (187)
+#define RecallE2 184 	'0xB8 (184)
 			'Protocol for recalling alarm trigger values from EEPROM
+ #define ReadPowerSupply 180  '0xB4 (180)
+			'Protocol for identifying Power Supply Mode
 
 ' Public Routines
 

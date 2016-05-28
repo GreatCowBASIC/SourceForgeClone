@@ -119,11 +119,11 @@ function ds2482_reset
           else
              ds2482_reset = false
           end if
-	
+
 end function
 
 '	 DS2428 Detect routine that sets the I2C address and then performs a
-'	 device reset followed by writing the configuration byte to default values:	
+'	 device reset followed by writing the configuration byte to default values:
 '	 Returns: TRUE if device was detected and written
 '	          FALSE device not detected or failure to write configuration byte
 '
@@ -138,7 +138,7 @@ function ds2482_detect
 		ds2482_detect = false
                     exit function
           end if
-		
+
 	ds2482_detect = true
 end function
 
@@ -162,7 +162,7 @@ function ds2482_write_config( ds2482_config )
 
 
   ds2482_status = not ds2482_config
-  ds2482_status = uf_shift ( ds2482_status, 4, << )
+  ds2482_status = Fnlsl ( ds2482_status, 4 )
   ds2482_status = ds2482_config | ds2482_status
 
   I2csend ds2482_status
@@ -380,7 +380,7 @@ sub oneWire_writeByte ( in ds2482byte )
      else
         ds2482_status = true
      end if
-			
+
 end sub
 
 
@@ -390,7 +390,7 @@ end sub
 '	Returns:  8 bits read from 1-Wire Net
 '
 sub oneWire_readByte( out ds2482byte as byte )
-	
+
     i2cstart
     i2csend ( DS2482_I2C_ADDR | 0 )
     i2csend ( DS2482_CMD_1WRB )
