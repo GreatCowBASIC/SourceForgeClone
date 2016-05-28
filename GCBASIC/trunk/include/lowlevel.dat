@@ -17,4 +17,3 @@ string.h
 usart.h
 i2c.h
 hwi2c.h
-hwi2c2.h

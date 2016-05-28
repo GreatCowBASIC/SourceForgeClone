@@ -73,7 +73,7 @@ Sub fram_wr_byte ( in addr as long , In data_out)
       ' ((0xA0|(int8)(address>>14))&0xFE);//&0xFE forces to write
 
 
-      target_address = uf_shift_long ( addr, 15, >> )
+      target_address = Fnlsr ( addr, 15 )
       target_address = target_address  | FRAM_DEVICE_1
       target_address = target_address & 0xFE
 
@@ -81,7 +81,7 @@ Sub fram_wr_byte ( in addr as long , In data_out)
       'send WRITE command
         I2CSEND( target_address )
 
-       addrh = uf_shift ( addr, 8, >> )
+       addrh = Fnlsr ( addr, 8 )
        addrl = addr & 0xff
       'address MSB
 
@@ -109,7 +109,7 @@ Sub fram_rd_byte( In addr as Long , Out ul_returnedbyte )
 
       ' ((0xA0|(int8)(address>>14))&0xFE);//&0xFE forces to write
 
-      target_address = uf_shift_long ( addr, 15, >> )
+      target_address = Fnlsr( addr, 15  )
       target_address = target_address  | FRAM_DEVICE_1
       target_address = target_address & 0xFE
 
@@ -117,7 +117,7 @@ Sub fram_rd_byte( In addr as Long , Out ul_returnedbyte )
       I2CSEND( target_address )
 
 
-       addrh = uf_shift ( addr, 8, >> )
+       addrh = Fnlsr ( addr, 8 )
        addrl = addr & 0xff
       'address MSB
       'comment the next line if a Low-Density (<=2kB) device is used
