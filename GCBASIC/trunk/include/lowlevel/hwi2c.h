@@ -1,9 +1,11 @@
 '    Hardware I2C routines for Great Cow BASIC
 '    Copyright (C) 2010 Hugh Considine
-'    Copyright (C) 2014 & 2015,2016 Evan R. Venn & Jacques Erdemaal
+'    Copyright (C) 2014 & 2015, 2016 Evan R. Venn & Jacques Erdemaal
 '    Version 1.1f
 '    Version 1.1g
 '    Version 1.1h
+'    Version 1.1i
+
 
 
 '    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
@@ -15,7 +17,7 @@
 '    Updated May 2015 - enhance hi2cwaitmssp
 '    Updated Oct 2015 - enhance hi2cwaitmssp
 '    Updated Jan 2016 - enhance hi2cwaitmssp
-
+'    Updated May 2016 - resolved AVR TWINT lockup issues
 
 '
 
@@ -165,7 +167,7 @@
                    End If
                End If
               ' Uncommented Displays Results In GCB Output Window
-              ' Error " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWB
+              ' warning " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWBR
           END IF
 #endscript
 
@@ -453,7 +455,7 @@ Sub AVRHI2CMode ( In HI2CCurrentMode )
           #ifdef AVR
                  If HI2CCurrentMode = Master Then
 
-                    TWSR = CST_PRESCALER    ' 0     0 0x00
+                    TWSR = CST_PRESCALER
                     TWBR = CST_TWBR
 
                  end if
@@ -464,7 +466,8 @@ Sub AVRHI2CMode ( In HI2CCurrentMode )
                  ldi  SysValueCopy, 0|(1<<TWEN)
                  sts	TWCR,SysValueCopy
 
-	#endif
+                 HI2CWaitMSSPTimeout = 0
+          	#endif
 
 
 End Sub
@@ -481,8 +484,8 @@ Sub AVRHI2CStart
     sbr   SysValueCopy, (1<<TWINT)|(1<<TWSTA)| (1<<TWEN)
     sts	TWCR,SysValueCopy
 
-    Do While TWINT = 0
-    Loop
+    do while TWINT = 0
+    loop
 
     I2CByte = TWSR & 0xF8
 
@@ -500,8 +503,9 @@ Sub AVRHI2CReStart
     sbr   SysValueCopy, (1<<TWINT)|(1<<TWSTA)| (1<<TWEN)
     sts	TWCR,SysValueCopy
 
-    Do While TWINT = 0
-    Loop
+    do while TWINT = 0
+    loop
+
 
     I2CByte = TWSR & 0xF8
 
@@ -541,8 +545,11 @@ Sub AVRHI2CSend ( In I2CByte )
         ldi       SysValueCopy, (1<<TWINT) | (1<<TWEN)
         sts       TWCR, SysValueCopy
 
-        Do While TWINT = 0
-        Loop
+        nop
+        nop
+        do while TWINT = 0
+        loop
+
 
         'Destructive use of I2CByte to save memory
         I2CByte = TWSR & 0xF8
@@ -564,7 +571,7 @@ Sub AVRHI2CSend ( In I2CByte )
                case MR_SLA_ACK
                    HI2CAckPollState = false
                case MR_DATA_NACK_REC
-                   HI2CAckPollState = false
+                   HI2CAckPollState = true
                case else
                     ' bad event!!
         end select
@@ -591,8 +598,12 @@ Sub AVRHI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
           sts	TWCR,SysValueCopy
         end if
 
-        Do While TWINT = 0
-        Loop
+        nop
+        nop
+        do while TWINT = 0
+        loop
+
+
         'Get byte
         I2CByte = TWDR
 

@@ -1,5 +1,5 @@
 '    Software I2C routines for the GCBASIC compiler
-'    Copyright (C) 2009, 2013, 2014 Hugh Considine, Evan R. Venn, Thomas Henry
+'    Copyright (C) 2009, 2013, 2014, 2016 Hugh Considine, Evan R. Venn, Thomas Henry
 
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 '     0.85 - Improved stability and corrections
 '     0.86 - Delete v2 subs
 '     0.87 - Added new sub I2CSlaveDeviceReceive to handle slave correctly.  I2CSlaveDeviceReceive thisI2CSlavedevice, readDeviceAddress, TRU
-'     0.88 - Revised timings and ensured the DATA line goes low at end of process.	
+'     0.88 - Revised timings and ensured the DATA line goes low at end of process.
 '     0.89 - Revised I2CAckPollState = I2CSendState
 '     0.90 - Revised to remove the BUGS!!!!!
 '     I2c-alt.h - Revised and documented by Thomas Henry, July 17, 2014
@@ -45,6 +45,7 @@
 '	   - more extensive documentation
 '	   - eliminated redundancies and unneeded global variables
 '	   - accounted for parameter corruption throughout
+'     0.95 revised to restore I2C_Dev_OK
 
 '	   - With the default constants, communication can be as high as 75 kHz.
 
@@ -149,7 +150,7 @@
 
 
 #define I2CSendState I2CAckPollState 'retained I2CSendState for backwards compatibility
-
+#define I2C_Dev_OK I2CAck
 '             --- Subroutines
 
 #startup InitI2C                  'automatically call in main program
@@ -273,14 +274,14 @@ end Sub
 Function I2CStartOccurred
 	'Check if a start condition has occurred since the last run of this function
 	'Only used in slave mode
-	
+
 	#if I2C_MODE = Master
 		I2CStartOccurred = TRUE
 	#endif
-	
+
 	#if I2C_MODE = Slave
 		I2CStartOccurred = FALSE
-		
+
 		If I2C_CLOCK = 1 Then
 			'State 0, CK 1, DA 1
 			If I2C_DATA = 1 Then
@@ -299,9 +300,9 @@ Function I2CStartOccurred
 			I2CState = 2
 		End If
 		I2COldState = I2CState
-		
+
 	#endif
-	
+
 End Function
 
 '             ---

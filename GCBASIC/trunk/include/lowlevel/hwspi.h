@@ -1,7 +1,7 @@
 '    Hardware SPI routines for Great Cow BASIC
 '    Copyright (C) 2006 - 2011 Hugh Considine
 '    Copyright (C) 2015 - Evan R. Venn
-
+'    Copyright (C) 2016 - Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,8 @@
 ' 3/2/2011: Some minor tweaks to reduce code size and make code neater
 ' 5/2/2011: Added AVR support, new version of SPIMode to set clock mode
 ' 14/6/2015: Adapted tp support software SPI by addressing SPITransfer via HWSPITransfer
+' 25/3/2016: Adapted to add 16f18855 support
+' 29/3/2016: Adapted to add 18f support in FastHWSPITransfer
 
 'To make the PIC pause until it receives an SPI message while in slave mode, set the
 'constant "WaitForSPI" at the start of the program. The value does not matter.
@@ -145,6 +147,8 @@ End Sub
 'Overloaded: Other version is more compact but doesn't allow clock options to be set
 Sub SPIMode (In SPICurrentMode, In SPIClockMode)
 
+
+
 	#ifdef PIC
 		#ifndef Var(SSPCON1)
 			#ifdef Var(SSPCON)
@@ -152,9 +156,30 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
 			#endif
 		#endif
 
+    'added for 16f18855
+		#ifndef Var(SSPCON1)
+			#ifdef Var(SSP1CON1)
+				Dim SSPCON1 Alias SSP1CON1 ;added for 18f18855
+			#endif
+		#endif
+    'added for 16f18855
+		#ifndef Var(SSPSTAT)
+			#ifdef Var(SSP1STAT)
+				Dim SSPSTAT Alias SSP1STAT ;added for 18f18855
+			#endif
+		#endif
+    'added for 16f18855
+    #ifndef Var(SSPBUF)
+			#ifdef Var(SSP1BUF)
+				Dim SSPBUF Alias SSP1BUF
+			#endif
+		#endif
+
+
+
 		'Turn off SPI
 		'(Prevents any weird glitches during setup)
-		Set SSPCON1.SSPEN Off
+		Set SSPCON1.SSPEN Off ;(Prevents any weird glitches during setup)
 
 		'Set clock pulse settings
 		Set SSPSTAT.SMP Off
@@ -255,11 +280,6 @@ End Sub
 Sub HWSPITransfer(In SPITxData, Out SPIRxData)
 
 	#ifdef PIC
-		#ifndef Var(SSPCON1)
-			#ifdef Var(SSPCON)
-				Dim SSPCON1 Alias SSPCON
-			#endif
-		#endif
 
 		'Master mode
 		If SPICurrentMode > 10 Then
@@ -315,13 +335,8 @@ End Sub
 
 'Sub to handle SPI data send - Master mode only
 Sub FastHWSPITransfer( In SPITxData )
-	'Master mode only
-	#ifdef PIC
-		#ifndef Var(SSPCON1)
-			#ifdef Var(SSPCON)
-				Dim SSPCON1 Alias SSPCON
-			#endif
-		#endif
+  'Master mode only
+  #ifdef PIC
 
     'Clear WCOL
     Set SSPCON1.WCOL Off
@@ -333,7 +348,12 @@ Sub FastHWSPITransfer( In SPITxData )
     Wait While SSPSTAT.BF = Off
     Set SSPSTAT.BF Off
 
-	#endif
+    'Handle 18F chips
+    #if ChipFamily 16
+      SPIRxData = SSPBUF
+    #endif
+
+  #endif
 
 	#ifdef AVR
 		'Master mode only
