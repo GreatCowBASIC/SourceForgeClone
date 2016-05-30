@@ -27,6 +27,7 @@
 ;    14-12-15
 ;    Added support for PIC18F(L)xx20 Chips
 ;    Added support for family 12 Chips and option_reg
+;    Fixed CMCON for 18f chips
 'Constants
 #define ON 1
 #define OFF 0
@@ -539,7 +540,22 @@ Sub InitSys
 
 	'Turn off comparator
 	#IFDEF Var(CMCON)
-		CMCON = 7
+    'defaults - same since 2013
+    #IFNDEF BIT(CMEN0)
+  		CMCON = 7
+    #ENDIF
+
+    #IFDEF BIT(CMEN0)
+    'fix for following chips
+      '    18f1230.dat:CMEN1,CMCON,1
+      '    18f1231.dat:CMEN1,CMCON,1
+      '    18f1330.dat:CMEN1,CMCON,1
+      '    18f1331.dat:CMEN1,CMCON,1
+  		CMEN0 = 0
+      CMEN1 = 0
+      CMEN2 = 0
+    #ENDIF
+
 	#ENDIF
 	#IFDEF Var(CMCON0)
 		CMCON0 = 7
