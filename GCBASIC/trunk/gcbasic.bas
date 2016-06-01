@@ -616,7 +616,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-05-27"
+Version = "0.95 2016-06-01"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7367,28 +7367,27 @@ Sub CompileTables
 							IF Mid(Source, SP, 1) = "=" THEN Temp = Temp + Chr(9) + "; (equals)"
 							CurrLine = LinkedListInsert(CurrLine, Temp)
 						Next
-	   			'Table on high end, can use dw and then read with tblrd
+	   			'Table on high end, can use db and then read with tblrd
 	 				Else
-						PCC += 1
-						'PreserveCode(PCC) = Chr(8) + " dw " + STR(LEN(Source) * 256 + LEN(Source)) + "," + CHR(34) + Source + CHR(34)
-						PreserveCode(PCC) = Chr(8) + " dw " + STR(LEN(Source) * 256 + LEN(Source))
-						ThisItem = ""
-						For SP = 1 TO LEN(Source)
-							Temp = Mid(Source, SP, 1)
-							If Temp = "\" Or Temp = Chr(34) Then
-								If ThisItem <> "" Then
-									PreserveCode(PCC) += "," + Chr(34) + ThisItem + Chr(34)
-									ThisItem = ""
-								End If
-								PreserveCode(PCC) += "," + Str(Asc(Temp))
+						Temp = ""
+						FOR SP = 0 TO LEN(Source)
+							If SP = 0 Then
+								ThisItem = Str(Len(Source))
 							Else
-								ThisItem += Temp
+								ThisItem = Str(Asc(Mid(Source, SP, 1)))
 							End If
-						Next
-						If ThisItem <> "" Then
-							PreserveCode(PCC) += "," + Chr(34) + ThisItem + Chr(34)
-						End If
-						CurrLine = LinkedListInsert(CurrLine, "PRESERVE " + Str(PCC))
+							If Len(Temp) + Len(ThisItem) >= 79 And Temp <> "" And (SP Mod 2) = 0 Then
+								CurrLine = LinkedListInsert(CurrLine, " db " + Temp)
+								Temp = ThisItem
+							Else
+								If Temp = "" Then
+									Temp = ThisItem
+								Else
+									Temp = Temp + "," + ThisItem
+								End If
+							End If
+						NEXT
+						If Temp <> "" Then CurrLine = LinkedListInsert(CurrLine, " db " + Temp)
 	 				End If
 
 	 			ElseIf ModeAVR Then

@@ -928,7 +928,6 @@ SysStringRead:
   TBLRD*+
   movff TABLAT,SysCalcTempA
   movff TABLAT,INDF1
-  TBLRD*+
   goto SysStringReadCheck
 
 SysReadStringPart:
@@ -936,8 +935,7 @@ SysReadStringPart:
   movf TABLAT, W
   movwf SysCalcTempA
   addwf SysStringLength,F
-  TBLRD*+
-
+  
   'Check length
 SysStringReadCheck:
   'If length is 0, exit
