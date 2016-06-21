@@ -62,5 +62,5 @@ function average_reading ( in analyze_queue() ) as word
 
     average_reading = _sum / NUM_READINGS
 
-end sub
+end Function
 

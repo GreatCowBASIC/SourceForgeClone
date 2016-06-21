@@ -176,7 +176,7 @@
                   read_LCD_buttons = btnSelect
       end select
 
-  end sub
+  end function
 
   sub InitClock
       InitTimer1 Osc, PS_256

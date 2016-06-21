@@ -158,7 +158,7 @@ function read_LCD_buttons
                 read_LCD_buttons = btnSelect
     end select
 
-end sub
+end function
 
 
 'Setup routine
