@@ -69,7 +69,14 @@ Many times you want to rotate the variable around like the STATUS.C bit wasn’t
 |b'10011011'
 |1
 |===
-Known as SREG bit C, or simply C flag on AVR.
+
+
+Notes:
+The carry is also called SREG bit C, or simply C flag on AVR.
+
+In some cases the Status.C or C flag may already be set because of prior operations in your program.
+Therefore, it may be necessary to clear the C flag before using `Rotate`.
+Use `Set C Off` before using the `Rotate` command to clear the flag.
 
 *Example:*
 ----
@@ -86,6 +93,7 @@ Known as SREG bit C, or simply C flag on AVR.
     PORTB = b'00010001'
 
     'Chase
+    C = 0
     Do
         Rotate PORTB Right Simple
         Wait 250 ms

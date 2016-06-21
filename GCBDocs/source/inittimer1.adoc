@@ -49,28 +49,23 @@ On Microchip PIC microcontrollers `_prescaler_` must be one of the following con
 |===
 |*Prescaler Value*
 |*Primary GCB Constant*
-|*Secondary GCB Constant*
 |*Constant Equates +
 to value*
 
 |1:1
 |`PS1_1`
-|`PS1_1/1`
 |0
 
 |1:2
 |`PS1_2`
-|`PS1_1/2`
 |16
 
 |1:4
 |`PS1_4`
-|`PS1_1/4`
 |32
 
 |1:8
 |`PS1_8`
-|`PS1_1/8`
 |48
 
 |===
@@ -130,86 +125,70 @@ On Atmel AVR ATtiny15/25/45/85/216/461/861 microcontrollers `_prescaler_` must b
 
 The prescaler will only apply when the timer is driven from the `Osc` the internal oscillator - the prescaler has no effect when the external clock source is specified.
 
-[cols="^1,1,1,^1", options="header,autowidth"]
+[cols="^1,1,^1", options="header,autowidth"]
 |===
 |*Prescaler Value*
 |*Primary GCB Constant*
-|*Secondary GCB Constant*
 |*Constant Equates +
 to value*
 |1:1
 |`PS_1_1`
-|`none`
 |1
 
 |1:2
 |`PS_1_2`
-|`none`
 |2
 
 |1:4
 |`PS_1_4`
-|`none`
 |3
 
 |1:8
 |`PS_1_8`
-|`none`
 |4
 
 |1:16
 |`PS_1_16`
-|`none`
 |5
 
 |1:32
 |`PS_1_32`
-|`none`
 |6
 
 |1:64
 |`PS_1_64`
-|`none`
 |7
 
 |1:128
 |`PS_1_128`
-|`none`
 |8
 
 |1:256
 |`PS_1_256`
-|`none`
 |9
 
 |1:512
 |`PS_1_512`
-|`none`
 |10
 
 |1:1024
 |`PS_1_1024`
-|`none`
 |11
 
 |1:2048
 |`PS_1_2048`
-|`none`
 |12
 
 |1:4096
 |`PS_1_4096`
-|`none`
 |13
 
 |1:8192
 |`PS_1_8192`
-|`none`
 |14
 
 |1:16384
 |`PS_1_16384`
-|`none`
 |15
 
 |===
@@ -251,7 +230,7 @@ This example will measure that time that a switch is depressed (or on) and will 
 {empty} +
 *Example 2 (Atmel AVR):*
 
-This example will flash the yellow LED on an Arduino Uno (R3) once every second.  
+This example will flash the yellow LED on an Arduino Uno (R3) once every second.
 
     #Chip mega328p, 16  'Using Arduino Uno R3
 

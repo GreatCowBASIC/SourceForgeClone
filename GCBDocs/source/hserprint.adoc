@@ -3,7 +3,8 @@
 *Syntax:*
 [subs="quotes"]
 ----
-    HSerPrint _user_value_
+    HSerPrint _user_value_ [,1|2|3|4]  'Choose comport with optional parameter
+                                       'Default comport is 11
 ----
 *Command Availability:*
 
@@ -17,7 +18,7 @@ Atmel AVR supports USART 1,2,3 and 4.
 *Explanation:*
 
 `HSerPrint` is used to send a value over the serial connection. `_user_value_`
-can be a string, integers, long, word or byte. `HSerPrint` is very similar
+can be a string, integer, long, word or byte. `HSerPrint` is very similar
 to `Print`. The data will be sent out the hardware serial module.
 
 `HSerPrint` will not send any new line characters. If the chip is sending
@@ -57,8 +58,6 @@ to a terminal, these commands should follow every `HSerPrint` :
 	#define POT_AN AN0
 
 	'Set pin directions
-	Dir SerOutPort Out
-	Dir SerInPort In
 	Dir POT_PORT In
 
 	'Create buffer variables to store received messages
@@ -127,8 +126,6 @@ to a terminal, these commands should follow every `HSerPrint` :
 		End If
 	End Function
 
-	HserPrintByteCRLF
-	HserPrintCRLF
 ----
 *For more help, see also*
 <<_hserprintbytecrlf,HserPrintByteCRLF>>

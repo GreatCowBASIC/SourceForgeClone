@@ -3,7 +3,7 @@
 *About Arrays*
 
 An array is a special type of variable - one which can store several
-values at once. It is essentially a list of numbers in which each one
+values at once. It is essentially a list of byte numbers in which each one
 can be addressed individually through the use of an "index". The index
 is a value in brackets immediately after the name of the array.
 

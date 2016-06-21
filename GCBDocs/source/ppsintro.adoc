@@ -1,0 +1,39 @@
+==== Peripheral Pin Select for Microchip microcontrollers.
+
+*Introduction:*
+
+Peripheral Pin Select (PPS) enables the digital peripheral I/O pins to be changed to support mapping of external pins to different pins.
+
+In older 8-bit Microchip devices, a peripheral was hard-wired to a specific pin (example: PWM1 output on pin RC5).
+
+PPS allows you to choose from a number of output and input pins to connect to the digital peripheral.
+
+This can be extremely useful for routing circuit boards.
+
+There are cases where a change of I/O position can make a circuit board easier to route Sometimes mistakes are found too late to fix so having the option to change a pinout mapping in software rather than creating a new printed circuit board can be very helpful.
+
+You *must* use both commands `UnLockPPS` and `LockPPS` to complete any PPS changes.
+Great Cow BASIC includes these two macros to ensure this process is handled correctly.
+
+Also, see http://microchip.wikidot.com/8bit:pps for more information.
+
+*Example:*
+
+----
+    'Set the PPS of the PWM and the RS232 ports on a 16f18855.
+    'Please check configuration before using on an alternative microcontroller.
+
+    UNLOCKPPS
+        RC0PPS = 0x0010		 		'RC0->EUSART:TX;
+        RXPPS  = 0x0011 		  'RC1->EUSART:RX;
+
+        RC0PPS = 0x0010				'RC0->EUSART:TX;
+        RC3PPS = 0x0017				'RC3->MSSP2:SDA2;
+        SSP2DATPPS = 0x0013		'RC3->MSSP2:SDA2;
+        SSP2CLKPPS = 0x0014		'RC4->MSSP2:SCL2;
+        RC4PPS = 0x0016				'RC4->MSSP2:SCL2;
+    LOCKPPS
+
+----
+
+*For more help, see: <<_unlockpps,UnlockPPS>> and <<_lockpps,LockPPS>>.*

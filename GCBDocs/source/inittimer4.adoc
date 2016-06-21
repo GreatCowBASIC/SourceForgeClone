@@ -45,32 +45,27 @@ Parameters for this timer are detailed in the table below:
 
 `prescaler` can be one of the following settings:
 
-[cols="^1,1,1,^1", options="header,autowidth"]
+[cols="^1,1,^1", options="header,autowidth"]
 |===
 |*Prescaler Value*
 |*Primary GCB Constant*
-|*Secondary GCB Constant*
 |*Constant Equates +
 to value*
 
 |1:1
 |`PS4_1`
-|`PS4_1/1`
 |0
 
 |1:4
 |`PS4_4`
-|`PS4_1/4`
 |1
 
 |1:16
 |`PS4_16`
-|`PS4_1/16`
 |2
 
 |1:64
 |`PS4_64`
-|`PS4_1/64`
 |3
 
 |===
@@ -173,7 +168,7 @@ Parameters for this timer are detailed in the table below:
 {empty} +
 
 
-`prescaler` for Atmel AVR Timer 4 can be selected from the table below.  
+`prescaler` for Atmel AVR Timer 4 can be selected from the table below.
 
 Prescaler Rate Select bits are in the range of 1 to 1024
 
@@ -239,6 +234,6 @@ This code uses Timer 4 and On Interrupt to generate a 1ms pulse 20 ms.
 
     Sub PulsePin3
        pulseout Pin3, 1 ms
-    End Sub    
+    End Sub
 ----
 

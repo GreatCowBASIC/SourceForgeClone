@@ -48,8 +48,13 @@ Example
   Print ReadAD12( AN3, An4 )
 ----
 
-See Also <<_readad, ReadAD>>, <<_readad10, ReadAD10>> and <<_readad12, ReadAD12>>
+*Optimising Great Cow BASIC Code*
 
+Great Cow BASIC supports a wide range of A/D modules and the supporting library addresses up to 34 channels.
+To reduce the size of the code produced you can define which channels are specifically supported.  See <<_analog_digital_conversion_code_optimisation, Optimising ADC code>> for more details.
+
+
+See also <<_readad, ReadAD>>, <<_readad10, ReadAD10>> and <<_readad12, ReadAD12>>
 
 The Microchip PIC microcontrollers that support Differential and 12-bit A/D are listed below. Dated December 2015.
 

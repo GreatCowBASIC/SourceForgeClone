@@ -15,11 +15,9 @@ Great Cow BASIC supports the following methods.
 |*Meaning*
 |Set
 |Assigns a Bit value of On or Off
-|SetWith
-|Evaluates an expression and assigns the result
-|FnEquBit
-|Performs a logical assignment from a Bit or Variable
-|FnNotBit
+|=
+|Performs a logical assignment from a Bit or Variable, set Set
+|= !
 |Performs a logical NOT operation
 |FnLSL
 |Performs a Bitwise LEFT shift
@@ -29,4 +27,4 @@ Great Cow BASIC supports the following methods.
 |Performs a rotation of a variable of one bit in a specified direction
 |===
 
-*For more help, see: <<_set, Set>>, <<_setwith, SetWith>>, <<_fnequbit, FnEquBit>>, <<_fnlsl, FnLSL>>, <<_fnlsr,FnLSR>>, <<_fnnotbit,FnNotBit>>* and *<<_rotate, Rotate>>*
+*For more help, see: <<_set, Set>>, <<_fnlsl, FnLSL>>, <<_fnlsr,FnLSR>> and <<_rotate, Rotate>>*

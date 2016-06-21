@@ -1,16 +1,19 @@
 ==== InitTimer0
 // BillR 021416
 // Reveiwed EvanV 021316
+// Edit EvanV 031216
 
 
 *Syntax:*
 [subs="quotes"]
 ----
-    InitTimer0 _source, prescaler [, postscaler_ ]
+    InitTimer0 source, prescaler
 ----
 *Command Availability:*
 
 Available on all microcontrollers with a Timer 0 module.
+
+See also  see: <<_inittimer0_8bit_16bit,InitTimer0 8bit/16bit>> for support for microcontrollers with a 8 bit/16 bit Timer 0 module.
 
 *Explanation:*
 
@@ -31,12 +34,6 @@ Parameters are required as detailed in the table below:
 |`_prescaler_`
 |The value of the prescaler for this specific timer.  See the tables below for permitted values for Microchip PIC or the Atmel AVR microcontrollers.
 
-|`_postscaler_`
-|This normally optional value is for the postcaler for this specific timer.  See the tables below for permitted values for Microchip. +
-Please refer to the specific datasheet if the timer required a `_postcaler_`.
-
-
-
 |===
 
 When the timer overflows from 255 to 0, a  `Timer0Overflow` interrupt will
@@ -49,66 +46,45 @@ section of code when the overflow occurs.
 
 *Microchip PIC microcontrollers:*
 
-Timer 0 on Microchip PIC 18(L)F, as well as small number of 18C and 16(L)F microcontrollers,
-can be configured for either 8-bit or 16-bit operation. The default operation is as an 8-bit timer.
-Refer to the datasheet for your microcontroller to determine if it supports both 8-bit and 16-bit operation.
-
-To configure PIC Timer 0 for 16_bit operation add the following line to the source code.
-
-----
-    #define TMR0_16bit
-----
-{empty} +
-{empty} +
-
 On Microchip PIC microcontrollers where the `_prescaler_` rate select bits are in the range of 2 to 256  you should use one of the following constants.  If the `_prescaler_` rate select bits are in the range of 1 to 32768 then see the subsequent table.
 
-[cols="^1,1,1,^1", options="header,autowidth"]
+[cols="^1,1,^1", options="header,autowidth"]
 |===
 |*Prescaler Value*
 |*Primary GCB Constant*
-|*Secondary GCB Constant*
 |*Constant Equates +
 to value*
 
 |1:2
 |`PS0_2`
-|`PS0_1/2`
 |0
 
 |1:4
 |`PS0_4`
-|`PS0_1/4`
 |1
 
 |1:8
 |`PS0_8`
-|`PS0_1/8`
 |2
 
 |1:16
 |`PS0_16`
-|`PS0_1/16`
 |3
 
 |1:32
 |`PS0_32`
-|`PS0_1/32`
 |4
 
 |1:64
 |`PS0_64`
-|`PS0_1/64`
 |5
 
 |1:128
 |`PS0_128`
-|`PS0_1/128`
 |6
 
 |1:256
 |`PS0_256`
-|`PS0_1/256`
 |7
 
 
@@ -117,175 +93,6 @@ to value*
 These correspond to a prescaler of between 1:2 and 1:256 of the oscillator
 speed where the oscillator speed is (FOSC/4). The prescaler applies to
 both the internal oscillator or the external clock.
-{empty} +
-{empty} +
-
-On Microchip PIC microcontrollers where the `_prescaler_` rate select bits are in the range of 1 to 32768  you should use one of the following constants.
-
-[cols="^1,1,1,^1", options="header,autowidth"]
-|===
-|*Prescaler Value*
-|*Primary GCB Constant*
-|*Secondary GCB Constant*
-|*Constant Equates +
-to value*
-
-
-|1:1
-|`PS0_1`
-|`PS0_1/1`
-|0
-
-
-|1:2
-|`PS0_2`
-|`PS0_1/2`
-|1
-
-|1:4
-|`PS0_4`
-|`PS0_1/4`
-|2
-
-|1:8
-|`PS0_8`
-|`PS0_1/8`
-|3
-
-|1:16
-|`PS0_16`
-|`PS0_1/16`
-|4
-
-|1:32
-|`PS0_32`
-|`PS0_1/32`
-|5
-
-|1:64
-|`PS0_64`
-|`PS0_1/64`
-|6
-
-|1:128
-|`PS0_128`
-|`PS0_1/128`
-|7
-
-|1:256
-|`PS0_256`
-|`PS0_1/256`
-|8
-
-|1:512
-|`PS0_512`
-|`PS0_1/512`
-|9
-
-|1:1024
-|`PS0_1024`
-|`PS0_1/1024`
-|10
-
-|1:2048
-|`PS0_2048`
-|`PS0_1/2048`
-|11
-
-|1:4096
-|`PS0_4096`
-|`PS0_1/4096`
-|12
-
-|1:8192
-|`PS0_8192`
-|`PS0_1/8192`
-|13
-
-|1:16384
-|`PS0_16384`
-|`PS0_1/16384`
-|14
-
-|1:32768
-|`PS0_32768`
-|`PS0_1/32768`
-|15
-
-|===
-
-These correspond to a prescaler of between 1:1 and 1:32768 of the oscillator
-speed where the oscillator speed is (FOSC/4). The prescaler applies to
-both the internal oscillator or the external clock.
-
-
-{empty} +
-{empty} +
-{empty} +
-{empty} +
-
-On Microchip PIC microcontroller that require `_postscaler_` is can be one of the following constants where the Postscaler Rate Select bits are in the range of 1 to 16.
-
-[cols="^1,^1", options="header,autowidth"]
-|===
-|*Postcaler Value*
-|*Use Numeric Constant*
-
-
-|1:1 Postscaler
-|0
-
-
-|1:2 Postscaler
-|1
-
-|1:3 Postscaler
-|2
-
-|1:4 Postscaler
-|3
-
-|1:5 Postscaler
-|4
-
-
-|1:6 Postscaler
-|5
-
-|1:7 Postscaler
-|6
-
-|1:8 Postscaler
-|7
-
-|1:9 Postscaler
-|8
-
-|1:10 Postscaler
-|9
-
-|1:11 Postscaler
-|10
-
-|1:12 Postscaler
-|11
-
-|1:13 Postscaler
-|12
-
-|1:14 Postscaler
-|13
-
-|1:15 Postscaler
-|14
-
-|1:16 Postscaler
-|15
-
-|===
-
-
-{empty} +
 {empty} +
 {empty} +
 {empty} +

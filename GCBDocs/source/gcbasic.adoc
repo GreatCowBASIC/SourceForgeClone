@@ -83,20 +83,16 @@ include::readad10.adoc[]
 
 include::readad12.adoc[]
 
+include::analogdigitialconversionoptimisation.adoc[]
+
 ifdef::backend-pdf[<<<]
 === Bitwise
 
 include::Bitwiseoperationsoverview.adoc[]
 
-include::FnEquBit.adoc[]
-
-include::FnNotBit.adoc[]
-
 include::FnLsL.adoc[]
 
 include::FnLSR.adoc[]
-
-include::SetWith.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Eeprom
@@ -338,7 +334,11 @@ include::pwmoff.adoc[]
 
 include::pwmon.adoc[]
 
-include::hpwm.adoc[]
+include::hpwmCCP.adoc[]
+
+include::hpwm10Bit.adoc[]
+
+include::hpwmoptimisation.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Random Numbers
@@ -454,6 +454,8 @@ include::i2csend.adoc[]
 
 include::i2cstart.adoc[]
 
+include::i2cstartoccurred.adoc[]
+
 include::i2cstop.adoc[]
 
 ifdef::backend-pdf[<<<]
@@ -506,6 +508,8 @@ include::timeroverview.adoc[]
 include::cleartimer.adoc[]
 
 include::inittimer0.adoc[]
+
+include::inittimer0_16bit.adoc[]
 
 include::inittimer1.adoc[]
 
@@ -652,6 +656,15 @@ include::trigonometry.adoc[]
 include::trigonometryatan.adoc[]
 
 ifdef::backend-pdf[<<<]
+=== Peripheral Pin Select
+
+include::ppsintro.adoc[]
+
+include::UNLOCKPPS.adoc[]
+
+include::lockpps.adoc[]
+
+ifdef::backend-pdf[<<<]
 == Compiler Directives
 
 include::chip.adoc[]
@@ -684,6 +697,8 @@ include::optionbootloader.adoc[]
 include::optionnocontextsave.adoc[]
 
 include::optionnolatch.adoc[]
+
+include::optionvolatile.adoc[]
 
 ifdef::backend-pdf[<<<]
 == Using Assembler
