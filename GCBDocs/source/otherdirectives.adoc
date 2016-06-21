@@ -8,6 +8,15 @@ The built-in `#defines` used to support `#IFDEF` etc are as follows:
 |*Description*
 |*Returns*
 
+|`ChipADC`
+|String
+|The number of A/D inputs on the current chip
+
+|`ChipIO`
+|String
+|The number of general purpose IO pins
+
+
 |`ChipMHz`
 |String
 |The microcontroller clock speed

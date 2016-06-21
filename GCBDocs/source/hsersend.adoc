@@ -3,8 +3,8 @@
 *Syntax:*
 [subs="quotes"]
 ----
-    HSerSend _user_byte_ [,1|2|3|4] 	'choose comport with optional parameter.
-		                                  'default comport is 1
+    HSerSend _user_byte_ [,1|2|3|4] 	'Choose comport with optional parameter
+	                                    'Default comport is 1
 ----
 *Command Availability:*
 

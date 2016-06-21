@@ -43,32 +43,27 @@ This interrupt event can be used in conjunction with `On Interrupt` to run a sec
 
 On Microchip PIC microcontrollers `_prescaler_` must be one of the following constants:
 
-[cols="^1,1,1,^1", options="header,autowidth"]
+[cols="^1,1,^1", options="header,autowidth"]
 |===
 |*Prescaler Value*
 |*Primary GCB Constant*
-|*Secondary GCB Constant*
 |*Constant Equates +
 to value*
 
 |1:1
 |`PS3_1`
-|`PS3_1/1`
 |0
 
 |1:2
 |`PS3_2`
-|`PS3_1/2`
 |16
 
 |1:4
 |`PS3_4`
-|`PS3_1/4`
 |32
 
 |1:8
 |`PS3_8`
-|`PS3_1/8`
 |48
 
 |===

@@ -30,8 +30,8 @@ for Software PWM.
 
 *_Hardware PWM_*
 
-Hardware PWM requires a CCP or CCP1 module on the microcontroller and Software PWM has no requirements regarding a supporting hardware modle within the microcontroller.
-Hardware PWM is only available through the "CCP1" or "CCP" pin. This is
+Hardware PWM requires a CCP, CCP1, CCP2, CCP3 or CCP4 module on the microcontroller and Software PWM has no requirements regarding a supporting hardware modle within the microcontroller.
+Hardware PWM is only available through the "CCP" or "CCPx" pin. This is
 a hardware limitation of Microchip PIC microcontrollers.
 
 These constants are required for PWMOn.
@@ -52,6 +52,8 @@ These constants are required for PWMOn.
 |===
 
 HPWM and PWMOff do not require any constants to operate.
+
+Optimisation of the hardware PWM code can be implemented within Great Cow BASIC, see <<_hardware_pwm_code_optimisation, Hardware PWM Code Optimisation>>
 
 
 *_Software PWM_*

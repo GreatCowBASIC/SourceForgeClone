@@ -55,3 +55,28 @@ type `LightOn`, and have the compiler do the hard work.
     #define MOD %
     #define forever 0
 ----
+
+**Precedence of Constants within Great Cow BASIC.**
+{empty} +
+{empty} +
+The `#define` command creates constants, and, a script can creates constants.
+{empty} +
+{empty} +
+The precedence is as follows:
+{empty} +
+{empty} +
+`#define` in the main program are read first,
+{empty} +
+{empty} +
+then, the `#define` in the include files. Constants defined in the include files will be ignored if they conflict or are different to another constant in the main program,
+{empty} +
+{empty} +
+then, the scripts are processed. Scripts that create constants always override any constant value previously defined.
+{empty} +
+{empty} +
+Scripts are highest priority, then constants in the main program, then constants in include files from the main program, then constants in the standard libraries.
+{empty} +
+{empty} +
+
+
+See *<<__define,#define>>*

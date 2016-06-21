@@ -4,7 +4,7 @@
 [subs="quotes"]
 For a normal ( also called a Single Channel )  read use.
 ----
-    var = ReadAD_port_)
+    var = ReadAD_port( ANX )
 ----
 For a Differential Channel read use the following. Where ANpX is the positive port, and ANnY is the negative port.
 ----

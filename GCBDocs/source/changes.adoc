@@ -1,5 +1,5 @@
 == Changes
-*Formal Release of GBASIC.EXE 0.95.006*
+*Formal Release of GBASIC.EXE 0.95.007*
 
 {empty} +
 [cols="^1,^1", options="header",width="60%"]
@@ -20,28 +20,38 @@
 
 Updates to User Help is as follows:
 
+*Release 0.95.007*::
+- Added new capabilities to support 16F1885x range of Microcontrollers.
+- New PMW commands - support for hardware PWM
+- New Initimer0 option to support 8bit and 16bit timer modules.
+- New constants available ChipADC and ChipIO.
+- New commands to support PPS.  LOCKPPS and UNLOCKPPS.
+- Added I2CStartoccurred command. Missing from Help.
+- Additional information for Scripts.
+- General removal of typos in Help files.
+- Updated FnLSL section removing error.
+- Removal of SetWith, FnEQUBit and FnNOTBit should now be replaced by built-in compiler operations.
+  Bits are now correctly handled by built-in Not operator.
+- New command #option volatile.  Sensitive pins can be marked as volatile, and native assignment operators will set without glitching, replacing SetWith.
+- Added new sections on ADC and PWM code optimisation
+
 *Release 0.95.006*::
 - Completed rewrite of the Help File. +
- New Help File in PDF. +
- New Help File in XML. +
- New Help File in HTML5. +
- New Help File in HTML for Web.
-
+- New Help File in PDF. +
+- New Help File in XML. +
+- New Help File in HTML5. +
+- New Help File in HTML for Web.
 - Revised Linux section
 - Revised SPIMode section
 
-
 *Release 0.95.005a*::
 - Revised RS232 Hardware section to improve readability
-
 
 *Release 0.95.005*::
 - Added LeftPad
 
 *Release 0.95.004*::
 - Updated HSerial commands to support AVR 1, 2, 3 and 4.
-
-
 
 *Release 0.95*::
 - Added weak pullup command set

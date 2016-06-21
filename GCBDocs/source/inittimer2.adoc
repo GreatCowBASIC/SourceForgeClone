@@ -46,32 +46,27 @@ Parameters for this timer are detailed in the table below:
 
 `prescaler` can be one of the following settings:
 
-[cols="^1,1,1,^1", options="header,autowidth"]
+[cols="^1,1,^1", options="header,autowidth"]
 |===
 |*Prescaler Value*
 |*Primary GCB Constant*
-|*Secondary GCB Constant*
 |*Constant Equates +
 to value*
 
 |1:1
 |`PS2_1`
-|`PS2_1/1`
 |0
 
 |1:4
 |`PS2_4`
-|`PS2_1/4`
 |1
 
 |1:16
 |`PS2_16`
-|`PS2_1/16`
 |2
 
 |1:64
 |`PS2_64`
-|`PS2_1/64`
 |3
 
 |===

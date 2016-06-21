@@ -1,5 +1,5 @@
 === Scripts
-
+// Edit EvanV 031216
 *About Scripts*
 
 A script is a small section of code that Great Cow BASIC runs when it
@@ -55,6 +55,9 @@ The returned value could be incorrect if simplification is not implemented.
 Scripts can only access existing `constants` both user and system defined.
 
 User defines variables are not accessible within the scope of a script.
+
+Scripts has precendence over #define.  A #define constant statements are read first, then scripts run.
+So, a script will always overwrite a constant that was set with #define.
 
 Use `Warning` to display constants values when creating and debugging scripts.
 

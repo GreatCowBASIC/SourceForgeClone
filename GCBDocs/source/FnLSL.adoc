@@ -20,9 +20,9 @@ Available on all microcontrollers.
     BitsOut = BitsIn << NumBits
 ----
 
-Each left shift is the equivalent of Multiplying BitsIn by 2.
+Each left shift is the equivalent of multiplying BitsIn by 2.
 BitsIn and NumBits may be may be a variable and of  type: Bit, Byte, Word, Long, Constant or another Function.
-Zeros are shifted in from the left, Bits that are shifted out are lost.
+Zeros are shifted in from the right, Bits that are shifted out are lost.
 
 It is useful for mathematical and logical operations, as well as creating serial data streams or manipulating I/O ports.
 
