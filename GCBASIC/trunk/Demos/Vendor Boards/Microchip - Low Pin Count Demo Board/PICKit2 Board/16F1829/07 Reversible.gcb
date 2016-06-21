@@ -157,4 +157,5 @@ function  check_switch
         exit function
     end if
 
-end sub
+end Function
+

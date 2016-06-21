@@ -1,13 +1,13 @@
   '''A demonstration program for GCGB and GCB.
   '''--------------------------------------------------------------------------------------------------------------------------------
-  '''This program demostrates use of the Logical Shift Right macro command.
+  '''This program demostrates use of the Logical Shift Left (FnLsl) command.
   '''A set eigth LEDs are connected to PortC via eigth suitable resistors, 1k resistors should be adequate for a 5v supply voltage.
-  '''This demonstration shifts the LED to the right which turns on each LED in sequence.
+  '''This demonstration shifts the LED to the left which turns on each LED in sequence.
   '''For the LED and Switch connection please see the program below.
   '''@author 	ChrisR and EvanV
   '''@licence	GPL
-  '''@version	1.00
-  '''@date   	26.09.2015
+  '''@version	1.01
+  '''@date   	22.02.2016
   '''********************************************************************************
 
   ; ----- Configuration
@@ -19,7 +19,6 @@
   ; ----- Define Hardware settings
   Dir PortC Out
 
-
   ; ----- Variables
     ' No Variables specified in this example. All byte variables are defined upon use.
 
@@ -27,17 +26,16 @@
   'See header for details
 
 
-
   ; ----- Main body of program commences here.
 
   Set C ON
   Do
 
-    PortC.7 = 1
+    PortC.0 = 1
     Repeat 8
 
       wait 500 ms
-      lsrBit (PortC, PortC, 1)
+      PortC = FnLsl( PortC, 1 )
 
     End Repeat
 
@@ -46,9 +44,4 @@
   end
 
   ; ----- Support methods.  Subroutines and Functions
-
-
-
-
-
 

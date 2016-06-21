@@ -148,7 +148,7 @@
       PrintFloat = PrintFloat + "."
       PrintFloat = PrintFloat + Right(tempstr,2)
 
-    end Sub
+    end function
 	#endif
 
 

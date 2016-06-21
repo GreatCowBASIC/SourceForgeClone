@@ -6,7 +6,7 @@
 '''
 '''@author 	Immo,DL5KB&EvanV
 '''@licence	GPL
-'''@version	1.0b
+'''@version	1.0c
 '''@date   	Dec 2015
 ''' *****************************************
 ''' Program: Reads a rotary encoder ALPS EC11
@@ -95,7 +95,7 @@
   CLS
   Print "@Dec 2015"
   Locate 1,0
-  PRINT "Immo's&Ano Code""
+  PRINT "Immo's&Ano Code"
   wait 2 s
 	CLS
 

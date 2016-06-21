@@ -1,6 +1,6 @@
   '''A demonstration program for GCGB and GCB.
   '''--------------------------------------------------------------------------------------------------------------------------------
-  '''This program demostrates use of the LSL, LSR and ISNOT macro command set.
+  '''This program demostrates use of the FnLsl and FnLsr command set.
   '''A set eigth LEDs are connected to PortC via eigth suitable resistors, 1k resistors should be adequate for a 5v supply voltage.
   '''A switch is pulled high (to the supply voltage) which is then connected to the microchip.
   '''For the LED and Switch connection please see the program below.
@@ -9,8 +9,8 @@
   ''':
   '''@author 	ChrisR and EvanV
   '''@licence	GPL
-  '''@version	1.00
-  '''@date   	26.09.2015
+  '''@version	1.01
+  '''@date   	22.02.2016
   '''********************************************************************************
 
   ; ----- Configuration
@@ -40,13 +40,13 @@
 
     if LEDDirection then
         ' Rotate left
-        lslBit (LEDs, LEDs, 1)  ' LEDs = LEDs << 1
+        LEDs = FnLsl ( LEDs , 1 )  ' LEDs = LEDs << 1
         if LEDs.4 then
            LEDs = 1
         end if
     else
         ' Rotate right
-        lsrBit (LEDs, LEDs, 1)  ' LEDs = LEDs >> 1
+        LEDs = FnLsr ( LEDs , 1 )  ' LEDs = LEDs >> 1
         if LEDs = 0 then
            LEDs.3 = 1
         end if

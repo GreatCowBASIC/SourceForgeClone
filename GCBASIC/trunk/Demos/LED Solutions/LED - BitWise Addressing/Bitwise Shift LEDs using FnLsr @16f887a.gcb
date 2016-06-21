@@ -1,27 +1,23 @@
   '''A demonstration program for GCGB and GCB.
   '''--------------------------------------------------------------------------------------------------------------------------------
-  '''This program demostrates use of the ISNOT macro command set.  This demonstration will flash the attached LED.
-  '''An LED isconnected to PortA.0 via A suitable resistor, 1k resistors should be adequate for a 5v supply voltage.
-  '''For the LED connection please see the program below.
-  ''':
-  '''This demonstration toggles the LEDs by use of the NOT operation of the LED current status.
-  '''
+  '''This program demostrates use of the Logical Shift Right (FnLsr) command.
+  '''A set eigth LEDs are connected to PortC via eigth suitable resistors, 1k resistors should be adequate for a 5v supply voltage.
+  '''This demonstration shifts the LED to the right which turns on each LED in sequence.
+  '''For the LED and Switch connection please see the program below.
   '''@author 	ChrisR and EvanV
   '''@licence	GPL
-  '''@version	1.00
-  '''@date   	26.09.2015
+  '''@version	1.01
+  '''@date   	22.02.2016
   '''********************************************************************************
 
   ; ----- Configuration
   #chip 16f877a, 4
 
-
   ; ----- Constants
-  #define LED PortA.0
-
+    ' No Constants specified in this example.
 
   ; ----- Define Hardware settings
-  dir LED out
+  Dir PortC Out
 
 
   ; ----- Variables
@@ -30,15 +26,29 @@
   ; ----- Quick Command Reference:
   'See header for details
 
+
+
   ; ----- Main body of program commences here.
 
+  Set C ON
   Do
-    isNotBit(LED, LED)  ' LED != LED
-    wait 500 ms
+
+    PortC.7 = 1
+    Repeat 8
+
+      wait 500 ms
+      PortC = FnLsr( PortC, 1 )
+
+    End Repeat
+
   Loop
 
   end
 
   ; ----- Support methods.  Subroutines and Functions
+
+
+
+
 
 

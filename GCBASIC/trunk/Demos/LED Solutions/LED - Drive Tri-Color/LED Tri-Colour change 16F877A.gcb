@@ -88,5 +88,6 @@ function Smooth(temp)
    if temp >= 100 then
       Smooth = 200-temp
    end if
-end sub
+end function
+
 
