@@ -636,7 +636,7 @@ macro LLReadAD (ADLeftAdjust)
      '***  'Special section for 16F1688x Chips ***
      #IFDEF Var(ADCON3)  ' then must be 16F1688x
 
-'       'Configure ANSELA/B/C/D for 16F1885x
+'       'Configure ANSELA/B/C/D for 16F188x
         Select Case ADReadPort
 
             #ifdef USE_ADA0 TRUE
