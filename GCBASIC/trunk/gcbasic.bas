@@ -112,7 +112,7 @@ Type SubType
 	Name As String
 	SourceFile As Integer
 	Origin As String
-	
+
 	IsMacro As Integer
 	IsFunction As Integer
 	ReturnType As String
@@ -135,10 +135,10 @@ Type SubType
 
 	'Call tree
 	CallList As LinkedListElement Pointer
-	
-	'Assembly bit variable used to save IntOn/IntOff state 
+
+	'Assembly bit variable used to save IntOn/IntOff state
 	IntStateSaveVar As String
-	
+
 	'Original BASIC size (for compilation report)
 	OriginalLOC As Integer
 
@@ -199,7 +199,7 @@ Type AsmCommand
 	Cmd As String
 	Params As Integer
 	Param(25) As String
-	
+
 	Alternative As AsmCommand Pointer 'Need this to allow for multiple commands with same name
 End Type
 
@@ -616,7 +616,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-06-01"
+Version = "0.95 2016-06-26"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -789,7 +789,7 @@ SUB Add18FBanks(CompSub As SubType Pointer)
 			IF INSTR(TempData, "F") <> 0 THEN
 				IF INSTR(VarName, ",") <> 0 THEN VarName = Left(VarName, INSTR(VarName, ",") - 1)
 				VarName = Trim(VarName)
-				
+
 				'Check if the variable being accessed is a SFR, and add banking mode
 				If IsInAccessBank(VarName) Then
 					CurrLine->Value = CurrLine->Value + ",ACCESS"
@@ -864,13 +864,13 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 			OtherData = UCase(Trim(TempData))
 			IF INSTR(OtherData, " ") <> 0 THEN OtherData = Left(OtherData, INSTR(OtherData, " ") - 1)
 			IF INSTR(OtherData, "F") <> 0 And WholeINSTR(TempData, "lfsr") <> 2 And WholeINSTR(TempData, "movff") <> 2 Then
-				
+
 				'Split line into tokens
 				GetTokens(TempData, LineToken(), LineTokens)
 				For CurrToken = 1 To LineTokens
 					'Check for SFRs outside of Bank 0
 					FoundSFR = GetSysVar(UCase(LineToken(CurrToken)))
-					
+
 					If FoundSFR <> 0 Then
 						'Found an SFR
 
@@ -901,7 +901,7 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 						End If
 						GoTo RequiredBankFound
 					End If
-					
+
 					'Check for user vars outside of bank 0
 					FoundFinalVar = HashMapGet(FinalVarList, UCase(LineToken(CurrToken)))
 					IF FoundFinalVar <> 0 Then
@@ -915,7 +915,7 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 						End With
 					End If
 				Next
-				
+
 				RequiredBankFound:
 			End If
 		End If
@@ -1415,7 +1415,7 @@ Sub AddMainInitCode
 			CurrLine = LinkedListInsert(CurrLine, " ei")
 
 		End If
-		
+
 		'Ensure interrupts stay on - need int state save set when interrupts enabled in main
 		If Subroutine(0)->IntStateSaveVar <> "" Then
 			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("1", Subroutine(0)->IntStateSaveVar, "S0"))
@@ -1664,7 +1664,7 @@ Sub AddInterruptCode
 			SubStart = .CodeStart
 		End With
 		CurrLine = SubStart
-		
+
 		'Add context save code
 		If AutoContextSave Then
 			AddVar "SysW", "BYTE", 1, 0, "REAL", "", , -1
@@ -1774,7 +1774,7 @@ Sub AddInterruptCode
 	ElseIf ModeAVR Then
 		'On AVR, need to add subs for context save/restore, and set up vectors to
 		'call correct handlers
-		
+
 		If AutoContextSave Then
 			'Add variables
 			AddVar("SaveSysValueCopy", "BYTE", 1, 0, "REAL", "", , -1)
@@ -1931,7 +1931,7 @@ Sub AddSysVarBits (CompSub As SubType Pointer)
 		IF Left(TempData, 11) = "WAIT UNTIL " THEN T = 1
 		IF Left(TempData, 11) = "WAIT WHILE " THEN T = 1
 		IF T = 0 THEN GOTO AddNextLineBits
-		
+
 		LineElements = GetElements(TempData, , -1)
 		LineChanged = 0
 		CurrElement = LineElements->Next
@@ -1946,10 +1946,10 @@ Sub AddSysVarBits (CompSub As SubType Pointer)
 					End If
 				End If
 			End If
-			
+
 			CurrElement = CurrElement->Next
 		Loop
-		
+
 		If LineChanged Then
 			CurrLine->Value = ""
 			CurrElement = LineElements->Next
@@ -1958,7 +1958,7 @@ Sub AddSysVarBits (CompSub As SubType Pointer)
 				CurrElement = CurrElement->Next
 			Loop
 		End If
-		
+
 		AddNextLineBits:
 		CurrLine = CurrLine->Next
 	Loop
@@ -2332,7 +2332,7 @@ SearchForOpAgain:
 			Exit For
 		End If
 	Next
-	
+
 	'Check syntax
 	CalcIsBad = 0
 	If V1 = "" And Not UnaryMode Then
@@ -2370,7 +2370,7 @@ SearchForOpAgain:
 	TypeAV = TypeOfValue(AV, Subroutine(GetDestSub(Origin)))
 	CalcType = GetCalcType(TypeV1, Act, TypeV2, TypeAV)
 	'Print V1, Act, V2, CalcType, AV, Origin
-	
+
 	'Decide output variable
 	If CalcStart = 1 And CalcEnd = LEN(SUM) And AV <> "" And (Not NeverLast) Then
 		AnswerIn = AV
@@ -2449,7 +2449,7 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Asm
 	Dim As Integer RestorePage, NextCalledSub, NextCalledSubPage
 	Dim As SubType Pointer GotoSub
 	Dim As AsmCommand Pointer InstIndex
-	
+
 	Dim As String ROMData, Temp
 	Dim As Integer DataBlockSize, RSC, DWIC, SS
 
@@ -2589,7 +2589,7 @@ Sub CalcSubSize(CurrSub As SubType Pointer)
 	Dim As LinkedListElement Pointer CurrLine, NextLine
 	Dim As String NextLineValue
 	Dim As AsmCommand Pointer CallPos, GotoPos, RetPos
-	
+
 	'Get the position of call instruction, saves work later
 	CallPos = IsASM("call")
 
@@ -2802,8 +2802,8 @@ Sub CompileProgram
 
 	'Add context save/restore and int handlers to Interrupt
 	AddInterruptCode
-	
-	
+
+
 	'Compile IntOn/IntOff
 	'(Need to compile here, after all On Interrupt commands in all subs have been found, but before AddMainInitCode)
 	For CurrSub = 0 To SBC
@@ -2819,15 +2819,15 @@ Sub CompileProgram
 	If ChipFamily = 12 Then
 		FixSinglePinSet
 	End If
-	
+
 End Sub
 
 Sub CompileSubroutine(CompSub As SubType Pointer)
-	
+
 	If VBS = 1 Then
 		Print Spc(10); CompSub->Name
 	End If
-	
+
 	'Split any lines at : (these may be inserted through constants)
 	SplitLines (CompSub)
 	'Compile calls to other subroutines, insert macros
@@ -2892,7 +2892,7 @@ Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As
 			IF Mid(TempData, T, 1) = ")" THEN BL = BL - 1
 			IF BL = 0 THEN TempData = Left(TempData, T): EXIT FOR
 		Next
-		
+
 		'Detect if whole sum is in brackets, remove brackets and try again if so
 		If Len(TempData) = Len(SUM) Then
 			SUM = Mid(Sum, 2, Len(Sum) - 2)
@@ -2916,7 +2916,7 @@ Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As
 	CalcOps OutList, SUM, AV, "+-", Origin
 	CalcOps OutList, SUM, AV, "=~<>{}", Origin
 	CalcOps OutList, SUM, AV, "&|!#", Origin
-	
+
 	'Re-add asm calculations
 	FindLine = OutList->CodeList
 	Do While FindLine <> 0
@@ -3837,11 +3837,11 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 		Replace Temp, "%type%", V2Type
 		LogError Temp, Origin
 	End If
-	
+
 	'Get output var
 	AV = Answer
 	OldCalcType = CalcType
-	
+
 	'Deal with bit variable input
 	'Convert bit vars to byte
 	If V2Type = "BIT" And Not IsConst(V2) Then
@@ -3866,7 +3866,7 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 			End If
 		End If
 	End If
-	
+
 	'If V2 is constant, produce constant result
 	If IsConst(V2) And InStr(V2, "@") = 0 Then
 		IF Act = "!" THEN
@@ -4653,7 +4653,7 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				InLine = NewVarList(CV)
 				'Get size
 				Si = 1
-				
+
 				'added error handling for arrays and processing of arrays using constant
 				IF INSTR(InLine, "(") <> 0 Then
 					If CountOccur( InLine, "(" ) <> CountOccur( InLine, ")" ) Then
@@ -4673,18 +4673,18 @@ Sub CompileDim (CurrSub As SubType Pointer)
 
 					InLine = Trim(Left(InLine, INSTR(InLine, "(") - 1))
 				End If
-				
+
 				'Check variable name
 				If IsConst(VarName) THEN
 					Temp = Message("BadVarName")
 					If Left(VarName, 7) = ";STRING" Then
 						Replace Temp, "%var%", Chr(34) + GetString(VarName, 0) + Chr(34)
 					Else
-						Replace Temp, "%var%", VarName						
+						Replace Temp, "%var%", VarName
 					End If
 					LogError Temp, Origin
 				END If
-				
+
 				'Add var
 				If IsAlias Then
 					AddVar(InLine, VarType, Si, CurrSub, "ALIAS:" + VarAlias, Origin, , -1)
@@ -5530,7 +5530,7 @@ Sub CompileIntOnOff (CompSub As SubType Pointer)
 	Dim As String LineTemp, TempData, Origin
 	Dim NewCode(10) As String
 	Dim As LinkedListElement Pointer CurrLine
-	
+
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
 		LineTemp = CurrLine->Value
@@ -5541,16 +5541,16 @@ Sub CompileIntOnOff (CompSub As SubType Pointer)
 				LineTemp = RTRIM(LEFT(LineTemp, INSTR(LineTemp, ";?F") - 1))
 			END IF
 			If LineTemp <> "INTON" And LineTemp <> "INTOFF" Then Continue Do
-			
+
 			If SysInt Or UserInt Then
-				
+
 				'Get status save variable to use (if not already found)
 				If CompSub->IntStateSaveVar = "" Then
 					CompSub->IntStateSaveVar = "SYSINTSTATESAVE" + Str(IntOnOffCount \ 8) + "." + Str(IntOnOffCount Mod 8)
 					IntOnOffCount += 1
-					
+
 				End If
-				
+
 				CurrLine = LinkedListDelete(CurrLine)
 
 				If ModePIC Then
@@ -5697,7 +5697,7 @@ SUB CompileOn (CompSub As SubType Pointer)
 								FlagBit = GetWholeSFR(.FlagBit)
 								Replace EnableBit, ".", ","
 								Replace FlagBit, ".", ","
-								
+
 								CurrLine->Value = "SET " + GetWholeSFR(.EnableBit) + " 1"
 								If .Handler = "" Then
 									If .FlagBit = "" Then
@@ -6397,7 +6397,7 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
 	'Find subroutine that contains array
 	CurrSubID = GetSubID(Origin)
 	CurrSub = Subroutine(CurrSubID)
-	
+
 	'Disable interrupt
 	'CurrLine = LinkedListInsert(CurrLine, "INTOFF")
 
@@ -6597,7 +6597,7 @@ SUB CompileSelect (CompSub As SubType Pointer)
 					IF Condition <> "ELSE" THEN
 						IF CountOccur(Condition, "';=~<>{}") = 0 THEN Condition = "=" + Condition
 						Condition = SelectValue + Condition
-						
+
 						NewCode = CompileConditions(Condition, "FALSE", Origin, CompSub)
 						FindCase = LinkedListInsertList(FindCase, NewCode)
 						If ModePIC Then
@@ -6658,7 +6658,7 @@ SUB CompileSet (CompSub As SubType Pointer)
 
 			'Delete line from program, will add asm later
 			CurrLine = LinkedListDelete(CurrLine)
-			
+
 			'Do we have a bit by itself?
 			If Tokens = 3 Then
 				VarName = GetWholeSFR(Token(2))
@@ -6670,7 +6670,7 @@ SUB CompileSet (CompSub As SubType Pointer)
 					Token(3) = Mid(VarName, InStr(VarName, ".") + 1)
 				End If
 			End If
-			
+
 			'Get var/port and bit
 			If Tokens = 4 Then
 				VarName = Token(2)
@@ -6755,7 +6755,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 				End If
 				'Insert line (or lines, divided by :)
 				If TempData <> "" Then
-					
+
 					Do While InStr(TempData, ":") <> 0
 						NextLine = Trim(Mid(TempData, InStr(TempData, ":") + 1))
 						'If line is label, : should be last character
@@ -6764,7 +6764,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 							TempData = NextLine
 						End If
 					Loop
-					
+
 					'Append insertion origin
 					If TempData <> "" Then
 						CurrPos = LinkedListInsert(CurrPos, TempData + MacroLineOrigin)
@@ -6812,7 +6812,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					.Param(CD, 1) = ReplaceConstantsLine(.Param(CD, 1), 0)
 					.Param(CD, 2) = TypeOfValue(.Param(CD, 1), Subroutine(GetSubID(.Origin)))
 				End If
-				
+
 				'Decide how to pass parameter
 				'C = 0: Copy variable
 				'C = 1: Copy constant value
@@ -6846,7 +6846,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					LogError Temp, .Origin
 					C = -1
 				End If
-				
+
 				'Pass by copying
 				If C = 0 OR C = 1 OR C = 2 THEN
 					'Calculate new origins
@@ -7022,7 +7022,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
 				CompileNextParam:
 			Next
-			
+
 			'Mark sub as required
 			.Called->Required = -1
 			'Mark file sub came from as used
@@ -7059,7 +7059,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 	CurrLine = CompSub->CodeStart->Next
 	Origin = ""
 	Do While CurrLine <> 0
-		
+
 		'Check if startup sub is needed for the line because of a constant
 		DO WHILE INSTR(UCase(CurrLine->Value), ";STARTUP") <> 0
 			Temp = VAL(Mid(CurrLine->Value, INSTR(UCase(CurrLine->Value), ";STARTUP") + 8))
@@ -7072,7 +7072,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		For PD = 1 to 10
 			TempVarCount(PD) = 0
 		Next
-		
+
 		FindFunctionsAgain:
 		TempLine = CurrLine->Value
 		NewOrigin = ""
@@ -7185,7 +7185,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 						FunctionParams = Trim(AfterFn) + ")"
 						AfterFn = ""
 					End If
-					
+
 				Else
 					'Macro/Sub, parameters take up the rest of the line, brackets optional
 					FunctionParams = Trim(AfterFn)
@@ -7282,7 +7282,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		NextLineFunctions:
 		CurrLine = CurrLine->Next
 	Loop
-	
+
 	'Deal with any missed names
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
@@ -7296,7 +7296,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		End If
 		CurrLine = CurrLine->Next
 	Loop
-	
+
 End Sub
 
 Sub CompileTables
@@ -7622,7 +7622,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 	Source = SourceIn
 	CurrentSub = GetSubID(Origin)
 	IF INSTR(Origin, "D") <> 0 Then DestSub = GetDestSub(Origin) Else DestSub = CurrentSub
-	
+
 	'Get types
 	If Instr(Source, "[") <> 0 And InStr(Source, "]") <> 0 Then
 		'Remove cast from source name
@@ -7636,7 +7636,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 		SCastType = UCase(Left(SCastType, InStr(SCastType, "]") - 1))
 		If IsConst(Source) Then
 			SType = "CONST"
-			
+
 		Else
 			'Do not allow cast to increase source type - this causes problems
 			SType = TypeOfVar(Source, Subroutine(CurrentSub))
@@ -7678,12 +7678,12 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 	If Source = Dest Then
 		Return OutList
 	End If
-	
+
 	DestReg = IsRegister(Dest)
 	DestIO = IsIOReg(Dest)
 	SourceReg = IsRegister(Source)
 	SourceIO = IsIOReg(Source)
-	
+
 	'Record reads and writes (for auto pin direction setting)
 	If DType = "BIT" Or DType = "BYTE" Then
 		'If writing to a pin/port, record it
@@ -7865,7 +7865,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 	Case "BIT":
 		DestTemp = FixBit(Dest, Origin)
 		If InStr(DestTemp, ".") <> 0 Then Replace DestTemp, ".", ","
-		
+
 		'Split dest into var and bit, get source
 		Dim As String DestVarName, DestVarBit
 		If InStr(DestTemp, ",") <> 0 Then
@@ -7874,7 +7874,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 		Else
 			Print "Internal error in CompileVarSet bit > bit: " + DestTemp
 		End If
-		
+
 		'Glitch free output needed?
 		DestVarBitNo = -1
 		If IsConst(DestVarBit) Then
@@ -7889,14 +7889,14 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 		If DestVarBitNo <> -1 Then
 			RequiresGlitchFree = HashMapGet(GlitchFreeOutputs, DestVarName + "." + Str(DestVarBitNo)) <> 0
 		End If
-		
+
 		'Redirect PORTx writes to LATx
 		If UseChipOutLatches And Left(DestTemp, 4) = "PORT" And Mid(DestTemp, 6, 1) = "," Then
 			If HasSFR(DestVarName) Then
 				DestTemp = "LAT" + Right(DestVarName, 1) + Mid(DestTemp, InStr(DestTemp, ","))
 			End If
 		End If
-		
+
 		'Record setting of individual OPTION_REG bits (PIC12x5/16x5)
 		If ChipFamily = 12 Then
 			If DestVarName = "OPTION_REG" And Not HasSFR(DestVarName) Then
@@ -7913,7 +7913,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 		IF INSTR(DestTemp, ",") <> 0 Then
 			AddVar DestVarName, "BYTE", 1, 0, "REAL", Origin
 		End If
-		
+
 		Select Case SType
 		'bit > bit
 			Case "BIT":
@@ -7922,7 +7922,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 				Temp = Left(SourceTemp, InStr(SourceTemp, ".") - 1)
 				AddVar Temp, "BYTE", 1, 0, "REAL", Origin
 			End If
-			
+
 			If ModePIC Then
 				If INSTR(SourceTemp, ".") <> 0 Then Replace SourceTemp, ".", ","
 				If RequiresGlitchFree Then
@@ -8518,7 +8518,7 @@ SUB CompileVars (CompSub As SubType Pointer)
 						END If
 					End If
 				End If
-				
+
 				'Write the assembly code
 				If NewCode->Next <> 0 Then
 					CurrLine = LinkedListDelete(CurrLine)
@@ -8869,7 +8869,7 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String) As Intege
 		If InStr(Config, "IRCIO67") <> 0 Then Return -1
 		If InStr(Config, "IRC") <> 0 Then Return -1
 		If InStr(Config, "HFINT32") <> 0 Then Return -1
-		
+
 	End If
 
 	'No match found
@@ -8979,7 +8979,7 @@ Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Ori
 			Replace InLineCopy, Temp, Temp + "("
 			InLineCopy = InLineCopy + ")"
 		END If
-		
+
 		'Get sub name
 		SubName = Left(InLineCopy, INSTR(InLineCopy, "(") - 1)
 
@@ -9055,7 +9055,7 @@ Sub FindAssembly (CompSub As SubType Pointer)
 	Dim As Integer PD
 	Dim As LinkedListElement Pointer CurrLine
 	Dim As AsmCommand Pointer CallPos, RCallPos, ThisCmdPos
-	
+
 	CallPos = IsASM("call")
 	RCallPos = IsASM("rcall")
 
@@ -9236,11 +9236,11 @@ Function FixBit (InBit As String, Origin As String) As String
 	Dim As String DivChar, VarName, VarType, VarBit, Temp
 	Dim As Integer B
 	Dim As VariableType Pointer FoundUserVar
-	
+
 	'Get dividing character
 	DivChar = "."
 	IF INSTR(InBit, ".") = 0 AND INSTR(InBit, ",") <> 0 Then DivChar = ","
-	
+
 	'Deal with bit variables (which are all stored in main)
 	If InStr(InBit, DivChar) = 0 Then
 		FoundUserVar = HashMapGet(@(Subroutine(0)->Variables), InBit)
@@ -9248,7 +9248,7 @@ Function FixBit (InBit As String, Origin As String) As String
 			InBit = UCASE(FoundUserVar->BitVarLocation)
 		End If
 	End If
-	
+
 	'Exit if not a bit
 	IF INSTR(InBit, DivChar) = 0 Then Return Inbit
 
@@ -9389,7 +9389,7 @@ Sub FixSinglePinSet
 	'Need to cache W into TRISIO before tris
 	'Also need to copy TRISIO into tris after bcf/bsf on TRISIO
 	'Need to operate on every subroutine
-	
+
 	'Also need to fix OPTION in the same way
 
 	Dim As Integer CurrSub, NextSamePort, SearchPos, FoundPos, AddedShadows
@@ -9442,10 +9442,10 @@ Sub FixSinglePinSet
 							'Add caching instructions
 							AddVar("TRIS" + TrisPort, "BYTE", 1, 0, "REAL", "", , -1)
 						End If
-						
+
 					'Find option
 					ElseIf Trim(CurrLine->Value) = "option" Then
-						
+
 						'Check if shadow needed
 						FoundPos = -1
 						For SearchPos = 1 To PinDirShadows
@@ -9480,7 +9480,7 @@ Sub FixSinglePinSet
 								End If
 							End If
 						Loop While NextSamePort
-						
+
 						'Add caching instructions
 						AddVar("OPTION_REG", "BYTE", 1, 0, "REAL", "", , -1)
 						CurrLine = LinkedListInsert(CurrLine, " movf OPTION_REG,W")
@@ -9934,7 +9934,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 				VarName = "LAT" + Right(VarName, 1)
 			End If
 		End If
-		
+
 		'Record individual setting of OPTION bits
 		If ChipFamily = 12 Then
 			If VarName = "OPTION_REG" And Not HasSFR(VarName) Then
@@ -10200,17 +10200,17 @@ Function GetCalcType(VT1 As String, Act As String, VT2 As String, AnswerType As 
 	If Act = ">" Then Return "BYTE"
 	If Act = "{" Then Return "BYTE"
 	If Act = "}" Then Return "BYTE"
-	
+
 	'Negate returns at least an integer
 	If Act = "-" And VT1 = "" And CastOrder(VT2) < CastOrder("INTEGER") Then Return "INTEGER"
-	
+
 	'Multiply, divide and remainder operations return highest of two operands
 	'Also return highest of two input types if no answer type
 	If Act = "*" Or Act = "/" Or Act = "%" Or AnswerType = "" Then
 		If CastOrder(VT1) > CastOrder(VT2) Then Return VT1
 		Return VT2
 	End If
-	
+
 	'Other operations return answer type if known
 	Return AnswerType
 End Function
@@ -10723,7 +10723,7 @@ End Function
 Function GetSysVar(VarName As String) As SysVarType Pointer
 	'Look up system variable in hash map
 	Return CPtr(SysVarType Pointer, HashMapGet(SysVars, VarName))
-	
+
 End Function
 
 Function GetSub(Origin As String) As String
@@ -11391,7 +11391,7 @@ Function IsArray (VarNameIn As String, CurrSub As SubType Pointer) As Integer
 	If Right(VarName, 2) = "()" Then
 		VarName = RTrim(Left(VarName, Len(VarName) - 2))
 	End If
-	
+
 	'Array var?
 	FoundVar = HashMapGet(@(CurrSub->Variables), VarName)
 	If FoundVar <> 0 Then
@@ -11399,7 +11399,7 @@ Function IsArray (VarNameIn As String, CurrSub As SubType Pointer) As Integer
 			Return -1
 		End If
 	End If
-	
+
 	'Main sub
 	FoundVar = HashMapGet(@(Subroutine(0)->Variables), VarName)
 	If FoundVar <> 0 Then
@@ -11407,7 +11407,7 @@ Function IsArray (VarNameIn As String, CurrSub As SubType Pointer) As Integer
 			Return -1
 		End If
 	End If
-	
+
 End FUNCTION
 
 Function IsNonBanked(Location As Integer) As Integer
@@ -11452,7 +11452,7 @@ Function IsInAccessBank(VarNameIn As String) As Integer
 	If FoundVar <> 0 Then
 		Return IsNonBanked(FoundVar->Location)
 	End If
-	
+
 	'Check if the variable being accessed is a SFR
 	If IsRegister(VarNameIn) Then
 		Return -1
@@ -11484,7 +11484,7 @@ Function IsIOReg (RegNameIn As String) As Integer
 	Dim RegName As String
 	Dim As Integer SD
 	Dim As SysVarType Pointer FoundVar
-	
+
 	'Check if a register is in the IO space
 	RegName = TRIM(UCASE(RegNameIn))
 
@@ -11501,7 +11501,7 @@ Function IsIOReg (RegNameIn As String) As Integer
 			End If
 		End If
 	End If
-	
+
 	'Check aliases
 	'May have an alias to an IO register
 	Dim As String Source, Temp
@@ -11521,7 +11521,7 @@ Function IsIOReg (RegNameIn As String) As Integer
 				End If
 			End If
 		End If
-		
+
 	Next
 
 	Return 0
@@ -11531,7 +11531,7 @@ Function IsLowIOReg (RegNameIn As String) As Integer
 	Dim RegName As String
 	Dim As Integer SD
 	Dim As SysVarType Pointer FoundVar
-	
+
 	'Check if a register is in the IO space
 	RegName = TRIM(UCASE(RegNameIn))
 
@@ -11566,9 +11566,9 @@ Function IsLowIOReg (RegNameIn As String) As Integer
 				Return IsLowIOReg(Temp)
 			End If
 		End If
-		
+
 	Next
-	
+
 	Return 0
 End Function
 
@@ -11674,7 +11674,7 @@ Function IsRegister (VarName As String) As Integer
 	Temp = ""
 	For CurrSub = 0 To SBC
 		FoundVar = HashMapGet(@(Subroutine(CurrSub)->Variables), SourceLowByte)
-		
+
 		If FoundVar <> 0 THEN
 			Temp = FoundVar->Alias
 			'Have found an alias?
@@ -11683,7 +11683,7 @@ Function IsRegister (VarName As String) As Integer
 				Return IsRegister(Temp)
 			End If
 		End If
-		
+
 	Next
 
 	Return 0
@@ -11753,7 +11753,7 @@ FUNCTION IsWord (InData As String, CurrentSub As Integer) As Integer
 			Return 0
 		End If
 	END IF
-	
+
 
 	'Check for global word var
 	FoundVar = HashMapGet(@(MainSub->Variables), UCase(InData))
@@ -12013,7 +12013,7 @@ Sub OptimiseCalls
 	Dim As Integer IsRelative, UseRelative, IsJump, LineSize, CurrLinePos
 	Dim As Integer JumpSize, IsFirstLine
 	Dim As Integer CallChanged, ProgramScans
-	
+
 	ProgramScans = 0
 	Do
 		'Get list of labels and locations in program
@@ -12023,9 +12023,9 @@ Sub OptimiseCalls
 		CurrLinePos = 0
 		Labels = HashMapCreate
 		Do While CurrLine <> 0
-			
+
 			CurrMeta = GetMetaData(CurrLine)
-			
+
 			LineSize = CalcLineSize(CurrLine->Value, 1)
 			CurrMeta->LineSize = LineSize
 			If LineSize = 0 Then
@@ -12051,14 +12051,14 @@ Sub OptimiseCalls
 
 			CurrLine = CurrLine->Next
 		Loop
-		
+
 		'Check program, make changes where needed
 		CurrLine = CompilerOutput->CodeList->Next
 		CurrLinePos = 0
 		Do While CurrLine <> 0
-			
+
 			CurrMeta = GetMetaData(CurrLine)
-			
+
 			'Get current position
 			If CurrLinePos = 0 Then
 				IsFirstLine = -1
@@ -12394,7 +12394,7 @@ SUB ProcessArrays (CompSub As SubType Pointer)
 		End If
 		CurrVarLoc = CurrVarLoc->Next
 	Loop
-	
+
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
 		InLine = CurrLine->Value
@@ -12435,7 +12435,7 @@ SUB ProcessArrays (CompSub As SubType Pointer)
 					Loop
 				END IF
 			End With
-			
+
 			CurrVarLoc = CurrVarLoc->Next
 		Loop
 
@@ -12458,7 +12458,7 @@ CheckArrayAgain:
 					END IF
 				END IF
 			End With
-			
+
 			CurrVarLoc = CurrVarLoc->Next
 		Loop
 
@@ -12766,14 +12766,14 @@ SUB ReadChipData
 #ELSE
 	ChipDataFile = ID + "\chipdata\" + ChipName + ".dat"
 #ENDIF
-	
+
 	'Check that the chip data is present
 	If OPEN(ChipDataFile For Input As #1) <> 0 Then
 		'Chip file not found. If ChipName contains LF, try loading F file
 		If InStr(LCase(ChipName), "lf") <> 0 Then
 			TempData = ChipName
 			Replace TempData, "lf", "f"
-			
+
 			#IFDEF __FB_LINUX__
 				ChipDataFile = ID + "/chipdata/" + LCase(TempData) + ".dat"
 			#ELSE
@@ -12781,7 +12781,7 @@ SUB ReadChipData
 			#EndIf
 			If Open(ChipDataFile For Input As #1) = 0 Then GoTo ChipDataFileOpened
 		End If
-		
+
 		'Chip data still not found, show error and quit
 		LogError Message("ChipNotSupported")
 		WriteErrorLog
@@ -12789,9 +12789,9 @@ SUB ReadChipData
 	End If
 	ChipDataFileOpened:
 	IF VBS = 1 THEN PRINT SPC(10); ChipDataFile
-	
+
 	FirstSFR = &HFFFF
-	
+
 	ReadDataMode = ""
 	DO WHILE NOT EOF(1)
 		LINE INPUT #1, InLine
@@ -12832,12 +12832,12 @@ SUB ReadChipData
 				Case "configwords": ConfWords = VAL(TempData)
 				Case "psp": PSP = VAL(TempData)
 				Case "maxaddress": MemSize = VAL(TempData)
-				
+
 				Case "hardwaremult":
 					HMult = 0: If TempData = "y" Then HMult = -1
-				
-				
-				
+
+
+
 			End Select
 
 		'Interrupts
@@ -12886,7 +12886,7 @@ SUB ReadChipData
 			SFRName = Trim(Left(InLine, INSTR(InLine, ",") - 1))
 			SFRLoc = Val(Trim(Mid(InLine, INSTR(InLine, ",") + 1)))
 			MakeSFR(SFRName, SFRLoc)
-			
+
 			'On 18F, need to find lowest SFR location
 			If ChipFamily = 16 Then
 				If SFRLoc < FirstSFR Then
@@ -13086,9 +13086,9 @@ SUB ReadChipData
 		InLine = Trim(UCase(InLine))
 		IF InLine <> "" AND Left(InLine, 1) <> "'" THEN
 			DO WHILE INSTR(InLine, Chr(9)) <> 0: Replace InLine, Chr(9), " ": LOOP
-			
+
 			NewAsmCommand = Callocate(SizeOf(AsmCommand))
-			
+
 			With *NewAsmCommand
 
 				'Get syntax and number of words
@@ -13124,7 +13124,7 @@ SUB ReadChipData
 				GetTokens (ParamName, .Param(), .Params, ",")
 
 			End With
-			
+
 			'Is command with same name already in hashmap?
 			FindAsmCommand = HashMapGet(ASMCommands, NewAsmCommand->Cmd)
 			If FindAsmCommand <> 0 Then
@@ -13137,7 +13137,7 @@ SUB ReadChipData
 				'No, so add to map normally
 				HashMapSet(ASMCommands, NewAsmCommand->Cmd, NewAsmCommand)
 			End If
-			
+
 		END If
 	Loop
 	CLOSE
@@ -13154,15 +13154,15 @@ SUB ReadChipData
 	ElseIf Not (HasSFR("LATA") OrElse HasSFR("LATB") OrElse HasSFR("LATC")) Then
 		UseChipOutLatches = 0
 	End If
-	
+
 	'Ensure GIE is switched in glitch free mode
 	If ModePIC Then
 		NewSysVar = HashMapGet(SysVarBits, "GIE")
 		If NewSysVar <> 0 Then
-			HashMapSet(GlitchFreeOutputs, NewSysVar->Parent + "." + Str(NewSysVar->Location), "y") 
+			HashMapSet(GlitchFreeOutputs, NewSysVar->Parent + "." + Str(NewSysVar->Location), "y")
 		End If
 	End If
-	
+
 End Sub
 
 Sub ReadOptions(OptionsIn As String)
@@ -13173,7 +13173,7 @@ Sub ReadOptions(OptionsIn As String)
 	Dim As String VarName, VarBit
 	Dim As SysVarType Pointer SysVarBit
 	Dim As Integer VarBitNo
-	
+
 	'Set defaults
 	Bootloader = 0
 
@@ -13181,7 +13181,7 @@ Sub ReadOptions(OptionsIn As String)
 	OptionElements = GetElements(OptionsIn, " ,")
 	CurrElement = OptionElements->Next
 	Do While CurrElement <> 0
-		
+
 		'Get bootloader setting
 		If CurrElement->Value = "BOOTLOADER" Then
 			If CurrElement->Next <> 0 Then
@@ -13198,18 +13198,18 @@ Sub ReadOptions(OptionsIn As String)
 		'Disable automatic interrupt context save/restore?
 		ElseIf CurrElement->Value = "NOCONTEXTSAVE" Then
 			AutoContextSave = 0
-			
+
 		'Volatile bit?
 		ElseIf CurrElement->Value = "VOLATILE" Then
 			If CurrElement->Next <> 0 Then
 				VolatileVar = ReplaceConstantsLine(CurrElement->Next->Value, 0)
-				
+
 				'Split dest into var and bit, get source
 				VarName = ""
 				If InStr(VolatileVar, ".") <> 0 Then
 					VarName = Trim(Left(VolatileVar, InStr(VolatileVar, ".") - 1))
 					VarBit = Trim(Mid(VolatileVar, InStr(VolatileVar, ".") + 1))
-					
+
 					'Get name for map
 					VarBitNo = -1
 					If IsConst(VarBit) Then
@@ -13232,7 +13232,7 @@ Sub ReadOptions(OptionsIn As String)
 					Replace OutMessage, "%bit%", VolatileVar
 					LogWarning OutMessage, ""
 				End If
-				
+
 				CurrElement = CurrElement->Next
 			End If
 
@@ -13242,7 +13242,7 @@ Sub ReadOptions(OptionsIn As String)
 			Replace OutMessage, "%option%", CurrElement->Value
 			LogWarning(OutMessage, "")
 		End If
-		
+
 		CurrElement = CurrElement->Next
 	Loop
 
@@ -13312,7 +13312,7 @@ Function RequestSub(Requester As SubType Pointer, SubNameIn As String, SubSigIn 
 	Dim As Integer CurrSub, BestMatchPos, BestMatch, ThisMatch, InReqList
 	Dim As String SubName, SubSig
 	Dim As LinkedListElement Pointer ReqListPos, ReqListData
-	
+
 	SubName = UCase(Trim(SubNameIn))
 	BestMatchPos = -1
 	BestMatch = -1
@@ -13337,12 +13337,12 @@ Function RequestSub(Requester As SubType Pointer, SubNameIn As String, SubSigIn 
 			Else
 				Subroutine(CurrSub)->Required = -1
 				RecordSubCall(Requester, Subroutine(CurrSub))
-				
+
 				Return CurrSub
 			End If
 		End If
 	Next
-	
+
 	If BestMatch <> -1 Then
 		Subroutine(BestMatchPos)->Required = -1
 		RecordSubCall(Requester, Subroutine(BestMatchPos))
@@ -13521,20 +13521,20 @@ Sub TidyProgram
 			End If
 		End With
 	Next
-	
+
 End Sub
 
 Sub TidySubroutine(CompSub As SubType Pointer)
-	
+
 	'Fix function calls
 	FixFunctions(CompSub)
-	
+
 	'Set Bank
 	AddBankCommands(CompSub)
-	
+
 	'Perform some simple ASM optimisations
 	AsmOptimiser(CompSub)
-	
+
 	'Add banking mode to 18F commands
 	If ChipFamily = 16 Then
 		Add18FBanks(CompSub)
@@ -13542,7 +13542,7 @@ Sub TidySubroutine(CompSub As SubType Pointer)
 
 	'Tidy up IFs
 	OptimiseIF (CompSub)
-	
+
 End Sub
 
 Function TranslateFile(InFile As String) As String
@@ -13703,7 +13703,7 @@ Sub WriteAssembly
 
 	End If
 	PRINT #1, ""
-	
+
 	VarList = HashMapToList(FinalVarList, -1)
 	IF VarList <> 0 AndAlso VarList->Next <> 0 THEN
 		PRINT #1, Star80
@@ -14605,7 +14605,7 @@ Function NewSubroutine(SubName As String) As SubType Pointer
 		.Name = SubName
 		.CodeStart = LinkedListCreate
 		.CallList = LinkedListCreate
-		
+
 		.IntStateSaveVar = ""
 	End With
 
@@ -14978,7 +14978,7 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	If FoundVar <> 0 Then
 		Return FoundVar
 	End If
-	
+
 	'Search global variables
 	If MainSub <> CurrSub Then
 		FoundVar = HashMapGet(@(MainSub->Variables), ArrayName)
@@ -14996,7 +14996,7 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 				'Have found function, add a var and then return it
 				AddVar ArrayNameIn, .ReturnType, 1, 0, "REAL", "", , -1
 				FoundVar = HashMapGet(@(MainSub->Variables), ArrayName)
-				
+
 				Return FoundVar
 			End If
 		End With
