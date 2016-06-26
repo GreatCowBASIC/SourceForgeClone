@@ -1,5 +1,5 @@
 '    Software I2C routines for the GCBASIC compiler
-'    Copyright (C) 2009, 2013, 2014, 2016 Hugh Considine, Evan R. Venn, Thomas Henry
+'    Copyright (C) 2009, 2013, 2014, 2016 Hugh Considine, Evan R. Venn, Thomas Henry, William Roth
 
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -46,6 +46,8 @@
 '	   - eliminated redundancies and unneeded global variables
 '	   - accounted for parameter corruption throughout
 '     0.95 revised to restore I2C_Dev_OK
+'			0.96 revised to support I2C_USE_TIMEOUT for I2C Master
+'			To enable failsafe in I2C Master mode, user must add #define I2C_USE_TIMEOUT to source code
 
 '	   - With the default constants, communication can be as high as 75 kHz.
 
@@ -309,8 +311,8 @@ End Function
 sub I2CSend(in I2CByte )
 
   #if I2C_MODE = Master           'send byte from Master to Slave
-    I2C_CLOCK_LOW                 'begin with SCL=0
-    wait I2C_END_DELAY            'let port settle
+     I2C_CLOCK_LOW                 'begin with SCL=0
+     wait I2C_END_DELAY            'let port settle
 
     repeat 8                      '8 data bits
       if I2CByte.7 = ON then      'put most significant bit on SDA line
@@ -320,9 +322,24 @@ sub I2CSend(in I2CByte )
       end if
 
       rotate I2CByte left         'shift in bit for the next time
-
       I2C_CLOCK_HIGH              'now clock it in
-      wait while I2C_CLOCK = OFF  'permit clock stretching here
+
+      #ifndef I2C_USE_TIMEOUT
+        wait while I2C_CLOCK = OFF    'permit clock stretching here
+      #endif
+
+      #ifdef I2C_USE_TIMEOUT         'clock strething with timeout
+         I2CCount = 0                'wait until clock goes high
+         do while I2C_CLOCK = OFF
+           IC2CCount++                'give SCL another chance to go high
+           if I2CCount = 0 then       'else, used up our 256 chances
+             I2CAck = FALSE
+             Exit sub                 'so indicate an error
+           end if                      'bail out, we're giving up
+         wait 100 us
+        loop
+      #endif
+
       wait I2C_CLOCK_DELAY        'clock pulse width given here
       I2C_CLOCK_LOW               'done clocking that bit
       wait I2C_END_DELAY          'time between clock pulses
@@ -332,10 +349,22 @@ sub I2CSend(in I2CByte )
 
     I2C_DATA_HIGH                 'idle SDA to let Slave respond
     wait I2C_END_DELAY            'let SDA port line settle
-
     I2C_CLOCK_HIGH                'clock for the ACK/NAK bit
-    wait while I2C_CLOCK = OFF    'permit clock stretching here
 
+    #ifndef USE_I2C_TIMEOUT
+       wait while I2C_CLOCK = OFF    'permit clock stretching here
+    #endif
+
+    #Ifdef USE_I2C_TIMEOUT
+     I2CCount = 0                'wait until clock goes high
+       do until I2C_CLOCK = ON
+          I2CCount ++            'give SCL another chance to go high
+          if I2CCount = 0 then    'else, used up our 256 chances
+             I2CAck = FALSE        'so indicate an error
+             exit sub              'bail out, we're giving up
+          end if
+        loop
+    #Endif
                                   'restored 'I2CSendState' variable for backwards compatibility
     if I2C_DATA then              'read 9th bit in from Slave
       I2CAck = FALSE              'return a NAK to the program
@@ -349,8 +378,8 @@ sub I2CSend(in I2CByte )
     wait I2C_END_DELAY            'so keep idling both
     I2C_DATA_LOW                  'SCL and SDA low
     wait I2C_BIT_DELAY            'wait the usual bit length
-
   #endif
+
 
   #if I2C_MODE = Slave            'send a byte from Slave to Master
     #ifndef I2C_USE_TIMEOUT       'never give up on the Master
@@ -435,7 +464,22 @@ sub I2CReceive (out I2CByte, optional I2CAck = ACK)
       wait I2C_END_DELAY          'let port lines settle down
       I2C_CLOCK_HIGH              'send a clock pulse
 
-      wait while I2C_CLOCK = OFF  'permit clock stretching
+      #ifndef USE_I2C_TIMEOUT
+         wait while I2C_CLOCK = OFF  'permit clock stretching
+      #endif
+
+      #ifdef I2C_USE_TIMEOUT      'clock stretching with timeout
+        I2CCount = 0              'wait until clock goes high
+         do until I2C_CLOCK = ON
+           I2CCount += 1           'give SCL another chance to go high
+           if I2CCount = 0 then    'else, used up our 256 chances
+             I2CAck = FALSE        'so indicate an error
+             exit sub              'bail out, we're giving up
+           end if
+          wait 100 us
+        loop
+      #endif
+
       rotate I2CByte left         'make room for next bit
 
       set I2CByte.0 OFF           'assume it's a zero
@@ -457,7 +501,22 @@ sub I2CReceive (out I2CByte, optional I2CAck = ACK)
     wait I2C_END_DELAY            'either way, let it settle
     I2C_CLOCK_HIGH                'then clock it out
 
-    wait while I2C_CLOCK = OFF    'permit clock stretching
+     #ifndef USE_I2C_TIMEOUT
+       wait while I2C_CLOCK = OFF    'permit clock stretching
+     #endif
+
+     #ifdef I2C_USE_TIMEOUT       'clock stretchihg with timeout
+        I2CCount = 0              'wait until clock goes high
+        do until I2C_CLOCK = ON
+          I2CCount += 1           'give SCL another chance to go high
+          if I2CCount = 0 then    'else, used up our 256 chances
+            I2CAck = FALSE        'so indicate an error
+            exit sub              'bail out, we're giving up
+          end if
+          wait 100 us
+        loop
+     #endif
+
     wait I2C_CLOCK_DELAY          'keep high long enough
     I2C_CLOCK_LOW                 'then SCL goes low again
     wait I2C_END_DELAY            'and settles before proceeding
