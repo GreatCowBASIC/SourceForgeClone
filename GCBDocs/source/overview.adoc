@@ -37,8 +37,13 @@ These constants control the setup of the software I2C routines:
 |Time between clock pulses
 |1 us
 |I2C_USE_TIMEOUT
-|Set to true if slave mode I2C routines should stop waiting for the
-master and exit after a timeout occurs.
+|Set to true if the I2C routines should stop waiting for the
+I2c bus - the routine will exit if a timeout occurs.
+Should be used when you need to prevent system lockups on the I2C bus.
+
+Supports both software I2C master and slave mode.
+
+Will return the variable `I2CAck = FALSE` when a timeout has occurred.
 |Not Set
 |I2C_DISABLE_INTERRUPTS
 |Disable interrupts during I2C routines. Important when an i2C clock is
