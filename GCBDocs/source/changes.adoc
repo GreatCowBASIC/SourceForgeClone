@@ -34,6 +34,7 @@ Updates to User Help is as follows:
   Bits are now correctly handled by built-in Not operator.
 - New command #option volatile.  Sensitive pins can be marked as volatile, and native assignment operators will set without glitching, replacing SetWith.
 - Added new sections on ADC and PWM code optimisation
+- Added new I2C command for software I2C - use_i2c_timeout
 
 *Release 0.95.006*::
 - Completed rewrite of the Help File. +
