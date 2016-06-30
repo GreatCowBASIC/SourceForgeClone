@@ -1,10 +1,10 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATtiny12
-'Generated 27/9/2007
+'Generated 16/7/2015
 'Format last revised: 23/9/2007
 
 [ChipData]
-Prog=1024
+Prog=512
 EEPROM=64
 RAM=0
 I/O=0
@@ -15,7 +15,7 @@ Family=100
 ConfigWords=0
 GPR=32
 MaxAddress=10
-HardwareMult=N
+HardwareMult=n
 
 [Pointers]
 XL:26

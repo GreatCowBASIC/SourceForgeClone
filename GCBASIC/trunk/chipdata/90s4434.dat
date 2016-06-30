@@ -1,13 +1,13 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: AT90S4434
-'Generated 3/5/2008
+'Generated 16/7/2015
 'Format last revised: 23/9/2007
 
 [ChipData]
-Prog=4096
+Prog=2048
 EEPROM=256
 RAM=256
-I/O=32
+I/O=31
 ADC=8
 MaxMHz=8
 Pins=8

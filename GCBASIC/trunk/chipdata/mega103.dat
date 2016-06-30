@@ -1,13 +1,13 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega103
-'Generated 3/5/2008
+'Generated 16/7/2015
 'Format last revised: 23/9/2007
 
 [ChipData]
-Prog=131072
+Prog=65536
 EEPROM=4096
 RAM=4000
-I/O=32
+I/O=31
 ADC=8
 MaxMHz=6
 Pins=8
