@@ -1,10 +1,10 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: AT90S2323
-'Generated 3/5/2008
+'Generated 16/7/2015
 'Format last revised: 23/9/2007
 
 [ChipData]
-Prog=2048
+Prog=1024
 EEPROM=128
 RAM=128
 I/O=0

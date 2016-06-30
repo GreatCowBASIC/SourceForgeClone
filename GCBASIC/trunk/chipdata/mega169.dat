@@ -1,13 +1,13 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega169
-'Generated 19/7/2011
+'Generated 16/7/2015
 'Format last revised: 23/9/2007
 
 [ChipData]
-Prog=16384
+Prog=8192
 EEPROM=512
 RAM=1024
-I/O=32
+I/O=31
 ADC=0
 MaxMHz=16
 Pins=28
