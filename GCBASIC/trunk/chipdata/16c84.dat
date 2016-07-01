@@ -1,17 +1,17 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C84
-'Generated 25/4/2016
+'Generated 1/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
-Prog=2048
+Prog=1024
 EEPROM=0
-RAM=128
-I/O=16
-ADC=8
-MaxMHz=20
-IntOsc=4
-Pins=20
+RAM=68
+I/O=13
+ADC=0
+MaxMHz=10
+IntOsc=0
+Pins=18
 Family=14
 ConfigWords=1
 PSP=0
@@ -73,28 +73,30 @@ WR,EECON1,1
 RD,EECON1,0
 
 [FreeRAM]
-20:7F
-A0:BF
+0C:4F
 
 [NoBankRAM]
-70:7F
+0C:4F
 
 [Pins-DIP]
-19,RA0(IO)
+17,RA0(IO)
 18,RA1(IO)
-17,RA2(IO)
-4,RA3(IO)
+1,RA2(IO)
+2,RA3(IO)
 3,RA4(IO),T0CKI(I)
-0,RB0(IO)
-0,RB1(IO)
-0,RB2(IO)
-0,RB3(IO)
-13,RB4(IO)
-12,RB5(IO)
-11,RB6(IO)
-10,RB7(IO)
-20,Vss
-1,Vdd
+6,RB0(IO)
+7,RB1(IO)
+8,RB2(IO)
+9,RB3(IO)
+10,RB4(IO)
+11,RB5(IO)
+12,RB6(IO)
+13,RB7(IO)
+4,MCLR
+16,OSC1
+15,OSC2
+5,Vss
+14,Vdd
 
 [ConfigOps]
 CP=ON,OFF
