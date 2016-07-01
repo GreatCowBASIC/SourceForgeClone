@@ -1,17 +1,17 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16LF1824T39A
-'Generated 25/4/2016
+'Generated 2/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
-Prog=8192
-EEPROM=0
-RAM=512
-I/O=18
-ADC=17
+Prog=4096
+EEPROM=256
+RAM=256
+I/O=12
+ADC=8
 MaxMHz=32
-IntOsc=16, 8, 4, 2, 1, 0.5, 0.25, 0.125
-Pins=20
+IntOsc=32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+Pins=14
 Family=15
 ConfigWords=2
 PSP=0
@@ -765,28 +765,24 @@ _BOREN_SBODEN,BORCON,15359
 20:7F
 A0:EF
 120:16F
-1A0:1EF
-220:26F
-2A0:2EF
-320:32F
 
 [NoBankRAM]
 70:7F
 
 [Pins-DIP]
-19,RA0(IO)
-18,RA1(IO)
-17,RA2(IO)
+13,RA0(IO)
+12,RA1(IO)
+11,RA2(IO)
 4,RA3(IO)
 3,RA4(IO)
 2,RA5(IO)
-16,RC0(IO)
-15,RC1(IO)
-14,RC2(IO)
-7,RC3(IO)
-6,RC4(IO)
-5,RC5(IO)
-20,Vss
+10,RC0(IO)
+9,RC1(IO)
+8,RC2(IO)
+7,RC3(IO),SCL(IO),SCK(IO)
+6,RC4(IO),SDA(IO),SDI(I)
+5,RC5(IO),SDO(O)
+14,Vss
 1,Vdd
 
 [ConfigOps]

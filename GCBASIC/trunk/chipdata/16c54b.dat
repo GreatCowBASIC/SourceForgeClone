@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C54B
-'Generated 25/4/2016
+'Generated 2/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -9,7 +9,7 @@ EEPROM=0
 RAM=25
 I/O=12
 ADC=0
-MaxMHz=20
+MaxMHz=0
 IntOsc=0
 Pins=18
 Family=12

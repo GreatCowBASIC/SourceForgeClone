@@ -1,17 +1,17 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16CR57A
-'Generated 25/4/2016
+'Generated 2/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
-Prog=1024
+Prog=2048
 EEPROM=0
-RAM=25
-I/O=12
+RAM=72
+I/O=20
 ADC=0
 MaxMHz=20
 IntOsc=0
-Pins=18
+Pins=28
 Family=12
 ConfigWords=1
 PSP=0
@@ -82,38 +82,42 @@ TRISA3,TRISA,3
 TRISA4,TRISA,4
 
 [FreeRAM]
-07:1F
+08:1F
+30:3F
+50:5F
+70:7F
 
 [NoBankRAM]
-07:1F
+08:1F
 
 [Pins-DIP]
-17,RA0(IO)
-18,RA1(IO)
-1,RA2(IO)
-2,RA3(IO)
-3,RA4(I)
-6,RB0(IO)
-7,RB1(IO)
-8,RB2(IO)
-9,RB3(IO)
-10,RB4(IO)
-11,RB5(IO)
-12,RB6(IO)
-13,RB7(IO)
-0,RC0(IO)
-0,RC1(IO)
-0,RC2(IO)
-0,RC3(IO)
-0,RC4(IO)
-0,RC5(IO)
-0,RC6(IO)
-0,RC7(IO)
-4,MCLR
-16,OSC1
-15,OSC2
-5,Vss
-14,Vdd
+2,RA0(IO)
+3,RA1(IO)
+4,RA2(IO)
+5,RA3(IO)
+6,RA4(I)
+21,RB0(IO)
+22,RB1(IO)
+23,RB2(IO)
+24,RB3(IO)
+25,RB4(IO)
+26,RB5(IO)
+27,RB6(IO)
+28,RB7(IO)
+11,RC0(IO)
+12,RC1(IO)
+13,RC2(IO)
+14,RC3(IO)
+15,RC4(IO)
+16,RC5(IO)
+17,RC6(IO)
+18,RC7(IO)
+1,MCLR
+9,OSC1
+10,OSC2
+8,Vss
+19,Vss
+20,Vdd
 
 [ConfigOps]
 OSC=LP,XT,HS,RC

@@ -1,16 +1,16 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 12LF1840T39A
-'Generated 25/4/2016
+'Generated 2/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
-Prog=2048
-EEPROM=0
+Prog=4096
+EEPROM=256
 RAM=256
 I/O=6
-ADC=5
+ADC=4
 MaxMHz=32
-IntOsc=16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+IntOsc=32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
 Pins=8
 Family=15
 ConfigWords=2

@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F65K40
-'Generated 25/4/2016
+'Generated 2/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -8,9 +8,9 @@ Prog=16384
 EEPROM=1024
 RAM=2048
 I/O=53
-ADC=16
+ADC=47
 MaxMHz=64
-IntOsc=16
+IntOsc=64
 Pins=64
 Family=16
 PSP=0
