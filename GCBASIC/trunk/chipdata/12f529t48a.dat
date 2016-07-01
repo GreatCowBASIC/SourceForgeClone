@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 12F529T48A
-'Generated 25/4/2016
+'Generated 2/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -11,7 +11,7 @@ I/O=6
 ADC=0
 MaxMHz=8
 IntOsc=8
-Pins=8
+Pins=14
 Family=12
 ConfigWords=1
 PSP=0
@@ -78,13 +78,13 @@ E0:FF
 07:0F
 
 [Pins-DIP]
-7,RB0(IO)
-6,RB1(IO)
-5,RB2(IO)
+13,RB0(IO)
+12,RB1(IO)
+11,RB2(IO)
 4,RB3(IO)
 3,RB4(IO)
 2,RB5(IO)
-8,Vss
+14,Vss
 1,Vdd
 
 [ConfigOps]
