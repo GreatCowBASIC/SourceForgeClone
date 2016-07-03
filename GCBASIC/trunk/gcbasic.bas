@@ -616,7 +616,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95 2016-06-26"
+Version = "0.95 2016-07-03"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2243,11 +2243,14 @@ Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As
 	Dim As String Answer, ActN, AnswerIn, V1, V2, TypeV1, TypeV2, CalcType, TypeAV, Act
 	Dim As Integer NeverLast, UnaryMode, SearchStart, CalcisBad, OpPos, SD, SO
 	Dim As Integer CalcStart, CalcEnd, LastCalc, NextSame, PD
-
+	Dim As SubType Pointer CurrentSub, DestSub
+	
 	Dim As LinkedListElement Pointer NewCode
 
 	'PRINT "CalcOps origin", Origin, SUM
 	Origin = OriginIn
+	CurrentSub = Subroutine(GetSubID(Origin))
+	IF INSTR(Origin, "D") <> 0 Then DestSub = Subroutine(GetDestSub(Origin)) Else DestSub = CurrentSub
 
 	NeverLast = 0
 	If UCase(Right(Origin, 2)) = "NL" Then
@@ -2390,9 +2393,9 @@ SearchForOpAgain:
 
 	'Define all vars found as byte
 	'AddVar will ignore any constants/system vars/vars already defined
-	AddVar DelType(V1), "BYTE", 1, 0, "REAL", Origin
-	AddVar DelType(V2), "BYTE", 1, 0, "REAL", Origin
-	AddVar AnswerIn, "BYTE", 1, 0, "REAL", Origin
+	AddVar DelType(V1), "BYTE", 1, CurrentSub, "REAL", Origin
+	AddVar DelType(V2), "BYTE", 1, CurrentSub, "REAL", Origin
+	AddVar AnswerIn, "BYTE", 1, DestSub, "REAL", Origin
 
 	Color 3
 
@@ -6233,11 +6236,11 @@ SUB CompileRotate (CompSub As SubType Pointer)
 					OldType = 0
 				ElseIf IsLowIOReg(VarName) Then
 					CurrLine = LinkedListInsert(CurrLine, "in " + CalcVar + "," + VarName)
-					AddVar CalcVar, VarType, 1, CompSub, "REAL", Origin
+					AddVar CalcVar, VarType, 1, CompSub, "REAL", Origin, , -1
 					RotateReg = CalcVar
 					OldType = 1
 				Else
-					AddVar CalcVar, VarType, 1, CompSub, "REAL", Origin
+					AddVar CalcVar, VarType, 1, CompSub, "REAL", Origin, , -1
 					CurrLine = LinkedListInsert(CurrLine, "lds " + CalcVar + "," + VarName)
 					If VarType = "WORD" Then
 						CurrLine = LinkedListInsert(CurrLine, "lds " + CalcVar + "_H," + VarName + "_H")
@@ -6317,7 +6320,7 @@ SUB CompileRotate (CompSub As SubType Pointer)
 					End If
 				END IF
 				CurrLine = LinkedListInsert(CurrLine, Temp + VarName + ",F")
-				IF VarType <> "WORD" THEN AddVar VarName, "BYTE", 1, 0, "REAL", Origin
+				IF VarType <> "WORD" THEN AddVar VarName, "BYTE", 1, CompSub, "REAL", Origin
 			ElseIf ModeAVR Then
 				Temp = " ror "
 				IF Direction = "LEFT" THEN Temp = " rol "
@@ -7607,12 +7610,13 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 	Dim As String SType, DType, Temp, DestTemp, SourceTemp, CSource, SCastType
 	Dim As String LTemp, HTemp, UTemp, ETemp, STemp, Source, ReferencedSub
-	Dim As Integer CurrentSub, DestSub, CurrVarByte, LastConst, ThisConst
+	Dim As Integer CurrVarByte, LastConst, ThisConst
 	Dim As Integer DestReg, DestIO, SourceReg, SourceIO, L, H, U, E, CD
 	Dim As Integer RequiresGlitchFree, DestVarBitNo
 	Dim As LongInt S
 	Dim As PinDirType Pointer CurrPinDir
 	Dim As SysVarType Pointer SysVarBit
+	Dim As SubType Pointer CurrentSub, DestSub
 
 	Dim As LinkedListElement Pointer CurrLine, OutList
 	OutList = LinkedListCreate
@@ -7620,8 +7624,8 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 	'Initialise
 	Source = SourceIn
-	CurrentSub = GetSubID(Origin)
-	IF INSTR(Origin, "D") <> 0 Then DestSub = GetDestSub(Origin) Else DestSub = CurrentSub
+	CurrentSub = Subroutine(GetSubID(Origin))
+	IF INSTR(Origin, "D") <> 0 Then DestSub = Subroutine(GetDestSub(Origin)) Else DestSub = CurrentSub
 
 	'Get types
 	If Instr(Source, "[") <> 0 And InStr(Source, "]") <> 0 Then
@@ -7639,14 +7643,14 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 		Else
 			'Do not allow cast to increase source type - this causes problems
-			SType = TypeOfVar(Source, Subroutine(CurrentSub))
+			SType = TypeOfVar(Source, CurrentSub)
 			If CastOrder(SCastType) <= CastOrder(SType) Then
 				SType = SCastType
 			End If
 		End If
 
 	Else
-		SType = TypeOfVar(Source, Subroutine(CurrentSub))
+		SType = TypeOfVar(Source, CurrentSub)
 		If IsConst(Source) Then SType = "CONST"
 		IF INSTR(Source, ";STRING") <> 0 THEN
 			If Len(GetString(Source)) = 1 Then
@@ -7671,7 +7675,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 		If IsConst(Dest) Then SType = "CONST"
 
 	Else
-		DType = TypeOfVar(Dest, Subroutine(DestSub))
+		DType = TypeOfVar(Dest, DestSub)
 	End If
 
 	'Don't copy var to itself
@@ -7911,7 +7915,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 		'Add var that contains bit
 		IF INSTR(DestTemp, ",") <> 0 Then
-			AddVar DestVarName, "BYTE", 1, 0, "REAL", Origin
+			AddVar DestVarName, "BYTE", 1, DestSub, "REAL", Origin
 		End If
 
 		Select Case SType
@@ -7920,7 +7924,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 			SourceTemp = FixBit(Source, Origin)
 			IF INSTR(SourceTemp, ".") <> 0 Then
 				Temp = Left(SourceTemp, InStr(SourceTemp, ".") - 1)
-				AddVar Temp, "BYTE", 1, 0, "REAL", Origin
+				AddVar Temp, "BYTE", 1, CurrentSub, "REAL", Origin
 			End If
 
 			If ModePIC Then
@@ -8153,7 +8157,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 	'Copy to byte
 	Case "BYTE":
-		AddVar Dest, "BYTE", 1, 0, "REAL", Origin
+		AddVar Dest, "BYTE", 1, DestSub, "REAL", Origin
 		Select Case SType
 		'bit > byte
 		Case "BIT"
@@ -8403,8 +8407,9 @@ End Function
 SUB CompileVars (CompSub As SubType Pointer)
 	Dim As String InLine, Origin, Temp, DestVar, SourceData
 	Dim As String VarType, SourceOld, ErrorTemp
-	Dim As Integer CD, PD, T, DisableInt, CTR, AIC, SourceSub, DestSub
+	Dim As Integer CD, PD, T, DisableInt, CTR, AIC
 	Dim As PinDirType Pointer CurrPinDir
+	Dim As SubType Pointer SourceSub, DestSub
 
 	Dim As LinkedListElement Pointer CurrLine, NewCode, FindLine
 	Dim As CodeSection Pointer NewSection
@@ -8433,11 +8438,15 @@ SUB CompileVars (CompSub As SubType Pointer)
 				InLine = RTrim(Left(InLine, INSTR(InLine, ";?F") - 1))
 				CurrLine->Value = InLine
 			END IF
-			SourceSub = GetSubID(Origin)
+			If Origin <> "" Then
+				SourceSub = Subroutine(GetSubID(Origin))
+			Else
+				SourceSub = CompSub
+			End If
 			IF INSTR(Origin, "D") = 0 Then
 				DestSub = SourceSub
 			Else
-				DestSub = GetDestSub(Origin)
+				DestSub = Subroutine(GetDestSub(Origin))
 			End If
 
 			'Remove ALL spaces
@@ -8458,7 +8467,7 @@ SUB CompileVars (CompSub As SubType Pointer)
 			END IF
 
 			'Load an array with a list of values?
-			If INSTR(SourceData, ",") <> 0 And IsArray(DestVar, Subroutine(DestSub)) Then
+			If INSTR(SourceData, ",") <> 0 And IsArray(DestVar, DestSub) Then
 				CurrLine = LinkedListDelete(CurrLine)
 				CurrLine = LinkedListInsertList(CurrLine, CompileWholeArray(InLine, Origin))
 				GOTO CompNextVar
@@ -8466,7 +8475,7 @@ SUB CompileVars (CompSub As SubType Pointer)
 
 			'Check if command involves setting a string
 			'IF (IsString(DestVar, Subroutine(DestSub)) Or INSTR(DestVar, "()") <> 0) And (IsString(SourceData, Subroutine(SourceSub))) Or (INSTR(SourceData, "()") <> 0) THEN
-			IF IsString(DestVar, Subroutine(DestSub)) Or INSTR(DestVar, "()") <> 0 Then
+			IF IsString(DestVar, DestSub) Or INSTR(DestVar, "()") <> 0 Then
 				CurrLine = LinkedListDelete(CurrLine)
 				CurrLine = LinkedListInsertList(CurrLine, CompileString(InLine, Origin))
 				GOTO CompNextVar
@@ -8477,8 +8486,8 @@ SUB CompileVars (CompSub As SubType Pointer)
 
 				'Add var
 				If InStr(DestVar, "[") = 0 Then
-					AddVar DestVar, "BYTE", 1, Subroutine(DestSub), "REAL", Origin
-					VarType = TypeOfVar(DestVar, Subroutine(DestSub))
+					AddVar DestVar, "BYTE", 1, DestSub, "REAL", Origin
+					VarType = TypeOfVar(DestVar, DestSub)
 				Else
 					VarType = Mid(DestVar, InStr(DestVar, "[") + 1)
 					VarType = Left(VarType, InStr(VarType, "]") - 1)
@@ -8535,12 +8544,12 @@ SUB CompileVars (CompSub As SubType Pointer)
 				End If
 
 				'Add variables
-				AddVar SourceData, "BYTE", 1, Subroutine(SourceSub), "REAL", Origin
-				AddVar DestVar, "BYTE", 1, Subroutine(DestSub), "REAL", Origin
+				AddVar SourceData, "BYTE", 1, SourceSub, "REAL", Origin
+				AddVar DestVar, "BYTE", 1, DestSub, "REAL", Origin
 
 				'Get code
 				NewCode = CompileVarSet(SourceData, DestVar, Origin)
-
+				
 				'Add code
 				If NewCode->Next <> 0 Then
 					CurrLine = LinkedListDelete(CurrLine)
