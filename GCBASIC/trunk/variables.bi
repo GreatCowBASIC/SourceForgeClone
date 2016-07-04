@@ -252,7 +252,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	'If variable not found, make a new one
 	If VarFound = 0 Then
 		'Implicit declaration of new variable
-		If (Not ExplicitDeclaration) And MainVarFound = 0 And Not IsSysTemp(VarName) And VarPointer = "REAL" Then
+		If (Not ExplicitDeclaration) And MainVarFound = 0 And Not IsSysTemp(VarName) And VarPointer = "REAL" And Left(UCase(VarName), 9) <> "SYSBITVAR" Then
 			'If explicit declaration required, generate error
 			If SourceFile(CurrFile).OptionExplicit Then
 				Temp = Message("UndeclaredVar")
