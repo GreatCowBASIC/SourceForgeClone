@@ -1,12 +1,12 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C84
-'Generated 2/7/2016
+'Generated 11/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
 Prog=1024
 EEPROM=0
-RAM=68
+RAM=36
 I/O=13
 ADC=0
 MaxMHz=10
@@ -73,10 +73,10 @@ WR,EECON1,1
 RD,EECON1,0
 
 [FreeRAM]
-0C:4F
+0C:2F
 
 [NoBankRAM]
-0C:4F
+0C:2F
 
 [Pins-DIP]
 17,RA0(IO)
