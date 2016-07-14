@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015 Evan Venn
+'    Copyright (C) 2015, 2016 Evan Venn and Paolo Iocco
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 
 'Changes
 ' 04/10/2015:      Revised to add ReadID.           Evan R Venn
+' 14/07/2016:			 Revised to resolve Linux build.	Paolo Iocco edited by Evan R Venn
 
 '
 'Hardware settings
@@ -565,6 +566,7 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
 
 				#ifndef ILI9341_HardwareSPI
 					SendWord_ILI9341 ( GLCDBackground )
+        #endif
 			end repeat
 
     end repeat
