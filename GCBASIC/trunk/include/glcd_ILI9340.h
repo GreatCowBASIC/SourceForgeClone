@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2014, 2016 Hugh Considine, Evan Venn and Paolo Iocco
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,7 @@
 ' 27/10/2014: Changed ILI9340Rotation to GLCDRotate
 '
 ' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 14/07/2016:			 Revised to resolve Linux build.	Paolo Iocco edited by Evan R Venn
 '
 'Hardware settings
 'Type
@@ -377,6 +378,7 @@ Sub GLCDCLS_ILI9340 ( Optional In  GLCDBackground as word = GLCDBackground )
 
 				#ifndef ILI9340_HardwareSPI
 					SendWord_ILI9340 ( GLCDBackground )
+        #endif
 			end repeat
 
     end repeat
