@@ -1,6 +1,5 @@
 '    Timer control routines for Great Cow BASIC
 '    Copyright (C) 2006-2016 Hugh Considine, Evan Venn and William Roth
-'    Release v0.95.004.2b Beta 5  (Candidate 2b)
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation; either
@@ -77,7 +76,8 @@
 ' 18/02/2016  Added/corrected TCCR2A setting in Stop/starttimer -Wmr
 ' 22/02/2016  Corrected TCCR2A error - Wmr
 ' 24/04/2016: Removed PSn_1/x constants - no longer valid syntax - HC
-
+' 15/07/2016: Revised Settimer to improve support for 16f188xx and T016BIT.
+'							Change is limited ChipFamily 15
 '***********************************************************
 
 'Subroutines:
@@ -766,20 +766,49 @@ Sub ClearTimer (In TMRNumber)
 
 End Sub
 
+
+
+' if device has T016BIT then YOU MUST pass a 16bit number
+' Revised Settimer to improve support for 16f188xx and T016BIT 15/7/16
 Sub SetTimer (In TMRNumber, In TMRValue As Word)
 
+
   #ifdef PIC
-     If TMRNumber = 0 Then  'modified 07/01/2016
-        #ifndef Var(TMR0H)   'not an 8/16 bit selectable timer0
-           TMR0 = TMRValue    'so just write TMR0
+     If TMRNumber = 0 Then
+        ' Handle chips withOUT TMR0H
+        #ifndef Var(TMR0H)
+           TMR0 = TMRValue
+           'just get out faster
+           exit sub
         #endif
 
+				' Handle chips with TMR0H
         #ifdef Var(TMR0H)
+
            #ifdef TMR0_16BIT
               TMR0H = TMRValue_H
+              TMR0L = TMRValue
+              ' exit to prevent default setting TMR0L = TMRValue
+              exit sub
            #endif
+
+					 'Added to resolve 16f18855 (chip type) using 8bit Timer0
+           'High byte is timer0 register
+           #ifdef Bit(T016BIT)
+           		'for 16f specific chips.
+              #ifdef ChipFamily 15
+                TMR0H = TMRValue_h
+                TMR0L = TMRValue
+                ' exit to prevent default setting TMR0L = TMRValue
+                exit sub
+              #endif
+           #endif
+
+        	 'else write the low byte to the L register
+           'default of setting TMR0L = TMRValue
            TMR0L = TMRValue
-        #endif
+
+           #endif
 
      End If
 
@@ -846,68 +875,6 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
            TMR12 = TMRValue
         End If
      #endif
-  #endif
-
-  #ifdef AVR
-     If TMRNumber = 0 Then
-        #ifdef Var(TCNT0)
-          TCNT0 = TMRValue
-        #endif
-
-        #ifdef Var(TCNT0L)  'added 05/01/2016 Timer0 16bit support (ATtiny 261/461/861)
-           #ifdef TMR0_16BIT
-             TCNT0H = TMRValue_H
-           #endif
-           TCNT0L = TMRValue
-        #endif
-     End If
-
-     #ifdef Var(TCNT1L)
-        If TMRNumber = 1 Then
-          TCNT1H = TMRValue_H
-          TCNT1L = TMRValue
-        End If
-     #endif
-
-     #ifdef Var(TC1H)   'added 05/01/2016 for ATtiny 261/461/861
-        If TMRNumber = 1 Then
-          TC1H = TMRValue_H  'must be written before TCNT1
-        End If
-     #endif
-
-     #ifdef Var(TCNT1)   'added 05/01/2016 for ATtiny 15/25/45/85, 261/461/861
-        If TMRNumber = 1 Then
-          TCNT1 = TMRValue
-        End If
-     #endif
-
-     #ifdef Var(TCNT2)
-        If TMRNumber = 2 Then
-          TCNT2 = TMRValue
-        End If
-     #endif
-
-     #ifdef Var(TCNT3L)
-        If TMRNumber = 3 Then
-          TCNT3H = TMRValue_H
-          TCNT3L = TMRValue
-        End If
-     #endif
-
-     #ifdef Var(TCNT4L)
-        If TMRNumber = 4 Then
-          TCNT4H = TMRValue_H
-          TCNT4L = TMRValue
-        End If
-     #endif
-
-     #ifdef Var(TCNT5L)
-        If TMRNumber = 5 Then
-          TCNT5H = TMRValue_H
-          TCNT5L = TMRValue
-        End If
-     #endif
-
   #endif
 
 End Sub
