@@ -1,4 +1,7 @@
 #!/bin/sh
+
+#2016-07-20: Make grep for version number from $VersionFile case-insensitive
+
 set -e # Halt on error
 
 # Great Cow Basic generic Linux installer, Version 0.1
@@ -46,7 +49,7 @@ build()
 	done
 
 	# Get version number, release date from SynToolbars.ini, gcbasic.bas
-	Version=$(expr "$(grep '3h=Show GCBasic Compiler' $VersionFile)" : '.* v\(.*\) b')
+	Version=$(expr "$(grep -i '3h=Show GCBASIC Compiler' $VersionFile)" : '.* v\(.*\) b')
 	Release=$(expr "$(grep "Version =" $ReleaseFile)" : '.*".* \(.*\)"')
 	# Write to text file to facilitate support
 	echo -e "Version: $Version\nRelease: $Release\n" > $VersionReleaseFile
