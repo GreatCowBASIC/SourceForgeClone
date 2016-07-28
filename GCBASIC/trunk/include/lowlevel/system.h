@@ -56,7 +56,7 @@ Sub InitSys
 
     	#IFDEF Var(OSCCON1)
 
-				nop							' This is the routine for the OSCCON1 config
+				nop							' This is the routine for the OSCCON1 config addresss 16f18326 errata
         OSCCON1 = 0x60 ' NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
 
         OSCCON3 = 0x00 ' CSWHOLD may proceed; SOSCPWR Low power
@@ -73,6 +73,16 @@ Sub InitSys
           #ENDIF
 				#ENDIF
 
+        #IFDEF ChipMHz 24
+        	#IFDEF Var(OSCSTAT1)
+            OSCFRQ = 0b00000101
+            NOSC0 = 0
+            NOSC1 = 0
+            NOSC2 = 0
+          #ENDIF
+        #ENDIF
+
+
         #IFDEF ChipMHz 16
         	#IFDEF Var(OSCSTAT)
             OSCFRQ = 0b00000101
@@ -81,6 +91,14 @@ Sub InitSys
             OSCFRQ = 0b00000110
           #ENDIF
         #ENDIF
+
+        #IFDEF ChipMHz 12
+        	#IFDEF Var(OSCSTAT1)
+            OSCFRQ = 0b00000101
+          #ENDIF
+        #ENDIF
+
+
 
         #IFDEF ChipMHz 8
         	#IFDEF Var(OSCSTAT)
