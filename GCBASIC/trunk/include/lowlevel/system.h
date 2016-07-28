@@ -28,6 +28,8 @@
 ;    Added support for PIC18F(L)xx20 Chips
 ;    Added support for family 12 Chips and option_reg
 ;    Fixed CMCON for 18f chips
+;		 27072016 - Added support for OSCCON1 config
+
 'Constants
 #define ON 1
 #define OFF 0
@@ -49,7 +51,95 @@
 Sub InitSys
 
 	'Set up internal oscillator
+	#IFNDEF Var(OSCCON)
+		'handle OSCCON1 chips 16f and some 18f that have this register
+
+    	#IFDEF Var(OSCCON1)
+
+				nop							' This is the routine for the OSCCON1 config
+        OSCCON1 = 0x60 ' NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
+
+        OSCCON3 = 0x00 ' CSWHOLD may proceed; SOSCPWR Low power
+
+        OSCEN = 0x00 	 ' MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
+
+        OSCTUNE = 0x00 ' HFTUN 0
+      	#IFDEF ChipMHz 32
+        	#IFDEF Var(OSCSTAT)
+            OSCFRQ = 0b00000110 'Commentry for ASM Only - 16F18855 syle chip
+          #ENDIF
+        	#IFDEF Var(OSCSTAT1)
+            OSCFRQ = 0b00000111 'Commentry for ASM Only - 16F18326/18346 syle chip
+          #ENDIF
+				#ENDIF
+
+        #IFDEF ChipMHz 16
+        	#IFDEF Var(OSCSTAT)
+            OSCFRQ = 0b00000101
+          #ENDIF
+        	#IFDEF Var(OSCSTAT1)
+            OSCFRQ = 0b00000110
+          #ENDIF
+        #ENDIF
+
+        #IFDEF ChipMHz 8
+        	#IFDEF Var(OSCSTAT)
+            OSCFRQ = 0b00000011
+          #ENDIF
+        	#IFDEF Var(OSCSTAT1)
+            OSCFRQ = 0b00000100
+          #ENDIF
+				#ENDIF
+
+				#IFDEF ChipMHz 4
+        	#IFDEF Var(OSCSTAT)
+            OSCFRQ = 0b00000010
+          #ENDIF
+        	#IFDEF Var(OSCSTAT1)
+            OSCFRQ = 0b00000011
+          #ENDIF
+				#ENDIF
+
+        #IFDEF ChipMHz 2
+        	#IFDEF Var(OSCSTAT)
+            OSCFRQ = 0b00000001
+          #ENDIF
+        	#IFDEF Var(OSCSTAT1)
+            OSCFRQ = 0b00000001
+          #ENDIF
+				#ENDIF
+
+        #IFDEF ChipMHz 1
+            OSCFRQ = 0b00000000
+				#ENDIF
+
+        #IFDEF ChipMHz 0.5
+        		OSCFRQ = 0b00000000
+						OSCCON1 = OSCCON1 OR 0b00000001
+				#ENDIF
+
+        #IFDEF ChipMHz 0.25
+        		OSCFRQ = 0b00000000
+						OSCCON1 = OSCCON1 OR 0b00000010
+				#ENDIF
+
+        #IFDEF ChipMHz 0.125
+        	OSCFRQ = 0b00000000
+					OSCCON1 = OSCCON1 OR 0b00000011
+				#ENDIF
+
+			#ENDIF
+
+      #IFNDEF Var(OSCCON1)
+
+  					Errorlog "oscillator NOT being set - REPORT TO forum"
+
+			#ENDIF
+
+	#ENDIF
+
 	#IFDEF Var(OSCCON)
+		nop							' This is the routine for the OSCCON config
 		#IFDEF Bit(FOSC4)
 			Set FOSC4 Off
 		#ENDIF
@@ -935,7 +1025,7 @@ SysReadStringPart:
   movf TABLAT, W
   movwf SysCalcTempA
   addwf SysStringLength,F
-  
+
   'Check length
 SysStringReadCheck:
   'If length is 0, exit
