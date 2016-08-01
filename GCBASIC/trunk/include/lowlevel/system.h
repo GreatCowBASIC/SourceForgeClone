@@ -29,7 +29,7 @@
 ;    Added support for family 12 Chips and option_reg
 ;    Fixed CMCON for 18f chips
 ;		 27072016 - Added support for OSCCON1 config
-
+;    01082016 - Removed new command support
 'Constants
 #define ON 1
 #define OFF 0
@@ -145,12 +145,6 @@ Sub InitSys
         	OSCFRQ = 0b00000000
 					OSCCON1 = OSCCON1 OR 0b00000011
 				#ENDIF
-
-			#ENDIF
-
-      #IFNDEF Var(OSCCON1)
-
-  					Errorlog "oscillator NOT being set - REPORT TO forum"
 
 			#ENDIF
 
