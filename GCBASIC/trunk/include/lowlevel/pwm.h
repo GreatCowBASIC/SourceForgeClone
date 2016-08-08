@@ -27,7 +27,7 @@
 
 '''Changed position of 'Dim PRx_Temp as word' to remove declaration of variables when not required
 ''' 14/3/16		Added support for Hardware PMW and revised CCP PWM to support 16f18855 series
-
+''' 01/08/16  Added support for 16f18326* series
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
 #define PWM_Duty 50      'Duty cycle of PWM (%)
@@ -41,6 +41,7 @@
 #define USE_HPWMCCP3 TRUE
 #define USE_HPWMCCP4 TRUE
 
+#define USE_HPWM5 TRUE
 #define USE_HPWM6 TRUE
 #define USE_HPWM7 TRUE
 
@@ -63,13 +64,8 @@ Sub InitPWM
 
 	'Script to calculate constants required for given Frequency and Duty Cycle
 	#script
-
  	'revised to support new chips like 16f18855
    if bit(CCP1CON_MODE0) then
-
-        if bit(CCP1M0) Then
-        	warning "Unsupported PWM setup - please let us know via the GCBASIC forum."
-        end if
 
     		if nobit(CCP1M0) Then
 					CCP1M0 = CCP1CON_MODE0
@@ -93,6 +89,41 @@ Sub InitPWM
           CCP4M3 = CCP4CON_MODE3
         end if
 
+    end if
+
+ 	'revised to support new chips like 16f18326*
+   if bit(CCP1MODE0) then
+
+    		if nobit(CCP1M0) Then
+					CCP1M0 = CCP1MODE0
+          CCP1M1 = CCP1MODE1
+          CCP1M2 = CCP1MODE2
+          CCP1M3 = CCP1MODE3
+
+					CCP2M0 = CCP2MODE0
+          CCP2M1 = CCP2MODE1
+          CCP2M2 = CCP2MODE2
+          CCP2M3 = CCP2MODE3
+
+					CCP3M0 = CCP3MODE0
+          CCP3M1 = CCP3MODE1
+          CCP3M2 = CCP3MODE2
+          CCP3M3 = CCP3MODE3
+
+					CCP4M0 = CCP4MODE0		'remapped
+          CCP4M1 = CCP4MODE1		'remapped
+          CCP4M2 = CCP4MODE2		'remapped
+          CCP4M3 = CCP4MODE3    'remapped
+
+        end if
+
+    end if
+
+		'remapped for consistency
+    if bit(CCP4EN) then
+        CCP2CON_EN = CCP2EN
+        CCP3CON_EN = CCP3EN
+        CCP4CON_EN = CCP4EN
     end if
 
 		'T2PR was used in these routines, but, that is now a register, so, Changed to TxPR
@@ -226,9 +257,9 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 	#ifdef HPWM_FAST
 	    If PWMFreq <> PWMFreqOld Then
 	#endif
-					' Calculate PWM parameters
 
-          Tx_PR = 1
+
+          Tx_PR = 1   ' Commence calculations of PMW parameters using CCP in HWPMW (pwm.h) @ calcpoint
           PRx_Temp = PWMOsc1 / PWMFreq
           IF PRx_Temp_H > 0 then
             Tx_PR = 4
@@ -276,7 +307,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 			AddHPWMCCPSetup1
     #endif
 
-    #ifdef NoVar(CCP2CON)   'Only 1 CCP module on Chip
+    #ifdef NoVar(CCP2CON)   'We assumne there is is only 1 CCP module on Chip
       PRx_Temp = PWMDuty * (PRx_Temp + 2)   'Correction  - WMR
       CCPR1L = PRx_Temp_H
       If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
@@ -297,7 +328,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 	'Devices with more than one CCP
   #ifdef Var(CCP2CON)
 
-    #ifdef USE_HPWMCCP1 TRUE
+    #ifdef USE_HPWMCCP1 TRUE 'USE_HPWMCCP1 TRUE
 
       #ifdef AddHPWMCCPSetup1
 				AddHPWMCCPSetup1
@@ -305,7 +336,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 
       if PWMChannel = 1 then
 
-        #ifndef VAR(T2CLKCON)
+        #ifndef VAR(CCPR1H)
             PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction  - WMR
             CCPR1L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
@@ -315,7 +346,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP1M0 OFF
         #ENDIF
 
-        #ifdef VAR(T2CLKCON)
+        #ifdef VAR(CCPR1H)
 						calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             CCPR1H = PRx_Temp_H
             CCPR1L = PRx_Temp
@@ -323,8 +354,12 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP1M2 ON
             SET CCP1M1 ON
             SET CCP1M0 ON
-            SET CCP1EN ON
-            SET CCP1FMT ON
+            #ifdef bit(CCP1EN)
+            	SET CCP1EN ON
+            #endif
+            #ifdef bit(CCP1FMT)
+            	SET CCP1FMT ON
+            #endif
         #ENDIF
 
       end if
@@ -335,7 +370,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 
     #endif
 
-    #ifdef USE_HPWMCCP2 TRUE
+    #ifdef USE_HPWMCCP2 TRUE 'USE_HPWMCCP2 TRUE
 
       #ifdef AddHPWMCCPSetup2
 				AddHPWMCCPSetup2
@@ -344,7 +379,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
       if PWMChannel = 2 then
 
 
-        #ifndef VAR(T2CLKCON) 'This is the general case
+        #ifndef VAR(CCPR2H) 'This is the general case
             PRx_Temp = PWMDuty * ( PR2 + 2)  'Correction  - WMR
             CCPR2L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR2L = 0  ' Assure OFF at Zero - WMR
@@ -354,7 +389,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP2M0 OFF
         #ENDIF
 
-        #ifdef VAR(T2CLKCON)
+        #ifdef VAR(CCPR2H)
 						calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             CCPR2H = PRx_Temp_H
             CCPR2L = PRx_Temp
@@ -362,8 +397,12 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP2M2 ON
             SET CCP2M1 ON
             SET CCP2M0 ON
-            SET CCP2CON_EN ON
-            SET CCP2FMT ON
+            #ifdef bit(CCP2CON_EN)
+            	SET CCP2CON_EN ON
+            #endif
+            #ifdef bit(CCP2FMT)
+            	SET CCP2FMT ON
+            #endif
         #ENDIF
 
       end if
@@ -383,9 +422,9 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
     #endif
 
     #ifdef Var(CCP3CON)
-      if PWMChannel = 3 then
+      if PWMChannel = 3 then 'USE_HPWMCCP3 TRUE
 
-        #ifndef VAR(T2CLKCON)
+        #ifndef VAR(CCPR3H)
             PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction  - WMR
             CCPR3L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR3L = 0  ' Assure OFF at Zero - WMR
@@ -395,7 +434,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP3M0 OFF
         #ENDIF
 
-        #ifdef VAR(T2CLKCON)
+        #ifdef VAR(CCPR3H)
 						calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             CCPR3H = PRx_Temp_H
             CCPR3L = PRx_Temp
@@ -403,8 +442,13 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP3M2 ON
             SET CCP3M1 ON
             SET CCP3M0 ON
-            SET CCP3CON_EN ON
-            SET CCP3FMT ON
+            #ifdef bit(CCP3CON_EN)
+            	SET CCP3CON_EN ON
+            #endif
+            #ifdef bit(CCP3FMT)
+            	SET CCP3FMT ON
+            #endif
+
         #ENDIF
 
       end if
@@ -423,28 +467,34 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
     #endif
 
     #ifdef Var(CCP4CON)    'Added 17.04.2105 - WMR
-      if PWMChannel = 4 then
+      if PWMChannel = 4 then  'USE_HPWMCCP4 TRUE
 
-        #ifndef VAR(T2CLKCON)
-            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction  - WMR
+        #ifndef VAR(CCPR4H)
+            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'ifndef VAR(CCPR1H) Calculate PRx_Temp value ...
             CCPR4L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero - WMR
-            SET CCP4M3 ON
-            SET CCP4M2 ON
-            SET CCP4M1 OFF
-            SET CCP4M0 OFF
+
+            SET CCP4M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM
+            SET CCP4M2 ON'These my have been remapped using a script - do check ASM and script in INITPWM
+            SET CCP4M1 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
+            SET CCP4M0 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
         #ENDIF
 
-        #ifdef VAR(T2CLKCON)
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+        #ifdef VAR(CCPR4H)
+            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6.  ifdef VAR(CCPR1H)
             CCPR4H = PRx_Temp_H
             CCPR4L = PRx_Temp
             SET CCP4M3 ON
             SET CCP4M2 ON
             SET CCP4M1 ON
             SET CCP4M0 ON
-            SET CCP4CON_EN ON
-            SET CCP4FMT ON
+            #ifdef bit(CCP4CON_EN)
+            	SET CCP4CON_EN ON    'potentially rempped, check scripts
+            #endif
+            #ifdef bit(CCP4FMT)
+            	SET CCP4FMT ON
+            #endif
+
         #ENDIF
       end if
     #endif
@@ -586,7 +636,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
         #endif
 
         #ifdef USE_HPWM_TIMER4 TRUE
-            #ifdef bit(T4CON)
+            #ifdef var(T4CON)
               case 4
                 'Set PR4
                 PR4 = PRx_Temp  'This is required in the next sction of code, and as will not know which timer has been selected
@@ -632,7 +682,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
 
 				#ifdef USE_HPWM_TIMER6 TRUE
 
-        	#ifdef bit(T6CON)
+        	#ifdef var(T6CON)
         	    case 6
 
         	    'Set PR6
@@ -683,6 +733,37 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
 'This section setups up the PWM Duty
 
 		'The following code can be optimised via 'defines'
+
+    #ifdef USE_HPWM5 TRUE
+
+      #ifdef AddHPWMSetup5
+        AddHPWMSetup5
+      #endif
+      if PWMChannel = 5 then  'in section USE_HPWM5
+					' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+					calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+          PWM5DCH = PRx_Temp_H
+          PWM5DCL = PRx_Temp
+
+          ' Select timer by updating CCPTMRS1 register
+          SetWith ( P5TSEL0, TimerSelected.1 )
+          SetWith ( P5TSEL1, TimerSelected.2 )
+
+          #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
+            'Start PMW5
+            Set PWM5EN On
+					#ENDIF
+
+      End if
+
+      #ifdef AddHPWMExit5
+        AddHPWMExit5
+      #endif
+
+    #endif
+
+
+
     #ifdef USE_HPWM6 TRUE
 
       #ifdef AddHPWMSetup6
@@ -698,8 +779,11 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
           SetWith ( P6TSEL0, TimerSelected.1 )
           SetWith ( P6TSEL1, TimerSelected.2 )
 
-					'Start PMW6
-          Set PWM6EN On
+          #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
+            'Start PMW6
+            Set PWM6EN On
+					#ENDIF
+
 
       End if
 
@@ -727,8 +811,10 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
           SetWith ( P7TSEL0, TimerSelected.1 )
           SetWith ( P7TSEL1, TimerSelected.2 )
 
-					'Start PMW7
-          Set PWM7EN On
+          #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
+            'Start PMW7
+            Set PWM7EN On
+					#ENDIF
 
       end if
 
