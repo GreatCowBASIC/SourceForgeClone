@@ -1022,7 +1022,7 @@ End Function
 
 Function HasSFRBit(BitName As String) As Integer
 	
-	Return HashMapGet(SysVarBits, UCase(BitName)) <> 0
+	Return HashMapGet(SysVarBits, Trim(UCase(BitName))) <> 0
 	
 End Function
 
