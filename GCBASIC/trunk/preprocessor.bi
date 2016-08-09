@@ -53,7 +53,7 @@ Function CheckSysVarDef(ConditionIn As String) As String
 		End If
 		
 		'Search for bit in list
-		ConstFound = HasSFRBit(Temp)
+		ConstFound = HasSFRBit(Trim(Temp))
 		
 		'Replace result
 		If FV = 1 Then
@@ -82,7 +82,7 @@ Function CheckSysVarDef(ConditionIn As String) As String
 			Original = "NOVAR(" + Temp + ")"
 		End If
 		
-		ConstFound = HasSFR(Temp)
+		ConstFound = HasSFR(Trim(Temp))
 		
 		'Replace result
 		If FV = 1 Then
@@ -1449,7 +1449,7 @@ SUB RemIfDefs
 							'Get name of bit, and whether checking for presence or absence
 							FV = 0: IF INSTR(Cmd, "NOBIT(") <> 0 THEN FV = 1
 							Temp = Mid(Cmd, INSTR(Cmd, "(") + 1)
-							Temp = Left(Temp, INSTR(Temp, ")") - 1)
+							Temp = Trim(Left(Temp, INSTR(Temp, ")") - 1))
 							
 							'Search for bit in list
 							ConstFound = HasSFRBit(Temp)
@@ -1468,7 +1468,7 @@ SUB RemIfDefs
 							'Get name of SFR, and checking mode
 							FV = 0: IF INSTR(Cmd, "NOVAR(") <> 0 THEN FV = 1
 							Temp = Mid(Cmd, INSTR(Cmd, "(") + 1)
-							Temp = Left(Temp, INSTR(Temp, ")") - 1)
+							Temp = Trim(Left(Temp, INSTR(Temp, ")") - 1))
 							
 							ConstFound = HasSFR(Temp)
 							
