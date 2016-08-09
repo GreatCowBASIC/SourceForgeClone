@@ -28,6 +28,8 @@
 '''Changed position of 'Dim PRx_Temp as word' to remove declaration of variables when not required
 ''' 14/3/16		Added support for Hardware PMW and revised CCP PWM to support 16f18855 series
 ''' 01/08/16  Added support for 16f18326* series
+''' 08/08/16  Revised to remove the silly error instroduced above when I called bit() with a leading space!
+
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
 #define PWM_Duty 50      'Duty cycle of PWM (%)
@@ -64,10 +66,11 @@ Sub InitPWM
 
 	'Script to calculate constants required for given Frequency and Duty Cycle
 	#script
- 	'revised to support new chips like 16f18855
+ 	'revised to support new chips like the 16f188555
    if bit(CCP1CON_MODE0) then
 
     		if nobit(CCP1M0) Then
+          ' warning "Supporting microcontrollers like the 16f18555 and related microcontrollers"
 					CCP1M0 = CCP1CON_MODE0
           CCP1M1 = CCP1CON_MODE1
           CCP1M2 = CCP1CON_MODE2
@@ -95,6 +98,8 @@ Sub InitPWM
    if bit(CCP1MODE0) then
 
     		if nobit(CCP1M0) Then
+
+        	' warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxMODEx"
 					CCP1M0 = CCP1MODE0
           CCP1M1 = CCP1MODE1
           CCP1M2 = CCP1MODE2
@@ -110,10 +115,10 @@ Sub InitPWM
           CCP3M2 = CCP3MODE2
           CCP3M3 = CCP3MODE3
 
-					CCP4M0 = CCP4MODE0		'remapped
-          CCP4M1 = CCP4MODE1		'remapped
-          CCP4M2 = CCP4MODE2		'remapped
-          CCP4M3 = CCP4MODE3    'remapped
+					CCP4M0 = CCP4MODE0
+          CCP4M1 = CCP4MODE1
+          CCP4M2 = CCP4MODE2
+          CCP4M3 = CCP4MODE3
 
         end if
 
@@ -121,6 +126,7 @@ Sub InitPWM
 
 		'remapped for consistency
     if bit(CCP4EN) then
+    		' warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxEN"
         CCP2CON_EN = CCP2EN
         CCP3CON_EN = CCP3EN
         CCP4CON_EN = CCP4EN
@@ -301,6 +307,10 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
       End If
 	#endif
 
+	'this code can be optimised by using defines USE_HPWMCCP1|2|3|4
+  'and, you can define user setup and exit commands using AddHPWMCCPSetupN and  AddHPWMCCPExitN
+  '		These can be used to FIX little errors!
+
   #ifdef USE_HPWMCCP1 TRUE
 
     #ifdef AddHPWMCCPSetup1
@@ -354,9 +364,9 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP1M2 ON
             SET CCP1M1 ON
             SET CCP1M0 ON
-            #ifdef bit(CCP1EN)
-            	SET CCP1EN ON
-            #endif
+
+            SET CCP1CON_EN ON
+
             #ifdef bit(CCP1FMT)
             	SET CCP1FMT ON
             #endif
@@ -397,9 +407,9 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP2M2 ON
             SET CCP2M1 ON
             SET CCP2M0 ON
-            #ifdef bit(CCP2CON_EN)
-            	SET CCP2CON_EN ON
-            #endif
+
+            SET CCP2CON_EN ON
+
             #ifdef bit(CCP2FMT)
             	SET CCP2FMT ON
             #endif
@@ -442,9 +452,9 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP3M2 ON
             SET CCP3M1 ON
             SET CCP3M0 ON
-            #ifdef bit(CCP3CON_EN)
-            	SET CCP3CON_EN ON
-            #endif
+
+            SET CCP3CON_EN ON
+
             #ifdef bit(CCP3FMT)
             	SET CCP3FMT ON
             #endif
@@ -474,7 +484,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             CCPR4L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero - WMR
 
-            SET CCP4M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM
+            SET CCP4M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM @1@CCP4
             SET CCP4M2 ON'These my have been remapped using a script - do check ASM and script in INITPWM
             SET CCP4M1 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
             SET CCP4M0 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
@@ -484,13 +494,13 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6.  ifdef VAR(CCPR1H)
             CCPR4H = PRx_Temp_H
             CCPR4L = PRx_Temp
-            SET CCP4M3 ON
-            SET CCP4M2 ON
-            SET CCP4M1 ON
-            SET CCP4M0 ON
-            #ifdef bit(CCP4CON_EN)
-            	SET CCP4CON_EN ON    'potentially rempped, check scripts
-            #endif
+            SET CCP4M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM @2@CCP4
+            SET CCP4M2 ON'These my have been remapped using a script - do check ASM and script in INITPWM
+            SET CCP4M1 ON'These my have been remapped using a script - do check ASM and script in INITPWM
+            SET CCP4M0 ON'These my have been remapped using a script - do check ASM and script in INITPWM
+
+            SET CCP4CON_EN ON
+
             #ifdef bit(CCP4FMT)
             	SET CCP4FMT ON
             #endif
