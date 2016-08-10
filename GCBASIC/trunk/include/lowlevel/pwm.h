@@ -29,6 +29,7 @@
 ''' 14/3/16		Added support for Hardware PMW and revised CCP PWM to support 16f18855 series
 ''' 01/08/16  Added support for 16f18326* series
 ''' 08/08/16  Revised to remove the silly error instroduced above when I called bit() with a leading space!
+''' 09/08/16  Revised to remove fix the all case ENable option
 
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
@@ -365,7 +366,13 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP1M1 ON
             SET CCP1M0 ON
 
-            SET CCP1CON_EN ON
+            #ifdef bit(CCP1EN)
+              SET CCP1EN ON
+            #endif
+
+            #ifdef bit(CCP1CON_EN)
+              SET CCP1CON_EN ON
+            #endif
 
             #ifdef bit(CCP1FMT)
             	SET CCP1FMT ON
@@ -408,7 +415,13 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP2M1 ON
             SET CCP2M0 ON
 
-            SET CCP2CON_EN ON
+            #ifdef bit(CCP2EN)
+              SET CCP2EN ON
+            #endif
+
+            #ifdef bit(CCP2CON_EN)
+              SET CCP2CON_EN ON
+            #endif
 
             #ifdef bit(CCP2FMT)
             	SET CCP2FMT ON
@@ -453,7 +466,14 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP3M1 ON
             SET CCP3M0 ON
 
-            SET CCP3CON_EN ON
+            #ifdef bit(CCP3EN)
+              SET CCP3EN ON
+            #endif
+
+
+            #ifdef bit(CCP3CON_EN)
+              SET CCP3CON_EN ON
+            #endif
 
             #ifdef bit(CCP3FMT)
             	SET CCP3FMT ON
@@ -499,7 +519,13 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP4M1 ON'These my have been remapped using a script - do check ASM and script in INITPWM
             SET CCP4M0 ON'These my have been remapped using a script - do check ASM and script in INITPWM
 
-            SET CCP4CON_EN ON
+            #ifdef bit(CCP4EN)
+              SET CCP4EN ON
+            #endif
+
+            #ifdef bit(CCP4CON_EN)
+              SET CCP4CON_EN ON
+            #endif
 
             #ifdef bit(CCP4FMT)
             	SET CCP4FMT ON
