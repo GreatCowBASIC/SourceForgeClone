@@ -132,6 +132,9 @@ Type SubType
 
 	'If ends in goto, record sub jumped to
 	FinalGotoDest As String
+	
+	'If overloaded function, alias for return value
+	ReturnAlias As String
 
 	'Call tree
 	CallList As LinkedListElement Pointer
@@ -616,7 +619,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-08-09"
+Version = "0.95.<<>> 2016-09-01"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7048,9 +7051,10 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 
 	Dim As String TempLine, LineFromFile, BeforeFn, FunctionName, FunctionParams, AfterFn
 	Dim As String FunctionType, Origin, NewOrigin, TempVarName, TempData
+	Dim As String ReturnVar
 	Dim As Integer CD, DS, S, E, BL, FB, F, PD, FoundFunction, MatchScore, BetterMatch
 	Dim As Integer L, D, SL, Temp, UseTempVar, FunctionTypeID, CurrSub, FindMatch
-	Dim As Integer ParamsInBrackets
+	Dim As Integer ParamsInBrackets, CurrAliasByte
 
 	Dim As LinkedListElement Pointer CurrLine, NewCallCode, NewCallLine, LineBeforeCall
 
@@ -7234,19 +7238,45 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 						Goto SearchLineAgain
 					End If
 				End If
-
+				
+				'Get return variable
+				ReturnVar = ""
+				If NewSubCall.Called->IsFunction Then
+					If NewSubCall.Called->Overloaded Then
+						ReturnVar = "SYS" + Chr(31) + Str(CurrSub) + CHR(31) + UCase(NewSubCall.Called->ReturnType)
+						
+						'Add alias for return variable with appropriate type
+						If NewSubCall.Called->ReturnAlias = "" Then
+							For CurrAliasByte = GetTypeSize(NewSubCall.Called->ReturnType) - 1 To 0 Step -1
+								If NewSubCall.Called->ReturnAlias = "" Then
+									NewSubCall.Called->ReturnAlias = GetByte(NewSubCall.Called->Name, CurrAliasByte)
+								Else
+									NewSubCall.Called->ReturnAlias += "," + GetByte(NewSubCall.Called->Name, CurrAliasByte)
+								End If
+							Next
+							AddVar("SYS" + UCase(NewSubCall.Called->Name + NewSubCall.Called->ReturnType), NewSubCall.Called->ReturnType, 1, 0, "ALIAS:" + NewSubCall.Called->ReturnAlias, Origin,, -1)
+						End If
+					Else
+						ReturnVar = CHR(31) + Str(CurrSub) + CHR(31)
+					End If
+				End If
+				
 				'Adjust line
 				'Use 31 where name needs removal to prevent trying to handle it twice
 				If UseTempVar Then
 					TempLine = BeforeFn + TempVarName + AfterFn
 				Else
-					TempLine = BeforeFn + CHR(31) + Str(CurrSub) + CHR(31) + AfterFn
+					TempLine = BeforeFn + ReturnVar + AfterFn
 				End If
 
 				'Write back code
 				'Print DS, BeforeFn, FunctionName, FunctionParams, AfterFn
 				If Subroutine(CurrSub)->IsFunction Then
-					CurrLine->Value = ";FNSTART," + CHR(31) + Str(CurrSub) + CHR(31)
+					If NewSubCall.Called->Overloaded Then
+						CurrLine->Value = ";FNSTART," + CHR(31) + Str(CurrSub) + CHR(31) + Str(CurrSub)
+					Else
+						CurrLine->Value = ";FNSTART," + CHR(31) + Str(CurrSub) + CHR(31)
+					End If
 				Else
 					CurrLine = LinkedListDelete(CurrLine)
 				End If
@@ -7259,7 +7289,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				End If
 
 				If UseTempVar Then
-					CurrLine = LinkedListInsert(CurrLine, TempVarName + "=" + Chr(31) + Str(CurrSub) + CHR(31))
+					CurrLine = LinkedListInsert(CurrLine, TempVarName + "=" + ReturnVar)
 					LinkedListInsert(CurrLine, TempLine)
 				Else
 					LinkedListInsert(CurrLine, TempLine)
@@ -14616,6 +14646,7 @@ Function NewSubroutine(SubName As String) As SubType Pointer
 		.CallList = LinkedListCreate
 
 		.IntStateSaveVar = ""
+		.ReturnAlias = ""
 	End With
 
 	Return OutSub
@@ -14671,19 +14702,23 @@ FUNCTION TypeOfVar (VarName As String, CurrSub As SubType Pointer) As String
 	End If
 
 	'Element is a function
-	SubLoc = LocationOfSub(VarName, "")
-	If SubLoc > 0 Then
-		If Subroutine(SubLoc)->IsFunction Then
-			With *(Subroutine(SubLoc))
-				If .ReturnType <> "" Then
+	If UCase(VarName) = UCase(CurrSub->Name) And CurrSub->IsFunction Then
+		Return CurrSub->ReturnType
+			
+	Else
+		SubLoc = LocationOfSub(VarName, "", , -1)
+		'Don't use overloaded type
+		If SubLoc > 0 Then
+			If Subroutine(SubLoc)->IsFunction Then
+				With *(Subroutine(SubLoc))
+					If .ReturnType <> "" Then
 						Return .ReturnType
-				'Else
-				'		Return "BYTE"
-				End If
-			End With
+					End If
+				End With
+			End If
 		End If
 	End If
-
+	
 	'Get local type
 	LocalType = "BYTE"
 	GlobalType = "BYTE"
