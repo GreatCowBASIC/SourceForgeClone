@@ -865,7 +865,7 @@ SUB AssembleProgram
 	
 	'Add config
 	Dim As Integer CurrConfWord, ConfWord(ConfWords)
-	If ModePIC Then 'No config needed for AVR
+	If ModePIC And Not ConfigDisabled Then 'No config needed for AVR
 		If ChipFamily <> 16 THEN
 			
 			For CurrConfWord = 1 To ConfWords
