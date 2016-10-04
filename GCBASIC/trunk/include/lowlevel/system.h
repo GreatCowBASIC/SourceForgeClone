@@ -28,8 +28,9 @@
 ;    Added support for PIC18F(L)xx20 Chips
 ;    Added support for family 12 Chips and option_reg
 ;    Fixed CMCON for 18f chips
-;		 27072016 - Added support for OSCCON1 config
+;    27072016 - Added support for OSCCON1 config
 ;    01082016 - Removed new command support
+;    04102016 - Added OSCCAL Support
 'Constants
 #define ON 1
 #define OFF 0
@@ -50,31 +51,48 @@
 'System initialisation routine
 Sub InitSys
 
-	'Set up internal oscillator
-	#IFNDEF Var(OSCCON)
-		'handle OSCCON1 chips 16f and some 18f that have this register
+  'added 03102016 to resolve OSCCAL calibration
+  'GCB does not load saved calibration data into OSCCAL register on Baseline PIC. Therefore the FOSC is inaccurate when using internal RC oscillator.
+  'Solution:  Add following as the FIRST lines in the INITSYS sub in the System.h file
+  '#Ifdef PIC
+  '     #Ifdef Var(OSCCAL)
+  '           movwf OSCCAL
+  '    #Endif
+  '#Endif
+  'This loads the saved calibration data from the last flash memory location at POR or any time the chip is reset.
 
-    	#IFDEF Var(OSCCON1)
+  #Ifdef PIC
+       #Ifdef Var(OSCCAL)
+             movwf OSCCAL
+      #Endif
+  #Endif
 
-				nop							' This is the routine for the OSCCON1 config addresss 16f18326 errata
+
+  'Set up internal oscillator
+  #IFNDEF Var(OSCCON)
+    'handle OSCCON1 chips 16f and some 18f that have this register
+
+      #IFDEF Var(OSCCON1)
+
+        nop             ' This is the routine for the OSCCON1 config addresss 16f18326 errata
         OSCCON1 = 0x60 ' NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
 
         OSCCON3 = 0x00 ' CSWHOLD may proceed; SOSCPWR Low power
 
-        OSCEN = 0x00 	 ' MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
+        OSCEN = 0x00   ' MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
 
         OSCTUNE = 0x00 ' HFTUN 0
-      	#IFDEF ChipMHz 32
-        	#IFDEF Var(OSCSTAT)
+        #IFDEF ChipMHz 32
+          #IFDEF Var(OSCSTAT)
             OSCFRQ = 0b00000110 'Commentry for ASM Only - 16F18855 syle chip
           #ENDIF
-        	#IFDEF Var(OSCSTAT1)
+          #IFDEF Var(OSCSTAT1)
             OSCFRQ = 0b00000111 'Commentry for ASM Only - 16F18326/18346 syle chip
           #ENDIF
-				#ENDIF
+        #ENDIF
 
         #IFDEF ChipMHz 24
-        	#IFDEF Var(OSCSTAT1)
+          #IFDEF Var(OSCSTAT1)
             OSCFRQ = 0b00000101
             NOSC0 = 0
             NOSC1 = 0
@@ -84,16 +102,16 @@ Sub InitSys
 
 
         #IFDEF ChipMHz 16
-        	#IFDEF Var(OSCSTAT)
+          #IFDEF Var(OSCSTAT)
             OSCFRQ = 0b00000101
           #ENDIF
-        	#IFDEF Var(OSCSTAT1)
+          #IFDEF Var(OSCSTAT1)
             OSCFRQ = 0b00000110
           #ENDIF
         #ENDIF
 
         #IFDEF ChipMHz 12
-        	#IFDEF Var(OSCSTAT1)
+          #IFDEF Var(OSCSTAT1)
             OSCFRQ = 0b00000101
           #ENDIF
         #ENDIF
@@ -101,550 +119,550 @@ Sub InitSys
 
 
         #IFDEF ChipMHz 8
-        	#IFDEF Var(OSCSTAT)
+          #IFDEF Var(OSCSTAT)
             OSCFRQ = 0b00000011
           #ENDIF
-        	#IFDEF Var(OSCSTAT1)
+          #IFDEF Var(OSCSTAT1)
             OSCFRQ = 0b00000100
           #ENDIF
-				#ENDIF
+        #ENDIF
 
-				#IFDEF ChipMHz 4
-        	#IFDEF Var(OSCSTAT)
+        #IFDEF ChipMHz 4
+          #IFDEF Var(OSCSTAT)
             OSCFRQ = 0b00000010
           #ENDIF
-        	#IFDEF Var(OSCSTAT1)
+          #IFDEF Var(OSCSTAT1)
             OSCFRQ = 0b00000011
           #ENDIF
-				#ENDIF
+        #ENDIF
 
         #IFDEF ChipMHz 2
-        	#IFDEF Var(OSCSTAT)
+          #IFDEF Var(OSCSTAT)
             OSCFRQ = 0b00000001
           #ENDIF
-        	#IFDEF Var(OSCSTAT1)
+          #IFDEF Var(OSCSTAT1)
             OSCFRQ = 0b00000001
           #ENDIF
-				#ENDIF
+        #ENDIF
 
         #IFDEF ChipMHz 1
             OSCFRQ = 0b00000000
-				#ENDIF
+        #ENDIF
 
         #IFDEF ChipMHz 0.5
-        		OSCFRQ = 0b00000000
-						OSCCON1 = OSCCON1 OR 0b00000001
-				#ENDIF
+            OSCFRQ = 0b00000000
+            OSCCON1 = OSCCON1 OR 0b00000001
+        #ENDIF
 
         #IFDEF ChipMHz 0.25
-        		OSCFRQ = 0b00000000
-						OSCCON1 = OSCCON1 OR 0b00000010
-				#ENDIF
+            OSCFRQ = 0b00000000
+            OSCCON1 = OSCCON1 OR 0b00000010
+        #ENDIF
 
         #IFDEF ChipMHz 0.125
-        	OSCFRQ = 0b00000000
-					OSCCON1 = OSCCON1 OR 0b00000011
-				#ENDIF
+          OSCFRQ = 0b00000000
+          OSCCON1 = OSCCON1 OR 0b00000011
+        #ENDIF
 
-			#ENDIF
+      #ENDIF
 
-	#ENDIF
+  #ENDIF
 
-	#IFDEF Var(OSCCON)
-		nop							' This is the routine for the OSCCON config
-		#IFDEF Bit(FOSC4)
-			Set FOSC4 Off
-		#ENDIF
+  #IFDEF Var(OSCCON)
+    nop             ' This is the routine for the OSCCON config
+    #IFDEF Bit(FOSC4)
+      Set FOSC4 Off
+    #ENDIF
 
     #if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
-		  'Most chips:
-			#ifndef Bit(HFIOFS)
+      'Most chips:
+      #ifndef Bit(HFIOFS)
 
         #IFDEF ChipMHz 64 'added for 18F(L)K20 -WMR
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 On
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 On
           #ifdef Bit(SPLLMULT)
-						Set SPLLMULT On
-					#endif
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
+            Set SPLLMULT On
+          #endif
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN On
+          #endif
           #ifdef Bit(PLLEN)
-						Set PLLEN On
-					#endif
-				#ENDIF
+            Set PLLEN On
+          #endif
+        #ENDIF
 
-      	#IFDEF ChipMHz 32 'added for 18F(L)K20 -WMR
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 Off
-					#ifdef Bit(SPLLMULT)
-						Set SPLLMULT Off
-					#endif
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
+        #IFDEF ChipMHz 32 'added for 18F(L)K20 -WMR
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 Off
+          #ifdef Bit(SPLLMULT)
+            Set SPLLMULT Off
+          #endif
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN On
+          #endif
           #ifdef Bit(PLLEN)
-						Set PLLEN On
-					#endif
-				#ENDIF
+            Set PLLEN On
+          #endif
+        #ENDIF
 
         #IFDEF ChipMHz 16 'added for 18F(L)K20 -WMR
           Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 On
-        		'OSCCON = OSCCON OR b'01110000'
-				#ENDIF
+          Set IRCF1 On
+          Set IRCF0 On
+            'OSCCON = OSCCON OR b'01110000'
+        #ENDIF
 
         #IFDEF ChipMHz 8
-					OSCCON = OSCCON OR b'01110000'
-				#ENDIF
-				#IFDEF ChipMHz 4
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01100000'
-				#ENDIF
-				#IFDEF ChipMHz 2
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01010000'
-				#ENDIF
-				#IFDEF ChipMHz 1
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01000000'
-				#ENDIF
-				#IFDEF ChipMHz 0.5
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00110000'
-				#ENDIF
-				#IFDEF ChipMHz 0.25
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00100000'
-				#ENDIF
-				#IFDEF ChipMHz 0.125
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00010000'
-				#ENDIF
-			#endif
+          OSCCON = OSCCON OR b'01110000'
+        #ENDIF
+        #IFDEF ChipMHz 4
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01100000'
+        #ENDIF
+        #IFDEF ChipMHz 2
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01010000'
+        #ENDIF
+        #IFDEF ChipMHz 1
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01000000'
+        #ENDIF
+        #IFDEF ChipMHz 0.5
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00110000'
+        #ENDIF
+        #IFDEF ChipMHz 0.25
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00100000'
+        #ENDIF
+        #IFDEF ChipMHz 0.125
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00010000'
+        #ENDIF
+      #endif
 
       '10F32x chips:
       #ifdef Bit(HFIOFS)
-      	#IFDEF ChipMHz 64 'added for 18F25K22-WMR
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 On
+        #IFDEF ChipMHz 64 'added for 18F25K22-WMR
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 On
           #ifdef Bit(SPLLMULT)
-						Set SPLLMULT On
-					#endif
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
+            Set SPLLMULT On
+          #endif
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN On
+          #endif
           #ifdef Bit(PLLEN)
-						Set PLLEN On
-					#endif
-				#ENDIF
+            Set PLLEN On
+          #endif
+        #ENDIF
 
-      	#IFDEF ChipMHz 32 'added for 18F25K22 WMR
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 Off
-					#ifdef Bit(SPLLMULT)
-						Set SPLLMULT Off
-					#endif
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
+        #IFDEF ChipMHz 32 'added for 18F25K22 WMR
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 Off
+          #ifdef Bit(SPLLMULT)
+            Set SPLLMULT Off
+          #endif
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN On
+          #endif
           #ifdef Bit(PLLEN)
-						Set PLLEN On
-					#endif
-				#ENDIF
+            Set PLLEN On
+          #endif
+        #ENDIF
 
         #IFDEF ChipMHz 16
-        		OSCCON = OSCCON OR b'01110000'
-				#ENDIF
-				#IFDEF ChipMHz 8
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01100000'
-				#ENDIF
-				#IFDEF ChipMHz 4
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01010000'
-				#ENDIF
-				#IFDEF ChipMHz 2
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01000000'
-				#ENDIF
-				#IFDEF ChipMHz 1
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00110000'
-				#ENDIF
-				#IFDEF ChipMHz 0.5
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00100000'
-				#ENDIF
-				#IFDEF ChipMHz 0.25
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00010000'
-				#ENDIF
-			#endif
-		#endif
+            OSCCON = OSCCON OR b'01110000'
+        #ENDIF
+        #IFDEF ChipMHz 8
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01100000'
+        #ENDIF
+        #IFDEF ChipMHz 4
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01010000'
+        #ENDIF
+        #IFDEF ChipMHz 2
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01000000'
+        #ENDIF
+        #IFDEF ChipMHz 1
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00110000'
+        #ENDIF
+        #IFDEF ChipMHz 0.5
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00100000'
+        #ENDIF
+        #IFDEF ChipMHz 0.25
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00010000'
+        #ENDIF
+      #endif
+    #endif
 
-		#if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
+    #if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
 
       #ifdef Bit(IRCF3)
 
         #IFDEF ChipMHz 64
-				  'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
-					'OSCCON = OSCCON OR b'01111000'
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 On
-				#ENDIF
-				#IFDEF ChipMHz 48
-					'Same as for 16, assuming 48 MHz clock is 16 MHz x 3
-					'OSCCON = OSCCON OR b'01111000'
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 On
-					#ifdef Bit(SPLLMULT)
-						Set SPLLMULT On
-					#endif
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 32
-					'Same as for 8, assuming 32 MHz clock is 8 MHz x 4
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'11110000'
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 Off
-					#ifdef Bit(SPLLMULT)
-						Set SPLLMULT Off
-					#endif
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 24
-					'Same as for 8, assuming 24 MHz clock is 8 MHz x 3
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 Off
-					#ifdef Bit(SPLLMULT)
-						Set SPLLMULT On
-					#endif
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN On
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 16
+          'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
           'OSCCON = OSCCON OR b'01111000'
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 On
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 8
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'01110000'
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 Off
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 4
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'01101000'
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 Off
-					Set IRCF0 On
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 2
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'01100000'
-					Set IRCF3 On
-					Set IRCF2 On
-					Set IRCF1 Off
-					Set IRCF0 Off
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 1
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'01011000'
-					Set IRCF3 On
-					Set IRCF2 Off
-					Set IRCF1 On
-					Set IRCF0 On
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 0.5
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'00111000'
-					Set IRCF3 Off
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 On
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 0.25
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'00110000'
-					Set IRCF3 Off
-					Set IRCF2 On
-					Set IRCF1 On
-					Set IRCF0 Off
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 0.125
-					'OSCCON = OSCCON AND b'10000111'
-					'OSCCON = OSCCON OR b'00101000'
-					Set IRCF3 Off
-					Set IRCF2 On
-					Set IRCF1 Off
-					Set IRCF0 On
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-			#endif
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 On
+        #ENDIF
+        #IFDEF ChipMHz 48
+          'Same as for 16, assuming 48 MHz clock is 16 MHz x 3
+          'OSCCON = OSCCON OR b'01111000'
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 On
+          #ifdef Bit(SPLLMULT)
+            Set SPLLMULT On
+          #endif
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN On
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 32
+          'Same as for 8, assuming 32 MHz clock is 8 MHz x 4
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'11110000'
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 Off
+          #ifdef Bit(SPLLMULT)
+            Set SPLLMULT Off
+          #endif
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN On
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 24
+          'Same as for 8, assuming 24 MHz clock is 8 MHz x 3
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 Off
+          #ifdef Bit(SPLLMULT)
+            Set SPLLMULT On
+          #endif
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN On
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 16
+          'OSCCON = OSCCON OR b'01111000'
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 On
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 8
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'01110000'
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 Off
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 4
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'01101000'
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 Off
+          Set IRCF0 On
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 2
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'01100000'
+          Set IRCF3 On
+          Set IRCF2 On
+          Set IRCF1 Off
+          Set IRCF0 Off
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 1
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'01011000'
+          Set IRCF3 On
+          Set IRCF2 Off
+          Set IRCF1 On
+          Set IRCF0 On
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 0.5
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'00111000'
+          Set IRCF3 Off
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 On
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 0.25
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'00110000'
+          Set IRCF3 Off
+          Set IRCF2 On
+          Set IRCF1 On
+          Set IRCF0 Off
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 0.125
+          'OSCCON = OSCCON AND b'10000111'
+          'OSCCON = OSCCON OR b'00101000'
+          Set IRCF3 Off
+          Set IRCF2 On
+          Set IRCF1 Off
+          Set IRCF0 On
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+      #endif
 
       #ifndef Bit(IRCF3)
 
         #IFDEF ChipMHz 64
           'OSCCON = OSCCON AND b'10001111'
-					'OSCCON = OSCCON OR  b'01100000'
-					Set IRCF2 On    '- WMR
-					Set IRCF1 On    '- WMR
-					Set IRCF0 On    ' -WMR
+          'OSCCON = OSCCON OR  b'01100000'
+          Set IRCF2 On    '- WMR
+          Set IRCF1 On    '- WMR
+          Set IRCF0 On    ' -WMR
           #ifdef Bit(SPLLEN)
-            	Set SPLLEN On
-					#endif
+              Set SPLLEN On
+          #endif
           #ifdef Bit(PLLEN)   'Added for 18F14K22 and many others -WMR
-             	Set PLLEN On    'that use PLLEN instead of SPLLEN
-					#endif              'for software control of the PLL
+              Set PLLEN On    'that use PLLEN instead of SPLLEN
+          #endif              'for software control of the PLL
         #ENDIF
         #IFDEF ChipMHz 32
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR  b'01100000'
-					#ifdef Bit(SPLLEN)
-            	Set SPLLEN On
-					#endif
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR  b'01100000'
+          #ifdef Bit(SPLLEN)
+              Set SPLLEN On
+          #endif
           #ifdef Bit(PLLEN) 'Added for 18F14K22 and amny others -WMR
-            	Set PLLEN On  'that use PLLEN instead of SPLLEN
-					#endif            'for software control of the PLL
+              Set PLLEN On  'that use PLLEN instead of SPLLEN
+          #endif            'for software control of the PLL
         #ENDIF
 
         #IFDEF ChipMHz 16
-					OSCCON = OSCCON OR b'01110000'
-				#ENDIF
-				#IFDEF ChipMHz 8
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01100000'
-					#ifdef Bit(SPLLEN)
-						Set SPLLEN Off
-					#endif
-				#ENDIF
-				#IFDEF ChipMHz 4
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01010000'
-				#ENDIF
-				#IFDEF ChipMHz 2
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'01000000'
-				#ENDIF
-				#IFDEF ChipMHz 1
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00110000'
-				#ENDIF
-				#IFDEF ChipMHz 0.5
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00100000'
-				#ENDIF
-				#IFDEF ChipMHz 0.25
-					OSCCON = OSCCON AND b'10001111'
-					OSCCON = OSCCON OR b'00010000'
-				#ENDIF
-				#IFDEF ChipMHz 0.031
-					OSCCON = OSCCON AND b'10001111'
-				#ENDIF
-			#endif
-		#endif
+          OSCCON = OSCCON OR b'01110000'
+        #ENDIF
+        #IFDEF ChipMHz 8
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01100000'
+          #ifdef Bit(SPLLEN)
+            Set SPLLEN Off
+          #endif
+        #ENDIF
+        #IFDEF ChipMHz 4
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01010000'
+        #ENDIF
+        #IFDEF ChipMHz 2
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'01000000'
+        #ENDIF
+        #IFDEF ChipMHz 1
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00110000'
+        #ENDIF
+        #IFDEF ChipMHz 0.5
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00100000'
+        #ENDIF
+        #IFDEF ChipMHz 0.25
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR b'00010000'
+        #ENDIF
+        #IFDEF ChipMHz 0.031
+          OSCCON = OSCCON AND b'10001111'
+        #ENDIF
+      #endif
+    #endif
 
-	#ENDIF
+  #ENDIF
 
-	'Clear BSR on 18F chips
-	#IFDEF ChipFamily 16
-		BSR = 0
-	#ENDIF
+  'Clear BSR on 18F chips
+  #IFDEF ChipFamily 16
+    BSR = 0
+  #ENDIF
 
-	#IFDEF Var(TBLPTRU)
-		TBLPTRU = 0
-	#ENDIF
+  #IFDEF Var(TBLPTRU)
+    TBLPTRU = 0
+  #ENDIF
 
-	'Ensure all ports are set for digital I/O
-	'Turn off A/D
-	#IF Var(ADCON0) OR Var(ADCON)
-		#IFDEF Bit(ADFM)
-			SET ADFM OFF
-		#ENDIF
-		'Switch off A/D
-		#ifdef NoVar(ADCON0)
-			Set ADCON.ADON Off
-		#endif
-		#IFDEF Var(ADCON0)
-			SET ADCON0.ADON OFF
-			#IF NoVar(ANSEL) AND NoVar(ANSELA) AND NoVar(ANSEL0)
-				#IFDEF NoBit(PCFG4)
-					#IFDEF NoVar(ADCON2)
-						#IFDEF NoBit(ANS0)
-							#IFDEF Bit(PCFG3)
-								SET PCFG3 OFF
-							#ENDIF
-							#IFDEF Bit(PCFG2)
-								SET PCFG2 ON
-							#ENDIF
-							SET PCFG1 ON
-							SET PCFG0 OFF
-						#ENDIF
-						#IFDEF Bit(ANS0)
-							SET ANS0 OFF
-							SET ANS1 OFF
-						#ENDIF
-					#ENDIF
+  'Ensure all ports are set for digital I/O
+  'Turn off A/D
+  #IF Var(ADCON0) OR Var(ADCON)
+    #IFDEF Bit(ADFM)
+      SET ADFM OFF
+    #ENDIF
+    'Switch off A/D
+    #ifdef NoVar(ADCON0)
+      Set ADCON.ADON Off
+    #endif
+    #IFDEF Var(ADCON0)
+      SET ADCON0.ADON OFF
+      #IF NoVar(ANSEL) AND NoVar(ANSELA) AND NoVar(ANSEL0)
+        #IFDEF NoBit(PCFG4)
+          #IFDEF NoVar(ADCON2)
+            #IFDEF NoBit(ANS0)
+              #IFDEF Bit(PCFG3)
+                SET PCFG3 OFF
+              #ENDIF
+              #IFDEF Bit(PCFG2)
+                SET PCFG2 ON
+              #ENDIF
+              SET PCFG1 ON
+              SET PCFG0 OFF
+            #ENDIF
+            #IFDEF Bit(ANS0)
+              SET ANS0 OFF
+              SET ANS1 OFF
+            #ENDIF
+          #ENDIF
 
-					#IFDEF Var(ADCON2)
-						#IFDEF BIT(PCFG3)
-							SET PCFG3 ON
-							SET PCFG2 ON
-							SET PCFG1 ON
-							SET PCFG0 ON
-						#ENDIF
-					#ENDIF
-				#ENDIF
+          #IFDEF Var(ADCON2)
+            #IFDEF BIT(PCFG3)
+              SET PCFG3 ON
+              SET PCFG2 ON
+              SET PCFG1 ON
+              SET PCFG0 ON
+            #ENDIF
+          #ENDIF
+        #ENDIF
 
-				'For 18F1320, which uses ADCON1 as an ANSEL register
-				#IFDEF Bit(PCFG4)
-					ADCON1 = 0
-				#ENDIF
-			#ENDIF
-		#ENDIF
+        'For 18F1320, which uses ADCON1 as an ANSEL register
+        #IFDEF Bit(PCFG4)
+          ADCON1 = 0
+        #ENDIF
+      #ENDIF
+    #ENDIF
 
-		'Clear whatever ANSEL variants the chip has
-		#IFDEF Var(ANSEL)
-			ANSEL = 0
-		#ENDIF
-		#IFDEF Var(ANSELH)
-			ANSELH = 0
-		#ENDIF
-		#IFDEF Var(ANSEL0)
-			ANSEL0 = 0
-		#ENDIF
-		#IFDEF Var(ANSEL1)
-			ANSEL1 = 0
-		#ENDIF
-		#IFDEF Var(ANSELA)
-			ANSELA = 0
-		#ENDIF
-		#IFDEF Var(ANSELB)
-			ANSELB = 0
-		#ENDIF
-		#IFDEF Var(ANSELC)
-			ANSELC = 0
-		#ENDIF
-		#IFDEF Var(ANSELD)
-			ANSELD = 0
-		#ENDIF
-		#IFDEF Var(ANSELE)
-			ANSELE = 0
-		#ENDIF
-	#ENDIF
+    'Clear whatever ANSEL variants the chip has
+    #IFDEF Var(ANSEL)
+      ANSEL = 0
+    #ENDIF
+    #IFDEF Var(ANSELH)
+      ANSELH = 0
+    #ENDIF
+    #IFDEF Var(ANSEL0)
+      ANSEL0 = 0
+    #ENDIF
+    #IFDEF Var(ANSEL1)
+      ANSEL1 = 0
+    #ENDIF
+    #IFDEF Var(ANSELA)
+      ANSELA = 0
+    #ENDIF
+    #IFDEF Var(ANSELB)
+      ANSELB = 0
+    #ENDIF
+    #IFDEF Var(ANSELC)
+      ANSELC = 0
+    #ENDIF
+    #IFDEF Var(ANSELD)
+      ANSELD = 0
+    #ENDIF
+    #IFDEF Var(ANSELE)
+      ANSELE = 0
+    #ENDIF
+  #ENDIF
 
 
   'For 18f devices
   #IFDEF VAR(ANCON0)
-		#IFDEF BIT(ANSEL0)
-			Set ANSEL0 off
-		#ENDIF
+    #IFDEF BIT(ANSEL0)
+      Set ANSEL0 off
+    #ENDIF
     #IFDEF BIT(ANSEL1)
-			Set ANSEL1 off
-		#ENDIF
+      Set ANSEL1 off
+    #ENDIF
     #IFDEF BIT(ANSEL2)
-			Set ANSEL2 off
-		#ENDIF
+      Set ANSEL2 off
+    #ENDIF
     #IFDEF BIT(ANSEL3)
-			Set ANSEL3 off
-		#ENDIF
+      Set ANSEL3 off
+    #ENDIF
     #IFDEF BIT(ANSEL4)
-			Set ANSEL4 off
-		#ENDIF
+      Set ANSEL4 off
+    #ENDIF
     #IFDEF BIT(ANSEL5)
-			Set ANSEL5 off
-		#ENDIF
+      Set ANSEL5 off
+    #ENDIF
     #IFDEF BIT(ANSEL6)
-			Set ANSEL6 off
-		#ENDIF
+      Set ANSEL6 off
+    #ENDIF
     #IFDEF BIT(ANSEL7)
-			Set ANSEL7 off
-		#ENDIF
+      Set ANSEL7 off
+    #ENDIF
 
   #ENDIF
 
   #IFDEF VAR(ANCON1)
-		#IFDEF BIT(ANSEL8)
-			Set ANSEL9 off
-		#ENDIF
+    #IFDEF BIT(ANSEL8)
+      Set ANSEL9 off
+    #ENDIF
     #IFDEF BIT(ANSEL9)
-			Set ANSEL9 off
-		#ENDIF
+      Set ANSEL9 off
+    #ENDIF
     #IFDEF BIT(ANSEL10)
-			Set ANSEL10 off
-		#ENDIF
+      Set ANSEL10 off
+    #ENDIF
     #IFDEF BIT(ANSEL11)
-			Set ANSEL11 off
-		#ENDIF
+      Set ANSEL11 off
+    #ENDIF
     #IFDEF BIT(ANSEL12)
-			Set ANSEL12 off
-		#ENDIF
+      Set ANSEL12 off
+    #ENDIF
     #IFDEF BIT(ANSEL13)
-			Set ANSEL13 off
-		#ENDIF
+      Set ANSEL13 off
+    #ENDIF
     #IFDEF BIT(ANSEL14)
-			Set ANSEL14 off
-		#ENDIF
+      Set ANSEL14 off
+    #ENDIF
     #IFDEF BIT(ANSEL15)
-			Set ANSEL15 off
-		#ENDIF
+      Set ANSEL15 off
+    #ENDIF
 
   #ENDIF
 
-	'Turn off comparator
-	#IFDEF Var(CMCON)
+  'Turn off comparator
+  #IFDEF Var(CMCON)
     'defaults - same since 2013
     #IFNDEF BIT(CMEN0)
-  		CMCON = 7
+      CMCON = 7
     #ENDIF
 
     #IFDEF BIT(CMEN0)
@@ -653,66 +671,66 @@ Sub InitSys
       '    18f1231.dat:CMEN1,CMCON,1
       '    18f1330.dat:CMEN1,CMCON,1
       '    18f1331.dat:CMEN1,CMCON,1
-  		CMEN0 = 0
+      CMEN0 = 0
       CMEN1 = 0
       CMEN2 = 0
     #ENDIF
 
-	#ENDIF
-	#IFDEF Var(CMCON0)
-		CMCON0 = 7
-	#ENDIF
-	'12F510,16F506 and other devices? (Thanks to Kent for suggesting these lines!)
-	#IFDEF Var(CM1CON0)
-		#IFDEF Var(CM2CON0)
-			C2ON = 0
-		#ENDIF
-		C1ON = 0
-	#ENDIF
+  #ENDIF
+  #IFDEF Var(CMCON0)
+    CMCON0 = 7
+  #ENDIF
+  '12F510,16F506 and other devices? (Thanks to Kent for suggesting these lines!)
+  #IFDEF Var(CM1CON0)
+    #IFDEF Var(CM2CON0)
+      C2ON = 0
+    #ENDIF
+    C1ON = 0
+  #ENDIF
 
-	'Set GPIO.2 to digital (clear T0CS bit)
-	#IFDEF ChipFamily 12
-		#IFDEF Bit(T0CS)
-			movlw b'11000111'
-			option
+  'Set GPIO.2 to digital (clear T0CS bit)
+  #IFDEF ChipFamily 12
+    #IFDEF Bit(T0CS)
+      movlw b'11000111'
+      option
       option_reg = b'11000111'
-		#ENDIF
-	#ENDIF
+    #ENDIF
+  #ENDIF
 
-	'Turn off all ports
-	#IFDEF Var(GPIO)
-		GPIO = 0
-	#ENDIF
-	#IFDEF Var(PORTA)
-		PORTA = 0
-	#ENDIF
-	#IFDEF Var(PORTB)
-		PORTB = 0
-	#ENDIF
-	#IFDEF Var(PORTC)
-		PORTC = 0
-	#ENDIF
-	#IFDEF Var(PORTD)
-		PORTD = 0
-	#ENDIF
-	#IFDEF Var(PORTE)
-		PORTE = 0
-	#ENDIF
-	#IFDEF Var(PORTF)
-		PORTF = 0
-	#ENDIF
-	#IFDEF Var(PORTG)
-		PORTG = 0
-	#ENDIF
-	#IFDEF Var(PORTH)
-		PORTH = 0
-	#ENDIF
-	#IFDEF Var(PORTI)
-		PORTI = 0
-	#ENDIF
-	#IFDEF Var(PORTJ)
-		PORTJ = 0
-	#ENDIF
+  'Turn off all ports
+  #IFDEF Var(GPIO)
+    GPIO = 0
+  #ENDIF
+  #IFDEF Var(PORTA)
+    PORTA = 0
+  #ENDIF
+  #IFDEF Var(PORTB)
+    PORTB = 0
+  #ENDIF
+  #IFDEF Var(PORTC)
+    PORTC = 0
+  #ENDIF
+  #IFDEF Var(PORTD)
+    PORTD = 0
+  #ENDIF
+  #IFDEF Var(PORTE)
+    PORTE = 0
+  #ENDIF
+  #IFDEF Var(PORTF)
+    PORTF = 0
+  #ENDIF
+  #IFDEF Var(PORTG)
+    PORTG = 0
+  #ENDIF
+  #IFDEF Var(PORTH)
+    PORTH = 0
+  #ENDIF
+  #IFDEF Var(PORTI)
+    PORTI = 0
+  #ENDIF
+  #IFDEF Var(PORTJ)
+    PORTJ = 0
+  #ENDIF
 
 End Sub
 
@@ -721,11 +739,11 @@ End Sub
 
 'String parameter vars:
 'On 12/14 bit:
-'	SysStringA = Source string
-'	SysStringB = Dest string
+' SysStringA = Source string
+' SysStringB = Dest string
 'On extended 14 and 16 bit:
-'	FSR0 = Source string
-'	FSR1 = Dest string
+' FSR0 = Source string
+' FSR1 = Dest string
 
 sub SysCopyString
 
@@ -814,38 +832,38 @@ SysStringCopy:
 
 #ENDIF
 
-	#ifdef ChipFamily 15
-		'Get and copy length
-		movf INDF0, W
-		movwf SysCalcTempA
-		movwf INDF1
+  #ifdef ChipFamily 15
+    'Get and copy length
+    movf INDF0, W
+    movwf SysCalcTempA
+    movwf INDF1
 
-		goto SysCopyStringCheck
+    goto SysCopyStringCheck
 
-		'When appending, add length to counter
-		SysCopyStringPart:
-		movf INDF0, W
-		movwf SysCalcTempA
-		addwf SysStringLength, F
+    'When appending, add length to counter
+    SysCopyStringPart:
+    movf INDF0, W
+    movwf SysCalcTempA
+    addwf SysStringLength, F
 
-		SysCopyStringCheck:
-		'Exit if length = 0
-		movf SysCalcTempA,F
-		btfsc STATUS,Z
-		return
+    SysCopyStringCheck:
+    'Exit if length = 0
+    movf SysCalcTempA,F
+    btfsc STATUS,Z
+    return
 
-		SysStringCopy:
-			'Increment pointers
-			addfsr 0, 1
-			addfsr 1, 1
+    SysStringCopy:
+      'Increment pointers
+      addfsr 0, 1
+      addfsr 1, 1
 
-			'Copy character
-			movf INDF0, W
-			movwf INDF1
+      'Copy character
+      movf INDF0, W
+      movwf INDF1
 
-		decfsz SysCalcTempA, F
-		goto SysStringCopy
-	#endif
+    decfsz SysCalcTempA, F
+    goto SysStringCopy
+  #endif
 
 #IFDEF ChipFamily 16
 
@@ -915,14 +933,14 @@ end sub
 
 'Program Memory > String
 'On 12/14 bit:
-'	SysStringA = Source address
-'	SysStringB = Dest string
+' SysStringA = Source address
+' SysStringB = Dest string
 'On enhanced 14 bit:
-'	SysStringA = Source address
-'	FSR1 = Dest string
+' SysStringA = Source address
+' FSR1 = Dest string
 'On 16 bit:
-'	TBLPTRL/TBLPTRH = Source string
-'	FSR1 = Dest string
+' TBLPTRL/TBLPTRH = Source string
+' FSR1 = Dest string
 
 sub SysReadString
 
@@ -988,41 +1006,41 @@ SysStringRead:
 
  #endif
 
-	#ifdef ChipFamily 15
+  #ifdef ChipFamily 15
 
-		'Get length
-		call SysStringTables
-		movwf SysCalcTempA
-		movwf INDF1
+    'Get length
+    call SysStringTables
+    movwf SysCalcTempA
+    movwf INDF1
 
-		goto SysStringReadCheck
-		SysReadStringPart:
+    goto SysStringReadCheck
+    SysReadStringPart:
 
-		'Get length
-		call SysStringTables
-		movwf SysCalcTempA
-		addwf SysStringLength,F
+    'Get length
+    call SysStringTables
+    movwf SysCalcTempA
+    addwf SysStringLength,F
 
-		'Check length
-		SysStringReadCheck:
-		'If length is 0, exit
-		movf SysCalcTempA,F
-		btfsc STATUS,Z
-		return
+    'Check length
+    SysStringReadCheck:
+    'If length is 0, exit
+    movf SysCalcTempA,F
+    btfsc STATUS,Z
+    return
 
-		'Copy
-		SysStringRead:
-			'Get char
-			call SysStringTables
+    'Copy
+    SysStringRead:
+      'Get char
+      call SysStringTables
 
-			'Set char
-			addfsr 1,1
-			movwf INDF1
+      'Set char
+      addfsr 1,1
+      movwf INDF1
 
-		decfsz SysCalcTempA, F
-		goto SysStringRead
+    decfsz SysCalcTempA, F
+    goto SysStringRead
 
-	#endif
+  #endif
 
  #ifdef ChipFamily 16
 
@@ -1058,7 +1076,7 @@ SysStringRead:
  #endif
 
  #IFDEF AVR
-	Dim SysCalcTempX As Byte
+  Dim SysCalcTempX As Byte
 
   'Get length
   'lpm SysCalcTempA, Z+
@@ -1188,37 +1206,37 @@ SCEStrTrue:
 
 #ENDIF
 
-	#ifdef ChipFamily 15
-		'Check length matches
-		movf INDF0, W
-		movwf SysByteTempA
-		subwf INDF1, W
-		btfss STATUS, Z
-		return
-		'Check if empty
-		movf SysByteTempA, F
-		btfsc STATUS, Z
-		goto SCEStrTrue
+  #ifdef ChipFamily 15
+    'Check length matches
+    movf INDF0, W
+    movwf SysByteTempA
+    subwf INDF1, W
+    btfss STATUS, Z
+    return
+    'Check if empty
+    movf SysByteTempA, F
+    btfsc STATUS, Z
+    goto SCEStrTrue
 
-		'Check each char, exit if not equal
-		SysStringComp:
+    'Check each char, exit if not equal
+    SysStringComp:
 
-			'Move to next char
-			addfsr 0, 1
-			addfsr 1, 1
+      'Move to next char
+      addfsr 0, 1
+      addfsr 1, 1
 
-			'Compare, exit if <>
-			movf INDF0, W
-			subwf INDF1, W
-			btfss STATUS, Z
-			return
+      'Compare, exit if <>
+      movf INDF0, W
+      subwf INDF1, W
+      btfss STATUS, Z
+      return
 
-		decfsz SysByteTempA, F
-		goto SysStringComp
+    decfsz SysByteTempA, F
+    goto SysStringComp
 
-		SCEStrTrue:
-		comf SysByteTempX, F
-	#endif
+    SCEStrTrue:
+    comf SysByteTempX, F
+  #endif
 
 #IFDEF ChipFamily 16
 
@@ -1248,10 +1266,10 @@ SCEStrTrue:
 
 #IFDEF AVR
 
-	Dim SysReadA As Word
-	Dim SysByteTempA As Byte
+  Dim SysReadA As Word
+  Dim SysByteTempA As Byte
 
-	SysByteTempX = 0
+  SysByteTempX = 0
 
  'Check length matches
  ld SysReadA, X+
@@ -1330,218 +1348,218 @@ end sub
 
 '8 bit
 sub SysMultSub
-	dim SysByteTempA as byte
-	dim SysByteTempB as byte
-	dim SysByteTempX as byte
+  dim SysByteTempA as byte
+  dim SysByteTempB as byte
+  dim SysByteTempX as byte
 
-	#IFDEF PIC
-		#IFDEF ChipFamily 12, 14, 15
-			clrf SysByteTempX
-		MUL8LOOP:
-			movf SysByteTempA, W
-			btfsc SysByteTempB, 0
-			addwf SysByteTempX, F
-			bcf STATUS, C
-			rrf SysByteTempB, F
-			bcf STATUS, C
-			rlf SysByteTempA, F
-			movf SysByteTempB, F
-			btfss STATUS, Z
-			goto MUL8LOOP
-		#ENDIF
+  #IFDEF PIC
+    #IFDEF ChipFamily 12, 14, 15
+      clrf SysByteTempX
+    MUL8LOOP:
+      movf SysByteTempA, W
+      btfsc SysByteTempB, 0
+      addwf SysByteTempX, F
+      bcf STATUS, C
+      rrf SysByteTempB, F
+      bcf STATUS, C
+      rlf SysByteTempA, F
+      movf SysByteTempB, F
+      btfss STATUS, Z
+      goto MUL8LOOP
+    #ENDIF
 
-		#IFDEF ChipFamily 16
-			movf SysByteTempA, W
-			mulwf SysByteTempB
-			movff PRODL,SysByteTempX
-		#ENDIF
-	#ENDIF
+    #IFDEF ChipFamily 16
+      movf SysByteTempA, W
+      mulwf SysByteTempB
+      movff PRODL,SysByteTempX
+    #ENDIF
+  #ENDIF
 
-	#IFDEF AVR
-		#IFNDEF HardwareMult
-			clr SysByteTempX
-		MUL8LOOP:
-			sbrc SysByteTempB,0
-			add SysByteTempX,SysByteTempA
-			lsr SysByteTempB
-			lsl SysByteTempA
-			tst SysByteTempB
-			brne MUL8LOOP
-		#ENDIF
-		#IFDEF HardwareMult
-			mul SysByteTempA,SysByteTempB
-		#ENDIF
-	#ENDIF
+  #IFDEF AVR
+    #IFNDEF HardwareMult
+      clr SysByteTempX
+    MUL8LOOP:
+      sbrc SysByteTempB,0
+      add SysByteTempX,SysByteTempA
+      lsr SysByteTempB
+      lsl SysByteTempA
+      tst SysByteTempB
+      brne MUL8LOOP
+    #ENDIF
+    #IFDEF HardwareMult
+      mul SysByteTempA,SysByteTempB
+    #ENDIF
+  #ENDIF
 
 end sub
 
 '16 bit
 sub SysMultSub16
 
-	dim SysWordTempA as word
-	dim SysWordTempB as word
-	dim SysWordTempX as word
+  dim SysWordTempA as word
+  dim SysWordTempB as word
+  dim SysWordTempX as word
 
-	#IFDEF PIC
-		#IFDEF ChipFamily 12, 14, 15
-			dim SysDivMultA as word
-			dim SysDivMultB as word
-			dim SysDivMultX as word
+  #IFDEF PIC
+    #IFDEF ChipFamily 12, 14, 15
+      dim SysDivMultA as word
+      dim SysDivMultB as word
+      dim SysDivMultX as word
 
-			SysDivMultA = SysWordTempA
-			SysDivMultB = SysWordTempB
-			SysDivMultX = 0
+      SysDivMultA = SysWordTempA
+      SysDivMultB = SysWordTempB
+      SysDivMultX = 0
 
-			MUL16LOOP:
-				IF SysDivMultB.0 ON then SysDivMultX += SysDivMultA
-				set STATUS.C OFF
-				rotate SysDivMultB right
-				set STATUS.C off
-				rotate SysDivMultA left
-			if SysDivMultB > 0 then goto MUL16LOOP
+      MUL16LOOP:
+        IF SysDivMultB.0 ON then SysDivMultX += SysDivMultA
+        set STATUS.C OFF
+        rotate SysDivMultB right
+        set STATUS.C off
+        rotate SysDivMultA left
+      if SysDivMultB > 0 then goto MUL16LOOP
 
-			SysWordTempX = SysDivMultX
-		#ENDIF
+      SysWordTempX = SysDivMultX
+    #ENDIF
 
-		#IFDEF ChipFamily 16
-			'X = LowA * LowB
-			movf SysWordTempA, W
-			mulwf SysWordTempB
-			movff PRODL, SysWordTempX
-			movff PRODH, SysWordTempX_H
+    #IFDEF ChipFamily 16
+      'X = LowA * LowB
+      movf SysWordTempA, W
+      mulwf SysWordTempB
+      movff PRODL, SysWordTempX
+      movff PRODH, SysWordTempX_H
 
-			'HighX += LowA * HighB
-			movf SysWordTempA, W
-			mulwf SysWordTempB_H
-			movf PRODL, W
-			addwf SysWordTempX_H, F
+      'HighX += LowA * HighB
+      movf SysWordTempA, W
+      mulwf SysWordTempB_H
+      movf PRODL, W
+      addwf SysWordTempX_H, F
 
-			'HighX += HighA * LowB
-			movf SysWordTempA_H, W
-			mulwf SysWordTempB
-			movf PRODL, W
-			addwf SysWordTempX_H, F
+      'HighX += HighA * LowB
+      movf SysWordTempA_H, W
+      mulwf SysWordTempB
+      movf PRODL, W
+      addwf SysWordTempX_H, F
 
-			'PRODL = HighA * HighB
-			movf SysWordTempA_H, F
-			mulwf SysWordTempB_H
-		#ENDIF
-	#ENDIF
+      'PRODL = HighA * HighB
+      movf SysWordTempA_H, F
+      mulwf SysWordTempB_H
+    #ENDIF
+  #ENDIF
 
-	#IFDEF AVR
-		#IFNDEF HardwareMult
-			dim SysDivMultA as word
-			dim SysDivMultB as word
-			dim SysDivMultX as word
+  #IFDEF AVR
+    #IFNDEF HardwareMult
+      dim SysDivMultA as word
+      dim SysDivMultB as word
+      dim SysDivMultX as word
 
-			SysDivMultA = SysWordTempA
-			SysDivMultB = SysWordTempB
-			SysDivMultX = 0
+      SysDivMultA = SysWordTempA
+      SysDivMultB = SysWordTempB
+      SysDivMultX = 0
 
-			MUL16LOOP:
-				IF SysDivMultB.0 ON then SysDivMultX += SysDivMultA
-				Set C Off
-				rotate SysDivMultB right
-				Set C Off
-				rotate SysDivMultA left
-			if SysDivMultB > 0 then goto MUL16LOOP
+      MUL16LOOP:
+        IF SysDivMultB.0 ON then SysDivMultX += SysDivMultA
+        Set C Off
+        rotate SysDivMultB right
+        Set C Off
+        rotate SysDivMultA left
+      if SysDivMultB > 0 then goto MUL16LOOP
 
-			SysWordTempX = SysDivMultX
-		#ENDIF
+      SysWordTempX = SysDivMultX
+    #ENDIF
 
-		#IFDEF HardwareMult
-			'Need to keep result in here because SysWordTempX[_H] gets overwritten by mul
-			dim SysDivMultX as word ' alias SysWordTempX_U, SysWordTempX_H
+    #IFDEF HardwareMult
+      'Need to keep result in here because SysWordTempX[_H] gets overwritten by mul
+      dim SysDivMultX as word ' alias SysWordTempX_U, SysWordTempX_H
 
-			'X = LowA * LowB
-			mul SysWordTempA, SysWordTempB
-			'movff PRODL, SysWordTempX
-			'movff PRODH, SysWordTempX_H
-			SysDivMultX = SysWordTempX
+      'X = LowA * LowB
+      mul SysWordTempA, SysWordTempB
+      'movff PRODL, SysWordTempX
+      'movff PRODH, SysWordTempX_H
+      SysDivMultX = SysWordTempX
 
-			'HighX += LowA * HighB
-			mul SysWordTempA, SysWordTempB_H
-			add SysDivMultX_H, SysWordTempX
+      'HighX += LowA * HighB
+      mul SysWordTempA, SysWordTempB_H
+      add SysDivMultX_H, SysWordTempX
 
-			'HighX += HighA * LowB
-			mul SysWordTempA_H, SysWordTempB
-			add SysDivMultX_H, SysWordTempX
+      'HighX += HighA * LowB
+      mul SysWordTempA_H, SysWordTempB
+      add SysDivMultX_H, SysWordTempX
 
-			'Copy result back
-			SysWordTempX = SysDivMultX
-		#ENDIF
-	#ENDIF
+      'Copy result back
+      SysWordTempX = SysDivMultX
+    #ENDIF
+  #ENDIF
 
 end sub
 
 sub SysMultSubInt
 
-	Dim SysIntegerTempA, SysIntegerTempB, SysIntegerTempX As Integer
-	Dim SysSignByte As Byte
+  Dim SysIntegerTempA, SysIntegerTempB, SysIntegerTempX As Integer
+  Dim SysSignByte As Byte
 
-	'Make both inputs positive, decide output type
-	SysSignByte = SysIntegerTempA_H xor SysIntegerTempB_H
-	if SysIntegerTempA.15 then SysIntegerTempA = -SysIntegerTempA
-	if SysIntegerTempB.15 then SysIntegerTempB = -SysIntegerTempB
+  'Make both inputs positive, decide output type
+  SysSignByte = SysIntegerTempA_H xor SysIntegerTempB_H
+  if SysIntegerTempA.15 then SysIntegerTempA = -SysIntegerTempA
+  if SysIntegerTempB.15 then SysIntegerTempB = -SysIntegerTempB
 
-	'Call word multiply routine
-	SysMultSub16
+  'Call word multiply routine
+  SysMultSub16
 
-	'Negate result if necessary
-	if SysSignByte.7 then SysIntegerTempX = -SysIntegerTempX
+  'Negate result if necessary
+  if SysSignByte.7 then SysIntegerTempX = -SysIntegerTempX
 
 end sub
 
 '32 bit
 sub SysMultSub32
 
-	dim SysLongTempA as long
-	dim SysLongTempB as long
-	dim SysLongTempX as long
+  dim SysLongTempA as long
+  dim SysLongTempB as long
+  dim SysLongTempX as long
 
-	#IFDEF PIC
-		'Can't use normal SysDivMult variables for 32 bit, they overlap with
-		'SysLongTemp variables
-		dim SysLongDivMultA as long
-		dim SysLongDivMultB as long
-		dim SysLongDivMultX as long
+  #IFDEF PIC
+    'Can't use normal SysDivMult variables for 32 bit, they overlap with
+    'SysLongTemp variables
+    dim SysLongDivMultA as long
+    dim SysLongDivMultB as long
+    dim SysLongDivMultX as long
 
-		SysLongDivMultA = SysLongTempA
-		SysLongDivMultB = SysLongTempB
-		SysLongDivMultX = 0
+    SysLongDivMultA = SysLongTempA
+    SysLongDivMultB = SysLongTempB
+    SysLongDivMultX = 0
 
-		MUL32LOOP:
-			IF SysLongDivMultB.0 ON then SysLongDivMultX += SysLongDivMultA
-			set STATUS.C OFF
-			rotate SysLongDivMultB right
-			set STATUS.C off
-			rotate SysLongDivMultA left
-		if SysLongDivMultB > 0 then goto MUL32LOOP
+    MUL32LOOP:
+      IF SysLongDivMultB.0 ON then SysLongDivMultX += SysLongDivMultA
+      set STATUS.C OFF
+      rotate SysLongDivMultB right
+      set STATUS.C off
+      rotate SysLongDivMultA left
+    if SysLongDivMultB > 0 then goto MUL32LOOP
 
-		SysLongTempX = SysLongDivMultX
+    SysLongTempX = SysLongDivMultX
 
-	#ENDIF
+  #ENDIF
 
-	#IFDEF AVR
-		dim SysLongDivMultA as long
-		dim SysLongDivMultB as long
-		dim SysLongDivMultX as long
+  #IFDEF AVR
+    dim SysLongDivMultA as long
+    dim SysLongDivMultB as long
+    dim SysLongDivMultX as long
 
-		SysLongDivMultA = SysLongTempA
-		SysLongDivMultB = SysLongTempB
-		SysLongDivMultX = 0
+    SysLongDivMultA = SysLongTempA
+    SysLongDivMultB = SysLongTempB
+    SysLongDivMultX = 0
 
-		MUL32LOOP:
-			IF SysLongDivMultB.0 ON then SysLongDivMultX += SysLongDivMultA
-			Set C Off
-			rotate SysLongDivMultB right
-			Set C Off
-			rotate SysLongDivMultA left
-		if SysLongDivMultB > 0 then goto MUL32LOOP
+    MUL32LOOP:
+      IF SysLongDivMultB.0 ON then SysLongDivMultX += SysLongDivMultA
+      Set C Off
+      rotate SysLongDivMultB right
+      Set C Off
+      rotate SysLongDivMultA left
+    if SysLongDivMultB > 0 then goto MUL32LOOP
 
-		SysLongTempX = SysLongDivMultX
+    SysLongTempX = SysLongDivMultX
 
-	#ENDIF
+  #ENDIF
 
 end sub
 
@@ -1555,203 +1573,203 @@ end sub
 '8 bit
 sub SysDivSub
 
-	#IFDEF PIC
-		dim SysByteTempA as byte
-		dim SysByteTempB as byte
-		dim SysByteTempX as byte
+  #IFDEF PIC
+    dim SysByteTempA as byte
+    dim SysByteTempB as byte
+    dim SysByteTempX as byte
 
-		#ifdef CheckDivZero TRUE
-			'Check for div/0
-			movf SysByteTempB, F
-			btfsc STATUS, Z
-			return
-		#endif
+    #ifdef CheckDivZero TRUE
+      'Check for div/0
+      movf SysByteTempB, F
+      btfsc STATUS, Z
+      return
+    #endif
 
-		'Main calc routine
-		SysByteTempX = 0
-		SysDivLoop = 8
-		SysDiv8Start:
+    'Main calc routine
+    SysByteTempX = 0
+    SysDivLoop = 8
+    SysDiv8Start:
 
-			bcf STATUS, C
-			rlf SysByteTempA, F
-			rlf SysByteTempX, F
-			movf SysByteTempB, W
-			subwf SysByteTempX, F
+      bcf STATUS, C
+      rlf SysByteTempA, F
+      rlf SysByteTempX, F
+      movf SysByteTempB, W
+      subwf SysByteTempX, F
 
-			bsf SysByteTempA, 0
-			btfsc STATUS, C
-			goto Div8NotNeg
-			bcf SysByteTempA, 0
-			movf SysByteTempB, W
-			addwf SysByteTempX, F
-		Div8NotNeg:
+      bsf SysByteTempA, 0
+      btfsc STATUS, C
+      goto Div8NotNeg
+      bcf SysByteTempA, 0
+      movf SysByteTempB, W
+      addwf SysByteTempX, F
+    Div8NotNeg:
 
-		decfsz SysDivLoop, F
-		goto SysDiv8Start
+    decfsz SysDivLoop, F
+    goto SysDiv8Start
 
-	#ENDIF
+  #ENDIF
 
-	#IFDEF AVR
-		#ifdef CheckDivZero TRUE
-			'Check for div/0
-			tst SysByteTempB
-			brne DIV8Cont
-			ret
-			DIV8Cont:
-		#endif
+  #IFDEF AVR
+    #ifdef CheckDivZero TRUE
+      'Check for div/0
+      tst SysByteTempB
+      brne DIV8Cont
+      ret
+      DIV8Cont:
+    #endif
 
-		'Main calc routine
-		clr SysByteTempX
-		SysDivLoop = 8
-		SysDiv8Start:
-			lsl SysByteTempA
-			rol SysByteTempX
-			asm sub SysByteTempX,SysByteTempB 'asm needed, or else sub will be used as start of sub
+    'Main calc routine
+    clr SysByteTempX
+    SysDivLoop = 8
+    SysDiv8Start:
+      lsl SysByteTempA
+      rol SysByteTempX
+      asm sub SysByteTempX,SysByteTempB 'asm needed, or else sub will be used as start of sub
 
-			sbr SysByteTempA,1
-			brsh Div8NotNeg
-			cbr SysByteTempA,1
-			add SysByteTempX,SysByteTempB
-		Div8NotNeg:
+      sbr SysByteTempA,1
+      brsh Div8NotNeg
+      cbr SysByteTempA,1
+      add SysByteTempX,SysByteTempB
+    Div8NotNeg:
 
-		dec SysDivLoop
-		brne SysDiv8Start
-	#ENDIF
+    dec SysDivLoop
+    brne SysDiv8Start
+  #ENDIF
 
 end sub
 
 '16 bit
 sub SysDivSub16
 
-	dim SysWordTempA as word
-	dim SysWordTempB as word
-	dim SysWordTempX as word
+  dim SysWordTempA as word
+  dim SysWordTempB as word
+  dim SysWordTempX as word
 
-	dim SysDivMultA as word
-	dim SysDivMultB as word
-	dim SysDivMultX as word
+  dim SysDivMultA as word
+  dim SysDivMultB as word
+  dim SysDivMultX as word
 
-	SysDivMultA = SysWordTempA
-	SysDivMultB = SysWordTempB
-	SysDivMultX = 0
+  SysDivMultA = SysWordTempA
+  SysDivMultB = SysWordTempB
+  SysDivMultX = 0
 
-	'Avoid division by zero
-	if SysDivMultB = 0 then
-		SysWordTempA = 0
-		exit sub
-	end if
+  'Avoid division by zero
+  if SysDivMultB = 0 then
+    SysWordTempA = 0
+    exit sub
+  end if
 
-	'Main calc routine
-	SysDivLoop = 16
-	SysDiv16Start:
+  'Main calc routine
+  SysDivLoop = 16
+  SysDiv16Start:
 
-		set C off
-		Rotate SysDivMultA Left
-		Rotate SysDivMultX Left
-		SysDivMultX = SysDivMultX - SysDivMultB
-		Set SysDivMultA.0 On
+    set C off
+    Rotate SysDivMultA Left
+    Rotate SysDivMultX Left
+    SysDivMultX = SysDivMultX - SysDivMultB
+    Set SysDivMultA.0 On
 
-		#IFDEF PIC
-			If C Off Then
-				Set SysDivMultA.0 Off
-				SysDivMultX = SysDivMultX + SysDivMultB
-			End If
+    #IFDEF PIC
+      If C Off Then
+        Set SysDivMultA.0 Off
+        SysDivMultX = SysDivMultX + SysDivMultB
+      End If
 
-			decfsz SysDivLoop, F
-			goto SysDiv16Start
-		#ENDIF
-		#IFDEF AVR
-			If C On Then
-				Set SysDivMultA.0 Off
-				SysDivMultX = SysDivMultX + SysDivMultB
-			End If
+      decfsz SysDivLoop, F
+      goto SysDiv16Start
+    #ENDIF
+    #IFDEF AVR
+      If C On Then
+        Set SysDivMultA.0 Off
+        SysDivMultX = SysDivMultX + SysDivMultB
+      End If
 
-			dec SysDivLoop
-			brne SysDiv16Start
-		#ENDIF
+      dec SysDivLoop
+      brne SysDiv16Start
+    #ENDIF
 
-	SysWordTempA = SysDivMultA
-	SysWordTempX = SysDivMultX
+  SysWordTempA = SysDivMultA
+  SysWordTempX = SysDivMultX
 
 end sub
 
 sub SysDivSubInt
 
-	Dim SysIntegerTempA, SysIntegerTempB, SysIntegerTempX As Integer
-	Dim SysSignByte As Byte
+  Dim SysIntegerTempA, SysIntegerTempB, SysIntegerTempX As Integer
+  Dim SysSignByte As Byte
 
-	'Make both inputs positive, decide output type
-	SysSignByte = SysIntegerTempA_H xor SysIntegerTempB_H
-	If SysIntegerTempA.15 Then SysIntegerTempA = -SysIntegerTempA
-	If SysIntegerTempB.15 Then SysIntegerTempB = -SysIntegerTempB
+  'Make both inputs positive, decide output type
+  SysSignByte = SysIntegerTempA_H xor SysIntegerTempB_H
+  If SysIntegerTempA.15 Then SysIntegerTempA = -SysIntegerTempA
+  If SysIntegerTempB.15 Then SysIntegerTempB = -SysIntegerTempB
 
-	'Call word divide routine
-	SysDivSub16
+  'Call word divide routine
+  SysDivSub16
 
-	'Negate result if necessary
-	If SysSignByte.7 Then
-		SysIntegerTempA = -SysIntegerTempA
-		SysIntegerTempX = -SysIntegerTempX
-	End If
+  'Negate result if necessary
+  If SysSignByte.7 Then
+    SysIntegerTempA = -SysIntegerTempA
+    SysIntegerTempX = -SysIntegerTempX
+  End If
 
 end sub
 
 '32 bit
 sub SysDivSub32
 
-	dim SysLongTempA as long
-	dim SysLongTempB as long
-	dim SysLongTempX as long
+  dim SysLongTempA as long
+  dim SysLongTempB as long
+  dim SysLongTempX as long
 
-	'#ifdef PIC
-		dim SysLongDivMultA as long
-		dim SysLongDivMultB as long
-		dim SysLongDivMultX as long
-	'#endif
+  '#ifdef PIC
+    dim SysLongDivMultA as long
+    dim SysLongDivMultB as long
+    dim SysLongDivMultX as long
+  '#endif
 
-	SysLongDivMultA = SysLongTempA
-	SysLongDivMultB = SysLongTempB
-	SysLongDivMultX = 0
+  SysLongDivMultA = SysLongTempA
+  SysLongDivMultB = SysLongTempB
+  SysLongDivMultX = 0
 
-	'Avoid division by zero
-	if SysLongDivMultB = 0 then
-		SysLongTempA = 0
-		exit sub
-	end if
+  'Avoid division by zero
+  if SysLongDivMultB = 0 then
+    SysLongTempA = 0
+    exit sub
+  end if
 
-	'Main calc routine
-	SysDivLoop = 32
-	SysDiv32Start:
+  'Main calc routine
+  SysDivLoop = 32
+  SysDiv32Start:
 
-		set C off
-		Rotate SysLongDivMultA Left
-		Rotate SysLongDivMultX Left
-		SysLongDivMultX = SysLongDivMultX - SysLongDivMultB
-		Set SysLongDivMultA.0 On
+    set C off
+    Rotate SysLongDivMultA Left
+    Rotate SysLongDivMultX Left
+    SysLongDivMultX = SysLongDivMultX - SysLongDivMultB
+    Set SysLongDivMultA.0 On
 
-		#IFDEF PIC
-			If C Off Then
-				Set SysLongDivMultA.0 Off
-				SysLongDivMultX = SysLongDivMultX + SysLongDivMultB
-			End If
+    #IFDEF PIC
+      If C Off Then
+        Set SysLongDivMultA.0 Off
+        SysLongDivMultX = SysLongDivMultX + SysLongDivMultB
+      End If
 
-			decfsz SysDivLoop, F
-			goto SysDiv32Start
-		#ENDIF
-		#IFDEF AVR
-			If C On Then
-				Set SysLongDivMultA.0 Off
-				SysLongDivMultX = SysLongDivMultX + SysLongDivMultB
-			End If
+      decfsz SysDivLoop, F
+      goto SysDiv32Start
+    #ENDIF
+    #IFDEF AVR
+      If C On Then
+        Set SysLongDivMultA.0 Off
+        SysLongDivMultX = SysLongDivMultX + SysLongDivMultB
+      End If
 
-			dec SysDivLoop
-			breq SysDiv32End
-			goto SysDiv32Start
-			SysDiv32End:
-		#ENDIF
+      dec SysDivLoop
+      breq SysDiv32End
+      goto SysDiv32Start
+      SysDiv32End:
+    #ENDIF
 
-	SysLongTempA = SysLongDivMultA
-	SysLongTempX = SysLongDivMultX
+  SysLongTempA = SysLongDivMultA
+  SysLongTempX = SysLongDivMultX
 
 end sub
 
@@ -1778,165 +1796,165 @@ end sub
 
 'Equal
 sub SysCompEqual
-	Dim SysByteTempA, SysByteTempB, SysByteTempX as byte
+  Dim SysByteTempA, SysByteTempB, SysByteTempX as byte
 
-	#IFDEF ChipFamily 12,14,15
-		clrf SysByteTempX
-		movf SysByteTempA, W
-		subwf SysByteTempB, W
-		btfsc STATUS, Z
-		comf SysByteTempX,F
-	#ENDIF
+  #IFDEF ChipFamily 12,14,15
+    clrf SysByteTempX
+    movf SysByteTempA, W
+    subwf SysByteTempB, W
+    btfsc STATUS, Z
+    comf SysByteTempX,F
+  #ENDIF
 
-	#IFDEF ChipFamily 16
-		setf SysByteTempX
-		movf SysByteTempB, W
-		cpfseq SysByteTempA
-		clrf SysByteTempX
-	#ENDIF
+  #IFDEF ChipFamily 16
+    setf SysByteTempX
+    movf SysByteTempB, W
+    cpfseq SysByteTempA
+    clrf SysByteTempX
+  #ENDIF
 
-	#IFDEF AVR
-		clr SysByteTempX
-		cpse SysByteTempA, SysByteTempB
-		return
-		com SysByteTempX
-	#ENDIF
+  #IFDEF AVR
+    clr SysByteTempX
+    cpse SysByteTempA, SysByteTempB
+    return
+    com SysByteTempX
+  #ENDIF
 end sub
 
 sub SysCompEqual16
 
-	dim SysWordTempA as word
-	dim SysWordTempB as word
-	dim SysByteTempX as byte
+  dim SysWordTempA as word
+  dim SysWordTempB as word
+  dim SysByteTempX as byte
 
-	#IFDEF ChipFamily 12,14,15
-		clrf SysByteTempX
+  #IFDEF ChipFamily 12,14,15
+    clrf SysByteTempX
 
-		'Test low, exit if false
-		movf SysWordTempA, W
-		subwf SysWordTempB, W
-		btfss STATUS, Z
-		return
+    'Test low, exit if false
+    movf SysWordTempA, W
+    subwf SysWordTempB, W
+    btfss STATUS, Z
+    return
 
-		'Test high, exit if false
-		movf SysWordTempA_H, W
-		subwf SysWordTempB_H, W
-		btfss STATUS, Z
-		return
+    'Test high, exit if false
+    movf SysWordTempA_H, W
+    subwf SysWordTempB_H, W
+    btfss STATUS, Z
+    return
 
-		comf SysByteTempX,F
-	#ENDIF
+    comf SysByteTempX,F
+  #ENDIF
 
-	#IFDEF ChipFamily 16
-		clrf SysByteTempX
+  #IFDEF ChipFamily 16
+    clrf SysByteTempX
 
-		'Test low, exit if false
-		movf SysWordTempB, W
-		cpfseq SysWordTempA
-		return
+    'Test low, exit if false
+    movf SysWordTempB, W
+    cpfseq SysWordTempA
+    return
 
-		'Test high, exit if false
-		movf SysWordTempB_H, W
-		cpfseq SysWordTempA_H
-		return
+    'Test high, exit if false
+    movf SysWordTempB_H, W
+    cpfseq SysWordTempA_H
+    return
 
-		setf SysByteTempX
+    setf SysByteTempX
 
-	#ENDIF
-	#IFDEF AVR
-		clr SysByteTempX
+  #ENDIF
+  #IFDEF AVR
+    clr SysByteTempX
 
-		cp SysWordTempA, SysWordTempB
-		brne SCE16False
+    cp SysWordTempA, SysWordTempB
+    brne SCE16False
 
-		cp SysWordTempA_H, SysWordTempB_H
-		brne SCE16False
+    cp SysWordTempA_H, SysWordTempB_H
+    brne SCE16False
 
-		com SysByteTempX
-		SCE16False:
-	#ENDIF
+    com SysByteTempX
+    SCE16False:
+  #ENDIF
 end sub
 
 sub SysCompEqual32
 
-	dim SysLongTempA as long
-	dim SysLongTempB as long
-	dim SysByteTempX as byte
+  dim SysLongTempA as long
+  dim SysLongTempB as long
+  dim SysByteTempX as byte
 
-	#IFDEF ChipFamily 12,14,15
-		clrf SysByteTempX
+  #IFDEF ChipFamily 12,14,15
+    clrf SysByteTempX
 
-		'Test low, exit if false
-		movf SysLongTempA, W
-		subwf SysLongTempB, W
-		btfss STATUS, Z
-		return
+    'Test low, exit if false
+    movf SysLongTempA, W
+    subwf SysLongTempB, W
+    btfss STATUS, Z
+    return
 
-		'Test high, exit if false
-		movf SysLongTempA_H, W
-		subwf SysLongTempB_H, W
-		btfss STATUS, Z
-		return
+    'Test high, exit if false
+    movf SysLongTempA_H, W
+    subwf SysLongTempB_H, W
+    btfss STATUS, Z
+    return
 
-		'Test upper, exit if false
-		movf SysLongTempA_U, W
-		subwf SysLongTempB_U, W
-		btfss STATUS, Z
-		return
+    'Test upper, exit if false
+    movf SysLongTempA_U, W
+    subwf SysLongTempB_U, W
+    btfss STATUS, Z
+    return
 
-		'Test exp, exit if false
-		movf SysLongTempA_E, W
-		subwf SysLongTempB_E, W
-		btfss STATUS, Z
-		return
+    'Test exp, exit if false
+    movf SysLongTempA_E, W
+    subwf SysLongTempB_E, W
+    btfss STATUS, Z
+    return
 
-		comf SysByteTempX,F
-	#ENDIF
+    comf SysByteTempX,F
+  #ENDIF
 
-	#IFDEF ChipFamily 16
-		clrf SysByteTempX
+  #IFDEF ChipFamily 16
+    clrf SysByteTempX
 
-		'Test low, exit if false
-		movf SysLongTempB, W
-		cpfseq SysLongTempA
-		return
+    'Test low, exit if false
+    movf SysLongTempB, W
+    cpfseq SysLongTempA
+    return
 
-		'Test high, exit if false
-		movf SysLongTempB_H, W
-		cpfseq SysLongTempA_H
-		return
+    'Test high, exit if false
+    movf SysLongTempB_H, W
+    cpfseq SysLongTempA_H
+    return
 
-		'Test upper, exit if false
-		movf SysLongTempB_U, W
-		cpfseq SysLongTempA_U
-		return
+    'Test upper, exit if false
+    movf SysLongTempB_U, W
+    cpfseq SysLongTempA_U
+    return
 
-		'Test exp, exit if false
-		movf SysLongTempB_E, W
-		cpfseq SysLongTempA_E
-		return
+    'Test exp, exit if false
+    movf SysLongTempB_E, W
+    cpfseq SysLongTempA_E
+    return
 
-		setf SysByteTempX
+    setf SysByteTempX
 
-	#ENDIF
-	#IFDEF AVR
-		clr SysByteTempX
+  #ENDIF
+  #IFDEF AVR
+    clr SysByteTempX
 
-		cp SysLongTempA, SysLongTempB
-		brne SCE32False
+    cp SysLongTempA, SysLongTempB
+    brne SCE32False
 
-		cp SysLongTempA_H, SysLongTempB_H
-		brne SCE32False
+    cp SysLongTempA_H, SysLongTempB_H
+    brne SCE32False
 
-		cp SysLongTempA_U, SysLongTempB_U
-		brne SCE32False
+    cp SysLongTempA_U, SysLongTempB_U
+    brne SCE32False
 
-		cp SysLongTempA_E, SysLongTempB_E
-		brne SCE32False
+    cp SysLongTempA_E, SysLongTempB_E
+    brne SCE32False
 
-		com SysByteTempX
-		SCE32False:
-	#ENDIF
+    com SysByteTempX
+    SCE32False:
+  #ENDIF
 end sub
 
 'Less than
@@ -1945,262 +1963,262 @@ end sub
 'if A is 3 and B is 3, C is on
 'if A is 2 and B is 4, C is off
 sub SysCompLessThan
-	Dim SysByteTempA, SysByteTempB, SysByteTempX as byte
+  Dim SysByteTempA, SysByteTempB, SysByteTempX as byte
 
-	#IFDEF ChipFamily 12,14,15
-		clrf SysByteTempX
-		bsf STATUS, C
-		movf SysByteTempB, W
-		subwf SysByteTempA, W
-		btfss STATUS, C
-		comf SysByteTempX,F
-	#ENDIF
+  #IFDEF ChipFamily 12,14,15
+    clrf SysByteTempX
+    bsf STATUS, C
+    movf SysByteTempB, W
+    subwf SysByteTempA, W
+    btfss STATUS, C
+    comf SysByteTempX,F
+  #ENDIF
 
-	#IFDEF ChipFamily 16
-		setf SysByteTempX
-		movf SysByteTempB, W
-		cpfslt SysByteTempA
-		clrf SysByteTempX
-	#ENDIF
+  #IFDEF ChipFamily 16
+    setf SysByteTempX
+    movf SysByteTempB, W
+    cpfslt SysByteTempA
+    clrf SysByteTempX
+  #ENDIF
 
-	#IFDEF AVR
-		clr SysByteTempX
-		cp SysByteTempA,SysByteTempB
-		brlo SCLTTrue
-		ret
+  #IFDEF AVR
+    clr SysByteTempX
+    cp SysByteTempA,SysByteTempB
+    brlo SCLTTrue
+    ret
 
-		SCLTTrue:
-		com SysByteTempX
-	#ENDIF
+    SCLTTrue:
+    com SysByteTempX
+  #ENDIF
 end sub
 
 Sub SysCompLessThan16
-	#IFDEF PIC
-		dim SysWordTempA as word
-		dim SysWordTempB as word
-		dim SysByteTempX as byte
+  #IFDEF PIC
+    dim SysWordTempA as word
+    dim SysWordTempB as word
+    dim SysByteTempX as byte
 
-		clrf SysByteTempX
+    clrf SysByteTempX
 
-		'Test High, exit if more
-		movf SysWordTempA_H,W
-		subwf SysWordTempB_H,W
-		btfss STATUS,C
-		return
+    'Test High, exit if more
+    movf SysWordTempA_H,W
+    subwf SysWordTempB_H,W
+    btfss STATUS,C
+    return
 
-		'Test high, exit true if less
-		movf SysWordTempB_H,W
-		subwf SysWordTempA_H,W
-		#IFDEF ChipFamily 12,14,15
-			btfss STATUS,C
-			goto SCLT16True
-		#ENDIF
-		#IFDEF ChipFamily 16
-			bnc SCLT16True
-		#ENDIF
+    'Test high, exit true if less
+    movf SysWordTempB_H,W
+    subwf SysWordTempA_H,W
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,C
+      goto SCLT16True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnc SCLT16True
+    #ENDIF
 
-		'Test Low, exit if more or equal
-		movf SysWordTempB,W
-		subwf SysWordTempA,W
-		btfsc STATUS,C
-		return
+    'Test Low, exit if more or equal
+    movf SysWordTempB,W
+    subwf SysWordTempA,W
+    btfsc STATUS,C
+    return
 
-		SCLT16True:
-		comf SysByteTempX,F
-	#ENDIF
+    SCLT16True:
+    comf SysByteTempX,F
+  #ENDIF
 
-	#IFDEF AVR
-		clr SysByteTempX
+  #IFDEF AVR
+    clr SysByteTempX
 
-		'Test High, exit false if more
-		cp SysWordTempB_H,SysWordTempA_H
-		brlo SCLT16False
+    'Test High, exit false if more
+    cp SysWordTempB_H,SysWordTempA_H
+    brlo SCLT16False
 
-		'Test high, exit true if less
-		cp SysWordTempA_H,SysWordTempB_H
-		brlo SCLT16True
+    'Test high, exit true if less
+    cp SysWordTempA_H,SysWordTempB_H
+    brlo SCLT16True
 
-		'Test Low, exit if more or equal
-		cp SysWordTempA,SysWordTempB
-		brlo SCLT16True
-		ret
+    'Test Low, exit if more or equal
+    cp SysWordTempA,SysWordTempB
+    brlo SCLT16True
+    ret
 
-		SCLT16True:
-		com SysByteTempX
-		SCLT16False:
-	#ENDIF
+    SCLT16True:
+    com SysByteTempX
+    SCLT16False:
+  #ENDIF
 
 End Sub
 
 Sub SysCompLessThan32
-	#IFDEF PIC
-		dim SysLongTempA as long
-		dim SysLongTempB as long
-		dim SysByteTempX as byte
+  #IFDEF PIC
+    dim SysLongTempA as long
+    dim SysLongTempB as long
+    dim SysByteTempX as byte
 
-		clrf SysByteTempX
+    clrf SysByteTempX
 
-		'Test Exp, exit if more
-		movf SysLongTempA_E,W
-		subwf SysLongTempB_E,W
-		btfss STATUS,C
-		return
-		'If not more and not zero, is less
-		#IFDEF ChipFamily 12,14,15
-			btfss STATUS,Z
-			goto SCLT32True
-		#ENDIF
-		#IFDEF ChipFamily 16
-			bnz SCLT32True
-		#ENDIF
+    'Test Exp, exit if more
+    movf SysLongTempA_E,W
+    subwf SysLongTempB_E,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT32True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT32True
+    #ENDIF
 
-		'Test Upper, exit if more
-		movf SysLongTempA_U,W
-		subwf SysLongTempB_U,W
-		btfss STATUS,C
-		return
-		'If not more and not zero, is less
-		#IFDEF ChipFamily 12,14,15
-			btfss STATUS,Z
-			goto SCLT32True
-		#ENDIF
-		#IFDEF ChipFamily 16
-			bnz SCLT32True
-		#ENDIF
+    'Test Upper, exit if more
+    movf SysLongTempA_U,W
+    subwf SysLongTempB_U,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT32True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT32True
+    #ENDIF
 
-		'Test High, exit if more
-		movf SysLongTempA_H,W
-		subwf SysLongTempB_H,W
-		btfss STATUS,C
-		return
-		'If not more and not zero, is less
-		#IFDEF ChipFamily 12,14,15
-			btfss STATUS,Z
-			goto SCLT32True
-		#ENDIF
-		#IFDEF ChipFamily 16
-			bnz SCLT32True
-		#ENDIF
+    'Test High, exit if more
+    movf SysLongTempA_H,W
+    subwf SysLongTempB_H,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT32True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT32True
+    #ENDIF
 
-		'Test Low, exit if more or equal
-		movf SysLongTempB,W
-		subwf SysLongTempA,W
-		btfsc STATUS,C
-		return
+    'Test Low, exit if more or equal
+    movf SysLongTempB,W
+    subwf SysLongTempA,W
+    btfsc STATUS,C
+    return
 
-		SCLT32True:
-		comf SysByteTempX,F
-	#ENDIF
+    SCLT32True:
+    comf SysByteTempX,F
+  #ENDIF
 
-	#IFDEF AVR
-		clr SysByteTempX
+  #IFDEF AVR
+    clr SysByteTempX
 
-		'Test Exp, exit false if more
-		cp SysLongTempB_E,SysLongTempA_E
-		brlo SCLT32False
-		'Test Exp, exit true not equal
-		brne SCLT32True
+    'Test Exp, exit false if more
+    cp SysLongTempB_E,SysLongTempA_E
+    brlo SCLT32False
+    'Test Exp, exit true not equal
+    brne SCLT32True
 
-		'Test Upper, exit false if more
-		cp SysLongTempB_U,SysLongTempA_U
-		brlo SCLT32False
-		'Test Upper, exit true not equal
-		brne SCLT32True
+    'Test Upper, exit false if more
+    cp SysLongTempB_U,SysLongTempA_U
+    brlo SCLT32False
+    'Test Upper, exit true not equal
+    brne SCLT32True
 
-		'Test High, exit false if more
-		cp SysLongTempB_H,SysLongTempA_H
-		brlo SCLT32False
-		'Test high, exit true not equal
-		brne SCLT32True
+    'Test High, exit false if more
+    cp SysLongTempB_H,SysLongTempA_H
+    brlo SCLT32False
+    'Test high, exit true not equal
+    brne SCLT32True
 
-		'Test Low, exit if more or equal
-		cp SysLongTempA,SysLongTempB
-		brlo SCLT32True
-		ret
+    'Test Low, exit if more or equal
+    cp SysLongTempA,SysLongTempB
+    brlo SCLT32True
+    ret
 
-		SCLT32True:
-		com SysByteTempX
-		SCLT32False:
-	#ENDIF
+    SCLT32True:
+    com SysByteTempX
+    SCLT32False:
+  #ENDIF
 
 End Sub
 
 'Returns true if A < B
 sub SysCompLessThanInt
 
-	Dim SysIntegerTempA, SysIntegerTempB, SysDivMultA as Integer
+  Dim SysIntegerTempA, SysIntegerTempB, SysDivMultA as Integer
 
-	'Clear result
-	SysByteTempX = 0
+  'Clear result
+  SysByteTempX = 0
 
-	'Compare sign bits
-	'-A
-	If SysIntegerTempA.15 = On Then
-		'-A, +B, return true
-		If SysIntegerTempB.15 = Off Then
-			'Set SysByteTempX to 255
-			SysByteTempX = Not SysByteTempX
-			Exit Sub
-		End If
-		'-A, -B, negate both and swap
-		SysDivMultA = -SysIntegerTempA
-		SysIntegerTempA = -SysIntegerTempB
-		SysIntegerTempB = SysDivMultA
-	'+A
-	Else
-		'+A, -B, return false
-		If SysIntegerTempB.15 = On Then
-			Exit Sub
-		End If
-	End If
+  'Compare sign bits
+  '-A
+  If SysIntegerTempA.15 = On Then
+    '-A, +B, return true
+    If SysIntegerTempB.15 = Off Then
+      'Set SysByteTempX to 255
+      SysByteTempX = Not SysByteTempX
+      Exit Sub
+    End If
+    '-A, -B, negate both and swap
+    SysDivMultA = -SysIntegerTempA
+    SysIntegerTempA = -SysIntegerTempB
+    SysIntegerTempB = SysDivMultA
+  '+A
+  Else
+    '+A, -B, return false
+    If SysIntegerTempB.15 = On Then
+      Exit Sub
+    End If
+  End If
 
-	#IFDEF PIC
+  #IFDEF PIC
 
-		'Test High, exit if more
-		movf SysIntegerTempA_H,W
-		subwf SysIntegerTempB_H,W
-		btfss STATUS,C
-		return
+    'Test High, exit if more
+    movf SysIntegerTempA_H,W
+    subwf SysIntegerTempB_H,W
+    btfss STATUS,C
+    return
 
-		'Test high, exit true if less
-		movf SysIntegerTempB_H,W
-		subwf SysIntegerTempA_H,W
-		#IFDEF ChipFamily 12,14,15
-			btfss STATUS,C
-			goto SCLTIntTrue
-		#ENDIF
-		#IFDEF ChipFamily 16
-			bnc SCLTIntTrue
-		#ENDIF
+    'Test high, exit true if less
+    movf SysIntegerTempB_H,W
+    subwf SysIntegerTempA_H,W
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,C
+      goto SCLTIntTrue
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnc SCLTIntTrue
+    #ENDIF
 
-		'Test Low, exit if more or equal
-		movf SysIntegerTempB,W
-		subwf SysIntegerTempA,W
-		btfsc STATUS,C
-		return
+    'Test Low, exit if more or equal
+    movf SysIntegerTempB,W
+    subwf SysIntegerTempA,W
+    btfsc STATUS,C
+    return
 
-	SCLTIntTrue:
-		comf SysByteTempX,F
-	#ENDIF
+  SCLTIntTrue:
+    comf SysByteTempX,F
+  #ENDIF
 
-	#IFDEF AVR
+  #IFDEF AVR
 
-		'Test High, exit false if more
-		cp SysIntegerTempB_H,SysIntegerTempA_H
-		brlo SCLTIntFalse
+    'Test High, exit false if more
+    cp SysIntegerTempB_H,SysIntegerTempA_H
+    brlo SCLTIntFalse
 
-		'Test high, exit true if less
-		cp SysIntegerTempA_H,SysIntegerTempB_H
-		brlo SCLTIntTrue
+    'Test high, exit true if less
+    cp SysIntegerTempA_H,SysIntegerTempB_H
+    brlo SCLTIntTrue
 
-		'Test Low, exit if more or equal
-		cp SysIntegerTempA,SysIntegerTempB
-		brlo SCLTIntTrue
-		ret
+    'Test Low, exit if more or equal
+    cp SysIntegerTempA,SysIntegerTempB
+    brlo SCLTIntTrue
+    ret
 
-	SCLTIntTrue:
-		com SysByteTempX
-	SCLTIntFalse:
-	#ENDIF
+  SCLTIntTrue:
+    com SysByteTempX
+  SCLTIntFalse:
+  #ENDIF
 
 end sub
