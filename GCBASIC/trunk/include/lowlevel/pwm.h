@@ -37,6 +37,7 @@
 #define PWM_Freq 38      'Frequency of PWM in KHz
 #define PWM_Duty 50      'Duty cycle of PWM (%)
 
+#define HPWM5 5
 #define HPWM6 6
 #define HPWM7 7
 
