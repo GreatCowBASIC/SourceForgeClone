@@ -31,12 +31,12 @@
 ''' 08/08/16  Revised to remove the silly error instroduced above when I called bit() with a leading space!
 ''' 09/08/16  Revised to remove fix the all case ENable option
 ''' 13/08/16  Added HPWM5 missing constant
-''' 10/10/16  Added by EvanV CCP5 support with great help from Isay Goltman
 
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
 #define PWM_Duty 50      'Duty cycle of PWM (%)
 
+#define HPWM5 5
 #define HPWM6 6
 #define HPWM7 7
 
@@ -45,8 +45,6 @@
 #define USE_HPWMCCP2 TRUE
 #define USE_HPWMCCP3 TRUE
 #define USE_HPWMCCP4 TRUE
-#define USE_HPWMCCP5 TRUE
-
 
 #define USE_HPWM5 TRUE
 #define USE_HPWM6 TRUE
@@ -75,7 +73,7 @@ Sub InitPWM
    if bit(CCP1CON_MODE0) then
 
         if nobit(CCP1M0) Then
-          warning "Supporting microcontrollers like the 16f18555 and related microcontrollers"
+          ' warning "Supporting microcontrollers like the 16f18555 and related microcontrollers"
           CCP1M0 = CCP1CON_MODE0
           CCP1M1 = CCP1CON_MODE1
           CCP1M2 = CCP1CON_MODE2
@@ -95,11 +93,6 @@ Sub InitPWM
           CCP4M1 = CCP4CON_MODE1
           CCP4M2 = CCP4CON_MODE2
           CCP4M3 = CCP4CON_MODE3
-
-          CCP5M0 = CCP5CON_MODE0
-          CCP5M1 = CCP5CON_MODE1
-          CCP5M2 = CCP5CON_MODE2
-          CCP5M3 = CCP5CON_MODE3
         end if
 
     end if
@@ -109,7 +102,7 @@ Sub InitPWM
 
         if nobit(CCP1M0) Then
 
-          warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxMODEx"
+          ' warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxMODEx"
           CCP1M0 = CCP1MODE0
           CCP1M1 = CCP1MODE1
           CCP1M2 = CCP1MODE2
@@ -130,22 +123,16 @@ Sub InitPWM
           CCP4M2 = CCP4MODE2
           CCP4M3 = CCP4MODE3
 
-          CCP5M0 = CCP5MODE0
-          CCP5M1 = CCP5MODE1
-          CCP5M2 = CCP5MODE2
-          CCP5M3 = CCP5MODE3
-
         end if
 
     end if
 
     'remapped for consistency
     if bit(CCP4EN) then
-        warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxEN"
+        ' warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxEN"
         CCP2CON_EN = CCP2EN
         CCP3CON_EN = CCP3EN
         CCP4CON_EN = CCP4EN
-        CCP5CON_EN = CCP5EN
     end if
 
     'T2PR was used in these routines, but, that is now a register, so, Changed to TxPR
@@ -556,63 +543,12 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 
   #endif
 
-  #ifdef USE_HPWMCCP5 TRUE
-
-    #ifdef AddHPWMCCPSetup5
-      AddHPWMCCPSetup5
-    #endif
-
-    #ifdef Var(CCP5CON)    'ADDED 10.10.2016 erv
-      if PWMChannel = 5 then  'USE_HPWMCCP5 TRUE
-
-        #ifndef VAR(CCPR5H)
-            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'ifndef VAR(CCPR1H) Calculate PRx_Temp value ...
-            CCPR5L = PRx_Temp_H
-            If PWMDuty = 0 Then CCPR5L = 0  ' Assure OFF at Zero - WMR
-
-            SET CCP5M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM @1@CCP5
-            SET CCP5M2 ON'These my have been remapped using a script - do check ASM and script in INITPWM
-            SET CCP5M1 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
-            SET CCP5M0 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
-        #ENDIF
-
-        #ifdef VAR(CCPR5H)
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6.  ifdef VAR(CCPR1H)
-            CCPR5H = PRx_Temp_H
-            CCPR5L = PRx_Temp
-            SET CCP5M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM @2@CCP5
-            SET CCP5M2 ON'These my have been remapped using a script - do check ASM and script in INITPWM
-            SET CCP5M1 ON'These my have been remapped using a script - do check ASM and script in INITPWM
-            SET CCP5M0 ON'These my have been remapped using a script - do check ASM and script in INITPWM
-
-            #ifdef bit(CCP5EN)
-              SET CCP5EN ON
-            #endif
-
-            #ifdef bit(CCP5CON_EN)
-              SET CCP5CON_EN ON
-            #endif
-
-            #ifdef bit(CCP5FMT)
-              SET CCP5FMT ON
-            #endif
-
-        #ENDIF
-      end if
-    #endif
-
-    #ifdef AddHPWMCCPExit5
-      AddHPWMCCPExit5
-    #endif
-
-  #endif
-
 end sub
 
 #Define HPWMOff PWMOff
 SUB PWMOff (IN Channel)   'Added 27.04.2015
 
-    If Channel > 5 OR Channel < 1 then channel = 1
+    If Channel > 4 OR Channel < 1 then channel = 1
 
     #IF bit(SET CCP1EN ON)
       Select Case Channel
@@ -624,8 +560,7 @@ SUB PWMOff (IN Channel)   'Added 27.04.2015
               SET CCP3CON_EN OFF
           Case 4
               SET CCP4CON_EN OFF
-          Case 5
-              SET CCP5CON_EN OFF
+
       End Select
       Exit Sub
     #ENDIF
@@ -649,11 +584,6 @@ SUB PWMOff (IN Channel)   'Added 27.04.2015
     #IFDEF VAR(CCP4CON)
        IF Channel = 4 then CCP4CON = 0
     #ENDIF
-
-    #IFDEF VAR(CCP5CON)
-       IF Channel = 5 then CCP5CON = 0
-    #ENDIF
-
 END SUB
 
 
