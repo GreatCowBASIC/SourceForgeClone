@@ -136,7 +136,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		IF UCase(Left(VarName, 14)) = "SYSINTEGERTEMP" Then VarPointer = "REGISTER@-2"
 		IF UCase(Left(VarName, 11)) = "SYSLONGTEMP" Then VarPointer = "REGISTER@-2"
 		If UCase(Left(VarName, 10)) = "SYSDIVMULT" Then VarPointer = "REGISTER@-2"
-		If UCase(Left(VarName, 8)) = "SYSREADA" Then VarPointer = "REGISTER@-2"
+		If VarName = "SYSREADA" Or VarName = "SYSREADA_H" Then VarPointer = "REGISTER@-2"
 		If UCase(Left(VarName, 9)) = "SYSSTRING" Then
 			Temp = UCase(Mid(VarName, 10))
 			If Temp = "LENGTH" Or Temp = "A" Or Temp = "A_H" Or Temp = "B" Or Temp = "B_H" Then

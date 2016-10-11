@@ -484,25 +484,29 @@ SUB AssembleProgram
 					END IF
 					
 					If ChipFamily <> 15 Then
-						B = (B AND 6144) / 2048
-						RepeatPagesel = 0
-						AddMorePagesel:
-						RepeatPagesel = RepeatPagesel + 1
-						If RepeatPagesel = 2 THEN
-							CurrentLine = CurrentLine + 1
-							DataSource = "BCF PCLATH,4"
-							IF (B AND 2) > 0 THEN DataSource = "BSF PCLATH,4"
-							AsmLine->Value = DataSource
-							CurrCmd = IsASM(DataSource)
-						END IF
-						If RepeatPagesel = 1 THEN
-							If PCUpper = 1 THEN RepeatPagesel = 2
-							DataSource = "BCF PCLATH,3"
-							IF (B AND 1) > 0 THEN DataSource = "BSF PCLATH,3"
-							AsmLine->Value = DataSource
-							CurrCmd = IsASM(DataSource)
-						END If
-					
+						'Remove pagesel on chips with under 2048 words
+						If PCUpper = 0 Then
+							CurrCmd = 0
+						Else
+							B = (B AND 6144) / 2048
+							RepeatPagesel = 0
+							AddMorePagesel:
+							RepeatPagesel = RepeatPagesel + 1
+							If RepeatPagesel = 2 THEN
+								CurrentLine = CurrentLine + 1
+								DataSource = "BCF PCLATH,4"
+								IF (B AND 2) > 0 THEN DataSource = "BSF PCLATH,4"
+								AsmLine->Value = DataSource
+								CurrCmd = IsASM(DataSource)
+							END IF
+							If RepeatPagesel = 1 THEN
+								If PCUpper = 1 THEN RepeatPagesel = 2
+								DataSource = "BCF PCLATH,3"
+								IF (B AND 1) > 0 THEN DataSource = "BSF PCLATH,3"
+								AsmLine->Value = DataSource
+								CurrCmd = IsASM(DataSource)
+							END If
+						End If
 					Else
 						B = (B And 65280) / 256
 						DataSource = "MOVLP " + Str(B)
@@ -1441,7 +1445,7 @@ Sub BuildAsmSymbolTable
 	
 End Sub
 
-FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
+Function IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
 	'Returns 0 if instruction is not assembly
 	'Returns instruction if it is asm
 	
