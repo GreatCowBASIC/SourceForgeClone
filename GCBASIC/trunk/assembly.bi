@@ -483,11 +483,12 @@ SUB AssembleProgram
 						B = Val(HashMapGetStr(ASMSymbols, Temp))
 					END IF
 					
-					If ChipFamily <> 15 Then
-						'Remove pagesel on chips with under 2048 words
-						If PCUpper = 0 Then
-							CurrCmd = 0
-						Else
+					'Remove pagesel on chips with under 2048 words
+					If PCUpper = 0 Then
+						CurrCmd = 0
+					Else
+						If ChipFamily <> 15 Then
+						
 							B = (B AND 6144) / 2048
 							RepeatPagesel = 0
 							AddMorePagesel:
@@ -506,13 +507,12 @@ SUB AssembleProgram
 								AsmLine->Value = DataSource
 								CurrCmd = IsASM(DataSource)
 							END If
+						Else
+							B = (B And 65280) / 256
+							DataSource = "MOVLP " + Str(B)
+							AsmLine->Value = DataSource
+							CurrCmd = IsASM(DataSource)
 						End If
-					Else
-						B = (B And 65280) / 256
-						DataSource = "MOVLP " + Str(B)
-						AsmLine->Value = DataSource
-						CurrCmd = IsASM(DataSource)
-						
 					End If
 					
 				ElseIF Left(DataSource, 9) = "BANKISEL " THEN
@@ -1317,7 +1317,7 @@ Sub BuildAsmSymbolTable
 			ElseIF Left(AsmLine->Value, 8) = "PAGESEL " THEN
 				If ChipFamily = 15 Then
 					AsmLine->Value = Str(CurrentLocation) + ":" + AsmLine->Value
-					CurrentLocation += 1
+					If PCUpper > 0 Then CurrentLocation += 1
 					FoundDirective = -1
 					
 				Else

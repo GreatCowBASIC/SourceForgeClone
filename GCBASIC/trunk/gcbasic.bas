@@ -619,7 +619,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-10-11"
+Version = "0.95.<<>> 2016-10-12"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7111,7 +7111,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 
 			'Avoid calling functions from themselves
 			If FoundFunction = 2 And Subroutine(CurrSub)->IsFunction Then
-				If CompSub = Subroutine(CurrSub) Then FoundFunction = 0
+				If CompSub->Name = Subroutine(CurrSub)->Name Then FoundFunction = 0
 			END IF
 
 			'Have already dealt with line
@@ -13056,7 +13056,7 @@ SUB ReadChipData
 	If ModePIC Then
 		'Calculate the number of high PC bits
 		PCUpper = 0
-		IF ChipFamily = 12 Or ChipFamily = 14 THEN
+		IF ChipFamily = 12 Or ChipFamily = 14 Or ChipFamily = 15 Then
 			IF ChipProg > 2048 THEN PCUpper = 1
 			IF ChipProg > 4096 THEN PCUpper = 2
 		END If
