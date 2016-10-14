@@ -38,5 +38,5 @@ MOVLW k;	1;	1100 kkkk kkkk
 OPTION;		1;	0000 0000 0010
 RETLW k;	1;	1000 kkkk kkkk
 SLEEP;		1;	0000 0000 0011
-TRIS f;		1;	0000 0000 0fff
+TRIS f;		1;	0000 0000 ffff
 XORLW k;	1;	1111 kkkk kkkk
