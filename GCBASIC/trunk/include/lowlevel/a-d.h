@@ -37,10 +37,10 @@
 '       AD Read Variable as integer
 '-------------------------------------------------
 '27/12/2015 - William Roth
-'	Revised ReadAD and ReadAD10 for greater compatibility.  Revised at RC37
+' Revised ReadAD and ReadAD10 for greater compatibility.  Revised at RC37
 '6/3/2016 - Evan Venn
 ' Revised ReadAD, ReadAD10 and ReadAD12 for ADPCH
-'	Corrected typo in LLREADAD
+' Corrected typo in LLREADAD
 
 '7/3/2016 - William Roth
 'Added IFDEF's to prevent unnecessary select case code from compiling when
@@ -56,10 +56,19 @@
 '14/3/2016 - Added spport for 16F168xx Chips
 'See new section starting at line 637 for details
 
+'10/10/2016 - added support for 14 and 20 ANSELx config for devices. These were missing.
+'     Added ADReadAdditionalPreReadCommand for support
+'
+'     #ifdef ADReadAdditionalPreReadCommand
+'        ADReadAdditionalPreReadCommand
+'     #endif
+'11/10/2016 - added support for 8 pin ANSELx config for devices.
+'11/10/2016 - Reverted READAD and READAD10 commands for compatbility
+'             added ReadAD, ReadAD10 and ReadAD12 for Differential reads
 'Commands:
-'var = ReadAD(port, optional port)	Reads port(s), and returns value.
-'ADFormat(type)		Choose Left or Right justified
-'ADOff			Set A/D converter off. Use if trouble is experienced when
+'var = ReadAD(port, optional port)  Reads port(s), and returns value.
+'ADFormat(type)   Choose Left or Right justified
+'ADOff      Set A/D converter off. Use if trouble is experienced when
 'attempting to use ports in digital mode
 
 
@@ -260,7 +269,7 @@
 
 macro LLReadAD (ADLeftAdjust)
 
-	#IFDEF PIC
+  #IFDEF PIC
       'Set up A/D
       'Make necessary ports analog
       'Code for PICs with older A/D (No ANSEL register)
@@ -321,7 +330,98 @@ macro LLReadAD (ADLeftAdjust)
 
           'Code for 16F193x chips (and others?) with ANSELA/ANSELB/ANSELE registers
           #IFDEF Var(ANSELA)
-            Select Case ADReadPort
+
+            Select Case ADReadPort ' #IFDEF Var(ANSELA) #1
+
+              #IF ChipPins = 14  Or ChipPins = 8
+
+                #ifdef USE_AD0 TRUE
+                  Case 0: Set ANSELA.0 On
+                #endif
+                #ifdef USE_AD1 TRUE
+                  Case 1: Set ANSELA.1 On
+                #endif
+                #ifdef USE_AD2 TRUE
+                  Case 2: Set ANSELA.2 On
+                #endif
+                #ifdef USE_AD3 TRUE
+                  Case 3: Set ANSELA.4 On
+                #endif
+                #ifdef USE_AD4 TRUE
+                  Case 4: Set ANSELA.5 On
+                #endif
+                #Ifdef USE_AD16 TRUE
+                  Case 16: Set ANSELC.0 On
+                #endif
+                #Ifdef USE_AD17 TRUE
+                  Case 17: Set ANSELC.1 On
+                #endif
+                #Ifdef USE_AD18 TRUE
+                  Case 18: Set ANSELC.2 On
+                #endif
+                #Ifdef USE_AD19 TRUE
+                  Case 19: Set ANSELC.3 On
+                #endif
+                #Ifdef USE_AD20 TRUE
+                  Case 20: Set ANSELC.4 On
+                #endif
+                #Ifdef USE_AD21 TRUE
+                  Case 21: Set ANSELC.5 On
+                #endif
+
+              #ENDIF
+
+              #IF ChipPins = 20
+
+                #ifdef USE_AD0 TRUE
+                  Case 0: Set ANSELA.0 On
+                #endif
+                #ifdef USE_AD1 TRUE
+                  Case 1: Set ANSELA.1 On
+                #endif
+                #ifdef USE_AD2 TRUE
+                  Case 2: Set ANSELA.2 On
+                #endif
+                #ifdef USE_AD3 TRUE
+                  Case 3: Set ANSELA.4 On
+                #endif
+                #ifdef USE_AD4 TRUE
+                  Case 4: Set ANSELA.5 On
+                #endif
+                #Ifdef USE_AD16 TRUE
+                  Case 16: Set ANSELC.0 On
+                #endif
+                #Ifdef USE_AD17 TRUE
+                  Case 17: Set ANSELC.1 On
+                #endif
+                #Ifdef USE_AD18 TRUE
+                  Case 18: Set ANSELC.2 On
+                #endif
+                #Ifdef USE_AD19 TRUE
+                  Case 19: Set ANSELC.3 On
+                #endif
+                #Ifdef USE_AD20 TRUE
+                  Case 20: Set ANSELC.4 On
+                #endif
+                #Ifdef USE_AD21 TRUE
+                  Case 21: Set ANSELC.5 On
+                #endif
+
+                #Ifdef USE_AD12 TRUE
+                   Case 12: Set ANSELB.4 On
+                #endif
+                #Ifdef USE_AD13 TRUE
+                   Case 13: Set ANSELB.5 On
+                #endif
+                #Ifdef USE_AD14 TRUE
+                   Case 14: Set ANSELB.6 On
+                #endif
+                #Ifdef USE_AD15 TRUE
+                   Case 15: Set ANSELB.7 On
+                #endif
+
+              #ENDIF
+
 
               #IF ChipPins = 18
 
@@ -471,7 +571,7 @@ macro LLReadAD (ADLeftAdjust)
                   #endif
                 #ENDIF
               #ENDIF
-            End Select
+            End Select  'End Select #1
 
           #ENDIF
 
@@ -637,7 +737,7 @@ macro LLReadAD (ADLeftAdjust)
      #IFDEF Var(ADCON3)  ' then must be 16F1688x
 
 '       'Configure ANSELA/B/C/D for 16F188x
-        Select Case ADReadPort
+        Select Case ADReadPort 'Configure ANSELA/B/C/D for 16F188x @ #2
 
             #ifdef USE_ADA0 TRUE
               Case 0: Set ANSELA.0 On
@@ -754,7 +854,7 @@ macro LLReadAD (ADLeftAdjust)
                 Case 34: Set ANSELE.2 On
               #endif
             #ENDIF
-        End Select
+        End Select  '*** ANSEL Bits should now be set ***
         '*** ANSEL Bits are now set ***
 
        'Set voltage reference
@@ -797,210 +897,258 @@ macro LLReadAD (ADLeftAdjust)
 
      #ENDIF   'End of 16F188x Section
 
-		'Enable A/D
-		SET ADCON0.ADON ON
+      #ifdef ADReadPreReadCommand
+          ADReadPreReadCommand  'add user code here
+      #endif
 
-		'Acquisition Delay
-		Wait AD_Delay
+    'Enable A/D
+    SET ADCON0.ADON ON
 
-		'Read A/D
-		#ifdef bit(GO_NOT_DONE)
-			SET ADCON0.GO_NOT_DONE ON
-			nop
-    	Wait While ADCON0.GO_NOT_DONE ON
-		#endif
+    'Acquisition Delay
+    Wait AD_Delay
+
+    'Read A/D
+    #ifdef bit(GO_NOT_DONE)
+      SET ADCON0.GO_NOT_DONE ON
+      nop
+      Wait While ADCON0.GO_NOT_DONE ON
+    #endif
 
     #ifndef bit(GO_NOT_DONE)
-			#IFDEF Bit(GO_DONE)
-				SET ADCON0.GO_DONE ON
-				Wait While ADCON0.GO_DONE ON
-			#ENDIF
-			#IFNDEF Bit(GO_DONE)
-				#IFDEF Bit(GO)
-					SET ADCON0.GO ON
-					Wait While ADCON0.GO ON
-				#ENDIF
-			#ENDIF
-		#endif
+      #IFDEF Bit(GO_DONE)
+        SET ADCON0.GO_DONE ON
+        Wait While ADCON0.GO_DONE ON
+      #ENDIF
+      #IFNDEF Bit(GO_DONE)
+        #IFDEF Bit(GO)
+          SET ADCON0.GO ON
+          Wait While ADCON0.GO ON
+        #ENDIF
+      #ENDIF
+    #endif
 
-		'Switch off A/D
-		#IFDEF Var(ADCON0)
-			SET ADCON0.ADON OFF
-			#IFDEF NoVar(ANSEL)
-				#IFDEF NoVar(ANSELA)
+    'Switch off A/D
+    #IFDEF Var(ADCON0)
+      SET ADCON0.ADON OFF
+      #IFDEF NoVar(ANSEL)
+        #IFDEF NoVar(ANSELA)
 
-					#IFDEF NoBit(PCFG4)
-						#IFDEF NoVar(ADCON2)
-							#IFDEF NoBit(ANS0)
-								#IFDEF Bit(PCFG3)
-									SET PCFG3 OFF
-								#ENDIF
-								SET PCFG2 ON
-								SET PCFG1 ON
-								SET PCFG0 OFF
-							#ENDIF
-							#IFDEF Bit(ANS0)
-								SET ANS0 OFF
-								SET ANS1 OFF
-							#ENDIF
-						#ENDIF
+          #IFDEF NoBit(PCFG4)
+            #IFDEF NoVar(ADCON2)
+              #IFDEF NoBit(ANS0)
+                #IFDEF Bit(PCFG3)
+                  SET PCFG3 OFF
+                #ENDIF
+                SET PCFG2 ON
+                SET PCFG1 ON
+                SET PCFG0 OFF
+              #ENDIF
+              #IFDEF Bit(ANS0)
+                SET ANS0 OFF
+                SET ANS1 OFF
+              #ENDIF
+            #ENDIF
 
-						#IFDEF Var(ADCON2)
-							#IFDEF BIT(PCFG3)
-								SET PCFG3 ON
-								SET PCFG2 ON
-								SET PCFG1 ON
-								SET PCFG0 ON
-							#ENDIF
-						#ENDIF
-					#ENDIF
+            #IFDEF Var(ADCON2)
+              #IFDEF BIT(PCFG3)
+                SET PCFG3 ON
+                SET PCFG2 ON
+                SET PCFG1 ON
+                SET PCFG0 ON
+              #ENDIF
+            #ENDIF
+          #ENDIF
 
-					'For 18F1320, which uses ADCON1 as an ANSEL register
-					#IFDEF Bit(PCFG4)
-						ADCON1 = 0
-					#ENDIF
-				#ENDIF
-			#ENDIF
-		#ENDIF
+          'For 18F1320, which uses ADCON1 as an ANSEL register
+          #IFDEF Bit(PCFG4)
+            ADCON1 = 0
+          #ENDIF
+        #ENDIF
+      #ENDIF
+    #ENDIF
 
-		'Clear whatever ANSEL variants the chip has
-		#IFDEF Var(ANSEL)
-			ANSEL = 0
-		#ENDIF
-		#IFDEF Var(ANSELH)
-			ANSELH = 0
-		#ENDIF
-		#IFDEF Var(ANSEL0)
-			ANSEL0 = 0
-		#ENDIF
-		#IFDEF Var(ANSEL1)
-			ANSEL1 = 0
-		#ENDIF
-		#IFDEF Var(ANSELA)
-			ANSELA = 0
-		#ENDIF
-		#IFDEF Var(ANSELB)
-			ANSELB = 0
-		#ENDIF
-		#IFDEF Var(ANSELC)
-			ANSELC = 0
-		#ENDIF
-		#IFDEF Var(ANSELD)
-			ANSELD = 0
-		#ENDIF
-		#IFDEF Var(ANSELE)
-			ANSELE = 0
-		#ENDIF
+    'Clear whatever ANSEL variants the chip has
+    #IFDEF Var(ANSEL)
+      ANSEL = 0
+    #ENDIF
+    #IFDEF Var(ANSELH)
+      ANSELH = 0
+    #ENDIF
+    #IFDEF Var(ANSEL0)
+      ANSEL0 = 0
+    #ENDIF
+    #IFDEF Var(ANSEL1)
+      ANSEL1 = 0
+    #ENDIF
+    #IFDEF Var(ANSELA)
+      ANSELA = 0
+    #ENDIF
+    #IFDEF Var(ANSELB)
+      ANSELB = 0
+    #ENDIF
+    #IFDEF Var(ANSELC)
+      ANSELC = 0
+    #ENDIF
+    #IFDEF Var(ANSELD)
+      ANSELD = 0
+    #ENDIF
+    #IFDEF Var(ANSELE)
+      ANSELE = 0
+    #ENDIF
 
-	#ENDIF
+  #ENDIF
 
 
-	#IFDEF AVR
+  #IFDEF AVR
 
-		'Select channel
-		#IFNDEF Bit(MUX5)
-			ADMUX = ADReadPort
-		#endif
-		#ifdef Bit(MUX5)
-			#ifdef NoBit(ADATE)
-				ADCSRB.MUX5 = ADReadPort.5
-				ADMUX = ADReadPort And 0x1F
-			#endif
-			#ifdef Bit(ADATE)
-				ADMUX = 0
-				MUX5 = ADReadPort.5
-				MUX4 = ADReadPort.4
-				MUX3 = ADReadPort.3
-				MUX2 = ADReadPort.2
-				MUX1 = ADReadPort.1
-				MUX0 = ADReadPort.0
-			#endif
-		#endif
-		#ifdef Bit(ADLAR)
-			If ADLeftAdjust = 1 Then
-				Set ADMUX.ADLAR On
-			End If
-			If ADLeftAdjust = 0 Then
-				Set ADMUX.ADLAR Off
-			End If
-		#endif
+    'Select channel
+    #IFNDEF Bit(MUX5)
+      ADMUX = ADReadPort
+    #endif
+    #ifdef Bit(MUX5)
+      #ifdef NoBit(ADATE)
+        ADCSRB.MUX5 = ADReadPort.5
+        ADMUX = ADReadPort And 0x1F
+      #endif
+      #ifdef Bit(ADATE)
+        ADMUX = 0
+        MUX5 = ADReadPort.5
+        MUX4 = ADReadPort.4
+        MUX3 = ADReadPort.3
+        MUX2 = ADReadPort.2
+        MUX1 = ADReadPort.1
+        MUX0 = ADReadPort.0
+      #endif
+    #endif
+    #ifdef Bit(ADLAR)
+      If ADLeftAdjust = 1 Then
+        Set ADMUX.ADLAR On
+      End If
+      If ADLeftAdjust = 0 Then
+        Set ADMUX.ADLAR Off
+      End If
+    #endif
 
-		'Select reference source
-		#ifndef Bit(REFS2)
-			If AD_REF_SOURCE = AD_REF_AVCC Then
-				Set ADMUX.REFS0 On
-			End If
-			If AD_REF_SOURCE = AD_REF_256 Then
-				Set ADMUX.REFS0 On
-				Set ADMUX.REFS1 On
-			End If
-		#endif
-		#ifdef Bit(REFS2)
-			If AD_REF_SOURCE = AD_REF_AREF Then
-				Set ADMUX.REFS0 On
-			End If
-			If AD_REF_SOURCE = AD_REF_256 Then
-				Set ADMUX.REFS0 On
-				Set ADMUX.REFS1 On
-				Set REFS2 On
-			End If
-		#endif
+    'Select reference source
+    #ifndef Bit(REFS2)
+      If AD_REF_SOURCE = AD_REF_AVCC Then
+        Set ADMUX.REFS0 On
+      End If
+      If AD_REF_SOURCE = AD_REF_256 Then
+        Set ADMUX.REFS0 On
+        Set ADMUX.REFS1 On
+      End If
+    #endif
+    #ifdef Bit(REFS2)
+      If AD_REF_SOURCE = AD_REF_AREF Then
+        Set ADMUX.REFS0 On
+      End If
+      If AD_REF_SOURCE = AD_REF_256 Then
+        Set ADMUX.REFS0 On
+        Set ADMUX.REFS1 On
+        Set REFS2 On
+      End If
+    #endif
 
-		'Set conversion clock
-		#IFDEF Bit(ADPS2)
-			#IFDEF ADSpeed HighSpeed
-				SET ADPS2 Off
-				SET ADPS1 Off
-			#ENDIF
-			#IFDEF ADSpeed MediumSpeed
-				SET ADPS2 On
-				SET ADPS1 Off
-			#ENDIF
-			#IFDEF ADSpeed LowSpeed
-				SET ADPS2 On
-				SET ADPS1 On
-			#ENDIF
-		#ENDIF
+    'Set conversion clock
+    #IFDEF Bit(ADPS2)
+      #IFDEF ADSpeed HighSpeed
+        SET ADPS2 Off
+        SET ADPS1 Off
+      #ENDIF
+      #IFDEF ADSpeed MediumSpeed
+        SET ADPS2 On
+        SET ADPS1 Off
+      #ENDIF
+      #IFDEF ADSpeed LowSpeed
+        SET ADPS2 On
+        SET ADPS1 On
+      #ENDIF
+    #ENDIF
 
-		'Acquisition Delay
-		Wait AD_Delay
+    'Acquisition Delay
+    Wait AD_Delay
 
-		'Take reading
-		Set ADEN On
-		'After turning on ADC, let internal Vref stabilise
-		If AD_REF_SOURCE = AD_REF_256 Then
-			Wait AD_VREF_DELAY
-		End If
-		Set ADSC On
-		Wait While ADSC On
-		Set ADEN Off
+    'Take reading
+    Set ADEN On
+    'After turning on ADC, let internal Vref stabilise
+    If AD_REF_SOURCE = AD_REF_256 Then
+      Wait AD_VREF_DELAY
+    End If
+    Set ADSC On
+    Wait While ADSC On
+    Set ADEN Off
 
-	#ENDIF
+  #ENDIF
 
 end macro
 
-function ReadAD(ADReadPort, in OPTIONAL ADN_PORT = 255) as integer
+'Returns Byte
+function ReadAD( in ADReadPort) as byte
  'added optional ADN_PORT to support differential ADC
 
   #IFDEF PIC
+
+'      #IFDEF Bit(ADFM)
+'          SET ADFM ON
+'      #ENDIF
+
+      'for 16F1885x and possibly future others
+      #IFDEF VAR(ADPCH)
+          ADPCH = ADReadPort
+      #ENDIF
+
+  #ENDIF
+
+'***************************************
+
+'Perform conversion
+LLReadAD 1
+
+  'Write output
+   #IFDEF PIC
+
+      #IFDEF Var(ADRESH)
+          ReadAD = ADRESH
+      #ENDIF
+      #IFDEF NoVar(ADRESH)
+          ReadAD = ADRES
+      #ENDIF
+
+      #IFDEF Bit(ADFM)
+          SET ADFM OFF
+      #ENDIF
+
+
+   #ENDIF
+
+   #IFDEF AVR
+      ReadAD = ADCH
+   #ENDIF
+
+End Function
+
+'ReadAD - suppports Differential reads
+function ReadAD( in ADReadPort, in ADN_PORT ) as integer
+ 'added optional ADN_PORT to support differential ADC
+
+  #IFDEF PIC
+
+'      #IFDEF Bit(ADFM)
+'          SET ADFM ON
+'      #ENDIF
+
       #IFDEF Bit(CHSN0)
 
-      	#IFDEF Bit(ADFM)
-						SET ADFM ON
-				#ENDIF
-
-      	;set AD Result Mode to 12-Bit
-  			#IFDEF Bit(ADRMD)      ;Added for 16F178x
-    			SET ADRMD OFF      ; WMR
-  			#ENDIF
-
-         	configNegativeChannel
+        IF ADN_PORT <> 255 then
+               configNegativeChannel
+        END IF
 
       #ENDIF
 
       'for 16F1885x and possibly future others
       #IFDEF VAR(ADPCH)
-      		ADPCH = ADReadPort
+          ADPCH = ADReadPort
       #ENDIF
   #ENDIF
 
@@ -1014,157 +1162,277 @@ LLReadAD 1
 
     'Chips with no differential ADC (MOST CHIPS) - WMR
     #IFNDEF Bit(CHSN0)
-    		#IFDEF Var(ADRESH)
-						ReadAD = ADRESH
-				#ENDIF
-				#IFDEF NoVar(ADRESH)
-						ReadAD = ADRES
-				#ENDIF
-		#ENDIF
+        #IFDEF Var(ADRESH)
+            ReadAD = ADRESH
+        #ENDIF
+        #IFDEF NoVar(ADRESH)
+            ReadAD = ADRES
+        #ENDIF
+    #ENDIF
 
        'Allow 8-bit differential reads - WMR
-  	#IFDEF Bit(CHSN0) 'Chip has differential ADC
+    #IFDEF Bit(CHSN0) 'Chip has differential ADC
+        IF ADN_PORT <> 0 then
+            'Write output
+              #IFDEF NoVar(ADRESL)
+                  ReadAD = ADRES
+              #ENDIF
 
-     	'Write output
-				#IFDEF NoVar(ADRESL)
-						ReadAD = ADRES
-				#ENDIF
+              #IFDEF Var(ADRESL)
+                  ReadAD = ADRESL
+              #ENDIF
 
-   			#IFDEF Var(ADRESL)
-						ReadAD = ADRESL
-				#ENDIF
+              #IFDEF Var(ADRESH)
+                  ReadAD_H = ADRESH
+              #ENDIF
 
-  			#IFDEF Var(ADRESH)
-						ReadAD_H = ADRESH
-				#ENDIF
 
-     		#IFDEF Bit(ADFM)
-						SET ADFM OFF
-				#ENDIF
 
-        ReadAd = ReadAd / 16
- 		#ENDIF
+              Repeat 4
+                  ' ReadAd = ReadAd / 16
+                  rotate READAD right
+              End Repeat
+        END IF
+    #ENDIF
+
+    #IFDEF Bit(ADFM)
+        SET ADFM OFF
+    #ENDIF
+
  #ENDIF
 
  #IFDEF AVR
-	  ReadAD = ADCH
+    ReadAD = ADCH
  #ENDIF
 
 End Function
 
-
 'Large ReadAD
-function ReadAD10(ADReadPort, OPTIONAL ADN_PORT = 255) As integer
-
-	#IFDEF PIC
-	   	#IFDEF Bit(ADFM)
-					SET ADFM ON
-			#ENDIF
-
-
-     	#IFDEF Bit(CHSN0)
-      		;set AD Result Mode to 10-Bit
-  				#IFDEF Bit(ADRMD)      ;Added for 16F178x
-    					SET ADRMD ON      ; WMR
-  				#ENDIF
-         	configNegativeChannel
+function ReadAD10( ADReadPort ) As Word
+'  NOP 'function ReadAD10( ADReadPort ) As Word
+  #IFDEF PIC
+      #IFDEF Bit(ADFM)
+          SET ADFM ON
       #ENDIF
 
       #IFDEF VAR(ADPCH)
-      		ADPCH = ADReadPort
+          ADPCH = ADReadPort
       #ENDIF
-
 
   #ENDIF
 
- 	#IFDEF AVR
-			Dim LLADResult As Word Alias ADCH, ADCL
-	#ENDIF
+  #IFDEF AVR
+      Dim LLADResult As Word Alias ADCH, ADCL
+  #ENDIF
 
 'Do conversion
 LLReadAD 0
 
-	 #IFDEF PIC
-			'Write output
-			#IFDEF NoVar(ADRESL)
-				ReadAD10 = ADRES
-			#ENDIF
+   #IFDEF PIC
+      'Write output
+      #IFDEF NoVar(ADRESL)
+        ReadAD10 = ADRES
+      #ENDIF
 
-   		#IFDEF Var(ADRESL)
-					ReadAD10 = ADRESL
-			#ENDIF
+      #IFDEF Var(ADRESL)
+          ReadAD10 = ADRESL
+      #ENDIF
 
-  		#IFDEF Var(ADRESH)
-					ReadAD10_H = ADRESH
-			#ENDIF
+      #IFDEF Var(ADRESH)
+          ReadAD10_H = ADRESH
+      #ENDIF
 
-			'Put A/D format back to normal
-			#IFDEF Bit(ADFM)
-					SET ADFM OFF
-			#ENDIF
+      'Put A/D format back to normal
+      #IFDEF Bit(ADFM)
+          SET ADFM OFF
+      #ENDIF
 
-			#IFDEF Bit(CHSN0)'18F PIC with 12=bit ADC do not support 10-bit result
-     	' Added DIV/4 to return 10 bit value -WMR
- 					#IFNDEF Bit(CHSN3)
-        	   READAD10 = READAD10 / 4
-        	#ENDIF
-			#ENDIF
- 	#ENDIF
+  #ENDIF
 
-	#IFDEF AVR
-			ReadAD10 = LLADResult
-	#ENDIF
+  #IFDEF AVR
+      ReadAD10 = LLADResult
+  #ENDIF
 
 end function
 
-'Larger ReadAD
-function ReadAD12(ADReadPort, OPTIONAL ADN_PORT = 255) As integer
 
-	#IFDEF PIC
 
-   'Set up A/D format
-			#IFDEF Bit(ADFM)
-		  		SET ADFM ON
-	  	#ENDIF
+'Large ReadAD  - suppports Differential reads
+function ReadAD10(ADReadPort, in ADN_PORT ) As integer
+'  nop 'function ReadAD10(ADReadPort, in ADN_PORT ) As integer
+  #IFDEF PIC
+      #IFDEF Bit(ADFM)
+          SET ADFM ON
+      #ENDIF
 
-      'Set A/D Result Mode to 12-Bit  (16F178x) -WMR
-			#IFDEF Bit(ADRMD)
-      		SET ADRMD OFF
-    	#ENDIF
 
-      #IFDEF Bit(CHSN0)'Chip has Differential ADC Module
-         configNegativeChannel
+      #IFDEF Bit(CHSN0)
+
+          ;set AD Result Mode to 10-Bit
+          #IFDEF Bit(ADRMD)      ;Added for 16F178x
+              SET ADRMD ON      ; WMR
+          #ENDIF
+
+          IF ADN_PORT <> 255 then
+              configNegativeChannel
+          END IF
+
       #ENDIF
 
       #IFDEF VAR(ADPCH)
-      		ADPCH = ADReadPort
+          ; #IFDEF VAR(ADPCH)
+          ADPCH = ADReadPort
       #ENDIF
 
 
   #ENDIF
 
+  #IFDEF AVR
+      Dim LLADResult As Word Alias ADCH, ADCL
+  #ENDIF
+
 'Do conversion
 LLReadAD 0
 
-#IFDEF PIC
-	'Write output
-	#IFDEF NoVar(ADRESL)
-		ReadAD12 = ADRES
-	#ENDIF
+   #IFDEF PIC
+      'Write output
+      #IFDEF NoVar(ADRESL)
+        ReadAD10 = ADRES
+      #ENDIF
 
-	#IFDEF Var(ADRESL)
-		ReadAD12 = ADRESL
-	#ENDIF
+      #IFDEF Var(ADRESL)
+          ReadAD10 = ADRESL
+      #ENDIF
 
-	#IFDEF Var(ADRESH)
-		ReadAD12_H = ADRESH
-	#ENDIF
+      #IFDEF Var(ADRESH)
+          ReadAD10_H = ADRESH
+      #ENDIF
 
-	'Put A/D format back to normal
-	#IFDEF Bit(ADFM)
-		SET ADFM OFF
-	#ENDIF
-#ENDIF
+      'Put A/D format back to normal
+      #IFDEF Bit(ADFM)
+          SET ADFM OFF
+      #ENDIF
+
+      #IFDEF Bit(CHSN0)'18F PIC with 12=bit ADC do not support 10-bit result
+          IF ADN_PORT <> 0 then
+            ' Added DIV/4 to return 10 bit value -WMR
+                #IFNDEF Bit(CHSN3)
+                  Repeat 2
+                      ' READAD10 = READAD10/4
+                      rotate READAD10 right
+                  End Repeat
+                #ENDIF
+          END IF
+      #ENDIF
+  #ENDIF
+
+  #IFDEF AVR
+      ReadAD10 = LLADResult
+  #ENDIF
+
+end function
+
+
+'Larger ReadAD
+function ReadAD12( ADReadPort ) As Word
+
+  #IFDEF PIC
+
+   'Set up A/D format
+      #IFDEF Bit(ADFM)
+          SET ADFM ON
+      #ENDIF
+
+      'Set A/D Result Mode to 12-Bit
+      #IFDEF Bit(ADRMD)
+          SET ADRMD OFF
+      #ENDIF
+
+      'Required by some chips
+      #IFDEF VAR(ADPCH)
+          ADPCH = ADReadPort
+      #ENDIF
+
+
+  #ENDIF
+
+  'Do conversion
+  LLReadAD 0
+
+  #IFDEF PIC
+    'Write output
+    #IFDEF NoVar(ADRESL)
+      ReadAD12 = ADRES
+    #ENDIF
+
+    #IFDEF Var(ADRESL)
+      ReadAD12 = ADRESL
+    #ENDIF
+
+    #IFDEF Var(ADRESH)
+      ReadAD12_H = ADRESH
+    #ENDIF
+
+    'Put A/D format back to normal
+    #IFDEF Bit(ADFM)
+      SET ADFM OFF
+    #ENDIF
+
+  #ENDIF
+
+end function
+
+
+'Larger ReadAD - suppports Differential reads
+function ReadAD12(ADReadPort, ADN_PORT ) As integer
+
+  #IFDEF PIC
+
+   'Set up A/D format
+      #IFDEF Bit(ADFM)
+          SET ADFM ON
+      #ENDIF
+
+      'Set A/D Result Mode to 12-Bit  (16F178x) -WMR
+      #IFDEF Bit(ADRMD)
+          SET ADRMD OFF
+      #ENDIF
+
+      #IFDEF Bit(CHSN0)'Chip has Differential ADC Module
+         IF ADN_PORT <> 255 then
+            configNegativeChannel
+         END IF
+      #ENDIF
+
+      #IFDEF VAR(ADPCH)
+          ADPCH = ADReadPort
+      #ENDIF
+
+  #ENDIF
+
+  'Do conversion
+  LLReadAD 0
+
+  #IFDEF PIC
+    'Write output
+    #IFDEF NoVar(ADRESL)
+      ReadAD12 = ADRES
+    #ENDIF
+
+    #IFDEF Var(ADRESL)
+      ReadAD12 = ADRESL
+    #ENDIF
+
+    #IFDEF Var(ADRESH)
+      ReadAD12_H = ADRESH
+    #ENDIF
+
+    'Put A/D format back to normal
+    #IFDEF Bit(ADFM)
+      SET ADFM OFF
+    #ENDIF
+
+  #ENDIF
 
 end function
 
@@ -1235,29 +1503,29 @@ Sub ConfigNegativeChannel
 
        IF ADN_PORT > 6  then
             set CHSN2 OFF
-    	      set CHSN1 OFF
-    				set CHSN0 OFF
+            set CHSN1 OFF
+            set CHSN0 OFF
        END IF
    #ENDIF
 
    #IFDEF Bit(CHSN3) '16F178x
       ' AN0 - AN13 and AN21 Allowed
       'configure Negative A/D Channel
-			IF ADN_PORT >= 0 and ADN_PORT <= 13 then
+      IF ADN_PORT >= 0 and ADN_PORT <= 13 then
            N_CHAN = ADN_PORT
            ADCON2 = ADCON2 AND b'11110000' OR N_CHAN
       END IF
 
       'exception for (16F1789) where AN21 = channel 14
-			IF ADN_PORT = 21 then
+      IF ADN_PORT = 21 then
            N_CHAN = 14
            ADCON2 = ADCON2 AND b'11110000' OR N_CHAN
-			END IF
+      END IF
 
       IF ADN_PORT > 13 and ADN_PORT <> 21 then
           set CHSN3 ON
-    	    set CHSN2 ON
-    	    set CHSN1 ON
+          set CHSN2 ON
+          set CHSN1 ON
           set CHSN0 ON
       END IF
    #ENDIF

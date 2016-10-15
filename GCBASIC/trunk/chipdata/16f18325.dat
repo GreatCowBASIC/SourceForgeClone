@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16F18325
-'Generated 2/7/2016
+'Generated 30/7/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -10,7 +10,7 @@ RAM=1024
 I/O=12
 ADC=15
 MaxMHz=32
-IntOsc=32
+IntOsc=32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0.0625
 Pins=14
 Family=15
 ConfigWords=4

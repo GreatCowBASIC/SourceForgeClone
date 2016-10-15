@@ -259,14 +259,38 @@ Sub GLCDDrawChar_PCD8544(In CharLocX, In CharLocY, In CharCode, Optional In Line
 		End Select
                     ' Handles general draw sequence. This caters for read display status then update display RAM
                     #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+
+                        'code replaced as part of font size support 7/2016
+                        'For CurrCharRow = 1 to 8
+                        '          If CurrCharVal.0 = 0 Then
+                        '                    PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                        '          Else
+                        '                    PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
+                        '          End If
+                        '          Rotate CurrCharVal Right
+                        'Next
+
+												'this code replaced the code above 7/2016
+                        CharRow=0
                         For CurrCharRow = 1 to 8
-                                  If CurrCharVal.0 = 0 Then
-                                            PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
-                                  Else
-                                            PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
-                                  End If
-                                  Rotate CurrCharVal Right
+                            CharColS=0
+                            For Col=1 to GLCDfntDefaultsize
+                                  CharColS +=1
+                                  CharRowS=0
+                                  For Row=1 to GLCDfntDefaultsize
+                                      CharRowS +=1
+                                      if CurrCharVal.0=1 then
+                                         PSet [word]CharLocX + CurrCharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDForeground
+                                      Else
+                                         PSet [word]CharLocX + CurrCharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                                      End if
+                                  Next Row
+                            Next Col
+                          Rotate CurrCharVal Right
+                          CharRow +=GLCDfntDefaultsize
                         Next
+                        CharCol +=GLCDfntDefaultsize
+
                     #endif
 
                     ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.

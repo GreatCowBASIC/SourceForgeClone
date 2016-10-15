@@ -1,5 +1,5 @@
 ;    Serial/RS232 routines for Great Cow BASIC
-;    Copyright (C) 2006, 2014, 2015 Hugh Considine, Evan R Venn, William Roth
+;    Copyright (C) 2006, 2014, 2015, 2016 Hugh Considine, William Roth and Evan Venn
 
 ;    This library is free software; you can redistributet and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,9 @@
 ;   February 2015 - William Roth
 ;     1. Modified SerFullDelay  for more accurate output baud rates.
 ;     2. Added Padding to bit delay times to balance High/Low bit times
+;  26 Aug 2016. Added Serprint Long support.
+;  29 Aug 2016. Added 5 ms delay to init to ensure lines are settled.
+
 ;********************************************************************************
 
 ;    Usage of Sys232Temp
@@ -63,6 +66,7 @@
 'Start Bit settings
 #define WaitForStart 128
 
+#define SerialInitDelay 5
 
 'Calculate delay lengths
 #script
@@ -152,6 +156,10 @@ sub InitSer(In Ser_Select, In Ser_Rate, In Ser_Start, In Ser_Data, In Ser_Stop, 
           Ser_Invert_C = Ser_Invert
        END IF
   #ENDIF
+
+  'ensure lines are settled
+  wait SerialInitDelay ms
+
 end sub
 
 Sub SerSend(In Ser_Select, In Ser_Byte)
@@ -353,6 +361,34 @@ Sub SerPrint (In Ser_Select, In SerPrintVal As Word)
   #IFDEF SerPrintLF
     SerSend(Ser_Select, 10)
   #ENDIF
+
+End Sub
+
+
+Sub SerPrint (In Ser_Select, In SerPrintVal As Long)
+     Dim SysCalcTempA As Long
+      Dim SysPrintBuffer(10)
+      SysPrintBuffLen = 0
+
+      Do
+                'Divide number by 10, remainder into buffer
+                SysPrintBuffLen += 1
+                SysPrintBuffer(SysPrintBuffLen) = SerPrintVal % 10
+                SerPrintVal = SysCalcTempA
+      Loop While SerPrintVal <> 0
+
+      'Display
+      For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+                SerSend (Ser_Select,SysPrintBuffer(SysPrintTemp) + 48)
+      Next
+
+      'CR
+      #IFDEF SerPrintCR
+                SerSend (Ser_Select, 13)
+      #ENDIF
+      #IFDEF SerPrintLF
+                SerSend ( Ser_Select, 10)
+      #ENDIF
 
 End Sub
 

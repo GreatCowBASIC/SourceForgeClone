@@ -76,7 +76,7 @@ Sub InitPWM
    if bit(CCP1CON_MODE0) then
 
         if nobit(CCP1M0) Then
-          warning "Supporting microcontrollers like the 16f18555 and related microcontrollers"
+'          warning "Supporting microcontrollers like the 16f18555 and related microcontrollers"
           CCP1M0 = CCP1CON_MODE0
           CCP1M1 = CCP1CON_MODE1
           CCP1M2 = CCP1CON_MODE2
@@ -110,7 +110,7 @@ Sub InitPWM
 
         if nobit(CCP1M0) Then
 
-          warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxMODEx"
+'          warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxMODEx"
           CCP1M0 = CCP1MODE0
           CCP1M1 = CCP1MODE1
           CCP1M2 = CCP1MODE2
@@ -142,7 +142,7 @@ Sub InitPWM
 
     'remapped for consistency
     if bit(CCP4EN) then
-        warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxEN"
+'        warning "Supporting microcontrollers like the 16f18326 and related microcontrollers for CCPxEN"
         CCP2CON_EN = CCP2EN
         CCP3CON_EN = CCP3EN
         CCP4CON_EN = CCP4EN

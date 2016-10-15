@@ -98,8 +98,8 @@ Sub InitGLCD_KS0108
 		'Colours
 		GLCDBackground = 0
 		GLCDForeground = 1
-                GLCDFontWidth = 6
-                GLCDfntDefault = 0
+    GLCDFontWidth = 6
+    GLCDfntDefault = 0
 		GLCDfntDefaultsize = 1
 
 	#endif
