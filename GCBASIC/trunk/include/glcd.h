@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2015 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2016 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,8 @@
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
 '    9/11/14	New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
-'
+'		 26/7/16  Moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc. in Drawstring and DrawChar
+'    22/8/16  removal of X1 and Y1 varibles. these clashed with register addresses
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306
@@ -50,7 +51,7 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define GLCD_TYPE_ILI9340 6
 #define GLCD_TYPE_SSD1289 7
 #define GLCD_TYPE_ILI9341 8
-
+#define GLCD_TYPE_SH1106  9
 
 
 
@@ -210,6 +211,23 @@ Dim GLCDDeviceWidth as Word
      PCD8544_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
+  If GLCD_TYPE = GLCD_TYPE_SH1106 Then
+     #include <glcd_SH1106.h>
+     InitGLCD = InitGLCD_SH1106
+     GLCDCLS = GLCDCLS_SH1106
+     FilledBox = FilledBox_SH1106
+     Pset = Pset_SH1106
+     GLCDSetContrast = GLCDSetContrast_SSH1106
+     GLCDSetDisplayNormalMode = GLCDSetDisplayNormalMode_SSH1106
+     GLCDSetDisplayInvertMode = GLCDSetDisplayInvertMode_SSH1106
+     glcd_type_string = "SH1106"
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 64
+     SH1106_GLCD_HEIGHT = GLCDDeviceHeight
+     SH1106_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
+
 	'Loads extended fonts set ASCII characters 31-254
   'Requires 1358 bytes of program memory
   If GLCD_EXTENDEDFONTSET1 then
@@ -291,13 +309,14 @@ End Sub
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour as word = GLCDForeground )
-    Dim TargetCharCol as Word
+
+    dim TargetCharCol as word
     for xchar = 1 to Chars(0)
-      ' June 2014
       ' Corrected error X calcaluation. It was adding an Extra 1!
-      TargetCharCol = StringLocX + ((xchar*GLCDFontWidth)-GLCDFontWidth)
+      TargetCharCol = StringLocX + ((xchar*( GLCDFontWidth * GLCDfntDefaultsize ))-( GLCDFontWidth * GLCDfntDefaultsize ))
       GLCDDrawChar TargetCharCol , CharLocY , Chars(xchar), LineColour
     next
+
 end sub
 
 '''Draws a character at the specified location on the ST7920 GLCD
@@ -306,42 +325,57 @@ end sub
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
-
+	'moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc.
 	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-	CharCode -= 15
 
-	'invert colors if required
+    'invert colors if required
+    if LineColour <> GLCDForeground  then
+      'Inverted Colours
+      GLCDBackground = 1
+      GLCDForeground = 0
+    end if
 
-          if LineColour <> GLCDForeground  then
-            'Inverted Colours
-            GLCDBackground = 1
-            GLCDForeground = 0
-          end if
+	 dim CharCol, CharRow as word
+	 CharCode -= 15
 
-          'Need to read characters from CharColn (n = 0:7) tables
-	'(First 3, ie 0:2 are blank, so can ignore)
-	For CurrCharCol = 1 to 5
-		Select Case CurrCharCol
-			Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-			Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-			Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-		End Select
-                    For CurrCharRow = 1 to 8
-                              If CurrCharVal.0 = 0 Then
-                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
-                              Else
-                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
-                              End If
-                              Rotate CurrCharVal Right
-                    Next
+    if CharCode>=178 and CharCode<=202 then
+       CharLocY=CharLocY-1
+    end if
 
-	Next
+    CharCol=1
 
-          'Restore
-          GLCDBackground = 0
-          GLCDForeground = 1
+    For CurrCharCol = 1 to 5
+      Select Case CurrCharCol
+        Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+        Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+        Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+        Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+        Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+      End Select
+      CharRow=0
+      For CurrCharRow = 1 to 8
+          CharColS=0
+          For Col=1 to GLCDfntDefaultsize
+                CharColS +=1
+                CharRowS=0
+                For Row=1 to GLCDfntDefaultsize
+                    CharRowS +=1
+                    if CurrCharVal.0=1 then
+                       PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
+                    Else
+                       PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                    End if
+                Next Row
+          Next Col
+        Rotate CurrCharVal Right
+        CharRow +=GLCDfntDefaultsize
+      Next
+      CharCol +=GLCDfntDefaultsize
+    Next
+
+	  'Restore
+	  GLCDBackground = 0
+	  GLCDForeground = 1
 
 End Sub
 
@@ -444,9 +478,9 @@ FillCircleXX = 0
 FillCircleYY = xradius
 
 	' Fill in the center between the two halves
-          y2 = yoffset+xradius
-          y1 = yoffset-xradius
-	Line( xoffset, y1 , xoffset, y2, LineColour)
+          YCalc2 = yoffset+xradius
+          YCalc1 = yoffset-xradius
+	Line( xoffset, YCalc1 , xoffset, YCalc2, LineColour)
 
 	do while (FillCircleXX < FillCircleYY)
              if ff >= 0 then
@@ -645,17 +679,17 @@ End Sub
 'Size the size of characters
 Sub CreateButton (In BX1 as Word, In BY1 as Word , In BX2 as Word , In BY2 as Word , In FillColor as Word, In BorderColor as Word, In PrintData As String, In FColor as Word, In Size = 1)
     Dim TempColor1 , TempColor2 as Word
-    Dim X1 , Y1 as Word
+    Dim XCalc1 , YCalc1 as Word
 
     FillRoundRect(BX1, BY1, BX2, BY2, FillColor)
     RoundRect(BX1, BY1, BX2, BY2, BorderColor)
-    X1=(BX1+BX2)/2-PrintData(0)*6*Size/2
-    Y1=(BY1+BY2)/2-4*Size
+    XCalc1=(BX1+BX2)/2-PrintData(0)*6*Size/2
+    YCalc1=(BY1+BY2)/2-4*Size
     TempColor1=GLCDBackground
     TempColor2= GLCDForeground
     GLCDBackground=FillColor
 
-    GLCDPrint( X1, Y1, PrintData, FColor, Size )
+    GLCDPrint( XCalc1, YCalc1, PrintData, FColor, Size )
     GLCDBackground=TempColor1
     GLCDForeground=TempColor2
 End Sub
