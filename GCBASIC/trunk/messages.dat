@@ -232,6 +232,7 @@ RepeatMissingCount = "No value given for Repeat"
 UndeclaredVar = "Variable %var% was not explicitly declared"
 MissingSubParam = "Missing value for parameter %param%"
 WarningsAsErrors = "Warnings generated and treated as errors"
+BadBitCompareOp = "Incorrect operator: Only = and <> comparisons can be used with bit variables"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"
