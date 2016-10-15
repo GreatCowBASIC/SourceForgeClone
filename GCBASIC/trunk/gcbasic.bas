@@ -619,7 +619,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-10-12"
+Version = "0.95.<<>> 2016-10-15"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -4260,6 +4260,11 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 
 			'Need to compare 2 bit variables
 			Else
+				'Check operator
+				If Op <> "=" And Op <> "~" Then
+					LogError(Message("BadBitCompareOp"), Origin)
+				End If
+				
 				If ModePIC Then
 					'Get variables
 					R1 = FixBit(V1, Origin)
@@ -4274,8 +4279,13 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 					CurrLine = LinkedListInsert(CurrLine, " btfsc " + R2)
 					CurrLine = LinkedListInsert(CurrLine, " xorlw 255")
 					'If W is 0, variables are equal (inverted 0 or 2 times)
-					IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN Cmd = " btfss STATUS,Z"
-					If INSTR(UCase(IfTrue), "FALSE") <> 0 THEN Cmd = " btfsc STATUS,Z"
+					If Op = "=" Then
+						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN Cmd = " btfsc STATUS,Z"
+						If INSTR(UCase(IfTrue), "FALSE") <> 0 THEN Cmd = " btfss STATUS,Z"
+					Else
+						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN Cmd = " btfss STATUS,Z"
+						If INSTR(UCase(IfTrue), "FALSE") <> 0 THEN Cmd = " btfsc STATUS,Z"
+					End If
 					CurrLine = LinkedListInsert(CurrLine, Cmd)
 
 				ElseIf ModeAVR Then
@@ -4284,13 +4294,18 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 					'clear w, xor if each var set
 					AddVar "SysCalcTempX", "BYTE", 1, CurrSub, "REAL", Origin, , -1
 					CurrLine = LinkedListInsert(CurrLine, " clr SysCalcTempX")
-					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V1 + " = 1", "TRUE", Origin, CurrSub))
+					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V1 + "=1", "TRUE", Origin, CurrSub))
 					CurrLine = LinkedListInsert(CurrLine, " com SysCalcTempX")
 					CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V2 + "=1", "TRUE", Origin, CurrSub))
 					CurrLine = LinkedListInsert(CurrLine, " com SysCalcTempX")
 					'If W is 0, variables are equal (inverted 0 or 2 times)
-					IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN Cmd = " sbrs SysCalcTempX,0"
-					If INSTR(UCase(IfTrue), "FALSE") <> 0 THEN Cmd = " sbrc SysCalcTempX,0"
+					If Op = "=" Then
+						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN Cmd = " sbrs SysCalcTempX,0"
+						If INSTR(UCase(IfTrue), "FALSE") <> 0 THEN Cmd = " sbrc SysCalcTempX,0"
+					Else
+						IF INSTR(UCase(IfTrue), "TRUE") <> 0 THEN Cmd = " sbrc SysCalcTempX,0"
+						If INSTR(UCase(IfTrue), "FALSE") <> 0 THEN Cmd = " sbrs SysCalcTempX,0"
+					End If
 					CurrLine = LinkedListInsert(CurrLine, Cmd)
 
 				End If
