@@ -83,6 +83,7 @@ Type VariableType
 	ExplicitDeclaration As Integer
 
 	FixedSize As Integer
+	Used As Integer
 
 End Type
 
@@ -301,7 +302,7 @@ Declare Sub AddInterruptCode
 DECLARE SUB AddSysVarBits (CompSub As SubType Pointer)
 Declare SUB BuildMemoryMap
 DECLARE SUB CalcConfig
-DECLARE Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As String, OriginIn As String)
+DECLARE Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As String, OriginIn As String, NeverLast As Integer)
 Declare Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As AsmCommand Pointer = 0, GotoPos As AsmCommand Pointer = 0) As Integer
 Declare Sub CalcSubSize(CurrSub As SubType Pointer)
 DECLARE FUNCTION CastOrder (InType As String) As Integer
@@ -309,7 +310,7 @@ Declare Sub CheckConstName (ConstName As String, Origin As String)
 Declare Sub CheckClockSpeed
 Declare Sub CompileProgram
 Declare Sub CompileSubroutine(CompSub As SubType Pointer)
-Declare Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As CodeSection Pointer = 0)
+Declare Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As CodeSection Pointer = 0, NeverLast As Integer = 0)
 DECLARE FUNCTION CompileCalcAdd(CodeSection As CodeSection Pointer, V1 As String, Act As String, V2 As String, Origin As String, Answer As String) As String
 DECLARE FUNCTION CompileCalcCondition(CodeSection As CodeSection Pointer, V1 As String, Act As String, V2 As String, Origin As String, Answer As String) As String
 DECLARE FUNCTION CompileCalcLogic(CodeSection As CodeSection Pointer, V1 As String, Act As String, V2 As String, Origin As String, Answer As String) As String
@@ -444,13 +445,14 @@ Declare Function IsASMConst (DataSource As String) As Integer
 
 'Subs in variables.bi
 Declare Function AddFinalVar(VarName As String, VarLoc As String, VarIsArray As Integer = 0) As Integer
-Declare Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0)
+Declare Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0, Used As Integer = -1)
 DECLARE SUB AllocateRAM
 Declare Function CalcAliasLoc(LocationIn As String) As Integer
 Declare Function GetWholeSFR(BitName As String) As String
 Declare Function HasSFR(SFRName As String) As Integer
 Declare Function HasSFRBit(BitName As String) As Integer
 Declare Sub MakeSFR (UserVar As String, SFRAddress As Integer)
+Declare Sub RequestVariable(VarName As String, CurrSub As SubType Pointer)
 
 'Subs in preprocessor.bi
 Declare Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As String = "", ReplaceExisting As Integer = -1)
@@ -619,7 +621,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-10-15"
+Version = "0.95.<<>> 2016-10-19"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2243,11 +2245,11 @@ SUB CalcConfig
 
 END SUB
 
-Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As String, OriginIn As String)
+Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As String, OriginIn As String, NeverLast As Integer)
 
 	Dim As String Origin, Temp
 	Dim As String Answer, ActN, AnswerIn, V1, V2, TypeV1, TypeV2, CalcType, TypeAV, Act
-	Dim As Integer NeverLast, UnaryMode, SearchStart, CalcisBad, OpPos, SD, SO
+	Dim As Integer UnaryMode, SearchStart, CalcisBad, OpPos, SD, SO
 	Dim As Integer CalcStart, CalcEnd, LastCalc, NextSame, PD
 	Dim As SubType Pointer CurrentSub, DestSub
 
@@ -2257,12 +2259,6 @@ Sub CalcOps (OutList As CodeSection Pointer, SUM As String, AV As String, Ops As
 	Origin = OriginIn
 	CurrentSub = Subroutine(GetSubID(Origin))
 	IF INSTR(Origin, "D") <> 0 Then DestSub = Subroutine(GetDestSub(Origin)) Else DestSub = CurrentSub
-
-	NeverLast = 0
-	If UCase(Right(Origin, 2)) = "NL" Then
-		NeverLast = -1
-		Origin = Left(Origin, LEN(Origin) - 2)
-	End If
 
 	UnaryMode = 0
 	If Left(Ops, 1) = "U" Then
@@ -2877,7 +2873,7 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 	CompSub->Compiled = -1
 End Sub
 
-Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As CodeSection Pointer = 0)
+Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As CodeSection Pointer = 0, NeverLast As Integer = 0)
 
 	Dim As String TempData, InBrackets, OutTemp
 	Dim As Integer T, BL, BC
@@ -2911,20 +2907,20 @@ Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As
 			InBrackets = Mid(TempData, 2)
 			InBrackets = Left(InBrackets, LEN(InBrackets) - 1)
 			OutTemp = ""
-			CompileCalc InBrackets, OutTemp, Origin + "NL", OutList
+			CompileCalc InBrackets, OutTemp, Origin, OutList, -1
 			If OutTemp = "" Then OutTemp = InBrackets
 			Replace SUM, TempData, OutTemp
 		End If
 	Loop
 
 	'Calculate unary operations
-	CalcOps OutList, SUM, AV, "U!-", Origin
+	CalcOps OutList, SUM, AV, "U!-", Origin, NeverLast
 
 	'Calculate binary operations
-	CalcOps OutList, SUM, AV, "*/%", Origin
-	CalcOps OutList, SUM, AV, "+-", Origin
-	CalcOps OutList, SUM, AV, "=~<>{}", Origin
-	CalcOps OutList, SUM, AV, "&|!#", Origin
+	CalcOps OutList, SUM, AV, "*/%", Origin, NeverLast
+	CalcOps OutList, SUM, AV, "+-", Origin, NeverLast
+	CalcOps OutList, SUM, AV, "=~<>{}", Origin, NeverLast
+	CalcOps OutList, SUM, AV, "&|!#", Origin, NeverLast
 
 	'Re-add asm calculations
 	FindLine = OutList->CodeList
@@ -4711,9 +4707,9 @@ Sub CompileDim (CurrSub As SubType Pointer)
 
 				'Add var
 				If IsAlias Then
-					AddVar(InLine, VarType, Si, CurrSub, "ALIAS:" + VarAlias, Origin, , -1)
+					AddVar(InLine, VarType, Si, CurrSub, "ALIAS:" + VarAlias, Origin, , -1, 0)
 				Else
-					AddVar(InLine, VarType, Si, CurrSub, "REAL", Origin, VarFixedLoc, -1)
+					AddVar(InLine, VarType, Si, CurrSub, "REAL", Origin, VarFixedLoc, -1, 0)
 				End If
 			Next
 		End If
@@ -6341,7 +6337,7 @@ SUB CompileRotate (CompSub As SubType Pointer)
 					End If
 				END IF
 				CurrLine = LinkedListInsert(CurrLine, Temp + VarName + ",F")
-				IF VarType <> "WORD" THEN AddVar VarName, "BYTE", 1, CompSub, "REAL", Origin
+				AddVar VarName, "BYTE", 1, CompSub, "REAL", Origin
 			ElseIf ModeAVR Then
 				Temp = " ror "
 				IF Direction = "LEFT" THEN Temp = " rol "
@@ -6391,7 +6387,7 @@ SUB CompileRotate (CompSub As SubType Pointer)
 						CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + "_U," + CalcVar + "_U")
 						CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + "_E," + CalcVar + "_E")
 					End If
-					IF VarType = "BYTE" THEN AddVar VarName, "BYTE", 1, 0, "REAL", Origin
+					AddVar VarName, "BYTE", 1, 0, "REAL", Origin
 				End If
 			End If
 
@@ -6931,7 +6927,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						IF INSTR(DestArray, "$") <> 0 THEN DestArray = Left(DestArray, INSTR(DestArray, "$") - 1)
 						'Create destination array if necessary
 						SourcePtr = VarAddress(DestArray, .Called)
-						IF SourcePtr = 0 THEN AddVar DestArray, "BYTE", 2, .Called, "POINTER", .Origin
+						AddVar DestArray, "BYTE", 2, .Called, "POINTER", .Origin
 						'Set handler name
 						ArrayHandler = "Sys" + DestArray + "Handler"
 						AddVar ArrayHandler, "WORD", 1, 0, "REAL", .Origin, , -1 'Make handler global
@@ -6984,6 +6980,9 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 							Replace Temp, "%name%", ReplaceFnNames(SourceArray)
 							LogError Temp, .Origin
 							GoTo CompileNextParam
+						Else
+							'Mark source variable as used
+							RequestVariable(ReplaceFnNames(SourceArray), .Caller)
 						End If
 					End If
 
@@ -6995,7 +6994,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
 					'Create destination array if necessary
 					SourcePtr = VarAddress(DestArray, .Called)
-					IF SourcePtr = 0 THEN AddVar DestArray, "BYTE", 2, .Called, "POINTER", .Origin
+					AddVar DestArray, "BYTE", 2, .Called, "POINTER", .Origin
 					'Print .Param(CD, 1), SourcePtr, SourceArrayPtr
 
 					'Set handler name
@@ -9110,7 +9109,7 @@ End Sub
 Sub FindAssembly (CompSub As SubType Pointer)
 	Dim As String Temp, CalledSub
 	Dim As Integer PD
-	Dim As LinkedListElement Pointer CurrLine
+	Dim As LinkedListElement Pointer CurrLine, LineElements, CurrElement
 	Dim As AsmCommand Pointer CallPos, RCallPos, ThisCmdPos
 
 	CallPos = IsASM("call")
@@ -9129,6 +9128,16 @@ Sub FindAssembly (CompSub As SubType Pointer)
 			If ThisCmdPos <> 0 AND Left(CurrLine->Value, 1) <> " " THEN
 				Temp = Trim(ThisCmdPos->Syntax)
 				IF InStr(Temp, " ") <> 0 THEN Temp = Trim(Left(Temp, INSTR(Temp, " ") - 1))
+				
+				'Find variables
+				LineElements = GetElements(CurrLine->Value)
+				CurrElement = LineElements->Next
+				If CurrElement <> 0 Then CurrElement = CurrElement->Next 'Don't try adding command as variable
+				Do While CurrElement <> 0
+					RequestVariable(CurrElement->Value, CompSub)
+					CurrElement = CurrElement->Next
+				Loop
+				LinkedListDeleteList(LineElements, 0)
 
 				'Record calls
 				If ThisCmdPos = CallPos Or ThisCmdPos = RCallPos Then
@@ -9682,6 +9691,7 @@ Function GenerateArrayPointerSet(DestVar As String, DestPtr As Integer, CurrSub 
 
 	'Find array type, get source location
 	IF ArrayPtr->Pointer = "REAL" THEN
+		ArrayPtr->Used = -1
 		ArrayHandler = ArrayPtr->Name
 		ArrayType = 0
 	ElseIF ArrayPtr->Pointer = "POINTER" THEN
@@ -12561,7 +12571,10 @@ CheckArrayAgain:
 			If MarkBlock Then
 				NewCodeLine = LinkedListInsert(NewCodeLine, ";BLOCKSTART," + ArrayName)
 			End If
-
+			
+			'Mark array as used
+			CurrVar->Used = -1
+			
 			'Is array being read or set?
 			ArrayDir = 0 '0 = read, 1 = set
 			If UseTempVar Then
@@ -12701,7 +12714,7 @@ CheckArrayAgain:
 							NewCodeLine = LinkedListInsert(NewCodeLine, "SysStringA = " + ArrayHandler + AppendArrayPosition + Origin)
 						End If
 						If UseTempVar Then
-							IF ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, AV + " = SysPointerX")
+							If ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, AV + " = SysPointerX")
 							IF ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "SysPointerX = " + AV)
 						End If
 					End If

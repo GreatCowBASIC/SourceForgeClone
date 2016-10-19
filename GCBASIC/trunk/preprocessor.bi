@@ -476,7 +476,7 @@ SUB PreProcessor
 	
 	Dim As Integer T, T2, ICCO, CE, PD, RF, S, LC, LCS, SID, CD, SL, NR
 	Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro
-	Dim As Integer CurrCharPos, ReadType
+	Dim As Integer CurrCharPos, ReadType, ConvertAgain
 	Dim As Single CurrPerc, PercAdd, PercOld
 	
 	CurrentSub = ""
@@ -845,27 +845,32 @@ SUB PreProcessor
 				End If
 				
 				'Check/fix binary and hex notation
-				'Convert H' ' to 0x
-				IF INSTR(DataSource, "H'") <> 0 THEN
-					Replace DataSource, "H'", "0x"
-					Replace DataSource, "'", ""
-				END IF
-				'Convert 0b to B' '
-				IF WholeINSTR(DataSource, "0B") > 0 Then
-					T = InStr(DataSource, "0B")
-					If IsDivider(Mid(DataSource, T - 1, 1)) Then
-						Replace DataSource, "0B", "B'"
-						T = LEN(DataSource) + 1
-						For SL = INSTR(DataSource, "B'") + 2 TO LEN(DataSource)
-							Temp = Mid(DataSource, SL, 1)   
-							If IsDivider(Temp) Then T = SL: Exit For
-						Next
-						LTemp = Left(DataSource, T - 1)
-						RTemp = ""
-						IF T < LEN(DataSource) Then RTemp = Mid(DataSource, T)
-						DataSource = LTemp + "'" + RTemp
-					End If
-				END IF
+				Do
+					ConvertAgain = 0
+					'Convert H' ' to 0x
+					IF INSTR(DataSource, "H'") <> 0 THEN
+						Replace DataSource, "H'", "0x"
+						Replace DataSource, "'", ""
+						ConvertAgain = -1
+					END IF
+					'Convert 0b to B' '
+					IF WholeINSTR(DataSource, "0B") > 0 Then
+						T = InStr(DataSource, "0B")
+						If IsDivider(Mid(DataSource, T - 1, 1)) Then
+							Replace DataSource, "0B", "B'"
+							T = LEN(DataSource) + 1
+							For SL = INSTR(DataSource, "B'") + 2 TO LEN(DataSource)
+								Temp = Mid(DataSource, SL, 1)   
+								If IsDivider(Temp) Then T = SL: Exit For
+							Next
+							LTemp = Left(DataSource, T - 1)
+							RTemp = ""
+							IF T < LEN(DataSource) Then RTemp = Mid(DataSource, T)
+							DataSource = LTemp + "'" + RTemp
+							ConvertAgain = -1
+						End If
+					END If
+				Loop While ConvertAgain
 				
 				'Remove any tabs and double spaces (again)
 				DO WHILE INSTR(DataSource, Chr(9)) <> 0: Replace DataSource, Chr(9), " ": LOOP

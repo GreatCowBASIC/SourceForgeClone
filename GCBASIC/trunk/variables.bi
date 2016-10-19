@@ -36,12 +36,12 @@ Function AddFinalVar(VarName As String, VarLoc As String, VarIsArray As Integer 
 	Return 0
 End Function
 
-Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0)
+Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSubIn As SubType Pointer, VarPointerIn As String, OriginIn As String, FixedLocation As Integer = -1, ExplicitDeclaration As Integer = 0, Used As Integer = -1)
 	
 	Dim As String VarName, VarType, VarPointer, Origin, Temp, VarAlias, ConstName
 	Dim As String AliasList(16)
 	Dim As Integer VarSize, CL, TempSize, PD, VarSearchStart, T, VarFixedSize
-	Dim As Integer CurrFile, ALC
+	Dim As Integer CurrFile, ALC, ParentByte
 	Dim As VariableType Pointer VarFound, MainVarFound
 	Dim As SubType Pointer VarSub, MainSub
 	Dim As LinkedListElement Pointer SearchConstPos
@@ -66,6 +66,9 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Else
 		CurrFile = VarSub->SourceFile
 	End If
+	
+	'Do not add SysPointerX pseudo var
+	If UCase(VarName) = "SYSPOINTERX" Then Exit Sub
 	
 	'If VarName is a constant, exit
 	If IsConst(VarName) Then Exit Sub
@@ -249,10 +252,43 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		End If
 	End If
 	
+	'If dealing with a higher byte of large variable, may not need to add
+	If VarFound = 0 Then
+		Temp = UCase(Right(VarName, 2))
+		ParentByte = 0
+		If Temp = "_H" Then ParentByte = 1
+		If Temp = "_U" Then ParentByte = 2
+		If Temp = "_E" Then ParentByte = 3
+		
+		If ParentByte > 0 Then
+			'Check to see if var exists
+			Temp = Left(UCase(Trim(VarName)), Len(Trim(VarName)) - 2)
+			VarFound = HashMapGet(@(VarSub->Variables), Temp)
+			If VarFound <> 0 Then
+				If GetTypeSize(VarFound->Type) > ParentByte Then
+					VarFound->Used = -1
+					Exit Sub
+				End If
+			EndIf
+			If VarSub <> MainSub Then
+				VarFound = HashMapGet(@(MainSub->Variables), Temp)
+				If VarFound <> 0 Then
+					If GetTypeSize(VarFound->Type) > ParentByte Then
+						VarFound->Used = -1
+						Exit Sub
+					End If
+				End If
+			End If
+			
+			VarFound = 0
+		End If
+	End If
+	
 	'If variable not found, make a new one
 	If VarFound = 0 Then
 		'Implicit declaration of new variable
-		If (Not ExplicitDeclaration) And MainVarFound = 0 And Not IsSysTemp(VarName) And VarPointer = "REAL" And Left(UCase(VarName), 9) <> "SYSBITVAR" Then
+		If (Not ExplicitDeclaration) And MainVarFound = 0 And Not IsSysTemp(VarName) And VarPointer = "REAL" And _
+			Left(UCase(VarName), 9) <> "SYSBITVAR" And Left(UCase(VarName), 15) <> "SYSINTSTATESAVE" Then
 			'If explicit declaration required, generate error
 			If SourceFile(CurrFile).OptionExplicit Then
 				Temp = Message("UndeclaredVar")
@@ -277,6 +313,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 			VarFound->FixedSize = VarFixedSize
 			VarFound->ExplicitDeclaration = ExplicitDeclaration
 			VarFound->Alias = ""
+			VarFound->Used = 0
 			
 			HashMapSet(@(VarSub->Variables), UCase(VarName), VarFound)
 		End With
@@ -348,6 +385,12 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 			.BitVarLocation = "SYSBITVAR" + Str(INT(BVC / 8)) + "." + Str(BVC MOD 8)
 			BVC = BVC + 1
 		End If
+		
+		'Mark as used
+		If Used = -1 Then
+			.Used = -1
+		End If
+		
 	End With
 	
 	'If variable is bit, need to move to main
@@ -413,6 +456,7 @@ SUB AllocateRAM
 					SubVar = SubVarLoc->MetaData
 					FinalVar = HashMapGet(@Variables, UCase(Trim(SubVar->Name)))
 					
+						
 					'Var not found, create a new one
 					If FinalVar = 0 Then
 						HashMapSet(@Variables, UCase(Trim(SubVar->Name)), SubVar)
@@ -460,12 +504,16 @@ SUB AllocateRAM
 						If SubVar->ExplicitDeclaration Then
 							FinalVar->ExplicitDeclaration = SubVar->ExplicitDeclaration
 						End If
+						'Used
+						If SubVar->Used Then
+							FinalVar->Used = SubVar->Used
+						End If
 						'Origin
 						If FinalVar->Origin = "" And SubVar->Origin <> "" Then
 							FinalVar->Origin = SubVar->Origin
 						End If
 					End If
-					
+						
 					SubVarLoc = SubVarLoc->Next
 				Loop
 			End If
@@ -481,12 +529,22 @@ SUB AllocateRAM
 	
 	'Put all variables into a list
 	AllVarsUnsorted = HashMapToList(@Variables, -1)
-	AllVars = LinkedListCreate
+	
+	'Remove unused variables from list
+	CurrVarItem = AllVarsUnsorted->Next
+	Do While CurrVarItem <> 0
+		FinalVar = CurrVarItem->MetaData
+		If Not FinalVar->Used Then
+			CurrVarItem = LinkedListDelete(CurrVarItem, 0)
+		End If
+		CurrVarItem = CurrVarItem->Next
+	Loop
 	
 	'Sort list into correct order
 	' - Fixed location variables must be before movable ones
 	' - Larger variables should be before smaller ones
 	' - Variables should be in alphabetical order
+	AllVars = LinkedListCreate
 	CurrVarItem = AllVarsUnsorted->Next
 	Do While CurrVarItem <> 0
 		'Find where to put the item
@@ -1037,5 +1095,62 @@ Sub MakeSFR (UserVar As String, SFRAddress As Integer)
 	NewVar->Location = SFRAddress
 	
 	HashMapSet(SysVars, UserVar, NewVar)
+	
+End Sub
+
+Sub RequestVariable(VarName As String, CurrSub As SubType Pointer)
+	'Find requested sub, either in current sub or main, and mark as used
+	'Will get names from inline assembly, so also need to request vars if high byte used
+	'(or if _H is appended to var name but no matching high byte exists)
+	
+	Dim As Integer ParentByte
+	Dim As String Temp
+	Dim As VariableType Pointer VarFound
+	Dim As SubType Pointer MainSub
+	
+	MainSub = Subroutine(0)
+	
+	Temp = UCase(Right(VarName, 2))
+	ParentByte = 0
+	If Temp = "_H" Then ParentByte = 1
+	If Temp = "_U" Then ParentByte = 2
+	If Temp = "_E" Then ParentByte = 3
+	
+	'Check parent of this variable
+	If ParentByte > 0 Then
+		'Check to see if var exists
+		Temp = Left(UCase(Trim(VarName)), Len(Trim(VarName)) - 2)
+		VarFound = HashMapGet(@(CurrSub->Variables), Temp)
+		If VarFound <> 0 Then
+			If GetTypeSize(VarFound->Type) > ParentByte Then
+				VarFound->Used = -1
+				Exit Sub
+			End If
+		End If
+		If CurrSub <> MainSub Then
+			VarFound = HashMapGet(@(MainSub->Variables), Temp)
+			If VarFound <> 0 Then
+				If GetTypeSize(VarFound->Type) > ParentByte Then
+					VarFound->Used = -1
+					Exit Sub
+				End If
+			End If
+		End If
+	End If
+	
+	'Check for variable
+	Temp = UCase(Trim(VarName))
+	VarFound = HashMapGet(@(CurrSub->Variables), Temp)
+	If VarFound <> 0 Then
+		VarFound->Used = -1
+		Exit Sub
+	End If
+	If CurrSub <> MainSub Then
+		VarFound = HashMapGet(@(MainSub->Variables), Temp)
+		If VarFound <> 0 Then
+			VarFound->Used = -1
+			Exit Sub
+		End If
+	End If
 	
 End Sub
