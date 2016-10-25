@@ -35,6 +35,7 @@
 
 
  #chip 16f690,8
+ #option explicit
  #config FOSC_INTOSC , WDTE_OFF , PWRTE_OFF , MCLRE_OFF , CP_OFF , CPD_OFF , BOREN_ON , IESO_OFF
 
 
@@ -63,6 +64,9 @@
     '' LED:   ---------------|DS4|DS3|DS2|DS1|-
     ''-----------------------------------------
     ''
+
+    Dim RESTORED_VALUE, ADC_VALUE as Byte
+
 
     dir portc out
     portc = 0

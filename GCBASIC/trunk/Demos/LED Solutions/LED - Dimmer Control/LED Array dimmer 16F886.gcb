@@ -15,6 +15,7 @@
 ; ----- Configuration
 
   #chip 16F886,16
+  #option explicit
   #config HS_OSC, WDT_OFF, LVP_OFF
 
 ; ----- Define Hardware settings
@@ -38,6 +39,7 @@
 
 ; ----- Variables
   Counter = 0
+  Dim COUNTER, CONTROLVALUE, TEMP, STOPFLICKER, TEMP3, TEMP2 as Byte
 
 
 ; ----- Main body of program commences here.

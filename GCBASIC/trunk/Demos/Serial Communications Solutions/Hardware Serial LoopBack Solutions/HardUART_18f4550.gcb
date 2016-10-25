@@ -11,6 +11,7 @@
 
 ; ----- Configuration
  #chip 18F4550, 1
+ #option explicit
 
 
 ; ----- Define Hardware settings
@@ -29,7 +30,7 @@
 
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim INCHAR as Byte
 
 ; ----- Main body of program commences here.
   HSerPrint "18F4550"

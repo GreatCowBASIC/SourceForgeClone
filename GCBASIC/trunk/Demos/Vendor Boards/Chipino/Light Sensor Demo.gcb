@@ -12,8 +12,11 @@
  ; ----- Configuration
 'Chip model
 #chip 16F886, 8
+#option explicit
 #config MCLRE_ON
 #define SoundOut PORTc.2
+
+Dim LL as Byte
 
 dim timedelay1 as word
 

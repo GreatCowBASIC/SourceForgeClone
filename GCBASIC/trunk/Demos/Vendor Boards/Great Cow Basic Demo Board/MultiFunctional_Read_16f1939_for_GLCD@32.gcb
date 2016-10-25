@@ -10,6 +10,7 @@
 '''********************************************************************************
 
   #chip 16f1939,32
+  #option explicit
   #config Osc = INT, VCAPEN_OFF, MCLRE_On, PLLEN_ON, CLKOUTEN_OFF, WDTE_SWDTEN
 
   #include <glcd.h>
@@ -61,6 +62,7 @@
 
 ; ----- Variables
   dim TempC_100 as word   ' a variabler to handle the temperature calculations
+  Dim CCOUNT, OLDINTVALUE, SIGNBIT, FRACT, DIG, R8, R13, CLEARIRR, TEMPWD as Byte
 
 
 	' IRR specific variables

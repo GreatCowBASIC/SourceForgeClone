@@ -11,6 +11,7 @@
 
   'Chip Settings. Assumes the my development board 'C' with with a 16LF1939
   #chip 16f1939,32
+  #option explicit
   #config Osc = INT, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
 
       #include <glcd.h>
@@ -27,6 +28,8 @@
       #define GLCD_RESET portc.0     ' > RESET p15
 
       #define ST7735_HardwareSPI     ' remove comment out if you want to use software SPI.
+
+      Dim CCOUNT, BYTENUMBER as Byte
 
       GLCDCLS
       GLCDRotate ( PORTRAIT_REV )     ' optionally you can rotate the screen.

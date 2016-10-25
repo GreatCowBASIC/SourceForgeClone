@@ -2,14 +2,18 @@
 '''--------------------------------------------------------------------------------------------------------------------------------
 '''This program shows the humidity and the temperature of a DHT11 on the GLCD.
 '''The data/output from the DHT11 requires a 4.k pull-up to VDD.
+'''
+'''Revised to support large fonts.
+'''
 '''@author 	EvanV
 '''@licence	GPL
-'''@version	1.0a
+'''@version	1.1a
 '''@date   	09.01.16
 '''********************************************************************************
 
 ; ----- Configuration
   #chip 16f1939, 32
+  #config mclr_on
   #include <glcd.h>
   #include <DHT.H>
 
@@ -34,7 +38,7 @@
   #define GLCD_RESET PORTC.2
 
   ' Change timing for 32 mhz
-  #define KS0108ReadDelay    2    ; = 2 normal usage, 6 or above is OK at 32 mhz!
+  #define KS0108ReadDelay    4    ; = 2 normal usage, 6 or above is OK at 32 mhz!
   #define KS0108WriteDelay   0    ; = 1 normal usage you may get away with 0, 2 or above is OK at 32 mhz!
   #define KS0108ClockDelay   0     ; = 1 normal usage you may get away with 0, 2 or above is OK at 32 mhz!
 
@@ -65,28 +69,40 @@
 
 ; ----- Main body of program commences here.
 
+  box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
+  GLCDfntDefaultsize = 2
+  GLCDPrint ( 0,   0, "Great Cow")                                ; Print some texT
+  GLCDPrint ( 0,   18, "BASIC 2016")                                ; Print some text
+  GLCDfntDefaultsize = 1
+
+  GLCDPrint ( 0,   52, "@Evan R. Venn")                                ; Print some text
+  wait 4 s
+  GLCDCLS
+
   glcdcls
   glcdprint 0,0, "Initializing..."
   'let sensor stabilize
   wait period
   GLCDCLS
 
+
+	GLCDfntDefaultsize = 2: GLCDFontWidth = 6
   do
         'get current values
         readDHT(rh, cels, fahr, msg)
-
+				GLCDfntDefaultsize = 1: GLCDFontWidth = 6
         select case msg
           'all okay, so proceed
           case 0:
             'print relative humidity
             glcdprint 0,0, "Humidity"
-            glcdprint 54, 0, pad(str(rh / 10),3)+"%"
-
+						GLCDfntDefaultsize = 2: GLCDFontWidth = 6
+            glcdprint 88, 0, pad(str(rh / 10),2)+"%"
             'print temperature in Celsius
-            glcdprint 54, 8, pad(str(cels / 10),3)+"C"
+            glcdprint 88, 16, pad(str(cels / 10),2)+"C"
 
             'print temperature in Fahrenheit
-            glcdprint 54, 16, pad(str(fahr / 10),3)+"F"
+            glcdprint 88, 32, pad(str(fahr / 10),2)+"F"
 
           'unit not responding
           case 1:

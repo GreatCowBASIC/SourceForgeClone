@@ -18,6 +18,7 @@
 ; ----- Configuration
   'Chip model
   #chip mega328p, 16
+  #option explicit
   #INCLUDE <UNO_mega328p.h>
 
   ;Setup LCD Parameters
@@ -52,6 +53,8 @@
 ; ------ Define variables
   select_status = !true
   dim adc_key_in as Word
+
+  Dim SELECT_STATUS, PWMLEVEL, PWMCOUNTER, PWMCOUNTER as Byte
 
 
 ; ------ Main program starts here

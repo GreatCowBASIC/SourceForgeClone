@@ -19,6 +19,7 @@
 
 ; ----- Configuration
 #chip mega2560, 16
+#option explicit
 
 ; ----- Define USART settings
   #define USART_BAUD_RATE 9600
@@ -48,6 +49,7 @@
 ; ----- Variables
   Dim myNum as word
   Dim MyString as String
+  Dim INCHAR as Byte
 
 
 ; ----- Main body of program commences here.

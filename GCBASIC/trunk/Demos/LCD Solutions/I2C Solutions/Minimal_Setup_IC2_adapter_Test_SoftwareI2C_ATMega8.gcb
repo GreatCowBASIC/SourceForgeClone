@@ -16,6 +16,7 @@
 ;----- Configuration
 
   #chip mega8,8
+  #option explicit
 
   ; ----- Define Hardware settings
   ' Define I2C settings - CHANGE PORTS
@@ -41,6 +42,9 @@
 
  '''Set LCD_10 to 10 for the YwRobot LCD1602 IIC V1 or the Sainsmart LCD_PIC I2C adapter
  '''Set LCD_10 to 12 for the Ywmjkdz I2C adapter with pot bent over top of chip
+
+;----- Variables
+  Dim LCD_I2C_ADDRESS_CURRENT as Byte
 
 
 ; ----- Main body of program commences here.

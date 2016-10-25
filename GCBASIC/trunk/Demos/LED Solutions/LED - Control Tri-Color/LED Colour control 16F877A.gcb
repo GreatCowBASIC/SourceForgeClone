@@ -12,6 +12,7 @@
 ; ----- Configuration
 
   #chip 16F877A,16
+  #option explicit
 
 
 ; ----- Define Hardware settings
@@ -36,6 +37,8 @@
 ; ----- Variables
   'Calculation Variable
   Dim CalcTemp As Word
+
+  Dim HUE, RINT, GINT, BINT, FLASHRATE, PULSELOOP, LEVEL, RLTEMP as Byte
 
 
 ; ----- Main body of program commences here.

@@ -11,6 +11,7 @@
 
 ; ----- Configuration
  #chip 16F886,16
+ #option explicit
 
 ; ----- Define Hardware settings
   Dir Portb.0 out
@@ -18,6 +19,9 @@
 
 ; ----- Constants
   #define LED Portb.0
+
+;----- Variables
+  Dim LEDPOWER, LEDLUM, PWMCOUNTER, PWMCOUNTER as Byte
 
 
 ; ----- Main body of program commences here.

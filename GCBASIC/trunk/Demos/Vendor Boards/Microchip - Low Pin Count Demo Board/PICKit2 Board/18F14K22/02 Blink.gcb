@@ -23,7 +23,11 @@
 '''
 
  #Chip 18F14K22, 8
+ #option explicit
  #config MCLRE_OFF
+
+    Dim CURRENTSTATE as Byte
+
 
     dir portc.0 out
 

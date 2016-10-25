@@ -22,6 +22,7 @@
 
 ; ----- Configuration
   #chip mega328p,16
+  #option explicit
   #include <UNO_mega328p.h>
 
 	' Load encoder header file
@@ -74,7 +75,7 @@
 
 
 ;---- variables
-	'None
+  Dim REFRESHLCD as Byte
 
 ; ----- Main body of program commences here.
 

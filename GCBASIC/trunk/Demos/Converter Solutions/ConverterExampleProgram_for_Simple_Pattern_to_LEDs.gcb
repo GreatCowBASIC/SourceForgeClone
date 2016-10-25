@@ -13,6 +13,7 @@
 ; ----- Configuration
 
  #chip mega8, 8
+ #option explicit
 
   ; This is the source data file that will be converted into a GCB table by the external converter program.
  #include <..\converters\InfraRedPatterns.TXT>
@@ -27,6 +28,7 @@
 ; ----- Variables
   ' These variables must be WORDs as this could be large table created by the conversion program
   dim TableReadPosition, TableLen as word
+  dim TransmissionPattern, PulseDelay as Byte
 
 ; ----- Quick Command Reference:
   'This is demonstration of the capabiliites of the GCB converter process.

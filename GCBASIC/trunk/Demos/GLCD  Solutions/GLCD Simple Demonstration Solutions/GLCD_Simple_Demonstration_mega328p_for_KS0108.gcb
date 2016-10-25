@@ -12,6 +12,7 @@
 ; ----- Configuration
 
  #chip mega328p,16
+ #option explicit
  #include <GLCD.h>
 
 
@@ -37,7 +38,7 @@
 
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim CHAR, XVAR as Byte
 
 ; ----- Main body of program commences here.
   Start:

@@ -11,6 +11,7 @@
 
 ;Set chip model required:
   #chip mega328p, 16
+  #option explicit
   ;Setup LCD Parameters
   #define LCD_IO 4
   #define LCD_NO_RW
@@ -23,6 +24,10 @@
   #define LCD_DB5 Portd.5
   #define LCD_DB6 Portd.6
   #define LCD_DB7 Portd.7
+
+;----- Variables
+  Dim BV as Byte
+
 'Program Start
 
 'Program Start

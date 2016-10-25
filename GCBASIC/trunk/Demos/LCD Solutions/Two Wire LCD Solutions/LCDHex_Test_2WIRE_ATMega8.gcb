@@ -15,6 +15,7 @@
 
 ;Set chip model required:
   #chip mega8, 16
+  #option explicit
 
 ;Setup LCD Parameters
 ;Use LCD in 2-wire mode with shift reg. 74LS164 / 74HC164
@@ -24,6 +25,9 @@
   'Change as necessary
  #define LCD_DB PORTC.0            ; databit
  #define LCD_CB PORTC.1            ; clockbit
+
+  Dim BV as Byte
+
 
 'Program Start
 

@@ -11,6 +11,7 @@
 
 ; ----- Configuration
   #chip 16f1938, 16
+  #option explicit
   #include <LCD2SerialRedirect.h>
 
 
@@ -24,6 +25,10 @@
    #define USART_DELAY 10 ms
    #define USART_BLOCKING
    wait 500 ms
+
+;----- Variables
+  Dim YPOS, XPOS as Byte
+
 
 ; ----- Main body of program commences here.
 

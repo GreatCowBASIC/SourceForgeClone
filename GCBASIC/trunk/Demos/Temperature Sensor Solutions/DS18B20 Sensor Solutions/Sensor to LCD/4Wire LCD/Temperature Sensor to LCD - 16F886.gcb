@@ -12,6 +12,7 @@
 
 ; ----- Configuration
  #chip 16F886, 16
+ #option explicit
  #config MCLRE_ON
  #include <DS18B20.h>
 
@@ -40,6 +41,7 @@
 
 ; ----- Variables
   dim TempC_100 as word   ' a variabler to handle the temperature calculations
+  Dim CCOUNT, SIGNBIT, WHOLE, FRACT, DIG as Byte
 
 
 ; ----- Main body of program commences here.

@@ -10,6 +10,7 @@
 
 'Chip Settings. Assumes the development board with with a 16F877A
 #chip 16F877A,20
+#option explicit
 #include <DS18B20.h>
 
  'Use LCD in 4 pin mode and define LCD pins
@@ -40,6 +41,9 @@
  '
  ' 8-BIT CRC      48-BIT SERIAL NUMBER          8-BIT FAMILY CODE (28h)
  ' MSB  LSB       MSB              LSB          MSB                 LSB
+
+  Dim YPOS, XPOS, EIGHTBYTES, CLOCKS as Byte
+
 
   cls
   print "Great Cow Basic "

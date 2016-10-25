@@ -26,6 +26,7 @@
 
 
 #CHIP 16f88, 4
+#option explicit
  #config WDTE_OFF , PWRTE_OFF , MCLRE_ON , CP_OFF , BOREN_ON
  #config  LVP_OFF
 
@@ -37,6 +38,7 @@
 
   #define SoundOut PORTA.7
 
+  Dim DIRECTION as Byte
   dim mydelay as byte
 
     'start from the right to left

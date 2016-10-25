@@ -32,6 +32,8 @@
 
 ; ----- Configuration
  #chip 16F1937, 32
+ #option explicit
+ #option explicit
  #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
 
  #include <MCP7940N.h>
@@ -85,6 +87,10 @@
 
 
 ;----- Variables
+
+    Dim MINUTE, STATE, DAYSMAX, DAYSMAX as Byte
+    Dim ALARM0TRACK, ALARM1TRACK as Byte
+
 
     dim changed as bit
     dim hour, min, sec, am_pm as byte

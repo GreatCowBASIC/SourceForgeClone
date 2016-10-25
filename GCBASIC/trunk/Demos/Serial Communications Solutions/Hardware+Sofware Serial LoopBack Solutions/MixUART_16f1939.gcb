@@ -10,6 +10,7 @@
 
 ; ----- Configuration
   #chip 16f1939, 4
+  #option explicit
 
 ; ----- Define Hardware settings
   ' see uart for critical port settings
@@ -33,7 +34,7 @@
 
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim INCHAR as Byte
 
 ; ----- Main body of program commences here.
     'Message after reset

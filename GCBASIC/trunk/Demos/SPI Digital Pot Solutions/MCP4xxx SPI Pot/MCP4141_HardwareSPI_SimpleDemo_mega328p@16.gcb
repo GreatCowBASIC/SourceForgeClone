@@ -28,6 +28,7 @@
 
 ; ----- Configuration
   #chip mega328p, 16
+  #option explicit
   #include <UNO_mega328p.h>
   #include <MCP4XXXDigitalPot.h>
 
@@ -44,7 +45,8 @@
 ; ----- Define Hardware settings
 	' None
 ; ----- Variables
-	dim loopx as word
+  dim loopx as word
+  Dim DD as Byte
 
 
 

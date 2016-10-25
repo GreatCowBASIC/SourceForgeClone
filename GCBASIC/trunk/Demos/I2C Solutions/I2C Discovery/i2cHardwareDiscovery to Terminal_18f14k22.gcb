@@ -13,6 +13,7 @@
 
 ; ----- Configuration
   #chip 18f14k22, 4
+  #option explicit
   #include "DisplayDevices.h"
 
 
@@ -34,6 +35,9 @@
          #define USART_DELAY 5 ms
          #define USART_BLOCKING
          wait 500 ms
+
+; ----- Variables
+  Dim DEVICEID, TESTID as Byte
 
 ; ----- Main body of program commences here.
          ' Now assumes Serial Terminal is operational

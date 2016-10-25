@@ -10,6 +10,7 @@
 '''********************************************************************************
 
  #chip mega328P, 16
+ #option explicit
  #include <DS18B20.h>
 
 ; ----- Define Hardware settings
@@ -24,6 +25,8 @@
 ; ----- Variables
   'TempC_100 required to support temp sensor
   Dim TempC_100 as word
+  Dim CCOUNT, SIGNBIT, WHOLE, FRACT, DIG as Byte
+
 
 ; ----- Main body of program commences here.
   ccount = 1

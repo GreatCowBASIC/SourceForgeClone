@@ -1,5 +1,6 @@
   ' i2cHardwareDiscovery_16F1939_for_test_bed.gcb
   #chip 18f14k22, 4
+  #option explicit
   #include "DisplayDevices.h"
 
 
@@ -17,6 +18,8 @@
          #define USART_BLOCKING
          wait 500 ms
 
+;----- Variables 
+  Dim TESTID as Byte
 
 
 

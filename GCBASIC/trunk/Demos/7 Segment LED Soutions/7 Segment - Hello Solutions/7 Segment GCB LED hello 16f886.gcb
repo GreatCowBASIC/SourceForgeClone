@@ -3,15 +3,16 @@
 '''This program will display "Hello" using an 7 Segment display.
 '''The 7 Segment display is connected to PortC.0-6 for segments A-G respectively.
 '''The 7 Segment display enable pin for device 1 connected to PortA.0
-'''@author 	EvanV plus works of HughC
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	31.01.2015
+'''@author  EvanV plus works of HughC
+'''@licence GPL
+'''@version 2.0a
+'''@date    02.10.2016
 '''********************************************************************************
 
 ; ----- Configuration
 
   #chip 16F886, 16
+  #option explicit
   #config HS_OSC, WDT_OFF, LVP_OFF
 
 ; ----- Define Hardware settings
@@ -26,22 +27,24 @@
   #define DISP_SEG_E PORTc.4
   #define DISP_SEG_F PORTc.5
   #define DISP_SEG_G PORTc.6
+
   #define DISP_SEL_1 PORTA.0
 
 
 ; ----- Variables
-  dim Message(10)                                  ; defines a string
-  Message() = "Hello"
+  Dim DISPMESSAGE as Byte
+  dim Message as string * 5                                 ; defines a string
+  Message = "Hello"
 
 ; ----- Main body of program commences her
 
-  Main:
+  Do Forever
+
     for DispMessage = 1 to 5
         DisplayChar 1, Message(DispMessage)
         wait 25 10ms
     next
-  goto Main
 
-
+  Loop
 
 

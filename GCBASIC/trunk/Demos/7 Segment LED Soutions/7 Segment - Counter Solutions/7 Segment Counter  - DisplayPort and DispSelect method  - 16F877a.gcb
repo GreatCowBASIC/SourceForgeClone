@@ -1,0 +1,89 @@
+'''A demonstration program for GCGB and GCB.
+'''--------------------------------------------------------------------------------------------------------------------------------
+'''This program will count from 0 to 9999 on four 7 segment LED display.
+''':
+'''This uses 7 segment port (all 8 bits) addressing and a specific command to select the specific 7 segment display.
+''':
+'''The 7 Segment displays are connected to PortB.0-6 for segments A-G respectively.
+'''The 7 Segment displays enable pins are connected to PortA.0, A,1, A.2 and A.3.
+'''@author  EvanV plus works of HughC
+'''@licence GPL
+'''@version 2.0a
+'''@date    02.10.2016
+'''********************************************************************************
+
+; ----- Configuration
+
+  #chip 16F877A, 4
+
+; ----- Define Hardware settings
+  ; No hardware specifics setting for 7-Segment display shown below using the constants
+  ; You MUST specify constants as show below in the constants section.
+
+; ----- Constants
+  ; You NEED to specify the port settings
+
+    #define DisplayPortA PORTB          ;Set the 7 segment port for the first 7-Segment display
+    #define DisplayPortB PORTB          ;Set the 7 segment as the same port as the second display
+    #define DisplayPortC PORTB          ;Set the 7 segment as the same port as the third display
+    #define DisplayPortD PORTB          ;Set the 7 segment as the same port as the forth display
+
+    #define DispSelectA Set portA.0 on      ;The select pin for the first 7-Segment display
+    #define DispSelectB Set portA.1 on      ;The select pin for the second  7-Segment display
+    #define DispSelectC Set portA.2 on      ;The select pin for the third 7-Segment display
+    #define DispSelectD Set portA.3 on      ;The select pin for the forth 7-Segment display
+    #define DispDeSelectA Set portA.0 off   ;The select pin for the first 7-Segment display
+    #define DispDeSelectB Set portA.1 off   ;The select pin for the second  7-Segment display
+    #define DispDeSelectC Set portA.2 off   ;The select pin for the third 7-Segment display
+    #define DispDeSelectD Set portA.3 off   ;The select pin for the firstforth 7-Segment display
+
+; ----- Variables
+  'Words are needed to support the numbers beyond the byte value of 255
+  'Note: SysCalcTempX is the carry left over from divisions. We use this!!
+  dim Counter, DCarry, DData, SysCalcTempX as word
+
+; ----- Main body of program commences here.
+
+    do Forever
+
+        For Counter = 0 to 10000
+
+            ;Show the value on the 7-Segment displays
+            'Calculate 1000
+            DData = Counter / 1000
+            DCarry = SysCalcTempX
+'             Optionally clear the char before the new number is displayed
+            DisplayChar 1, " "
+
+            DisplayValue  1, DData
+
+
+            'Calculate 100's
+            DData = DCarry / 100
+            DCarry = SysCalcTempX
+'            Optionally clear the char before the new number is displayed
+            DisplayChar 2, " "
+
+            DisplayValue  2, DData
+
+            'Calculate 10's
+            DData = DCarry / 10
+            DCarry = SysCalcTempX
+
+'            Optionally clear the char before the new number is displayed
+            DisplayChar 3, " "
+
+            DisplayValue  3, DData
+
+            'We are left with the units in the carry
+
+'            Optionally clear the char before the new number is displayed
+            DisplayChar 4, " "
+
+            DisplayValue  4, DCarry
+
+            Wait 250 ms
+
+        Next
+
+    loop

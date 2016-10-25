@@ -13,6 +13,7 @@
 ; ----- Configuration
 
   #chip mega328p,16
+  #option explicit
 
 ; ----- Define Hardware settings
   ; All port settings, like in and out, are handled within the Seven Segment driver.
@@ -30,8 +31,9 @@
 
 
 ; ----- Variables
-  dim Message(10)                                  ; defines a string
-  Message() = "Hello"
+  dim DispMessage as Byte
+  dim Message as string * 10                                  ; defines a string
+  Message = "Hello"
 
 ; ----- Main body of program commences her
 

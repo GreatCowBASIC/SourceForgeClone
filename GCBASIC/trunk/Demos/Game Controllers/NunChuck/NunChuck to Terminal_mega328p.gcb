@@ -32,6 +32,8 @@
 
 ; ----- Configuration
   #chip mega328p,16
+  #option explicit
+  #option explicit
   #include	<NunChuck.h>
 
 
@@ -82,8 +84,8 @@
   Dim Nunchuck_AccelZ as Integer
 
   dim TenthSeconds as byte
-
-
+  Dim OLDJOYX, JOYY as Byte
+  dim Pnt, AA, AAA, BBB, XX, JOYX, OLDJOYY, NUNCHUCK_STATUS, OLDNUNCHUCK_STATUS, NUNCHUCK_SWITCHSTATE as byte
 
 ; ----- Main body of program commences here.
 

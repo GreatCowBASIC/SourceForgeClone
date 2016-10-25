@@ -12,18 +12,19 @@
 ''':
 '''@author 	EvanV
 '''@licence	GPL
-'''@version	1.3
-'''@date   	08.11.14
+'''@version	1.4
+'''@date   	26.07.16
 '''********************************************************************************
 
     ;Chip Settings.
     #chip 16lf1939,32
+    #option explicit
     #config Osc = INT, MCLRE_ON, PLLEN_Off, CLKOUTEN_OFF
 
     #include <glcd.h>
 
     #DEFINE GLCD_TYPE GLCD_TYPE_PCD8544
-    '#DEFINE GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+'    #DEFINE GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
 
 ' Pin mappings for SPI for Nokia 3310 Device
 ' None LAT configurations
@@ -37,6 +38,9 @@
     #define PCD8544ClockDelay 0
     ' write delay of 0 is works at 32mhz.
     #define PCD8544WriteDelay 0
+
+    Dim BYTENUMBER, WIDTHOFPICTURE, HEIGHTOFPICTURE, CURRCHARVAL, ORGCHARLOCX, FIRSTPASS, CHARLOCY, CURRCHARROW, CHARLOCX, CCOUNT as Byte
+
 
     GLCDCLS
 
@@ -147,7 +151,15 @@
                   outString = str( CCount )
                   ' draw a box to overwrite existing strings
                   FilledBox(58,9,GLCD_WIDTH-1,17,GLCDBackground )
-                  GLCDDrawString(58, 9, outString )
+									#ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+                      GLCDfntDefaultsize = 2: GLCDFontWidth = 4
+                      GLCDDrawString(58, 4, "   " )
+                      GLCDDrawString(58, 4, outString )
+                      GLCDfntDefaultsize = 1: GLCDFontWidth = 6
+                  #endif
+                  #ifdef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+                      GLCDDrawString(58, 4, outString )
+                  #endif
 
                    box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
                    box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH-1, GLCD_HEIGHT-1

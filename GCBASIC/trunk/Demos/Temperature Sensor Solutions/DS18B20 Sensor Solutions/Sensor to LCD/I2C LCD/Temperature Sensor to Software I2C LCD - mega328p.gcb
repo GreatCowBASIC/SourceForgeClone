@@ -13,6 +13,7 @@
 
 ; ----- Configuration
   #chip mega328p, 16
+  #option explicit
   #include <DS18B20.h>
 
   ; ----- Define Hardware settings
@@ -36,6 +37,7 @@
 
 ; ----- Variables
   dim TempC_100 as word   ' a variabler to handle the temperature calculations
+  Dim CCOUNT, SIGNBIT, WHOLE, FRACT, DIG as Byte
 
 
 ; ----- Main body of program commences here.

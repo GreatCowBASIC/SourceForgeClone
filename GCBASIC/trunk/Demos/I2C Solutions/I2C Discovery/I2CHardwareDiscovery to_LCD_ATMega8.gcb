@@ -11,6 +11,7 @@
 
 ; ----- Configuration
  #chip mega8,8
+ #option explicit
 
 ; ----- Define Hardware settings
 
@@ -51,6 +52,8 @@
 '  #define LCD_DATA_PORT PORTD
 
 '---------------------------------------------------------
+;----- Variables 
+  Dim DEVICEID as Byte
 
 ; ----- Main body of program commences here.
 Do

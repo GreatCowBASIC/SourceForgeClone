@@ -16,6 +16,7 @@
 
 ; Chip Settings
 #chip 16F1509, 8
+#option explicit
 #include <heflash.h>
 
 
@@ -64,8 +65,12 @@ end sub
 ;
 ; --- Main test Program
 ;
+
+Dim INDEX, TEST1, TEST, ROW_H, MEMLOCATION_H, INDEX1, NUMBYTE, TEMP as Byte
+
 dim Hello as string
 dim data(32)
+
 HSerPrintCRLF
 HSerPrint "Initial HEFM state :"
 HEFM_Dump

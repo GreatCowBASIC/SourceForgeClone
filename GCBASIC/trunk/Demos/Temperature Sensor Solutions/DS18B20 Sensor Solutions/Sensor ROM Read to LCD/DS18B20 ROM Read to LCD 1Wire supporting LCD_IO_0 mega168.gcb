@@ -10,6 +10,7 @@
 
 ; ----- Configuration
   #chip mega168, 16
+  #option explicit
   #include <DS18B20.h>
 
   ; ----- Define Hardware settings
@@ -34,6 +35,9 @@
   #define LCDWriteByte MySendToLCD
   #define LCD_NO_RW
 
+
+;----- Variables 
+  Dim YPOS, OLDDSDATA, XPOS, EIGHTBYTES, CLOCKS as Byte
 
 ; ----- Quick Command Reference:
 

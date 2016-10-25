@@ -29,6 +29,7 @@
 '''
 
  #chip 18F14K22,1
+ #option explicit
  #config MCLRE_OFF
 
   #define DOWN                0
@@ -51,12 +52,12 @@
   'setup switch (SW1)
   dir switch in
 
+  Dim _DIRECTION as Byte
+
 
   #ifdef PULL_UPS
     'enable the weak pull-up for the switch
     WPUA2 = 1
-    'enable the global weak pull-up bit
-    nWPUEN = 0
   #endif
 
   TMR0IE = 1

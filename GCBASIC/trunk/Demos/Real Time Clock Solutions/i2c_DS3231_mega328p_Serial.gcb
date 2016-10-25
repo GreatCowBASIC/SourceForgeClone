@@ -18,18 +18,20 @@
 ''':    which will take you consecutively to Month, Day, Year,
 ''':    Day of the Week, Hour, Minute and Second. Within each of
 ''':    these, press Mode to cycle through the possible values.
+''':
 ''':    You may hold the Mode button to increment automatically,
 ''':    or press momentarily for a single increment. Time is
 ''':    always set in 24-hour clock format.
 
 '''@author          EvanV
-'''@licence	GPL
-'''@version	1.2a
-'''@date   	17.02.15
+'''@licence GPL
+'''@version 1.2a
+'''@date    17.02.15
 '''********************************************************************************
 
 ; ----- Configuration
  #chip mega328p, 16
+ #option explicit
  #config MCLRE_ON
 
  #include <DS3231.h>
@@ -70,6 +72,8 @@
 
 ;----- Variables
 
+  Dim ALARM1TRACK, ALARM2TRACK as Byte
+  Dim CENTURY_FLAG, POWERLOSS, EEPROMVAL, DAYSMAX, DAYSMAX as Byte
   dim changed as bit
   dim hour, min, sec, am_pm as byte
   dim oldsec as byte
@@ -735,5 +739,4 @@ Sub ANSIERASECREEN
 
 
 end Sub
-
 

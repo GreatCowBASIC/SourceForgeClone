@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip 16F1939, 32
+  #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
 
 
@@ -37,8 +38,10 @@
 
 
 ; ----- Main body of program commences here.
-	' Now assumes Serial Terminal is operational
-	dim DeviceID as byte
+  ' Now assumes Serial Terminal is operational
+  dim DeviceID as byte
+  Dim DISPLAYNEWLINE as Byte
+
 
   HSerPrintCRLF
   HSerPrint "Hardware I2C "

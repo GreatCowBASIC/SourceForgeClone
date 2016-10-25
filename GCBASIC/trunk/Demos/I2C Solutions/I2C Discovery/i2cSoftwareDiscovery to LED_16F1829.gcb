@@ -16,6 +16,7 @@
 
 ; ----- Configuration
   #Chip 16f1829, 16
+  #option explicit
   #config Osc = intOSC, MCLRE_ON
 
    ; ----- Define Hardware settings
@@ -39,6 +40,8 @@
    #define I2C_CLOCK_DELAY 0 us 'width of clock pulse on SCL
    #define I2C_END_DELAY 0 us 'interval between clock pulses
 
+;----- Variables 
+  Dim LOOPX as Byte
 
 ; ----- Main body of program commences here.
   dir portc out

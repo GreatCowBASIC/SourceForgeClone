@@ -11,6 +11,7 @@
 
 ; ----- Configuration
   #chip mega8,8
+  #option explicit
   #include <LCD2SerialRedirect.h>
 
   ; ----- Define Hardware settings
@@ -23,6 +24,8 @@
    #define USART_BLOCKING
    wait 500 ms
    HSerSend 7
+
+  Dim YPOS, XPOS as Byte
 
 ; ----- Main body of program commences here.
 

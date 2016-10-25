@@ -10,6 +10,7 @@
 '''********************************************************************************
 
   #chip 16f1939,32
+  #option explicit
   #config Osc = INT, VCAPEN_OFF, MCLRE_On, PLLEN_ON, CLKOUTEN_OFF
 
   #include <glcd.h>
@@ -36,6 +37,8 @@
    #define KS0108WriteDelay   0    ; = 1 normal usage you may get away with 0, 2 or above is OK at 32 mhz!
    #define KS0108ClockDelay   0     ; = 1 normal usage you may get away with 0, 2 or above is OK at 32 mhz!
 
+
+      Dim BYTENUMBER, CCOUNT as Byte
 
       CCount = 0
       dim longNumber as long

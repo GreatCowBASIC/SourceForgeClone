@@ -21,6 +21,7 @@
 ; ----- Configuration
 
  #chip mega8,8
+ #option explicit
 
   #include <maths.h>
 
@@ -34,6 +35,7 @@
 ; ----- Variables
  dim ii as word
  dim outStr, valStr as string
+ Dim LENGTH as Byte
 
 
 ; ----- Main body of program commences here.

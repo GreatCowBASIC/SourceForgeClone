@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip mega328p, 16
+  #option explicit
   #include <UNO_mega328p.h>
 
 ; ----- Constants
@@ -32,7 +33,7 @@
 
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim BV as Byte
 
 ; ----- Quick Command Reference:
 ; ----- Main body of program commences here.

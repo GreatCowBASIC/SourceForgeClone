@@ -12,6 +12,7 @@
 ; ----- Configuration
 
   #chip 12F675, 4
+  #option explicit
 ; #config                                     ; no config. assumes defaults
 
 ; #include                                    ; no solution specifc includes, default includes are always included
@@ -22,7 +23,7 @@
 
 
 ; ----- Variables
-' none specified in the example. All byte variables are defined upon use.
+  Dim DESTBIT as Byte
 
 ; ----- Main body of program commences here.
   Do Forever

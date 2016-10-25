@@ -23,6 +23,7 @@
 
 'Chip Settings. Assumes the development board with with a 16F877a at 4 or 20 Mhz
 #chip 16F877a,20
+#option explicit
 
 
 'Use LCD in 4 pin mode and define LCD pins
@@ -36,6 +37,7 @@
  #define LCD_DB7 PORTD.7
  #define LCD_SPEED FAST
 
+ Dim YY, XX, COL, PRINTLOCX as Byte
  dim outstring as string * 16
 'Main program
 

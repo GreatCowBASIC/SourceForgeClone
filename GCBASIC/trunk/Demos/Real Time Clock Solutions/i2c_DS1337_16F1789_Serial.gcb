@@ -24,14 +24,15 @@
 ''':    Evan R Venn/Anobium  ---  10/1/2015 - Minor improvements to cater for Oscicallor stopping
 ''':    Evan R Venn/Anobium  ---  11/1/2015 - added Hardware i2c support
 ''':
-'''@author          EvanV       	
-'''@licence	GPL
-'''@version	1.1a
-'''@date   	23.02.15
+'''@author          EvanV
+'''@licence GPL
+'''@version 1.1a
+'''@date    23.02.15
 '''********************************************************************************
 
 ; ----- Configuration
  #chip 16F1789, 32
+ #option explicit
  #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
 
  #include <DS1337.h>
@@ -80,6 +81,7 @@
 
 ;----- Variables
 
+  Dim CENTURY_FLAG, POWERLOSS, DAYSMAX, DAYSMAX, Alarm1track, Alarm2track as Byte
   dim changed as bit
   dim hour, min, sec, am_pm as byte
   dim oldsec as byte
@@ -146,49 +148,49 @@
   wait 2 s
   CLS
 
-  ;	Quick Command Reference:
+  ; Quick Command Reference:
 
-  ;	DS1337_EnableOscillator(flag [true|false])
-  ;	DS1337_OscillatorStopFlagStatus
-  ;	DS1337_ClearOscillatorStopFlag
-  ;	DS1337_ResetClock
-  ;	DS1337_SetClock(hour, minute, second, DOW, date, month, year)
-  ;	DS1337_SetTime(hour, minute, second)
-  ;	DS1337_SetDate(DOW, date, month, year)
-  ;	DS1337_ReadClock(hour, minute, second, a.m.|p.m., DOW, date, month, year)
-  ;	DS1337_ReadTime(hour, minute, second, a.m.|p.m.)
-  ;	DS1337_ReadDate(DOW, date, month, year)
-  ;	DS1337_SetHourMode(12|24)
-  ;	DS1337_ReadHourMode(12|24)
-  ;	DS1337_SetSQW(rate)
-  ;	DS1337_EnableSQW
-  ;	DS1337_DisableSQW
+  ; DS1337_EnableOscillator(flag [true|false])
+  ; DS1337_OscillatorStopFlagStatus
+  ; DS1337_ClearOscillatorStopFlag
+  ; DS1337_ResetClock
+  ; DS1337_SetClock(hour, minute, second, DOW, date, month, year)
+  ; DS1337_SetTime(hour, minute, second)
+  ; DS1337_SetDate(DOW, date, month, year)
+  ; DS1337_ReadClock(hour, minute, second, a.m.|p.m., DOW, date, month, year)
+  ; DS1337_ReadTime(hour, minute, second, a.m.|p.m.)
+  ; DS1337_ReadDate(DOW, date, month, year)
+  ; DS1337_SetHourMode(12|24)
+  ; DS1337_ReadHourMode(12|24)
+  ; DS1337_SetSQW(rate)
+  ; DS1337_EnableSQW
+  ; DS1337_DisableSQW
 
-  ;	DS1337_SetControl(value)
-  ;	DS1337_ReadControl. A function return currrent value
-  ;	DS1337_SetControlStatus(value)
-  ;	DS1337_ReadControlStatus. A function return currrent value
+  ; DS1337_SetControl(value)
+  ; DS1337_ReadControl. A function return currrent value
+  ; DS1337_SetControlStatus(value)
+  ; DS1337_ReadControlStatus. A function return currrent value
 
-  ;	DS1337_SetAlarm1 ( hour, minute, second, DOW, date )
-  ;	DS1337_SetAlarmMask1 ( alarmAssertionMatch )
-  ;	DS1337_ReadAlarm1 ( hour, minute, second, DOW, date ). Return values
-  ;	DS1337_ClearAlarm1
-  ;	DS1337_EnableAlarm1Interrupt
-  ;	DS1337_DisableAlarm1Interrupt
-  ;	DS1337_Alarm1Status
-  ;	DS1337_DisableAlarm1
+  ; DS1337_SetAlarm1 ( hour, minute, second, DOW, date )
+  ; DS1337_SetAlarmMask1 ( alarmAssertionMatch )
+  ; DS1337_ReadAlarm1 ( hour, minute, second, DOW, date ). Return values
+  ; DS1337_ClearAlarm1
+  ; DS1337_EnableAlarm1Interrupt
+  ; DS1337_DisableAlarm1Interrupt
+  ; DS1337_Alarm1Status
+  ; DS1337_DisableAlarm1
 
-  ;	DS1337_SetAlarm2 ( hour, minute, DOW, date )
-  ;	DS1337_SetAlarmMask2 ( alarmAssertionMatch )
-  ;	DS1337_ReadAlarm2 ( hour, minute, DOW, date ). Return values
-  ;	DS1337_ClearAlarm2
-  ;	DS1337_EnableAlarm2Interrupt
-  ;	DS1337_DisableAlarm2Interrupt
-  ;	DS1337_Alarm2Status
-  ;	DS1337_DisableAlarm2
+  ; DS1337_SetAlarm2 ( hour, minute, DOW, date )
+  ; DS1337_SetAlarmMask2 ( alarmAssertionMatch )
+  ; DS1337_ReadAlarm2 ( hour, minute, DOW, date ). Return values
+  ; DS1337_ClearAlarm2
+  ; DS1337_EnableAlarm2Interrupt
+  ; DS1337_DisableAlarm2Interrupt
+  ; DS1337_Alarm2Status
+  ; DS1337_DisableAlarm2
 
-  ;	DS1337_ReadRegister. A function
-  ;	DS1337_WriteRegister
+  ; DS1337_ReadRegister. A function
+  ; DS1337_WriteRegister
 
 
   ; example uses of the DS1337 functions

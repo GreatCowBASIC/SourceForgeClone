@@ -25,6 +25,7 @@
 
 
     #chip 16f18855,32
+    #option explicit
     #Config FEXTOSC_OFF, RSTOSC_HFINT32
     #Config WRT_OFF, CPD_ON, MCLRE_ON
 
@@ -37,6 +38,8 @@
     #define USE_HPWMCCP3 FALSE       ' This is not used so optimise
     #define USE_HPWMCCP4 FALSE       ' This is not used so optimise
 
+
+    Dim BRIGHT as Byte
 
     'Setting the port an output is VERY important... LED will not work if you do not set as an output.
     dir portC.2 out    ; CCP2

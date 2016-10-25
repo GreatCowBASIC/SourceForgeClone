@@ -11,6 +11,7 @@
 
 'Chip Settings. Assumes the development board with with a 16F877A
 #chip 16F1937,32
+#option explicit
 #config Osc = INT, VCAPEN_OFF, MCLRE_On, PLLEN_ON, CLKOUTEN_OFF
 
 #include <DS18B20.h>
@@ -43,6 +44,7 @@
 
 
 dim msg1 as string * 16
+Dim POSX, CCOUNT, SIGNBIT, WHOLE, FRACT, DIG, MSG1LEN as Byte
 
 
 GLCDCLS

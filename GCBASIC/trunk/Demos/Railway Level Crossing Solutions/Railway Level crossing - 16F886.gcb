@@ -17,6 +17,7 @@
 
 ; ----- Configuration
  #chip 16F886, 16
+ #option explicit
  #config INTOSC_OSC_NOCLKOUT, MCLRE_OFF
 
 
@@ -52,7 +53,7 @@
 
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim RINGBELL, BELLTONE, GATEMOVING, TEMP, GATEMOVING as Byte
 
 ; ----- Main body of program commences here.
 

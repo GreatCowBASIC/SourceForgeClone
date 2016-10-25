@@ -16,6 +16,7 @@
 
 ; ----- Configuration
   #chip mega328p,16
+  #option explicit
   #include <glcd.h>
 
 ; ----- Define Hardware settings
@@ -29,6 +30,9 @@
   #define GLCD_I2C_Address 0x78
 
 ; ----- Define variables
+
+  Dim BYTENUMBER, CCOUNT as Byte
+
   CCount = 0
   dim longNumber as long
   longNumber = 123456 ' max value = 4294967290

@@ -3,6 +3,23 @@
 '''
 ''' It also shows many parameter from the sensor.
 '''
+''' The EMC1001 controls the two output pins (marked on the Xpress board as ALARM1 and ALARM2)
+''' according to two different sets of rules.
+''' While both pins are open drain, the Xpress evaluation board comes with a pull up resistor only
+''' for the ALARM1 output. If you intend to use the second output you will have to mount a second
+''' pull up resistor yourself (a ~10K ohm resistor will do).
+'''
+''' The ALARM1 output is activated (pulled low) only when Ttherm is passed (>85°C by default).
+''' You can change this value by writing to the Therm Limit register (0x20).
+''' Note: This is an 8-bit (integer) value.
+'''
+''' The ALARM2 output is activated (pulled low) when the temperature is above Th or below Tl. After appropriate configuration.
+''' By default this output is not enabled.
+''' Write to the Configuration register (0x03) the appropirate value (0x05 for example) to activate.
+'''
+''' You can also verify the device has detected the temperature conditions by reading the STATUS register (0x01).
+''' Bit 6 and bit 5 are set when Thigh and Tlow respectively are violated (equiv ALARM2), while bit 0 is set when the THERM limit is exceeded (equiv. ALARM1)
+'''
 '''
 '''  PIC: 16F18855
 '''  Compiler: GCB
@@ -16,6 +33,7 @@
 ' ----- Configuration
     'Chip Settings.
     #chip 16f18855,32
+    #option explicit
     #Config FEXTOSC_OFF, RSTOSC_HFINT32
     #Config WRT_OFF, CPD_ON, MCLRE_ON
 
@@ -68,7 +86,8 @@
     'MASTER Second Port
     HI2C2Mode Master
 
-		showDegreeChar = False
+    Dim HI, LO, EMC_TEMP_H, SIGNBIT, WHOLE, FRACT, DIG, SHOWDEGREECHAR, DATA, OLDSTATUS as Byte    
+    showDegreeChar = False
 
 ; ----- Main body of program commences here.
 
@@ -83,7 +102,7 @@
 		dim emc_temp as word
 
 		EMC1001_Write ( EMC1001_TEMP_LIMIT_HI_H , 30)
-		EMC1001_Write ( EMC1001_TEMP_LIMIT_LO_H , 20)
+		EMC1001_Write ( EMC1001_TEMP_LIMIT_LO_H , 22)
 
     EMC1001_Write ( EMC1001_TEMP_THERM_LIMIT, 30)
 		EMC1001_Write ( EMC1001_TEMP_THERM_HYSTERIS, 0x01)

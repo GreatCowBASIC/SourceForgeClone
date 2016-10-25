@@ -11,6 +11,7 @@
 
 ; ----- Configuration
   #chip 16F1937, 32
+  #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
 
 
@@ -31,6 +32,9 @@
  #define SerSendDelayms 10
  #define USART_BLOCKING
  wait 500 ms
+
+;----- Variables 
+  Dim DISPLAYNEWLINE as Byte
 
 
 ; ----- Main body of program commences here.

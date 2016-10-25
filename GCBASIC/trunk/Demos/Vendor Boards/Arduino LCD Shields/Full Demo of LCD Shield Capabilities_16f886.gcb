@@ -18,6 +18,7 @@
 ; ----- Configuration
 'Chip model
 #chip 16F886, 8
+#option explicit
 #config MCLRE_ON
 #include <chipino.h>
 
@@ -55,6 +56,9 @@
 
   'Used in reading buttun state
   dim adc_key_in as Word
+
+  Dim SELECT_STATUS, PWMLEVEL, PWMCOUNTER, PWMCOUNTER as Byte
+
 
 ; ------ Main program starts here
   'Call the initialisation routine

@@ -10,6 +10,7 @@
 
 ; ----- Configuration
   #chip 16F886, 16
+  #option explicit
 
 
 ; ----- Define Hardware settings
@@ -19,6 +20,8 @@
   ' define the PWMout 1 pin - this is required for the PWMOut method
   #define PWM_out1 portb.5	
 
+;----- Variables 
+  Dim CNT as Byte
 
 
 ; ----- Main body of program commences here.
