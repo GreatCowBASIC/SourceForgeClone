@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip 16F886,16
+  #option explicit
   #config MCLR_OFF
 
 
@@ -19,6 +20,9 @@
   dir PORTA.0 in
   dir PORTB.0 out
 
+
+;----- Variables
+  Dim PWMCOUNT, PWMLEVEL as Byte
 
 ; ----- Main body of program commences here.
   Main:

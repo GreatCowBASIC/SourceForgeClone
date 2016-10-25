@@ -17,6 +17,7 @@
 ; ----- Configuration
 
  #chip 16F886,16
+ #option explicit
  #include <GLCD.h>
 
 ; ----- Define Hardware settings
@@ -46,6 +47,8 @@
   ' These must be WORDs as this a large table.    These are required!!
   dim TableReadPosition as word
   dim TableLen as word
+  Dim OBJWIDTH, OBJHEIGHT, GLCDXPOS, GLCDYPOS, OLDGLCDXPOS, WHOLEYBYTES, HCOUNT, GLCDY, WIDTHCOUNT, WBYTE, OPTMISEGLCDDRAW, ONPAGEBOUNDARY, GLCDX, CURRPAGE, MAXHEIGHT, CURRCHARROW as Byte
+
 
 ; ----- Main body of program commences here.  This is reusable code.
 

@@ -12,6 +12,7 @@
 ; ----- Configuration
 
  #chip 16F88, 8                  
+ #option explicit
  #config mclr=off                ;reset handled internally
  #config osc=int                 ;use internal clock
 
@@ -34,6 +35,7 @@
 ; ----- Variables
  dim ii as integer
  dim outStr, valStr as string
+ Dim LENGTH as Byte
 
 
 ; ----- Main body of program commences here.

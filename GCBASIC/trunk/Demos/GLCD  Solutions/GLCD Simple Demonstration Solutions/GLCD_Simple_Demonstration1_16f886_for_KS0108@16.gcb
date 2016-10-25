@@ -12,6 +12,7 @@
 ; ----- Configuration
 
  #chip 16F886,16
+ #option explicit
  #include <GLCD.h>
 
 ; ----- Define Hardware settings
@@ -40,6 +41,8 @@
   #define KS0108ClockDelay   0     ; = 1 normal usage you may get away with 0, 2 or above is OK at 32 mhz!
 
 ; ----- Variables
+  Dim BYTENUMBER, CCOUNT as Byte
+
   CCount = 0
   dim longNumber as long
   longNumber = 4294967290 ' max value = 4294967296

@@ -17,6 +17,7 @@
 
 
   #chip mega8, 8
+  #option explicit
 
 
   ; ----- Define Hardware settings
@@ -37,6 +38,9 @@
 
 ; ----- Constants
   'None required beyond the scope of the hardware.
+
+;----- Variables
+  Dim LCD_I2C_ADDRESS_CURRENT as Byte
 
 ; ----- Quick Command Reference:
 

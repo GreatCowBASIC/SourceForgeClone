@@ -16,6 +16,7 @@
 
 ; ----- Configuration
   #Chip 16f1829, 32
+  #option explicit
   #include "DisplayDevices.h"
   #config Osc = intOSC, MCLRE_ON
 
@@ -40,6 +41,9 @@
    #define SerSendDelayms 10
    #define USART_BLOCKING
    wait 500 ms
+
+; ----- Variables
+  Dim DEVICEID, TESTID as Byte
 
 
 ; ----- Main body of program commences here.

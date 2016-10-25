@@ -37,6 +37,7 @@
 
 
  #chip 16f690,8
+ #option explicit
  #config FOSC_INTOSC , WDTE_OFF , PWRTE_OFF , MCLRE_OFF , CP_OFF , CPD_OFF , BOREN_ON, IESO_OFF, FCMEN_OFF
 
     '' -------------------LATC-----------------
@@ -68,6 +69,8 @@
   #define SWITCH      PORTA.3
 
   dim mydelay as byte
+  Dim DIRECTION as Byte
+
 
     'start from the right to left
     direction = LED_RIGHT

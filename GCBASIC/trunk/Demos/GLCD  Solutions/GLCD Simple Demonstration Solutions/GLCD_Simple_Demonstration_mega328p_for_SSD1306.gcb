@@ -14,6 +14,7 @@
 
 ; ----- Configuration
   #chip mega328p,16
+  #option explicit
   #include <glcd.h>
   #include <..\converters\AnobiumFull.BMP>
 
@@ -41,6 +42,8 @@
   #define GLCD_I2C_Address 0x78
 
   GLCDCLS
+
+  Dim BYTENUMBER, WIDTHOFPICTURE, HEIGHTOFPICTURE, ORGCHARLOCX, CURRCHARVAL, FIRSTPASS, CHARLOCY, CURRCHARROW, CHARLOCX, CCOUNT as Byte
 
   CCount = 0
   dim longNumber as long

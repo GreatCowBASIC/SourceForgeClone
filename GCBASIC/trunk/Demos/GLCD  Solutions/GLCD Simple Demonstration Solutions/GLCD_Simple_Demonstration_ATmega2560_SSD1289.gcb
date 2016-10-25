@@ -12,6 +12,7 @@
 
 'Chip Settings
 #chip mega2560, 16
+#option explicit
 
 'Include
 #include <glcd.h>
@@ -45,6 +46,8 @@ GLCDCLS SSD1289_blue
 
   'Set font size, in this demo this also set the demonstration to execute.
   GLCDfntDefaultsize = 2
+
+  Dim BYTENUMBER, OLDFONT, CCOUNT, OLDFONT, CCOUNT as Byte
   dim longNumber as Long
   dim wordNumber as Word
 

@@ -11,6 +11,7 @@
 
 ; ----- Configuration
   #chip 16f1938, 16
+  #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_OFF, VCAPEN_OFF
   #include <DS18B20.h>
 
@@ -47,6 +48,7 @@
 
 ; ----- Variables
   dim TempC_100 as word   ' a variabler to handle the temperature calculations
+  Dim CCOUNT, SIGNBIT, WHOLE, FRACT, DIG as Byte
 
 
 ; ----- Main body of program commences here.

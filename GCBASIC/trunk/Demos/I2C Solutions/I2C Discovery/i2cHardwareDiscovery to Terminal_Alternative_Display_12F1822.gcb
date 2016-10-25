@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip 12F1840, 32
+  #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_ON
 
 
@@ -35,6 +36,8 @@
  #define USART_TX_BLOCKING
  wait 500 ms
 
+; ----- Variables
+  Dim DISPLAYNEWLINE, HI2CWAITMSSPTIMEOUT, HI2CACKPOLLSTATE as Byte
 
 ; ----- Main body of program commences here.
 	' Now assumes Serial Terminal is operational

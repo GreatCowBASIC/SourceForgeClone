@@ -12,6 +12,7 @@
 ; ----- Configuration
 
     #chip 16F1789,32
+    #option explicit
     #config Osc = INT, VCAPEN_OFF, MCLRE_On, PLLEN_ON, CLKOUTEN_OFF
     #include <GLCD.h>
 
@@ -37,6 +38,7 @@
 
 
 ; ----- Variables
+    Dim CCOUNT, BYTENUMBER as Byte
     CCount = 0
     dim longNumber as long
     longNumber = 0 ' max value = 4294967290

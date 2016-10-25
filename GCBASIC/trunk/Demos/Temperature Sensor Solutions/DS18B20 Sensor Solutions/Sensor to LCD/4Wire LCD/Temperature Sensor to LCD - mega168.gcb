@@ -11,6 +11,7 @@
 
 ; ----- Configuration
  #chip mega168, 16
+ #option explicit
  #include <DS18B20.h>
 
   ;Setup LCD Parameters
@@ -33,6 +34,7 @@
 ; ----- Variables
   ' a variable to handle the temperature calculations
   dim TempC_100 as word
+  Dim CCOUNT, SIGNBIT, WHOLE, FRACT, DIG as Byte
 
 
 ; ----- Main body of program commences here.

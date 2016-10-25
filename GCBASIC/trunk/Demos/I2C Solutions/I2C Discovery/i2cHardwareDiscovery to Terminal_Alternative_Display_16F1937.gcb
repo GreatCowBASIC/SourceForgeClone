@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip 16F1937, 32
+  #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
 
 
@@ -34,6 +35,8 @@
  Dir PORTc.7 In
  #define USART_TX_BLOCKING
  wait 500 ms
+
+ Dim DISPLAYNEWLINE as Byte
 
 
 ; ----- Main body of program commences here.

@@ -31,6 +31,7 @@
 
     'Chip Settings.
     #chip 16f18855,32
+    #option explicit
     #Config FEXTOSC_OFF, RSTOSC_HFINT32
     #Config WRT_OFF, CPD_ON, MCLRE_ON
 
@@ -57,6 +58,7 @@
 
     #define SWITCH      				PORTA.5
 
+    Dim OUTVALUE, DOWN, ADC_VALUE as Byte
 
     'Setup an Interrupt event when porta.5 goes negative.
     IOCAN5 = 1

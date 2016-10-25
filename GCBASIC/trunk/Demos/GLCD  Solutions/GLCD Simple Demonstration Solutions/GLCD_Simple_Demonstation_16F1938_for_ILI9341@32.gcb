@@ -12,6 +12,7 @@
 
   'Chip Settings.
   #chip 16f1938,32
+  #option explicit
   #config Osc = INT, VCAPEN_OFF, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
 
     #include <glcd.h>
@@ -73,6 +74,7 @@
     'ILI9341_NAVY
     'ILI9341_FUCHSIA
 
+    Dim CCOUNT, BYTENUMBER, OLDFONT, OLDFONT as Byte
     CCount = 31
     dim longNumber as long
     longNumber = 0 ' max value = 4294967290

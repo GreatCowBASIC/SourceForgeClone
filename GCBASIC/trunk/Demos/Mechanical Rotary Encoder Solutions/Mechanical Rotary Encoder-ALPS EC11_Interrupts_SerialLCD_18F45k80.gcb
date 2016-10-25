@@ -23,6 +23,7 @@
 
 ; ----- Configuration
   #chip 18F45k80, 8
+  #option explicit
 
 	' Load encoder header file
   #include <ALPS-EC11.h>
@@ -51,7 +52,7 @@
    #define Alps_ENCODER_ENC_READ_DELAY 100
 
 ;---- variables
-
+  Dim REFRESHLCD as Byte
 
 
 

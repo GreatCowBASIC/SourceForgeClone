@@ -20,6 +20,7 @@
 ; ----- Configuration
 ' Change chip and speed
   #chip 16f1939,32
+  #option explicit
   #config Osc = INT, VCAPEN_OFF, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
 
 	' Initialise HMC5883L device is automatic
@@ -49,7 +50,7 @@
   dim device_z as word
 
   dim temp as Integer
-
+  dim RawWordValue as word
 
 ; ----- Main body of program commences here
 

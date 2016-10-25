@@ -11,6 +11,7 @@
 
 ; ----- Configuration
   #chip 16F886, 16
+  #option explicit
 
 ; ----- Define Hardware settings
   DIR portb.0 in
@@ -22,6 +23,7 @@
 ; ----- Variables
   'Requires word size to hold note frequencies
   dim note as word
+  Dim CNT as Byte
 
 
 ; ----- Main body of program commences here.

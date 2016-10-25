@@ -5,14 +5,15 @@
 '''The GLCD shows the integer value and the decimal value of the temperature.
 ''':
 '''1.1a changes temp from c.3 to c.4 to match shield. See http://www.shieldlist.org/dfrobot/lcd
-'''@author 	EvanV plus works of others
-'''@licence	GPL
-'''@version	1.1a
-'''@date   	28.05.2015
+'''@author  EvanV plus works of others
+'''@licence GPL
+'''@version 1.1a
+'''@date    28.05.2015
 '''********************************************************************************
 
 ; ----- Configuration
  #chip 16F886,16
+ #option explicit
  #include <GLCD.h>
  #include <DS18B20.h>
 
@@ -49,7 +50,7 @@
 
 ; ----- Variables
   dim TempC_100 as word   ' a variabler to handle the temperature calculations
-
+  Dim CCOUNT, DSDATA as Byte
 
 ; ----- Main body of program commences here.
 
@@ -68,7 +69,7 @@
        GLCDPrint(48, 24,  hex(ccount) )
        ' Display the integer value of the sensor on the LCD
        GLCDPrint(66, 24,  str(DSdata) + "c" )
-       DSdata = ((( DSdata × 9) /5) + 32 )
+       DSdata = ((( DSdata * 9) /5) + 32 )
        GLCDPrint(66, 32,  str(DSdata) + "f" )
 
        wait 2 s

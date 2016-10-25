@@ -18,6 +18,7 @@
 ; ----- Configuration
 
   #chip 16F1847, 32
+  #option explicit
   #config osc = int, PLLEN_ON
 
 ; ----- Define Hardware settings
@@ -49,6 +50,11 @@
   #define spare1 	= PORTA.1 ; spare output 1
   #define spare2 	= PORTA.2 ; spare output 2 (or optional backlight)
   #define spare3 	= PORTA.3 ; spare output 3
+
+
+;----- Variables
+  Dim B1, B2, XLOOP, LOCATION, ENDLOCATION, EEPROM_PTR, INASCVAL as Byte
+
 
 ; ----- Main body of program commences here.
   set spare0 off
@@ -104,7 +110,7 @@
               case else                    ; must be 255
                                            ; wait for the next byte
                       HSerReceive b2
-                      set PortA = ( b2 & b'00011111' ) | b'10000000'
+                      set PortA = ( b2 & 0b00011111 ) | 0b10000000
                                            ; output the data on A.0 to A.4, keep RS high
                       goto main            ; back to top
      end select
@@ -124,7 +130,7 @@
 
   sub  msg ( in location )
 
-            location = ( location & b'00001111') * line_length
+            location = ( location & 0b00001111) * line_length
             ; EEPROM start address is 0 to 15 multiplied by 16
             endlocation = location + line_length - 1 ; end address is start address + (line_length - 1)
 

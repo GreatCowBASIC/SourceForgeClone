@@ -10,6 +10,7 @@
 
 'Chip Settings. Assumes the development board with with a 16F877A
 #chip 16F877A,20
+#option explicit
 #include <DS18B20.h>
 
 'Serial settings
@@ -29,6 +30,7 @@
   ' DS18B20 port settings - this is required
   #define DQ PortC.3
 
+  Dim CCOUNT, SIGNBIT, WHOLE, FRACT, DIG as Byte
   dim TempC_100 as word   ' a variabler to handle the temperature calculations
   ccount = 0
 

@@ -3,18 +3,22 @@
 '''This program is a demonstration of a simple dimmer.
 '''This adjusts the power to the LED over 2.5 seconds, then two zero power again over 2.5 seconds.
 '''The LED is connected to Portb.0 via appropiate resistors.
-'''@author 	EvanV plus works of others
-'''@licence	GPL
-'''@version	1.1a
-'''@date   	14.02.2015
+'''@author  EvanV plus works of others
+'''@licence GPL
+'''@version 1.1a
+'''@date    14.02.2015
 '''********************************************************************************
 
 ; ----- Configuration
  #chip 16F1789, 16
+ #option explicit
   #config Osc = INT, MCLRE_ON, PLLEN_OFF, CLKOUTEN_OFF
 
 ; ----- Define Hardware settings
   Dir LED out
+
+;----- Variables
+  Dim LEDPOWER, LEDLUM, PWMCOUNTER, PWMCOUNTER as Byte
 
 
 ; ----- Constants

@@ -4,15 +4,16 @@
 '''The 7 segment display is connected to PortB.0-6 for segments A-G respectively.
 '''The 7 Segment display enable pin connected to PortD.1
 '''The 7 Segment dot is connected to PortD.2
-'''@author 	ThoeL plus works of EvanV and HughC
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	31.01.2015
+'''@author  ThoeL plus works of EvanV and HughC
+'''@licence GPL
+'''@version 2.0a
+'''@date    02.10.2016
 '''********************************************************************************
 
 ; ----- Configuration
 
   #chip mega8, 8
+  #option explicit
 
 ; ----- Define Hardware settings
 
@@ -34,11 +35,14 @@
   #define 7Seg_CommonAnode
 
 ; ----- Variables
+  Dim Temp, Counter as Byte
+
   Dim Message As String
   Message = " ABCDEFGHIJKLMNOPQRSTUVWXYZ "
 
 ; ----- Main body of program commences here.
   Do
+
   'show number (0-15) on 7 Segment Display
   'Numbers > 9 will be translated into a HEX number
     For Temp = 0 to 15
@@ -46,7 +50,7 @@
       wait 1 s
     next
 
-    'Blink Segment dot, for Common Anode inverted
+    'Blink Segment dot, for Common Anode invert the DISP_SEG_DOT ON/OFF
     wait 1 s
     set DISP_SEG_DOT OFF
     wait 500 ms
@@ -61,4 +65,5 @@
       DisplayChar 1, Message(Counter)
       Wait 750 ms
     Next
+
   Loop

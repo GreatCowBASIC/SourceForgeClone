@@ -37,6 +37,7 @@
 
 
  #Chip 18F14K22, 8
+ #option explicit
  #config MCLRE_OFF
 
  'This script allows for the voltage drop and compensates of any losses.
@@ -63,6 +64,7 @@
   #define SWITCH      PORTA.3
 
   dim mydelay as byte
+  Dim DIRECTION as Byte
 
     'start from the right to left
     direction = LED_RIGHT

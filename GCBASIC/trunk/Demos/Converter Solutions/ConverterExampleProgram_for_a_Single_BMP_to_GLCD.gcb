@@ -13,6 +13,8 @@
 ; ----- Configuration
 
  #chip 16f877a, 20
+ #option explicit
+ #option explicit
  #include <glcd.h>
 
 ; ----- Constants
@@ -48,6 +50,11 @@
   ' These must be WORDs as this a large table.
   dim TableReadPosition, TableLen as word
   OptmiseGLCDDraw  = 0            ; either 0 or 1.  Needs to match the background pixel state.
+  
+  dim objwidth, objheight, wholebytes, hcount, widthcount, wbyte, OptmiseGLCDDraw, OnPageBoundary as byte
+  dim GLCDYPOS, glcdxpos, oldglcdxpos, GLCDX, GLCDY as Word
+  Dim WHOLEYBYTES, CURRPAGE, MAXHEIGHT, CURRCHARROW as Byte
+
 
 ; ----- Quick Command Reference:
   #include <..\converters\Anobium.BMP>

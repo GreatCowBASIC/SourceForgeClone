@@ -17,6 +17,7 @@
 
   'Chip Settings.
   #chip mega328p, 16
+  #option explicit
 
     #include <glcd.h>
     #include <UNO_mega328p.h >
@@ -64,6 +65,8 @@
     'ILI9341_TEAL
     'ILI9341_NAVY
     'ILI9341_FUCHSIA
+
+    Dim CCOUNT, BYTENUMBER, OLDFONT, OLDFONT as Byte
 
     CCount = 31
     dim longNumber as long

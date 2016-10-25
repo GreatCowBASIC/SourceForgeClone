@@ -30,10 +30,14 @@
 
 
  #chip 16f690,16
+ #option explicit
  #config FOSC_INTOSC , WDTE_OFF , PWRTE_OFF , MCLRE_OFF , CP_OFF , CPD_OFF , BOREN_ON , IESO_OFF
 
  #define PULL_UPS                                  'if this is uncommented, the trace under JP5 can be cut
                                                     'with no affect on the output
+
+  Dim _DIRECTION as Byte
+
 
    'This script allows for the voltage drop and compensates of any losses.
    #script
@@ -53,8 +57,6 @@
    #ifdef PULL_UPS
     'enable the weak pull-up for the switch
     WPUA2 = 1
-    'enable the global weak pull-up bit
-    nWPUEN = 0
   #endif
 
 
@@ -130,4 +132,3 @@ sub InterruptHandler
     end if
 
 end sub
-

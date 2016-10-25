@@ -11,6 +11,7 @@
 
 ; ----- Configuration
  #chip 12f1501, 4
+ #option explicit
   'Set internal oscillator to 4 MHz
   ' (writing to IRCF only does not work !?)
   ' Set OSCCON = b'1101011'  'writing bit 0-6; bit 3-6 = IRCF
@@ -28,7 +29,7 @@
   InitSer 1, r2400, 1+WaitForStart, 8, 1, None, Invert
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim INCHAR as Byte
 
 ; ----- Main body of program commences here.
   'Message after reset

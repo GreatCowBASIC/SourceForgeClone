@@ -18,6 +18,7 @@
 ; ----- Configuration
 'Chip model
 #chip 16F1938, 32
+#option explicit
 
 #config INTOSC, VCAPEN_OFF, MCLRE_OFF, PLLEN_ON, CLKOUTEN_OFF
 #include <chipino.h>
@@ -65,6 +66,7 @@
   'Used in reading buttun state
   dim adc_key_in as Word
 
+  Dim SELECT_STATUS, PWMLEVEL, PWMCOUNTER, PWMCOUNTER as Byte
 
 ; ------ Main program starts here
   'Call the initialisation routine

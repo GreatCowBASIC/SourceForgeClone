@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip mega328p, 16
+  #option explicit
   #include <UNO_mega328p.h>
 
 ; ----- Constants
@@ -45,6 +46,7 @@
 
 
 ; ----- Variables
+  Dim COUNTERVALUE, SELECT_STATUS, PWMLEVEL, BTNRESET, PWMCOUNTER, PWMCOUNTER as Byte
   select_status = !true
   dim adc_key_in as Word
 

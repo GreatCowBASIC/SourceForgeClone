@@ -11,6 +11,7 @@
 
   'Chip Settings. Assumes the my development board 'C' with with a 16LF1939
   #chip 16f1937,32
+  #option explicit
   #config Osc = INT, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
 
       #include <glcd.h>
@@ -31,6 +32,8 @@
       GLCDCLS
       ' GLCDRotate ( LANDSCAPE )     ' optionally you can rotate the screen.
 
+
+        Dim CCOUNT, BYTENUMBER as Byte
 
         CCount = 0
         dim longNumber as long

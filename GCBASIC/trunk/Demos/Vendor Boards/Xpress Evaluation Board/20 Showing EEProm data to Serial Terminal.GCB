@@ -24,6 +24,7 @@
 
   'Chip Settings.
   #chip 16f18855,32
+  #option explicit
   #Config FEXTOSC_OFF, RSTOSC_HFINT32
   #Config WRT_OFF, CPD_ON, MCLRE_ON
 
@@ -40,6 +41,7 @@
     RXPPS  = 0x0011 		 'RC1->EUSART:RX;
   LOCKPPS
 
+  Dim DISPLAYNEWLINE, OUTDATA, INDATA as Byte
 
   #define USART_BAUD_RATE 19200
   #define USART_TX_BLOCKING

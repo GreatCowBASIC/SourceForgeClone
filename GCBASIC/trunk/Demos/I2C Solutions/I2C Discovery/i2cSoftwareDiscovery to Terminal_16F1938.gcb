@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip 16F1938, 32
+  #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
   #include "DisplayDevices.h"
 
@@ -33,6 +34,8 @@
  #define USART_BLOCKING
  wait 500 ms
 
+;----- Variables 
+  Dim TESTID as Byte
 
 ; ----- Main body of program commences here.
          ' Now assumes Serial Terminal is operational

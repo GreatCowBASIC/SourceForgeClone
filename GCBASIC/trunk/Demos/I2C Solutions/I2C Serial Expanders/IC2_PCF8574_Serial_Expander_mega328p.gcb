@@ -15,6 +15,7 @@
 '''********************************************************************************
 
 #chip mega328p, 16
+#option explicit
 
  #INCLUDE <PCF8574.h>
  'Used the Serial port/terminal as an LCD emulator.  The output device should be changed to any suitable device.
@@ -61,6 +62,8 @@
 ; ----- Variables
   Dim ButtonPressedEvent as byte
   ButtonPressedEvent = false
+  Dim LEDSTATUS, PORTSTATUS as Byte
+
 
 ; ----- Main body of program commences here.
 

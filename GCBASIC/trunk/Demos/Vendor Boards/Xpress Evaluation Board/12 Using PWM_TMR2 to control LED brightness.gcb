@@ -25,6 +25,7 @@
 
 
     #chip 16f18855,32
+    #option explicit
     #Config FEXTOSC_OFF, RSTOSC_HFINT32
     #Config WRT_OFF, CPD_ON, MCLRE_ON
 
@@ -60,6 +61,7 @@
     dir porta.2 out
     dir porta.3 out
 
+    Dim BRIGHT as Byte
 
     Do Forever
           for bright = 0 to 100

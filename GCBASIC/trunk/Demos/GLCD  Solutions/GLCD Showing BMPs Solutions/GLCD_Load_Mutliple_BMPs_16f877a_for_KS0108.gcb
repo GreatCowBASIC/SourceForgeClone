@@ -21,6 +21,7 @@
 ; ----- Configuration
 
  #chip 16f877a, 20
+ #option explicit
  #include <glcd.h>
 
 ; ----- Constants
@@ -54,6 +55,8 @@
   OptmiseGLCDDraw  = 0            ; either 0 or 1.  Needs to match the background pixel state. Makes drawing faster.
   ' These must be WORDs as this is required to handle large tables.
   Dim TableReadPosition, TableLen,SelectedTable as word
+  Dim OPTMISEGLCDDRAW, OBJWIDTH, OBJHEIGHT, OLDGLCDXPOS, WHOLEYBYTES, HCOUNT, GLCDY, WIDTHCOUNT, WBYTE, ONPAGEBOUNDARY, GLCDX, CURRPAGE, CURRPAGE, MAXHEIGHT, CURRCHARROW, WBYTE as Byte
+
 
 ; ----- Quick Command Reference:
   'You should then do the following.

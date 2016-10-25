@@ -23,6 +23,7 @@
 '''
 
  #chip 16f1825,8
+ #option explicit
  #config FOSC_INTOSC , WDTE_OFF , PWRTE_OFF , MCLRE_OFF , CP_OFF , CPD_OFF , BOREN_ON , CLKOUTEN_OFF , IESO_OFF
  ', FCMEN_OFF
  #config WRT_OFF , PLLEN_OFF , STVREN_OFF , LVP_OFF
@@ -32,6 +33,9 @@
     '' LED:   ---------------|DS4|DS3|DS2|DS1|-
     ''-----------------------------------------
     ''
+
+    Dim CURRENTSTATE as Byte
+
 
     dir portc.0 out
 

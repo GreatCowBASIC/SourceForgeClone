@@ -13,6 +13,7 @@
 
 ; ----- Configuration
   #chip 16F886, 16 	
+  #option explicit
 
 ; ----- Define Hardware settings
   'Set pin directions
@@ -29,6 +30,9 @@
   #define SendALow Set SerOutPort on
   #define RecAHigh SerInPort off
   #define RecALow SerInPort on
+
+
+  Dim TEMP as Byte
 
 
 ; ----- Main body of program commences here.

@@ -11,6 +11,7 @@
 
 ; ----- Configuration
  #chip mega168, 16
+ #option explicit
  #include <DS18B20.h>
 
 ; ----- Define Hardware settings
@@ -31,7 +32,7 @@
   #define DQ PortC.3
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim CCOUNT as Byte
 
 ; ----- Main body of program commences here.
   InitSer 1, r4800, 1+WaitForStart, 8, 1, none, invert

@@ -10,6 +10,7 @@
 
 ; ----- Configuration
   #chip mega8,8
+  #option explicit
 
 ; ----- Define Hardware settings
   #define SWX PORTC.2               ; input pin from pushbutton/switch
@@ -21,6 +22,8 @@
 ; ----- Variables
   'Requires word size to hold note frequencies
   dim note as word
+  Dim CNT as Byte
+
 
 
 ; ----- Main body of program commences here.

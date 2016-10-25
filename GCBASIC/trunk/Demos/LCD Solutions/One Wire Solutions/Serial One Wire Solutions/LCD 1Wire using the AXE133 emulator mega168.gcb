@@ -20,6 +20,7 @@
 ; ----- Configuration
 
   #chip mega168, 16
+  #option explicit
 
   ; ----- Define Hardware settings
   'Set up the Serial Port
@@ -30,6 +31,9 @@
    #define USART_DELAY 1 ms
    #define USART_BLOCKING
    wait 500 ms
+
+;----- Variables
+  Dim DISPLAYEEPROMMESSAGE as Byte
 
 ; ----- Constants
   ' No Constants specified in this example.

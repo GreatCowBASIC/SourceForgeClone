@@ -27,6 +27,7 @@
 ; ----- Configuration
 
   #chip 16f1938, 32
+  #option explicit
   #config mclr_on
 
   ; ----- Define Hardware settings
@@ -49,6 +50,11 @@
 
 ; ----- Constants
   'None required beyond the scope of the hardware.
+
+
+;----- Variables
+  Dim LCD_I2C_ADDRESS_CURRENT as Byte
+
 
 ; ----- Quick Command Reference:
 

@@ -24,12 +24,14 @@
 
 
 #chip 16F877a, 20          ' Select the chip and the chip speed
+#option explicit
 
 ' Set ports
   dir portd out          ' Set the portd as outputs
   set portd = 255        ' Set the initial value of the state of the LEDs
 
 ' Set required variables
+  Dim DDELAY as Byte
   ddelay = 125          ' Set the delay for the LEDs
 
 

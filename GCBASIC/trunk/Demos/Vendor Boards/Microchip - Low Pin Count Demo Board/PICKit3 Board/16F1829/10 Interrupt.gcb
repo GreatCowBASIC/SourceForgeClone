@@ -29,6 +29,7 @@
 '''
 
  #chip 16f1829,2
+ #option explicit
  #config FOSC_INTOSC , WDTE_OFF , PWRTE_OFF , MCLRE_ON , CP_OFF , CPD_OFF , BOREN_ON , CLKOUTEN_OFF , IESO_OFF
  #config WRT_OFF , PLLEN_OFF , STVREN_OFF , LVP_OFF
 
@@ -49,6 +50,9 @@
     ''-----------------------------------------
     ''
 
+    Dim _DIRECTION as Byte
+
+
     dir portc out
     portc = 0
     portc.3 = 1
@@ -63,7 +67,7 @@
       'enable the weak pull-up for the switch
       WPUA2 = 1
       'enable the global weak pull-up bit
-      nWPUEN = 0
+      NOT_WPUEN = 0
     #endif
 
     TMR0IE = 1

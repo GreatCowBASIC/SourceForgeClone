@@ -35,6 +35,7 @@
 
 
  #chip 18F14K22,8
+ #option explicit
  #config MCLRE_OFF
 
  'This script allows for the voltage drop and compensates of any losses.
@@ -56,6 +57,9 @@
  #define UP                  1
 
  #define SWITCH              PORTA.3
+
+
+    Dim RESTORED_VALUE, ADC_VALUE as Byte
 
     dir portc out
     portc = 0

@@ -16,6 +16,7 @@
  ; or
 
  #chip 16F1938, 16
+ #option explicit
  #config INTOSC, VCAPEN_OFF, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
 
 
@@ -31,6 +32,10 @@
   #define LCD_DB5 PORTC.2
   #define LCD_DB6 PORTC.1
   #define LCD_DB7 PORTC.0
+
+;----- Variables
+  Dim BV as Byte
+
 
 'Program Start
 

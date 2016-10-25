@@ -15,6 +15,7 @@
 
   'Chip Settings.
   #chip 16f1829,4
+  #option explicit
   #config Osc = INT, MCLRE_OFF, PLLEN_ON, CLKOUTEN_OFF
 
   #include <chipino.h>
@@ -38,6 +39,8 @@
  'MASTER Second Port
   HI2C2Mode Master
 
+;----- Variables 
+  Dim DEVICEID, TESTID as Byte
 
 ; ----- Main body of program commences here.
          ' Now assumes Serial Terminal is operational

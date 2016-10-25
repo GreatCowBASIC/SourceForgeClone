@@ -15,18 +15,19 @@
 '''  IDE: GCB@SYN
 '''
 '''  Board: Xpress Evaluation Board
-'''  Date: 13.3.2016
+'''  Date: 19.10.2016
 '''
 
 ' ----- Configuration
     #chip 16f18855
+    #option explicit
     #Config FEXTOSC_OFF, RSTOSC_HFINT32
     #Config WRT_OFF, CPD_ON, MCLRE_ON
 
     'Set the PPS of the PWM and the RS232 ports.
     UNLOCKPPS
-      RC0PPS = 0x0010		  'RC0->EUSART:TX;
-      RXPPS  = 0x0011 		'RC1->EUSART:RX;
+      RC0PPS = 0x0010     'RC0->EUSART:TX;
+      RXPPS  = 0x0011     'RC1->EUSART:RX;
     LOCKPPS
 
     #define USART_BAUD_RATE 19200
@@ -40,7 +41,10 @@
 
     #define SWITCH      PORTA.5
 
-    dim mydelay, leds  as byte
+    dim leds  as byte
+    dim DIRECTION as Byte
+
+    dim mydelay as word
 
     'start from the right to left
     direction = LED_RIGHT
@@ -51,6 +55,7 @@
     'Potentitor is connected to RA4...set as input
     dir porta.4 in
 
+    dir portb.0 out
     'setup switch (SW1)
     dir SWITCH in
 
@@ -64,12 +69,24 @@
 
     do
 
-      mydelay = ReadAD10 ( AN4 ) / 4
-
+      'Show BYTE read of ADC just passing the Analog address - you will get an incorrect response as this is a 10bit ADC
+      mydelay = ReadAD ( AN4  )
       HSerPrint "P: "
       hserprint mydelay
       HSerSend 9
 
+
+      'Show BYTE read of ADC by using the 2nd parameter to force a byte response
+      mydelay = ReadAD ( AN4, TRUE )
+      HSerPrint "P: "
+      hserprint mydelay
+      HSerSend 9
+
+      'Show WORD read of ADC by using the 2nd parameter
+      mydelay = ReadAD10 ( AN4 )
+      HSerPrint "P: "
+      hserprint mydelay
+      HSerSend 9
 
       ' Factor the ADC reading to delay steps
       mydelay = mydelay / 16
@@ -160,4 +177,93 @@
 
   end Function
 
+''' GCB Optimisation file
 
+'Optmise PWM.h
+    #define USE_HPWMCCP1 TRUE
+    #define USE_HPWMCCP2 TRUE
+    #define USE_HPWMCCP3 TRUE
+    #define USE_HPWMCCP4 TRUE
+
+    #define USE_HPWM6 TRUE
+    #define USE_HPWM7 TRUE
+
+    #define USE_HPWM_TIMER2 TRUE
+    #define USE_HPWM_TIMER4 TRUE
+    #define USE_HPWM_TIMER6 TRUE
+
+'Optimise A-d.h
+    'Standard family chips
+    #define USE_AD0 FALSE
+    #define USE_AD1 FALSE
+    #define USE_AD2 FALSE
+    #define USE_AD2 FALSE
+    #define USE_AD3 FALSE
+    #define USE_AD4 TRUE
+    #define USE_AD5 FALSE
+    #define USE_AD6 FALSE
+    #define USE_AD7 FALSE
+    #define USE_AD8 FALSE
+    #define USE_AD9 FALSE
+    #define USE_AD10 FALSE
+    #define USE_AD11 FALSE
+    #define USE_AD12 FALSE
+    #define USE_AD13 FALSE
+    #define USE_AD14 FALSE
+    #define USE_AD15 FALSE
+    #define USE_AD16 FALSE
+    #define USE_AD17 FALSE
+    #define USE_AD18 FALSE
+    #define USE_AD19 FALSE
+    #define USE_AD20 FALSE
+    #define USE_AD21 FALSE
+    #define USE_AD22 FALSE
+    #define USE_AD23 FALSE
+    #define USE_AD24 FALSE
+    #define USE_AD25 FALSE
+    #define USE_AD26 FALSE
+    #define USE_AD27 FALSE
+    #define USE_AD28 FALSE
+    #define USE_AD29 FALSE
+    #define USE_AD30 FALSE
+    #define USE_AD31 FALSE
+    #define USE_AD32 FALSE
+    #define USE_AD33 FALSE
+    #define USE_AD34 FALSE
+
+    'Family of chips based on 16f1688x with ADCON3 register
+    #define USE_ADA0 FALSE
+    #define USE_ADA1 FALSE
+    #define USE_ADA2 FALSE
+    #define USE_ADA3 FALSE
+    #define USE_ADA4 TRUE
+    #define USE_ADA5 FALSE
+    #define USE_ADA6 FALSE
+    #define USE_ADA7 FALSE
+    #define USE_ADB0 FALSE
+    #define USE_ADB1 FALSE
+    #define USE_ADB2 FALSE
+    #define USE_ADB3 FALSE
+    #define USE_ADB4 FALSE
+    #define USE_ADB5 FALSE
+    #define USE_ADB6 FALSE
+    #define USE_ADB7 FALSE
+    #define USE_ADC0 FALSE
+    #define USE_ADC1 FALSE
+    #define USE_ADC2 FALSE
+    #define USE_ADC3 FALSE
+    #define USE_ADC4 FALSE
+    #define USE_ADC5 FALSE
+    #define USE_ADC6 FALSE
+    #define USE_ADC7 FALSE
+    #define USE_ADD0 FALSE
+    #define USE_ADD1 FALSE
+    #define USE_ADD2 FALSE
+    #define USE_ADD3 FALSE
+    #define USE_ADD4 FALSE
+    #define USE_ADD5 FALSE
+    #define USE_ADD6 FALSE
+    #define USE_ADD7 FALSE
+    #define USE_ADE0 FALSE
+    #define USE_ADE1 FALSE
+    #define USE_ADE2 FALSE

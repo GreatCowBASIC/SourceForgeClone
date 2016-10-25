@@ -14,6 +14,7 @@
 
 ; ----- Configuration
   #chip mega328p,16
+  #option explicit
   #include <glcd.h>
   #include <..\converters\AnobiumFull.BMP>
 
@@ -51,6 +52,8 @@
   byteNumber = 0
 
   dim lengthofpicture, ram_index as word
+  Dim BYTENUMBER, WIDTHOFPICTURE, HEIGHTOFPICTURE, ORGCHARLOCX, CURRCHARVAL, FIRSTPASS, CHARLOCY, CURRCHARROW, CHARLOCX, CCOUNT as Byte
+
 
   ' Display a BMP file
   GLCDCLS

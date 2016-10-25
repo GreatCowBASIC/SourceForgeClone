@@ -16,6 +16,7 @@
 
 ; ----- Configuration
   #Chip 16f1829, 32
+  #option explicit
   #config Osc = intOSC, MCLRE_ON
 
    ; ----- Define Hardware settings
@@ -29,6 +30,8 @@
 
    HI2CMode Master
 
+; ----- Variables 
+  Dim LOOPX as Byte
 
 ; ----- Main body of program commences here.
   dir portc out

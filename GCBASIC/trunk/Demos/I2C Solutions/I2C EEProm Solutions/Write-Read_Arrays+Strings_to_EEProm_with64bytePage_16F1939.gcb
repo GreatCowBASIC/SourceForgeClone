@@ -11,14 +11,15 @@
 ''':A 24LC256 uses 0x0A (thro to 0xAF), EEpromPageSize = 16 and eepAddr as Byte
 ''':A 24LC256 uses 0x0A (thro to 0xAF), EEpromPageSize = 64 and eepAddr as Word
 ''':
-'''@author 	Evan R. Venn
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	3rd  March 2016
+'''@author  Evan R. Venn
+'''@licence GPL
+'''@version 1.0a
+'''@date    3rd  March 2016
 '''********************************************************************************
 
 ; ----- Configuration
   #chip 16F1939, 32
+  #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
   #include <I2CEEPROM.h>
 
@@ -43,13 +44,15 @@
  wait 500 ms
 
 ; ----- Define Hardware settings
-  #define eepDev 0xA0								'Change this ADDRESS to suit
-  #define EEpromPageSize 64					'Change this typical 16, 32 or 64.
-  																	'This IS EEPROM device specific
+  #define eepDev 0xA0               'Change this ADDRESS to suit
+  #define EEpromPageSize 64         'Change this typical 16, 32 or 64.
+                                    'This IS EEPROM device specific
 
 ; ----- Variables
-  Dim eepAddr as Word								'Change this type Byte or Word.
-  																	'This IS EEPROM device specific. Smaller device with 16 byte page size are typically requird 'Dim eepAddr as byte'
+  Dim XLOOP as Byte
+
+  Dim eepAddr as Word               'Change this type Byte or Word.
+                                    'This IS EEPROM device specific. Smaller device with 16 byte page size are typically requird 'Dim eepAddr as byte'
                                     'Large devices will required 'Dim eepAddr as word'
 
   Dim datarray( EEpromPageSize )
@@ -71,7 +74,7 @@
   #endif
   HSerPrintCRLF 2
 
-	ArrayOps:
+  ArrayOps:
   ' Write an Array
         'populate the array, the array is 10 elements long
         datarray = 10,9,8,7,6,5,4,3,2,1
@@ -83,7 +86,7 @@
           HSerPrint datarray(xloop)
           if xloop < 10 then HSerPrint ","
         next
-				HSerPrintCRLF 2
+        HSerPrintCRLF 2
 
         'set EEProm start address for saving the array
         eepAddr = 0
@@ -99,7 +102,7 @@
           HSerPrint datarray(xloop)
           if xloop < 10 then HSerPrint ","
         next
-				HSerPrintCRLF 2
+        HSerPrintCRLF 2
 
         'set EEProm start address for reading the array
         eepAddr = 0
@@ -117,7 +120,7 @@
         HSerPrintCRLF 2
 
         stringOps:
-				HSerPrint "Start of string operations"
+        HSerPrint "Start of string operations"
         HSerPrintCRLF 2
 
 
@@ -142,7 +145,7 @@
 
         'empty string
         datastring = "XXXXXXXXXXXXXXXX"
-				HSerPrint "Populate the string with X's"
+        HSerPrint "Populate the string with X's"
         HSerPrintCRLF
         HSerPrint "    -:"
         HSerPrint datastring
@@ -153,13 +156,13 @@
           eeprom_rd_byte( eepDev, eepAddr , datastring(eepAddr) )
         next
 
-				HSerPrint "Read String from EEProm results"
+        HSerPrint "Read String from EEProm results"
         HSerPrintCRLF
         HSerPrint "    -:"
         HSerPrint datastring
         HSerPrintCRLF 2
         HSerPrint "End of string operations"
         HSerPrintCRLF
-  			wait 100 ms
+        wait 100 ms
         end
 ; ----- Support methods.  Subroutines and Functions

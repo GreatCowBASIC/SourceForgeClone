@@ -13,6 +13,7 @@
 'Chip Settings
 
 #chip mega2560, 16
+#option explicit
 
 'Include
 #include <glcd.h>
@@ -46,8 +47,9 @@
 #define GLCD_DB14 PORTA.6
 #define GLCD_DB15 PORTA.7
 
-
+Dim SYM, XAXIS as Byte
 Dim FColor as Word
+
 GLCDCLS SSD1289_Blue
 Wait 1 s
 GLCDPrint  75, 100, "GCBasic", SSD1289_Yellow, 2

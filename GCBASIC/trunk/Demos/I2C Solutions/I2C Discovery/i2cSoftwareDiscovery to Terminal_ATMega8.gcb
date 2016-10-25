@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip mega8,8
+  #option explicit
 
   #include "DisplayDevices.h"
 
@@ -32,6 +33,8 @@
    #define USART_BLOCKING
    wait 500 ms
 
+;----- Variables 
+  Dim TESTID as Byte
 
 ; ----- Main body of program commences here.
          ' Now assumes Serial Terminal is operational

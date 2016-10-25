@@ -16,6 +16,7 @@
 ; ----- Configuration
 
   #chip mega328p,16
+  #option explicit
   #include <UNO_mega328p.h>
 
 ; ----- Constants
@@ -46,6 +47,8 @@
 ; ----- Variables
   Dim PressedKey As byte
   Dim KeyBuffer(4)
+  Dim RESETBUFFER as Byte
+
 
 ; ----- Main body of program commences here.
   Do Forever

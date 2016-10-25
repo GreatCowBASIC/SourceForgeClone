@@ -11,6 +11,7 @@
 
 ; ----- Configuration
   #chip 16F886, 16
+  #option explicit
 
 ; ----- Define Hardware settings
   ' No hardware configuration is required as outputs and inputs are set automatically within the methods used.
@@ -19,7 +20,7 @@
   ' No Constants specified in this example.
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim COUNT as Byte
 
 
 ; ----- Main body of program commences here.

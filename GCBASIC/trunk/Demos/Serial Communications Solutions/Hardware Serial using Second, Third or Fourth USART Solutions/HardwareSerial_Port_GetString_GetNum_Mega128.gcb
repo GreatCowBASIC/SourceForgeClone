@@ -20,6 +20,7 @@
 
 ; ----- Configuration
 #chip mega128, 16
+#option explicit
 
 ; ----- Define USART settings
     'Set the pin directions
@@ -45,6 +46,7 @@
 ; ----- Variables
   Dim myNum as Word
   Dim myString as string
+  Dim INCHAR as Byte
 
 
 ; ----- Main body of program commences here.

@@ -27,14 +27,15 @@
 ''':    Evan R Venn/Anobium  ---  10/1/2015 - Minor improvements to cater for Oscicallor stopping
 ''':    Evan R Venn/Anobium  ---  11/1/2015 - added Hardware i2c support
 ''':
-'''@author          EvanV       	
-'''@licence	GPL
-'''@version	1.2a
-'''@date   	23.02.15
+'''@author          EvanV
+'''@licence GPL
+'''@version 1.2a
+'''@date    23.02.15
 '''********************************************************************************
 
 ; ----- Configuration
  #chip 16F1937, 32
+ #option explicit
  #config Osc = intOSC, MCLRE_ON, PLLEN_ON, VCAPEN_OFF
 
  #include <DS3231.h>
@@ -80,6 +81,7 @@
 
 ;----- Variables
 
+  Dim Alarm1track, Alarm2track, CENTURY_FLAG, POWERLOSS, EEPROMVAL, DAYSMAX, DAYSMAX as Byte
   dim changed as bit
   dim hour, min, sec, am_pm as byte
   dim oldsec as byte
@@ -699,5 +701,4 @@ end
 
 
   end sub
-
 

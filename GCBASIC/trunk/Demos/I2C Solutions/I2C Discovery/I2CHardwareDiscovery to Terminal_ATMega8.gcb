@@ -12,6 +12,7 @@
 
 ; ----- Configuration
   #chip mega8, 8
+  #option explicit
   #include "DisplayDevices.h"
 
 ; ----- Define Hardware settings
@@ -28,6 +29,9 @@
  #define SerSendDelayms 10
  #define USART_BLOCKING
  wait 500 ms
+
+;----- Variables 
+  Dim DEVICEID, TESTID as Byte
 
 ; ----- Main body of program commences here.
         ' Now assumes Serial Terminal is operational

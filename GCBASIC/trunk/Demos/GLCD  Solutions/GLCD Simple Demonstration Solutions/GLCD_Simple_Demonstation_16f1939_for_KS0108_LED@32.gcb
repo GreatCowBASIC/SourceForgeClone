@@ -10,6 +10,7 @@
 '''********************************************************************************
 
   #chip 16f1939,32
+  #option explicit
   #config Osc = INT, VCAPEN_OFF, MCLRE_On, PLLEN_ON, CLKOUTEN_OFF
 
   #include <glcd.h>
@@ -39,6 +40,8 @@
   'change to LED height, this, avoids set the 4 LED signals
   #define LED_GLCD_HEIGHT GLCD_HEIGHT-1
 
+
+      Dim BYTENUMBER, CCOUNT as Byte
 
       CCount = 0
       dim longNumber as long

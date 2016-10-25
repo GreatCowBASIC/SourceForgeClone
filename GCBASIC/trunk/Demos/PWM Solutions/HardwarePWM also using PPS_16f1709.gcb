@@ -11,6 +11,7 @@
 
 ; ----- Configuration
 #chip 16f1709, 4
+#option explicit
 #config osc=INT
 
 	'Set the PPS of the PWM and the RS232 ports.
@@ -33,7 +34,7 @@
 
 
 ; ----- Variables
-  ' No Variables specified in this example.
+  Dim BRIGHT as Byte
 
 
 ; ----- Main body of program commences here.

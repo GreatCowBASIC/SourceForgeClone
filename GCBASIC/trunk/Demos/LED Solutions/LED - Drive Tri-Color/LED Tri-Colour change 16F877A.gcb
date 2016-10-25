@@ -12,6 +12,7 @@
 ; ----- Configuration
 
   #chip 16F877A,16
+  #option explicit
 
 
 ; ----- Define Hardware settings
@@ -33,7 +34,7 @@
   #define Blue PORTB.0
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim REDLEVEL, GREENLEVEL, BLUELEVEL, FLASHRATE, PULSELOOP, LEVEL, RLTEMP as Byte
 
 
 

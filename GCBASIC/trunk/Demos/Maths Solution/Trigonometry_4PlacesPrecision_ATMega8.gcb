@@ -13,6 +13,7 @@
 ; ----- Configuration
 
  #chip mega8,8
+ #option explicit
 
  #include <Trig4Places.h>
 
@@ -26,7 +27,7 @@
 ; ----- Variables
  dim ii as integer
  dim outStr, valStr as string
-
+ Dim LENGTH as Byte
 
 ; ----- Main body of program commences here.
 

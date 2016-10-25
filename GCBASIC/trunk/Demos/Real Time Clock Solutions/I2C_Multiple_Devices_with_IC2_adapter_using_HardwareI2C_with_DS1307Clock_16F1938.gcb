@@ -33,6 +33,7 @@
 '''@date   	22.02.15
 '''********************************************************************************
   #chip 16f1938, 16
+  #option explicit
   #config mclr_on
   #include <Ds1307.h>
 
@@ -68,6 +69,8 @@
   #define modeBut     portb.1         ;Mode pushbutton
 
 ; ----- Variables
+
+  Dim LCD_I2C_ADDRESS_CURRENT, DAYSMAX, DAYSMAX as Byte
   dim changed as bit
   dim hour, min, sec, am_pm as byte
   dim oldsec as byte

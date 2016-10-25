@@ -11,6 +11,7 @@
 
 ; ----- Configuration
  #chip 18F14k50, 1
+ #option explicit
 
 ; ----- Define Hardware settings
   'Tx = Pin 10
@@ -32,7 +33,7 @@
   Wait 100 Ms
 
 ; ----- Variables
-  ' No Variables specified in this example. All byte variables are defined upon use.
+  Dim INCHAR as Byte
 
 ; ----- Main body of program commences here.
     'Message after reset

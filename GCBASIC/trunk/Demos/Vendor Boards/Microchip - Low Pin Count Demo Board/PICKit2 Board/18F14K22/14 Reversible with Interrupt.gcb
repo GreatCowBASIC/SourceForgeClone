@@ -30,6 +30,7 @@
 
 
  #Chip 18F14K22, 8
+ #option explicit
  #config MCLRE_OFF
 
  #define PULL_UPS                                  'if this is uncommented, the trace under JP5 can be cut
@@ -53,10 +54,9 @@
    #ifdef PULL_UPS
     'enable the weak pull-up for the switch
     WPUA2 = 1
-    'enable the global weak pull-up bit
-    nWPUEN = 0
   #endif
 
+  Dim _DIRECTION as Byte
 
   #define SWITCH_DOWN         0
   #define SWITCH_UP           1
@@ -130,4 +130,3 @@ sub InterruptHandler
     end if
 
 end sub
-

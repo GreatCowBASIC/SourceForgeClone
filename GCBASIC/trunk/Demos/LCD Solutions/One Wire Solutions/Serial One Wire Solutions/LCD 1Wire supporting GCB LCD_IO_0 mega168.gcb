@@ -20,6 +20,7 @@
 ; ----- Configuration
 
   #chip mega168, 16
+  #option explicit
 
   ; ----- Define Hardware settings
   'Set up the Serial Port
@@ -37,6 +38,8 @@
   #define LCDWriteByte MySendToLCD
   #define LCD_NO_RW
 
+;----- Variables
+  Dim DISPLAYEEPROMMESSAGE as Byte
 
 
 
