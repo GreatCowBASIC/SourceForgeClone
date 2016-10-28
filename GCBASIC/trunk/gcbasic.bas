@@ -621,7 +621,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-10-19"
+Version = "0.95.<<>> 2016-10-28"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3201,10 +3201,9 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 				Temp = " btfsc ": IF Act = "-" THEN Temp = " btfss "
 				If ChipFamily = 12 Then
 					TempVar = GetCalcVar("BYTE")
-					CurrLine = LinkedListInsert(CurrLine, " movlw 1")
 					CurrLine = LinkedListInsert(CurrLine, " movwf " + TempVar)
 					CurrLine = LinkedListInsert(CurrLine, Temp + "STATUS,C")
-					CurrLine = LinkedListInsert(CurrLine, " addwf " + TempVar + ",W")
+					CurrLine = LinkedListInsert(CurrLine, " incf " + TempVar + ",W")
 					FreeCalcVar TempVar
 				Else
 					CurrLine = LinkedListInsert(CurrLine, Temp + "STATUS,C")
