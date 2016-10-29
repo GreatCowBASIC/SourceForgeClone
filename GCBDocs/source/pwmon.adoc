@@ -1,3 +1,4 @@
+// Edit EvanV 171016 0,95.010.RC9+
 ==== PWMOn
 
 *Syntax:*
@@ -8,11 +9,13 @@
 *Command Availability:*
 
 Only available on Microchip PIC microcontrollers with Capture/Compare/PWM
-module.
+module CCP1.
+
+This command does not operate on any other CCP channel except for CCP1.
 
 *Explanation:*
 
-This command will enable the output of the PWM module on the Microchip PIC microcontroller.
+This command will enable the output of the CCP1/PWM module on the Microchip PIC microcontroller.
 
 *Example:*
 ----

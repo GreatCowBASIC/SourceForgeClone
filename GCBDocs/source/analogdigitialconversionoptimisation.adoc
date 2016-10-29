@@ -1,19 +1,26 @@
+// Edit EvanV 171016
 ==== Analog/Digital Conversion Code Optimisation
 
 *About Analog/Digital Conversion Code Optimisation*
 
-The analog to digital converter (ADC or A/D) module support is implemented by Great Cow BASIC to provide 8-bit, 10-bit and 12-bit Single channel measurement mode and Differential Channel Measurement with support up to 34 channels.
+The analog to digital converter (ADC or A/D) module support is implemented by Great Cow BASIC to provide 8-bit, 10-bit and 12-bit Single channel measurement mode and Differential Channel Measurement with support up to 34 channels.  For compatibility all channels are supported.
 
-For compatibility all channels are supported.
+There are two methods to optimise the code.
 
-To mimise the code, use the following to disable support for a channel AD0.
+1. To mimise the code, use the contstants to disable support for a specfic channels
+2. To adapt the ADC configuration by inserting specfic commands to set registers or register bits.
+
+*1. Minimise the code*
+
+
+The example below would disable support for ADC port 0 (AD0).
 
 ----
-		#define USE_AD0 FALSE
+    #define USE_AD0 FALSE
 ----
 
-The following tables show the `#define`s that can be used to reduce the code size - these are the defines for the standard microcontrollers.
-For 16f1688x devices please see the second table.
+The following tables show the #defines that can be used to reduce the code size - these are the defines for the standard microcontrollers.
+For 16f1688x and similar microcontrollers please see the second table.
 
 [cols=3, options="header,autowidth"]
 
@@ -291,7 +298,7 @@ For 16f1688x devices see the table below.
 
 
 
-This is a example - disables every channel except the specified channel by defineing every channel except USE_AD0 as FALSE.
+This is a example - disables every channel except the specified channel by defining every channel except USE_AD0 as FALSE.
 
 
 This will save 146 bytes of program memory.
@@ -384,19 +391,19 @@ For 16f18855 family of microcontrollers this is a example.  This will save 149 b
         #define USART_BAUD_RATE 19200
         #define USART_TX_BLOCKING
 
-        #define LEDD2	PORTA.0
-        #define LEDD3	PORTA.1
-        #define LEDD4	PORTA.2
-        #define LEDD5	PORTA.3
-        Dir 		LEDD2 OUT
-        Dir 		LEDD3 OUT
-        Dir 		LEDD4 OUT
-        Dir 		LEDD5 OUT
+        #define LEDD2 PORTA.0
+        #define LEDD3 PORTA.1
+        #define LEDD4 PORTA.2
+        #define LEDD5 PORTA.3
+        Dir     LEDD2 OUT
+        Dir     LEDD3 OUT
+        Dir     LEDD4 OUT
+        Dir     LEDD5 OUT
 
         #define SWITCH_DOWN         0
         #define SWITCH_UP           1
 
-        #define SWITCH      				PORTA.5
+        #define SWITCH              PORTA.5
 
 
         'Setup an Interrupt event when porta.5 goes negative.
@@ -418,7 +425,7 @@ For 16f18855 family of microcontrollers this is a example.  This will save 149 b
     sub InterruptHandler
 
         if IOCAF5 = 1 then                         'S2 was just pressed
-            IOCAN5 = 0														 'Prevent the event from reentering the InterruptHandler routine
+            IOCAN5 = 0                             'Prevent the event from reentering the InterruptHandler routine
             IOCAF5 = 0                             'We must clear the flag in software
 
             wait 5 ms                              'debounce by waiting and seeing if still held down
@@ -428,7 +435,7 @@ For 16f18855 family of microcontrollers this is a example.  This will save 149 b
                 'Write the value to register Zero in the EEPROM
                 EPWrite ( 0, adc_value )
             end if
-            IOCAN5 = 1															'ReEnable the InterruptHandler routine
+            IOCAN5 = 1                              'ReEnable the InterruptHandler routine
 
         end if
 
@@ -469,4 +476,26 @@ For 16f18855 family of microcontrollers this is a example.  This will save 149 b
     #define USE_ADE0 FALSE
     #define USE_ADE1 FALSE
     #define USE_ADE2 FALSE
+----
+
+*2. Adapt the ADC configuration*
+
+The following example will set the specific register bits.  The instruction will be added to the compiled code.
+
+----
+    #define ADReadPreReadCommand  ADCON.2=0:ANSELA.0=1
+----
+
+The constant *ADReadPreReadCommand* can be used to adapt the ADC methods. The constant can enable registers or register bit(s) that are required to managed for a specfic solution.
+
+In the example above the following ASM will be added to your code.  This WILL be added just before the ADC is enabled and the setting of the acquisition delay.
+
+----
+
+  ;ADReadPreReadCommand
+  banksel ADCON
+  bcf ADCON,2
+  banksel ANSELA
+  bsf ANSELA,0
+
 ----

@@ -1,3 +1,4 @@
+// Edit EvanV 171016
 ==== HPWM 10 Bit
 
 *Syntax:*
@@ -17,7 +18,7 @@ This command sets up the hardware PWM module of the Microchip PIC microcontrolle
 a PWM waveform of the given frequency and duty cycle. Once this command
 is called, the PWM will be emitted until PWMOff is called.
 
-`_channel_` is 6 or 7, and corresponds to the PMW6 or PMW6
+`_channel_` is 5, 6 or 7. These corresponds to the HPWM5, HPWM6 or HPWM7
 respectively.
 
 `_frequency_` sets the frequency of the PWM output. It is measured in KHz.
@@ -51,12 +52,12 @@ ranges from 0 to 255 where 255 is 100% duty cycle.
         'Turn up brightness over 2.5 seconds
         For Bright = 1 to 255
             HPWM 6, 40, Bright, 2
-            wait 25 ms
+            wait 10 ms
         next
         'Turn down brightness over 2.5 seconds
         For Bright = 255 to 1
             HPWM 6, 40, Bright, 2
-            wait 25 ms
+            wait 10 ms
         next
     loop
 ----

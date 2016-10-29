@@ -3,7 +3,7 @@
 *Syntax:*
 [subs="quotes"]
 ----
-	SerPrint _channel, value_
+  SerPrint _channel, value_
 ----
 *Command Availability:*
 
@@ -12,7 +12,7 @@ Available on all microcontrollers.
 *Explanation:*
 
 `SerPrint` is used to send a value over the serial connection. `_value_` can
-be a string, integer, word or byte - `SerPrint` is very similar to `Print`.
+be a string, integer, long, word or byte.
 
 `_channel_` is the serial connection to send data through (1 | 2 |3 ).
 
@@ -45,22 +45,26 @@ to a terminal, these commands should follow `SerPrint`.
     #define LCD_DB7 PORTC.1
 
     'Serial settings
-    #define SerInPort PORTB.6
-    #define SerOutPort PORTB.7
+    #define RS232Out PORTB.0
+    #define RS232In  PORTB.1
 
-    #define SendAHigh Set SerOutPort Off
-    #define SendALow Set SerOutPort On
-    #define RecAHigh SerInPort Off
-    #define RecALow SerInPort On
+    'Set pin direction
+    Dir RS232Out Out
+    Dir RS232In In
+
+    'Config Software-UART
+    #define SendAHigh Set RS232Out ON
+    #define SendALow Set RS232Out OFF
+    #define RecAHigh Set RS232In ON
+    #define RecALow Set RS232In OFF
+    set RS232Out On
 
     Do
       'Potentiometer
       #define POT_PORT PORTA.0
       #define POT_AN AN0
 
-      'Set pin directions
-      Dir SerOutPort Out
-      Dir SerInPort In
+      'Set pin direction
       Dir POT_PORT In
 
       'Create buffer variables to store received messages

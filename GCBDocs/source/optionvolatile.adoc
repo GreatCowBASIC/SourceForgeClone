@@ -1,10 +1,11 @@
-=== #option volatile
+// Edit EvanV 171016
+=== #Option Volatile
 
 *Syntax:*
 ----
     #option volatile `bit`
 ----
-This option ensure port assigns are glith-free.
+This option ensure port setting are glitch-free.
 
 *Introduction:*
 

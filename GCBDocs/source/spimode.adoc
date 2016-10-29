@@ -43,7 +43,7 @@ _SPIClockMode_ is an optional parameter to set the mode of the SPI clock mode. T
 |===
 You can alternatively use constants to set the SPIClockMode as follows:
 ----
-    SPIMode ( MasterFast, _SPI_CPOL_n_ + _SPI_CPHA_n_ )
+    SPIMode ( MasterFast, SPI_CPOL_n + SPI_CPHA_n )
 ----
 Where the following parameters can be used as a calculation to set the SPIClockMode.
 [cols=2, options="header,autowidth"]

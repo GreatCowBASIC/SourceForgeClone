@@ -10,20 +10,21 @@ To mimise the code, use the following to disable support for a specific Capture/
 
 ----
 
-		#define USE_HPWMCCP1 FALSE
-		#define USE_HPWMCCP2 FALSE
-		#define USE_HPWMCCP3 FALSE
-		#define USE_HPWMCCP4 FALSE
+    #define USE_HPWMCCP1 FALSE
+    #define USE_HPWMCCP2 FALSE
+    #define USE_HPWMCCP3 FALSE
+    #define USE_HPWMCCP4 FALSE
 
 ----
 
 
-To further mimise the code, use the following to disable support for a specific PWM channels.  Only PWM channels 6 and 7 are supported.
+To further mimise the code, use the following to disable support for a specific PWM channels.  Only PWM channels 5, 6 and 7 are supported.
 
 ----
 
-		#define USE_HPWM6 FALSE
-		#define USE_HPWM7 FALSE
+    #define USE_HPWM5 FALSE
+    #define USE_HPWM6 FALSE
+    #define USE_HPWM7 FALSE
 
 ----
 
@@ -31,9 +32,9 @@ To further mimise the code, use the following to disable support for a specific 
 
 ----
 
-		#define USE_HPWM_TIMER2 TRUE
-		#define USE_HPWM_TIMER4 TRUE
-		#define USE_HPWM_TIMER6 TRUE
+    #define USE_HPWM_TIMER2 TRUE
+    #define USE_HPWM_TIMER4 TRUE
+    #define USE_HPWM_TIMER6 TRUE
 
 ----
 
@@ -50,7 +51,7 @@ This will save 335 bytes of program memory by removing support for CCP1, CCP2 an
     #Config WRT_OFF, CPD_ON, MCLRE_ON
 
     UNLOCKPPS
-        RC2PPS = 0x0A		    'RC2->CCP2:CCP2;
+        RC2PPS = 0x0A       'RC2->CCP2:CCP2;
     LOCKPPS
 
     #define USE_HPWMCCP1 FALSE       ' This is not used so optimise

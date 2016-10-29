@@ -1,16 +1,16 @@
-==== SSD1306 Controllers
+==== SH1106 Controllers
 
-See below for an example of using the SSD1306 GLCD.   This section contains the relevant information for this type of device.
+See below for an example of using the SH1106 GLCD.   This section contains the relevant information for this type of device.
 
 The Great Cow BASIC constants for control of the connectivity are shown in the table below.
 The only connectivity option is I2C BUS.  I2C is the connectivity between the microcontroller and the GLCD to control the data bus.
 
-To use the SSD1306 drivers simply include the following.  The I2C setup/configuration commands must be included.
+To use the SH1106 drivers simply include the following.  The I2C setup/configuration commands must be included.
 ----
     #include <glcd.h>
 
     ; ----- Define GLCD Hardware settings
-    #define GLCD_TYPE GLCD_TYPE_SSD1306
+    #define GLCD_TYPE GLCD_TYPE_SH1106
     #define GLCD_I2C_Address 0x78
 
     ; ----- Define Hardware settings
@@ -30,7 +30,7 @@ The Great Cow BASIC constants for control display characteristics are shown in t
 |*Options*
 
 |`GLCD_TYPE`
-|`GLCD_TYPE_SSD1306`
+|`GLCD_TYPE_SH1106`
 |Required
 
 |`GLCD_I2C_Address`
@@ -110,46 +110,25 @@ specific attribute.
 |`bytevariable = GLCDReadByte`
 |===
 
-The Great Cow BASIC specific commands for this GLCD are shown in the table below.
+The additional Great Cow BASIC commands for this GLCD are shown in the table below.
 [cols="1,1", options="header,autowidth"]
 |===
 |Command
 |Purpose
 
-|`Stopscroll_SSD1306`
-|Stops all scrolling
+|`GLCDSetDisplayInvertMode`
+|Inverts the display
 
-|`Startscrollright_SSD1306 ( start , stop [,scrollspeed] )`
-|Activate a right handed scroll for rows start through stop
-Hint, the display is 16 rows tall. To scroll the whole display, execute: +
-`startscrollright_SSD1306(0x00, 0x0F)` +
-Parameters are `Start row`, `End row`, optionally `Scrollspeed`
-
-|`Startscrollleft_SSD1306 ( start , stop [,scrollspeed] )`
-|Activate a left handed scroll for rows start through stop
-Hint, the display is 16 rows tall. To scroll the whole display, execute: +
-`startscrollleft_SSD1306(0x00, 0x0F)` +
-Parameters are `Start row`, `End row`, optionally `Scrollspeed`
-
-|`Startscrolldiagright_SSD1306 ( start , stop [,scrollspeed] )`
-|Activate a diagright handed scroll for rows start through stop
-Hint, the display is 16 rows tall. To scroll the whole display, execute: +
-`startscrolldiagright_SSD1306(0x00, 0x0F)` +
-Parameters are `Start row`, `End row`, optionally `Scrollspeed`
-
-|`Startscrolldiagleft_SSD1306 ( start , stop [,scrollspeed] )`
-|Activate a diagleft handed scroll for rows start through stop
-Hint, the display is 16 rows tall. To scroll the whole display, execute: +
-`startscrolldiagleft_SSD1306(0x00, 0x0F)` +
-Parameters are `Start row`,`End row`, optionally `Scrollspeed`
+|`GLCDSetDisplayNormalMode`
+|Set the display to normal mode
 
 |`SetContrast ( dim_state )`
 |Sets the constrast to select 1 out of 256 contrast steps. Contrast increases as the value increases. +
 Parameter is dim value
 |===
-For a SSD1306 datasheet, please refer http://gcbasic.sourceforge.net/library/DISPLAY/SSD1306.pdf[here].
+For a SH1106 datasheet, please refer http://gcbasic.sourceforge.net/library/DISPLAY/SH1106.pdf[here].
 
-This example shows how to drive a SSD1306 based Graphic LCD module with the built in commands of Great Cow BASIC.
+This example shows how to drive a SH1106 based Graphic LCD module with the built in commands of Great Cow BASIC.
 ----
 ; ----- Configuration
     #chip mega328p,16
@@ -162,12 +141,12 @@ This example shows how to drive a SSD1306 based Graphic LCD module with the buil
     HI2CMode Master
 
     ; ----- Define GLCD Hardware settings
-    #define GLCD_TYPE GLCD_TYPE_SSD1306
+    #define GLCD_TYPE GLCD_TYPE_SH1106
     #define GLCD_I2C_Address 0x78
 
     GLCDCLS
     GLCDPrint 0, 0, "Great Cow BASIC"
-    GLCDPrint (0, 16, "Anobium 2015")
+    GLCDPrint (0, 16, "Anobium 2016")
 
     wait 3 s
     GLCDCLS

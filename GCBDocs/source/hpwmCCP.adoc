@@ -1,3 +1,4 @@
+// Edit EvanV 171016
 ==== HPWM CCP
 
 *Syntax:*
@@ -10,7 +11,7 @@
 Only available on Microchip PIC microcontrollers with Capture/Compare/PWM (CCP)
 module.
 
-This command supports the CCP model only for PWM 10 Bit support, see here <<_hpwm_10_bit,HPWM 10 Bit>>
+This command supports the CCP 8 bit support with Timer 2 only.  For PWM 10 Bit support with only timer see here <<_hpwm_10_bit,HPWM 10 Bit>>
 
 *Explanation:*
 
@@ -20,7 +21,7 @@ is called, the PWM will be emitted until PWMOff is called. If you only
 need one particular frequency and duty cycle, you should use PWMOn and
 the constants PWM_Freq and PWM_Duty instead.
 
-`_channel_` is 1 or 2, and corresponds to the pins CCP1 and CCP2
+`_channel_` is 1, 2, 3, 4 or 5, and corresponds to the pins CCP1, CCP2, CCP3, CCP4 and CCP5
 respectively. On chips with only one CCP port, pin CCP or CCP1 is always
 used, and `_channel_` is ignored. (It should be set to 1 anyway to allow
 for future upgrades to more powerful microcontrollers.)
@@ -58,12 +59,12 @@ This will not cause any issue when using `HPWM` and `PWMOff` in the same program
         'Turn up brightness over 2.5 seconds
         For Bright = 1 to 255
             HPWM 1, 40, Bright
-            wait 25 ms
+            wait 10 ms
         next
         'Turn down brightness over 2.5 seconds
         For Bright = 255 to 1
             HPWM 1, 40, Bright
-            wait 25 ms
+            wait 10 ms
         next
     loop
 ----
