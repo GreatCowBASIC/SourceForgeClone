@@ -1,4 +1,5 @@
-=== #option nolatch
+// Edit EvanV 171016
+=== #Option NoLatch
 
 *Syntax:*
 ----
@@ -26,4 +27,3 @@ the data value held in the port latch, regardless of the state of the actual pin
 *Note:*
 
 You can use the `#option nolatch` if problems occur with compiler redirection.
-

@@ -63,6 +63,8 @@ include::subroutines.adoc[]
 
 include::variables.adoc[]
 
+// include::referencing.adoc[]
+
 include::converters.adoc[]
 
 ifdef::backend-pdf[<<<]
@@ -70,6 +72,8 @@ ifdef::backend-pdf[<<<]
 
 ifdef::backend-pdf[<<<]
 === Analog/Digital conversion
+
+This is the Analog/Digital conversion section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::analogdigitialconversionoverview.adoc[]
 
@@ -88,6 +92,8 @@ include::analogdigitialconversionoptimisation.adoc[]
 ifdef::backend-pdf[<<<]
 === Bitwise
 
+This is the Bitwise section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::Bitwiseoperationsoverview.adoc[]
 
 include::FnLsL.adoc[]
@@ -96,6 +102,8 @@ include::FnLSR.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Eeprom
+
+This is the Eeprom section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::epread.adoc[]
 
@@ -110,10 +118,14 @@ include::programwrite.adoc[]
 ifdef::backend-pdf[<<<]
 === Hefm
 
+This is the Hefm section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::hefm.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Flow control
+
+This is the Flow control section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::do.adoc[]
 
@@ -142,6 +154,8 @@ include::wait.adoc[]
 ifdef::backend-pdf[<<<]
 === Interrupts
 
+This is the Interrupt section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::interrupts.adoc[]
 
 include::intoff.adoc[]
@@ -155,6 +169,8 @@ include::onintteruptthedefaulthandler.adoc[]
 ifdef::backend-pdf[<<<]
 === Keypad
 
+This is the Keypad section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::relevantconstantskeys.adoc[]
 
 include::keypaddata.adoc[]
@@ -163,6 +179,8 @@ include::keypadraw.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Graphical LCD
+
+This is the GLCD section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::glcdoverview.adoc[]
 
@@ -175,6 +193,8 @@ include::ks0108controllers.adoc[]
 include::pcd8544controllers.adoc[]
 
 include::sdd1289controllers.adoc[]
+
+include::sh1106controllers.adoc[]
 
 include::ssd1306controllers.adoc[]
 
@@ -248,11 +268,16 @@ include::pset.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Touch Screen
+
+This is the Touch Screen section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::ADS7843SerialDriver.adoc[]
 
 
 ifdef::backend-pdf[<<<]
 === Liquid Crystal Display
+
+This is the LCD section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::relevantconstantslcd.adoc[]
 
@@ -324,7 +349,9 @@ include::eightwirelcdexample.adoc[]
 include::lcd_io10example.adoc[]
 
 ifdef::backend-pdf[<<<]
-=== Pulse with modulation
+=== Pulse width modulation
+
+This is the Pulse width modulation section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::relevantconstants.adoc[]
 
@@ -343,6 +370,8 @@ include::hpwmoptimisation.adoc[]
 ifdef::backend-pdf[<<<]
 === Random Numbers
 
+This is the Random Numbers section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::overview_random.adoc[]
 
 include::random.adoc[]
@@ -351,6 +380,9 @@ include::randomize.adoc[]
 
 ifdef::backend-pdf[<<<]
 === 7-Segment Displays
+
+This is the 7-Segment Displays section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 
 include::7segmentdisplaysoverview.adoc[]
 
@@ -369,6 +401,9 @@ include::displaychar.adoc[]
 ifdef::backend-pdf[<<<]
 === One Wire Devices
 
+This is the One Wire Devices section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
+
 include::ds18b20.adoc[]
 
 include::readdigitaltemp.adoc[]
@@ -379,6 +414,8 @@ include::readtemp12.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Serial Communications
+
+This is the Serial Communications section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 ==== RS232 (software)
 
@@ -396,6 +433,10 @@ include::serprint.adoc[]
 
 ifdef::backend-pdf[<<<]
 === RS232 (hardware)
+
+
+This is the RS232 (hardware) section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 
 include::usartrelevantconstants.adoc[]
 
@@ -418,6 +459,8 @@ include::hserprintcrlf.adoc[]
 ifdef::backend-pdf[<<<]
 === PS/2
 
+This is the PS/2 section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::overview_ps2.adoc[]
 
 include::inkey.adoc[]
@@ -431,12 +474,16 @@ include::ps2writebyte.adoc[]
 ifdef::backend-pdf[<<<]
 === SPI
 
+This is the Serial Peripheral Interface section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::spimode.adoc[]
 
 include::spitransfer.adoc[]
 
 ifdef::backend-pdf[<<<]
 === I2C Software
+
+This is the I2C Software section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::overview.adoc[]
 
@@ -460,6 +507,8 @@ include::i2cstop.adoc[]
 
 ifdef::backend-pdf[<<<]
 === I2C/TWI Hardware Module
+
+This is the I2C/TWI section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::hi2coverview.adoc[]
 
@@ -490,6 +539,8 @@ include::HI2CWaitMSSP.adoc[]
 ifdef::backend-pdf[<<<]
 === Sound
 
+This is the Sound section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::relevantconstantssound.adoc[]
 
 include::tone.adoc[]
@@ -498,10 +549,12 @@ include::shorttone.adoc[]
 
 include::play.adoc[]
 
-include::playRTTL.adoc[]
+include::playRTTTL.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Timers
+
+This is the Timers section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::timeroverview.adoc[]
 
@@ -542,11 +595,15 @@ include::readingtimers.adoc[]
 ifdef::backend-pdf[<<<]
 === Variables Operations
 
+This is the Variables Operations section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::usingvariables.adoc[]
 
 include::constantsandmoreonsettingvariables.adoc[]
 
 include::settingvariables.adoc[]
+
+include::variablelifecycle.adoc[]
 
 include::dim.adoc[]
 
@@ -564,6 +621,8 @@ include::swap.adoc[]
 
 ifdef::backend-pdf[<<<]
 === String Manipulation
+
+This is the String Manipulation section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::asc.adoc[]
 
@@ -610,6 +669,8 @@ include::concatenation.adoc[]
 ifdef::backend-pdf[<<<]
 === Miscellaneous Commands
 
+This is the Miscellaneous Commands section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 include::dir.adoc[]
 
 include::pot.adoc[]
@@ -628,6 +689,9 @@ include::weakpullups.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Maths
+
+This is the Maths section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 
 include::abs.adoc[]
 
@@ -658,6 +722,10 @@ include::trigonometryatan.adoc[]
 ifdef::backend-pdf[<<<]
 === Peripheral Pin Select
 
+This is the Peripheral Pin Select section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
+
+
 include::ppsintro.adoc[]
 
 include::UNLOCKPPS.adoc[]
@@ -666,6 +734,8 @@ include::lockpps.adoc[]
 
 ifdef::backend-pdf[<<<]
 == Compiler Directives
+
+This is the Compiler Directives section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::chip.adoc[]
 
@@ -692,6 +762,13 @@ include::otherdirectives.adoc[]
 ifdef::backend-pdf[<<<]
 == Compiler Options
 
+This is the Compiler Options section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
+
+include::optionexplicit.adoc[]
+
+include::optionnoconfig.adoc[]
+
 include::optionbootloader.adoc[]
 
 include::optionnocontextsave.adoc[]
@@ -703,15 +780,25 @@ include::optionvolatile.adoc[]
 ifdef::backend-pdf[<<<]
 == Using Assembler
 
+This is the Using Assembler section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
+
+
 include::assembleroverview.adoc[]
 
 ifdef::backend-pdf[<<<]
 == Macros
 
+This is the Macros section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
+
 include::macrosoverview.adoc[]
 
 ifdef::backend-pdf[<<<]
 === Example Macros
+
+This is the Example Macros section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
 
 include::measuringapulsewidth.adoc[]
 
@@ -749,11 +836,16 @@ include::trigonometrycircles.adoc[]
 ifdef::backend-pdf[<<<]
 == Great Cow Graphical BASIC
 
+This is the Great Cow Graphical BASIC section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
+
+
 include::codedocumentation.adoc[]
 
 include::windowsnet.adoc[]
 
 ifdef::backend-pdf[<<<]
 == Great Cow BASIC for Linux
+
+This is the Great Cow BASIC for Linux section of the Help file.  Please refer the sub-sections for details using the contents/folder view.
 
 include::linuxoverview.adoc[]

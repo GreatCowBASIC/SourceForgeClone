@@ -1,5 +1,7 @@
 === Serial/RS232 Buffer Ring
 
+// Edit EvanV 01092016 to show buffer element 0 can be part of the buffer.
+
 *Explanation:*
 
 This program demonstrates how to create a serial input buffer ring.
@@ -20,7 +22,7 @@ Testing `bkbhit` will set to True when a byte has been received. Reading the fun
     ' Define the USART port
     #define USART_BAUD_RATE 9600
     #define USART_BLOCKING true
-    ' [[change to your config] Ensure these port addresses are correct
+    ' [change to your config] Ensure these port addresses are correct
     #define SerInPort PORTc.7
     #define SerOutPort PORTc.6
     'Set pin directions
@@ -43,9 +45,9 @@ Testing `bkbhit` will set to True when a byte has been received. Reading the fun
     #define BUFFER_SIZE 8
     #define bkbhit (next_in <> next_out)
     ;Variables
-    Dim buffer(BUFFER_SIZE)
-    Dim next_in as byte: next_in = 1
-    Dim next_out as byte: next_out = 1
+    Dim buffer( BUFFER_SIZE - 1 ) 'we will use element 0 in the array as part of out buffer
+    Dim next_in as byte: next_in = 0
+    Dim next_out as byte: next_out = 0
     Dim syncbyte as Byte
 
     syncbyte = 0x55 ' you can use 255 - your choice
@@ -82,4 +84,5 @@ Testing `bkbhit` will set to True when a byte has been received. Reading the fun
         bgetc = buffer(next_out)
         next_out=(next_out+1) % BUFFER_SIZE
     end Function
+
 ----

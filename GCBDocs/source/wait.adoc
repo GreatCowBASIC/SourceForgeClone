@@ -6,12 +6,12 @@
 
 *_Fixed Length Delay:_*
 ----
-    Wait _time units_
+    Wait time units
 ----
 
 *_Conditional Delay:_*
 ----
-    Wait {While | Until} _condition_
+    Wait {While | Until} condition
 ----
 
 *Command Availability:*

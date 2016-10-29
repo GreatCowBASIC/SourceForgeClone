@@ -1,3 +1,4 @@
+// Edit EvanV 171016
 ==== ReadAD12
 
 *Syntax:*
@@ -15,8 +16,10 @@ For a Differential Channel read use the following. Where ANpX is the positive po
 *Command Availability:*
 
 When using *ReadAD12* ( ANX ) the returned value is an 12 bit number [0-4095]. The user variable can be a word, integer or long.
+
 When using *ReadAD12* ( ANpX , ANnY ) the returned value is an integer as negative values can be returned.
-ReadAD12  is a function that can be used to read the built-in analog to digital converter that many microcontroller chips include. Port should be AN0, AN1, AN2, etc., up to the number of analog inputs available on the chip that is in use. Those familiar with Atmel AVR microcontrollers can also refer to the ports as ADC0, ADC1, etc. Refer to the datasheet for the microcontroller chip to find the number of ports available. (Note: it's perfectly acceptable to use ANx on AVR, or ADCx on the microcontroller.)
+
+*ReadAD12*  is a function that can be used to read the built-in analog to digital converter that many microcontroller chips include. Port should be specified as AN0, AN1, AN2, etc., up to the number of analog inputs available on the chip that is in use. Those familiar with Atmel AVR microcontrollers can also refer to the ports as ADC0, ADC1, etc. Refer to the datasheet for the microcontroller chip to find the number of ports available. (Note: it's perfectly acceptable to use ANx on AVR, or ADCx on the microcontroller.)
 
 Another function, *ReadAD10* is similar to *ReadAD12*. The only difference is that it returns a 10 bit number.
 

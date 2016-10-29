@@ -19,8 +19,8 @@ These Great Cow BASIC methods generate tones of a given frequency and duration.
 |Play
 |Play a tune string.  The format of the string is the QBASIC play command.
 
-|PlayRTTL
-|Play a tune string.  The format of the string is the Nokia cell phone RTTL format.
+|PlayRTTTL
+|Play a tune string.  The format of the string is the Nokia cell phone RTTTL format.
 
 |===
 
