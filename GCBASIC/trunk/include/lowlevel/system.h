@@ -31,6 +31,8 @@
 ;    27072016 - Added support for OSCCON1 config
 ;    01082016 - Removed new command support
 ;    04102016 - Added OSCCAL Support
+;    14112016 - Revised OSCCAL Support
+
 'Constants
 #define ON 1
 #define OFF 0
@@ -61,12 +63,14 @@ Sub InitSys
   '#Endif
   'This loads the saved calibration data from the last flash memory location at POR or any time the chip is reset.
 
-  #Ifdef PIC
-       #Ifdef Var(OSCCAL)
-             movwf OSCCAL
-      #Endif
-  #Endif
-
+    #ifdef PIC
+        #ifdef Var(OSCCAL)
+            #ifdef  chipfamily 14
+                 CALL 0x3ff
+            #endif
+            movwf osccal
+        #endif
+    #endif
 
   'Set up internal oscillator
   #IFNDEF Var(OSCCON)
