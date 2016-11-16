@@ -1,5 +1,5 @@
 '    7 Segment LED/LCD display routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2016 Hugh Considine, Evan R. Venn and Kent Shafer
+'    Copyright (C) 2006 - 2016 Hugh Considine, Evan R. Venn, Kent Shafer and Mike Otte
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,9 @@
 '            Also extended the DisplayValue to support 0x0 to 0xF. It was 0x0 to 0x9. Also added an example to an update to the help file.
 ; 1/4/2014:  Added two new defines, #define 7Seg_CommonAnode, and #define 7Seg_HighSide to support common anode devices and high side drivers
 ' 9/10/2016: Revised to support turning off the selects and added Deselect(S)
-
+'26/10/2016 changed selects, added dot parameter to DisplayValue to display decimal point
+'16/11/2016 revised to correct commonanode support
+'16/11/2016 revised to add decimal point and - to DisplayChar
 
 'When using DisplayPortx constants, the following setup is assumed:
 ' PIC Pin   Display Segment
@@ -184,31 +186,55 @@ Table SevenSegDispLetter
   27 'Z
 End Table
 
-'Write integer between 0 and 9 inclusive
-Sub DisplayValue(In DispPort, In DispChar)
-
-  'Convert to code for output
-  ReadTable SevenSegDispDigit, DispChar + 1, DispTemp
+'Write raw values to the device
+Sub DisplaySegment(In DispPort, In DispTemp)
 
   'Select display and show integer
   DisplaySevenSeg
 
 End Sub
 
+'Write integer between 0 and 9 inclusive
+Sub DisplayValue(In DispPort, In DispChar, Optional In Dot = 0 )
+
+  'Convert to code for output
+  ReadTable SevenSegDispDigit, DispChar + 1, DispTemp
+  'Add decimal point if dot = 1
+  If Dot.0 = 1 Then DispTemp= DispTemp OR 128
+  'Select display and show integer
+  DisplaySevenSeg
+
+End Sub
+
 'Write ASCII character
-Sub DisplayChar(In DispPort, In DispChar)
+Sub DisplayChar(In DispPort, In DispChar, Optional In Dot = 0 )
 
   'Only accept letters A-Z
   'Space
-  If DispChar = 32 Then DispTemp = 0: Goto ShowChar
+  If DispChar = 32 Then
+      DispTemp = 0
+      Goto ShowChar
+  End if
+
+  ' -
+  If DispChar = 45 Then
+      DispTemp = 64
+      Goto ShowChar
+  End if
+
   'Numbers
   If DispChar >= 48 And DispChar <= 57 Then
     ReadTable SevenSegDispDigit, DispChar - 47, DispTemp
     Goto ShowChar
   End If
+
   If DispChar < 65 Then Exit Sub
   'Convert to upper case
-  If DispChar > 96 Then DispChar = DispChar - 32
+
+  If DispChar > 96 Then
+      DispChar = DispChar - 32
+  End if
+
   'Exit if not a letter
   If DispChar > 90 Then Exit Sub
 
@@ -216,6 +242,8 @@ Sub DisplayChar(In DispPort, In DispChar)
   ReadTable SevenSegDispLetter, DispChar - 64, DispTemp
 
 ShowChar:
+  'Add decimal point if dot = 1
+  If Dot.0 = 1 Then DispTemp= DispTemp OR 128
   DisplaySevenSeg
 End Sub
 
@@ -384,30 +412,28 @@ Macro DisplaySevenSeg
 
 
   #endif
-
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   'Whole port code using DisplayPortx
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
   #ifndef DISP_SEG_A
-
+     'Select new display
+    'Commands to Deselect
+    #ifdef DispDeSelectA
+     DispDeSelectA
+    #endif
+    #ifdef DispDeSelectB
+     DispDeSelectB
+    #endif
+    #ifdef DispDeSelectC
+     DispDeSelectC
+    #endif
+    #ifdef DispDeSelectD
+     DispDeSelectD
+    #endif
     #ifdef 7Seg_CommonAnode
       DispTemp = NOT DispTemp
     #endif
     #ifdef 7Seg_HighSide  'pnp/pfet highside driver
-      'Pins to select
-      'Turn all off
-      #ifdef DISP_SEL_1
-        Set DISP_SEL_1 On
-      #endif
-      #ifdef DISP_SEL_2
-        Set DISP_SEL_2 On
-      #endif
-      #ifdef DISP_SEL_3
-        Set DISP_SEL_3 On
-      #endif
-      #ifdef DISP_SEL_4
-        Set DISP_SEL_4 On
-      #endif
-    #endif
-    #ifndef 7Seg_HighSide 'CommonCathode or npn/nfet high side CommonAnode
       'Pins to select
       'Turn all off
       #ifdef DISP_SEL_1
@@ -423,13 +449,26 @@ Macro DisplaySevenSeg
         Set DISP_SEL_4 Off
       #endif
     #endif
+    #ifndef 7Seg_HighSide 'CommonCathode or npn/nfet high side CommonAnode
+      'Pins to select
+      'Turn all off
+      #ifdef DISP_SEL_1
+        Set DISP_SEL_1 On
+      #endif
+      #ifdef DISP_SEL_2
+        Set DISP_SEL_2 On
+      #endif
+      #ifdef DISP_SEL_3
+        Set DISP_SEL_3 On
+      #endif
+      #ifdef DISP_SEL_4
+        Set DISP_SEL_4 On
+      #endif
+    #endif
     #ifdef DisplayPortA
       #ifdef OneOf(DisplayPortB, DisplayPortC, DisplayPortD)
         If DispPort = 1 Then
       #endif
-        #ifdef DispSelectA
-          DispSelectA
-        #endif
         #ifdef 7Seg_HighSide  'pnp/pfet highside driver
           #ifdef DISP_SEL_1
             Set DISP_SEL_1 Off
@@ -455,8 +494,8 @@ Macro DisplaySevenSeg
           #endif
         #endif
 
-        #ifdef DispDeSelectA
-          DispDeSelectA
+        #ifdef DispSelectA
+          DispSelectA
         #endif
 
       #ifdef OneOf(DisplayPortB, DisplayPortC, DisplayPortD)
@@ -465,9 +504,7 @@ Macro DisplaySevenSeg
     #endif
     #ifdef DisplayPortB
       If DispPort = 2 Then
-        #ifdef DispSelectB
-          DispSelectB
-        #endif
+
         #ifdef 7Seg_HighSide  'pnp/pfet highside driver
           #ifdef DISP_SEL_2
             Set DISP_SEL_2 Off
@@ -493,17 +530,15 @@ Macro DisplaySevenSeg
           #endif
         #endif
 
-        #ifdef DispDeSelectB
-          DispDeSelectB
+        #ifdef DispSelectB
+          DispSelectB
         #endif
 
       End If
     #endif
     #ifdef DisplayPortC
       If DispPort = 3 Then
-        #ifdef DispSelectC
-          DispSelectC
-        #endif
+
         #ifdef 7Seg_HighSide  'pnp/pfet highside driver
           #ifdef DISP_SEL_3
             Set DISP_SEL_3 Off
@@ -529,17 +564,15 @@ Macro DisplaySevenSeg
           #endif
         #endif
 
-        #ifdef DispDeSelectC
-          DispDeSelectC
+        #ifdef DispSelectC
+          DispSelectC
         #endif
 
       End If
     #endif
     #ifdef DisplayPortD
       If DispPort = 4 Then
-        #ifdef DispSelectD
-          DispSelectD
-        #endif
+
         #ifdef 7Seg_HighSide  'pnp/pfet highside driver
           #ifdef DISP_SEL_4
             Set DISP_SEL_4 Off
@@ -565,8 +598,8 @@ Macro DisplaySevenSeg
           #endif
         #endif
 
-        #ifdef DispDeSelectD
-          DispDeSelectD
+        #ifdef DispSelectD
+          DispSelectD
         #endif
 
       End If
