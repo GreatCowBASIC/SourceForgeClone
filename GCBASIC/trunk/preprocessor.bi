@@ -469,7 +469,7 @@ SUB PreProcessor
 	Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
 	Dim As String TempFile, LastTableOrigin, NewFNType, CurrChar, CodeTemp, OtherChar
-	Dim As String DataSourceOld
+	Dim As String DataSourceOld, TranslatedFile
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 	
 	Dim As String LineToken(100)
@@ -507,45 +507,54 @@ SUB PreProcessor
 			
 			Else
 				IF VBS = 1 THEN PRINT ": " + Message("found")
-				OPEN SourceFile(T).FileName For INPUT AS #1
-				LC = 0
 				
-				DO WHILE NOT EOF(1)
-					LINE INPUT #1, Temp
-					LC += 1
-					Temp = Trim(Temp, Any Chr(9) + " ")
-					IF Left(UCase(Temp), 8) = "#INCLUDE" THEN
-						IF INSTR(Temp, Chr(34)) <> 0 THEN
-							Temp = Mid(Temp, INSTR(Temp, Chr(34)) + 1)
-							Temp = Trim(Left(Temp, INSTR(Temp, Chr(34)) - 1))
-							Temp = AddFullPath(Temp, ProgDir)
-						ElseIF INSTR(Temp, "<") <> 0 THEN
-							Temp = Mid(Temp, INSTR(Temp, "<") + 1)
-							Temp = Left(Temp, INSTR(Temp, ">") - 1)
-							Temp = AddFullPath(Temp, ID + "\include\") 
+				If Not SourceFile(T).RequiresConversion Then
+					OPEN SourceFile(T).FileName For INPUT AS #1
+					LC = 0
+					
+					DO WHILE NOT EOF(1)
+						LINE INPUT #1, Temp
+						LC += 1
+						Temp = Trim(Temp, Any Chr(9) + " ")
+						IF Left(UCase(Temp), 8) = "#INCLUDE" THEN
+							IF INSTR(Temp, Chr(34)) <> 0 THEN
+								Temp = Mid(Temp, INSTR(Temp, Chr(34)) + 1)
+								Temp = Trim(Left(Temp, INSTR(Temp, Chr(34)) - 1))
+								Temp = AddFullPath(Temp, ProgDir)
+							ElseIF INSTR(Temp, "<") <> 0 THEN
+								Temp = Mid(Temp, INSTR(Temp, "<") + 1)
+								Temp = Left(Temp, INSTR(Temp, ">") - 1)
+								Temp = AddFullPath(Temp, ID + "\include\") 
+							END IF
+							Temp = ShortName(Temp)
+							'Check to see if include file already in list
+							CE = 0
+							FOR PD = 1 TO SourceFiles
+								IF UCase(SourceFile(PD).FileName) = UCase(Temp) THEN CE = 1: EXIT FOR
+							Next
+							
+							'If not, add it
+							IF CE = 0 Then
+								
+								SourceFiles += 1
+								SourceFile(SourceFiles).IncludeOrigin = ";?F" + Str(T) + "L" + Str(LC) + "S0?"
+								
+								'May need to convert
+								TranslatedFile = TranslateFile(Temp)
+								If TranslatedFile = "" Then
+									SourceFile(SourceFiles).FileName = Temp
+									SourceFile(SourceFiles).RequiresConversion = -1
+								Else
+									SourceFile(SourceFiles).FileName = TranslatedFile
+								End If
+								
+							End If
 						END IF
-						Temp = ShortName(Temp)
-						'Check to see if include file already in list
-						CE = 0
-						FOR PD = 1 TO SourceFiles
-							IF UCase(SourceFile(PD).FileName) = UCase(Temp) THEN CE = 1: EXIT FOR
-						Next
-						
-						'If not, add it
-						IF CE = 0 Then
-							
-							'May need to convert
-							Temp = TranslateFile(Temp)
-							
-							SourceFiles += 1
-							SourceFile(SourceFiles).FileName = Temp
-							SourceFile(SourceFiles).IncludeOrigin = ";?F" + Str(T) + "L" + Str(LC) + "S0?"
-						End If
-					END IF
-				LOOP
-				
-				CLOSE #1
-			END IF
+					LOOP
+					
+					CLOSE #1
+				END If
+			End If
 		NEXT
 	'IF ICCO < ICC THEN GOTO FindIncludeFiles
 	Loop While ICCO < SourceFiles
@@ -594,6 +603,13 @@ SUB PreProcessor
 	CurrPerc = 0.5
 	PercAdd = 1 / SourceFiles * 100
 	FOR RF = 1 TO SourceFiles
+		
+		'Translate files if needed
+		If SourceFile(RF).RequiresConversion Then
+			SourceFile(RF).FileName = TranslateFile(SourceFile(RF).FileName)
+			SourceFile(RF).RequiresConversion = 0
+		EndIf
+		
 		If OPEN(SourceFile(RF).FileName FOR INPUT AS #1) <> 0 Then Goto LoadNextFile
 		
 		S = 0
@@ -1054,10 +1070,13 @@ SUB PreProcessor
 				
 				If Left(DataSource, 1) = "#" Then
 					'Automatic initialisation preparation
-					IF Left(DataSource, 8) = "#STARTUP" THEN SourceFile(RF).InitSub = Trim(Mid(DataSource, 9)): GOTO LoadNextLine
-					IF Left(DataSource, 7) = "#DEFINE" THEN DataSource = DataSource + "':" + Str(RF)
+					IF Left(DataSource, 8) = "#STARTUP" Then
+						SourceFile(RF).InitSub = Trim(Mid(DataSource, 9)): GOTO LoadNextLine
 					
-					IF Left(DataSource, 8) = "#OPTION " Then
+					ElseIF Left(DataSource, 7) = "#DEFINE" Then
+						DataSource = DataSource + "':" + Str(RF)
+					
+					ElseIf Left(DataSource, 8) = "#OPTION " Then
 						DataSource = Trim(Mid(DataSource, 8))
 						If DataSource = "EXPLICIT" Then
 							SourceFile(RF).OptionExplicit = -1
@@ -1066,15 +1085,34 @@ SUB PreProcessor
 							gcOPTION = gcOPTION + DataSource
 						End If
 						GoTo LoadNextLine
-					End If
 					
-					If Left(DataSource, 8) = "#DEFINE " Then ForceMain = 1
-					IF Left(DataSource, 5) = "#OSC " THEN ForceMain = 1
-					IF Left(DataSource, 8) = "#CONFIG " THEN ForceMain = 1
-					If Left(DataSource, 5) = "#MEM " THEN ForceMain = 1 'Not used
-					IF Left(DataSource, 5) = "#RAM " THEN ForceMain = 1 'Not used
-					IF Left(DataSource, 5) = "#INT " THEN ForceMain = 1 'Not used
-					IF Left(DataSource, 6) = "#CHIP " THEN ForceMain = 1
+					ElseIf Left(DataSource, 8) = "#DEFINE " Then
+						ForceMain = 1
+					ElseIF Left(DataSource, 5) = "#OSC " Then
+						ForceMain = 1
+					ElseIF Left(DataSource, 8) = "#CONFIG " Then
+						ForceMain = 1
+					ElseIf Left(DataSource, 5) = "#MEM " Then
+						GoTo LoadNextLine 'Not used
+					ElseIF Left(DataSource, 5) = "#RAM " Then
+						GoTo LoadNextLine 'Not used
+					ElseIF Left(DataSource, 5) = "#INT " Then
+						GoTo LoadNextLine 'Not used
+					
+					ElseIf Left(DataSource, 6) = "#CHIP " THEN
+						If ChipName = "" THEN
+							ChipName = Trim(Mid(DataSource, 6))
+							ChipMhz = 0
+							If InStr(ChipName, ",") <> 0 Then
+								ChipMhz = VAL(Mid(ChipName, INSTR(ChipName, ",") + 1))
+								ChipName = Trim(Left(ChipName, INSTR(ChipName, ",") - 1))
+							End If
+							IF Left(UCase(ChipName), 3) = "PIC" THEN ChipName = Mid(ChipName, 4)
+							IF Left(UCase(ChipName), 1) = "P" THEN ChipName = Mid(ChipName, 2)
+						End If
+						GoTo LoadNextLine
+					End If
+			
 				End If
 				
 				RestOfLine = ""
@@ -1257,17 +1295,7 @@ LoadNextFile:
 					CheckConstName ConstName, Origin
 				END IF
 			
-			ElseIF Left(Temp, 5) = "#CHIP" AND ChipName = "" THEN
-				ChipName = Trim(Mid(Temp, 6))
-				ChipMhz = 0
-				If InStr(ChipName, ",") <> 0 Then
-					ChipMhz = VAL(Mid(ChipName, INSTR(ChipName, ",") + 1))
-					ChipName = Trim(Left(ChipName, INSTR(ChipName, ",") - 1))
-				End If
-				IF Left(UCase(ChipName), 3) = "PIC" THEN ChipName = Mid(ChipName, 4)
-				IF Left(UCase(ChipName), 1) = "P" THEN ChipName = Mid(ChipName, 2)
-			
-			ElseIF Left(Temp, 4) = "#OSC" AND OSCType = "" THEN
+			ElseIf Left(Temp, 4) = "#OSC" AND OSCType = "" THEN
 				OSCType = Trim(Mid(Temp, 5))
 			
 			ElseIF Left(Temp, 7) = "#CONFIG" THEN
@@ -1287,7 +1315,7 @@ LoadNextFile:
 		LogError Message("NoChip")
 		WriteErrorLog
 		END
-	END IF
+	End IF
 	
 	'Get chip data
 	IF VBS = 1 THEN PRINT: PRINT SPC(5); Message("ReadChipData")
