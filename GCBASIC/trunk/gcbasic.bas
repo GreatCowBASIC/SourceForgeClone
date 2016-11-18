@@ -60,9 +60,11 @@ End Type
 
 Type SourceFileType
 	FileName As String
+	RequiresConversion As Integer = 0
+	
 	InitSub As String
 	InitSubUsed As Integer
-
+	
 	IncludeOrigin As String
 
 	OptionExplicit As Integer
@@ -244,6 +246,7 @@ Type FileConverterType
 	InFormats As Integer
 	OutFormat As String
 	ExeName As String
+	Params As String
 End Type
 
 'Type to store generated code
@@ -621,7 +624,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-10-28"
+Version = "0.95.<<>> 2016-11-18"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -11871,6 +11874,8 @@ Sub LoadConverters
 							.OutFormat = InVal
 						ElseIf InName = "exe" Then
 							.ExeName = InVal
+						ElseIf InName = "params" Then
+							.Params = InVal
 						End If
 					End If
 				Loop
@@ -13671,9 +13676,17 @@ Function TranslateFile(InFile As String) As String
 
 						'If convert needed, convert
 						If ConvertRequired Then
-
+							ConvParams = InFile
+							If .Params <> "" Then
+								ConvParams = ReplaceToolVariables(.Params, CurrType, InFile)
+								'If chip model required but not known, cannot convert
+								If InStr(LCase(.Params), "%chipmodel%") <> 0 And ChipName = "" Then
+									Return ""
+								End If
+							End If
+							
 							ConvExe = AddFullPath(.ExeName, ConvDir)
-							If Exec(ConvExe, OutFile) <> -1 Then
+							If Exec(ConvExe, ConvParams) <> -1 Then
 								If VBS = 1 Then Print Message("Success")
 								OutFile = ConvFile
 								Converted = -1
