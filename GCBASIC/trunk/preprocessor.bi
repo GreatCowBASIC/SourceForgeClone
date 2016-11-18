@@ -473,13 +473,15 @@ SUB PreProcessor
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 	
 	Dim As String LineToken(100)
+	Dim As SourceFileType UnconvertedFile(100)
 	
 	Dim As Integer T, T2, ICCO, CE, PD, RF, S, LC, LCS, SID, CD, SL, NR
 	Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro
-	Dim As Integer CurrCharPos, ReadType, ConvertAgain
+	Dim As Integer CurrCharPos, ReadType, ConvertAgain, UnconvertedFiles
 	Dim As Single CurrPerc, PercAdd, PercOld
 	
 	CurrentSub = ""
+	UnconvertedFiles = 0
 	
 	'Find required files
 	IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("FindSource")
@@ -536,15 +538,16 @@ SUB PreProcessor
 							'If not, add it
 							IF CE = 0 Then
 								
-								SourceFiles += 1
-								SourceFile(SourceFiles).IncludeOrigin = ";?F" + Str(T) + "L" + Str(LC) + "S0?"
-								
 								'May need to convert
 								TranslatedFile = TranslateFile(Temp)
 								If TranslatedFile = "" Then
-									SourceFile(SourceFiles).FileName = Temp
-									SourceFile(SourceFiles).RequiresConversion = -1
+									UnconvertedFiles += 1
+									UnconvertedFile(UnconvertedFiles).FileName = Temp
+									UnconvertedFile(UnconvertedFiles).IncludeOrigin = ";?F" + Str(T) + "L" + Str(LC) + "S0?"
+									UnconvertedFile(UnconvertedFiles).RequiresConversion = -1
 								Else
+									SourceFiles += 1
+									SourceFile(SourceFiles).IncludeOrigin = ";?F" + Str(T) + "L" + Str(LC) + "S0?"
 									SourceFile(SourceFiles).FileName = TranslatedFile
 								End If
 								
@@ -596,6 +599,12 @@ SUB PreProcessor
 	Subroutine(0) = NewSubroutine("Main")
 	MainCurrPos = Subroutine(0)->CodeStart
 	Subroutine(0)->Required = -1 'Mark as required so that it gets compiled
+	
+	'Add any uncoverted files to file list
+	For RF = 1 To UnconvertedFiles
+		SourceFiles += 1
+		SourceFile(SourceFiles) = UnconvertedFile(RF)
+	Next
 	
 	'Read all required files
 	IF VBS = 1 THEN PRINT SPC(5); Message("LoadSource");
