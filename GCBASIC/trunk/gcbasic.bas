@@ -247,6 +247,7 @@ Type FileConverterType
 	OutFormat As String
 	ExeName As String
 	Params As String
+	DeleteTarget As Integer
 End Type
 
 'Type to store generated code
@@ -624,7 +625,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-11-18"
+Version = "0.95.<<>> 2016-11-21"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -11856,6 +11857,8 @@ Sub LoadConverters
 			With FileConverter(FileConverters)
 				.Name = CurrFile
 				.InFormats = 0
+				.Params = ""
+				.DeleteTarget = 0
 
 				f = FreeFile
 				Open CurrFile For Input As #f
@@ -11876,6 +11879,11 @@ Sub LoadConverters
 							.ExeName = InVal
 						ElseIf InName = "params" Then
 							.Params = InVal
+						ElseIf InName = "deletetarget" Then
+							Select Case LCase(Left(InVal, 1))
+								Case "y", "t", "1": .DeleteTarget = -1
+								Case "n", "f", "0": .DeleteTarget = 0
+							End Select
 						End If
 					End If
 				Loop
@@ -13667,7 +13675,10 @@ Function TranslateFile(InFile As String) As String
 							OutDate = FileDateTime(ConvFile)
 							If InDate > OutDate Then ConvertRequired = -1
 						End If
-
+						
+						'If DeleteTarget set, always convert
+						If .DeleteTarget Then ConvertRequired = -1
+						
 						If VBS = 1 Then
 							Temp = Message("Converting")
 							Replace Temp, "%infile%", OutFile
