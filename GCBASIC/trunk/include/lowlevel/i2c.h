@@ -32,92 +32,95 @@
 '     0.92 - Revised and merged 0.91 and I2C-alt.h
 '     0.93 - Revised to remove use of Constants where they should have been variables and the reverse case.
 '     0.94 - Revised to Move variable defintion to prevent variable defintion when not required
-'	   - Eliminated parameter on I2CSend as this was causing backward compatibility issues
-'	   - This is a megerd version of the alternate version of the software I2C routines by
+'    - Eliminated parameter on I2CSend as this was causing backward compatibility issues
+'    - This is a megerd version of the alternate version of the software I2C routines by
 '          - Thomas Henry, July 17, 2014.
 '          - ACK/NAK logic for Slave multibyte reception
 '          - therefore multiple Slaves are permitted on the bus
-'	   - eliminated need for a separate addressed slave read command,
-'	   - reduced the command set to make I2C more understandable
-'	   - made the basic commands more intuitive for beginners
-'	   - eliminated redundant code while speeding up the loops
-'	   - a single error flag (I2CAck or I2CSendState) checks many error conditions
-'	   - more extensive documentation
-'	   - eliminated redundancies and unneeded global variables
-'	   - accounted for parameter corruption throughout
+'    - eliminated need for a separate addressed slave read command,
+'    - reduced the command set to make I2C more understandable
+'    - made the basic commands more intuitive for beginners
+'    - eliminated redundant code while speeding up the loops
+'    - a single error flag (I2CAck or I2CSendState) checks many error conditions
+'    - more extensive documentation
+'    - eliminated redundancies and unneeded global variables
+'    - accounted for parameter corruption throughout
 '     0.95 revised to restore I2C_Dev_OK
-'			0.96 revised to support I2C_USE_TIMEOUT for I2C Master
-'			To enable failsafe in I2C Master mode, user must add #define I2C_USE_TIMEOUT to source code
+'     0.96 revised to support I2C_USE_TIMEOUT for I2C Master
+'     To enable failsafe in I2C Master mode, user must add #define I2C_USE_TIMEOUT to source code
+'    Updated Oct 2016  - for Option Explicit
 
-'	   - With the default constants, communication can be as high as 75 kHz.
 
-'	   - Command Set (parameters I2CAck and I2C_Dev_OK are optional):
 
-'	   -   I2CStart() and I2CStop() are the usual commands used to start
-'	   -   and stop I2C communications. I2CAckPoll() is used to sense
-'	   -   whether the Slave device is alive and ready to respond. It
-'	   -   is also useful for waiting until an Eeprom has completed its
-'	   -   write cycle. The optional parameter I2C_Dev_OK reports whether
-'	   -   the device responded or timed out.
+'    - With the default constants, communication can be as high as 75 kHz.
 
-'	   -   The two high-level commands are I2CReceive() and I2CSend().
-'	   -   Either of these may be used in either Master or Slave mode.
-'	   -   For emphasis, this means that the following combinations
-'	   -   are valid:
+'    - Command Set (parameters I2CAck and I2C_Dev_OK are optional):
 
-'	   -   Master receives from the Slave
-'	   -   Slave receives from the Master
-'	   -   Master sends to the Slave
-'	   -   Slave sends to the Master
+'    -   I2CStart() and I2CStop() are the usual commands used to start
+'    -   and stop I2C communications. I2CAckPoll() is used to sense
+'    -   whether the Slave device is alive and ready to respond. It
+'    -   is also useful for waiting until an Eeprom has completed its
+'    -   write cycle. The optional parameter I2C_Dev_OK reports whether
+'    -   the device responded or timed out.
 
-'	   -   Additionally, a fair amount of error detection is worked in
-'	   -   which can detect certain problems, typically with the SCL
-'	   -   (clock) line. By using the error flag (a parameter called
-'	   -   I2CAck) it is possible to have the Master or Slave retry the
-'	   -   communication in case of errors. The parameter I2CAck is
-'	   -   optional, and may be ignored in many situations. Note, too,
-'	   -   that clock stretching is implemented which gives the Slave
-'	   -   a chance to get caught up when needed. This is invisible to
-'	   -   the programmer/user.
+'    -   The two high-level commands are I2CReceive() and I2CSend().
+'    -   Either of these may be used in either Master or Slave mode.
+'    -   For emphasis, this means that the following combinations
+'    -   are valid:
 
-'	   -   Interrupts are always disabled during I2C communication.
-'	   -   since it makes no sense to permit interruptions in a
-'	   -   synchronous environment.
+'    -   Master receives from the Slave
+'    -   Slave receives from the Master
+'    -   Master sends to the Slave
+'    -   Slave sends to the Master
 
-'	   -   The purpose of the parameter I2CByte in these two commands is
-'	   -   obvious--it is the byte which is received or transmitted.
-'	   -   On the other hand, the second parameter, I2CAck, can be used
-'	   -   in a couple different ways to monitor for error conditions,
-'	   -   among other things. Here are the details for the two commands.
+'    -   Additionally, a fair amount of error detection is worked in
+'    -   which can detect certain problems, typically with the SCL
+'    -   (clock) line. By using the error flag (a parameter called
+'    -   I2CAck) it is possible to have the Master or Slave retry the
+'    -   communication in case of errors. The parameter I2CAck is
+'    -   optional, and may be ignored in many situations. Note, too,
+'    -   that clock stretching is implemented which gives the Slave
+'    -   a chance to get caught up when needed. This is invisible to
+'    -   the programmer/user.
 
-'	   -   *** I2CReceive(out I2CByte, in/out I2CAck)
+'    -   Interrupts are always disabled during I2C communication.
+'    -   since it makes no sense to permit interruptions in a
+'    -   synchronous environment.
 
-'	   -   MASTER FROM SLAVE:
-'	   -   In Master mode, if your program sets I2CAck to TRUE before
-'	   -   calling I2CReceive(), then the Master will send an ACK to
-'	   -   the Slave after receiving its byte. If FALSE then the Master
-'	   -   will send a NAK to the slave after receiving its byte
-'	   -   ACK and NAK are aliases for TRUE and FALSE, respectively.
+'    -   The purpose of the parameter I2CByte in these two commands is
+'    -   obvious--it is the byte which is received or transmitted.
+'    -   On the other hand, the second parameter, I2CAck, can be used
+'    -   in a couple different ways to monitor for error conditions,
+'    -   among other things. Here are the details for the two commands.
 
-'	   -   SLAVE FROM MASTER:
-'	   -   In Slave mode, upon exit from I2CReceive(), the Slave will
-'	   -   set I2CAck to TRUE if things went well, or FALSE if a timeout
-'	   -   occurred (supposing you had requested timeouts be used).
+'    -   *** I2CReceive(out I2CByte, in/out I2CAck)
 
-'	   -   *** I2CSend(in I2CByte )
+'    -   MASTER FROM SLAVE:
+'    -   In Master mode, if your program sets I2CAck to TRUE before
+'    -   calling I2CReceive(), then the Master will send an ACK to
+'    -   the Slave after receiving its byte. If FALSE then the Master
+'    -   will send a NAK to the slave after receiving its byte
+'    -   ACK and NAK are aliases for TRUE and FALSE, respectively.
 
-'	   -   MASTER TO SLAVE:
-'	   -   In Master mode, I2CAck is returned to indicate whether an
-'	   -   ACK or a NAK was received from the Slave after transmission.
-'	   -   ACK means all is okay, while NAK means something went wrong.
+'    -   SLAVE FROM MASTER:
+'    -   In Slave mode, upon exit from I2CReceive(), the Slave will
+'    -   set I2CAck to TRUE if things went well, or FALSE if a timeout
+'    -   occurred (supposing you had requested timeouts be used).
 
-'	   -   SLAVE TO MASTER:
-'	   -   In slave mode, I2CAck is returned to indicate whether an ACK
-'	   -   or a NAK was received from the Master after transmission.
-'	   -   ACK means all is okay, while NAK means something went wrong.
+'    -   *** I2CSend(in I2CByte )
 
-'	   -   Please note: for many programs, you simply won't need the
-'	   -   error detection and can ignore the value of the I2CAck parameter.
+'    -   MASTER TO SLAVE:
+'    -   In Master mode, I2CAck is returned to indicate whether an
+'    -   ACK or a NAK was received from the Slave after transmission.
+'    -   ACK means all is okay, while NAK means something went wrong.
+
+'    -   SLAVE TO MASTER:
+'    -   In slave mode, I2CAck is returned to indicate whether an ACK
+'    -   or a NAK was received from the Master after transmission.
+'    -   ACK means all is okay, while NAK means something went wrong.
+
+'    -   Please note: for many programs, you simply won't need the
+'    -   error detection and can ignore the value of the I2CAck parameter.
 
 '             --- Constants
 
@@ -149,7 +152,7 @@
 '             --- Variables
 
 
-
+dim I2CAckPollState as byte
 
 #define I2CSendState I2CAckPollState 'retained I2CSendState for backwards compatibility
 #define I2C_Dev_OK I2CAck
@@ -274,36 +277,36 @@ end Sub
 
 
 Function I2CStartOccurred
-	'Check if a start condition has occurred since the last run of this function
-	'Only used in slave mode
+  'Check if a start condition has occurred since the last run of this function
+  'Only used in slave mode
 
-	#if I2C_MODE = Master
-		I2CStartOccurred = TRUE
-	#endif
+  #if I2C_MODE = Master
+    I2CStartOccurred = TRUE
+  #endif
 
-	#if I2C_MODE = Slave
-		I2CStartOccurred = FALSE
+  #if I2C_MODE = Slave
+    I2CStartOccurred = FALSE
 
-		If I2C_CLOCK = 1 Then
-			'State 0, CK 1, DA 1
-			If I2C_DATA = 1 Then
-				I2CState = 0
-			'State 1, CK 1, DA 0
-			Else
-				'Start happens when data drops while clock high, so:
-				'start occurs on transition from CK 1 DA 1 (state 0) to CK 1 DA 0 (state 1)
-				If I2COldState = 0 Then
-					I2CStartOccurred = TRUE
-				End If
-				I2CState = 1
-			End If
-		Else
-			'State 2 when CK 0
-			I2CState = 2
-		End If
-		I2COldState = I2CState
+    If I2C_CLOCK = 1 Then
+      'State 0, CK 1, DA 1
+      If I2C_DATA = 1 Then
+        I2CState = 0
+      'State 1, CK 1, DA 0
+      Else
+        'Start happens when data drops while clock high, so:
+        'start occurs on transition from CK 1 DA 1 (state 0) to CK 1 DA 0 (state 1)
+        If I2COldState = 0 Then
+          I2CStartOccurred = TRUE
+        End If
+        I2CState = 1
+      End If
+    Else
+      'State 2 when CK 0
+      I2CState = 2
+    End If
+    I2COldState = I2CState
 
-	#endif
+  #endif
 
 End Function
 
@@ -617,5 +620,4 @@ sub I2CAckPoll(in I2CByte, optional I2C_Dev_OK = TRUE)
   next I2CCount                   'else try again
   I2CAckPollState = I2C_Dev_OK    'set state.  Used to understand if the device responded in IC2 discover process
 end sub
-
 

@@ -1,5 +1,5 @@
 '    System routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2016 Hugh Considine, Evan Venn and William Roth
+'    Copyright (C) 2006 - 2016 Hugh Considine,  William Roth and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -31,8 +31,7 @@
 ;    27072016 - Added support for OSCCON1 config
 ;    01082016 - Removed new command support
 ;    04102016 - Added OSCCAL Support
-;    14112016 - Revised OSCCAL Support
-
+;    12112016 - Revised to correct comparator registers NOT being set for new chips
 'Constants
 #define ON 1
 #define OFF 0
@@ -63,14 +62,12 @@ Sub InitSys
   '#Endif
   'This loads the saved calibration data from the last flash memory location at POR or any time the chip is reset.
 
-    #ifdef PIC
-        #ifdef Var(OSCCAL)
-            #ifdef  chipfamily 14
-                 CALL 0x3ff
-            #endif
-            movwf osccal
-        #endif
-    #endif
+  #Ifdef PIC
+       #Ifdef Var(OSCCAL)
+             movwf OSCCAL
+      #Endif
+  #Endif
+
 
   'Set up internal oscillator
   #IFNDEF Var(OSCCON)
@@ -78,7 +75,7 @@ Sub InitSys
 
       #IFDEF Var(OSCCON1)
 
-        nop             ' This is the routine for the OSCCON1 config addresss 16f18326 errata
+        nop             ' This is the routine to support OSCCON1 config addresss
         OSCCON1 = 0x60 ' NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
 
         OSCCON3 = 0x00 ' CSWHOLD may proceed; SOSCPWR Low power
@@ -88,10 +85,10 @@ Sub InitSys
         OSCTUNE = 0x00 ' HFTUN 0
         #IFDEF ChipMHz 32
           #IFDEF Var(OSCSTAT)
-            OSCFRQ = 0b00000110 'Commentry for ASM Only - 16F18855 syle chip
+            OSCFRQ = 0b00000110 'OSCSTAT chip.... the 16f18855 style chip
           #ENDIF
           #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000111 'Commentry for ASM Only - 16F18326/18346 syle chip
+            OSCFRQ = 0b00000111 'OSCSTAT1 chip... the 16F18326/18346 style chip
           #ENDIF
         #ENDIF
 
@@ -685,11 +682,25 @@ Sub InitSys
     CMCON0 = 7
   #ENDIF
   '12F510,16F506 and other devices? (Thanks to Kent for suggesting these lines!)
+  'Revised for PIC16F15355 class of chips
   #IFDEF Var(CM1CON0)
     #IFDEF Var(CM2CON0)
-      C2ON = 0
+      #IFDEF BIT(C2ON)
+        C2ON = 0
+      #ENDIF
+      #IFDEF BIT(CM2CON0_EN)
+        CM2CON0_EN = 0
+      #ENDIF
     #ENDIF
-    C1ON = 0
+
+    #IFDEF BIT(C1ON)
+      C1ON = 0
+    #ENDIF
+
+    #IFDEF BIT(CM1CON0_EN)
+      CM1CON0_EN = 0
+    #ENDIF
+
   #ENDIF
 
   'Set GPIO.2 to digital (clear T0CS bit)

@@ -6,7 +6,8 @@
 '    Version 1.1h
 '    Version 1.1i
 '    Version 1.1j
-
+'    Version 1.1k
+'    Version 1.1l
 
 
 
@@ -21,8 +22,8 @@
 '    Updated Jan 2016 - enhance hi2cwaitmssp
 '    Updated May 2016 - resolved AVR TWINT lockup issues
 '    Updated Sept 2016 - resolve 16f18855 register mapping
-
-'
+'    Updated Oct 2016  - for Option Explicit and to fix the script issue
+'    Updated Oct 2016  - ... Slave10 was NOT defined.
 
 
 '    This library is free software; you can redistribute it and/or
@@ -57,7 +58,7 @@
 '
 
 'HI2C Mode constants
-'#define Slave10 3
+#define Slave10 3
 'use Slave for 7-bit slave mode and Master for master mode
 
 
@@ -172,38 +173,41 @@
               ' Uncommented Displays Results In GCB Output Window
               ' warning " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWBR
           END IF
-#endscript
 
+         if novar(SSPCON1) then
+
+            if var(SSP1CON1) then
+                SSPCON1 = SSP1CON1
+                SSPSTAT = SSP1STAT
+                SSPBUF  = SSP1BUF
+                SSPCON2 = SSP1CON2
+                SSPADD  = SSP1ADD
+            end if
+
+         end if
+
+
+         if novar(SSPCON1) then
+            if var(SSPCON) then
+                SSPCON1 = SSPCON
+            end if
+         end if
+
+#endscript
 
 Sub HI2CMode (In HI2CCurrentMode)
 
   #ifdef PIC
-    #ifndef Var(SSPCON1)
-      #ifdef Var(SSPCON)
-        Dim SSPCON1 Alias SSPCON
-      #endif
-    #endif
-
-    'added for 16f18855
-    #ifndef Var(SSPCON1)
-      #ifdef Var(SSP1CON1)
-        Dim SSPCON1 Alias SSP1CON1 ;added for 18f18855
-      #endif
-    #endif
-    'added for 16f18855
-    #ifndef Var(SSPSTAT)
-      #ifdef Var(SSP1STAT)
-        Dim SSPSTAT Alias SSP1STAT ;added for 18f18855
-      #endif
-    #endif
-    'added for 16f18855
-    #ifndef Var(SSPBUF)
-      #ifdef Var(SSP1BUF)
-        Dim SSPBUF Alias SSP1BUF
-      #endif
-    #endif
 
 
+
+
+
+'    #ifndef Var(SSPCON1)
+'      #ifdef Var(SSPCON)
+'        Dim SSPCON1 Alias SSPCON
+'      #endif
+'    #endif
 
     set SSPSTAT.SMP on
     set SSPCON1.CKP on
@@ -248,15 +252,16 @@ Sub HI2CSetAddress(In I2CAddress)
 End Sub
 
 Sub HI2CStart
-
-
   'Master mode
   If HI2CCurrentMode > 10 Then
+
     #ifdef PIC
-      #ifdef Var(SSPCON2)
-                        Set SSPCON2.SEN On
-                        HI2CWaitMSSP
+
+      #ifdef bit(SEN)
+          Set SEN On
+          HI2CWaitMSSP
       #endif
+
     #endif
 
   'Slave mode
@@ -270,12 +275,11 @@ Sub HI2CStart
 End Sub
 
 Sub HI2CReStart
-
   'Master mode
   If HI2CCurrentMode > 10 Then
     #ifdef PIC
-      #ifdef Var(SSPCON2)
-                                        Set SSPCON2.RSEN On
+      #ifdef BIT(RSEN)
+                                        Set RSEN On
                                         HI2CWaitMSSP
       #endif
     #endif
@@ -291,7 +295,7 @@ Sub HI2CStop
   'Master mode
   If HI2CCurrentMode > 10 Then
     #ifdef PIC
-      #ifdef Var(SSPCON2)
+      #ifdef BIT(PEN)
                                      ' set SSPIE OFF; disable SSP interrupt, tested by Anobium but not implemented.
                                      wait while R_NOT_W = 1   'wait for completion of activities
                                      Set SSPCON2.PEN On
@@ -320,7 +324,7 @@ Function HI2CStartOccurred
   Else
     HI2CStartOccurred = FALSE
     #ifdef PIC
-      #ifdef Var(SSPSTAT)
+      #ifdef BIT(S)
         If SSPSTAT.S = On Then HI2CStartOccurred = TRUE
       #endif
     #endif
@@ -339,7 +343,7 @@ Function HI2CStopped
   Else
     HI2CStopped = FALSE
     #ifdef PIC
-      #ifdef Var(SSPSTAT)
+      #ifdef BIT(P)
         If SSPSTAT.P = On Then HI2CStopped = TRUE
       #endif
     #endif
@@ -347,14 +351,11 @@ Function HI2CStopped
   End If
 End Function
 
+Dim HI2CACKPOLLSTATE  as Byte
+
 Sub HI2CSend(In I2CByte)
 
   #ifdef PIC
-    #ifndef Var(SSPCON1)
-      #ifdef Var(SSPCON)
-        Dim SSPCON1 Alias SSPCON
-      #endif
-    #endif
 
     RetryHI2CSend:
       'Clear WCOL
@@ -384,14 +385,10 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
 
   #ifdef PIC
 
-    #ifndef Var(SSPCON1)
-      #ifdef Var(SSPCON)
-        Dim SSPCON1 Alias SSPCON
-      #endif
-    #endif
+
 
     'Enable receive
-                    #ifdef Var(SSPCON2)
+
       'Master mode
       If HI2CCurrentMode > 10 Then
                                 if HI2CGetAck.0 = 1 then
@@ -406,7 +403,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
       Else
         SET SSPSTAT.R_NOT_W ON
       End If
-    #endif
+
 
     'Clear Collisions
     SET SSPCON1.WCOL OFF
@@ -423,7 +420,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
                     HI2CWaitMSSP
 
     'Disable receive (master mode)
-    #ifdef Var(SSPCON2)
+
       'Master mode
       If HI2CCurrentMode > 10 Then
         Set SSPCON2.RCEN Off
@@ -431,7 +428,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
       Else
         SET SSPSTAT.R_NOT_W Off
       End If
-    #endif
+
   #endif
 
 End Sub
@@ -439,10 +436,11 @@ End Sub
 ; This routine waits for the last I2C operation to complete.
 ; It does this by polling the SSPIF flag in PIR1.
 ; Then, it clears SSPIF
-; Updated at v0.95.006
+; Updated at v0.95.010 Option Explicit
+Dim HI2CWaitMSSPTimeout as byte
 sub HI2CWaitMSSP
 
-    Dim HI2CWaitMSSPTimeout as byte
+
     HI2CWaitMSSPTimeout = 0
     HI2CWaitMSSPWait:
     HI2CWaitMSSPTimeout++
