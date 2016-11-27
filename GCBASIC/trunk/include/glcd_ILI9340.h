@@ -27,8 +27,9 @@
 ' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ILI9340 device.
 ' 27/10/2014: Changed ILI9340Rotation to GLCDRotate
 '
-' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
-' 14/07/2016:			 Revised to resolve Linux build.	Paolo Iocco edited by Evan R Venn
+' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 14/07/2016:      Revised to resolve Linux build.  Paolo Iocco edited by Evan R Venn
+' 08/11/2016:      Revised to resolve 18f init issues by Evan R Venn
 '
 'Hardware settings
 'Type
@@ -82,7 +83,7 @@
 #define ILI9340_RAMRD   0x2E
 
 #define ILI9340_PTLAR   0x30
-#define ILI9340_VSCRDEF	0x33
+#define ILI9340_VSCRDEF 0x33
 #define ILI9340_MADCTL  0x36
 
 #define ILI9340_MADCTL_MY  0x80
@@ -152,16 +153,16 @@
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9340
 
-	'	 Mapped to global variables to same RAM
-	'	dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
+  '  Mapped to global variables to same RAM
+  ' dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
       #define InitGLCD_ILI9341 nop
 
-	'Setup code for ILI9340 controllers
-	#if GLCD_TYPE = GLCD_TYPE_ILI9340
+  'Setup code for ILI9340 controllers
+  #if GLCD_TYPE = GLCD_TYPE_ILI9340
 
-	' Init required if using serial for early state debug
+  ' Init required if using serial for early state debug
   #if USART_BAUD_RATE
-  		INITUSART
+      INITUSART
   #endif
 
     'Pin directions
@@ -182,21 +183,21 @@ Sub InitGLCD_ILI9340
    Set ILI9340_DC On
 
 
-		'Reset display
-		Wait 50 ms
+    'Reset display
+    Wait 50 ms
     Set ILI9340_RST On
-		Wait 5 ms
-		'Reset sequence (lower line for at least 10 us)
-		Set ILI9340_RST Off
-		Wait 20 us
-		Set ILI9340_RST On
-		Wait 150 ms
+    Wait 5 ms
+    'Reset sequence (lower line for at least 10 us)
+    Set ILI9340_RST Off
+    Wait 20 us
+    Set ILI9340_RST On
+    Wait 150 ms
 
     repeat 3
-    	TFTDriver = ILI9340_ReadID
+      TFTDriver = ILI9340_ReadID
     end Repeat
 
-	SendCommand_ILI9340(0xEF)
+  SendCommand_ILI9340(0xEF)
   SendData_ILI9340(0x03)
   SendData_ILI9340(0x80)
   SendData_ILI9340(0x02)
@@ -314,10 +315,10 @@ Sub InitGLCD_ILI9340
   GLCDfntDefault = 0
   GLCDfntDefaultsize = 2
 
-	#endif
+  #endif
 
-	'Clear screen
-	GLCDCLS
+  'Clear screen
+  GLCDCLS
 
 End Sub
 
@@ -334,23 +335,23 @@ Sub GLCDCLS_ILI9340 ( Optional In  GLCDBackground as word = GLCDBackground )
     GLCD_yordinate = 0
 
     SetAddressWindow_ILI9340 ( 0, 0, ILI9340_GLCD_WIDTH -1 , ILI9340_GLCD_HEIGHT-1 )
-		ILI9340SendWord = GLCDBackground
+    ILI9340SendWord = GLCDBackground
 
-		set ILI9340_CS OFF
+    set ILI9340_CS OFF
     set ILI9340_DC ON
     repeat ILI9340_GLCD_WIDTH
 
-			repeat ILI9340_GLCD_HEIGHT
+      repeat ILI9340_GLCD_HEIGHT
 
         #ifdef ILI9340_HardwareSPI
-'					Could use these as an alternative
-'        	SPITransfer  ILI9340SendWord_h
+'         Could use these as an alternative
+'         SPITransfer  ILI9340SendWord_h
 '         SPITransfer  ILI9340SendWord
 
           #ifdef PIC
             #ifndef Var(SSPCON1)
               #ifdef Var(SSPCON)
-              	Dim SSPCON1 Alias SSPCON
+                Dim SSPCON1 Alias SSPCON
               #endif
             #endif
             'Clear WCOL
@@ -358,28 +359,35 @@ Sub GLCDCLS_ILI9340 ( Optional In  GLCDBackground as word = GLCDBackground )
             'Put byte to send into buffer
             'Will start transfer
             SSPBUF = ILI9340SendWord_h
-						Wait While SSPSTAT.BF = Off
+            Wait While SSPSTAT.BF = Off
             Set SSPSTAT.BF Off
+            #if ChipFamily 16
+              ILI9341TempOut = SSPBUF
+            #endif
 
             'Clear WCOL
             Set SSPCON1.WCOL Off
             'Put byte to send into buffer
             'Will start transfer
             SSPBUF = ILI9340SendWord
-						Wait While SSPSTAT.BF = Off
+            Wait While SSPSTAT.BF = Off
             Set SSPSTAT.BF Off
+            #if ChipFamily 16
+              ILI9341TempOut = SSPBUF
+            #endif
+
           #endif
-					#ifdef AVR
-          	FastHWSPITransfer  ILI9341SendWord_h
-          	FastHWSPITransfer  ILI9341SendWord
-					#endif
+          #ifdef AVR
+            FastHWSPITransfer  ILI9341SendWord_h
+            FastHWSPITransfer  ILI9341SendWord
+          #endif
 
         #endif
 
-				#ifndef ILI9340_HardwareSPI
-					SendWord_ILI9340 ( GLCDBackground )
+        #ifndef ILI9340_HardwareSPI
+          SendWord_ILI9340 ( GLCDBackground )
         #endif
-			end repeat
+      end repeat
 
     end repeat
     set ILI9340_CS ON;
@@ -409,19 +417,19 @@ end sub
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawChar_ILI9340(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
 
-'	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-'	CharCode -= 15
+' 'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+' CharCode -= 15
 '
 '  'Need to read characters from CharColn (n = 0:7) tables
-'	'(First 3, ie 0:2 are blank, so can ignore)
-'	For CurrCharCol = 1 to 5
-'		Select Case CurrCharCol
-'			Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-'			Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-'			Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-'			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-'			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-'		End Select
+' '(First 3, ie 0:2 are blank, so can ignore)
+' For CurrCharCol = 1 to 5
+'   Select Case CurrCharCol
+'     Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+'     Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+'     Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+'     Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+'     Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+'   End Select
 '                    For CurrCharRow = 1 to 8
 '                              If CurrCharVal.0 = 0 Then
 '                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
@@ -431,25 +439,25 @@ Sub GLCDDrawChar_ILI9340(In CharLocX as word, In CharLocY as word, In CharCode, 
 '                              Rotate CurrCharVal Right
 '                    Next
 '
-'	Next
-	dim CharCol, CharRow as word
-	CharCode -= 15
+' Next
+  dim CharCol, CharRow as word
+  CharCode -= 15
 
           if CharCode>=178 and CharCode<=202 then
              CharLocY=CharLocY-1
           end if
           CharCol=1
 
-	For CurrCharCol = 1 to 5
-		Select Case CurrCharCol
-			Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-			Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-			Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-		End Select
+  For CurrCharCol = 1 to 5
+    Select Case CurrCharCol
+      Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+      Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+      Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+      Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+      Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+    End Select
     CharRow=0
-		For CurrCharRow = 1 to 8
+    For CurrCharRow = 1 to 8
         CharColS=0
         For Col=1 to GLCDfntDefaultsize
               CharColS +=1
@@ -463,11 +471,11 @@ Sub GLCDDrawChar_ILI9340(In CharLocX as word, In CharLocY as word, In CharCode, 
                   End if
               Next Row
         Next Col
-			Rotate CurrCharVal Right
+      Rotate CurrCharVal Right
       CharRow +=GLCDfntDefaultsize
-		Next
+    Next
     CharCol +=GLCDfntDefaultsize
-	Next
+  Next
 
 
 End Sub
@@ -480,30 +488,30 @@ End Sub
 '''@param LineY2 Bottom right corner Y location
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox_ILI9340(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
-	dim GLCDTemp as word
-	'Make sure that starting point (1) is always less than end point (2)
-	If LineX1 > LineX2 Then
-		GLCDTemp = LineX1
-		LineX1 = LineX2
-		LineX2 = GLCDTemp
-	End If
-	If LineY1 > LineY2 Then
-		GLCDTemp = LineY1
-		LineY1 = LineY2
-		LineY2 = GLCDTemp
-	End If
+  dim GLCDTemp as word
+  'Make sure that starting point (1) is always less than end point (2)
+  If LineX1 > LineX2 Then
+    GLCDTemp = LineX1
+    LineX1 = LineX2
+    LineX2 = GLCDTemp
+  End If
+  If LineY1 > LineY2 Then
+    GLCDTemp = LineY1
+    LineY1 = LineY2
+    LineY2 = GLCDTemp
+  End If
 
 
-		'Set address window
-'		SetAddress_ILI9340 ILI9340_COLUMN, LineX1, LineX2
-'		SetAddress_ILI9340 ILI9340_ROW, LineY1, LineY2
-		SetAddressWindow_ILI9340 (  LineX1, LineY1, LineX2, LineY2 )
-		'Fill with colour
-		Dim GLCDPixelCount As Word
-		GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
-		Repeat GLCDPixelCount
-			SendWord_ILI9340 LineColour
-		End Repeat
+    'Set address window
+'   SetAddress_ILI9340 ILI9340_COLUMN, LineX1, LineX2
+'   SetAddress_ILI9340 ILI9340_ROW, LineY1, LineY2
+    SetAddressWindow_ILI9340 (  LineX1, LineY1, LineX2, LineY2 )
+    'Fill with colour
+    Dim GLCDPixelCount As Word
+    GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
+    Repeat GLCDPixelCount
+      SendWord_ILI9340 LineColour
+    End Repeat
 
 End Sub
 
@@ -513,8 +521,8 @@ End Sub
 '''@param GLCDColour State of pixel
 Sub PSet_ILI9340(In GLCDX as word, In GLCDY as word, In GLCDColour As Word)
 
-		SetAddressWindow_ILI9340 ( GLCDX, GLCDY, GLCDX, GLCDY )
-		SendWord_ILI9340 GLCDColour
+    SetAddressWindow_ILI9340 ( GLCDX, GLCDY, GLCDX, GLCDY )
+    SendWord_ILI9340 GLCDColour
 
 End Sub
 
@@ -619,17 +627,17 @@ End Sub
 '''@hide
 Sub SetAddressWindow_ILI9340( In x1 as word, in y1 as word, in x2 as word, in y2 as word)
 
-	SendCommand_ILI9340(ILI9340_CASET); // Column addr set
-	SendData_ILI9340 x1_H
-	SendData_ILI9340 x1
+  SendCommand_ILI9340(ILI9340_CASET); // Column addr set
+  SendData_ILI9340 x1_H
+  SendData_ILI9340 x1
   SendData_ILI9340 x2_H
-	SendData_ILI9340 x2
+  SendData_ILI9340 x2
 
   SendCommand_ILI9340(ILI9340_PASET); // Row addr set
-	SendData_ILI9340 y1_H
-	SendData_ILI9340 y1
+  SendData_ILI9340 y1_H
+  SendData_ILI9340 y1
   SendData_ILI9340 y2_H
-	SendData_ILI9340 y2
+  SendData_ILI9340 y2
 
   SendCommand_ILI9340(ILI9340_RAMWR); // write to RAM
 
@@ -638,17 +646,17 @@ End Sub
 
 
 Sub SetCursorPosition_ILI9340( In x1 as word, in y1 as word, in x2 as word, in y2 as word)
-	SendCommand_ILI9340(ILI9340_CASET); // Column addr set
-	SendData_ILI9340 x1_H
-	SendData_ILI9340 x1
+  SendCommand_ILI9340(ILI9340_CASET); // Column addr set
+  SendData_ILI9340 x1_H
+  SendData_ILI9340 x1
   SendData_ILI9340 x2_H
-	SendData_ILI9340 x2
+  SendData_ILI9340 x2
 
   SendCommand_ILI9340(ILI9340_PASET); // Row addr set
-	SendData_ILI9340 y1_H
-	SendData_ILI9340 y1
+  SendData_ILI9340 y1_H
+  SendData_ILI9340 y1
   SendData_ILI9340 y2_H
-	SendData_ILI9340 y2
+  SendData_ILI9340 y2
 
 End Sub
 
@@ -692,14 +700,14 @@ end sub
 '''@param PrintData String to display
 '''@param Color Optional color
 Sub BigPrint_ILI9340(In PrintLocX as Word, In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
-	Dim GLCDPrintLoc as word
+  Dim GLCDPrintLoc as word
   PrintLen = PrintData(0)
-	If PrintLen = 0 Then Exit Sub
-	GLCDPrintLoc = PrintLocX
-	For SysPrintTemp = 1 To PrintLen
-		DrawBigChar_ILI9340 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), Color
-		GLCDPrintLoc += 13
-	Next
+  If PrintLen = 0 Then Exit Sub
+  GLCDPrintLoc = PrintLocX
+  For SysPrintTemp = 1 To PrintLen
+    DrawBigChar_ILI9340 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), Color
+    GLCDPrintLoc += 13
+  Next
 End Sub
 
 '''Draws a Vertical Line on the GLCD with a
@@ -725,7 +733,7 @@ Sub DrawBigChar_ILI9340 (In CharLocX as Word, In CharLocY as Word, In CharCode, 
        Goto GCBBigTables
     end if
     GCBBigTables:
-	  For CurrCharCol = 1 to 24
+    For CurrCharCol = 1 to 24
       CurrCol=CurrCharCol+CharCode*24-(CharCode/10)*240
       if CharCode>=0 and CharCode<=9 then ReadTable BigFont32_41 , CurrCol, CurrCharVal
       if CharCode>=10 and CharCode<=19 then ReadTable BigFont42_51 , CurrCol, CurrCharVal
@@ -752,8 +760,7 @@ Sub DrawBigChar_ILI9340 (In CharLocX as Word, In CharLocY as Word, In CharCode, 
           if CurrCharVal.0=1 then
              PSet_ILI9340 LocX , LocY , Color
           end if
-					Rotate CurrCharVal Right
-				Next
-	  Next
+          Rotate CurrCharVal Right
+        Next
+    Next
 End Sub
-
