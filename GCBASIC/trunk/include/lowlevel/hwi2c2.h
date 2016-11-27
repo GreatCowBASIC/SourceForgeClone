@@ -22,7 +22,7 @@
 'UNLESS YOU KNOW WHAT YOU ARE DOING. CHANGING THIS FILE COULD RENDER SOME GCBASIC
 'COMMANDS UNUSABLE!
 '********************************************************************************
-
+'    Updated Oct 2016  - for Option Explicit and to fix the script issue
 
 'SPI mode constants ALSO used by hardware I2C:
 ' Define HI2C2 settings - CHANGE PORTS
@@ -46,7 +46,7 @@
 '        Dir HI2C2_DATA in
 '        Dir HI2C2_CLOCK in
 '
-'				 Type
+'        Type
 '        HI2C2Mode Master
 
 
@@ -69,93 +69,93 @@
 #startup HI2C2Init
 
 #script
-	HI2C2_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C2_BAUD_RATE)) - 1
+  HI2C2_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C2_BAUD_RATE)) - 1
 
-	If PIC Then
+  If PIC Then
              HI2C2HasData = "SSP2STAT_BF = On"
-	End If
+  End If
 
 #endscript
 
 
 Sub HI2C2Mode (In HI2C2CurrentMode)
 
-	#ifdef PIC
+  #ifdef PIC
 
-		set SSP2STAT_SMP on
-		set SSP2CON1_CKP on
-		set SSP2CON1_WCOL Off
+    set SSP2STAT_SMP on
+    set SSP2CON1_CKP on
+    set SSP2CON1_WCOL Off
 
-		'Select mode and clock
-		If HI2C2CurrentMode = Master Then
-			set SSP2CON1_SSPM3 on
-			set SSP2CON1_SSPM2 off
-			set SSP2CON1_SSPM1 off
-			set SSP2CON1_SSPM0 off
-			SSP2ADD = HI2C2_BAUD_TEMP And 127
-		end if
+    'Select mode and clock
+    If HI2C2CurrentMode = Master Then
+      set SSP2CON1_SSPM3 on
+      set SSP2CON1_SSPM2 off
+      set SSP2CON1_SSPM1 off
+      set SSP2CON1_SSPM0 off
+      SSP2ADD = HI2C2_BAUD_TEMP And 127
+    end if
 
-		if HI2C2CurrentMode = Slave then
-			set SSP2CON1_SSPM3 off
-			set SSP2CON1_SSPM2 on
-			set SSP2CON1_SSPM1 on
-			set SSP2CON1_SSPM0 off
-		end if
+    if HI2C2CurrentMode = Slave then
+      set SSP2CON1_SSPM3 off
+      set SSP2CON1_SSPM2 on
+      set SSP2CON1_SSPM1 on
+      set SSP2CON1_SSPM0 off
+    end if
 
-		if HI2C2CurrentMode = Slave10 then
-			set SSP2CON1_SSPM3 off
-			set SSP2CON1_SSPM2 on
-			set SSP2CON1_SSPM1 on
-			set SSP2CON1_SSPM0 on
-		end if
+    if HI2C2CurrentMode = Slave10 then
+      set SSP2CON1_SSPM3 off
+      set SSP2CON1_SSPM2 on
+      set SSP2CON1_SSPM1 on
+      set SSP2CON1_SSPM0 on
+    end if
 
-		'Enable I2C
-		set SSP2CON1_SSPEN on
-	#ENDIF
+    'Enable I2C
+    set SSP2CON1_SSPEN on
+  #ENDIF
 
 End Sub
 
 Sub HI2C2SetAddress(In HI2C2Address)
-	#ifdef PIC
-		'Slave mode only
-		If HI2C2CurrentMode <= 10 Then
-    	SSP2ADD = HI2C2Address
-		End If
-	#endif
+  #ifdef PIC
+    'Slave mode only
+    If HI2C2CurrentMode <= 10 Then
+      SSP2ADD = HI2C2Address
+    End If
+  #endif
 End Sub
 
 Sub HI2C2Start
 
-	'Master mode
-	If HI2C2CurrentMode > 10 Then
-		#ifdef PIC
-		  #ifdef Var(SSP2CON2)
+  'Master mode
+  If HI2C2CurrentMode > 10 Then
+    #ifdef PIC
+      #ifdef BIT(SSP2CON2_SEN)
         Set SSP2CON2_SEN On
         HI2C2WaitMSSP
-		  #endif
-		#endif
+      #endif
+    #endif
 
-	'Slave mode
-	Else
-		#ifdef PIC
-			Wait Until SSP2STAT_S = On
-		#endif
+  'Slave mode
+  Else
+    #ifdef PIC
+      Wait Until SSP2STAT_S = On
+    #endif
 
-	End If
+  End If
 
 End Sub
 
 Sub HI2C2ReStart
 
-	'Master mode
-	If HI2C2CurrentMode > 10 Then
-		#ifdef PIC
-			#ifdef Var(SSP2CON2)
-      	Set SSP2CON2_RSEN On
+  'Master mode
+  If HI2C2CurrentMode > 10 Then
+    #ifdef PIC
+      #ifdef BIT(SSP2CON2_RSEN)
+        Set SSP2CON2_RSEN On
         HI2C2WaitMSSP
-			#endif
-		#endif
-	End If
+      #endif
+    #endif
+  End If
 
 End Sub
 
@@ -164,107 +164,103 @@ End Sub
 
 Sub HI2C2Stop
 
-	'Master mode
-	If HI2C2CurrentMode > 10 Then
-		#ifdef PIC
-			#ifdef Var(SSP2CON2)
+  'Master mode
+  If HI2C2CurrentMode > 10 Then
+    #ifdef PIC
 
-      	wait while SSP2STAT_R_NOT_W = 1   'wait for completion of activities
+
+        wait while SSP2STAT_R_NOT_W = 1   'wait for completion of activities
         Set SSP2CON2_PEN On
         HI2C2WaitMSSP
-			#endif
-		#endif
 
-	'Slave mode
-	Else
-		#ifdef PIC
-			Wait Until SSP2STAT_P = On
-		#endif
+    #endif
 
-	End If
+  'Slave mode
+  Else
+    #ifdef PIC
+      Wait Until SSP2STAT_P = On
+    #endif
+
+  End If
 
 End Sub
 
 Function HI2C2StartOccurred
-	'Master mode
-	'Always return true
-	If HI2C2CurrentMode > 10 Then
-		HI2C2StartOccurred = TRUE
-		Exit Function
+  'Master mode
+  'Always return true
+  If HI2C2CurrentMode > 10 Then
+    HI2C2StartOccurred = TRUE
+    Exit Function
 
-	'Slave mode, check if start condition received last
-	Else
-		HI2C2StartOccurred = FALSE
-		#ifdef PIC
-			#ifdef Var(SSP2STAT)
-				If SSP2STAT_S = On Then HI2C2StartOccurred = TRUE
-			#endif
-		#endif
+  'Slave mode, check if start condition received last
+  Else
+    HI2C2StartOccurred = FALSE
+    #ifdef PIC
 
-	End If
+        If SSP2STAT_S = On Then HI2C2StartOccurred = TRUE
+
+    #endif
+
+  End If
 End Function
 
 Function HI2C2Stopped
-	'Master mode
-	'Always return false
-	If HI2C2CurrentMode > 10 Then
-		HI2C2Stopped = FALSE
-		Exit Function
+  'Master mode
+  'Always return false
+  If HI2C2CurrentMode > 10 Then
+    HI2C2Stopped = FALSE
+    Exit Function
 
-	'Slave mode, check if start condition received last
-	Else
-		HI2C2Stopped = FALSE
-		#ifdef PIC
-			#ifdef Var(SSP2STAT)
-				If SSP2STAT_P = On Then HI2C2Stopped = TRUE
-			#endif
-		#endif
+  'Slave mode, check if start condition received last
+  Else
+    HI2C2Stopped = FALSE
+    #ifdef PIC
 
-	End If
+        If SSP2STAT_P = On Then HI2C2Stopped = TRUE
+
+    #endif
+
+  End If
 End Function
 
+
+Dim HI2C2ACKPOLLSTATE as byte
 Sub HI2C2Send(In I2CByte)
 
-	#ifdef PIC
+  #ifdef PIC
 
-		RetryHI2C2Send:
-			'Clear WCOL
-			SET SSP2CON1_WCOL OFF
-			'Load data to send
-			SSP2BUF = I2CByte
+    RetryHI2C2Send:
+      'Clear WCOL
+      SET SSP2CON1_WCOL OFF
+      'Load data to send
+      SSP2BUF = I2CByte
       HI2C2WaitMSSP
 
-			if SSP2CON2_ACKSTAT =  1 then
-      	HI2C2AckPollState = true
+      if SSP2CON2_ACKSTAT =  1 then
+        HI2C2AckPollState = true
       else
-      	HI2C2AckPollState = false
+        HI2C2AckPollState = false
       end if
 
-		If SSP2CON1_WCOL  = On Then
-			If HI2C2CurrentMode <= 10 Then Goto RetryHI2C2Send
-		End If
+    If SSP2CON1_WCOL  = On Then
+      If HI2C2CurrentMode <= 10 Then Goto RetryHI2C2Send
+    End If
 
-		'Release clock (only needed by slave)
-		If HI2C2CurrentMode <= 10 Then Set SSP2CON1_CKP On
+    'Release clock (only needed by slave)
+    If HI2C2CurrentMode <= 10 Then Set SSP2CON1_CKP On
 
-	#endif
+  #endif
 
 End Sub
 
 Sub HI2C2Receive (Out HI2CByte, Optional In HI2CGetAck = 1 )
 
-	#ifdef PIC
+  #ifdef PIC
 
-'		#ifndef Var(SSPCON1)
-'			#ifdef Var(SSPCON)
-'				Dim SSPCON1 Alias SSPCON
-'			#endif
-'		#endif
+    'Enable receive
 
-		'Enable receive
-      #ifdef Var(SSP2CON2)
-			'Master mode
-			If HI2C2CurrentMode > 10 Then
+      'Master mode
+      If HI2C2CurrentMode > 10 Then
         if HI2CGetAck.0 = 1 then
            ' Acknowledge
             SSP2CON2_ACKDT = 0
@@ -273,49 +269,50 @@ Sub HI2C2Receive (Out HI2CByte, Optional In HI2CGetAck = 1 )
             SSP2CON2_ACKDT = 1
         end if
         SSP2CON2_RCEN = 1
-			'Slave mode
-			Else
-			  SET SSP2STAT_R_NOT_W ON
-			End If
-		#endif
+      'Slave mode
+      Else
+        SET SSP2STAT_R_NOT_W ON
+      End If
 
-		'Clear Collisions
-		SET SSP2CON1_WCOL OFF
-		SET SSP2CON1_SSPOV Off
 
-		'Wait for receive
-		Wait Until SSP2STAT_BF = 1
+    'Clear Collisions
+    SET SSP2CON1_WCOL OFF
+    SET SSP2CON1_SSPOV Off
 
-		HI2CByte = SSP2BUF
+    'Wait for receive
+    Wait Until SSP2STAT_BF = 1
+
+    HI2CByte = SSP2BUF
     SSP2IF = 0
     SSP2CON2_ACKEN = 1
     ' Clear flag - this is required
     SSP2STAT_BF = 0
     HI2C2WaitMSSP
 
-		'Disable receive (master mode)
-		#ifdef Var(SSP2CON2)
-			'Master mode
-			If HI2C2CurrentMode > 10 Then
-				Set SSP2CON2_RCEN Off
-			'Slave mode
-			Else
-			  SET SSP2STAT_R_NOT_W Off
-			End If
-		#endif
-	#endif
+    'Disable receive (master mode)
+
+      'Master mode
+      If HI2C2CurrentMode > 10 Then
+        Set SSP2CON2_RCEN Off
+      'Slave mode
+      Else
+        SET SSP2STAT_R_NOT_W Off
+      End If
+
+  #endif
 
 End Sub
 
 ; This routine waits for the last I2C operation to complete.
 ; It does this by polling the SSPIF flag in PIR1.
 ; Then, it clears SSPIF
+Dim HI2C2WaitMSSPTimeout as byte
 sub HI2C2WaitMSSP
 
-		' adapted for 18f - v0.94
-		Dim HI2CWaitMSSPTimeout as byte
-		HI2C2WaitMSSPTimeout = 0
-		HI2C2WaitMSSPWait:
+    ' adapted for 18f - v0.94
+
+    HI2C2WaitMSSPTimeout = 0
+    HI2C2WaitMSSPWait:
     HI2C2WaitMSSPTimeout++
     if HI2C2WaitMSSPTimeout < 255 then
         #ifdef bit(SSP2IF)

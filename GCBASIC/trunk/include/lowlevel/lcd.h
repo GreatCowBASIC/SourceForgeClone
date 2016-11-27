@@ -77,7 +77,7 @@
 ;    Changed backlight to support IC2 and Transistor support.
 ;    Revised to support multiple I2C.
 ;
-;		 Revised 31/07/2-15 to removed defines being defined when not needed.
+;    Revised 31/07/2-15 to removed defines being defined when not needed.
 ;
 
 ;    Uses
@@ -104,13 +104,13 @@
 '''   30-08-2015
 '''   Added LCD_IO 2_74XX174 and LCD_IO 2_74XX164: 2-wire modes for different shiftregisters
 '''
-'''		02/01/2015	added 404 support
+'''   02/01/2015  added 404 support
 
 #startup InitLCD
 
 #script
 
-	if LCD_IO = 404 then
+  if LCD_IO = 404 then
 
       PUT = PUT404
       LOCATE = LOCATE404
@@ -137,6 +137,8 @@
 #define LCDWriteByte LCDNormalWriteByte
 #define LCDReadByte LCDNormalReadByte
 
+
+Dim SysLCDTemp as Byte
 #define LCD_CD SysLCDTemp.0 'Combined clock & data bit. Used in 1-wire mode
 
 #define LCD_DB SysLCDTemp.0 'Data bit. Used in 2-bit mode
@@ -205,7 +207,7 @@
       slow_us = 40
       medium_us = 20
       fast_us = 10
-			#define LCD_I2C_Address_1 0x4E
+      #define LCD_I2C_Address_1 0x4E
     end if
 
     '''Definition for mjkdz I2C adapter with pot bent over top of chip
@@ -222,7 +224,7 @@
       slow_us = 40
       medium_us = 20
       fast_us = 10
-			#define LCD_I2C_Address_1 0x4E
+      #define LCD_I2C_Address_1 0x4E
     end if
 
 #endscript
@@ -318,10 +320,10 @@ sub InitLCD
       #ENDIF
   #ENDIF
 
-  #IFDEF LCD_IO 1		' 1-wire mode with shiftreg 74HC595
-  SET LCD_CD ON		  ' Default high
+  #IFDEF LCD_IO 1   ' 1-wire mode with shiftreg 74HC595
+  SET LCD_CD ON     ' Default high
   DIR LCD_CD OUT
-  LCDBacklight Off	' This is to prevent an error during compiling if LCDbacklight is not used in the script
+  LCDBacklight Off  ' This is to prevent an error during compiling if LCDbacklight is not used in the script
   wait 10 MS
   SET LCD_RS OFF
   ResetShiftReg
@@ -345,12 +347,12 @@ sub InitLCD
   WAIT 1 MS
   #ENDIF
 
-     #IFDEF LCD_IO 2, 2_74XX174, 2_74XX164   		'All 2-wire modes
+     #IFDEF LCD_IO 2, 2_74XX174, 2_74XX164      'All 2-wire modes
           SET LCD_DB OFF
           SET LCD_CB OFF
           DIR LCD_DB OUT
           DIR LCD_CB OUT
-          LCDBacklight Off	'this is to prevent an error during compiling if LCDbacklight is not used in the script
+          LCDBacklight Off  'this is to prevent an error during compiling if LCDbacklight is not used in the script
           WAIT 35 MS
           SET LCD_RS OFF
           LCD2_NIBBLEOUT 0X03
@@ -432,7 +434,7 @@ sub InitLCD
               Wait until LCDReady
               SET LCD_RS OFF
 
-      	#ENDIF
+        #ENDIF
 
 
           '**********************************
@@ -571,7 +573,7 @@ sub InitLCD
                 '===== now in 4 bit mode =====
 
 
-								gLCDEnableAddress = 1
+                gLCDEnableAddress = 1
                 gLCDXYPosition = 0
 
                 LCDWriteByte 0x28    '(b'011000000') 0x28  set 2 line mode
@@ -631,7 +633,7 @@ sub InitLCD
                 LCD_Backlight = LCD_Backlight_On_State
                 wait 2 ms
 
-                repeat 2	; called to ensure reset is complete.  Needed for cheap LCDs!!
+                repeat 2  ; called to ensure reset is complete.  Needed for cheap LCDs!!
 
                 #ifdef LCD_I2C_Address_1
                        LCD_I2C_Address_Current = LCD_I2C_Address_1
@@ -680,7 +682,7 @@ sub Print (In PrintData As String)
           'Write Data
           For SysPrintTemp = 1 To PrintLen
 
-              	LCDWriteByte PrintData(SysPrintTemp)
+                LCDWriteByte PrintData(SysPrintTemp)
 
           Next
 
@@ -827,7 +829,7 @@ function LCDReady
           #ENDIF
 
           #IFNDEF LCD_NO_RW
-                    #IFDEF LCD_IO 1, 2, 2_74XX174, 2_74XX164	' All 1 and 2-wire modes
+                    #IFDEF LCD_IO 1, 2, 2_74XX174, 2_74XX164  ' All 1 and 2-wire modes
                               LCDReady = TRUE
                               exit function
                     #ENDIF
@@ -885,7 +887,7 @@ sub LCDNormalWriteByte(In LCDByte )
           #ENDIF
      #ENDIF
 
-     #IFDEF LCD_IO 1, 2, 2_74XX174, 2_74XX164	' All 1 and 2-wire modes
+     #IFDEF LCD_IO 1, 2, 2_74XX174, 2_74XX164 ' All 1 and 2-wire modes
           LCD2_NIBBLEOUT Swap4(LCDByte)     ' Swap byte; Most significant NIBBLE sent first
           LCD2_NIBBLEOUT LCDByte            ' Less Significant NIBBLE output
      #ENDIF
@@ -1179,26 +1181,26 @@ end sub
 
 SUB LCD2_NIBBLEOUT (In LCD2BYTE)
 
-  #IFDEF LCD_IO 1	' 1-wire mode with 74HC595
-    SET LCD_CD ON		' idle high
+  #IFDEF LCD_IO 1 ' 1-wire mode with 74HC595
+    SET LCD_CD ON   ' idle high
 
-    Onebit			' send QH/QH' as a "One"; mandatory for resetting the shiftreg and a working monoflop
+    Onebit      ' send QH/QH' as a "One"; mandatory for resetting the shiftreg and a working monoflop
 
-    IF LCD_RS ON THEN	' send QG; LCD RS signal
+    IF LCD_RS ON THEN ' send QG; LCD RS signal
       Onebit
     ELSE
       Zerobit
     END IF
 
-    Zerobit			' send QF; Spare pin
+    Zerobit     ' send QF; Spare pin
 
-    If LCD_Backlight Then	' Background LED is used
-      Onebit			' send QE (pin 4 74HC595); used for Backlight
+    If LCD_Backlight Then ' Background LED is used
+      Onebit      ' send QE (pin 4 74HC595); used for Backlight
     Else
       Zerobit
     End if
 
-    REPEAT 4		' send QD - QA to Shift register; starting from Nibble most significant bit
+    REPEAT 4    ' send QD - QA to Shift register; starting from Nibble most significant bit
       IF LCD2Byte.3 ON THEN
         Onebit
       Else
@@ -1207,7 +1209,7 @@ SUB LCD2_NIBBLEOUT (In LCD2BYTE)
       ROTATE LCD2Byte LEFT
     END REPEAT
 
-    ResetShiftReg		'generate reset signal for shiftreg and activate monoflop
+    ResetShiftReg   'generate reset signal for shiftreg and activate monoflop
           'character delay settings
            #IFDEF LCD_Speed FAST   'Char Rate ~20K
                 wait fast_us us
@@ -1232,17 +1234,17 @@ SUB LCD2_NIBBLEOUT (In LCD2BYTE)
     SET LCD_DB OFF
     SET LCD_CB OFF
 
-    #IFDEF LCD_IO 2, 2_74XX174	' This is old mode with 74LS174 or
-    														' 74HC164 with diode connected to pin 11
+    #IFDEF LCD_IO 2, 2_74XX174  ' This is old mode with 74LS174 or
+                                ' 74HC164 with diode connected to pin 11
                                 ' NO BACKLIGHT!
-    REPEAT 6	' Clear Shift Register With six zero's
-    	SET LCD_CB ON  ' STROBE
-    	SET LCD_CB OFF ' ======
-  	END REPEAT
+    REPEAT 6  ' Clear Shift Register With six zero's
+      SET LCD_CB ON  ' STROBE
+      SET LCD_CB OFF ' ======
+    END REPEAT
     #ENDIF
 
-    #IFDEF LCD_IO 2_74XX164	' This is new mode with 74HC164 and Backlight
-    REPEAT 8	' Clear Shift Register with eight zero's
+    #IFDEF LCD_IO 2_74XX164 ' This is new mode with 74HC164 and Backlight
+    REPEAT 8  ' Clear Shift Register with eight zero's
       SET LCD_CB ON  ' STROBE
       SET LCD_CB OFF ' ======
     END REPEAT
@@ -1253,12 +1255,12 @@ SUB LCD2_NIBBLEOUT (In LCD2BYTE)
     SET LCD_CB OFF ' ======
 
 
-    #IFDEF LCD_IO 2_74XX164	' Set Spare pin and background pin 74HC164
+    #IFDEF LCD_IO 2_74XX164 ' Set Spare pin and background pin 74HC164
     SET LCD_DB OFF ' Spare bit (QG)
     SET LCD_CB ON  ' STROBE
     SET LCD_CB OFF ' ======
 
-    If LCD_Backlight Then	' Background LED is used
+    If LCD_Backlight Then ' Background LED is used
       SET LCD_DB ON  ' send a one bit (QF, pin 11 74HC164)
       SET LCD_CB ON  ' STROBE
       SET LCD_CB OFF ' ======
@@ -1275,13 +1277,13 @@ SUB LCD2_NIBBLEOUT (In LCD2BYTE)
     SET LCD_CB OFF ' ======
 
     '4 bits Data (QD - QA) out to Shift register, starting from Nibble most significant bit
-    REPEAT 4	'FOR LCDTemp = 1 to 4
+    REPEAT 4  'FOR LCDTemp = 1 to 4
       SET LCD_DB OFF
       IF LCD2Byte.3 ON THEN SET LCD_DB ON
       SET LCD_CB ON  ' STROBE
       SET LCD_CB OFF ' ======
       ROTATE LCD2Byte LEFT
-    END REPEAT	'NEXT
+    END REPEAT  'NEXT
 
     SET LCD_DB ON                 ' Last pulse for Nibble output. Not for Shift register
     WAIT 1 MS                     ' Put E pin on LCD to one through an AND operation
@@ -1386,93 +1388,93 @@ end sub
 'Create a custom character in CGRAM
 sub LCDCreateChar (In LCDCharLoc, LCDCharData())
 
-	'Store old location
-	#IFDEF LCD_IO 4,8,10,12
-		#ifndef LCD_NO_RW
-			Set LCD_RS Off
-			LCDLoc = LCDReadByte
-			Set LCDLoc.7 On
-		#endif
-	#ENDIF
+  'Store old location
+  #IFDEF LCD_IO 4,8,10,12
+    #ifndef LCD_NO_RW
+      Set LCD_RS Off
+      LCDLoc = LCDReadByte
+      Set LCDLoc.7 On
+    #endif
+  #ENDIF
 
-	'Select location
-	Set LCD_RS Off
-	LCDWriteByte (64 + LCDCharLoc * 8)
-	wait 5 10us
+  'Select location
+  Set LCD_RS Off
+  LCDWriteByte (64 + LCDCharLoc * 8)
+  wait 5 10us
 
-	'Write char
-	Set LCD_RS On
-	For LCDTemp = 1 to 8
-		LCDWriteByte LCDCharData(LCDTemp)
-		wait 5 10us
-	Next
+  'Write char
+  Set LCD_RS On
+  For LCDTemp = 1 to 8
+    LCDWriteByte LCDCharData(LCDTemp)
+    wait 5 10us
+  Next
 
-	'Restore location
-	#IFDEF LCD_IO 4,8,10,12
-		#ifndef LCD_NO_RW
-			Set LCD_RS Off
-			LCDWriteByte (LCDLoc)
-			wait 5 10us
-		#endif
-		#ifdef LCD_NO_RW
-			set LCD_RS off
-			LCDWriteByte(0x80)
-			wait 5 10us
-		#endif
-	#endif
-	#ifndef LCD_IO 4,8,10,12
-		set LCD_RS off
-		LCDWriteByte(0x80)
-		wait 5 10us
-	#endif
+  'Restore location
+  #IFDEF LCD_IO 4,8,10,12
+    #ifndef LCD_NO_RW
+      Set LCD_RS Off
+      LCDWriteByte (LCDLoc)
+      wait 5 10us
+    #endif
+    #ifdef LCD_NO_RW
+      set LCD_RS off
+      LCDWriteByte(0x80)
+      wait 5 10us
+    #endif
+  #endif
+  #ifndef LCD_IO 4,8,10,12
+    set LCD_RS off
+    LCDWriteByte(0x80)
+    wait 5 10us
+  #endif
 end sub
 
 'Create a graph character in CGRAM
 Sub LCDCreateGraph(In LCDCharLoc, In LCDValue)
 
-	'Store old location
-	#IFDEF LCD_IO 4,8
-		#ifndef LCD_NO_RW
-			Set LCD_RS Off
-			LCDLoc = LCDReadByte
-			Set LCDLoc.7 On
-		#endif
-	#ENDIF
+  'Store old location
+  #IFDEF LCD_IO 4,8
+    #ifndef LCD_NO_RW
+      Set LCD_RS Off
+      LCDLoc = LCDReadByte
+      Set LCDLoc.7 On
+    #endif
+  #ENDIF
 
-	'Select location
-	Set LCD_RS Off
-	LCDWriteByte (64 + LCDCharLoc * 8)
-	wait 5 10us
+  'Select location
+  Set LCD_RS Off
+  LCDWriteByte (64 + LCDCharLoc * 8)
+  wait 5 10us
 
-	'Write char for graph
-	Set LCD_RS On
-	For LCDTemp = 8 to 1
-		If LCDTemp > LCDValue Then
-			LCDWriteByte LCD_BAR_EMPTY
-		Else
-			LCDWriteByte LCD_BAR_FULL
-		End If
-		wait 5 10us
-	Next
+  'Write char for graph
+  Set LCD_RS On
+  For LCDTemp = 8 to 1
+    If LCDTemp > LCDValue Then
+      LCDWriteByte LCD_BAR_EMPTY
+    Else
+      LCDWriteByte LCD_BAR_FULL
+    End If
+    wait 5 10us
+  Next
 
-	'Restore location
-	#IFDEF LCD_IO 4,8
-		#ifndef LCD_NO_RW
-			Set LCD_RS Off
-			LCDWriteByte (LCDLoc)
-			wait 5 10us
-		#endif
-		#ifdef LCD_NO_RW
-			set LCD_RS off
-			LCDWriteByte(0x80)
-			wait 5 10us
-		#endif
-	#endif
-	#ifndef LCD_IO 4,8
-		set LCD_RS off
-		LCDWriteByte(0x80)
-		Wait 5 10us
-	#endif
+  'Restore location
+  #IFDEF LCD_IO 4,8
+    #ifndef LCD_NO_RW
+      Set LCD_RS Off
+      LCDWriteByte (LCDLoc)
+      wait 5 10us
+    #endif
+    #ifdef LCD_NO_RW
+      set LCD_RS off
+      LCDWriteByte(0x80)
+      wait 5 10us
+    #endif
+  #endif
+  #ifndef LCD_IO 4,8
+    set LCD_RS off
+    LCDWriteByte(0x80)
+    Wait 5 10us
+  #endif
 
 End Sub
 
@@ -1491,7 +1493,7 @@ sub LCDDisplayOff
     set LCD_RS off
     LCDWriteByte(b'00001000')
     LCD_State = 0
-		wait 10 ms
+    wait 10 ms
 end sub
 
 'sub to turn ON display, turn off curor and turn off flash
@@ -1503,7 +1505,7 @@ sub LCDDisplayOn
 End Sub
 
 sub LCDBacklight(IN LCDTemp)
-  #IFDEF LCD_IO 1, 2_74XX164   		'1 and 2-wire mode with Backlight
+  #IFDEF LCD_IO 1, 2_74XX164      '1 and 2-wire mode with Backlight
     IF LCDTemp = ON then
       LCD_Backlight = LCD_Backlight_On_State
     Else
@@ -1541,10 +1543,10 @@ Sub LOCATE404 (In LCDLine, In LCDColumn)
 
           Set LCD_RS Off
 
-					if LCDColumn < 20 Then
-          		gLCDEnableAddress = 1
+          if LCDColumn < 20 Then
+              gLCDEnableAddress = 1
           Else
-          		gLCDEnableAddress = 2
+              gLCDEnableAddress = 2
               LCDColumn = LCDColumn - 20
           end if
 
@@ -1560,8 +1562,8 @@ End Sub
 
 Sub CLS404( Optional in lLCDEnableAddress = 3 )
 
-		gLCDEnableAddress = 0
-		if lLCDEnableAddress.1 = 1 then gLCDEnableAddress = 2
+    gLCDEnableAddress = 0
+    if lLCDEnableAddress.1 = 1 then gLCDEnableAddress = 2
     Repeat 2
 
         SET LCD_RS OFF
@@ -1574,24 +1576,24 @@ Sub CLS404( Optional in lLCDEnableAddress = 3 )
         LCDWriteByte(0x80)
         Wait 12 10us
 
-				if lLCDEnableAddress.0 = 1 then gLCDEnableAddress = 1
-    	end repeat
+        if lLCDEnableAddress.0 = 1 then gLCDEnableAddress = 1
+      end repeat
 
     select case lLCDEnableAddress
-				case 1
-        	gLCDXYPosition = 0
+        case 1
+          gLCDXYPosition = 0
         case 2
-        	gLCDXYPosition = 20
+          gLCDXYPosition = 20
         Case Else
-        	gLCDXYPosition = 0
-		end Select
+          gLCDXYPosition = 0
+    end Select
 
 End Sub
 
 
 Sub LCDHOME404( Optional in lLCDEnableAddress = 3 )
 
-		if lLCDEnableAddress.1 = 1 then gLCDEnableAddress = 2
+    if lLCDEnableAddress.1 = 1 then gLCDEnableAddress = 2
     Repeat 2
 
           SET LCD_RS OFF
@@ -1599,18 +1601,18 @@ Sub LCDHOME404( Optional in lLCDEnableAddress = 3 )
           'Return CURSOR to home
           LCDWriteByte (b'00000010')
           Wait 12 10us
-					if lLCDEnableAddress.0 = 1 then gLCDEnableAddress = 1
+          if lLCDEnableAddress.0 = 1 then gLCDEnableAddress = 1
 
     end repeat
 
     select case lLCDEnableAddress
-				case 1
-        	gLCDXYPosition = 0
+        case 1
+          gLCDXYPosition = 0
         case 2
-        	gLCDXYPosition = 20
+          gLCDXYPosition = 20
         Case Else
-        	gLCDXYPosition = 0
-		end Select
+          gLCDXYPosition = 0
+    end Select
 
 End Sub
 
@@ -1618,14 +1620,14 @@ End Sub
 
 Sub LCDcmd404 ( In LCDValue,  Optional in lLCDEnableAddress = 3 )
 
-		if lLCDEnableAddress.1 = 1 then gLCDEnableAddress = 2
+    if lLCDEnableAddress.1 = 1 then gLCDEnableAddress = 2
     Repeat 2
 
           SET LCD_RS OFF
           'Send Command.... this is unvalidated.. send whatever is passed!
           LCDWriteByte ( LCDValue)
           Wait 4 10us
-					if lLCDEnableAddress.0 = 1 then gLCDEnableAddress = 1
+          if lLCDEnableAddress.0 = 1 then gLCDEnableAddress = 1
 
     end repeat
 end sub
@@ -1641,8 +1643,8 @@ sub Print404 (In PrintData As String)
 
           'Write Data
           For SysPrintTemp = 1 To PrintLen
-		          Set LCD_RS On
-          		locate ( ( gLCDXYPosition / 40 ) , (gLCDXYPosition mod 40) )
+              Set LCD_RS On
+              locate ( ( gLCDXYPosition / 40 ) , (gLCDXYPosition mod 40) )
               Set LCD_RS On
               LCDWriteByte PrintData(SysPrintTemp)
               'increment XY position
@@ -1731,7 +1733,7 @@ End Sub
 Sub Print404 (In LCDValueInt As Integer)
           Dim LCDValue As Word
 
-					'calculate XY position
+          'calculate XY position
           locate ( ( gLCDXYPosition / 40 ) , (gLCDXYPosition mod 40) )
 
           'If sign bit is on, print - sign and then negate
@@ -1755,7 +1757,7 @@ Sub Print404 (In LCDValue As Long)
           Dim SysPrintBuffer(10)
           SysPrintBuffLen = 0
 
-					'calculate XY position
+          'calculate XY position
           locate ( ( gLCDXYPosition / 40 ) , (gLCDXYPosition mod 40) )
 
           Do
@@ -1806,12 +1808,12 @@ sub LCDHex404  (In LCDValue, optional in LCDChar = 1)
 
     'Write high char if LCDValue is > 15 (DEC)
     IF LCDValue > 15 then
-    	LCDWriteChar HighChar
+      LCDWriteChar HighChar
       gLCDXYPosition++
     end if
 
     LCDWriteChar LowChar
-		gLCDXYPosition++
+    gLCDXYPosition++
 
 end sub
 
@@ -1865,16 +1867,16 @@ end sub
 sub LCDCreateChar404 ( In LCDCharLoc, LCDCharData() )
 
   'Select location
-	Set LCD_RS Off
-	LCDWriteByte (64 + LCDCharLoc * 8)
-	wait 5 10us
+  Set LCD_RS Off
+  LCDWriteByte (64 + LCDCharLoc * 8)
+  wait 5 10us
 
-	'Write char
-	Set LCD_RS On
-	For LCDTemp = 1 to 8
-		LCDWriteByte LCDCharData(LCDTemp)
-		wait 5 10us
-	Next
+  'Write char
+  Set LCD_RS On
+  For LCDTemp = 1 to 8
+    LCDWriteByte LCDCharData(LCDTemp)
+    wait 5 10us
+  Next
 
 
   set LCD_RS off
@@ -1903,8 +1905,8 @@ end sub
 'sub to turn off display and turn off cursor and turn off flash
 sub LCDDisplaysOff404
 
-		LCDValue = 0
-		setwith ( lcdvalue.0, LCD_enable1 )
+    LCDValue = 0
+    setwith ( lcdvalue.0, LCD_enable1 )
     setwith ( lcdvalue.1, LCD_enable2 )
 
     Set LCD_enable1 on
@@ -1915,7 +1917,7 @@ sub LCDDisplaysOff404
     Set LCD_enable2 on
     LCDCURSOR LCDOFF
 
-		wait 10 ms
+    wait 10 ms
     setwith ( LCD_enable2, lcdvalue.1 )
     setwith ( LCD_enable1, lcdvalue.0 )
 
@@ -1926,7 +1928,7 @@ end sub
 'sub to turn ON display, turn off curor and turn off flash
 sub LCDDisplaysOn404
 
- 		lcdvalue.1 = LCD_enable2
+    lcdvalue.1 = LCD_enable2
     lcdvalue.0 = LCD_enable1
 
     Set LCD_enable1 on
@@ -1941,4 +1943,3 @@ sub LCDDisplaysOn404
     setwith ( LCD_enable1, lcdvalue.0 )
 
 End Sub
-

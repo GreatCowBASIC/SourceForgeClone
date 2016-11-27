@@ -32,6 +32,8 @@
 ''' 09/08/16  Revised to remove fix the all case ENable option
 ''' 13/08/16  Added HPWM5 missing constant
 ''' 10/10/16  Added by EvanV CCP5 support with great help from Isay Goltman
+''' 12/10/16  Revised to sort out that the work of 14/3/16 had broken all the legacy chips!  Added alternative BIT() Test
+'''           Also, revised calcs to improve performance
 
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
@@ -165,14 +167,16 @@ Sub InitPWM
       end if
     end if
 
+    'Code from Early days
     'DutyCycle = (PWM_Duty*10.24)*PR2Temp/1024
     DutyCycle = (PWM_Duty / 25) * (PR2Temp + 1)
     DutyCycleH = (DutyCycle AND 1020)/4
     DutyCycleL = DutyCycle AND 3
+    'End of Code from Early days
 
     PWMOsc1 = int(60000/(240/ChipMHz))    'This is used in the calculations
-    PWMOsc4 = int(60000/(960/ChipMHz))    '*** Dead Code ***
-    PWMOsc16 = int(60000/(3840/ChipMHz))  '*** Dead Code ***
+    PWMOsc4 = int(60000/(960/ChipMHz))    '*** Unused constant ***
+    PWMOsc16 = int(60000/(3840/ChipMHz))  '*** Unused constant ***
 
   #endscript
 
@@ -182,10 +186,10 @@ Sub InitPWM
     PR2 = PR2Temp
     #ifdef TxPR 1
       SET T2CON.T2CKPS0 OFF
-        SET T2CON.T2CKPS1 OFF
+      SET T2CON.T2CKPS1 OFF
     #endif
     #ifdef TxPR 4
-        SET T2CON.T2CKPS0 ON
+      SET T2CON.T2CKPS0 ON
       SET T2CON.T2CKPS1 OFF
     #endif
     #ifdef TxPR 16
@@ -265,9 +269,12 @@ sub PWMOn
   CCP1CON = CCPCONCache
 end sub
 
+
 sub PWMOff
   CCP1CON = 0
 end sub
+
+
 
 sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 
@@ -324,7 +331,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
       End If
   #endif
 
-  'this code can be optimised by using defines USE_HPWMCCP1|2|3|4
+  'this code can be optimised by using defines USE_HPWMCCP1|2|3|4|5
   'and, you can define user setup and exit commands using AddHPWMCCPSetupN and  AddHPWMCCPExitN
   '   These can be used to FIX little errors!
 
@@ -335,10 +342,9 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
     #endif
 
     #ifdef NoVar(CCP2CON)   'We assumne there is is only 1 CCP module on Chip
-      PRx_Temp = PWMDuty * (PRx_Temp + 2)   'Correction  - WMR
+      PRx_Temp = PWMDuty * (PRx_Temp + 2)
       CCPR1L = PRx_Temp_H
       If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
-
       SET CCP1CON.CCP1M3 ON
       SET CCP1CON.CCP1M2 ON
       SET CCP1CON.CCP1M1 OFF
@@ -363,7 +369,9 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
 
       if PWMChannel = 1 then
 
-        #ifndef VAR(CCPR1H)
+
+        'Testing this bit is to identify the 2016 chip that use CCPR1H and CCPR1L of PWM
+        #ifndef BIT(CCP1FMT)
             PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction  - WMR
             CCPR1L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
@@ -373,7 +381,8 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP1M0 OFF
         #ENDIF
 
-        #ifdef VAR(CCPR1H)
+        'Testing this bit is to identify the 2016 chip that use CCPR1H and CCPR1L of PWM
+        #ifdef BIT(CCP1FMT)
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             CCPR1H = PRx_Temp_H
             CCPR1L = PRx_Temp
@@ -412,8 +421,8 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
       if PWMChannel = 2 then
 
 
-        #ifndef VAR(CCPR2H) 'This is the general case
-            PRx_Temp = PWMDuty * ( PR2 + 2)  'Correction  - WMR
+        #ifndef BIT(CCP2FMT)
+            PRx_Temp = PWMDuty * ( PRx_Temp + 2)  'Correction  - WMR
             CCPR2L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR2L = 0  ' Assure OFF at Zero - WMR
             SET CCP2M3 ON
@@ -422,7 +431,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP2M0 OFF
         #ENDIF
 
-        #ifdef VAR(CCPR2H)
+        #ifdef BIT(CCP2FMT)
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             CCPR2H = PRx_Temp_H
             CCPR2L = PRx_Temp
@@ -463,7 +472,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
     #ifdef Var(CCP3CON)
       if PWMChannel = 3 then 'USE_HPWMCCP3 TRUE
 
-        #ifndef VAR(CCPR3H)
+        #ifndef BIT(CCP3FMT)
             PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction  - WMR
             CCPR3L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR3L = 0  ' Assure OFF at Zero - WMR
@@ -473,7 +482,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP3M0 OFF
         #ENDIF
 
-        #ifdef VAR(CCPR3H)
+        #ifdef BIT(CCP3FMT)
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             CCPR3H = PRx_Temp_H
             CCPR3L = PRx_Temp
@@ -515,8 +524,8 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
     #ifdef Var(CCP4CON)    'Added 17.04.2105 - WMR
       if PWMChannel = 4 then  'USE_HPWMCCP4 TRUE
 
-        #ifndef VAR(CCPR4H)
-            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'ifndef VAR(CCPR1H) Calculate PRx_Temp value ...
+        #ifndef BIT(CCP4FMT)
+            PRx_Temp = PWMDuty * (PRx_Temp + 2)  '
             CCPR4L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero - WMR
 
@@ -526,7 +535,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP4M0 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
         #ENDIF
 
-        #ifdef VAR(CCPR4H)
+        #ifdef BIT(CCP4FMT)
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6.  ifdef VAR(CCPR1H)
             CCPR4H = PRx_Temp_H
             CCPR4L = PRx_Temp
@@ -566,8 +575,8 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
     #ifdef Var(CCP5CON)    'ADDED 10.10.2016 erv
       if PWMChannel = 5 then  'USE_HPWMCCP5 TRUE
 
-        #ifndef VAR(CCPR5H)
-            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'ifndef VAR(CCPR1H) Calculate PRx_Temp value ...
+        #ifndef BIT(CCP5FMT)
+            PRx_Temp = PWMDuty * (PRx_Temp + 2)
             CCPR5L = PRx_Temp_H
             If PWMDuty = 0 Then CCPR5L = 0  ' Assure OFF at Zero - WMR
 
@@ -577,7 +586,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
             SET CCP5M0 OFF'These my have been remapped using a script - do check ASM and script in INITPWM
         #ENDIF
 
-        #ifdef VAR(CCPR5H)
+        #ifdef BIT(CCP5FMT)
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6.  ifdef VAR(CCPR1H)
             CCPR5H = PRx_Temp_H
             CCPR5L = PRx_Temp
