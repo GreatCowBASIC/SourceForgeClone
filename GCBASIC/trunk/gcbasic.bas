@@ -205,6 +205,9 @@ Type AsmCommand
 	Cmd As String
 	Params As Integer
 	Param(25) As String
+	
+	FamilyVariant(10) As Integer
+	FamilyVariants As Integer = 0
 
 	Alternative As AsmCommand Pointer 'Need this to allow for multiple commands with same name
 End Type
@@ -446,6 +449,7 @@ DECLARE SUB AssembleProgram
 Declare Sub BuildAsmSymbolTable
 Declare FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
 Declare Function IsASMConst (DataSource As String) As Integer
+Declare Function IsForVariant(FoundCmd As AsmCommand Pointer) As Integer
 
 'Subs in variables.bi
 Declare Function AddFinalVar(VarName As String, VarLoc As String, VarIsArray As Integer = 0) As Integer
@@ -525,7 +529,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 DIM SHARED As Integer APC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, PSP, ChipProg
+DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount
@@ -625,7 +629,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.95.<<>> 2016-11-21"
+Version = "0.95.<<>> 2016-12-09"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -12874,6 +12878,7 @@ SUB ReadChipData
 	IF VBS = 1 THEN PRINT SPC(10); ChipDataFile
 
 	FirstSFR = &HFFFF
+	ChipFamilyVariant = 0
 
 	ReadDataMode = ""
 	DO WHILE NOT EOF(1)
@@ -12912,6 +12917,7 @@ SUB ReadChipData
 					End If
 				Case "pins": ChipPins = Val(TempData)
 				Case "family": ChipFamily = Val(TempData)
+				Case "familyvariant": ChipFamilyVariant = Val(TempData)
 				Case "configwords": ConfWords = VAL(TempData)
 				Case "psp": PSP = VAL(TempData)
 				Case "maxaddress": MemSize = VAL(TempData)
@@ -13180,22 +13186,32 @@ SUB ReadChipData
 				.Words = VAL(Trim(Left(InLine, INSTR(InLine, ";") - 1)))
 				InLine = Mid(InLine, INSTR(InLine, ";") + 1)
 
-				'Get binary instruction words
+				'Get binary instruction words and applicable variants
 				CW = 0
 				Do While INSTR(InLine, ";") <> 0
-					CW += 1
-					.Word(CW) = TRIM(Left(InLine, INSTR(InLine, ";") - 1))
+					If CW < .Words Then
+						CW += 1
+						.Word(CW) = TRIM(Left(InLine, INSTR(InLine, ";") - 1))
+					Else
+						.FamilyVariants += 1
+						.FamilyVariant(.FamilyVariants) = Val(TRIM(Left(InLine, INSTR(InLine, ";") - 1)))
+					End If
 					InLine = Trim(Mid(InLine, INSTR(InLine, ";") + 1))
 				Loop
 				If InLine <> "" Then
-					CW += 1
-					.Word(CW) = InLine
+					If CW < .Words Then
+						CW += 1
+						.Word(CW) = InLine
+					Else
+						.FamilyVariants += 1
+						.FamilyVariant(.FamilyVariants) = Val(InLine)
+					End If
 				End If
 
 				'Get command name
 				.Cmd = Trim(UCase(.Syntax))
 				If INSTR(.Cmd, " ") <> 0 THEN .Cmd = Trim(Left(.Cmd, INSTR(.Cmd, " ") - 1))
-
+				
 				'Get parameters
 				Dim As String ParamName
 				ParamName = .Syntax

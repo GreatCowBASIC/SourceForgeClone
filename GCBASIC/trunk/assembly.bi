@@ -462,7 +462,11 @@ SUB AssembleProgram
 					
 					ElseIf ChipFamily = 15 Then
 						'Print DataSource + ": Location " + Hex(B) + " Bank ";
-						B = (B AND 3968) / 128
+						If ChipFamilyVariant = 0 Then
+							B = (B AND 3968) / 128
+						Else
+							B = (B AND 8064) / 128
+						End If
 						'Print B
 						DataSource = "MOVLB " + Trim(Str(B))
 						AsmLine->Value = DataSource
@@ -1448,6 +1452,7 @@ End Sub
 Function IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
 	'Returns 0 if instruction is not assembly
 	'Returns instruction if it is asm
+	'Instructions not valid on current chip variant will be treated as not existing
 	
 	Dim As String Temp, Params
 	Dim As Integer CurrChar
@@ -1466,14 +1471,18 @@ Function IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand 
 	If ParamCount = -1 Then ParamCount = 0
 	
 	FoundCmd = HashMapGet(ASMCommands, Temp)
-	If FoundCmd <> 0 AndAlso FoundCmd->Params <> ParamCount Then
+	If FoundCmd <> 0 AndAlso (FoundCmd->Params <> ParamCount Or Not IsForVariant(FoundCmd)) Then
 		SearchCmd = FoundCmd->Alternative
 		Do While SearchCmd <> 0
-			If SearchCmd->Params = ParamCount Then
+			If SearchCmd->Params = ParamCount And IsForVariant(SearchCmd) Then
 				Return SearchCmd
 			End If
 			SearchCmd = SearchCmd->Alternative
 		Loop
+	End If
+	
+	If Not IsForVariant(FoundCmd) Then
+		Return 0
 	End If
 	
 	Return FoundCmd
@@ -1485,4 +1494,20 @@ Function IsASMConst (DataSource As String) As Integer
 	IF Left(Trim(DataSource), 1) = "@" Then Return -1
 	Return 0
 	
+End Function
+
+Function IsForVariant(FoundCmd As AsmCommand Pointer) As Integer
+	Dim SearchVariants As Integer
+	
+	'If no command, return false
+	If FoundCmd = 0 Then Return 0
+	
+	'If for all variants, return true
+	If FoundCmd->FamilyVariants = 0 Then Return -1
+	
+	'Search variants for current variant
+	For SearchVariants = 1 To FoundCmd->FamilyVariants
+		If FoundCmd->FamilyVariant(SearchVariants) = ChipFamilyVariant Then Return -1
+	Next
+	Return 0
 End Function
