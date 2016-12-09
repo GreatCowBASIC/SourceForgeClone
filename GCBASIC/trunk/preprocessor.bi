@@ -1084,6 +1084,7 @@ SUB PreProcessor
 					
 					ElseIF Left(DataSource, 7) = "#DEFINE" Then
 						DataSource = DataSource + "':" + Str(RF)
+						ForceMain = 1
 					
 					ElseIf Left(DataSource, 8) = "#OPTION " Then
 						DataSource = Trim(Mid(DataSource, 8))
@@ -1095,8 +1096,6 @@ SUB PreProcessor
 						End If
 						GoTo LoadNextLine
 					
-					ElseIf Left(DataSource, 8) = "#DEFINE " Then
-						ForceMain = 1
 					ElseIF Left(DataSource, 5) = "#OSC " Then
 						ForceMain = 1
 					ElseIF Left(DataSource, 8) = "#CONFIG " Then

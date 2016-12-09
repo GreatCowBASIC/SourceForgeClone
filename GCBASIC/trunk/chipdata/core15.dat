@@ -1,6 +1,6 @@
 'GCBASIC assembler instruction data
 'Suits enhanced midrange chips (12F1xxx and 16F1xxx)
-'Last updated 17/10/2009
+'Last updated 9/12/2016
 
 'Format: command;words;word1;word2
 'Whitespace does not matter in word1/2
@@ -41,7 +41,8 @@ BTFSS f,b;	1;	01 11bb bfff ffff
 ADDLW k;	1;	11 1110 kkkk kkkk
 ANDLW k;	1;	11 1001 kkkk kkkk
 IORLW k;	1;	11 1000 kkkk kkkk
-MOVLB k;	1;	00 0000 001k kkkk
+MOVLB k;	1;	00 0000 001k kkkk; 0
+MOVLB k;	1;	00 0001 01kk kkkk; 1
 MOVLP k;	1;	11 0001 1kkk kkkk
 MOVLW k;	1;	11 0000 kkkk kkkk
 SUBLW k;	1;	11 1100 kkkk kkkk
