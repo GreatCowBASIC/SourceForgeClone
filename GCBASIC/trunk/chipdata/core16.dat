@@ -39,7 +39,7 @@ SUBWF f,d,a;	1;	0101 11da ffff ffff
 SUBWFB f,d,a;	1;	0101 10da ffff ffff
 SWAPF f,d,a;	1;	0011 10da ffff ffff
 TSTFSZ f,a;	1;	0110 011a ffff ffff
-XORWF f,d,a	1;	0001 10da ffff ffff
+XORWF f,d,a;	1;	0001 10da ffff ffff
 
 'BIT-ORIENTED FILE REGISTER OPERATIONS
 
