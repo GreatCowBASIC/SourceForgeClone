@@ -931,7 +931,7 @@ FUNCTION IsDivider (Temp As String) As Integer
 	Select Case Temp
 		Case " ", "(", ")", ",", ".", ":", ";", "+", "-", "*", "/", "%": Return -1
 		Case "=", "!", "<", ">", "{", "}", "~", "&", "|", "#": Return -1
-		Case "[", "]": Return -1
+		Case "[", "]", Chr(9), Chr(160): Return -1
 		Case Else: Return 0
 	End Select
 	

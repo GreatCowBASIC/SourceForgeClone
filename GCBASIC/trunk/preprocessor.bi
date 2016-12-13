@@ -468,7 +468,7 @@ SUB PreProcessor
 
 	Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
-	Dim As String TempFile, LastTableOrigin, NewFNType, CurrChar, CodeTemp, OtherChar
+	Dim As String TempFile, LastTableOrigin, NewFNType, CurrChar, CodeTemp, OtherChar, BinHexTemp
 	Dim As String DataSourceOld, TranslatedFile
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 	
@@ -656,13 +656,14 @@ SUB PreProcessor
 			End If
 			
 			'Extract strings, and remove comments with ; and '
-			'Also process H' and B'
+			'Also process H' and B', 0x and 0b
 			'Convert tabs to spaces
 			
-			'0 = standard, 1 = string, 2 = inside binary or hex, 3 = comment
+			'0 = standard, 1 = string, 2 = inside binary or hex (with '), 3 = comment, 4 = inside binary or hex (no ')
 			ReadType = 0
 			CodeTemp = ""
 			StringTemp = ""
+			BinHexTemp = ""
 			CurrCharPos = 1
 			Do While CurrCharPos <= Len(DataSource)
 				CurrChar = Mid(DataSource, CurrCharPos, 1)
@@ -709,11 +710,48 @@ SUB PreProcessor
 						OtherChar = LCase(Mid(DataSource, CurrCharPos - 1, 1))
 						If OtherChar = "b" Or OtherChar = "h" Then
 							ReadType = 2
+							BinHexTemp = OtherChar + CurrChar
+							CurrChar = ""
+							'b or h will have been appended to CodeTemp, remove
+							CodeTemp = Left(CodeTemp, Len(CodeTemp) - 1)
 						Else
 							ReadType = 3
 						End If
 						
 					ElseIf ReadType = 2 Then
+						'Last part of binary/hex literal, b' or h' format
+						BinHexTemp += CurrChar
+						If LCase(Left(BinHexTemp, 1)) = "h" Then
+							BinHexTemp = "0x" + Mid(BinHexTemp, 3, Len(BinHexTemp) - 3)
+						End If
+						CodeTemp += Str(MakeDec(BinHexTemp))
+						
+						BinHexTemp = ""
+						CurrChar = ""
+						ReadType = 0
+					End If
+				
+				ElseIf ReadType <> 4 And CurrChar = "0" Then
+					If ReadType = 0 Then
+						OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
+						If (OtherChar = "b" Or OtherChar = "x") And IsDivider(Mid(DataSource, CurrCharPos - 1, 1)) Then
+							ReadType = 4
+							BinHexTemp = CurrChar
+							CurrChar = ""
+						End If
+					End If
+					
+				ElseIf ReadType = 4 Then
+					OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
+					If IsDivider(OtherChar) Or CurrCharPos = Len(DataSource) Then
+						'Last part of binary/hex literal, 0x or 0b format
+						BinHexTemp += CurrChar
+						If UCase(Left(BinHexTemp, 2)) = "0B" Then
+							BinHexTemp = "b'" + Mid(BinHexTemp, 3) + "'"
+						End If
+						CodeTemp += Str(MakeDec(BinHexTemp))
+						BinHexTemp = ""
+						CurrChar = ""
 						ReadType = 0
 					End If
 					
@@ -723,10 +761,11 @@ SUB PreProcessor
 				End If
 				
 				Select Case ReadType
-					Case 0, 2:
+					Case 0:
 						'Append char to code line
 						'Replace tabs with spaces
 						If Asc(CurrChar) = 9 Then CurrChar = " "
+						If Asc(CurrChar) = 160 Then CurrChar = " " 'non-breaking space, seems to end up in code sometimes and breaks compiler
 						'Prevent multiple spaces
 						If CurrChar <> " " Or Right(CodeTemp, 1) <> " " Then
 							CodeTemp += CurrChar
@@ -736,9 +775,14 @@ SUB PreProcessor
 						'Append char to string
 						StringTemp += CurrChar
 						
+					Case 2, 4:
+						'Store bin/hex character in temporary var
+						BinHexTemp += CurrChar
+						
 					Case 3:
 						'If in a comment, there's nothing else to read here
 						Exit Do
+						
 				End Select
 				
 				CurrCharPos += 1
@@ -771,6 +815,7 @@ SUB PreProcessor
 			
 			'Put trimmed uppercase code line with comments and strings removed back into DataSource for code below
 			DataSource = UCase(Trim(CodeTemp))
+			
 			'Add to count of loaded lines (main program only)
 			If RF <= ICCO Then
 				If DataSource <> "" Then
@@ -868,34 +913,6 @@ SUB PreProcessor
 					Temp = Message("WarningTimerConst")
 					'LogWarning(Temp, ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?")
 				End If
-				
-				'Check/fix binary and hex notation
-				Do
-					ConvertAgain = 0
-					'Convert H' ' to 0x
-					IF INSTR(DataSource, "H'") <> 0 THEN
-						Replace DataSource, "H'", "0x"
-						Replace DataSource, "'", ""
-						ConvertAgain = -1
-					END IF
-					'Convert 0b to B' '
-					IF WholeINSTR(DataSource, "0B") > 0 Then
-						T = InStr(DataSource, "0B")
-						If IsDivider(Mid(DataSource, T - 1, 1)) Then
-							Replace DataSource, "0B", "B'"
-							T = LEN(DataSource) + 1
-							For SL = INSTR(DataSource, "B'") + 2 TO LEN(DataSource)
-								Temp = Mid(DataSource, SL, 1)   
-								If IsDivider(Temp) Then T = SL: Exit For
-							Next
-							LTemp = Left(DataSource, T - 1)
-							RTemp = ""
-							IF T < LEN(DataSource) Then RTemp = Mid(DataSource, T)
-							DataSource = LTemp + "'" + RTemp
-							ConvertAgain = -1
-						End If
-					END If
-				Loop While ConvertAgain
 				
 				'Remove any tabs and double spaces (again)
 				DO WHILE INSTR(DataSource, Chr(9)) <> 0: Replace DataSource, Chr(9), " ": LOOP
