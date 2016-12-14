@@ -731,19 +731,17 @@ SUB PreProcessor
 						ReadType = 0
 					End If
 				
-				ElseIf ReadType <> 4 And CurrChar = "0" Then
-					If ReadType = 0 Then
-						OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
-						If (OtherChar = "b" Or OtherChar = "x") And IsDivider(Mid(DataSource, CurrCharPos - 1, 1)) Then
-							ReadType = 4
-							BinHexTemp = CurrChar
-							CurrChar = ""
-						End If
+				ElseIf ReadType = 0 And CurrChar = "0" Then
+					OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
+					If (OtherChar = "b" Or OtherChar = "x") And IsDivider(Mid(DataSource, CurrCharPos - 1, 1)) Then
+						ReadType = 4
+						BinHexTemp = CurrChar
+						CurrChar = ""
 					End If
 					
 				ElseIf ReadType = 4 Then
 					OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
-					If IsDivider(OtherChar) Or CurrCharPos = Len(DataSource) Then
+					If IsDivider(OtherChar) Or OtherChar = "'" Or OtherChar = Chr(34) Or CurrCharPos = Len(DataSource) Then
 						'Last part of binary/hex literal, 0x or 0b format
 						BinHexTemp += CurrChar
 						If UCase(Left(BinHexTemp, 2)) = "0B" Then
