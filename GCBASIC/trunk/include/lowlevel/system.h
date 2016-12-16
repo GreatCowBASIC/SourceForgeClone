@@ -32,6 +32,8 @@
 ;    01082016 - Removed new command support
 ;    04102016 - Added OSCCAL Support
 ;    12112016 - Revised to correct comparator registers NOT being set for new chips
+;    14112016 - Revised OSCCAL Support
+
 'Constants
 #define ON 1
 #define OFF 0
@@ -62,12 +64,14 @@ Sub InitSys
   '#Endif
   'This loads the saved calibration data from the last flash memory location at POR or any time the chip is reset.
 
-  #Ifdef PIC
-       #Ifdef Var(OSCCAL)
-             movwf OSCCAL
-      #Endif
-  #Endif
-
+    #ifdef PIC
+        #ifdef Var(OSCCAL)
+            #ifdef  chipfamily 14
+                 CALL 0x3ff
+            #endif
+            movwf osccal
+        #endif
+    #endif
 
   'Set up internal oscillator
   #IFNDEF Var(OSCCON)
@@ -685,21 +689,12 @@ Sub InitSys
   'Revised for PIC16F15355 class of chips
   #IFDEF Var(CM1CON0)
     #IFDEF Var(CM2CON0)
-      #IFDEF BIT(C2ON)
-        C2ON = 0
-      #ENDIF
-      #IFDEF BIT(CM2CON0_EN)
-        CM2CON0_EN = 0
-      #ENDIF
+      #IFDEF bit(C2ON): C2ON = 0: #ENDIF
+      #IFDEF bit(CM2CON0_EN): CM2CON0_EN = 0: #ENDIF
     #ENDIF
 
-    #IFDEF BIT(C1ON)
-      C1ON = 0
-    #ENDIF
-
-    #IFDEF BIT(CM1CON0_EN)
-      CM1CON0_EN = 0
-    #ENDIF
+    #IFDEF bit(C1ON): C1ON = 0: #ENDIF
+    #IFDEF bit(CM1CON0_EN): CM1CON0_EN = 0: #ENDIF
 
   #ENDIF
 

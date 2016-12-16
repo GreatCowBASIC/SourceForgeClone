@@ -1,5 +1,5 @@
 '    Timer control routines for Great Cow BASIC
-'    Copyright (C) 2006-2016 Hugh Considine, Evan Venn and William Roth
+'    Copyright (C) 2006-2016 Hugh Considine, William Roth and Evan R. Venn
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation; either
@@ -77,7 +77,13 @@
 ' 22/02/2016  Corrected TCCR2A error - Wmr
 ' 24/04/2016: Removed PSn_1/x constants - no longer valid syntax - HC
 ' 15/07/2016: Revised Settimer to improve support for 16f188xx and T016BIT.
-'							Change is limited ChipFamily 15
+'             Change is limited ChipFamily 15
+' 1/12/2016:  Added set Clock Source, if required by specific chip classes. Set to FOSC/4 via T[2,4,6]CLKCON support
+'             Added revised constants via script for timer 2/4 and 6
+' 7/12/2016:  Revised to correctly support settimer and cleartimer for 8 bit clock on chips that are tmr0 16 bit capable
+' 7/12/2016:  Added optimisation Constants
+' 10/12/2016: Revised Settimer to remove typo
+
 '***********************************************************
 
 'Subroutines:
@@ -297,18 +303,18 @@
   #define PS_5_1024 5
 
 
-	'support 16f18855 series 8/16 bit timers
-  #define   TMR0_CLC1 			0xE0
-  #define   TMR0_SOSC 			0xC0
-  #define   TMR0_LFINTOSC 		0x80
-  #define   TMR0_HFINTOSC 		0x60
-  #define   TMR0_FOSC4 			0x40
-  #define   TMR0_T0CKIPPS_Inverted 	0x20
-  #define   TMR0_T0CKIPPS_True 		0
+  'support 16f18855 series 8/16 bit timers
+  #define   TMR0_CLC1       0xE0
+  #define   TMR0_SOSC       0xC0
+  #define   TMR0_LFINTOSC     0x80
+  #define   TMR0_HFINTOSC     0x60
+  #define   TMR0_FOSC4      0x40
+  #define   TMR0_T0CKIPPS_Inverted  0x20
+  #define   TMR0_T0CKIPPS_True    0
 
-  #define 	TMR0_T0ASYNC 		0x10
+  #define   TMR0_T0ASYNC    0x10
 
-  #define	TMR0_T016BIT		0x10
+  #define TMR0_T016BIT    0x10
 
   #define PRE0_1 = 0
   #define PRE0_2 = 1
@@ -343,8 +349,23 @@
   #define POST0_14 = 13
   #define POST0_15 = 14
   #define POST0_16 = 15
-	'end if support 16f18855 series 8/16 bit timers
+  'end if support 16f18855 series 8/16 bit timers
 
+
+'Optimisation constants
+#define USE_Timer0 TRUE
+#define USE_Timer1 TRUE
+#define USE_Timer2 TRUE
+#define USE_Timer3 TRUE
+#define USE_Timer4 TRUE
+#define USE_Timer5 TRUE
+#define USE_Timer6 TRUE
+#define USE_Timer7 TRUE
+#define USE_Timer8 TRUE
+#define USE_Timer9 TRUE
+#define USE_Timer10 TRUE
+#define USE_Timer11 TRUE
+#define USE_Timer12 TRUE
 
 #script
 
@@ -447,11 +468,33 @@
 #define PS1_4 32
 #define PS1_8 48
 
-'Timer 2 prescales
-#define PS2_1 0
-#define PS2_4 1
-#define PS2_16 2
-#define PS2_64 3    'Added WMR
+'Timer 2 prescales for PIC - added Dec 2016
+
+#script
+
+  if bit(T2CKPS2) then
+    PS2_1   = 0
+    PS2_2   = 1
+    PS2_4   = 2
+    PS2_8   = 3
+    PS2_16  = 4
+    PS2_32  = 5
+    PS2_64  = 6
+    PS2_128 = 7
+
+  End if
+  if nobit(T2CKPS2) then
+    'Pre Dec 2016 constants
+    PS2_1  = 0
+    PS2_4  = 1
+    PS2_16 = 2
+    PS2_64 = 3
+
+  end if
+
+#endscript
+
+
 
 'Timer 3 prescales
 #define PS3_1 0
@@ -459,11 +502,33 @@
 #define PS3_4 32
 #define PS3_8 48
 
-'Timer 4 prescales
-#define PS4_1 0
-#define PS4_4 1
-#define PS4_16 2
-#define PS4_64 3
+
+'Timer 4 prescales for PIC - added Dec 2016
+
+#script
+
+  if bit(T4CKPS2) then
+    PS4_1   = 0
+    PS4_2   = 1
+    PS4_4   = 2
+    PS4_8   = 3
+    PS4_16  = 4
+    PS4_32  = 5
+    PS4_64  = 6
+    PS4_128 = 7
+
+  End if
+  if nobit(T4CKPS2) then
+    'Pre Dec 2016 constants
+    PS4_1  = 0
+    PS4_4  = 1
+    PS4_16 = 2
+    PS4_64 = 3
+
+  end if
+
+#endscript
+
 
 'Timer 5 prescales
 #define PS5_1 0
@@ -471,11 +536,31 @@
 #define PS5_4 32
 #define PS5_8 48
 
-'Timer 6 prescales
-#define PS6_1 0
-#define PS6_4 1
-#define PS6_16 2
-#define PS6_64 3
+'Timer 6 prescales for PIC - added Dec 2016
+
+#script
+
+  if bit(T6CKPS2) then
+    PS6_1   = 0
+    PS6_2   = 1
+    PS6_4   = 2
+    PS6_8   = 3
+    PS6_16  = 4
+    PS6_32  = 5
+    PS6_64  = 6
+    PS6_128 = 7
+
+  End if
+  if nobit(T6CKPS2) then
+    'Pre Dec 2016 constants
+    PS6_1  = 0
+    PS6_4  = 1
+    PS6_16 = 2
+    PS6_64 = 3
+
+  end if
+
+#endscript
 
 'Timer 7 prescales -wmr
 #define PS7_1 0
@@ -505,54 +590,77 @@
 Sub StartTimer(In TMRNumber)
   #ifdef PIC
 
-     #ifdef bit(TMR0ON)
-        IF TMRNumber = 0 then Set TMR0ON on
-     #endif
-
-     #ifdef bit(T0EN)
-        IF TMRNumber = 0 then Set T0EN on
-     #endif
+      #ifdef USE_Timer0 TRUE
+         #ifdef bit(TMR0ON)
+            IF TMRNumber = 0 then Set TMR0ON on
+         #endif
 
 
-     #ifdef bit(TMR1ON)
-        IF TMRNumber = 1 then Set TMR1ON on
-     #endif
+         #ifdef bit(T0EN)
+            IF TMRNumber = 0 then Set T0EN on
+         #endif
+      #endif
 
-     #ifdef bit(TMR2ON)
-        IF TMRNumber = 2 then Set TMR2ON on
-     #endif
+      #ifdef USE_Timer1 TRUE
+         #ifdef bit(TMR1ON)
+            IF TMRNumber = 1 then Set TMR1ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR3ON)
-        IF TMRNumber = 3 then Set TMR3ON on
-     #endif
+      #ifdef USE_Timer2 TRUE
+         #ifdef bit(TMR2ON)
+            IF TMRNumber = 2 then Set TMR2ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR4ON)
-        IF TMRNumber = 4 then Set TMR4ON on
-     #endif
+      #ifdef USE_Timer3 TRUE
+         #ifdef bit(TMR3ON)
+            IF TMRNumber = 3 then Set TMR3ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR5ON)
-        IF TMRNumber = 5 then Set TMR5ON on
-     #endif
+      #ifdef USE_Timer4 TRUE
+         #ifdef bit(TMR4ON)
+            IF TMRNumber = 4 then Set TMR4ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR6ON)
-        IF TMRNumber = 6 then Set TMR6ON on
-     #endif
+      #ifdef USE_Timer5 TRUE
+         #ifdef bit(TMR5ON)
+            IF TMRNumber = 5 then Set TMR5ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR7ON)
-        IF TMRNumber = 7 then Set TMR7ON on
-     #endif
+      #ifdef USE_Timer6 TRUE
+         #ifdef bit(TMR6ON)
+            IF TMRNumber = 6 then Set TMR6ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR8ON)
-        IF TMRNumber = 8 then Set TMR8ON on
-     #endif
+      #ifdef USE_Timer7 TRUE
+         #ifdef bit(TMR7ON)
+            IF TMRNumber = 7 then Set TMR7ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR10ON)
-        IF TMRNumber = 10 then Set TMR10ON on
-     #endif
+      #ifdef USE_Timer8 TRUE
+         #ifdef bit(TMR8ON)
+            IF TMRNumber = 8 then Set TMR8ON on
+         #endif
+      #endif
 
-     #ifdef bit(TMR12ON)
-        IF TMRNumber = 12 then Set TMR12ON on
-     #endif
+      #ifdef USE_Timer10 TRUE
+         #ifdef bit(TMR10ON)
+            IF TMRNumber = 10 then Set TMR10ON on
+         #endif
+      #endif
+
+      #ifdef USE_Timer12 TRUE
+         #ifdef bit(TMR12ON)
+            IF TMRNumber = 12 then Set TMR12ON on
+         #endif
+      #endif
+
   #endif
 
   #ifdef AVR
@@ -635,68 +743,100 @@ End Sub
 Sub ClearTimer (In TMRNumber)
 
   #ifdef PIC
-     #ifndef Var(TMR0H)
-        if TMRNumber = 0 then  TMR0 = 0
-     #endif
 
-      #ifdef Var(TMR0H)  '18F or other with 8/16 bit timer
-        if TMRNumber = 0 then
-            TMR0H = 0
-            TMR0L = 0
-         end if
-     #endif
+    #ifdef USE_Timer0 TRUE
+         #ifndef Var(TMR0H) ;Timer 0  is not 16-bit capable
+            if TMRNumber = 0 then  TMR0 = 0
+         #endif
 
-     #ifdef Var(T1CON)
-        If TMRNumber = 1 Then
-            TMR1H = 0
-            TMR1L = 0
-        End If
-     #endif
+          #ifdef Var(TMR0H)  '18F or other with 8/16 bit timer
 
-     #ifdef Var(T2CON)
-        If TMRNumber = 2 Then TMR2 = 0
-     #endif
+             #ifndef TMR0_16BIT
+                if TMRNumber = 0 then TMR0L = 0
+               ;don't clear the TMR0H PR0/MATCH register !
+             #endif
 
-     #ifdef Var(T3CON)
-        If TMRNumber = 3 then
-            TMR3H = 0
-            TMR3L = 0
-        End If
-     #endif
+             #ifdef TMR0_16BIT
+                if TMRNumber = 0 then
+                   TMR0H = 0
+                   TMR0L = 0
+                end if
+             #endif
 
-     #ifdef Var(T4CON)
-        If TMRNumber = 4 Then TMR4 = 0
-     #endif
+         #endif
+    #endif
 
-     #ifdef Var(T5CON)
-        If TMRNumber = 5 then
-            TMR5H = 0
-            TMR5L = 0
-        End If
-     #endif
+    #ifdef USE_Timer1 TRUE
+         #ifdef Var(T1CON)
+            If TMRNumber = 1 Then
+                TMR1H = 0
+                TMR1L = 0
+            End If
+         #endif
+    #endif
 
-     #ifdef Var(T6CON)
-        If TMRNumber = 6 Then TMR6 = 0
-     #endif
+    #ifdef USE_Timer2 TRUE
+         #ifdef Var(T2CON)
+            If TMRNumber = 2 Then TMR2 = 0
+         #endif
+    #endif
 
-     #ifdef Var(T7CON)
-        If TMRNumber = 7 then
-           TMR7H = 0
-           TMR7L = 0
-        End If
-     #endif
+    #ifdef USE_Timer3 TRUE
+         #ifdef Var(T3CON)
+            If TMRNumber = 3 then
+                TMR3H = 0
+                TMR3L = 0
+            End If
+         #endif
+    #endif
 
-     #ifdef Var(T8CON)
-        If TMRNumber = 8 Then TMR8 = 0
-     #endif
+    #ifdef USE_Timer4 TRUE
+         #ifdef Var(T4CON)
+            If TMRNumber = 4 Then TMR4 = 0
+         #endif
+    #endif
 
-     #ifdef Var(T10CON)
-        If TMRNumber = 10 Then TMR10 = 0
-     #endif
+    #ifdef USE_Timer5 TRUE
+         #ifdef Var(T5CON)
+            If TMRNumber = 5 then
+                TMR5H = 0
+                TMR5L = 0
+            End If
+         #endif
+    #endif
 
-     #ifdef Var(T12CON)
-        If TMRNumber = 12 Then TMR12 = 0
-     #endif
+    #ifdef USE_Timer6 TRUE
+         #ifdef Var(T6CON)
+            If TMRNumber = 6 Then TMR6 = 0
+         #endif
+    #endif
+
+    #ifdef USE_Timer7 TRUE
+         #ifdef Var(T7CON)
+            If TMRNumber = 7 then
+               TMR7H = 0
+               TMR7L = 0
+            End If
+         #endif
+    #endif
+
+    #ifdef USE_Timer8 TRUE
+         #ifdef Var(T8CON)
+            If TMRNumber = 8 Then TMR8 = 0
+         #endif
+    #endif
+
+    #ifdef USE_Timer10 TRUE
+         #ifdef Var(T10CON)
+            If TMRNumber = 10 Then TMR10 = 0
+         #endif
+    #endif
+
+    #ifdef USE_Timer12 TRUE
+         #ifdef Var(T12CON)
+            If TMRNumber = 12 Then TMR12 = 0
+         #endif
+    #endif
 
   #endif
 
@@ -774,107 +914,121 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
 
 
   #ifdef PIC
-     If TMRNumber = 0 Then
-        ' Handle chips withOUT TMR0H
-        #ifndef Var(TMR0H)
-           TMR0 = TMRValue
-           'just get out faster
-           exit sub
-        #endif
+    #ifdef USE_Timer0 TRUE
+       If TMRNumber = 0 Then
+          ' Handle chips withOUT TMR0H
+          #ifndef Var(TMR0H)
+             TMR0 = TMRValue
+             exit sub 'just get out faster
+          #endif
 
-				' Handle chips with TMR0H
-        #ifdef Var(TMR0H)
+          ' Handle chips with TMR0H
+          #ifdef Var(TMR0H)
 
-           #ifdef TMR0_16BIT
-              TMR0H = TMRValue_H
-              TMR0L = TMRValue
-              ' exit to prevent default setting TMR0L = TMRValue
-              exit sub
-           #endif
-
-					 'Added to resolve 16f18855 (chip type) using 8bit Timer0
-           'High byte is timer0 register
-           #ifdef Bit(T016BIT)
-           		'for 16f specific chips.
-              #ifdef ChipFamily 15
-                TMR0H = TMRValue_h
+             #ifdef TMR0_16BIT
+                TMR0H = TMRValue_H
                 TMR0L = TMRValue
                 ' exit to prevent default setting TMR0L = TMRValue
                 exit sub
-              #endif
-           #endif
+             #endif
 
-        	 'else write the low byte to the L register
-           'default of setting TMR0L = TMRValue
-           TMR0L = TMRValue
+             'This is therefore the default action of any chip with TMR0H and the TMR0_16BIT is NOT defined
+               'Added to resolve 16f18855 (chip type) using 8bit Timer0
+               'High byte is timer0 register
+             #ifndef TMR0_16BIT  ; USe default 8-bit mode
+                 TMR0L = TMRValue
+                 'Setting TMR0H/Match to Zero will stop the timer
+             #endif
 
-           #endif
+          #endif
 
-     End If
+       End If
+    #endif
 
+    #ifdef USE_Timer1 TRUE
      #ifdef Var(T1CON)
         If TMRNumber = 1 then
           TMR1H = TMRValue_H
           TMR1L = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer2 TRUE
      #ifdef Var(T2CON)
         If TMRNumber = 2 Then
            TMR2 = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer3 TRUE
      #ifdef Var(T3CON)
         If TMRNumber = 3 then
           TMR3H = TMRValue_H
           TMR3L = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer4 TRUE
      #ifdef Var(T4CON)
         If TMRNumber = 4 Then
            TMR4 = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer5 TRUE
      #ifdef Var(T5CON)
         If TMRNumber = 5 then
            TMR5H = TMRValue_H
            TMR5L = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer6 TRUE
      #ifdef Var(T6CON)
         If TMRNumber = 6 Then
             TMR6 = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer7 TRUE
      #ifdef Var(T7CON)
         If TMRNumber = 7 then
            TMR7H = TMRValue_H
            TMR7L = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer8 TRUE
      #ifdef Var(T8CON)
         If TMRNumber = 8 Then
            TMR8 = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer10 TRUE
      #ifdef Var(T10CON)
         If TMRNumber = 10 Then
            TMR10 = TMRValue
         End If
      #endif
+    #endif
 
+    #ifdef USE_Timer12 TRUE
      #ifdef Var(T12CON)
         If TMRNumber = 12 Then
            TMR12 = TMRValue
         End If
      #endif
+    #endif
+
   #endif
 
 End Sub
@@ -883,58 +1037,78 @@ End Sub
 Sub StopTimer (In TMRNumber)
 
   #ifdef PIC
-    'Timer 0 always runs
-    'Note: Not Always!  Timer 0 on 18F Can be stopped/started
+    #ifdef USE_Timer0 TRUE
+        'Timer 0 always runs
+        'Note: Not Always!  Timer 0 on 18F Can be stopped/started
 
-     #ifdef bit(TMR0ON)
-         If TMRNumber = 0 Then Set TMR0ON off
-     #endif
+         #ifdef bit(TMR0ON)
+             If TMRNumber = 0 Then Set TMR0ON off
+         #endif
 
-     #ifdef bit(T0EN)
-         If TMRNumber = 0 Then Set T0EN off
-     #endif
+         #ifdef bit(T0EN)
+             If TMRNumber = 0 Then Set T0EN off
+         #endif
+    #endif
 
+    #ifdef USE_Timer1 TRUE
+         #ifdef Bit(TMR1ON)
+             If TMRNumber = 1 Then Set TMR1ON OFF
+         #endif
+    #endif
 
+    #ifdef USE_Timer2 TRUE
+         #ifdef Bit(TMR2ON)
+             If TMRNumber = 2 Then Set TMR2ON OFF
+         #endif
+    #endif
 
-     #ifdef Bit(TMR1ON)
-         If TMRNumber = 1 Then Set TMR1ON OFF
-     #endif
+    #ifdef USE_Timer3 TRUE
+         #ifdef Bit(TMR3ON)
+             If TMRNumber = 3 Then Set TMR3ON OFF
+         #endif
+    #endif
 
-     #ifdef Bit(TMR2ON)
-         If TMRNumber = 2 Then Set TMR2ON OFF
-     #endif
+    #ifdef USE_Timer4 TRUE
+         #ifdef bit(TMR4ON)
+             If TMRNumber = 4 Then Set TMR4ON OFF
+         #endif
+    #endif
 
-     #ifdef Bit(TMR3ON)
-         If TMRNumber = 3 Then Set TMR3ON OFF
-     #endif
+    #ifdef USE_Timer5 TRUE
+         #ifdef bit(TMR5ON)
+             If TMRNumber = 5 Then Set TMR5ON OFF
+         #endif
+    #endif
 
-     #ifdef bit(TMR4ON)
-         If TMRNumber = 4 Then Set TMR4ON OFF
-     #endif
+    #ifdef USE_Timer6 TRUE
+         #ifdef bit(TMR6ON)
+             If TMRNumber = 6 Then Set TMR6ON OFF
+         #endif
+    #endif
 
-     #ifdef bit(TMR5ON)
-         If TMRNumber = 5 Then Set TMR5ON OFF
-     #endif
+    #ifdef USE_Timer7 TRUE
+         #ifdef bit(TMR7ON)
+             If TMRNumber = 7 Then Set TMR7ON OFF
+         #endif
+    #endif
 
-     #ifdef bit(TMR6ON)
-         If TMRNumber = 6 Then Set TMR6ON OFF
-     #endif
+    #ifdef USE_Timer8 TRUE
+         #ifdef bit(TMR8ON)
+             If TMRNumber = 8 Then Set TMR8ON OFF
+         #endif
+    #endif
 
-     #ifdef bit(TMR7ON)
-         If TMRNumber = 7 Then Set TMR7ON OFF
-     #endif
+    #ifdef USE_Timer10 TRUE
+         #ifdef bit(TMR10ON)
+             If TMRNumber = 10 Then Set TMR10ON OFF
+         #endif
+    #endif
 
-     #ifdef bit(TMR8ON)
-         If TMRNumber = 8 Then Set TMR8ON OFF
-     #endif
-
-     #ifdef bit(TMR10ON)
-         If TMRNumber = 10 Then Set TMR10ON OFF
-     #endif
-
-     #ifdef bit(TMR12ON)
-         If TMRNumber = 12 Then Set TMR12ON OFF
-     #endif
+    #ifdef USE_Timer12 TRUE
+         #ifdef bit(TMR12ON)
+             If TMRNumber = 12 Then Set TMR12ON OFF
+         #endif
+    #endif
   #endif
 
   #ifdef AVR
@@ -996,7 +1170,7 @@ Sub StopTimer (In TMRNumber)
 End Sub
 
 Sub InitTimer0(In TMRSource, In TMRPres, in TMRPost )
-'Equate to 			 bit5						T0CON1			T0CON0
+'Equate to       bit5           T0CON1      T0CON0
 
      'Assumed for code below Timer0 is 16-bit capable as we have been passed three parameters
      'Set prescaler
@@ -1022,7 +1196,7 @@ Sub InitTimer0(In TMRSource, In TMRPres, in TMRPost )
      'Set Postscaler
      #ifdef  Var(T0CON0)
          'Re-Use TMRPostas T0CON0 Temp register
-         'Keep T0CON0 7:5	 and write bits 5:0 to register
+         'Keep T0CON0 7:5  and write bits 5:0 to register
          'Bits therefore will be cleared!
           TMRPost = (T0CON0 And 224) OR TMRPost
 
@@ -1070,7 +1244,7 @@ Sub InitTimer0(In TMRSource, In TMRPres)
 
        'Set TO8BIT (T0CON.6)
         #ifdef TMR0_16BIT
-        	 Set TMRPres.4 OFF '16-bit Timer0
+           Set TMRPres.4 OFF '16-bit Timer0
         #endif
 
         #IFNDEF TMR0_16BIT
@@ -1114,7 +1288,7 @@ Sub InitTimer0(In TMRSource, In TMRPres)
 
           clrwdt               'clear watchdog timer
           clrw                 'Clear "W" to zero
-          addwf	tmrpres,W      'Add tmrpres to "W"
+          addwf tmrpres,W      'Add tmrpres to "W"
           option               'write "W" to option_reg
 
         #EndIF
@@ -1277,6 +1451,11 @@ Sub InitTimer2 (In TMRPres, In TMRPost)
        'Write the control register
         T2CON = TMRPres
      #endif
+
+     'Set Clock Source, if required by specific chip classes
+     'Set to FOSC/4 for backward compatibility
+     #ifdef var(T2CLKCON): T2CLKCON = 0x01:#ENDIF
+
   #endif
 
   #ifdef AVR
@@ -1362,6 +1541,11 @@ Sub InitTimer4 (In TMRPres, In TMRPost)
         If TMR4ON = ON then SET TMRPres.2 ON
         T4CON = TMRPres 'write the register
      #endif
+
+     'Set Clock Source, if required by specific chip classes
+     'Set to FOSC/4 for backward compatibility
+     #ifdef var(T4CLKCON): T4CLKCON = 0x01:#ENDIF
+
   #endif
 
   #ifdef AVR
@@ -1445,6 +1629,11 @@ Sub InitTimer6 (In TMRPres, In TMRPost)
          If TMR6ON = ON then SET TMRPres.2 ON
          T6CON = TMRPres 'write the register
      #endif
+
+     'Set Clock Source, if required by specific chip classes
+     'Set to FOSC/4 for backward compatibility
+     #ifdef var(T6CLKCON): T6CLKCON = 0x01:#ENDIF
+
   #endif
 End Sub
 
@@ -1540,4 +1729,3 @@ Sub InitTimer12 (In TMRPres, In TMRPost)
      #endif
   #endif
 End Sub
-
