@@ -34,7 +34,10 @@
 ''' 10/10/16  Added by EvanV CCP5 support with great help from Isay Goltman
 ''' 12/10/16  Revised to sort out that the work of 14/3/16 had broken all the legacy chips!  Added alternative BIT() Test
 '''           Also, revised calcs to improve performance
-
+''' 1/12/2016 Revised to enhance variable usafe when specific registers do not exist
+''' 3/12/2016 Revised to remove script that is not required
+''' 4/12/2016 Improved to remove creation of unneeded variables when the register  does not exist
+'''
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
 #define PWM_Duty 50      'Duty cycle of PWM (%)
@@ -74,40 +77,8 @@ Sub InitPWM
 
   'Script to calculate constants required for given Frequency and Duty Cycle
   #script
-  'revised to support new chips like the 16f188555
-   if bit(CCP1CON_MODE0) then
 
-        if nobit(CCP1M0) Then
-'          warning "Supporting microcontrollers like the 16f18555 and related microcontrollers"
-          CCP1M0 = CCP1CON_MODE0
-          CCP1M1 = CCP1CON_MODE1
-          CCP1M2 = CCP1CON_MODE2
-          CCP1M3 = CCP1CON_MODE3
-
-          CCP2M0 = CCP2CON_MODE0
-          CCP2M1 = CCP2CON_MODE1
-          CCP2M2 = CCP2CON_MODE2
-          CCP2M3 = CCP2CON_MODE3
-
-          CCP3M0 = CCP3CON_MODE0
-          CCP3M1 = CCP3CON_MODE1
-          CCP3M2 = CCP3CON_MODE2
-          CCP3M3 = CCP3CON_MODE3
-
-          CCP4M0 = CCP4CON_MODE0
-          CCP4M1 = CCP4CON_MODE1
-          CCP4M2 = CCP4CON_MODE2
-          CCP4M3 = CCP4CON_MODE3
-
-          CCP5M0 = CCP5CON_MODE0
-          CCP5M1 = CCP5CON_MODE1
-          CCP5M2 = CCP5CON_MODE2
-          CCP5M3 = CCP5CON_MODE3
-        end if
-
-    end if
-
-  'revised to support new chips like 16f18326*
+  'revised to support new chips like 16f18326*, 16f18555 and related microcontrollers"
    if bit(CCP1MODE0) then
 
         if nobit(CCP1M0) Then
@@ -715,16 +686,19 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
 
             'Set Clock Source
             'Set to FOSC/4 for backward compatibility
-            T2CLKCON = 0x01
+            #ifdef var(T2CLKCON): T2CLKCON = 0x01: #ENDIF
 
             'T2PSYNC Not Synchronized; T2MODE Software control; T2CKPOL Rising Edge; T2CKSYNC Not Synchronized
-            T2HLT = 0x00
+            'T2HLT = 0x00
+            #ifdef var(T2HLT): T2HLT = 0x00: #ENDIF
 
             'T2RSEL T2CKIPPS pin
-            T2RST = 0x00
+            'T2RST = 0x00
+            #ifdef var(T2RST): T2RST = 0x00: #ENDIF
 
             'TMR2.  Holding Register for the 8-bit TMR2 Register
-            T2TMR = 0x00
+            'T2TMR = 0x00
+            #ifdef var(T2TMR): T2TMR = 0x00: #ENDIF
 
             'Setup Timerx by clearing the Prescaler bits - it is set next....
             #ifdef bit(T2CKPS2)
@@ -759,18 +733,21 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
                 'Set PR4
                 PR4 = PRx_Temp  'This is required in the next sction of code, and as will not know which timer has been selected
 
-                'Set Clock Source
-                'Set to FOSC/4 for backward compatibility
-                T4CLKCON = 0x01
+              'Set Clock Source
+              'Set to FOSC/4 for backward compatibility
+              #ifdef var(T4CLKCON): T4CLKCON = 0x01: #ENDIF
 
-                'T4PSYNC Not Synchronized; T4MODE Software control; T4CKPOL Rising Edge; T4CKSYNC Not Synchronized
-                T4HLT = 0x00
+              'T4PSYNC Not Synchronized; T4MODE Software control; T4CKPOL Rising Edge; T4CKSYNC Not Synchronized
+              'T4HLT = 0x00
+              #ifdef var(T4HLT): T4HLT = 0x00: #ENDIF
 
-                'T4RSEL T4CKIPPS pin
-                T4RST = 0x00
+              'T4RSEL T4CKIPPS pin
+              'T4RST = 0x00
+              #ifdef var(T4RST): T4RST = 0x00: #ENDIF
 
-                'TMR4.  Holding Register for the 8-bit TMR4 Register
-                T4TMR = 0x00
+              'TMR4. Holding Register for the 8-bit TMR4` Register
+              'T4TMR = 0x00
+              #ifdef var(T4TMR): T4TMR = 0x00: #ENDIF
 
                 #ifdef bit(T4CKPS2)
                     SET T4CKPS0 OFF
@@ -808,16 +785,19 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
 
                 'Set Clock Source
                 'Set to FOSC/4 for backward compatibility
-                T6CLKCON = 0x01
+                #ifdef var(T6CLKCON): T6CLKCON = 0x01: #ENDIF
 
                 'T6PSYNC Not Synchronized; T6MODE Software control; T6CKPOL Rising Edge; T6CKSYNC Not Synchronized
-                T6HLT = 0x00
+                'T6HLT = 0x00
+                #ifdef var(T6HLT): T6HLT = 0x00: #ENDIF
 
-                'T6RSEL T4CKIPPS pin
-                T6RST = 0x00
+                'T6RSEL T6CKIPPS pin
+                'T6RST = 0x00
+                #ifdef var(T6RST): T6RST = 0x00: #ENDIF
 
                 'TMR6.  Holding Register for the 8-bit TMR6 Register
-                T6TMR = 0x00
+                'T6TMR = 0x00
+                #ifdef var(T6TMR): T6TMR = 0x00: #ENDIF
 
                 #ifdef bit(T6CKPS2)
                     SET T6CKPS0 OFF
@@ -864,8 +844,10 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
           PWM5DCL = PRx_Temp
 
           ' Select timer by updating CCPTMRS1 register
-          SetWith ( P5TSEL0, TimerSelected.1 )
-          SetWith ( P5TSEL1, TimerSelected.2 )
+          #ifdef bit(P5TSEL0)
+            SetWith ( P5TSEL0, TimerSelected.1 )
+            SetWith ( P5TSEL1, TimerSelected.2 )
+          #endif
 
           #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
             'Start PMW5
@@ -894,8 +876,10 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
           PWM6DCL = PRx_Temp
 
           ' Select timer by updating CCPTMRS1 register
-          SetWith ( P6TSEL0, TimerSelected.1 )
-          SetWith ( P6TSEL1, TimerSelected.2 )
+          #ifdef bit(P6TSEL0)
+            SetWith ( P6TSEL0, TimerSelected.1 )
+            SetWith ( P6TSEL1, TimerSelected.2 )
+          #endif
 
           #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
             'Start PMW6
@@ -926,9 +910,10 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty, in TimerSelected  )
           PWM7DCL = PRx_Temp
 
           ' Select timer by updating CCPTMRS1 register
-          SetWith ( P7TSEL0, TimerSelected.1 )
-          SetWith ( P7TSEL1, TimerSelected.2 )
-
+          #ifdef bit(P7TSEL0)
+            SetWith ( P7TSEL0, TimerSelected.1 )
+            SetWith ( P7TSEL1, TimerSelected.2 )
+          #endif
           #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
             'Start PMW7
             Set PWM7EN On
