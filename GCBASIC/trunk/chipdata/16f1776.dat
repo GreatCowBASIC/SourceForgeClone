@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16F1776
-'Generated 2/7/2016
+'Generated 10/12/2016
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -4817,6 +4817,9 @@ CHS1,ADCON0,3
 CHS2,ADCON0,4
 CHS3,ADCON0,5
 CHS4,ADCON0,6
+ADCS0,ADCON1,4
+ADCS1,ADCON1,5
+ADCS2,ADCON1,6
 
 [FreeRAM]
 20:7F
