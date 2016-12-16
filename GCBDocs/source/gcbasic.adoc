@@ -100,6 +100,8 @@ include::FnLsL.adoc[]
 
 include::FnLSR.adoc[]
 
+include::SetWith.adoc[]
+
 ifdef::backend-pdf[<<<]
 === Eeprom
 
@@ -397,6 +399,9 @@ include::commonanode.adoc[]
 include::displayvalue.adoc[]
 
 include::displaychar.adoc[]
+
+include::displaysegment.adoc[]
+
 
 ifdef::backend-pdf[<<<]
 === One Wire Devices

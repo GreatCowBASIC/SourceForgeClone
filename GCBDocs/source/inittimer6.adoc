@@ -3,7 +3,7 @@
 *Syntax:*
 [subs="quotes"]
 ----
-InitTimer6 _source_, _prescaler_
+InitTimer6 _prescaler_, _postscaler_
 ----
 *Command Availability:*
 
@@ -29,11 +29,13 @@ Parameters for this timer are detailed in the table below:
 |`_postscaler_`
 |The value of the postscaler for this specific timer.  See the tables below for permitted values.
 |===
+*Table 1*
 
 {empty} +
 {empty} +
 
-`prescaler` can be one of the following settings:
+
+`prescaler` can be one of the following settings, if you MicroChip microcontroller has the T6CKPS4 bit then refer to table 3:
 
 [cols="^1,1,^1", options="header,autowidth"]
 |===
@@ -59,14 +61,57 @@ to value*
 |3
 
 |===
+*Table 2*
 
 Note that a 1:64 prescale is only avaialable on certain midrange microcontrollers.
 Please refer to the datasheet to determine if a 1:64 prescale is supported by a
 spectific microcontroller.
-
 {empty} +
 {empty} +
+[cols="^1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Constant Equates +
+to value*
 
+|1:1
+|`PS6_1`
+|0
+
+|1:2
+|`PS6_2`
+|1
+
+|1:4
+|`PS6_4`
+|2
+
+|1:8
+|`PS6_8`
+|3
+
+|1:16
+|`PS6_16`
+|4
+
+|1:32
+|`PS6_32`
+|5
+
+|1:64
+|`PS6_64`
+|6
+
+|1:128
+|`PS6_128`
+|7
+
+
+|===
+*Table 3*
+{empty} +
+{empty} +
 
 `_postscaler_` slows the rate of the interrupt generation (or WDT reset) from a
 counter/timer by dividing it down.
@@ -128,4 +173,3 @@ On Microchip PIC microcontroller one of the following constants where the Postsc
 |15
 
 |===
-

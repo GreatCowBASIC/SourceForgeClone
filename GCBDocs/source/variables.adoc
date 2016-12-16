@@ -1,3 +1,6 @@
+// Edit EvanV 061116
+// Added   #define STRINGSIZE 24 constant information.
+// Added   091116 added String examplkes
 === Variables
 
 *About Variables*
@@ -81,7 +84,16 @@ of a specific chip.
 - 20 bytes for chips with 16 to 367 bytes of RAM.
 - 40 bytes for devices with more RAM than 367 bytes.
 - For chips that have less RAM then the required RAM to support the user define strings the strings (and therefore the RAM) will be NOT be allocated. Please reduce string size.
+
+
 You cannot store a string 20 characters long in a chip with 16 bytes of RAM.
+
+To change the default string size handled internally by the Great Cow BASIC compiler you add increase/decrease the default string size
+
+----
+    'To define the default string size as the follows constant.
+    #define STRINGSIZE 24
+----
 
 Defining a length for the string is the best way to limit memory usage.
 It is good practice if you need a string of a certain size to set the
@@ -89,11 +101,28 @@ length of a strings, since the default length for a string variable
 changes depending on the amount of memory in the microcontroller (see
 above).
 
-To set the length see the example below:
+To set the length of a string, see the example below:
 ----
     'Create buffer variables to store received messages as 16 bytes long
     Dim OutBuffer As String * 16
 ----
+
+To place quotation marks (" ") in a string of text. For example:
+----
+    She said, "You deserve a treat!"
+----
+
+Use the following method to show the string with the insertion of two quotation marks in a row as an embedded quotation mark.
+These two examples apply to all output methods like HerPrint, Print etc.
+
+----
+    hserprint "She said, ""You deserve a treat!"" "
+
+    dim myString as string * 39
+    myString = "She said, ""You deserve another treat!"" "
+    hserprint myString
+----
+
 *Variable Aliases*
 
 Some variables are aliases, which are used to refer to memory locations

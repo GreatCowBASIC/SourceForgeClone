@@ -37,10 +37,9 @@ It will SET  TargetBit  to 1 if Source evaluates to anything other than zero. Ta
 
     Do
       ' set the Bit DS1 to equal the Bit SW1
-      SetWith( DS1, FnNotBIT( SW1 ) )
+      SetWith( DS1, !SW1 )
     Loop
     END
 ----
 
 *See Also <<_bitwise_operations_overview, Bitwise Operations Overview>>* and *<<_conditions, Conditions>>*
-

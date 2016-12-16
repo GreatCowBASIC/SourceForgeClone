@@ -39,11 +39,13 @@ Parameters for this timer are detailed in the table below:
 |`_postscaler_`
 |The value of the postscaler for this specific timer.  See the tables below for permitted values.
 |===
+*Table 1*
 
 {empty} +
 {empty} +
 
-`prescaler` can be one of the following settings:
+
+`prescaler` can be one of the following settings, if you MicroChip microcontroller has the T4CKPS4 bit then refer to table 2:
 
 [cols="^1,1,^1", options="header,autowidth"]
 |===
@@ -69,14 +71,55 @@ to value*
 |3
 
 |===
+*Table 2*
 
 Note that a 1:64 prescale is only avaialable on certain midrange microcontrollers.
 Please refer to the datasheet to determine if a 1:64 prescale is supported by a
 spectific microcontroller.
-
 {empty} +
 {empty} +
+[cols="^1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Constant Equates +
+to value*
 
+|1:1
+|`PS4_1`
+|0
+
+|1:2
+|`PS4_2`
+|1
+
+|1:4
+|`PS4_4`
+|2
+
+|1:8
+|`PS4_8`
+|3
+
+|1:16
+|`PS4_16`
+|4
+
+|1:32
+|`PS4_32`
+|5
+
+|1:64
+|`PS4_64`
+|6
+
+|1:128
+|`PS4_128`
+|7
+
+
+|===
+*Table 3*
 {empty} +
 {empty} +
 
@@ -236,4 +279,3 @@ This code uses Timer 4 and On Interrupt to generate a 1ms pulse 20 ms.
        pulseout Pin3, 1 ms
     End Sub
 ----
-
