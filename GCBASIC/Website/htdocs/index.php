@@ -1,8 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
-<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Great Cow BASIC</title>
-
-</head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Great Cow BASIC</title></head>
 <body style="background-color: white; color: rgb(0, 0, 0);" alink="#ee0000" link="#0000ee" vlink="#551a8b">
 <table style="text-align: left; width: 100%; font-family: Arial; background-color: white;" border="0" cellpadding="2" cellspacing="2">
 <tbody>
@@ -87,7 +85,28 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">26/6/2016<br>
+<td><span style="font-weight: bold;">15/12/2016<br>
+<br>
+</span>
+<p style="margin-left: 40px;"><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">The Great Cow
+Basic development team have
+published <b>another</b> release that further enhances the
+Great Cow Basic compiler
+capabilities. &nbsp;This release &nbsp;is callled v0.96.00</span><o:p></o:p></p>
+<blockquote>
+<ul><li>Added support for a new range of &nbsp; microcontrollers
+including the 16f18877 and the 16f15355 range, see the chip folder of
+the installation . &nbsp;We now support over 1300 microcontrollers.<span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;"></span></li><li><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;"></span>Improved
+the overall compiler and supporting libraries to improve performance
+and quality of the solutions - the compiler is not 1000% faster.</li><li>New SH1106 GLCD driver and assiocated demos.</li><li>Improved support for Microchip PPS</li><li>Revised bootloader support include new revision of the TinyBootloader interface specific to Great Cow BASIC</li><li>Revised IDE that improves the user experience, improved Help and IDE Helpers</li><li>600+ demonstration files to show how easy it is to use Great Cow BASIC</li><li>See
+the&nbsp;GCB@Syn\GreatCowBasic\Release List.txt file for a full list of
+the changes - there are 100's since the last major release</li></ul>This
+release is brought to you by, in no specific order by &nbsp;Hugh
+Considine, Evan Venn, William Roth, and of course, Frank Steinberg.
+&nbsp;Past releases where brought to you by Chris Roper, Marco
+Cariboni, Theo Loermans, Mike Otte, Scott Garret of Microchip, and, a
+host of others. &nbsp; I am sure there are others.&nbsp; If I missed
+your name - please let us know, truly sorry.<br><br>Enjoy the release.<br><br>We will release v1.00 soon.<br></blockquote><span style="font-weight: bold;">26/6/2016<br>
 <br>
 </span>
 <p style="margin-left: 40px;"><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">The Great Cow
