@@ -1,5 +1,5 @@
 == Changes
-*Formal Release of Great Cow BASIC v0.95.010*
+*Formal Release of <>*
 
 {empty} +
 [cols="^1,^1", options="header",width="60%"]
@@ -19,6 +19,12 @@
 {empty} +
 
 Updates to User Help are as follows:
+
+- Revised String usage and String examples to show use of quote marks within a string
+- Revised OtherDirectives to include missing constants
+- Added DisplaySegment and revised DisplayChar
+- Revised initimer2/4 and 6 to show revised prescalers
+- Restore Bitwise operations and SetWith to Help
 
 *Release 0.95.010*::
 - Added improvements to SerSend and SerPrint

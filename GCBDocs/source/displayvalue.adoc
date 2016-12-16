@@ -30,8 +30,8 @@ The command also support HEX characters in the range between 0x00 and
     'This program will count from 0 to 99 on two LED displays
     #chip 16F819, 8
     #config osc = int
-	
-	'See 7 Segment Display Overview for alternate ways of defining Ports
+
+  'See 7 Segment Display Overview for alternate ways of defining Ports
     #define DISP_SEG_A PORTB.0
     #define DISP_SEG_B PORTB.1
     #define DISP_SEG_C PORTB.2
@@ -39,7 +39,7 @@ The command also support HEX characters in the range between 0x00 and
     #define DISP_SEG_E PORTB.4
     #define DISP_SEG_F PORTB.5
     #define DISP_SEG_G PORTB.6
-	'#define DISP_SEG_DOT PORTB.7 ' Optional DP
+  '#define DISP_SEG_DOT PORTB.7 ' Optional DP
 
     #define DISP_SEL_1 PORTA.0
     #define DISP_SEL_2 PORTA.1
@@ -118,4 +118,4 @@ The command also support HEX characters in the range between 0x00 and
     Loop
 ----
 
-*Also, see* <<_7_segment_displays_overview,7 Segment Display Overview>>, <<_displaychar,DisplayChar>>
+*Also, see* <<_7_segment_displays_overview,7 Segment Display Overview>>, <<_displaychar,DisplayChar>>, <<_displaysegment,DisplaySegment>>

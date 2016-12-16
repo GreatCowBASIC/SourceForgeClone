@@ -1,3 +1,5 @@
+// Edit EvanV 15116 - added new known directives
+
 === Other directives
 
 The built-in `#defines` used to support `#IFDEF` etc are as follows:
@@ -11,6 +13,11 @@ The built-in `#defines` used to support `#IFDEF` etc are as follows:
 |`ChipADC`
 |String
 |The number of A/D inputs on the current chip
+
+
+|`ChipEEprom`
+|Number
+|The number of Bytes in EEPROM memmory
 
 |`ChipIO`
 |String
@@ -29,6 +36,11 @@ The built-in `#defines` used to support `#IFDEF` etc are as follows:
 |String
 |The microcontroller name
 
+|`ChipPins`
+|Number
+|The number of microcontroller pins.
+
+
 |`ChipRAM`
 |Number
 |The RAM size
@@ -36,6 +48,10 @@ The built-in `#defines` used to support `#IFDEF` etc are as follows:
 |`ChipFamily`
 |Number
 |12, 14 or 16 depending on instruction width
+
+|`CHIPWORDS`
+|Number
+|The number of WORDS in Flash memmory
 
 |`Var()`
 |Function
@@ -62,5 +78,3 @@ The built-in `#defines` used to support `#IFDEF` etc are as follows:
 |True if all of or one of the listed defines is declared:
 
 |===
-
-

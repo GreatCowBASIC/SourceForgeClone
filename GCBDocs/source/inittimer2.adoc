@@ -39,12 +39,12 @@ Parameters for this timer are detailed in the table below:
 |`_postscaler_`
 |The value of the postscaler for this specific timer.  See the tables below for permitted values.
 |===
-
+*Table 1*
 {empty} +
 {empty} +
 
 
-`prescaler` can be one of the following settings:
+`prescaler` can be one of the following settings, if you MicroChip microcontroller has the T2CKPS4 bit then refer to table 2:
 
 [cols="^1,1,^1", options="header,autowidth"]
 |===
@@ -70,11 +70,55 @@ to value*
 |3
 
 |===
+*Table 2*
 
 Note that a 1:64 prescale is only avaialable on certain midrange microcontrollers.
 Please refer to the datasheet to determine if a 1:64 prescale is supported by a
 spectific microcontroller.
+{empty} +
+{empty} +
+[cols="^1,1,^1", options="header,autowidth"]
+|===
+|*Prescaler Value*
+|*Primary GCB Constant*
+|*Constant Equates +
+to value*
 
+|1:1
+|`PS2_1`
+|0
+
+|1:2
+|`PS2_2`
+|1
+
+|1:4
+|`PS2_4`
+|2
+
+|1:8
+|`PS2_8`
+|3
+
+|1:16
+|`PS2_16`
+|4
+
+|1:32
+|`PS2_32`
+|5
+
+|1:64
+|`PS2_64`
+|6
+
+|1:128
+|`PS2_128`
+|7
+
+
+|===
+*Table 3*
 {empty} +
 {empty} +
 
@@ -324,4 +368,3 @@ This code uses Timer 2 and On Interrupt to flash an LED every 200 timer ticks.
         pulseout LED, 5 ms
     END SUB
 ----
-

@@ -1,3 +1,4 @@
+//Edit EvanV 261116 Added GPASM
 == Command Line Parameters
 
 *About the Command Line Parameters*
@@ -67,10 +68,56 @@
 extension, and `%CHIPMODEL%` will be replaced with the name of the chip.
 The name of the chip will be the same as that on the chip data file.#
 
-A batch to to load the `ASM` from Great Cow BASIC into `MPASM`. I think that your
-`m.bat` should be like this:
+A batch file to load the `ASM` from Great Cow BASIC into `MPASM`. Command line should be like this:
 ----
-@ECHO OFF
-echo C:\progra~1\microc~1\mpasms~1\MPASMWIN /c- /o- /q+ /l- /x- /w1 %code%.asm
-C:\progra~1\microc~1\mpasms~1\MPASMWIN /c- /o- /q+ /l- /x- /w1 %code%.asm
+    C:\progra~1\microc~1\mpasms~1\MPASMWIN /c- /o- /q+ /l- /x- /w1 %code%.asm
 ----
+
+
+A batch file to compile in Great Cow BASIC then load the `ASM` from Great Cow BASIC into `GPASM`. Command line should be like this:
+----
+    gcbasic.exe %1 /NP /K:A /A:"..\gputils\bin\gpasm.exe %~d1%~p1%~n1.asm"
+----
+
+To instruct MAKEHEX.BAT to use `GPASM`.   You have GPUTILS installed.  The batch file should be edited as follows:
+----
+    REM Create the ASM
+    gcbasic.exe /NP /K:A %1
+    REM Use GPASM piping to the GCB error log
+    gpasm.exe "%~d1%~p1%~n1.asm" -k -i -w1 >> errors.txt
+----
+
+
+To summarise, you can use any of the following:
+
+----
+    gcbasic.exe filetocompile.gcb /A:GCASM /P:"icprog -L%FILENAME%" /V /O:compiled.asm
+----
+
+Great Cow BASIC will compile the file, then assemble the program, and run this command:
+----
+    `icprog -Lcompiled.hex`
+----
+You can also create/edit the gcbasic.ini file :
+
+----
+    'Assembler settings
+    Assembler = C:\Program Files\Microchip\MPASM Suite\mpasmwin
+    AssemblerParams = /c- /o- /q+ /l+ /x- /w1 "%FileName%"
+
+    'Programmer settings
+    Programmer = C:\Program Files\WinPic\Winpic.exe
+    ProgrammerParams = /device=PIC%ChipModel% /p "%FileName%"
+----
+
+This example will use MPASM to assemble the program. It will run the program specified in the assembler = line, and give it these parameters:
+
+----
+    `/c- /o- /q+ /l+ /x- /w1 "compiled.asm"`
+----
+Then, it will run the programmer, and give it these parameters when it calls it:
+
+----
+    `/device=PIC16F88 /p "compiled.hex"`
+----
+`%ChipModel%` will get replaced with the chip you are using, so this the chip Great Cow BASIC will pass to WinPIC.

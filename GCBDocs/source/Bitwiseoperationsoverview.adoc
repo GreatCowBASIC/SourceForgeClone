@@ -1,3 +1,4 @@
+//14122016 ERV reverted Setwith
 ==== Bitwise Operations Overview
 
 *About Bitwise Operations*
@@ -15,10 +16,8 @@ Great Cow BASIC supports the following methods.
 |*Meaning*
 |Set
 |Assigns a Bit value of On or Off
-|=
-|Performs a logical assignment from a Bit or Variable, set Set
-|= !
-|Performs a logical NOT operation
+|SetWith
+|Evaluates an expression and assigns the result
 |FnLSL
 |Performs a Bitwise LEFT shift
 |FnLSR
@@ -27,4 +26,4 @@ Great Cow BASIC supports the following methods.
 |Performs a rotation of a variable of one bit in a specified direction
 |===
 
-*For more help, see: <<_set, Set>>, <<_fnlsl, FnLSL>>, <<_fnlsr,FnLSR>> and <<_rotate, Rotate>>*
+*For more help, see: <<_set, Set>>, <<_setwith, SetWith>>, <<_fnlsl, FnLSL>>, <<_fnlsr,FnLSR>> and <<_rotate, Rotate>>*

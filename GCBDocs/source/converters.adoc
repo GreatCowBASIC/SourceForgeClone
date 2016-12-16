@@ -1,3 +1,4 @@
+// Edit EvanV 19116 - added new functionality [533]
 === Converters
 
 *About Converters*
@@ -56,8 +57,10 @@ The file has four items: `desc`, `in`, `out` and `exe`. Where:
 +
  desc      : Is the description shown in GCGB
  in        : Is the source file extension to be transformed
- out       : Is the targer transformed file extension.
+ out       : Is the target transformed file extension.
  exe       : Is the executable to be run for this specific configuration file.
+ params    : Optional, is the required parameter to be passed from the compiler.  Example:  params = %filename% %chipmodel%
+ purge     : Optional, will always recreate the target transformed file. The default is to retain the target transformed file unless source has changed.
 +
 You can have multiple configuration files within the `..\converters folder structure`.
 +
@@ -149,3 +152,30 @@ This example is located in the converter folder of the Great Cow BASIC installat
   Loop
 ----
 ====
+
+*Example 4 : Dynamic Import*
+====
+This program converts a chip specific configuration file into `manifest.GCB` that will have a Great Cow BASIC functions called `DataIn` and `DataOut`.
+This example is located in the converter folder of the Great Cow BASIC installation.
+----
+    #chip 16f18326
+
+    #include <..\converters\manifest.mcc>
+
+    DataOut ( TX, RA0 )  'this method is created during the convert process. They do not exist withiut the converter.
+    DataIn  ( Rx, RC6 )  'this method is created during the convert process. They do not exist withiut the converter.
+----
+
+This example would use the optional parameters of `params` and `purge` in the converter configuration file as follows:
+----
+    desc = PPS file (*.PPS)
+    params = %filename% %chipmodel%
+    in = mcc
+    out = GCB
+    exe = DataHandler.exe
+    purge = on
+----
+====
++
++
++

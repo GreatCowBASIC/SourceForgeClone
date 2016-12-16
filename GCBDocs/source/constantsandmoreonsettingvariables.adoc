@@ -12,7 +12,7 @@ The following methods are also supported.
     CharCode---
 ----
 
-Within Great Cow BASIC you can define constants, see <<_constants,Constants>>. Please note what is and what is not support with respect to assigning numbers to constants. An example program examines what is supported.
+Within Great Cow BASIC you can define binary, hexidecimal and decimal constants, see <<_constants,Constants>>. Please note what is and what is not support with respect to assigning numbers to constants. An example program examines what is supported.
 
 ----
     #chip 16F88, 4
@@ -45,7 +45,7 @@ You can assigned values/numbers with all the methods shown above (for constants 
 A few critical constants are defined within Great Cow BASIC , you can re-use these constants. They include:
 
 ----
-    #define ON 1  	   ' These are defined in System.h
+    #define ON 1       ' These are defined in System.h
     #define OFF 0
     #define TRUE 255
     #define FALSE 0
