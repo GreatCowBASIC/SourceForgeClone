@@ -2770,6 +2770,13 @@ Sub CompileProgram
 	If SubLoc > 0 Then
 		SourceFile(Subroutine(SubLoc)->SourceFile).InitSubUsed = -1
 	End If
+	'If main source file has startup routine, also call that
+	With SourceFile(1)
+		If .InitSub <> "" Then
+			RequestSub(0, .InitSub)
+			.InitSubUsed = -1
+		End If
+	End With
 
 	'Find Interrupt sub, if found mark as required and set UserInt flag
 	IntLoc = LocationOfSub("Interrupt", "")
