@@ -66,7 +66,7 @@
 #define HI2C2_BAUD_RATE 100
 
 
-#startup HI2C2Init
+#startup HI2C2Init, 90
 
 #script
   HI2C2_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C2_BAUD_RATE)) - 1

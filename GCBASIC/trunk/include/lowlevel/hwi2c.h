@@ -106,7 +106,7 @@
   #define MR_DATA_NACK_REC 0x58
 
 
-#startup HIC2Init
+#startup HIC2Init, 90
 
 #script
   HI2C_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) - 1

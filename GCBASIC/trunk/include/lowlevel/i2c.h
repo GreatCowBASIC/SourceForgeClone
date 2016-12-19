@@ -158,7 +158,7 @@ dim I2CAckPollState as byte
 #define I2C_Dev_OK I2CAck
 '             --- Subroutines
 
-#startup InitI2C                  'automatically call in main program
+#startup InitI2C, 90                  'automatically call in main program
 
 sub InitI2C()
 
