@@ -306,7 +306,7 @@ End Sub
 	End If
 #endscript
 
-#startup InitUSART
+#startup InitUSART, 90
 
 Sub InitUSART
 

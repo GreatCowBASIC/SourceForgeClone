@@ -1095,7 +1095,16 @@ SUB PreProcessor
 				If Left(DataSource, 1) = "#" Then
 					'Automatic initialisation preparation
 					IF Left(DataSource, 8) = "#STARTUP" Then
-						SourceFile(RF).InitSub = Trim(Mid(DataSource, 9)): GOTO LoadNextLine
+						With SourceFile(RF)
+							.InitSub = Trim(Mid(DataSource, 9))
+							.InitSubPriority = 100
+							If InStr(.InitSub, ",") <> 0 Then
+								.InitSubPriority = Val(Mid(.InitSub, InStr(.InitSub, ",") + 1))
+								.InitSub = Trim(Left(.InitSub, InStr(.InitSub, ",") - 1))
+							End If
+						End With
+						
+						GOTO LoadNextLine
 					
 					ElseIF Left(DataSource, 7) = "#DEFINE" Then
 						DataSource = DataSource + "':" + Str(RF)

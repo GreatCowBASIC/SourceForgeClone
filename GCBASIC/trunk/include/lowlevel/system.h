@@ -50,6 +50,8 @@
 'Options
 #define CheckDivZero TRUE
 
+#startup InitSys, 80
+
 '********************************************************************************
 'System initialisation routine
 Sub InitSys

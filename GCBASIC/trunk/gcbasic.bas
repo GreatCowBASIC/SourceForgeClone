@@ -64,6 +64,7 @@ Type SourceFileType
 	
 	InitSub As String
 	InitSubUsed As Integer
+	InitSubPriority As Integer = 100
 	
 	IncludeOrigin As String
 
@@ -629,7 +630,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.96.<<>> 2016-12-14"
+Version = "0.96.<<>> 2016-12-19"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1365,7 +1366,7 @@ End Sub
 
 Sub AddMainInitCode
 	'Add initialisation code to start of Main routine
-	Dim As LinkedListElement Pointer CurrLine
+	Dim As LinkedListElement Pointer CurrLine, AddPos, InitRoutineFiles
 	Dim As Integer CurrInc, SubLoc, OldVBS
 	Dim As String Temp
 
@@ -1393,27 +1394,38 @@ Sub AddMainInitCode
 
 	'Call init routines
 	CurrLine = LinkedListInsert(CurrLine, ";Call initialisation routines")
-	SubLoc = LocationOfSub("InitSys", "")
-	'Change 7/10/2012: Init routines do not need to be in page 0
-	'Subroutine(SubLoc)->FirstPage = -1
-	If ModeAVR Then
-		CurrLine = LinkedListInsert(CurrLine, " rcall INITSYS")
-	Else
-		CurrLine = LinkedListInsert(CurrLine, " call INITSYS")
-	End If
+	InitRoutineFiles = LinkedListCreate
 	FOR CurrInc = 1 TO SourceFiles
 		With SourceFile(CurrInc)
 			If .InitSub <> "" And .InitSubUsed Then
-				SubLoc = LocationOfSub(.InitSub, "")
-				If ModeAVR Then
-					CurrLine = LinkedListInsert(CurrLine, " rcall " + .InitSub)
-				Else
-					CurrLine = LinkedListInsert(CurrLine, " call " + .InitSub)
-				End If
+				'Need init sub, add to list
+				AddPos = InitRoutineFiles
+				Do
+					If AddPos->Next = 0 OrElse .InitSubPriority < AddPos->Next->NumVal Then
+						AddPos = LinkedListInsert(AddPos, .InitSub)
+						AddPos->NumVal = .InitSubPriority
+						Exit Do
+					End If
+					AddPos = AddPos->Next
+				Loop While AddPos <> 0
+				
 			End If
 		End With
 	Next
-
+	
+	AddPos = InitRoutineFiles->Next
+	Do While AddPos <> 0
+		SubLoc = LocationOfSub(AddPos->Value, "")
+		If ModeAVR Then
+			CurrLine = LinkedListInsert(CurrLine, " rcall " + AddPos->Value)
+		Else
+			CurrLine = LinkedListInsert(CurrLine, " call " + AddPos->Value)
+		End If
+		
+		AddPos = AddPos->Next
+	Loop
+	LinkedListDeleteList(InitRoutineFiles, 0)
+	
 	'Enable interrupts
 	If UserInt Or SysInt Then
 		CurrLine = LinkedListInsert(CurrLine, ";Enable interrupts")
@@ -2746,7 +2758,7 @@ End Sub
 Sub CompileProgram
 
 	Dim As Integer CurrSub, CompileMore, IntLoc, CurrInc, SubLoc, TablesCompiled
-
+	
 	'Check every sub in program, compile those that need to be compiled
 	'Need to check again once a sub has been compiled, because that sub may
 	'require other subs
@@ -2754,6 +2766,10 @@ Sub CompileProgram
 
 	'Request initialisation routine
 	RequestSub(0, "InitSys")
+	SubLoc = LocationOfSub("InitSys", "")
+	If SubLoc > 0 Then
+		SourceFile(Subroutine(SubLoc)->SourceFile).InitSubUsed = -1
+	End If
 
 	'Find Interrupt sub, if found mark as required and set UserInt flag
 	IntLoc = LocationOfSub("Interrupt", "")
@@ -11709,7 +11725,7 @@ Function IsRegister (VarName As String) As Integer
 	IF UCase(Left(VarName, 10)) = "SYSDIVMULT" Then Return -1
 	IF UCase(Left(VarName, 11)) = "SYSWAITTEMP" Then Return -1
 	IF UCase(Left(VarName, 11)) = "SYSWAITTEMP" OR UCase(Left(VarName, 9)) = "DELAYTEMP" Then Return -1
-	If UCase(Left(VarName, 8)) = "SYSREADA" Then Return -1
+	If UCase(VarName) = "SYSREADA" Or UCase(VarName) = "SYSREADA_H" Then Return -1
 	If UCase(Left(VarName, 9)) = "SYSSTRING" Then
 		Temp = UCase(Mid(VarName, 10))
 		If Temp = "A" Or Temp = "A_H" Or Temp = "B" Or Temp = "B_H" Or Temp = "LENGTH" Then
