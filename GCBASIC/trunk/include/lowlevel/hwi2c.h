@@ -24,6 +24,8 @@
 '    Updated Sept 2016 - resolve 16f18855 register mapping
 '    Updated Oct 2016  - for Option Explicit and to fix the script issue
 '    Updated Oct 2016  - ... Slave10 was NOT defined.
+'    Updated Dec 2016  - ... Added SSPIF = SSP1IF to correct error
+
 
 
 '    This library is free software; you can redistribute it and/or
@@ -182,6 +184,7 @@
                 SSPBUF  = SSP1BUF
                 SSPCON2 = SSP1CON2
                 SSPADD  = SSP1ADD
+                SSPIF = SSP1IF
             end if
 
          end if
