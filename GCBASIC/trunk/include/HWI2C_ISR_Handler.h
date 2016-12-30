@@ -48,7 +48,7 @@
 '''
 '''@author  EvanV
 '''@licence GPL
-'''@version 0.9i
+'''@version 0.9j
 '''@date    30.12.2016
 '''********************************************************************************
 
@@ -206,15 +206,8 @@ state2:
           HI2CSlave_State_2( SSPBUF )
 
           'Has Stop been received, test the Start bit.... it will have toggled
-          #ifndef ChipFamily 16
-            '!18f
-            if S = 0 then
-          #endif
 
-          #ifdef ChipFamily 16
-            '18F
             if S = 0 then
-          #endif
 
 state3:
              ' let user process existing buffer
