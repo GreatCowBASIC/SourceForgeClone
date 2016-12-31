@@ -29,7 +29,7 @@
 '''
 '''@author  EvanV
 '''@licence GPL
-'''@version 0.9i
+'''@version 0.9j
 '''@date    30.12.2016
 '''********************************************************************************
 #include <HWI2C_ISR_Handler.h>
@@ -91,9 +91,7 @@ sub HI2CMessageHandler_State_Error ( in HI2CErrorCode )
 
     ' HI2CErrorCode = What caused the error...
     ' SSPSTAT will tell you the status
-
-    'Recommend to consume the Buffer
-    portb.0 = !portb.0
+    ' Recommend to consume the Buffer
 
 end Sub
 
@@ -174,7 +172,6 @@ end sub
 sub HI2CMessageHandler_State_On_Stop
 
 '        let user process buffer
-'         HI2CDATAREQUESTED = true
-'         HI2CMessageHandler_Process_Message
+         HI2CMessageHandler_Process_Message
 
 end sub
