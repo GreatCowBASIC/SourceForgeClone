@@ -72,7 +72,7 @@
 '    #define HI2CSlaveSSPOVOverflowErrorLED    porta.0
 '    #define HI2CSlaveStateNotHandledErrorLED  porta.1
 
-'Optional - set the start stop handlers
+'Set the start stop handlers
 '#define HI2CSlaveEnableStartStopInterrupts
 
 
