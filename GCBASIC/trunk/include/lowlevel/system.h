@@ -33,6 +33,8 @@
 ;    04102016 - Added OSCCAL Support
 ;    12112016 - Revised to correct comparator registers NOT being set for new chips
 ;    14112016 - Revised OSCCAL Support
+;    01012017 - Added Oscillator Support for PIC18FxxK40
+;    01012017 - Added NVMREG fix for PIC18FxxK40 A2/A3 Silicon
 
 'Constants
 #define ON 1
@@ -55,6 +57,18 @@
 '********************************************************************************
 'System initialisation routine
 Sub InitSys
+
+   #Ifdef PIC
+       ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+       ' Sets NVRAM pointer to Static RAM as default location.
+       #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+            #Ifdef Var(NVMCON1)
+               NVMCON1.7 = 1
+               NVMCON1.6 = 0
+            #endif
+       #ENDIF
+   #ENDIF
+
 
   'added 03102016 to resolve OSCCAL calibration
   'GCB does not load saved calibration data into OSCCAL register on Baseline PIC. Therefore the FOSC is inaccurate when using internal RC oscillator.
@@ -89,91 +103,186 @@ Sub InitSys
         OSCEN = 0x00   ' MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
 
         OSCTUNE = 0x00 ' HFTUN 0
-        #IFDEF ChipMHz 32
-          #IFDEF Var(OSCSTAT)
-            OSCFRQ = 0b00000110 'OSCSTAT chip.... the 16f18855 style chip
-          #ENDIF
-          #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000111 'OSCSTAT1 chip... the 16F18326/18346 style chip
-          #ENDIF
-        #ENDIF
-
-        #IFDEF ChipMHz 24
-          #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000101
-            NOSC0 = 0
-            NOSC1 = 0
-            NOSC2 = 0
-          #ENDIF
-        #ENDIF
 
 
-        #IFDEF ChipMHz 16
-          #IFDEF Var(OSCSTAT)
-            OSCFRQ = 0b00000101
-          #ENDIF
-          #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000110
-          #ENDIF
-        #ENDIF
+         'Section added by WMR  for 18FxxK40 chips with PPS and
+         'Oscillator block similar to 16F188xx Chips
+         #IFDEF ChipFamily 16    'is 18Fxxxx
+            #IFDEF Bit(NDIV3)    'and has NDIV3 bit
+                                 'So must be 18FxxK40
 
-        #IFDEF ChipMHz 12
-          #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000101
-          #ENDIF
-        #ENDIF
+                'Clear NDIV3:0
+                NDIV3 = 0
+                NDIV2 = 0
+                NDIV1 = 0
+                NDIV0 = 0
 
 
+                #IFDEF ChipMHz 64       'No Div
+                   OSCFRQ = 0b00001000
+                #Endif
 
-        #IFDEF ChipMHz 8
-          #IFDEF Var(OSCSTAT)
-            OSCFRQ = 0b00000011
-          #ENDIF
-          #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000100
-          #ENDIF
-        #ENDIF
+                #IFDEF ChipMHz 48        'No Div
+                   OSCFRQ = 0b00000111
+                #Endif
 
-        #IFDEF ChipMHz 4
-          #IFDEF Var(OSCSTAT)
-            OSCFRQ = 0b00000010
-          #ENDIF
-          #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000011
-          #ENDIF
-        #ENDIF
+                #IFDEF ChipMHz 32        'No Div
+                   OSCFRQ = 0b00000110
+                #Endif
 
-        #IFDEF ChipMHz 2
-          #IFDEF Var(OSCSTAT)
-            OSCFRQ = 0b00000001
-          #ENDIF
-          #IFDEF Var(OSCSTAT1)
-            OSCFRQ = 0b00000001
-          #ENDIF
-        #ENDIF
+                #IFDEF ChipMHz 24        '48Mhz / 2
+                   OSCFRQ = 0b00000111
+                   NDIV0 = 1
+                #Endif
 
-        #IFDEF ChipMHz 1
-            OSCFRQ = 0b00000000
-        #ENDIF
+                #IFDEF ChipMHz 16        'No Div
+                   OSCFRQ = 0b00000101
+                #Endif
 
-        #IFDEF ChipMHz 0.5
-            OSCFRQ = 0b00000000
-            OSCCON1 = OSCCON1 OR 0b00000001
-        #ENDIF
+                #IFDEF ChipMHz 12        'No Div
+                   OSCFRQ = 0b00000100
+                #Endif
 
-        #IFDEF ChipMHz 0.25
-            OSCFRQ = 0b00000000
-            OSCCON1 = OSCCON1 OR 0b00000010
-        #ENDIF
+                #IFDEF ChipMHz 8          'No Div
+                   OSCFRQ = 0b00000011
+                #Endif
 
-        #IFDEF ChipMHz 0.125
-          OSCFRQ = 0b00000000
-          OSCCON1 = OSCCON1 OR 0b00000011
-        #ENDIF
+                #IFDEF ChipMHz 6          '12 Mhz / 2
+                   OSCFRQ = 0b00000100
+                   NDIV0 = 1
+                #Endif
+
+                #IFDEF ChipMHz 4          'No Div
+                   OSCFRQ = 0b00000010
+                #Endif
+
+                #IFDEF ChipMHz 3          '12mhz / 4
+                     OSCFRQ = 0b00000100
+                     NDIV1 = 1
+                #Endif
+
+                #IFDEF ChipMHz 2         'No DIV
+                   OSCFRQ = 0b00000001
+                #Endif
+
+               #IFDEF ChipMHz 1          'No Div
+                   OSCFRQ = 0b00000000
+               #Endif
+
+                #IFDEF ChipMHz 0.5       '1MHz / 2
+                    OSCFRQ = 0b00000000
+                    NDIV0 = 1
+                #ENDIF
+
+                #IFDEF ChipMHz 0.25     '1MHZ / 4
+                    OSCFRQ = 0b00000000
+                    NDIV1 = 1
+                #ENDIF
+
+                #IFDEF ChipMHz 0.125   '1 MHz / 8
+                  OSCFRQ = 0b00000000
+                  NDIV0 = 1
+                  NDIV1 = 1
+                #ENDIF
+
+
+            #ENDIF
+
+         #Endif
+
+         #IFNDEF CHIPFamily 16
+
+                #IFDEF ChipMHz 32
+                  #IFDEF Var(OSCSTAT)
+                     OSCFRQ = 0b00000110 'OSCSTAT chip.... the 16f18855 style chip
+                  #ENDIF
+
+                  #IFDEF Var(OSCSTAT1)
+                    OSCFRQ = 0b00000111 'OSCSTAT1 chip... the 16F18326/18346 style chip
+                  #ENDIF
+
+                #ENDIF
+
+                #IFDEF ChipMHz 24
+                  #IFDEF Var(OSCSTAT1)
+                    OSCFRQ = 0b00000101
+                    NOSC0 = 0
+                    NOSC1 = 0
+                    NOSC2 = 0
+                  #ENDIF
+                #ENDIF
+
+
+                #IFDEF ChipMHz 16
+                  #IFDEF Var(OSCSTAT)
+                    OSCFRQ = 0b00000101
+                  #ENDIF
+                  #IFDEF Var(OSCSTAT1)
+                    OSCFRQ = 0b00000110
+                  #ENDIF
+                #ENDIF
+
+                #IFDEF ChipMHz 12
+                  #IFDEF Var(OSCSTAT1)
+                    OSCFRQ = 0b00000101
+                  #ENDIF
+                #ENDIF
+
+
+
+                #IFDEF ChipMHz 8
+                  #IFDEF Var(OSCSTAT)
+                    OSCFRQ = 0b00000011
+                  #ENDIF
+                  #IFDEF Var(OSCSTAT1)
+                    OSCFRQ = 0b00000100
+                  #ENDIF
+                #ENDIF
+
+                #IFDEF ChipMHz 4
+                  #IFDEF Var(OSCSTAT)
+                    OSCFRQ = 0b00000010
+                  #ENDIF
+                  #IFDEF Var(OSCSTAT1)
+                    OSCFRQ = 0b00000011
+                  #ENDIF
+                #ENDIF
+
+                #IFDEF ChipMHz 2
+                  #IFDEF Var(OSCSTAT)
+                    OSCFRQ = 0b00000001
+                  #ENDIF
+                  #IFDEF Var(OSCSTAT1)
+                    OSCFRQ = 0b00000001
+                  #ENDIF
+                #ENDIF
+
+                #IFDEF ChipMHz 1
+                    OSCFRQ = 0b00000000
+                #ENDIF
+
+                #IFDEF ChipMHz 0.5
+                    OSCFRQ = 0b00000000
+                    OSCCON1 = OSCCON1 OR 0b00000001
+                #ENDIF
+
+                #IFDEF ChipMHz 0.25
+                    OSCFRQ = 0b00000000
+                    OSCCON1 = OSCCON1 OR 0b00000010
+                #ENDIF
+
+                #IFDEF ChipMHz 0.125
+                  OSCFRQ = 0b00000000
+                  OSCCON1 = OSCCON1 OR 0b00000011
+                #ENDIF
+
+          #Endif
+
 
       #ENDIF
 
   #ENDIF
+
 
   #IFDEF Var(OSCCON)
     nop             ' This is the routine for the OSCCON config
