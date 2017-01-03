@@ -1017,12 +1017,11 @@ SUB AssembleProgram
 				CCI += 1
 				Byte1 = Hex(VAL(TempData(CCI)))
 				Do While LEN(Byte1) < 2: Byte1 = "0" + Byte1: LOOP
-				IF Byte1 <> "FF" THEN
-					CCI += 1
-					Byte2 = Hex(VAL(TempData(CCI)))
-					Do While LEN(Byte2) < 2: Byte2 = "0" + Byte2: LOOP
-					APC = APC + 1: Prog(APC) = "&H" + HEX(3145726 + CCI) + ":" + Byte2 + Byte1
-				END IF
+				
+				CCI += 1
+				Byte2 = Hex(VAL(TempData(CCI)))
+				Do While LEN(Byte2) < 2: Byte2 = "0" + Byte2: LOOP
+				APC = APC + 1: Prog(APC) = "&H" + HEX(3145726 + CCI) + ":" + Byte2 + Byte1
 				
 			Loop While CCI < ConfWordCount
 			
