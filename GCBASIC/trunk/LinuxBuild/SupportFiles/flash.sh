@@ -1,3 +1,4 @@
+#!/bin/bash
 ##  Version 0.95.001
 ##  Adapted for use on Linux from flashAVR.bat and flashPIC.bat. Not to be used on Windows.
 ##  WARNING: Not tested!
@@ -15,13 +16,13 @@
 basename=${0##*/}
 
 if [ $# -ne 2 ]; then
-	echo "Usage: $basename <hexfile> <chipmodel>"
-	echo "Example: $basename myfile.hex tiny44"
-	echo
-	echo "Note: If calling this script from the gcbasic command line"
-	echo "using the %FILENAME% and %CHIPMODEL% placeholders,"
-	echo "the appropriate values will be populated automatically."
-	exit
+  echo "Usage: $basename <hexfile> <chipmodel>"
+  echo "Example: $basename myfile.hex tiny44"
+  echo
+  echo "Note: If calling this script from the gcbasic command line"
+  echo "using the %FILENAME% and %CHIPMODEL% placeholders,"
+  echo "the appropriate values will be populated automatically."
+  exit
 fi
 
 ##  --- Your code here: ---------------------------------------
@@ -95,5 +96,5 @@ avrdude -c arduino -P /dev/ttyUSB0 -b 115200 -p $2 -U flash:w:"$1":i
 ##  --- End of your code. ------------------------------------
 
 if [ $? -ne 0 ]; then
-	echo "ERROR $? running: $0 with parameters $*"
+  echo "ERROR $? running: $0 with parameters $*"
 fi
