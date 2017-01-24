@@ -11,10 +11,8 @@ set -e # Halt on errors
 # What's my name?
 myName=${0##*/}
 
-# Files containing Version and Release date
-VersionFile=../SynToolbars.ini
-ReleaseFile=gcbasic.bas
-VersionReleaseFile=../VersionRelease.txt
+# File containing Version and Release data
+VersionReleaseFile=../version.txt
 
 # Compiler vars
 FBC=fbc # Compiler
@@ -57,14 +55,14 @@ build()
 		fi
 	done
 
-	# Get version number, release date from SynToolbars.ini, gcbasic.bas
-	echo -e "Extracting version/release information...\n"
-	Version=$(expr "$(grep -i '3h=Show GCBASIC Compiler' $VersionFile)" : '.* v\(.*\) b')
-	Release=$(expr "$(grep "Version =" $ReleaseFile)" : '.*".* \(.*\)"')
-	# Write to text file to facilitate support
-	echo -e "Version: $Version\nRelease: $Release\n" > $VersionReleaseFile
+	# Get version number & release date from Version/Release file, "version.txt"
+	echo -e "Extracting release, version information...\n"
+	read VersionRelease <$VersionReleaseFile
+	VersionRelease=${VersionRelease%$'\r'}
+	Release="$( cut -d ':' -f 1 <<< "$VersionRelease" )"
+	Version="$( cut -d ':' -f 2 <<< "$VersionRelease" )"
 
-	echo -e "\nCompiling GCBASIC Version $Version, Release $Release\n"
+	echo -e "\nCompiling GCBASIC Version $Version, released $Release\n"
 	$CC
 	if [ $? -ne 0 ]; then
 		echo "There was an error executing: $CC"
@@ -72,7 +70,6 @@ build()
 		echo -e "\nCompiled successfully.\n"
 		existing=`which $exefile 2>/dev/null` # Is there an existing gcbasic found in the PATH?
 		if [[ $? -eq 0  && $existing != "$installdir/$exefile" ]] ; then
-			[ -f $VersionReleaseFile ] && cat $VersionReleaseFile
 			echo "Note: You already have a version of gcbasic installed at '$existing'."
 			echo "This could cause usage confusion between the two versions."
 			echo -e "You may wish to delete or rename the existing version before trying to use this version.\n"
