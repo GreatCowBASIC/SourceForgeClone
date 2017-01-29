@@ -630,7 +630,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.96.<<>> 2017-01-04"
+Version = "0.96.<<>> 2017-01-29"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3625,7 +3625,7 @@ FUNCTION CompileCalcLogic (OutList As CodeSection Pointer, V1 As String, Act As 
 				IF CurrAct = "|" THEN Cmd = " iorwf "
 				IF CurrAct = "#" THEN Cmd = " xorwf "
 				If CurrVarByte = 0 Then
-					AddVar V2, "BYTE", 1, 0, "REAL", Origin
+					AddVar V2, "BYTE", 1, Subroutine(SourceSub), "REAL", Origin
 				End If
 				If V2 <> AV Then
 					CurrLine = LinkedListInsert(CurrLine, Cmd + GetByte(V2, CurrVarByte) + ",W")
@@ -4218,7 +4218,7 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 					CurrLine = LinkedListInsert(CurrLine, Cmd + BI)
 					If INSTR(BI, ",") <> 0 Then
 						VarName = Left(BI, INSTR(BI, ",") - 1)
-						AddVar VarName, "BYTE", 1, 0, "REAL", Origin
+						AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
 					End If
 				ElseIf ModeAVR Then
 					VarName = GetRealIOName(Left(BI, INSTR(BI, ",") - 1))
@@ -5471,7 +5471,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 				'Generate code to test and jump
 				Condition = Mid(CurrLine->Value, 4)
 				Condition = Left(Condition, INSTR(UCase(Condition), "THEN") - 1)
-				NewCode = CompileConditions(Condition, "FALSE", Origin)
+				NewCode = CompileConditions(Condition, "FALSE", Origin, CompSub)
 				DelSection = 0
 				DelEndIf = 0
 				If Condition = "AlwaysTrue" Then
