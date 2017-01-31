@@ -366,7 +366,7 @@ Declare Sub FixSinglePinSet
 Declare Sub FreeCalcVar (VarName As String)
 Declare Function GenerateArrayPointerSet(DestVar As String, DestPtr As Integer, CurrSub As SubType Pointer, Origin As String) As LinkedListElement Pointer
 Declare Function GenerateAutoPinDir As LinkedListElement Pointer
-Declare Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As String) As LinkedListElement Pointer
+Declare Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As String, CurrSub As SubType Pointer = 0) As LinkedListElement Pointer
 Declare Function GenerateExactDelay(ByVal Cycles As Integer) As LinkedListElement Pointer
 Declare Function GenerateVectorCode As LinkedListElement Pointer
 Declare Function GetCalcType(VT1 As String, Act As String, VT2 As String, AnswerType As String) As String
@@ -630,7 +630,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.96.<<>> 2017-01-29"
+Version = "0.96.<<>> 2017-01-31"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6741,7 +6741,7 @@ SUB CompileSet (CompSub As SubType Pointer)
 			End If
 
 			'Generate code
-			CurrLine = LinkedListInsertList(CurrLine, GenerateBitSet(VarName + "." + VarBit, Status, Origin))
+			CurrLine = LinkedListInsertList(CurrLine, GenerateBitSet(VarName + "." + VarBit, Status, Origin, CompSub))
 
 			FoundCount = FoundCount + 1
 		END IF
@@ -9947,7 +9947,7 @@ Function GenerateAutoPinDir As LinkedListElement Pointer
 	Return OutList
 End Function
 
-Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As String) As LinkedListElement Pointer
+Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As String, CurrSub As SubType Pointer = 0) As LinkedListElement Pointer
 
 	Dim As String InLine, Temp, BitName
 	Dim As String VarName, VarType, VarBit, Status, VarNameOld, VarBitOld
@@ -9957,7 +9957,16 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 
 	OutList = LinkedListCreate
 	CurrLine = OutList
-
+	
+	'Ensure subroutine is known (or assume main)
+	If CurrSub = 0 Then
+		IF INSTR(Origin, "D") <> 0 Then
+			CurrSub = Subroutine(GetDestSub(Origin))
+		Else
+			CurrSub = Subroutine(GetSubID(Origin))
+		End If
+	End If
+	
 	'Get Bit var and name
 	BitName = BitNameIn
 	'If no var, might be dealing with an SFR bit
@@ -9972,7 +9981,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 		Return OutList
 	End If
 	Status = NewStatus
-	VarType = TypeOfVar(VarName, Subroutine(GetSubID(Origin)))
+	VarType = TypeOfVar(VarName, CurrSub)
 	VarNameOld = VarName: VarBitOld = VarBit
 
 	'Show error if used on invalid type
@@ -10046,7 +10055,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 
 		Temp = " bsf ": IF Status = "0" THEN Temp = " bcf "
 		CurrLine = LinkedListInsert(CurrLine, Temp + VarName + "," + VarBit)
-		If Not IsIOReg(VarName) Then AddVar VarName, "BYTE", 1, 0, "REAL", Origin
+		If Not IsIOReg(VarName) Then AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
 
 	ElseIf ModeAVR Then
 		IF VarName = "SREG" Then
@@ -10073,7 +10082,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 			CurrLine = LinkedListInsert(CurrLine, Temp + "SysValueCopy,1<<" + VarBit)
 			CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + ",SysValueCopy")
 			AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
-			AddVar VarName, "BYTE", 1, 0, "REAL", Origin
+			AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
 		End If
 
 	ElseIf ModeZ8 Then
