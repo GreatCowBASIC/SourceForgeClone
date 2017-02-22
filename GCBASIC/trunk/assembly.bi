@@ -975,7 +975,8 @@ SUB AssembleProgram
 				
 				'Find exact match
 				Temp = UCase(DataSource)
-				DO WHILE INSTR(Temp, "=") <> 0: Replace Temp, "=", "_": LOOP
+				DO WHILE INSTR(Temp, "=") <> 0: Replace Temp, "=", "_": Loop
+				ReplaceAll (Temp, " ", "")
 				FOR FCO = 1 TO COC
 					IF Temp = UCase(ConfigOps(FCO).Op) THEN
 						COI = FCO
