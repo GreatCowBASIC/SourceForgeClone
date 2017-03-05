@@ -1,5 +1,5 @@
 '    Sound/Tone generation routines for Great Cow BASIC
-'    Copyright (C) 2006-2007 Hugh Considine
+'    Copyright (C) 2006-2017 Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -29,25 +29,25 @@
 
 'Frequency is Hz, Duration is in 10ms units
 sub Tone (In ToneFrequency as word, In ToneDuration as word)
-	
-	dim ToneLoop as word
-	dim ToneLoop2 as word
-	
-	If ToneFrequency = 0 Then Exit Sub
-	
-	'TonePeriod = 20000 / ToneFrequency
-	TonePeriod = 50000 / ToneFrequency
-	'ToneFrequency = ToneFrequency / 200
-	ToneFrequency = ToneFrequency / 100
-	
-	For ToneLoop = 1 to ToneDuration
-		For ToneLoop2 = 1 to ToneFrequency
-			Set SoundOut ON
-			SysToneDelay
-			Set SoundOut OFF
-			SysToneDelay
-		Next
-	Next
+
+  dim ToneLoop as word
+  dim ToneLoop2 as word
+
+  If ToneFrequency = 0 Then Exit Sub
+
+  'TonePeriod = 20000 / ToneFrequency
+  TonePeriod = 50000 / ToneFrequency
+  'ToneFrequency = ToneFrequency / 200
+  ToneFrequency = ToneFrequency / 100
+
+  For ToneLoop = 1 to ToneDuration
+    For ToneLoop2 = 1 to ToneFrequency
+      Set SoundOut ON
+      SysToneDelay
+      Set SoundOut OFF
+      SysToneDelay
+    Next
+  Next
 End Sub
 
 '#define SysToneDelay Wait TonePeriod 10us: Wait TonePeriod 10us

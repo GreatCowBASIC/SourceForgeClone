@@ -1,5 +1,5 @@
 '    DS18b20 temperature sensor routines for the GCBASIC compiler
-'    Copyright (C) 2007 - 2014 Kent Schafer, R. White and Evan Venn
+'    Copyright (C) 2007 - 2017 Kent Schafer, R. White and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -66,10 +66,10 @@
         ' This command is not designed to be used with parasitically powered DS18B20 sensors, the 5V pin of the sensor must be connected.
 
 ' 16/8/2014 - Revised following feedback Kent.
-	' The original DS18S20 header file had an initial wait period of 1 s which was unnecessary, and likely an artifact of debugging.  So the initial wait of 250 ms could be dropped.
-	' After OWout ConvertT, instead of waiting the 750 ms, use polling.  This makes for shorter wait times:
-	'
-	'  Do
+  ' The original DS18S20 header file had an initial wait period of 1 s which was unnecessary, and likely an artifact of debugging.  So the initial wait of 250 ms could be dropped.
+  ' After OWout ConvertT, instead of waiting the 750 ms, use polling.  This makes for shorter wait times:
+  '
+  '  Do
 '                dir DQ out
 '                Set DQ Off
 '                wait 4 us
@@ -78,7 +78,7 @@
 '                If DQ = 1 Then Exit Do
 '                wait 60 us    'minimum 60 us time slots between reads
 '            Loop
-	' The wait of 1ms between one wire commands is unnecessary.
+  ' The wait of 1ms between one wire commands is unnecessary.
 ' 15/9/2014 - Correct silly errors in the code.  Timings were incorrect.
 
 
@@ -93,32 +93,32 @@
   Dim DSint as integer 'need this to return minus sign (set bit 15 = 1 (= negative))
 
 ' Define device ROM Commands for 1-Wire DS18B20
-#define SearchRom 240 	'0xF0 (240)
-			'Command for identifying Slave Rom codes, use as many
-			'times as needed
-#define ReadRom 51 	          '0x33 (051)
-			'Command for single slave
-#define	MatchRom 85 	'0x55 (085)
-			'Command for master to identify a specific slave code
-#define	SkipRom 204 	'0xCC (204)
-			'Command for addressing all devices simultaneously
-#define	AlarmSearch 236     '0xEC (236)
-			'Command is same as Search Rom to identify any alarm flags
+#define SearchRom 240   '0xF0 (240)
+      'Command for identifying Slave Rom codes, use as many
+      'times as needed
+#define ReadRom 51            '0x33 (051)
+      'Command for single slave
+#define MatchRom 85   '0x55 (085)
+      'Command for master to identify a specific slave code
+#define SkipRom 204   '0xCC (204)
+      'Command for addressing all devices simultaneously
+#define AlarmSearch 236     '0xEC (236)
+      'Command is same as Search Rom to identify any alarm flags
 
 ' Define function Commands for for 1-Wire DS18B20
-#define	ConvertT 68 	'0x44 (68)
-			'Protocol for Single Temp Conversion
-#define	WriteScratch 78     '0x4E (78)
-			'Protocol for Write Scratchpad
-#define	ReadScratch 190     '0xBE (190)
-			'Protocol for Read Scratchpad
+#define ConvertT 68   '0x44 (68)
+      'Protocol for Single Temp Conversion
+#define WriteScratch 78     '0x4E (78)
+      'Protocol for Write Scratchpad
+#define ReadScratch 190     '0xBE (190)
+      'Protocol for Read Scratchpad
 #define CopyScratch  72       '0x48 (72)
-			'Protocol for copying Scratchpad TH and TL
-			'registers to EEPROM
-#define RecallE2 184 	'0xB8 (184)
-			'Protocol for recalling alarm trigger values from EEPROM
+      'Protocol for copying Scratchpad TH and TL
+      'registers to EEPROM
+#define RecallE2 184  '0xB8 (184)
+      'Protocol for recalling alarm trigger values from EEPROM
  #define ReadPowerSupply 180  '0xB4 (180)
-			'Protocol for identifying Power Supply Mode
+      'Protocol for identifying Power Supply Mode
 
 ' Public Routines
 
@@ -194,7 +194,7 @@ function readtemp as integer
      SignBit = false
    end if
 
-   readtemp =  DSdata * 6		' convert raw data 12 bit value of 0.0625
+   readtemp =  DSdata * 6   ' convert raw data 12 bit value of 0.0625
    DSdata = ( DSdata * 25 ) / 100
    readtemp = readtemp + DSdata
 
@@ -287,7 +287,7 @@ end sub
 
 '''@hide
 Sub PPulse                ' Master receive DS18B20 presence pulse
-  wait 100 us             ' Set to 100us for long bus wires				  'test code
+  wait 100 us             ' Set to 100us for long bus wires         'test code
   wait 43 10us
   Dir DQ In
 end sub

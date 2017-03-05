@@ -1,6 +1,5 @@
 '
-'    Created Evan R Venn - Oct 2013
-'    Beta v0.81
+'    Created Evan R Venn - Oct 2013 - 2017
 '
 
 

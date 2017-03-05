@@ -1,5 +1,5 @@
 '    DS2482 routines for the GCBASIC compiler
-'    Copyright (C) 2014 Evan Venn
+'    Copyright (C) 2017 Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -30,72 +30,72 @@ dim ds2482_short_detected as Byte
 #define        ds2482_temp         SysCalcTempA   ' save memory - oNe byte1!
 
 ' constants/macros/typdefs
-#define DS2482_I2C_ADDR		0x30	' Base I2C address of DS2482 devices
-#define POLL_LIMIT			0x30	' 0x30 is the minimum poll limit
+#define DS2482_I2C_ADDR   0x30  ' Base I2C address of DS2482 devices
+#define POLL_LIMIT      0x30  ' 0x30 is the minimum poll limit
 
 
 ' Everything below here should not be changed.
 #define CONFIG_APU                      0x01      ' Active pullup (cAPU) = on (CONFIG_APU = 0x01)
 
 ' 1-wire eeprom and silicon serial number commands
-#define READ_DEVICE_ROM		0x33
-#define SKIP_ROM			0xCC
-#define WRITE_SCRATCHPAD	          0x0F
-#define READ_MEMORY			0xF0
-#define COPY_SCRATCHPAD		0x55
+#define READ_DEVICE_ROM   0x33
+#define SKIP_ROM      0xCC
+#define WRITE_SCRATCHPAD            0x0F
+#define READ_MEMORY     0xF0
+#define COPY_SCRATCHPAD   0x55
 
 ' DS2482 command defines
-#define DS2482_CMD_DRST		0xF0	'< DS2482 Device Reset
-#define DS2482_CMD_SRP		0xE1	'< DS2482 Set Read Pointer
-#define DS2482_CMD_WCFG		0xD2	'< DS2482 Write Configuration
-#define DS2482_CMD_CHSL		0xC3	'< DS2482 Channel Select
-#define DS2482_CMD_1WRS		0xB4	'< DS2482 1-Wire Reset
-#define DS2482_CMD_1WWB		0xA5	'< DS2482 1-Wire Write Byte
-#define DS2482_CMD_1WRB		0x96	'< DS2482 1-Wire Read Byte
-#define DS2482_CMD_1WSB		0x87	'< DS2482 1-Wire Single Bit
-#define DS2482_CMD_1WT		0x78	'< DS2482 1-Wire Triplet
+#define DS2482_CMD_DRST   0xF0  '< DS2482 Device Reset
+#define DS2482_CMD_SRP    0xE1  '< DS2482 Set Read Pointer
+#define DS2482_CMD_WCFG   0xD2  '< DS2482 Write Configuration
+#define DS2482_CMD_CHSL   0xC3  '< DS2482 Channel Select
+#define DS2482_CMD_1WRS   0xB4  '< DS2482 1-Wire Reset
+#define DS2482_CMD_1WWB   0xA5  '< DS2482 1-Wire Write Byte
+#define DS2482_CMD_1WRB   0x96  '< DS2482 1-Wire Read Byte
+#define DS2482_CMD_1WSB   0x87  '< DS2482 1-Wire Single Bit
+#define DS2482_CMD_1WT    0x78  '< DS2482 1-Wire Triplet
 
 ' DS2482 status register bit defines
-#define DS2482_STATUS_1WB	0x01	'< DS2482 Status 1-Wire Busy
-#define DS2482_STATUS_PPD	0x02	'< DS2482 Status Presence Pulse Detect
-#define DS2482_STATUS_SD	0x04	'< DS2482 Status Short Detected
-#define DS2482_STATUS_LL	0x08	'< DS2482 Status 1-Wire Logic Level
-#define DS2482_STATUS_RST	0x10	'< DS2482 Status Device Reset
-#define DS2482_STATUS_SBR	0x20	'< DS2482 Status Single Bit Result
-#define DS2482_STATUS_TSB	0x40	'< DS2482 Status Triplet Second Bit
-#define DS2482_STATUS_DIR	0x80	'< DS2482 Status Branch Direction Taken
+#define DS2482_STATUS_1WB 0x01  '< DS2482 Status 1-Wire Busy
+#define DS2482_STATUS_PPD 0x02  '< DS2482 Status Presence Pulse Detect
+#define DS2482_STATUS_SD  0x04  '< DS2482 Status Short Detected
+#define DS2482_STATUS_LL  0x08  '< DS2482 Status 1-Wire Logic Level
+#define DS2482_STATUS_RST 0x10  '< DS2482 Status Device Reset
+#define DS2482_STATUS_SBR 0x20  '< DS2482 Status Single Bit Result
+#define DS2482_STATUS_TSB 0x40  '< DS2482 Status Triplet Second Bit
+#define DS2482_STATUS_DIR 0x80  '< DS2482 Status Branch Direction Taken
 
 ' DS2482 configuration register bit defines
-#define DS2482_CFG_APU		0x01	'< DS2482 Config Active Pull-Up
-#define DS2482_CFG_PPM		0x02	'< DS2482 Config Presence Pulse Masking
-#define DS2482_CFG_SPU		0x04	'< DS2482 Config Strong Pull-Up
-#define DS2482_CFG_1WS		0x08	'< DS2482 Config 1-Wire Speed
+#define DS2482_CFG_APU    0x01  '< DS2482 Config Active Pull-Up
+#define DS2482_CFG_PPM    0x02  '< DS2482 Config Presence Pulse Masking
+#define DS2482_CFG_SPU    0x04  '< DS2482 Config Strong Pull-Up
+#define DS2482_CFG_1WS    0x08  '< DS2482 Config 1-Wire Speed
 
 ' DS2482 channel selection code for defines
-#define DS2482_CH_IO0		0xF0	'< DS2482 Select Channel IO0
-#define DS2482_CH_IO1		0xE1	'< DS2482 Select Channel IO1
-#define DS2482_CH_IO2		0xD2	'< DS2482 Select Channel IO2
-#define DS2482_CH_IO3		0xC3	'< DS2482 Select Channel IO3
-#define DS2482_CH_IO4		0xB4	'< DS2482 Select Channel IO4
-#define DS2482_CH_IO5		0xA5	'< DS2482 Select Channel IO5
-#define DS2482_CH_IO6		0x96	'< DS2482 Select Channel IO6
-#define DS2482_CH_IO7		0x87	'< DS2482 Select Channel IO7
+#define DS2482_CH_IO0   0xF0  '< DS2482 Select Channel IO0
+#define DS2482_CH_IO1   0xE1  '< DS2482 Select Channel IO1
+#define DS2482_CH_IO2   0xD2  '< DS2482 Select Channel IO2
+#define DS2482_CH_IO3   0xC3  '< DS2482 Select Channel IO3
+#define DS2482_CH_IO4   0xB4  '< DS2482 Select Channel IO4
+#define DS2482_CH_IO5   0xA5  '< DS2482 Select Channel IO5
+#define DS2482_CH_IO6   0x96  '< DS2482 Select Channel IO6
+#define DS2482_CH_IO7   0x87  '< DS2482 Select Channel IO7
 
 ' DS2482 channel selection read back code for defines
-#define DS2482_RCH_IO0		0xB8	'< DS2482 Select Channel IO0
-#define DS2482_RCH_IO1		0xB1	'< DS2482 Select Channel IO1
-#define DS2482_RCH_IO2		0xAA	'< DS2482 Select Channel IO2
-#define DS2482_RCH_IO3		0xA3	'< DS2482 Select Channel IO3
-#define DS2482_RCH_IO4		0x9C	'< DS2482 Select Channel IO4
-#define DS2482_RCH_IO5		0x95	'< DS2482 Select Channel IO5
-#define DS2482_RCH_IO6		0x8E	'< DS2482 Select Channel IO6
-#define DS2482_RCH_IO7		0x87	'< DS2482 Select Channel IO7
+#define DS2482_RCH_IO0    0xB8  '< DS2482 Select Channel IO0
+#define DS2482_RCH_IO1    0xB1  '< DS2482 Select Channel IO1
+#define DS2482_RCH_IO2    0xAA  '< DS2482 Select Channel IO2
+#define DS2482_RCH_IO3    0xA3  '< DS2482 Select Channel IO3
+#define DS2482_RCH_IO4    0x9C  '< DS2482 Select Channel IO4
+#define DS2482_RCH_IO5    0x95  '< DS2482 Select Channel IO5
+#define DS2482_RCH_IO6    0x8E  '< DS2482 Select Channel IO6
+#define DS2482_RCH_IO7    0x87  '< DS2482 Select Channel IO7
 
 ' DS2482 read pointer code defines
-#define DS2482_READPTR_SR	0xF0	'< DS2482 Status Register
-#define DS2482_READPTR_RDR	0xE1	'< DS2482 Read Data Register
-#define DS2482_READPTR_CSR	0xD2	'< DS2482 Channel Selection Register
-#define DS2482_READPTR_CR	0xC3	'< DS2482 Configuration Register
+#define DS2482_READPTR_SR 0xF0  '< DS2482 Status Register
+#define DS2482_READPTR_RDR  0xE1  '< DS2482 Read Data Register
+#define DS2482_READPTR_CSR  0xD2  '< DS2482 Channel Selection Register
+#define DS2482_READPTR_CR 0xC3  '< DS2482 Configuration Register
 
 
 
@@ -105,16 +105,16 @@ dim ds2482_short_detected as Byte
 '
 function ds2482_reset
 
-	i2cstart
-	i2csend ( DS2482_I2C_ADDR )
-	i2csend ( DS2482_CMD_DRST )
+  i2cstart
+  i2csend ( DS2482_I2C_ADDR )
+  i2csend ( DS2482_CMD_DRST )
           i2crestart
-	i2csend ( DS2482_I2C_ADDR | 1 )
-	i2creceive( ds2482_status, NACK )
-	i2cstop
-	' check for failure due to incorrect read back of ds2482_status
+  i2csend ( DS2482_I2C_ADDR | 1 )
+  i2creceive( ds2482_status, NACK )
+  i2cstop
+  ' check for failure due to incorrect read back of ds2482_status
           ' these values are determined from the device datasheet table 'status register bit assignment'
-	if (( ds2482_status & 0xf7) = 0x10) then
+  if (( ds2482_status & 0xf7) = 0x10) then
              ds2482_reset = true
           else
              ds2482_reset = false
@@ -122,36 +122,36 @@ function ds2482_reset
 
 end function
 
-'	 DS2428 Detect routine that sets the I2C address and then performs a
-'	 device reset followed by writing the configuration byte to default values:
-'	 Returns: TRUE if device was detected and written
-'	          FALSE device not detected or failure to write configuration byte
+'  DS2428 Detect routine that sets the I2C address and then performs a
+'  device reset followed by writing the configuration byte to default values:
+'  Returns: TRUE if device was detected and written
+'           FALSE device not detected or failure to write configuration byte
 '
 function ds2482_detect
 
-	if ( ds2482_reset = false ) then
-		ds2482_detect = false
+  if ( ds2482_reset = false ) then
+    ds2482_detect = false
                     exit function
           end if
 
-	if ( ds2482_write_config(DS2482_CFG_APU) = false ) then
-		ds2482_detect = false
+  if ( ds2482_write_config(DS2482_CFG_APU) = false ) then
+    ds2482_detect = false
                     exit function
           end if
 
-	ds2482_detect = true
+  ds2482_detect = true
 end function
 
 
-'	Write the configuration register in the DS2482. The configuration
-'	options are provided in the lower nibble of the provided config byte.
-'	The uppper nibble in bitwise inverted when written to the DS2482.
+' Write the configuration register in the DS2482. The configuration
+' options are provided in the lower nibble of the provided config byte.
+' The uppper nibble in bitwise inverted when written to the DS2482.
 '
 '         When writing to the Configuration Register
 '         the new data is accepted only if the upper nibble (bits 7 to 4) is the one’s complement of the lower nibble (bits 3 to 0).
 '         When read, the upper nibble is always 0h.
-'	Returns:  TRUE: config written and response correct
-'	          FALSE: response incorrect
+' Returns:  TRUE: config written and response correct
+'           FALSE: response incorrect
 '
 function ds2482_write_config( ds2482_config )
 
@@ -173,7 +173,7 @@ function ds2482_write_config( ds2482_config )
 
   ' check for failure by reading back the value
   if ds2482_config <> ds2482_status then
-	DS2482_reset
+  DS2482_reset
           ds2482_write_config = false
           exit function
   end if
@@ -192,21 +192,21 @@ function ds2482_channel_select( Optional  channel as byte = 0 )
 
 
    select case channel
-	case 0
+  case 0
                ch = DS2482_CH_IO0: ch_read = DS2482_RCH_IO0
-	case 1
+  case 1
                ch = DS2482_CH_IO1: ch_read = DS2482_RCH_IO1
-	case 2
+  case 2
                ch = DS2482_CH_IO2: ch_read = DS2482_RCH_IO2
-	case 3
+  case 3
                ch = DS2482_CH_IO3: ch_read = DS2482_RCH_IO3
-	case 4
+  case 4
                ch = DS2482_CH_IO4: ch_read = DS2482_RCH_IO4
-	case 5
+  case 5
                ch = DS2482_CH_IO5: ch_read = DS2482_RCH_IO5
-	case 6
+  case 6
                ch = DS2482_CH_IO6: ch_read = DS2482_RCH_IO6
-	case 7
+  case 7
                ch = DS2482_CH_IO7: ch_read = DS2482_RCH_IO7
    end select
 
@@ -276,14 +276,14 @@ end function
 '
 '   'sendbit' - 1 bit to send (least significant byte)
 sub oneWire_WriteBit( In sendbit as bit )
-	oneWire_TouchBit( sendbit )
+  oneWire_TouchBit( sendbit )
 end sub
 
 '   Reads 1 bit of communication from the 1-Wire Net and returns the result
 '
 '   Returns:  1 bit read from 1-Wire Net
 function oneWire_ReadBit
-	oneWire_ReadBit = oneWire_TouchBit( 0x01 )
+  oneWire_ReadBit = oneWire_TouchBit( 0x01 )
 end function
 
 
@@ -341,14 +341,14 @@ function oneWire_TouchBit( in touchbit as bit )
 
 end function
 
-'	Send 8 bits of communication to the 1-Wire Net and verify that the
-'	8 bits read from the 1-Wire Net are the same (write operation).
-'	The parameter 'ds2482byte' least significant 8 bits are used.
+' Send 8 bits of communication to the 1-Wire Net and verify that the
+' 8 bits read from the 1-Wire Net are the same (write operation).
+' The parameter 'ds2482byte' least significant 8 bits are used.
 '
-'	'ds2482byte' - 8 bits to send (least significant byte)
+' 'ds2482byte' - 8 bits to send (least significant byte)
 '
-'	Returns:  TRUE: bytes written and echo was the same
-'	          FALSE: echo was not the same
+' Returns:  TRUE: bytes written and echo was the same
+'           FALSE: echo was not the same
 '
 sub oneWire_writeByte ( in ds2482byte )
 
@@ -384,10 +384,10 @@ sub oneWire_writeByte ( in ds2482byte )
 end sub
 
 
-'	Send 8 bits of read communication to the 1-Wire Net and return the
-'	result 8 bits read from the 1-Wire Net.
+' Send 8 bits of read communication to the 1-Wire Net and return the
+' result 8 bits read from the 1-Wire Net.
 '
-'	Returns:  8 bits read from 1-Wire Net
+' Returns:  8 bits read from 1-Wire Net
 '
 sub oneWire_readByte( out ds2482byte as byte )
 
@@ -431,37 +431,37 @@ sub oneWire_readByte( out ds2482byte as byte )
 
 end sub
 
-'	The 'OWBlock' transfers a block of data to and from the
-'	1-Wire Net. The result is returned in the same buffer.
+' The 'OWBlock' transfers a block of data to and from the
+' 1-Wire Net. The result is returned in the same buffer.
 '
-'	'tran_buf' - pointer to a block of unsigned
-'	             chars of length 'tran_len' that will be sent
-'	             to the 1-Wire Net
-'	'tran_len' - length in bytes to transfer
+' 'tran_buf' - pointer to a block of unsigned
+'              chars of length 'tran_len' that will be sent
+'              to the 1-Wire Net
+' 'tran_len' - length in bytes to transfer
 '
 sub oneWire_BlockTransfer( transfer_buffer() as byte, arraylength as word )
 
-	for ds2482_temp = 1 to arraylength
-		transfer_buffer(ds2482_temp) = oneWire_TouchByte(transfer_buffer(ds2482_temp))
-	next
+  for ds2482_temp = 1 to arraylength
+    transfer_buffer(ds2482_temp) = oneWire_TouchByte(transfer_buffer(ds2482_temp))
+  next
 end sub
 
 
-'	Send 8 bits of communication to the 1-Wire Net and return the
-'	result 8 bits read from the 1-Wire Net. The parameter 'sendbyte'
-'	least significant 8 bits are used and the least significant 8 bits
-'	of the result are the return byte.
+' Send 8 bits of communication to the 1-Wire Net and return the
+' result 8 bits read from the 1-Wire Net. The parameter 'sendbyte'
+' least significant 8 bits are used and the least significant 8 bits
+' of the result are the return byte.
 '
-'	'sendbyte' - 8 bits to send (least significant byte)
+' 'sendbyte' - 8 bits to send (least significant byte)
 '
-'	Returns:  8 bits read from sendbyte
+' Returns:  8 bits read from sendbyte
 '
 sub oneWire_TouchByte( sendbyte )
-	if (sendbyte = 0xff) then
-		oneWire_ReadByte ( oneWire_TouchByte )
+  if (sendbyte = 0xff) then
+    oneWire_ReadByte ( oneWire_TouchByte )
           else
-		oneWire_WriteByte( sendbyte )
-		oneWire_TouchByte = sendbyte
+    oneWire_WriteByte( sendbyte )
+    oneWire_TouchByte = sendbyte
           end if
 
 end sub

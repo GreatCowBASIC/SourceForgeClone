@@ -48,10 +48,12 @@
 '''
 '''@author  EvanV
 '''@licence GPL
-'''@version 0.9j
-'''@date    30.12.2016
+'''@version 0.9k
+'''@date    22.1.2017
 '''********************************************************************************
-
+'''
+'''  0.9k Revised to support SSP1IF
+'''
 
 
 ; ---'''Variables
@@ -78,6 +80,7 @@
 
 #script
 
+
          if novar(SSPCON1) then
 
             if var(SSP1CON1) then
@@ -97,6 +100,20 @@
                 SSPCON1 = SSPCON
             end if
          end if
+
+
+          If nobit(SSPIF) then
+
+              If bit(SSP1IF) then
+                  SSPIF=SSP1IF
+              end if
+
+              if nobit(SSP1IF) then
+                  Warning "SSPIF not mapped to SSP1IF ….library is likely to fail"
+              End if
+
+          End if
+
 
 #endscript
 

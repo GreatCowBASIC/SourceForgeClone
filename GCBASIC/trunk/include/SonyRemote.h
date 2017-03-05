@@ -1,7 +1,7 @@
 ;Sony IR Remote Control Library for Great Cow Basic
 
 ;Thomas Henry
-;Version 2.0 -- 4/23/2014
+;Version 2.0 -- 4/23/2014 - 2017
 
 ;This include file will let you easily read and use the
 ;infrared signals from a Sony compatible television remote

@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015 Evan Venn
+'    Copyright (C) 2015 - 2017 Evan Venn and Kent Schafer
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -18,11 +18,17 @@
 'Notes:
 ' Supports SSD1306 controller only.
 
-'Hardware settings uses I2C
+'Hardware settings using I2C
 '  #define GLCD_TYPE GLCD_TYPE_SSD1306
 '  #define GLCD_I2C_Address 0x78
+'Hardware settings using SPI (4Wire,MOSI(D1),SCK(D0),DC,CS)
+'  #define GLCD_TYPE GLCD_TYPE_SSD1306
+'  #define S4Wire_Data
 
 ' 1.01 Added scrollspeed
+' 1.02 Add soft SPI (Kent Schafer)
+' 1.03 Revised S4Wire_Data to cater for i2c or hwi2c being used at same time as SPI
+' 1.04 Revised for performance only. No functional changes
 
 
 #define SSD1306_SETCONTRAST 0x81
@@ -71,13 +77,10 @@
 #define SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL 0x29
 #define SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL 0x2A
 
-
 #startup InitGLCD_SSD1306
-
 
 'Setup code for SSD1306 controllers
 #if GLCD_TYPE = GLCD_TYPE_SSD1306
-
     dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
 
        If ChipRAM > 1024  Then
@@ -88,6 +91,17 @@
 
 '''@hide
 Sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
+
+    #ifdef S4Wire_DATA
+
+      CS_SSD1306 = 0
+      DC_SSD1306 = 0
+      S4Wire_SSD1306 SSD1306SendByte
+      DC_SSD1306 = 1
+      CS_SSD1306 = 1
+      Exit Sub
+
+    #endif
 
     #ifdef I2C_DATA
 
@@ -114,6 +128,17 @@ End Sub
 '''@hide
 Sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
 
+    #ifdef S4Wire_DATA
+
+      CS_SSD1306 = 0
+      DC_SSD1306 = 1
+      S4Wire_SSD1306 SSD1306SendByte
+      DC_SSD1306 = 0
+      CS_SSD1306 = 1
+      Exit Sub
+
+    #endif
+
     #ifdef I2C_DATA
 
       I2CStart
@@ -133,6 +158,8 @@ Sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
       HI2CStop
 
     #endif
+
+
 End Sub
 
 
@@ -143,7 +170,17 @@ Sub InitGLCD_SSD1306
     #IFDEF HI2C_DATA
            HIC2INIT
     #ENDIF
-	  'Setup code for SSD1306 controllers
+    #ifdef S4Wire_DATA
+      dir MOSI_SSD1306 Out
+      dir SCK_SSD1306 Out
+      dir DC_SSD1306 Out
+      dir CS_SSD1306 Out
+      dir RES_SSD1306 Out
+      RES_SSD1306 = 0
+      wait 10 us
+      RES_SSD1306 = 1
+    #endif
+    'Setup code for SSD1306 controllers
     'Init sequence for 128x64 OLED module
     Write_Command_SSD1306(SSD1306_DISPLAYOFF)                    ' 0xAE
     Write_Command_SSD1306(SSD1306_DEACTIVATE_SCROLL)
@@ -231,26 +268,26 @@ End Sub
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox_SSD1306(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
 
-	'Make sure that starting point (1) is always less than end point (2)
-	If LineX1 > LineX2 Then
-		GLCDTemp = LineX1
-		LineX1 = LineX2
-		LineX2 = GLCDTemp
-	End If
-	If LineY1 > LineY2 Then
-		GLCDTemp = LineY1
-		LineY1 = LineY2
-		LineY2 = GLCDTemp
-	End If
+  'Make sure that starting point (1) is always less than end point (2)
+  If LineX1 > LineX2 Then
+    GLCDTemp = LineX1
+    LineX1 = LineX2
+    LineX2 = GLCDTemp
+  End If
+  If LineY1 > LineY2 Then
+    GLCDTemp = LineY1
+    LineY1 = LineY2
+    LineY2 = GLCDTemp
+  End If
 
-	#if GLCD_TYPE = GLCD_TYPE_SSD1306
-		'Draw lines going across
-		For DrawLine = LineX1 To LineX2
-			For GLCDTemp = LineY1 To LineY2
-				PSet DrawLine, GLCDTemp, LineColour
-			Next
-		Next
-	#endif
+  #if GLCD_TYPE = GLCD_TYPE_SSD1306
+    'Draw lines going across
+    For DrawLine = LineX1 To LineX2
+      For GLCDTemp = LineY1 To LineY2
+        PSet DrawLine, GLCDTemp, LineColour
+      Next
+    Next
+  #endif
 
 End Sub
 
@@ -260,14 +297,24 @@ End Sub
 '''@param GLCDColour State of pixel ( GLCDBackground | GLCDForeground )
 Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
 
-		'Set pixel at X, Y on LCD to State
-		'X is 0 to 127
-		'Y is 0 to 63
-		'Origin in top left
+    'Set pixel at X, Y on LCD to State
+    'X is 0 to 127
+    'Y is 0 to 63
+    'Origin in top left
 
-	#if GLCD_TYPE = GLCD_TYPE_SSD1306
+  #if GLCD_TYPE = GLCD_TYPE_SSD1306
 
-          SSD1306_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
+
+
+          'SSD1306_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
+          'faster than /8
+          SSD1306_BufferLocationCalc = GLCDY
+          Repeat 3
+            Set C Off
+            Rotate SSD1306_BufferLocationCalc Right
+          End Repeat
+          SSD1306_BufferLocationCalc = SSD1306_BufferLocationCalc * GLCD_WIDTH
+
           SSD1306_BufferLocationCalc = GLCDX + SSD1306_BufferLocationCalc+1
           GLCDDataTemp = SSD1306_BufferAlias(SSD1306_BufferLocationCalc)
 
@@ -294,7 +341,7 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
           Cursor_Position_SSD1306 ( GLCDX, GLCDY )
           Write_Data_SSD1306 ( GLCDDataTemp )
 
-	#endif
+  #endif
 
 End Sub
 
@@ -304,7 +351,17 @@ End Sub
 '''@param Y coordinate of pixel
 sub Cursor_Position_SSD1306( in LocX as byte, in LocY as byte )
   dim  PosCharX, PosCharX as Word
-  PosCharY = LocY / 8
+
+
+  ' PosCharY = LocY / 8
+  ' faster than /8
+  PosCharY = LocY
+  Repeat 3
+    Set C Off
+    Rotate PosCharY Right
+  End Repeat
+
+
   Write_Command_SSD1306( 0xB0 + PosCharY )   ' set page address
   PosCharX = ( LocX  & 0x0f )  ' lower nibble
   Write_Command_SSD1306( PosCharX )
@@ -410,5 +467,22 @@ sub SetContrast_SSD1306 ( in dim_state )
 
   Write_Command_SSD1306(SSD1306_SETCONTRAST)
   Write_Command_SSD1306(dim_state)
+
+end sub
+
+'*********************Software SPI**********************
+
+sub S4Wire_SSD1306(in SSD1306SendByte as byte)
+
+  For clocks = 1 to 8
+    If SSD1306SendByte.7 = 1 Then
+      MOSI_SSD1306 = 1
+    Else
+      MOSI_SSD1306 = 0
+    End if
+    Rotate SSD1306SendByte Left Simple
+    SCK_SSD1306 = 0
+    SCK_SSD1306 = 1
+  Next
 
 end sub

@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015 Dimitris  Katsaounis based on works of Hugh Considine and  Evan Venn
+'    Copyright (C) 2017 Dimitris  Katsaounis based on works of Hugh Considine and  Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
 '
 '    31st Aug 2015 Initial release
 '    1st Sept 2015 Minor correction to color and other parameters.
-'    25h Oct 2015 Corrected INIT 	
+'    25h Oct 2015 Corrected INIT
 '
 'Notes:
 ' Supports SSD1289 controller only.
@@ -26,35 +26,35 @@
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_SSD1289"
 'Serial lines (SSD1289 only)
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		????; GLCD_WR; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		????; GLCD_CS; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		????; GLCD_RS; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		       Reset; GLCD_RST; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.0; GLCD_DB0; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.1; GLCD_DB1; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.2; GLCD_DB2; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.3; GLCD_DB3; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.4; GLCD_DB4; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.5; GLCD_DB5; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.6; GLCD_DB6; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.7; GLCD_DB7; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.8; GLCD_DB8; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.9; GLCD_DB9; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		      Port.10; GLCD_DB10; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		     Port.11; GLCD_DB11; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		     Port.12; GLCD_DB12; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		     Port.13; GLCD_DB13; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		     Port.14; GLCD_DB14; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289; 		     Port.15; GLCD_DB15; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;     ????; GLCD_WR; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;     ????; GLCD_CS; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;     ????; GLCD_RS; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;            Reset; GLCD_RST; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.0; GLCD_DB0; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.1; GLCD_DB1; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.2; GLCD_DB2; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.3; GLCD_DB3; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.4; GLCD_DB4; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.5; GLCD_DB5; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.6; GLCD_DB6; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.7; GLCD_DB7; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.8; GLCD_DB8; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.9; GLCD_DB9; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;           Port.10; GLCD_DB10; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;          Port.11; GLCD_DB11; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;          Port.12; GLCD_DB12; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;          Port.13; GLCD_DB13; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;          Port.14; GLCD_DB14; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_SSD1289;          Port.15; GLCD_DB15; IO_Pin
 '''@font GLCD_EXTENDEDFONTSET1
 
 
 'Define Orientation
 
-#define LANDSCAPE	  1
+#define LANDSCAPE   1
 #define PORTRAIT_REV  2
 #define LANDSCAPE_REV 3
-#define PORTRAIT	  4
+#define PORTRAIT    4
 
 'Extended font set
 '#define GLCD_EXTENDEDFONTSET1
@@ -81,7 +81,7 @@
 
 
 'Define ports ' map from generic user program to device specific format
-#define SSD1289_WR	 GLCD_WR
+#define SSD1289_WR   GLCD_WR
 #define SSD1289_CS   GLCD_CS
 #define SSD1289_RS   GLCD_RS
 #define SSD1289_RST  GLCD_RST
@@ -185,7 +185,7 @@ End Sub
 '''Initialises the device
 Sub InitGLCD_SSD1289
 
-	Dim Orientation_SSD1289 as Byte
+  Dim Orientation_SSD1289 as Byte
         Dim GLCDBackground as Byte
         Orientation_SSD1289 = 4 'PORTRAIT
 
@@ -376,21 +376,21 @@ End Sub
 Sub Box_SSD1289(In BX1 as word, In BY1 as word, In  BX2 as word, In  BY2 as word, Optional In  FColor as word = GLCDForeground )
 
          'Make sure that starting point (1) is always less than end point (2)
-	If BX1 > BX2 Then
-		GLCDTempXY = BX1
-		BX1 = BX2
-		BX2 = GLCDTempXY
-	End If
-	If BY1 > BY2 Then
-		GLCDTempXY = BY1
-		BY1 = BY2
-		BY2 = GLCDTempXY
-	End If
+  If BX1 > BX2 Then
+    GLCDTempXY = BX1
+    BX1 = BX2
+    BX2 = GLCDTempXY
+  End If
+  If BY1 > BY2 Then
+    GLCDTempXY = BY1
+    BY1 = BY2
+    BY2 = GLCDTempXY
+  End If
           'Draw lines going across
           Line BX1 , BY1 , BX2 , BY1 , FColor
           Line BX1 , BY2 , BX2 , BY2 , FColor
 
-	'Draw lines going down
+  'Draw lines going down
           Line BX1 , BY1 , BX1 , BY2 , FColor
           Line BX2 , BY1 , BX2 , BY2 , FColor
 
@@ -540,23 +540,23 @@ Sub FilledCircle_SSD1289( In xoffset as Word, In yoffset as Word, In xradius as 
   FillCircleXX = 0
   FillCircleYY = xradius
 
-	' Fill in the center between the two halves
-	Line_SSD1289( xoffset, yoffset-xradius , xoffset, yoffset+xradius, LineColour)
+  ' Fill in the center between the two halves
+  Line_SSD1289( xoffset, yoffset-xradius , xoffset, yoffset+xradius, LineColour)
 
-	Do while (FillCircleXX < FillCircleYY)
+  Do while (FillCircleXX < FillCircleYY)
              if ff >= 0 then
                 FillCircleYY--
                 ddF_y += 2
                 ff += ddF_y
              end if
-	   FillCircleXX++
-	   ddF_x += 2
-	   ff += ddF_x
-	   Line_SSD1289 (xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour)
-	   Line_SSD1289 (xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour)
-	   Line_SSD1289 (xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour)
-	   Line_SSD1289 (xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour)
-  	Loop
+     FillCircleXX++
+     ddF_x += 2
+     ff += ddF_x
+     Line_SSD1289 (xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour)
+     Line_SSD1289 (xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour)
+     Line_SSD1289 (xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour)
+     Line_SSD1289 (xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour)
+    Loop
 End Sub
 
 
@@ -571,13 +571,13 @@ End Sub
 Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In PrintData As String, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize )
           Dim GLCDPrintLoc as Word
           PrintLen = PrintData(0)
-	If PrintLen = 0 Then Exit Sub
-	GLCDPrintLoc = PrintLocX
-	'Write Data
-	For SysPrintTemp = 1 To PrintLen
-		DrawChar_SSD1289 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), GLCDForeground , Size
-		GLCDPrintLoc += GLCDFontWidth*Size
-	Next
+  If PrintLen = 0 Then Exit Sub
+  GLCDPrintLoc = PrintLocX
+  'Write Data
+  For SysPrintTemp = 1 To PrintLen
+    DrawChar_SSD1289 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), GLCDForeground , Size
+    GLCDPrintLoc += GLCDFontWidth*Size
+  Next
 End Sub
 
 '''Displays a number
@@ -586,23 +586,23 @@ End Sub
 '''@param GLCDValue Number to display
 '''@param Color Optional color
 Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Long, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize)
-	Dim GLCDPrintLoc as Word
+  Dim GLCDPrintLoc as Word
   Dim SysCalcTempA As Long
-	Dim SysPrintBuffer(10)
-	SysPrintBuffLen = 0
-	Do
-		'Divide number by 10, remainder into buffer
-		SysPrintBuffLen += 1
-		SysPrintBuffer(SysPrintBuffLen) = GLCDValue %10
-		GLCDValue = SysCalcTempA
-	Loop While GLCDValue <> 0
+  Dim SysPrintBuffer(10)
+  SysPrintBuffLen = 0
+  Do
+    'Divide number by 10, remainder into buffer
+    SysPrintBuffLen += 1
+    SysPrintBuffer(SysPrintBuffLen) = GLCDValue %10
+    GLCDValue = SysCalcTempA
+  Loop While GLCDValue <> 0
 
-	'Display
-	GLCDPrintLoc = PrintLocX
-	For SysPrintTemp = SysPrintBuffLen To 1 Step -1
-		   DrawChar_SSD1289 GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48, GLCDForeground , Size
-		   GLCDPrintLoc += GLCDFontWidth*Size
-	Next
+  'Display
+  GLCDPrintLoc = PrintLocX
+  For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+       DrawChar_SSD1289 GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48, GLCDForeground , Size
+       GLCDPrintLoc += GLCDFontWidth*Size
+  Next
 
 End Sub
 
@@ -623,10 +623,10 @@ Sub DrawChar_SSD1289(In CharLocX as Word, In CharLocY as Word, In CharCode, Opti
   For CurrCharCol = 1 to 5
     Select Case CurrCharCol
            Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-	 Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-	 Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-	 Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-	 Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+   Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+   Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+   Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+   Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
     End Select
     CharRow=0
     For CurrCharRow = 1 to 8
@@ -656,14 +656,14 @@ End Sub
 '''@param PrintData String to display
 '''@param Color Optional color
 Sub BigPrint_SSD1289(In PrintLocX as Word , In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
-	Dim GLCDPrintLoc as Word
+  Dim GLCDPrintLoc as Word
           PrintLen = PrintData(0)
-	If PrintLen = 0 Then Exit Sub
-	GLCDPrintLoc = PrintLocX
-	For SysPrintTemp = 1 To PrintLen
-		DrawBigChar_SSD1289 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), Color
-		GLCDPrintLoc += 13
-	Next
+  If PrintLen = 0 Then Exit Sub
+  GLCDPrintLoc = PrintLocX
+  For SysPrintTemp = 1 To PrintLen
+    DrawBigChar_SSD1289 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), Color
+    GLCDPrintLoc += 13
+  Next
 End Sub
 
 '''Displays a character in a larger font
@@ -709,7 +709,7 @@ Sub DrawBigChar_SSD1289 (In CharLocX as Word, In CharLocY as Word, In CharCode, 
           if CurrCharVal.0=1 then
              PSet_SSD1289 LocX , LocY , Color
           end if
-	Rotate CurrCharVal Right
+  Rotate CurrCharVal Right
         Next
     Next
 End Sub

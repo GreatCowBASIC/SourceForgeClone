@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@
 ' 16/10/2014: Adapted to handle screen rotation and GLCDCLS for ST7735 device.
 ' 27/10/2014: Changed ST7735Rotation to GLCDRotate
 '
-' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 '
 'Hardware settings
 'Type
@@ -145,12 +145,12 @@
 '''Initialise the GLCD device
 Sub InitGLCD_ST7735
 
-	'mapped to global variable
-	'dim ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT as byte
+  'mapped to global variable
+  'dim ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT as byte
 
-	'Setup code for ST7735 controllers
-	#if GLCD_TYPE = GLCD_TYPE_ST7735
-		'Pin directions
+  'Setup code for ST7735 controllers
+  #if GLCD_TYPE = GLCD_TYPE_ST7735
+    'Pin directions
                     #IFNDEF GLCD_LAT
                         Dir ST7735_CS Out
                         Dir ST7735_DC Out
@@ -175,31 +175,31 @@ Sub InitGLCD_ST7735
                     #ifdef ST7735_HardwareSPI
                       ' harware SPI mode
                       SPIMode MasterFast, 0
-		#endif
+    #endif
 
-		'Reset display
-		Set ST7735_RST On
-		Wait 10 ms
-		'Reset sequence (lower line for at least 10 us)
-		Set ST7735_RST Off
-		Wait 25 us
-		Set ST7735_RST On
-		Wait 10 ms
-		'Software reset
-		SendCommand_ST7735 ST7735_SWRESET
-		Wait 200 ms
+    'Reset display
+    Set ST7735_RST On
+    Wait 10 ms
+    'Reset sequence (lower line for at least 10 us)
+    Set ST7735_RST Off
+    Wait 25 us
+    Set ST7735_RST On
+    Wait 10 ms
+    'Software reset
+    SendCommand_ST7735 ST7735_SWRESET
+    Wait 200 ms
 
-		'Software reset
-		SendCommand_ST7735 ST7735_SWRESET
-		Wait 200 ms
+    'Software reset
+    SendCommand_ST7735 ST7735_SWRESET
+    Wait 200 ms
 
                     'Out of sleep mode
-		SendCommand_ST7735 ST7735_SLPOUT
-		Wait 200 ms
+    SendCommand_ST7735 ST7735_SLPOUT
+    Wait 200 ms
 
                     SendCommand_ST7735(ST7735_COLMOD)   ; set color mode
                     SendData_ST7735(0x05)               ; 16-bit color
-		Wait 10 ms
+    Wait 10 ms
 
                     SendCommand_ST7735(ST7735_FRMCTR1); // frame rate control
                     SendData_ST7735(0x00);          // fastest refresh
@@ -277,36 +277,36 @@ Sub InitGLCD_ST7735
                     wait 10 ms;
 
 
-		'Gamma correction
-		'SetGammaCorrection_ST7735
+    'Gamma correction
+    'SetGammaCorrection_ST7735
 
-		'Scanning direction
-		SendCommand_ST7735 0x36
-		SendData_ST7735 0xC8
-		wait 10 ms;
-		'Set pixel mode to 16 bpp
-		SendCommand_ST7735 0x3A
-		SendData_ST7735 5
-		wait 10 ms;
-		'Display on
-		SendCommand_ST7735 0x29
-		Wait 100 ms
+    'Scanning direction
+    SendCommand_ST7735 0x36
+    SendData_ST7735 0xC8
+    wait 10 ms;
+    'Set pixel mode to 16 bpp
+    SendCommand_ST7735 0x3A
+    SendData_ST7735 5
+    wait 10 ms;
+    'Display on
+    SendCommand_ST7735 0x29
+    Wait 100 ms
 
-		'Colours
-		GLCDBackground = ST7735_WHITE
-		GLCDForeground = ST7735_BLACK
+    'Colours
+    GLCDBackground = ST7735_WHITE
+    GLCDForeground = ST7735_BLACK
 
                     'Variables required for device
                     ST7735_GLCD_WIDTH = GLCD_WIDTH
                     ST7735_GLCD_HEIGHT = GLCD_HEIGHT
                     GLCDFontWidth = 6
                     GLCDfntDefault = 0
-		    GLCDfntDefaultsize = 1
-	#endif
+        GLCDfntDefaultsize = 1
+  #endif
 
           GLCDRotate ( PORTRAIT_REV )
-	'Clear screen
-	GLCDCLS
+  'Clear screen
+  GLCDCLS
 
 End Sub
 
@@ -317,19 +317,19 @@ Sub GLCDCLS_ST7735
           ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
           GLCD_yordinate = 0
 
-	#if GLCD_TYPE = GLCD_TYPE_ST7735
-		SetAddress_ST7735 ST7735_COLUMN, 0, ST7735_GLCD_WIDTH
+  #if GLCD_TYPE = GLCD_TYPE_ST7735
+    SetAddress_ST7735 ST7735_COLUMN, 0, ST7735_GLCD_WIDTH
                     wait 2 ms
                     SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
                     wait 2 ms
                     SendCommand_ST7735 0x2C
                     wait 2 ms
                     Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
-			SendData_ST7735 GLCDBackground_h
+      SendData_ST7735 GLCDBackground_h
                               SendData_ST7735 GLCDBackground
-		End Repeat
+    End Repeat
 '                    FilledBox( 0, 0, ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT, GLCDBackground )
-	#endif
+  #endif
 
 End Sub
 
@@ -340,19 +340,19 @@ End Sub
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawChar_ST7735(In CharLocX, In CharLocY, In CharCode, Optional In LineColour as word = GLCDForeground )
 
-	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-	CharCode -= 15
+  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+  CharCode -= 15
 
           'Need to read characters from CharColn (n = 0:7) tables
-	'(First 3, ie 0:2 are blank, so can ignore)
-	For CurrCharCol = 1 to 5
-		Select Case CurrCharCol
-			Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-			Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-			Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-		End Select
+  '(First 3, ie 0:2 are blank, so can ignore)
+  For CurrCharCol = 1 to 5
+    Select Case CurrCharCol
+      Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+      Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+      Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+      Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+      Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+    End Select
                     For CurrCharRow = 1 to 8
                               If CurrCharVal.0 = 0 Then
                                         PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
@@ -362,7 +362,7 @@ Sub GLCDDrawChar_ST7735(In CharLocX, In CharLocY, In CharCode, Optional In LineC
                               Rotate CurrCharVal Right
                     Next
 
-	Next
+  Next
 
 
 
@@ -377,30 +377,30 @@ End Sub
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox_ST7735(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
 
-	'Make sure that starting point (1) is always less than end point (2)
-	If LineX1 > LineX2 Then
-		GLCDTemp = LineX1
-		LineX1 = LineX2
-		LineX2 = GLCDTemp
-	End If
-	If LineY1 > LineY2 Then
-		GLCDTemp = LineY1
-		LineY1 = LineY2
-		LineY2 = GLCDTemp
-	End If
+  'Make sure that starting point (1) is always less than end point (2)
+  If LineX1 > LineX2 Then
+    GLCDTemp = LineX1
+    LineX1 = LineX2
+    LineX2 = GLCDTemp
+  End If
+  If LineY1 > LineY2 Then
+    GLCDTemp = LineY1
+    LineY1 = LineY2
+    LineY2 = GLCDTemp
+  End If
 
-	#if GLCD_TYPE = GLCD_TYPE_ST7735
-		'Set address window
-		SetAddress_ST7735 ST7735_COLUMN, LineX1, LineX2
-		SetAddress_ST7735 ST7735_ROW, LineY1, LineY2
-		'Fill with colour
-		Dim GLCDPixelCount As Word
-		GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
-		SendCommand_ST7735 0x2C
-		Repeat GLCDPixelCount
-			SendWord_ST7735 LineColour
-		End Repeat
-	#endif
+  #if GLCD_TYPE = GLCD_TYPE_ST7735
+    'Set address window
+    SetAddress_ST7735 ST7735_COLUMN, LineX1, LineX2
+    SetAddress_ST7735 ST7735_ROW, LineY1, LineY2
+    'Fill with colour
+    Dim GLCDPixelCount As Word
+    GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
+    SendCommand_ST7735 0x2C
+    Repeat GLCDPixelCount
+      SendWord_ST7735 LineColour
+    End Repeat
+  #endif
 End Sub
 
 '''Draws a pixel on the GLCD
@@ -409,12 +409,12 @@ End Sub
 '''@param GLCDColour State of pixel
 Sub PSet_ST7735(In GLCDX, In GLCDY, In GLCDColour As Word)
 
-	#if GLCD_TYPE = GLCD_TYPE_ST7735
-		SetAddress_ST7735 ST7735_COLUMN, GLCDX, GLCDX
-		SetAddress_ST7735 ST7735_ROW, GLCDY, GLCDY
-		SendCommand_ST7735 0x2C
-		SendWord_ST7735 GLCDColour
-	#endif
+  #if GLCD_TYPE = GLCD_TYPE_ST7735
+    SetAddress_ST7735 ST7735_COLUMN, GLCDX, GLCDX
+    SetAddress_ST7735 ST7735_ROW, GLCDY, GLCDY
+    SendCommand_ST7735 0x2C
+    SendWord_ST7735 GLCDColour
+  #endif
 End Sub
 
 
@@ -423,7 +423,7 @@ End Sub
 '''@hide
 Sub Transfer_ST7735(In ST7735TempIn, Out ST7735TempOut)
 
-	'Use mode 0 - CPOL = 0, CPHA = 0
+  'Use mode 0 - CPOL = 0, CPHA = 0
           'Set SSPSTAT.CKE On
           'Set SSPCON1.CKP Off
 
@@ -543,11 +543,11 @@ End Sub
 '''@param ST7735End Ending address
 '''@hide
 Sub SetAddress_ST7735(In ST7735AddressType, In ST7735Start As Word, In ST7735End As Word)
-	SendCommand_ST7735 ST7735AddressType
-	SendData_ST7735 ST7735Start_H
-	SendData_ST7735 ST7735Start
-	SendData_ST7735 ST7735End_H
-	SendData_ST7735 ST7735End
+  SendCommand_ST7735 ST7735AddressType
+  SendData_ST7735 ST7735Start_H
+  SendData_ST7735 ST7735Start
+  SendData_ST7735 ST7735End_H
+  SendData_ST7735 ST7735End
 End Sub
 
 '''@hide
@@ -582,65 +582,64 @@ end sub
 '''@hide
 Sub SetGammaCorrection_ST7735
 
-	SendCommand_ST7735 0x26
-	SendData_ST7735 0x04
+  SendCommand_ST7735 0x26
+  SendData_ST7735 0x04
 
-	SendCommand_ST7735 0xF2
-	SendData_ST7735 0x01
+  SendCommand_ST7735 0xF2
+  SendData_ST7735 0x01
 
-	'Send commands and values from table
-	For ST7735ByteNo = 1 to 32
-		ReadTable ST7735GammaCorrection, ST7735ByteNo, ST7735Byte
-		If ST7735ByteNo = 1 Then
-			SendCommand_ST7735 ST7735Byte
-		Else
-			If ST7735ByteNo = 17 Then
-				Wait 50 ms
-				SendCommand_ST7735 ST7735Byte
-			Else
-				SendData_ST7735 ST7735Byte
-			End If
-		End If
-	Next
+  'Send commands and values from table
+  For ST7735ByteNo = 1 to 32
+    ReadTable ST7735GammaCorrection, ST7735ByteNo, ST7735Byte
+    If ST7735ByteNo = 1 Then
+      SendCommand_ST7735 ST7735Byte
+    Else
+      If ST7735ByteNo = 17 Then
+        Wait 50 ms
+        SendCommand_ST7735 ST7735Byte
+      Else
+        SendData_ST7735 ST7735Byte
+      End If
+    End If
+  Next
 End Sub
 
 'Numbers taken from Arduino_LCD.cpp
 Table ST7735GammaCorrection
-	'For CMCTRP1 (command E0)
-	0xE0
-	0x28
-	0x24
-	0x22
-	0x31
-	0x2b
-	0x0e
-	0x53
-	0xa5
-	0x42
-	0x16
-	0x18
-	0x12
-	0x1a
-	0x14
-	0x03
+  'For CMCTRP1 (command E0)
+  0xE0
+  0x28
+  0x24
+  0x22
+  0x31
+  0x2b
+  0x0e
+  0x53
+  0xa5
+  0x42
+  0x16
+  0x18
+  0x12
+  0x1a
+  0x14
+  0x03
 
     'For GMCTRN1 (command E1)
     0xE1
-	0x17
-	0x1b
-	0x1d
-	0x0e
-	0x14
-	0x11
-	0x2c
-	0xa5
-	0x3d
-	0x09
-	0x27
-	0x2d
-	0x25
-	0x2b
-	0x3c
+  0x17
+  0x1b
+  0x1d
+  0x0e
+  0x14
+  0x11
+  0x2c
+  0xa5
+  0x3d
+  0x09
+  0x27
+  0x2d
+  0x25
+  0x2b
+  0x3c
 End Table
-
 

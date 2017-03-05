@@ -1,5 +1,5 @@
 '    EEPROM routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2016 Hugh Considine
+'    Copyright (C) 2006 - 2017 Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -40,19 +40,19 @@
 
 'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 #script
-	If Var(EEDATA) Then
-		EEDATL_REF = EEDATA
-	End If
-	If Var(EEDAT) Then
-		EEDATL_REF = EEDAT
-	End If
+  If Var(EEDATA) Then
+    EEDATL_REF = EEDATA
+  End If
+  If Var(EEDAT) Then
+    EEDATL_REF = EEDAT
+  End If
 
   If Var(EEDATL) Then
-		EEDATL_REF = EEDATL
-	End If
+    EEDATL_REF = EEDATL
+  End If
 
   If var(NVMADRH) Then
-  	EPWrite = NVMADR_EPWrite
+    EPWrite = NVMADR_EPWrite
     EPRead  = NVMADR_EPRead
   End If
 
@@ -63,76 +63,76 @@ sub EPWrite(In EEAddress, In EEDataValue)
 
 #IFDEF PIC
 
-	'Variable alias
-	#IFNDEF Var(EEADRH)
-		Dim EEAddress Alias EEADR
-	#ENDIF
-	#IFDEF Var(EEADRH)
-		Dim EEAddress As Word Alias EEADRH, EEADR
-	#ENDIF
-	#ifdef EEDATL_REF
-		Dim EEDataValue Alias EEDATL_REF
-	#endif
-	
-	'Disable interrupt
-	IntOff
+  'Variable alias
+  #IFNDEF Var(EEADRH)
+    Dim EEAddress Alias EEADR
+  #ENDIF
+  #IFDEF Var(EEADRH)
+    Dim EEAddress As Word Alias EEADRH, EEADR
+  #ENDIF
+  #ifdef EEDATL_REF
+    Dim EEDataValue Alias EEDATL_REF
+  #endif
 
-	'Select data memory
-	#IFDEF Bit(EEPGD)
-		SET EECON1.EEPGD OFF
-	#ENDIF
-	#IFDEF Bit(CFGS)
-		Set EECON1.CFGS OFF
-	#ENDIF
+  'Disable interrupt
+  IntOff
 
-	'Start write
-	SET EECON1.WREN ON
-	EECON2 = 0x55
-	EECON2 = 0xAA
-	SET EECON1.WR ON
-	SET EECON1.WREN OFF
+  'Select data memory
+  #IFDEF Bit(EEPGD)
+    SET EECON1.EEPGD OFF
+  #ENDIF
+  #IFDEF Bit(CFGS)
+    Set EECON1.CFGS OFF
+  #ENDIF
 
-	'Wait for write to complete
-	WAIT WHILE EECON1.WR ON
-	SET EECON1.WREN OFF
+  'Start write
+  SET EECON1.WREN ON
+  EECON2 = 0x55
+  EECON2 = 0xAA
+  SET EECON1.WR ON
+  SET EECON1.WREN OFF
 
-	'Restore interrupt
-	IntOn
+  'Wait for write to complete
+  WAIT WHILE EECON1.WR ON
+  SET EECON1.WREN OFF
+
+  'Restore interrupt
+  IntOn
 
 #ENDIF
 
 #IFDEF AVR
-	'Variable alias
-	#IFDEF Var(EEARH)
-		Dim EEAddress As Word Alias EEARH, EEARL
-	#ENDIF
-	#IFNDEF Var(EEARH)
-		#IFDEF Var(EEAR)
-			Dim EEAddress Alias EEAR
-		#ENDIF
-	#ENDIF
-	Dim EEDataValue Alias EEDR
+  'Variable alias
+  #IFDEF Var(EEARH)
+    Dim EEAddress As Word Alias EEARH, EEARL
+  #ENDIF
+  #IFNDEF Var(EEARH)
+    #IFDEF Var(EEAR)
+      Dim EEAddress Alias EEAR
+    #ENDIF
+  #ENDIF
+  Dim EEDataValue Alias EEDR
 
-	'Enable write
-	#IFDEF Bit(EEMWE)
-		Set EECR.EEMWE On
-	#ENDIF
-	#IFNDEF Bit(EEMWE)
-		#IFDEF Bit(EEMPE)
-			Set EECR.EEMPE On
-		#ENDIF
-	#ENDIF
-	'Start write, wait for it to complete
-	#IFDEF Bit(EEWE)
-		Set EECR.EEWE On
-		Wait Until EECR.EEWE Off
-	#ENDIF
-	#IFNDEF Bit(EEWE)
-		#IFDEF Bit(EEPE)
-			Set EECR.EEPE On
-			Wait Until EECR.EEPE Off
-		#ENDIF
-	#ENDIF
+  'Enable write
+  #IFDEF Bit(EEMWE)
+    Set EECR.EEMWE On
+  #ENDIF
+  #IFNDEF Bit(EEMWE)
+    #IFDEF Bit(EEMPE)
+      Set EECR.EEMPE On
+    #ENDIF
+  #ENDIF
+  'Start write, wait for it to complete
+  #IFDEF Bit(EEWE)
+    Set EECR.EEWE On
+    Wait Until EECR.EEWE Off
+  #ENDIF
+  #IFNDEF Bit(EEWE)
+    #IFDEF Bit(EEPE)
+      Set EECR.EEPE On
+      Wait Until EECR.EEPE Off
+    #ENDIF
+  #ENDIF
 
 #ENDIF
 
@@ -145,49 +145,49 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
 
 #IFDEF PIC
 
-	'Variable alias
-	#IFNDEF Var(EEADRH)
-		Dim EEAddress Alias EEADR
-	#ENDIF
-	#IFDEF Var(EEADRH)
-		Dim EEAddress As Word Alias EEADRH, EEADR
-	#ENDIF
-	#ifdef EEDATL_REF
-		Dim EEDataValue Alias EEDATL_REF
-	#endif
+  'Variable alias
+  #IFNDEF Var(EEADRH)
+    Dim EEAddress Alias EEADR
+  #ENDIF
+  #IFDEF Var(EEADRH)
+    Dim EEAddress As Word Alias EEADRH, EEADR
+  #ENDIF
+  #ifdef EEDATL_REF
+    Dim EEDataValue Alias EEDATL_REF
+  #endif
 
-	'Disable interrupt
-	IntOff
+  'Disable interrupt
+  IntOff
 
-	'Select data memory
-	#IFDEF Bit(EEPGD)
-		SET EECON1.EEPGD OFF
-	#ENDIF
-	#IFDEF Bit(CFGS)
-		Set EECON1.CFGS OFF
-	#ENDIF
+  'Select data memory
+  #IFDEF Bit(EEPGD)
+    SET EECON1.EEPGD OFF
+  #ENDIF
+  #IFDEF Bit(CFGS)
+    Set EECON1.CFGS OFF
+  #ENDIF
 
-	'Read
-	SET EECON1.RD ON
+  'Read
+  SET EECON1.RD ON
 
-	'Restore interrupt
-	IntOn
+  'Restore interrupt
+  IntOn
 #ENDIF
 
 #IFDEF AVR
-	'Variable alias
-	#IFDEF Var(EEARH)
-		Dim EEAddress As Word Alias EEARH, EEARL
-	#ENDIF
-	#IFNDEF Var(EEARH)
-		#IFDEF Var(EEAR)
-			Dim EEAddress Alias EEAR
-		#ENDIF
-	#ENDIF
-	Dim EEDataValue Alias EEDR
+  'Variable alias
+  #IFDEF Var(EEARH)
+    Dim EEAddress As Word Alias EEARH, EEARL
+  #ENDIF
+  #IFNDEF Var(EEARH)
+    #IFDEF Var(EEAR)
+      Dim EEAddress Alias EEAR
+    #ENDIF
+  #ENDIF
+  Dim EEDataValue Alias EEDR
 
-	'Start read
-	Set EECR.EERE On
+  'Start read
+  Set EECR.EERE On
 
 #ENDIF
 
@@ -196,49 +196,49 @@ end sub
 function ReadEP(EEAddress)
 
 #IFDEF PIC
-	'Variable alias
-	#IFNDEF Var(EEADRH)
-		Dim EEAddress Alias EEADR
-	#ENDIF
-	#IFDEF Var(EEADRH)
-		Dim EEAddress As Word Alias EEADRH, EEADR
-	#ENDIF
-	#ifdef EEDATL_REF
-		Dim EEDataValue Alias EEDATL_REF
-	#endif
+  'Variable alias
+  #IFNDEF Var(EEADRH)
+    Dim EEAddress Alias EEADR
+  #ENDIF
+  #IFDEF Var(EEADRH)
+    Dim EEAddress As Word Alias EEADRH, EEADR
+  #ENDIF
+  #ifdef EEDATL_REF
+    Dim EEDataValue Alias EEDATL_REF
+  #endif
 
-	'Disable interrupt
-	IntOff
+  'Disable interrupt
+  IntOff
 
-	'Select data memory
-	#IFDEF Bit(EEPGD)
-		SET EECON1.EEPGD OFF
-	#ENDIF
-	#IFDEF Bit(CFGS)
-		Set EECON1.CFGS OFF
-	#ENDIF
+  'Select data memory
+  #IFDEF Bit(EEPGD)
+    SET EECON1.EEPGD OFF
+  #ENDIF
+  #IFDEF Bit(CFGS)
+    Set EECON1.CFGS OFF
+  #ENDIF
 
-	'Read
-	SET EECON1.RD ON
+  'Read
+  SET EECON1.RD ON
 
-	'Restore interrupt
-	IntOn
+  'Restore interrupt
+  IntOn
 #ENDIF
 
 #IFDEF AVR
-	'Variable alias
-	#IFDEF Var(EEARH)
-		Dim EEAddress As Word Alias EEARH, EEARL
-	#ENDIF
-	#IFNDEF Var(EEARH)
-		#IFDEF Var(EEAR)
-			Dim EEAddress Alias EEAR
-		#ENDIF
-	#ENDIF
-	Dim EEDataValue Alias EEDR
+  'Variable alias
+  #IFDEF Var(EEARH)
+    Dim EEAddress As Word Alias EEARH, EEARL
+  #ENDIF
+  #IFNDEF Var(EEARH)
+    #IFDEF Var(EEAR)
+      Dim EEAddress Alias EEAR
+    #ENDIF
+  #ENDIF
+  Dim EEDataValue Alias EEDR
 
-	'Start read
-	Set EECR.EERE On
+  'Start read
+  Set EECR.EERE On
 #ENDIF
 
 end function
@@ -246,90 +246,90 @@ end function
 sub ProgramWrite(In EEAddress, In EEDataWord)
 
 #IFDEF PIC
-	Dim EEAddress As Word Alias EEADRH, EEADR
-	Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+  Dim EEAddress As Word Alias EEADRH, EEADR
+  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
 
-	'Disable Interrupt
-	IntOff
+  'Disable Interrupt
+  IntOff
 
-	'Select program memory
-	SET EECON1.EEPGD ON
-	#IFDEF Bit(CFGS)
-		Set EECON1.CFGS OFF
-	#ENDIF
+  'Select program memory
+  SET EECON1.EEPGD ON
+  #IFDEF Bit(CFGS)
+    Set EECON1.CFGS OFF
+  #ENDIF
 
-	'Enable write
-	SET EECON1.WREN ON
-	#ifdef bit(FREE)
-		SET EECON1.FREE OFF
-	#endif
+  'Enable write
+  SET EECON1.WREN ON
+  #ifdef bit(FREE)
+    SET EECON1.FREE OFF
+  #endif
 
-	'Write enable code
-	EECON2 = 0x55
-	EECON2 = 0xAA
+  'Write enable code
+  EECON2 = 0x55
+  EECON2 = 0xAA
 
-	'Start write, wait for it to finish
-	SET EECON1.WR ON
-	NOP
-	NOP
-	SET EECON1.WREN OFF
+  'Start write, wait for it to finish
+  SET EECON1.WR ON
+  NOP
+  NOP
+  SET EECON1.WREN OFF
 
-	'Enable Interrupt
-	IntOn
+  'Enable Interrupt
+  IntOn
 #ENDIF
 
 end sub
 
 sub ProgramRead(In EEAddress, Out EEDataWord)
-	Dim EEAddress As Word Alias EEADRH, EEADR
-	Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+  Dim EEAddress As Word Alias EEADRH, EEADR
+  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
 
-	'Disable Interrupt
-	IntOff
+  'Disable Interrupt
+  IntOff
 
-	'Select program memory
-	SET EECON1.EEPGD ON
-	#IFDEF Bit(CFGS)
-		Set EECON1.CFGS OFF
-	#ENDIF
+  'Select program memory
+  SET EECON1.EEPGD ON
+  #IFDEF Bit(CFGS)
+    Set EECON1.CFGS OFF
+  #ENDIF
 
-	'Start read, wait for it to finish
-	SET EECON1.RD ON
-	NOP
-	NOP
+  'Start read, wait for it to finish
+  SET EECON1.RD ON
+  NOP
+  NOP
 
-	'Enable interrupt
-	IntOn
+  'Enable interrupt
+  IntOn
 end sub
 
 sub ProgramErase(In EEAddress)
-	Dim EEAddress As Word Alias EEADRH, EEADR
+  Dim EEAddress As Word Alias EEADRH, EEADR
 
-	'Disable Interrupt
-	IntOff
+  'Disable Interrupt
+  IntOff
 
-	'Select program memory
-	SET EECON1.EEPGD ON
-	#IFDEF Bit(CFGS)
-		Set EECON1.CFGS OFF
-	#ENDIF
+  'Select program memory
+  SET EECON1.EEPGD ON
+  #IFDEF Bit(CFGS)
+    Set EECON1.CFGS OFF
+  #ENDIF
 
-	SET EECON1.WREN ON
-	#ifdef bit(FREE)
-		SET EECON1.FREE ON
-	#endif
-	EECON2 = 0x55
-	EECON2 = 0xAA
-	SET EECON1.WR ON
-	NOP
-	NOP
-	#ifdef bit(FREE)
-		SET EECON1.FREE OFF
-	#endif
-	SET EECON1.WREN OFF
+  SET EECON1.WREN ON
+  #ifdef bit(FREE)
+    SET EECON1.FREE ON
+  #endif
+  EECON2 = 0x55
+  EECON2 = 0xAA
+  SET EECON1.WR ON
+  NOP
+  NOP
+  #ifdef bit(FREE)
+    SET EECON1.FREE OFF
+  #endif
+  SET EECON1.WREN OFF
 
-	'Enable interrupt
-	IntOn
+  'Enable interrupt
+  IntOn
 end sub
 
 '  Section: Data EEPROM Module APIs
@@ -342,7 +342,7 @@ Sub NVMADR_EPWrite( SysEEAddress  , in EEData)
 
     Dim SysEEPromAddress As Word
     SysEEPromAddress = SysEEAddress + 0x7000
-		NVMADRH =SysEEPromAddress_h
+    NVMADRH =SysEEPromAddress_h
     NVMADRL =SysEEPromAddress
 
     NVMDATL = EEData
@@ -356,7 +356,7 @@ Sub NVMADR_EPWrite( SysEEAddress  , in EEData)
     NVMCON2 = 0xAA
     WR = 1
     ' Wait for write to complete
-    NOP			' NOPs may be required for latency at high frequencies
+    NOP     ' NOPs may be required for latency at high frequencies
     NOP
     NOP
     NOP
@@ -364,25 +364,24 @@ Sub NVMADR_EPWrite( SysEEAddress  , in EEData)
     wait while WR = 1
     WREN = 0
     'Restore interrupt
-    '	IntOn
+    ' IntOn
     GIE = IntState
 
 end sub
 
 Sub NVMADR_EPRead( SysEEAddress  , out EEDataValue )
 
-		Dim SysEEPromAddress As Word
+    Dim SysEEPromAddress As Word
     SysEEPromAddress = SysEEAddress + 0x7000
-		NVMADRH =SysEEPromAddress_h
+    NVMADRH =SysEEPromAddress_h
     NVMADRL =SysEEPromAddress
 
     NVMREGS = 1
     RD = 1
-    NOP			' NOPs may be required for latency at high frequencies
+    NOP     ' NOPs may be required for latency at high frequencies
     NOP
-		NOP			' NOPs may be required for latency at high frequencies
+    NOP     ' NOPs may be required for latency at high frequencies
     NOP
     EEDataValue = NVMDATL
 
 End Sub
-

@@ -1,5 +1,5 @@
 '    DS18s20 routines for the Great Cow BASIC compiler
-'    Copyright (C) 2007 Kent Schafer
+'    Copyright (C) 2017 Kent Schafer
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 ' This is a Dallas DS18s20 temperature device device program for Great Cow Basic.
 ' This is the minimal code to get a positive temperature reading in degrees
 ' Celsius.  Has not been tested in Parasitic mode or with long lengths of wire.
-' Kent Schafer Feb 12, 2007                           
+' Kent Schafer Feb 12, 2007
 ' Rev0
 
 'To read a value, use the ReadTemp function. For example,
@@ -31,32 +31,32 @@
 'Dim RxData As Word (will need this for neg. no.)
 
 '=========ROM Commands for 1-Wire DS18S20======================================
-#define SearchRom 240 	'0xF0 (240)
-			'Command for identifying Slave Rom codes, use as many
-			'times as needed
-#define ReadRom 51 	'0x33 (051)
-			'Command for single slave
-#define	MatchRom 85 	'0x55 (085)
-			'Command for master to identify a specific slave code
-#define	SkipRom 204 	'0xCC (204)
-			'Command for addressing all devices simultaneously
-#define	AlarmSearch 236 '0xEC (236)
-			'Command is same as Search Rom to identify any alarm flags
+#define SearchRom 240   '0xF0 (240)
+      'Command for identifying Slave Rom codes, use as many
+      'times as needed
+#define ReadRom 51  '0x33 (051)
+      'Command for single slave
+#define MatchRom 85   '0x55 (085)
+      'Command for master to identify a specific slave code
+#define SkipRom 204   '0xCC (204)
+      'Command for addressing all devices simultaneously
+#define AlarmSearch 236 '0xEC (236)
+      'Command is same as Search Rom to identify any alarm flags
 
 '==========Function Commands for for 1-Wire DS18S20=============================
-#define	ConvertT 68 	'0x44 (68)
-			'Protocol for Single Temp Conversion
-#define	WriteScratch 78 '0x4E (78)
-			'Protocol for Write Scratchpad
-#define	ReadScratch 190 '0xBE (190)
-			'Protocol for Read Scratchpad
+#define ConvertT 68   '0x44 (68)
+      'Protocol for Single Temp Conversion
+#define WriteScratch 78 '0x4E (78)
+      'Protocol for Write Scratchpad
+#define ReadScratch 190 '0xBE (190)
+      'Protocol for Read Scratchpad
 #define CopyScratch  72 '0x48 (72)
-			'Protocol for copying Scratchpad TH and TL
-			'registers to EEPROM
-#define RecallE2 184 	'0xB8 (184)
-			'Protocol for recalling alarm trigger values from EEPROM
+      'Protocol for copying Scratchpad TH and TL
+      'registers to EEPROM
+#define RecallE2 184  '0xB8 (184)
+      'Protocol for recalling alarm trigger values from EEPROM
  #define ReadPowerSupply 180  '0xB4 (180)
-			'Protocol for identifying Power Supply Mode
+      'Protocol for identifying Power Supply Mode
 
 function ReadTemp
  wait 1 sec '*** Is this needed? ***
@@ -103,15 +103,15 @@ Sub PPulse  'Master receive DS18s20 presence pulse
   wait 70 us
   'If DQ 0 Then
   'cls
-  'Print "OW Device ACK"  
-  'End if 
+  'Print "OW Device ACK"
+  'End if
   wait 43 10us
   Dir DQ In
 end sub
 
 Sub OWout (Command) #NR
  Clocks = 0
- For Clocks = 1 to 8 
+ For Clocks = 1 to 8
   Dir DQ Out
   Set DQ Off
   wait 3 us  'Need to release bus within 15 us
@@ -130,11 +130,11 @@ Sub OWin
   Rotate RxData Right 'The DS18s20 xmits data LSB first
   Dir DQ Out
   Set DQ Off  'Read time slot
-  wait 6 us  
+  wait 6 us
   Dir DQ In   'Release bus for one wire Reception
-  wait 4 us  
+  wait 4 us
   If DQ On  Then Set RxData.7 1
   If DQ Off Then Set RxData.7 0
   wait 50 us
  Next
-end sub  
+end sub

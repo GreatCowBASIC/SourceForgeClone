@@ -1,5 +1,5 @@
 '    Remote Control routines for Great Cow BASIC
-'    Copyright (C) 2006 Hugh Considine
+'    Copyright (C) 2006-2017  Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 '********************************************************************************
 
 'Port settings
-'RC5Out		Pin to output RC5 codes on
+'RC5Out   Pin to output RC5 codes on
 
 sub NECSend (NECAdd, NECData) #NR
 
@@ -40,7 +40,7 @@ sub NECSend (NECAdd, NECData) #NR
  'Sync
  wait 4 ms
  wait 50 10us
- 
+
  'Address
  NECByte NECAdd
 
@@ -58,16 +58,16 @@ end sub
 sub NECByte (NECSendData) #NR
  NECTemp = 8
  NECSendByte:
- 
+
   'Send High
-  if NECSendData.0 on then 
+  if NECSendData.0 on then
   'Emit high
    For RC5Pulse = 1 to 21
     set RC5Out on
     wait 8 us
     set RC5Out off
     wait 18 us
-   next 
+   next
    'Emit low
    wait 56 10us
   end if
@@ -96,11 +96,11 @@ sub RC5Send (RC5Add, RC5Data) #NR
  'AGC
  RC5High
  RC5High
- 
+
  'Check bit
  if RC5Toggle.0 off then RC5Low
  if RC5Toggle.0 on then RC5High
- RC5Toggle += 1 
+ RC5Toggle += 1
 
  'Address
  RC5Temp = 5
@@ -118,7 +118,7 @@ sub RC5Send (RC5Add, RC5Data) #NR
   if RC5Data.5 off then RC5Low
   rotate RC5Data left
  decfsz RC5Temp, F
- goto RC5SendCom 
+ goto RC5SendCom
 end sub
 
 sub RC5High

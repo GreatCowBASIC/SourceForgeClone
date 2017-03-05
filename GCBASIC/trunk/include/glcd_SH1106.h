@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2016 Marco Cariboni and Evan Venn
+'    Copyright (C) 2017 Marco Cariboni and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -119,7 +119,7 @@ debug = 0
            HIC2INIT
     #ENDIF
 
-	 'Setup code for SH1106 controllers
+   'Setup code for SH1106 controllers
     'Init sequence for 132x64 OLED module
 
     Write_Command_SH1106(SH1106_DISPLAYOFF)                    ' 0xAE
@@ -129,22 +129,22 @@ debug = 0
     Write_Command_SH1106(SH1106_PAGEADDR)                      ' 0xB0
 
     Write_Command_SH1106(SH1106_SETCONTRASTCRTL)               ' 0x81
-    Write_Command_SH1106(0x80)								   ' Contrast = 128
+    Write_Command_SH1106(0x80)                   ' Contrast = 128
 
-    Write_Command_SH1106(SH1106_SEGREMAP)					   ' 0xA1
+    Write_Command_SH1106(SH1106_SEGREMAP)            ' 0xA1
     Write_Command_SH1106(SH1106_NORMALDISPLAY)                 ' 0xA6
 
     Write_Command_SH1106(SH1106_SETMULTIPLEX)                  ' 0xA8
-    Write_Command_SH1106(0x3F)								   ' Duty = 1/32
+    Write_Command_SH1106(0x3F)                   ' Duty = 1/32
 
     Write_Command_SH1106(SH1106_CHARGEPUMP)                    ' 0xAD
     Write_Command_SH1106(SH1106_EXTERNALVCC)                   ' 0x8B
-    Write_Command_SH1106(SH1106_PUMPVOLTAGE)				   ' 0x30
-    Write_Command_SH1106(SH1106_COMSCANDEC)					   ' 0xC8
+    Write_Command_SH1106(SH1106_PUMPVOLTAGE)           ' 0x30
+    Write_Command_SH1106(SH1106_COMSCANDEC)            ' 0xC8
 
     Write_Command_SH1106(SH1106_SETDISPLAYOFFSET)              ' 0xD3
     Write_Command_SH1106(0x00)                                ' No offset(Y position)
-		Write_Command_SH1106(0x00)                                ' No offset(Y position)
+    Write_Command_SH1106(0x00)                                ' No offset(Y position)
 
     Write_Command_SH1106(SH1106_SETDISPLAYCLOCKDIV)            ' 0xD5
     Write_Command_SH1106(0x50)                                 ' Suggested ratio 0x50
@@ -206,26 +206,26 @@ End Sub
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox_SH1106(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
 
-	'Make sure that starting point (1) is always less than end point (2)
-	If LineX1 > LineX2 Then
-		GLCDTemp = LineX1
-		LineX1 = LineX2
-		LineX2 = GLCDTemp
-	End If
-	If LineY1 > LineY2 Then
-		GLCDTemp = LineY1
-		LineY1 = LineY2
-		LineY2 = GLCDTemp
-	End If
+  'Make sure that starting point (1) is always less than end point (2)
+  If LineX1 > LineX2 Then
+    GLCDTemp = LineX1
+    LineX1 = LineX2
+    LineX2 = GLCDTemp
+  End If
+  If LineY1 > LineY2 Then
+    GLCDTemp = LineY1
+    LineY1 = LineY2
+    LineY2 = GLCDTemp
+  End If
 
-	#if GLCD_TYPE = GLCD_TYPE_SH1106
-		'Draw lines going across
-		For DrawLine = LineX1 To LineX2
-			For GLCDTemp = LineY1 To LineY2
-				PSet_SH1106 DrawLine, GLCDTemp, LineColour
-			Next
-		Next
-	#endif
+  #if GLCD_TYPE = GLCD_TYPE_SH1106
+    'Draw lines going across
+    For DrawLine = LineX1 To LineX2
+      For GLCDTemp = LineY1 To LineY2
+        PSet_SH1106 DrawLine, GLCDTemp, LineColour
+      Next
+    Next
+  #endif
 
 End Sub
 
@@ -235,42 +235,42 @@ End Sub
 '''@param GLCDColour State of pixel ( GLCDBackground | GLCDForeground )
 Sub PSet_SH1106(In GLCDX, In GLCDY, In GLCDColour As Word)
 
-		'Set pixel at X, Y on LCD to State
-		'X is 0 to 127
-		'Y is 0 to 63
-		'Origin in top left
+    'Set pixel at X, Y on LCD to State
+    'X is 0 to 127
+    'Y is 0 to 63
+    'Origin in top left
 
-	#if GLCD_TYPE = GLCD_TYPE_SH1106
+  #if GLCD_TYPE = GLCD_TYPE_SH1106
 
-				  dim  PosCharX, PosCharY as Word
+          dim  PosCharX, PosCharY as Word
 
-					'optimised /8 calculation
+          'optimised /8 calculation
           PosCharY = GLCDY
           Repeat 3
             Set C Off
             Rotate PosCharY Right
           end Repeat
 
-					'optimes * 128 calculation
-					#if GLCD_WIDTH = 128
+          'optimes * 128 calculation
+          #if GLCD_WIDTH = 128
             Repeat 7
               Set C Off
               Rotate PosCharY Left
             end Repeat
-						SH1106_BufferLocationCalc = PosCharY
-  				#endif
+            SH1106_BufferLocationCalc = PosCharY
+          #endif
 
-					#if GLCD_WIDTH <> 128
-          		'optimised /8 calculation
+          #if GLCD_WIDTH <> 128
+              'optimised /8 calculation
               PosCharY = GLCDY
               Repeat 3
                 Set C Off
                 Rotate PosCharY Right
               end Repeat
-  						SH1106_BufferLocationCalc = PosCharY * GLCD_WIDTH
-  				#endif
+              SH1106_BufferLocationCalc = PosCharY * GLCD_WIDTH
+          #endif
 
-					'unoptimised is shown on line below.  All the code above... just makes this faster!
+          'unoptimised is shown on line below.  All the code above... just makes this faster!
           ' SH1106_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
 
           SH1106_BufferLocationCalc = GLCDX + SH1106_BufferLocationCalc+1
@@ -299,7 +299,7 @@ Sub PSet_SH1106(In GLCDX, In GLCDY, In GLCDColour As Word)
           Cursor_Position_SH1106 ( GLCDX , GLCDY )
           Write_Data_SH1106 ( GLCDDataTemp )
 
-	#endif
+  #endif
 
 End Sub
 
@@ -314,7 +314,7 @@ sub Cursor_Position_SH1106( in LocX as byte, in LocY as byte )
   'PosCharY = LocY / 8 - optimised by rotate
   PosCharY = LocY
   Repeat 3
-  	Set C Off
+    Set C Off
     Rotate PosCharY Right
   end Repeat
 
@@ -346,12 +346,12 @@ end sub
 
 '''Set Display in normal mode
 sub GLCDSetDisplayNormalMode_SSH1106
-    Write_Command_SH1106(SH1106_SEGREMAP)					   ' 0xA1
+    Write_Command_SH1106(SH1106_SEGREMAP)            ' 0xA1
     Write_Command_SH1106(SH1106_NORMALDISPLAY)       ' 0xA6
 end sub
 
 '''Set Display in invert mode
 sub GLCDSetDisplayInvertMode_SSH1106
-    Write_Command_SH1106(SH1106_SEGREMAP)					   ' 0xA1
+    Write_Command_SH1106(SH1106_SEGREMAP)            ' 0xA1
     Write_Command_SH1106(SH1106_INVERTDISPLAY)       ' 0xA7
 end sub

@@ -2,7 +2,7 @@
 '    Copyright (C) 2013 Evan R. Venn
 '    Copyright (C) 2014 Thomas Henry
 '    Copyright (C) 2014 Evan R. Venn
-'    Copyright (C) 2015 Evan R. Venn
+'    Copyright (C) 2015 - 2017 Evan R. Venn
 
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -18,22 +18,22 @@
 '    License along with this library' if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-;	Evan R.  Venn                --- 10/2013   - Original work
-;	Thomas Henry                 --- 5/29/2014 - Updated and rationalised
-;	Evan R.  Venn Revised        --- 6/28/2014 - Correct parameter    eeprom_rd _array to IN
-;	Evan R.  Venn Revised        --- 7/3/2014 - Added Hardware I2C Support.  This simply detects your configuration variable I2C_DATA or HI2C_DATA
-;	Evan R.  Venn Revised        --- 7/12/2014 - Added Support for Byte and WORD address of EEPROMs
-'	Evan R.  Venn Revised        --- 7/13/2014  - Resolved issue with byte address.  Needed to add systemp to calculate next page, else, compile error.
-'    		- added references to function to add wr_string and rd_string
-'    		- eeprom_wr_array
-'    		- eeprom_wr_string
-'    		- eeprom_rd_array
-'    		- eeprom_rd_string
+; Evan R.  Venn                --- 10/2013   - Original work
+; Thomas Henry                 --- 5/29/2014 - Updated and rationalised
+; Evan R.  Venn Revised        --- 6/28/2014 - Correct parameter    eeprom_rd _array to IN
+; Evan R.  Venn Revised        --- 7/3/2014 - Added Hardware I2C Support.  This simply detects your configuration variable I2C_DATA or HI2C_DATA
+; Evan R.  Venn Revised        --- 7/12/2014 - Added Support for Byte and WORD address of EEPROMs
+' Evan R.  Venn Revised        --- 7/13/2014  - Resolved issue with byte address.  Needed to add systemp to calculate next page, else, compile error.
+'       - added references to function to add wr_string and rd_string
+'       - eeprom_wr_array
+'       - eeprom_wr_string
+'       - eeprom_rd_array
+'       - eeprom_rd_string
 '
-'    		- and, the Variables were removed to ensure stability in all cases.
-'	Evan R.  Venn Revised        --- 7/13/2014  - Removed error in use of byte variable eepPageSize
-'	Evan R.  Venn Revised        --- 16/3/2015  - Renamed systemp to CalcNextPage to remove AVR error
-'	Evan R.  Venn Revised        --- 17/3/2015  - Revised to fix AVR timing errors
+'       - and, the Variables were removed to ensure stability in all cases.
+' Evan R.  Venn Revised        --- 7/13/2014  - Removed error in use of byte variable eepPageSize
+' Evan R.  Venn Revised        --- 16/3/2015  - Renamed systemp to CalcNextPage to remove AVR error
+' Evan R.  Venn Revised        --- 17/3/2015  - Revised to fix AVR timing errors
 
 
 ;This include file began life as Evan R. Venn's "24LCxxxx.h"
@@ -406,4 +406,3 @@ sub eeprom_rd_array(in eepDev as byte, in eepAddr as byte, out eepArray() as byt
         I2CStop
     #endif
 end sub
-

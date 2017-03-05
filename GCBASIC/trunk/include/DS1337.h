@@ -1,5 +1,5 @@
 ;    Library for reading/writing to Microchip DS1337 RTC for the GCBASIC compiler
-;    Copyright (C) 2013 - 2015 Thomas Henry and Evan Venn
+;    Copyright (C) 2013 - 2017 Thomas Henry and Evan Venn
 ;
 ;    Version 1.1a  27/1/2015
 ;    Version 1.2a  17/3/2015
@@ -80,33 +80,33 @@
 ;----- Constants
 
  ' These are the addresses of the generic DS1337 Real-Time Clock
- #define DS_AddrWrite 0xD0		           'DS1337 uses 0xD0
- #define DS_AddrRead  0xD1		           'DS1337 uses 0xD1
+ #define DS_AddrWrite 0xD0               'DS1337 uses 0xD0
+ #define DS_AddrRead  0xD1               'DS1337 uses 0xD1
 
  'Addresses for DS1337
- #define DS1337_RTCSEC    0x00		'Start of the time registers - 0x00h
+ #define DS1337_RTCSEC    0x00    'Start of the time registers - 0x00h
  #define DS1337_RTCMIN    0x01                    'TIMEKEEPING MINUTES VALUE REGISTER - 0x01h
  #define DS1337_RTCHOUR   0x02                    'TIMEKEEPING HOURS VALUE REGISTER - 0x02h
- #define DS1337_RTCWKDAY  0x03		'TIMEKEEPING WEEKDAY VALUE REGISTER - 0x03h
- #define DS1337_RTCDATE   0x04		'TIMEKEEPING DATE VALUE REGISTER  - 0x04h
+ #define DS1337_RTCWKDAY  0x03    'TIMEKEEPING WEEKDAY VALUE REGISTER - 0x03h
+ #define DS1337_RTCDATE   0x04    'TIMEKEEPING DATE VALUE REGISTER  - 0x04h
  #define DS1337_RTCMTH    0x05                    'TIMEKEEPING MONTH and CENTURY VALUE REGISTER - 0x05h
  #define DS1337_RTCYEAR   0x06                    'TIMEKEEPING YEAR VALUE REGISTER - 0x06h
 
- #define DS1337_ALM1SEC   0x07	          ' ALARM 1 SECONDS VALUE REGISTER
- #define DS1337_ALM1MIN   0x08	          ' ALARM 1 MINUTES VALUE REGISTER
- #define DS1337_ALM1HOUR  0x09	          ' ALARM 1 HOURS VALUE REGISTER
- #define DS1337_ALM1DAY_DATE  0x0A	          ' ALARM 1 DAY/DATE VALUE REGISTER
+ #define DS1337_ALM1SEC   0x07            ' ALARM 1 SECONDS VALUE REGISTER
+ #define DS1337_ALM1MIN   0x08            ' ALARM 1 MINUTES VALUE REGISTER
+ #define DS1337_ALM1HOUR  0x09            ' ALARM 1 HOURS VALUE REGISTER
+ #define DS1337_ALM1DAY_DATE  0x0A            ' ALARM 1 DAY/DATE VALUE REGISTER
 
- #define DS1337_ALM2MIN   0x0B	          ' ALARM 2 MINUTES VALUE REGISTER
- #define DS1337_ALM2HOUR  0x0C	          ' ALARM 2 HOURS VALUE REGISTER
- #define DS1337_ALM2DAY_DATE  0x0D	          ' ALARM 2 DAY/DATE VALUE REGISTER
+ #define DS1337_ALM2MIN   0x0B            ' ALARM 2 MINUTES VALUE REGISTER
+ #define DS1337_ALM2HOUR  0x0C            ' ALARM 2 HOURS VALUE REGISTER
+ #define DS1337_ALM2DAY_DATE  0x0D            ' ALARM 2 DAY/DATE VALUE REGISTER
 
- #define DS1337_ControlRegister   0x0E		'Control register
- #define DS1337_ControlStatus   0x0F		'Control Status register
+ #define DS1337_ControlRegister   0x0E    'Control register
+ #define DS1337_ControlStatus   0x0F    'Control Status register
 
- #define DS1337_AgingOffset  0x10	          ' Aging VALUE REGISTER
- #define DS1337_MSB_Temp     0x11	          ' MSB Temp VALUE REGISTER
- #define DS1337_LSB_Temp     0x12	          ' LSB Temp VALUE REGISTER
+ #define DS1337_AgingOffset  0x10           ' Aging VALUE REGISTER
+ #define DS1337_MSB_Temp     0x11           ' MSB Temp VALUE REGISTER
+ #define DS1337_LSB_Temp     0x12           ' LSB Temp VALUE REGISTER
 
  #define DS1337_Alarm1Assertion_EverySecond                     0x0F
  #define DS1337_Alarm1Assertion_Seconds                         0x0E
@@ -950,8 +950,8 @@ end sub
 
 ;
 sub DS1337_SetControl(in MFP_Value)
-	'New function for DS1337. Sets Multifunction Pin status
-	'set the current value of the register
+  'New function for DS1337. Sets Multifunction Pin status
+  'set the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -981,7 +981,7 @@ end sub
 
 ;------
 function DS1337_ReadControl
-	'read the current value of the register
+  'read the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -1015,8 +1015,8 @@ end function
 
 
 sub DS1337_SetControlStatus(in MFP_Value)
-	'New function for DS1337. Sets Multifunction Pin status
-	'set the current value of the register
+  'New function for DS1337. Sets Multifunction Pin status
+  'set the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -1045,7 +1045,7 @@ end sub
 
 ;------
 function DS1337_ReadControlStatus
-	'read the current value of the register
+  'read the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -2507,7 +2507,7 @@ end sub
 
 ;------
 function DS1337_ReadRegister ( in DS_Value )
-	'read the current value of the register
+  'read the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -2543,7 +2543,7 @@ end function
 
 ;------
 sub DS1337_WriteRegister ( in DS_Value, in DS_Temp )
-	'read the current value of the register
+  'read the current value of the register
 
 
   #ifdef HI2C_DATA

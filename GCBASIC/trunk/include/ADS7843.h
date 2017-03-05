@@ -1,5 +1,5 @@
 '    ADS7843 routines for the GCBASIC compiler
-'    Copyright (C) 2015 Dimitris  Katsaounis
+'    Copyright (C) 2017 Dimitris  Katsaounis
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -15,7 +15,7 @@
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-'		30th Aug 2105
+'   30th Aug 2105
 'Notes:
 ' module ADS7843.h only supports GLCD_SSD1289 only
 
@@ -25,10 +25,10 @@ Dim T_x, T_y, TP_X , TP_Y as Word
 
 
 'Define Precision
-#define PREC_LOW	1
-#define PREC_MEDIUM	2
-#define PREC_HI	  	3
-#define PREC_EXTREME  	4
+#define PREC_LOW  1
+#define PREC_MEDIUM 2
+#define PREC_HI     3
+#define PREC_EXTREME    4
 
 #startup ADS7843_Init
 
@@ -134,11 +134,11 @@ End Sub
 
 
 Sub ADS7843_SetPrecision(In precision as Byte)
-	Select Case precision
-	       Case PREC_LOW: prec=1
-	       Case PREC_MEDIUM: prec=12
-	       Case PREC_HI: prec=27
-	       Case PREC_EXTREME: prec=102
+  Select Case precision
+         Case PREC_LOW: prec=1
+         Case PREC_MEDIUM: prec=12
+         Case PREC_HI: prec=27
+         Case PREC_EXTREME: prec=102
                  Case else : prec=12
-	End Select
+  End Select
 End Sub

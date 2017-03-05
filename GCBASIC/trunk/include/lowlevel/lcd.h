@@ -1,5 +1,5 @@
 ;    Liquid Crystal Display routines for Great Cow BASIC
-;    Copyright (C) 2006 - 2016 Hugh Considine, Stefano Bonomi, Evan Venn, William Roth
+;    Copyright (C) 2006 - 2017 Hugh Considine, Stefano Bonomi, Evan Venn, William Roth and Ruud de Vreugd
 
 ;    This library is free software; you can redistribute it and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -105,6 +105,17 @@
 '''   Added LCD_IO 2_74XX174 and LCD_IO 2_74XX164: 2-wire modes for different shiftregisters
 '''
 '''   02/01/2015  added 404 support
+'*************************************************************************
+
+
+
+'''
+'''   30/01/2017  edit the binary notation to prevent silly error message
+
+'''   18-02-2017 by Ruud de Vreugd
+'''   Added a forced write for instant backlightcontrol as suggested by Theo Loermans
+'''   Changed binary number format to not use quotationmarks (to avoid compiler errors)
+'''
 
 #startup InitLCD
 
@@ -258,7 +269,7 @@ Sub CLS
               SET LCD_RS OFF
 
               'Clear screen
-              LCDWriteByte (b'00000001')
+              LCDWriteByte (0b00000001)
               Wait 4 ms
 
               'Move to start of visible DDRAM
@@ -271,7 +282,7 @@ Sub LCDHOME
           SET LCD_RS OFF
 
           'Return CURSOR to home
-          LCDWriteByte (b'00000010')
+          LCDWriteByte (0b00000010)
           Wait 12 10us
 End Sub
 
@@ -1491,7 +1502,7 @@ end sub
 'sub to turn off display and turn off cursor and turn off flash
 sub LCDDisplayOff
     set LCD_RS off
-    LCDWriteByte(b'00001000')
+    LCDWriteByte(0b00001000)
     LCD_State = 0
     wait 10 ms
 end sub
@@ -1499,7 +1510,7 @@ end sub
 'sub to turn ON display, turn off curor and turn off flash
 sub LCDDisplayOn
     set LCD_RS off
-    LCDWriteByte(b'00001100')
+    LCDWriteByte(0b00001100)
     LCD_State = 8
     wait 10 ms
 End Sub
@@ -1511,6 +1522,8 @@ sub LCDBacklight(IN LCDTemp)
     Else
       LCD_Backlight = LCD_Backlight_Off_State
     END IF
+    Set LCD_RS OFF
+    LCDWriteByte(0)
   #ENDIF
     #IFDEF LCD_IO 0,4,8, 404
       'Set the port for this mode
@@ -1569,7 +1582,7 @@ Sub CLS404( Optional in lLCDEnableAddress = 3 )
         SET LCD_RS OFF
 
         'Clear screen
-        LCDWriteByte (b'00000001')
+        LCDWriteByte (0b00000001)
         Wait 4 ms
 
         'Move to start of visible DDRAM
@@ -1599,7 +1612,7 @@ Sub LCDHOME404( Optional in lLCDEnableAddress = 3 )
           SET LCD_RS OFF
 
           'Return CURSOR to home
-          LCDWriteByte (b'00000010')
+          LCDWriteByte (0b00000010)
           Wait 12 10us
           if lLCDEnableAddress.0 = 1 then gLCDEnableAddress = 1
 
