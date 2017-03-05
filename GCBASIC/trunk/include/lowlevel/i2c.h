@@ -1,5 +1,5 @@
 '    Software I2C routines for the GCBASIC compiler
-'    Copyright (C) 2009, 2013, 2014, 2016 Hugh Considine, Evan R. Venn, Thomas Henry, William Roth
+'    Copyright (C) 2009 - 2017 Hugh Considine, Evan R. Venn, Thomas Henry, William Roth
 
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -620,4 +620,3 @@ sub I2CAckPoll(in I2CByte, optional I2C_Dev_OK = TRUE)
   next I2CCount                   'else try again
   I2CAckPollState = I2C_Dev_OK    'set state.  Used to understand if the device responded in IC2 discover process
 end sub
-

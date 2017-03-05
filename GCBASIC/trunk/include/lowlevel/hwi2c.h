@@ -1,6 +1,5 @@
 '    Hardware I2C routines for Great Cow BASIC
-'    Copyright (C) 2010 Hugh Considine
-'    Copyright (C) 2014 & 2015, 2016 Evan R. Venn & Jacques Erdemaal
+'    Copyright (C) 2010 - 2017 Hugh Considine, Evan R. Venn & Jacques Erdemaal
 '    Version 1.1f
 '    Version 1.1g
 '    Version 1.1h
@@ -8,6 +7,8 @@
 '    Version 1.1j
 '    Version 1.1k
 '    Version 1.1l
+'    Version 1.1m
+
 
 
 
@@ -25,6 +26,7 @@
 '    Updated Oct 2016  - for Option Explicit and to fix the script issue
 '    Updated Oct 2016  - ... Slave10 was NOT defined.
 '    Updated Dec 2016  - ... Added SSPIF = SSP1IF to correct error
+'    Updated Feb 2017  - Added AVRDisable_HI2CAckPollState for AVR performance
 
 
 
@@ -580,27 +582,29 @@ Sub AVRHI2CSend ( In I2CByte )
         I2CByte = TWSR & 0xF8
 
         HI2CAckPollState = true
-        Select case I2CByte
-               case AVR_I2C_START
-                    ' dummy
-               case MT_SLA_ACK
-                  HI2CAckPollState = false
-               case MT_DATA_ACK
-                  HI2CAckPollState = false
-               case MT_SLA_NACK_REC
-                   HI2CAckPollState = true
-               case MT_DATA_NACK_REC
-                   HI2CAckPollState = true
-               case MR_SLA_NACK_REC
-                   HI2CAckPollState = true
-               case MR_SLA_ACK
-                   HI2CAckPollState = false
-               case MR_DATA_NACK_REC
-                   HI2CAckPollState = true
-               case else
-                    ' bad event!!
-        end select
 
+        #ifndef AVRDisable_HI2CAckPollState
+            Select case I2CByte          'Use AVRDisable_HI2CAckPollState to make a tad faster
+                   case AVR_I2C_START
+                        ' dummy
+                   case MT_SLA_ACK
+                      HI2CAckPollState = false
+                   case MT_DATA_ACK
+                      HI2CAckPollState = false
+                   case MT_SLA_NACK_REC
+                       HI2CAckPollState = true
+                   case MT_DATA_NACK_REC
+                       HI2CAckPollState = true
+                   case MR_SLA_NACK_REC
+                       HI2CAckPollState = true
+                   case MR_SLA_ACK
+                       HI2CAckPollState = false
+                   case MR_DATA_NACK_REC
+                       HI2CAckPollState = true
+                   case else
+                        ' bad event!!
+            end select
+        #endif
         HI2CStartOccurred = false
 
 End Sub

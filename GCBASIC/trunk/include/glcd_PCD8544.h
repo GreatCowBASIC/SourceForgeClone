@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 ' 21/10/2014: PCD9844 device improvements to remove a method and reduce configuration
 ' 22/10/2014: PCD9844 device improvements to handling of RAM limitations
 '
-' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 13/12/14: Revised to support Linear array memory addressing.  Now requires the compiler after the date of 13/12/2014
 
 
@@ -179,18 +179,18 @@ Sub InitGLCD_PCD8544
                         PCD8544_CS = 0
 
 
-    '	/*********SEE DATASHEET FOR ALL THIS********/
+    ' /*********SEE DATASHEET FOR ALL THIS********/
 
-                        Write_Command_PCD8544(0x21);		 Activate Chip and H=1.
-                        Write_Command_PCD8544(0x21);		 Activate Chip and H=1.
-                        Write_Command_PCD8544(0xC2);		 Set LCD Voltage to about 7V.
-                        Write_Command_PCD8544(0x13);		 Adjust voltage bias.
-                        Write_Command_PCD8544(0x20);		 Horizontal addressing and H=0.
-                        Write_Command_PCD8544(0x09);		 Activate all segments.
-                        Clear_RAM_PCD8544;		           Erase all pixel on the DDRAM.
-                        Write_Command_PCD8544(0x08);		 Blank the Display.
-                        Write_Command_PCD8544(0x0C);		 Display Normal.
-                        GOTO_Pixel_PCD8544(0,0);		 Cursor Home.
+                        Write_Command_PCD8544(0x21);     Activate Chip and H=1.
+                        Write_Command_PCD8544(0x21);     Activate Chip and H=1.
+                        Write_Command_PCD8544(0xC2);     Set LCD Voltage to about 7V.
+                        Write_Command_PCD8544(0x13);     Adjust voltage bias.
+                        Write_Command_PCD8544(0x20);     Horizontal addressing and H=0.
+                        Write_Command_PCD8544(0x09);     Activate all segments.
+                        Clear_RAM_PCD8544;               Erase all pixel on the DDRAM.
+                        Write_Command_PCD8544(0x08);     Blank the Display.
+                        Write_Command_PCD8544(0x0C);     Display Normal.
+                        GOTO_Pixel_PCD8544(0,0);     Cursor Home.
 
 
                         'Colours
@@ -198,12 +198,12 @@ Sub InitGLCD_PCD8544
                         GLCDForeground = 1
                         GLCDFontWidth = 6
                         GLCDfntDefault = 0
-			GLCDfntDefaultsize = 1
+      GLCDfntDefaultsize = 1
 
           #endif
 
-	'Clear screen
-	GLCDCLS
+  'Clear screen
+  GLCDCLS
 
 End Sub
 
@@ -221,11 +221,11 @@ Sub GLCDCLS_PCD8544
                 Next
               #endif
 
-              GOTO_Pixel_PCD8544(0,0);	'Goto the pixel specified by the Co-ordinate
+              GOTO_Pixel_PCD8544(0,0);  'Goto the pixel specified by the Co-ordinate
               for PCD8544_BufferLocationCalc = 503 to 0 step - 1
                   Write_Data_PCD8544(0x00);
               next
-              GOTO_Pixel_PCD8544(0,0);	'Goto the pixel specified by the Co-ordinate
+              GOTO_Pixel_PCD8544(0,0);  'Goto the pixel specified by the Co-ordinate
 
           #endif
 End Sub
@@ -237,10 +237,10 @@ End Sub
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawChar_PCD8544(In CharLocX, In CharLocY, In CharCode, Optional In LineColour as word = GLCDForeground )
 
-	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-	CharCode -= 15
+  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+  CharCode -= 15
 
-	'invert colors if required
+  'invert colors if required
           if LineColour <> GLCDForeground then
             'Inverted Colours
             GLCDBackground = 1
@@ -248,15 +248,15 @@ Sub GLCDDrawChar_PCD8544(In CharLocX, In CharLocY, In CharCode, Optional In Line
           end if
 
           'Need to read characters from CharColn (n = 0:7) tables
-	'(First 3, ie 0:2 are blank, so can ignore)
-	For CurrCharCol = 1 to 5
-		Select Case CurrCharCol
-			Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-			Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-			Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-			Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-			Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-		End Select
+  '(First 3, ie 0:2 are blank, so can ignore)
+  For CurrCharCol = 1 to 5
+    Select Case CurrCharCol
+      Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+      Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+      Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+      Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+      Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+    End Select
                     ' Handles general draw sequence. This caters for read display status then update display RAM
                     #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
 
@@ -270,7 +270,7 @@ Sub GLCDDrawChar_PCD8544(In CharLocX, In CharLocY, In CharCode, Optional In Line
                         '          Rotate CurrCharVal Right
                         'Next
 
-												'this code replaced the code above 7/2016
+                        'this code replaced the code above 7/2016
                         CharRow=0
                         For CurrCharRow = 1 to 8
                             CharColS=0
@@ -302,7 +302,7 @@ Sub GLCDDrawChar_PCD8544(In CharLocX, In CharLocY, In CharCode, Optional In Line
                               Write_Data_PCD8544( 255 - CurrCharVal )
                            end if
                     #endif
-	Next
+  Next
 
 
           GLCDBackground = 0
@@ -318,26 +318,26 @@ End Sub
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox_PCD8544(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
 
-	'Make sure that starting point (1) is always less than end point (2)
-	If LineX1 > LineX2 Then
-		GLCDTemp = LineX1
-		LineX1 = LineX2
-		LineX2 = GLCDTemp
-	End If
-	If LineY1 > LineY2 Then
-		GLCDTemp = LineY1
-		LineY1 = LineY2
-		LineY2 = GLCDTemp
-	End If
+  'Make sure that starting point (1) is always less than end point (2)
+  If LineX1 > LineX2 Then
+    GLCDTemp = LineX1
+    LineX1 = LineX2
+    LineX2 = GLCDTemp
+  End If
+  If LineY1 > LineY2 Then
+    GLCDTemp = LineY1
+    LineY1 = LineY2
+    LineY2 = GLCDTemp
+  End If
 
-	#if GLCD_TYPE = GLCD_TYPE_PCD8544
-		'Draw lines going across
-		For DrawLine = LineX1 To LineX2
-			For GLCDTemp = LineY1 To LineY2
-				PSet DrawLine, GLCDTemp, LineColour
-			Next
-		Next
-	#endif
+  #if GLCD_TYPE = GLCD_TYPE_PCD8544
+    'Draw lines going across
+    For DrawLine = LineX1 To LineX2
+      For GLCDTemp = LineY1 To LineY2
+        PSet DrawLine, GLCDTemp, LineColour
+      Next
+    Next
+  #endif
 End Sub
 
 '''Draws a pixel on the GLCD
@@ -346,60 +346,60 @@ End Sub
 '''@param GLCDColour State of pixel (0 = erase, 1 = display)
 Sub PSet_PCD8544(In GLCDX, In GLCDY, In GLCDColour As Word)
 
-	#if GLCD_TYPE = GLCD_TYPE_PCD8544
+  #if GLCD_TYPE = GLCD_TYPE_PCD8544
 
               #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
                     PCD8544_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
                     PCD8544_BufferLocationCalc = GLCDX + PCD8544_BufferLocationCalc+1
-		GLCDDataTemp = PCD8544_BufferAlias(PCD8544_BufferLocationCalc)
+    GLCDDataTemp = PCD8544_BufferAlias(PCD8544_BufferLocationCalc)
 
-		'Change data to set/clear pixel
-		GLCDBitNo = GLCDY And 7
-		If GLCDColour.0 = 0 Then
-			GLCDChange = 254
-			Set C On
-		Else
-			GLCDChange = 1
-			Set C Off
-		End If
-		Repeat GLCDBitNo
-			Rotate GLCDChange Left
-		End Repeat
+    'Change data to set/clear pixel
+    GLCDBitNo = GLCDY And 7
+    If GLCDColour.0 = 0 Then
+      GLCDChange = 254
+      Set C On
+    Else
+      GLCDChange = 1
+      Set C Off
+    End If
+    Repeat GLCDBitNo
+      Rotate GLCDChange Left
+    End Repeat
 
-		If GLCDColour.0 = 0 Then
-			GLCDDataTemp = GLCDDataTemp And GLCDChange
-		Else
-			GLCDDataTemp = GLCDDataTemp Or GLCDChange
-		End If
+    If GLCDColour.0 = 0 Then
+      GLCDDataTemp = GLCDDataTemp And GLCDChange
+    Else
+      GLCDDataTemp = GLCDDataTemp Or GLCDChange
+    End If
 
-		PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = GLCDDataTemp
+    PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = GLCDDataTemp
                     Cursor_Position_PCD8544 ( GLCDX, GLCDY )
                     Write_Data_PCD8544 ( GLCDDataTemp )
               #endif
 
-	#endif
+  #endif
 
 End Sub
 
 sub Write_Command_PCD8544(in  PCD8544SendByte)
 
-	SET PCD8544_DC OFF;		'Data/Command is set to zero to give Command of PCD8544 Controller
+  SET PCD8544_DC OFF;   'Data/Command is set to zero to give Command of PCD8544 Controller
           WAIT PCD8544WriteDelay us
-	set PCD8544_CS off ;	'Select the Chip, Chip Enable is an Active Low Signal
+  set PCD8544_CS off ;  'Select the Chip, Chip Enable is an Active Low Signal
           WAIT PCD8544WriteDelay us
-	SPI_Send_Data_PCD8544(PCD8544SendByte);
-	set PCD8544_CS on;	'Disable the Chip again by providing active high Signal
+  SPI_Send_Data_PCD8544(PCD8544SendByte);
+  set PCD8544_CS on;  'Disable the Chip again by providing active high Signal
           WAIT PCD8544WriteDelay us
 end sub
 
 sub Write_Data_PCD8544(in PCD8544SendByte)
 
-          SET PCD8544_DC ON;				'Data/Command is set to One to give Data of PCD8544 Controller
+          SET PCD8544_DC ON;        'Data/Command is set to One to give Data of PCD8544 Controller
           WAIT PCD8544WriteDelay us
-	set PCD8544_CS off;	'Select the Chip, Chip Enable is an Active Low Signal
+  set PCD8544_CS off; 'Select the Chip, Chip Enable is an Active Low Signal
           WAIT PCD8544WriteDelay us
-	SPI_Send_Data_PCD8544(PCD8544SendByte);
-	set PCD8544_CS on;	'Disable the Chip again by providing active high Signal
+  SPI_Send_Data_PCD8544(PCD8544SendByte);
+  set PCD8544_CS on;  'Disable the Chip again by providing active high Signal
           WAIT PCD8544WriteDelay us
 end sub
 
@@ -430,7 +430,7 @@ sub Clear_RAM_PCD8544
                 PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = 0
             Next
           #endif
-          GOTO_Pixel_PCD8544(0,0);	'Goto the pixel specified by the Co-ordinate
+          GOTO_Pixel_PCD8544(0,0);  'Goto the pixel specified by the Co-ordinate
           for PCD8544_BufferLocationCalc = 503 to 0 step - 1
                     Write_Data_PCD8544(0x00);
           next
@@ -439,11 +439,11 @@ end sub
 
 sub  GOTO_Pixel_PCD8544( In LocX, In  LocY)
 
-	'Refer Instruction Set Page of datasheet
-	'How to set Y-RAM Address and
-	'How to set X-RAM Address
-	Write_Command_PCD8544( 0x80 | (0x7F & LocX ));	'Set X-Address of RAM 0 <= x <= 83
-          Write_Command_PCD8544( 0x40 | (0x07 & LocY ));	'Set Y-Address of RAM 0 <= y <= 5
+  'Refer Instruction Set Page of datasheet
+  'How to set Y-RAM Address and
+  'How to set X-RAM Address
+  Write_Command_PCD8544( 0x80 | (0x7F & LocX ));  'Set X-Address of RAM 0 <= x <= 83
+          Write_Command_PCD8544( 0x40 | (0x07 & LocY ));  'Set Y-Address of RAM 0 <= y <= 5
 
 
 end sub
@@ -453,8 +453,8 @@ sub Cursor_Position_PCD8544( in LocX, in LocY)
 
           PosCharY = LocY / 8
 
-	Write_Command_PCD8544( 0x80 | (0x7F &	LocX ));	'Set X-Address of RAM 0 <= x <= 83
-          Write_Command_PCD8544( 0x40 | (0x07 & PosCharY ));	'Set Y-Address of RAM 0 <= y <= 5
+  Write_Command_PCD8544( 0x80 | (0x7F & LocX ));  'Set X-Address of RAM 0 <= x <= 83
+          Write_Command_PCD8544( 0x40 | (0x07 & PosCharY ));  'Set Y-Address of RAM 0 <= y <= 5
 
 end sub
 
@@ -534,8 +534,7 @@ end sub
 'Set Vop              0  1  Vop6  Vop5  Vop4  Vop3  Vop2  Vop1  Vop0  Write Vop to register
 
 sub ExtendedCommand_PCD8544 ( in PCD8544SendByte )
-                    Write_Command_PCD8544(0x21);		        LCD Extended Commands..
+                    Write_Command_PCD8544(0x21);            LCD Extended Commands..
                     Write_Command_PCD8544(PCD8544SendByte);         Set PCD8544SendByte
-                    Write_Command_PCD8544(0x0C);		        LCD in normal mode.
+                    Write_Command_PCD8544(0x0C);            LCD in normal mode.
 end sub
-

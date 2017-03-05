@@ -1,5 +1,5 @@
 '    Graphical LCD Image and addtional Fonts routines for the GCBASIC compiler
-'    Copyright (C) 2014 Evan Venn
+'    Copyright (C) 2014 - 2017  Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -388,7 +388,7 @@ sub loadEEPROM
                       CurrPage = GLCDY / 8
                       Set GLCD_RS Off
                       GLCDWriteByte b'10111000' Or CurrPage
-              		
+
                       'Select column
                       GLCDWriteByte 64 Or GLCDX
                       'Write data back
@@ -480,29 +480,29 @@ sub loadEEPROM
 
     ' This routine is only tested on the KS0108 GLCDs
     #if GLCD_TYPE = GLCD_TYPE_KS0108
-		'Set pixel at X, Y on LCD to State
-		'X is 0 to 127
-		'Y is 0 to 63
-		'Origin in top left
-		
-		'Select screen half
-		If GLCDX.6 = Off Then Set GLCD_CS2 On:Set GLCD_CS1 off
-		If GLCDX.6 = On Then Set GLCD_CS1 On: GLCDX -= 64: Set GLCD_CS2 off
+    'Set pixel at X, Y on LCD to State
+    'X is 0 to 127
+    'Y is 0 to 63
+    'Origin in top left
 
-		'Select page
-		CurrPage = GLCDY / 8
-		Set GLCD_RS Off
-		GLCDWriteByte b'10111000' Or CurrPage
-		
-		'Select column
-		GLCDWriteByte 64 Or GLCDX
-		'Write data back
-		Set GLCD_RS On
-		GLCDWriteByte GLCDByte
+    'Select screen half
+    If GLCDX.6 = Off Then Set GLCD_CS2 On:Set GLCD_CS1 off
+    If GLCDX.6 = On Then Set GLCD_CS1 On: GLCDX -= 64: Set GLCD_CS2 off
+
+    'Select page
+    CurrPage = GLCDY / 8
+    Set GLCD_RS Off
+    GLCDWriteByte b'10111000' Or CurrPage
+
+    'Select column
+    GLCDWriteByte 64 Or GLCDX
+    'Write data back
+    Set GLCD_RS On
+    GLCDWriteByte GLCDByte
     #endif
 
     #if GLCD_TYPE <> GLCD_TYPE_KS0108
-    	PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
+      PSet(In GLCDX, In GLCDY, In GLCDColour As Word)
     #endif
 
 end Sub
@@ -511,10 +511,10 @@ end Sub
 Sub myGLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour = GLCDForeground )
 
 
-	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-	CharCode -= 15
+  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+  CharCode -= 15
 
-	'invert colors if required
+  'invert colors if required
 
           if LineColour <> GLCDForeground and GLCD_TYPE <> GLCD_TYPE_ST7735 then
             'Inverted Colours
@@ -522,7 +522,7 @@ Sub myGLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour
             GLCDForeground = 0
           end if
 
-	select case GLCDfntDefault
+  select case GLCDfntDefault
 
                  case 0
                       GLCDfntDefaultSpacing = 6
@@ -551,7 +551,7 @@ Sub myGLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour
 
                  ' new font code
                    CharCode += 15
-                   getObjHeader ( GLCDfntDefault , objFont )		'returns objPointer, objWidth, objHeight, fntArray
+                   getObjHeader ( GLCDfntDefault , objFont )    'returns objPointer, objWidth, objHeight, fntArray
                    dotX = 0
 '                   HSerPrintCRLF
 '                   HSerPrint "objPointer: "
@@ -691,4 +691,3 @@ Sub myGLCDDrawChar(In CharLocX, In CharLocY, In CharCode, Optional In LineColour
           GLCDBackground = 0
           GLCDForeground = 1
 End Sub
-

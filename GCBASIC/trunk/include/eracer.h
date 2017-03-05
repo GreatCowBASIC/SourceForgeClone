@@ -1,5 +1,5 @@
 '    Subroutines to allow the eLabtronics eRacer robot to work with Great Cow BASIC
-'    Copyright (C) 2006 Hugh Considine
+'    Copyright (C) 2006-2017 Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -68,7 +68,7 @@ SUB InitBot
  'Turn off all ports
  PORTA = 0
  PORTB = 0
- 
+
 END SUB
 
 'Driving

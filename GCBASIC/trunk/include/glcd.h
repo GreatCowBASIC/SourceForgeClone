@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2016 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -15,8 +15,8 @@
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
-'    9/11/14	New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
-'		 26/7/16  Moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc. in Drawstring and DrawChar
+'    9/11/14  New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
+'    26/7/16  Moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc. in Drawstring and DrawChar
 '    22/8/16  removal of X1 and Y1 varibles. these clashed with register addresses
 
 'Constants that might need to be set
@@ -152,7 +152,7 @@ Dim GLCDDeviceWidth as Word
      FilledCircle  = FilledCircle_SSD1289
      Line =  Line_SSD1289
      Pset = PSet_SSD1289
-			GLCDRotate = GLCDRotate_SSD1289
+      GLCDRotate = GLCDRotate_SSD1289
      glcd_type_string = "SSD1289"
      GLCD_WIDTH = 240
      GLCD_HEIGHT = 320
@@ -228,7 +228,7 @@ Dim GLCDDeviceWidth as Word
 
   End If
 
-	'Loads extended fonts set ASCII characters 31-254
+  'Loads extended fonts set ASCII characters 31-254
   'Requires 1358 bytes of program memory
   If GLCD_EXTENDEDFONTSET1 then
 
@@ -263,16 +263,16 @@ End Sub
 '''@param PrintLocY Y coordinate for message
 '''@param PrintData Message to display
 Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string )
-	Dim GLCDPrintLoc as word
+  Dim GLCDPrintLoc as word
   PrintLen = LCDPrintData(0)
-	If PrintLen = 0 Then Exit Sub
+  If PrintLen = 0 Then Exit Sub
 
-	GLCDPrintLoc = PrintLocX
-	'Write Data
-	For SysPrintTemp = 1 To PrintLen
-		GLCDDrawChar GLCDPrintLoc, PrintLocY, LCDPrintData(SysPrintTemp)
-		GLCDPrintLoc += GLCDFontWidth * GLCDfntDefaultsize
-	Next
+  GLCDPrintLoc = PrintLocX
+  'Write Data
+  For SysPrintTemp = 1 To PrintLen
+    GLCDDrawChar GLCDPrintLoc, PrintLocY, LCDPrintData(SysPrintTemp)
+    GLCDPrintLoc += GLCDFontWidth * GLCDfntDefaultsize
+  Next
 End Sub
 
 '''Displays a number
@@ -280,24 +280,24 @@ End Sub
 '''@param PrintLocY Y coordinate for message
 '''@param LCDValue Number to display
 Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, In LCDValue As Long)
-	Dim SysCalcTempA As Long
+  Dim SysCalcTempA As Long
   Dim GLCDPrintLoc as word
-	Dim SysPrintBuffer(10)
-	SysPrintBuffLen = 0
+  Dim SysPrintBuffer(10)
+  SysPrintBuffLen = 0
 
-	Do
-		'Divide number by 10, remainder into buffer
-		SysPrintBuffLen += 1
-		SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
-		LCDValue = SysCalcTempA
-	Loop While LCDValue <> 0
+  Do
+    'Divide number by 10, remainder into buffer
+    SysPrintBuffLen += 1
+    SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
+    LCDValue = SysCalcTempA
+  Loop While LCDValue <> 0
 
-	'Display
-	GLCDPrintLoc = PrintLocX
-	For SysPrintTemp = SysPrintBuffLen To 1 Step -1
-		GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48
-		GLCDPrintLoc += GLCDFontWidth * GLCDfntDefaultsize
-	Next
+  'Display
+  GLCDPrintLoc = PrintLocX
+  For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+    GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48
+    GLCDPrintLoc += GLCDFontWidth * GLCDfntDefaultsize
+  Next
 
 End Sub
 
@@ -325,8 +325,8 @@ end sub
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
-	'moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc.
-	'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+  'moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc.
+  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
 
     'invert colors if required
     if LineColour <> GLCDForeground  then
@@ -335,8 +335,8 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
       GLCDForeground = 0
     end if
 
-	 dim CharCol, CharRow as word
-	 CharCode -= 15
+   dim CharCol, CharRow as word
+   CharCode -= 15
 
     if CharCode>=178 and CharCode<=202 then
        CharLocY=CharLocY-1
@@ -373,9 +373,9 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
       CharCol +=GLCDfntDefaultsize
     Next
 
-	  'Restore
-	  GLCDBackground = 0
-	  GLCDForeground = 1
+    'Restore
+    GLCDBackground = 0
+    GLCDForeground = 1
 
 End Sub
 
@@ -387,30 +387,30 @@ End Sub
 '''@param LineColour Colour of box border (0 = erase, 1 = draw, default is 1)
 #define GLCDBox Box
 Sub Box(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
-	'Make sure that starting point (1) is always less than end point (2)
-	If LineX1 > LineX2 Then
-		GLCDTemp = LineX1
-		LineX1 = LineX2
-		LineX2 = GLCDTemp
-	End If
-	If LineY1 > LineY2 Then
-		GLCDTemp = LineY1
-		LineY1 = LineY2
-		LineY2 = GLCDTemp
-	End If
+  'Make sure that starting point (1) is always less than end point (2)
+  If LineX1 > LineX2 Then
+    GLCDTemp = LineX1
+    LineX1 = LineX2
+    LineX2 = GLCDTemp
+  End If
+  If LineY1 > LineY2 Then
+    GLCDTemp = LineY1
+    LineY1 = LineY2
+    LineY2 = GLCDTemp
+  End If
 
-	dim DrawLine as word
-	'Draw lines going across
-	For DrawLine = LineX1 To LineX2
-		PSet DrawLine, LineY1, LineColour
-		PSet DrawLine, LineY2, LineColour
-	Next
+  dim DrawLine as word
+  'Draw lines going across
+  For DrawLine = LineX1 To LineX2
+    PSet DrawLine, LineY1, LineColour
+    PSet DrawLine, LineY2, LineColour
+  Next
 
-	'Draw lines going down
-	For DrawLine = LineY1 To LineY2
-		PSet LineX1, DrawLine, LineColour
-		PSet LineX2, DrawLine, LineColour
-	Next
+  'Draw lines going down
+  For DrawLine = LineY1 To LineY2
+    PSet LineX1, DrawLine, LineColour
+    PSet LineX2, DrawLine, LineColour
+  Next
 End Sub
 
 '''Draws a filled box on the GLCD screen
@@ -477,29 +477,29 @@ ddF_y = -2 * xradius
 FillCircleXX = 0
 FillCircleYY = xradius
 
-	' Fill in the center between the two halves
+  ' Fill in the center between the two halves
           YCalc2 = yoffset+xradius
           YCalc1 = yoffset-xradius
-	Line( xoffset, YCalc1 , xoffset, YCalc2, LineColour)
+  Line( xoffset, YCalc1 , xoffset, YCalc2, LineColour)
 
-	do while (FillCircleXX < FillCircleYY)
+  do while (FillCircleXX < FillCircleYY)
              if ff >= 0 then
                 FillCircleYY--
                 ddF_y += 2
                 ff += ddF_y
              end if
-	   FillCircleXX++
-	   ddF_x += 2
-	   ff += ddF_x
+     FillCircleXX++
+     ddF_x += 2
+     ff += ddF_x
              ' Now draw vertical lines between the points on the circle rather than
              ' draw the points of the circle. This draws lines between the
              ' perimeter points on the upper and lower quadrants of the 2 halves of the circle.
 
-	   Line(xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour);
-	   Line(xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour);
-	   Line(xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour);
-	   Line(xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour);
-  	loop
+     Line(xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour);
+     Line(xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour);
+     Line(xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour);
+     Line(xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour);
+    loop
 end sub
 
 

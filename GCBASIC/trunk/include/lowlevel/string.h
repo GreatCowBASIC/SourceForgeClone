@@ -1,5 +1,5 @@
 '    String routines for the GCBASIC compiler
-'    Copyright (C) 2006 - 2016 Hugh Considine, Evan Venn & Immo Freudenberg
+'    Copyright (C) 2006 - 2017 Hugh Considine, Evan Venn & Immo Freudenberg
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -240,8 +240,8 @@ Function StrInteger(SysValTemp As Word) As String * 6
   Dim SysCalcTempX As Word
 
   if SysValTemp.15 = 1 Then
-  	SysCharCount += 1
-  	StrInteger(SysCharCount) = 0x2D
+    SysCharCount += 1
+    StrInteger(SysCharCount) = 0x2D
     SysValTemp = 0xFFFF-SysValTemp
   end if
 

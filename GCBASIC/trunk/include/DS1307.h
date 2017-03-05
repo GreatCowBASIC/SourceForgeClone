@@ -2,7 +2,7 @@
 '    Copyright (C) 2013 Evan R. Venn
 '    Copyright (C) 2014 Thomas Henry
 '    Copyright (C) 2014 Evan R. Venn
-'    Copyright (C) 2015 Evan R. Venn
+'    Copyright (C) 2017 Evan R. Venn
 
 '
 '    This library is free software' you can redistribute it and/or
@@ -686,7 +686,6 @@ sub DS1307_Read(in DS_Addr, out DS_Value)
   #endif
 
 end sub
-
 
 
 

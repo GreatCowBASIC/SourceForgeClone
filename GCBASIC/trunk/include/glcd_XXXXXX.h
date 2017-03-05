@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 ' Supports XXXXXX controller only.
 
 'Changes
-' 9/11/14	New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 '
 
 'Hardware settings
@@ -48,23 +48,23 @@
 
 Sub InitGLCD_XXXXXX
 
-	'Setup code for XXXXXX controllers
-	#if GLCD_TYPE = GLCD_TYPE_XXXXXX
-		'Set pin directions
+  'Setup code for XXXXXX controllers
+  #if GLCD_TYPE = GLCD_TYPE_XXXXXX
+    'Set pin directions
 
-		'Reset
+    'Reset
 
-		'Colours
-		GLCDBackground = 0
-		GLCDForeground = 1
+    'Colours
+    GLCDBackground = 0
+    GLCDForeground = 1
                 GLCDFontWidth = 6
-		GLCDfntDefaultsize = 1
-		
-	#endif
-	
-	'Clear screen
-	GLCDCLS_XXXXXX
-	
+    GLCDfntDefaultsize = 1
+
+  #endif
+
+  'Clear screen
+  GLCDCLS_XXXXXX
+
 End Sub
 
 
@@ -75,10 +75,10 @@ Sub GLCDCLS_XXXXXX
 
           ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
           GLCD_yordinate = 0
-	#if GLCD_TYPE = GLCD_TYPE_XXXXXX
+  #if GLCD_TYPE = GLCD_TYPE_XXXXXX
 
-	#endif
-	
+  #endif
+
 End Sub
 
 '''Draws a character at the specified location on the ST7920 GLCD
@@ -109,10 +109,10 @@ End Sub
 '''@param GLCDColour State of pixel (0 = erase, 1 = display)
 Sub PSet_XXXXXX(In GLCDX, In GLCDY, In GLCDColour As Word)
 
-	#if GLCD_TYPE = GLCD_TYPE_XXXXXX
+  #if GLCD_TYPE = GLCD_TYPE_XXXXXX
 
-	#endif
-	
+  #endif
+
 End Sub
 
 ' This is an Published API do not change
@@ -121,7 +121,7 @@ End Sub
 '''Write byte to LCD
 '''@hide
 Sub GLCDWriteByte_XXXXXX (In LCDByte)
-	
+
 
 End Sub
 
@@ -131,6 +131,6 @@ End Sub
 '''Read byte from LCD
 '''@hide
 Function GLCDReadByte_XXXXXX
-	
-	
+
+
 End Function

@@ -1,6 +1,6 @@
 ;Include File: Trig4Places.h
 ;Trigonometric Functions for Great Cow Basic
-;Thomas Henry --- 4/17/2014
+;Thomas Henry --- 4/17/2014 - 2017
 
 ;Sine and Cosine, accurate to 4 decimal places.
 

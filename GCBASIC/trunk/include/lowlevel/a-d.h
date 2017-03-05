@@ -1,5 +1,5 @@
 '    Analog to Digital conversion routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2013, 2016 Hugh Considine, Kent Schafer, William Roth, Evan Venn
+'    Copyright (C) 2006 - 2013, 2017 Hugh Considine, Kent Schafer, William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public

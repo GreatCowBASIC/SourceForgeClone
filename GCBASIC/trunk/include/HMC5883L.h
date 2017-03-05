@@ -1,5 +1,5 @@
 '    HMC5883 routines for the GCBASIC compiler'
-'    Copyright (C) 2015 Evan Venn.
+'    Copyright (C) 201y Evan Venn.
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -18,9 +18,9 @@
 '    Created Evan R Venn - Jan 2014 revised July 2015
 '    Revised 11th Oct 2015
 
-'		 This support the address of the generic device 0011110b, therefore
-'		 I2C 8bit address of HMC5883L is 0x3C.
-'		 Change in the main program to alternative addresses, if required
+'    This support the address of the generic device 0011110b, therefore
+'    I2C 8bit address of HMC5883L is 0x3C.
+'    Change in the main program to alternative addresses, if required
 
   #define HMC5883L_address 0x3C
   #define HMC5883L_CONFIG_REG_A_INIT_CODE 0x70
@@ -30,7 +30,7 @@
   '#define HMC5883L_getDataReady_override
 
 
-	'Methods
+  'Methods
 '  HMC5883L_Init
 '  HMC5883L_StartContinousRead
 '  HMC5883L_ContinousRead ( device_x, device_y, device_z )
@@ -38,7 +38,7 @@
 '  HMC5883L_ReadXYZ ( device_x, device_y, device_z )
 '  HMC5883L_getDataReady as byte
 '
-'	 and,
+'  and,
 '  HMC5883L_setConfigurationA ( HMC5883L_byte )
 '  HMC5883L_setConfigurationB ( HMC5883L_byte )
 '  HMC5883L_getConfigurationA  as byte
@@ -125,7 +125,7 @@ Sub HMC5883L_Init
   #endif
 
   #ifdef HI2C_DATA
-		 HI2CMode Master
+     HI2CMode Master
      HI2CSTART
      HI2CSEND ( HMC5883L_address , ACK)
      HI2CSEND ( HMC5883L_CONFIG_REG_A , ACK)
@@ -148,7 +148,7 @@ end sub
 
 Sub HMC5883L_StartContinousRead( Optional DeviceOpMode As Byte = HMC5883L_MODE_CONVERSION_CONTINUOUS )
 
-	   Dim XHiByte alias HMC5883L_x_h
+     Dim XHiByte alias HMC5883L_x_h
      Dim XLoByte alias HMC5883L_x
      Dim YHiByte alias HMC5883L_y_h
      Dim YLoByte alias HMC5883L_y
@@ -156,7 +156,7 @@ Sub HMC5883L_StartContinousRead( Optional DeviceOpMode As Byte = HMC5883L_MODE_C
      Dim ZLoByte alias HMC5883L_z
 
 
-	#ifdef I2C_DATA
+  #ifdef I2C_DATA
 
      I2CSTART
      I2CSEND ( HMC5883L_address , ACK)
@@ -170,7 +170,7 @@ Sub HMC5883L_StartContinousRead( Optional DeviceOpMode As Byte = HMC5883L_MODE_C
      I2CSEND ( HMC5883L_DATA_OUT_X_MSB_REG )
 
 
-	#endif
+  #endif
 
   #ifdef HI2C_DATA
 
@@ -192,7 +192,7 @@ Sub HMC5883L_StartContinousRead( Optional DeviceOpMode As Byte = HMC5883L_MODE_C
 
 Sub HMC5883L_ContinousRead ( out HMC5883L_x AS WORD , Out HMC5883L_y AS WORD , Out HMC5883L_z AS WORD )
 
-	   Dim XHiByte alias HMC5883L_x_h
+     Dim XHiByte alias HMC5883L_x_h
      Dim XLoByte alias HMC5883L_x
      Dim YHiByte alias HMC5883L_y_h
      Dim YLoByte alias HMC5883L_y
@@ -200,7 +200,7 @@ Sub HMC5883L_ContinousRead ( out HMC5883L_x AS WORD , Out HMC5883L_y AS WORD , O
      Dim ZLoByte alias HMC5883L_z
 
 
-	#ifdef I2C_DATA
+  #ifdef I2C_DATA
 
      I2CSTART
      I2CSEND ( HMC5883L_address , ACK)
@@ -215,11 +215,11 @@ Sub HMC5883L_ContinousRead ( out HMC5883L_x AS WORD , Out HMC5883L_y AS WORD , O
      I2CReceive ( YLoByte , NACK)
      I2CStop
 
-		 Wait while HMC5883L_getDataReady = 0
+     Wait while HMC5883L_getDataReady = 0
 
 
 
-	#endif
+  #endif
 
   #ifdef HI2C_DATA
 
@@ -236,7 +236,7 @@ Sub HMC5883L_ContinousRead ( out HMC5883L_x AS WORD , Out HMC5883L_y AS WORD , O
      HI2CReceive ( YLoByte , NACK)
      HI2CStop
 
-		 Wait while HMC5883L_getDataReady = 0
+     Wait while HMC5883L_getDataReady = 0
 
   #endif
 
@@ -390,7 +390,7 @@ end function
 sub HMC5883L_ReadXYZ( out HMC5883L_x AS WORD , Out HMC5883L_y AS WORD , Out HMC5883L_z AS WORD )
 
 
-	   Dim XHiByte alias HMC5883L_x_h
+     Dim XHiByte alias HMC5883L_x_h
      Dim XLoByte alias HMC5883L_x
      Dim YHiByte alias HMC5883L_y_h
      Dim YLoByte alias HMC5883L_y
@@ -422,7 +422,7 @@ sub HMC5883L_ReadXYZ( out HMC5883L_x AS WORD , Out HMC5883L_y AS WORD , Out HMC5
 
       Wait while HMC5883L_getDataReady = 0
 
-	#endif
+  #endif
 
   #ifdef HI2C_DATA
      HI2CSTART
@@ -449,7 +449,7 @@ sub HMC5883L_ReadXYZ( out HMC5883L_x AS WORD , Out HMC5883L_y AS WORD , Out HMC5
 
       Wait while HMC5883L_getDataReady = 0
 
-	#endif
+  #endif
 
 
 
@@ -469,16 +469,16 @@ end function
 
 function HMC5883L_getDataReady as byte
 
-	HMC5883L_getDataReady = 0
+  HMC5883L_getDataReady = 0
 
-	 'HMC5883L_getDataReady_override can be used to force a 6 ms wait
+   'HMC5883L_getDataReady_override can be used to force a 6 ms wait
    #ifdef HMC5883L_getDataReady_override
        wait HMC5883L_getDataReady_override ms
        HMC5883L_getDataReady = 1
        Exit Function
    #endif
 
-	#ifdef I2C_DATA
+  #ifdef I2C_DATA
 
       I2CSTART
       I2CSEND ( HMC5883L_address , ACK)
@@ -489,22 +489,21 @@ function HMC5883L_getDataReady as byte
       I2CStop
       HMC5883L_getDataReady = I2CByte
 
-	#endif
+  #endif
 
   #ifdef HI2C_DATA
 
-		 HI2CSTART
+     HI2CSTART
      HI2CSEND ( HMC5883L_address , ACK)
      HI2CSEND ( HMC5883L_STATUS_REG )
      HI2CSTART
      HI2CSEND ( HMC5883L_address | 1 )
-		 HI2CReceive ( 	I2CByte, Nack  )
+     HI2CReceive (  I2CByte, Nack  )
      HI2CStop
-		 HMC5883L_getDataReady = I2CByte
+     HMC5883L_getDataReady = I2CByte
 
   #endif
 
-	HMC5883L_getDataReady = HMC5883L_getDataReady & 0b00000001
+  HMC5883L_getDataReady = HMC5883L_getDataReady & 0b00000001
 
 end function
-

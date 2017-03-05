@@ -1,5 +1,5 @@
 '    Maths outines for the GCBASIC compiler
-'    Copyright (C) 2014 Thomas Henry and Evan Venn
+'    Copyright (C) 2017 Thomas Henry and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
 
 '    27th Sept 2014 - Revised following a bug report the log2_full to support 18F, by removal of use of C, status.c and sequence and use of a long.
 '    28th Sept 2014 - Revised following a bug report the log2_full to support AVR devices by further removal of use of C, status.c and sequence and use of a long.
-'		 07/11/2015			- Added ATan
+'    07/11/2015     - Added ATan
 ;-----
 
 ;Square root function for Great Cow Basic.
@@ -252,32 +252,32 @@ Function  ATan  ( xvector as integer, yvector as integer ) as word
     Dim uxvector, uyvector, degree as Integer
 
 
-	'Save the sign flags then remove signs and get XY as unsigned ints
+  'Save the sign flags then remove signs and get XY as unsigned ints
    negflag = 0
    if (xvector < 0) then
       negflag += 0x01' x flag bit
       xvector = (0 - xvector) 'is now +
-	 end if
+   end if
 
-   uxvector = xvector	'copy to unsigned var before multiply
+   uxvector = xvector 'copy to unsigned var before multiply
    if (yvector < 0) then
       negflag += 0x02; y flag bit
       yvector = (0 - yvector ) 'is now +
-		end if
+    end if
    uyvector  = yvector 'copy to unsigned var before multiply
 
 
 '1. Calc the scaled "degrees"
    if (uxvector > uyvector) then
-      degree = (uyvector * 45) / uxvector		'degree result will be 0-45 range
-      negflag += 0x10												'octant flag bit
+      degree = (uyvector * 45) / uxvector   'degree result will be 0-45 range
+      negflag += 0x10                       'octant flag bit
    else
-      degree = (uxvector * 45) / uyvector		'degree result will be 0-45 range
-		end if
+      degree = (uxvector * 45) / uyvector   'degree result will be 0-45 range
+    end if
 
 '2. Compensate for the 4 degree error curve
    comp = 0
-   tempdegree = degree						'use an unsigned char for speed!
+   tempdegree = degree            'use an unsigned char for speed!
    if (tempdegree > 22)      then 'if top half of range
       if (tempdegree <= 44) then comp++
       if (tempdegree <= 41) then comp++
@@ -291,7 +291,7 @@ Function  ATan  ( xvector as integer, yvector as integer ) as word
       if (tempdegree >= 10) then comp++
       if (tempdegree >= 15) then comp++  '// max is 4 degrees compensated
    end if
-   degree += comp													'degree is now accurate to +/- 1 degree!
+   degree += comp                         'degree is now accurate to +/- 1 degree!
 
 'Invert degree if it was X>Y octant, makes 0-45 into 90-45
    if (negflag & 0x10) = 0x10 then degree = (90 - degree);
@@ -310,19 +310,19 @@ Function  ATan  ( xvector as integer, yvector as integer ) as word
       if (negflag & 0x01) = 0x01 then  'if +Y -X
             degree = (360 - degree)
       end if
-		end if
+    end if
 
-		'	Return result
-		Atan = degree
+    ' Return result
+    Atan = degree
     select case negflag
-    	case 0
-      	negflag = 1
-			case 1
-      	negflag = 4
+      case 0
+        negflag = 1
+      case 1
+        negflag = 4
       case 2
-      	negflag = 2
+        negflag = 2
       case 3
-      	negflag = 3
+        negflag = 3
     end Select
 
 

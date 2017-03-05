@@ -1,7 +1,7 @@
 '    Library for reading/writing to Microchip MCP7940N RTC for the GCBASIC compiler
 '    Copyright (C) 2012 - 2015 Thomas Henry, Pete Reverett and Evan Venn
 '
-'    Version 1.1a  12/1/2015
+'    Version 1.1a  12/1/2015 - 2017
 '
 '    This code is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -70,51 +70,51 @@
 ;----- Constants
 
  ' These are the addresses of the generic MCP7940N Real-Time Clock
- #define DS_AddrWrite 0xDE		'MCP7940 uses 0xDE
- #define DS_AddrRead  0xDF		'MCP7940 uses 0xDF
+ #define DS_AddrWrite 0xDE    'MCP7940 uses 0xDE
+ #define DS_AddrRead  0xDF    'MCP7940 uses 0xDF
 
  'Addresses for MCP7940N
- #define MCP7940_RTCSEC    0x00		 'Start of the time registers - 0x00h
+ #define MCP7940_RTCSEC    0x00    'Start of the time registers - 0x00h
  #define MCP7940_RTCMIN    0x01                    'TIMEKEEPING MINUTES VALUE REGISTER - 0x01h
  #define MCP7940_RTCHOUR   0x02                    'TIMEKEEPING HOURS VALUE REGISTER - 0x02h
- #define MCP7940_RTCWKDAY  0x03		 'TIMEKEEPING WEEKDAY VALUE REGISTER - 0x03h
- #define MCP7940_RTCDATE   0x04		 'TIMEKEEPING DATE VALUE REGISTER  - 0x04h
+ #define MCP7940_RTCWKDAY  0x03    'TIMEKEEPING WEEKDAY VALUE REGISTER - 0x03h
+ #define MCP7940_RTCDATE   0x04    'TIMEKEEPING DATE VALUE REGISTER  - 0x04h
  #define MCP7940_RTCMTH    0x05                    'TIMEKEEPING MONTH VALUE REGISTER - 0x05h
  #define MCP7940_RTCYEAR   0x06                    'TIMEKEEPING YEAR VALUE REGISTER - 0x06h
 
- #define MCP7940_Control   0x07		 'Control register
+ #define MCP7940_Control   0x07    'Control register
  #define MCP7940_OSCTRIM   0x08                    'OSCILLATOR DIGITAL TRIM REGISTER
 
- #define MCP7940_ALM0SEC   0x0A	           ' ALARM 0 SECONDS VALUE REGISTER
- #define MCP7940_ALM1SEC   0x11	           ' ALARM 1 SECONDS VALUE REGISTER
+ #define MCP7940_ALM0SEC   0x0A            ' ALARM 0 SECONDS VALUE REGISTER
+ #define MCP7940_ALM1SEC   0x11            ' ALARM 1 SECONDS VALUE REGISTER
 
- #define MCP7940_ALM0MIN   0x0B	           ' ALARM 0 MINUTES VALUE REGISTER
- #define MCP7940_ALM1MIN   0x12	           ' ALARM 1 MINUTES VALUE REGISTER
+ #define MCP7940_ALM0MIN   0x0B            ' ALARM 0 MINUTES VALUE REGISTER
+ #define MCP7940_ALM1MIN   0x12            ' ALARM 1 MINUTES VALUE REGISTER
 
- #define MCP7940_ALM0HOUR  0x0C	           ' ALARM 0 HOURS VALUE REGISTER
- #define MCP7940_ALM1HOUR  0x13	           ' ALARM 1 HOURS VALUE REGISTER
+ #define MCP7940_ALM0HOUR  0x0C            ' ALARM 0 HOURS VALUE REGISTER
+ #define MCP7940_ALM1HOUR  0x13            ' ALARM 1 HOURS VALUE REGISTER
 
- #define MCP7940_ALM0WKDAY  0x0D	           ' ALARM 0 WEEKDAY VALUE REGISTER
- #define MCP7940_ALM1WKDAY  0x14	           ' ALARM 1 WEEKDAY VALUE REGISTER
+ #define MCP7940_ALM0WKDAY  0x0D             ' ALARM 0 WEEKDAY VALUE REGISTER
+ #define MCP7940_ALM1WKDAY  0x14             ' ALARM 1 WEEKDAY VALUE REGISTER
 
- #define MCP7940_ALM0DATE  0x0E	           ' ALARM 0 DATE VALUE REGISTER
- #define MCP7940_ALM1DATE  0x15	           ' ALARM 1 DATE VALUE REGISTER
+ #define MCP7940_ALM0DATE  0x0E            ' ALARM 0 DATE VALUE REGISTER
+ #define MCP7940_ALM1DATE  0x15            ' ALARM 1 DATE VALUE REGISTER
 
- #define MCP7940_ALM0MONTH  0x0F	           ' ALARM 0 MONTH VALUE REGISTER
- #define MCP7940_ALM1MONTH  0x16	           ' ALARM 1 MONTH VALUE REGISTER
+ #define MCP7940_ALM0MONTH  0x0F             ' ALARM 0 MONTH VALUE REGISTER
+ #define MCP7940_ALM1MONTH  0x16             ' ALARM 1 MONTH VALUE REGISTER
 
 
- #define MCP7940_PWR00MIN   0x18	           ' POWER-DOWN/POWER-UP TIME-STAMP MINUTES VALUE REGISTER (ADDRESSES 0x18/0x1C)
- #define MCP7940_PWR01MIN   0x1C	
+ #define MCP7940_PWR00MIN   0x18             ' POWER-DOWN/POWER-UP TIME-STAMP MINUTES VALUE REGISTER (ADDRESSES 0x18/0x1C)
+ #define MCP7940_PWR01MIN   0x1C
 
- #define MCP7940_PWR00HOUR   0x19	           ' POWER-DOWN/POWER-UP TIME-STAMP HOURS VALUE REGISTER (ADDRESSES 0x19/0x1D)
- #define MCP7940_PWR01HOUR   0x1D	
+ #define MCP7940_PWR00HOUR   0x19            ' POWER-DOWN/POWER-UP TIME-STAMP HOURS VALUE REGISTER (ADDRESSES 0x19/0x1D)
+ #define MCP7940_PWR01HOUR   0x1D
 
- #define MCP7940_PWR00DATE   0x1A	           ' POWER-DOWN/POWER-UP TIME-STAMP DATE VALUE REGISTER (ADDRESSES 0x1A/0x1E)
- #define MCP7940_PWR01DATE   0x1E	
+ #define MCP7940_PWR00DATE   0x1A            ' POWER-DOWN/POWER-UP TIME-STAMP DATE VALUE REGISTER (ADDRESSES 0x1A/0x1E)
+ #define MCP7940_PWR01DATE   0x1E
 
- #define MCP7940_PWR00MTH   0x1B	           ' POWER-DOWN/POWER-UP TIME-STAMP MONTH VALUE REGISTER (ADDRESSES 0x1B/0x1F)
- #define MCP7940_PWR01MTH   0x1F	
+ #define MCP7940_PWR00MTH   0x1B             ' POWER-DOWN/POWER-UP TIME-STAMP MONTH VALUE REGISTER (ADDRESSES 0x1B/0x1F)
+ #define MCP7940_PWR01MTH   0x1F
 
  ;The alarm can be set to go off if any of the following conditions are met
  #define MCP7940_AlarmAssertion_Seconds            0x00                 ; a match of the seconds
@@ -845,7 +845,7 @@ sub MCP7940_SetSQW(in DS_Value)
          case 0                       ;0 = disable completely
               'turn off the enable bit
               set DS_Status.6 off
-    	
+
          case 4                       ;4 = 4.096kHz
               set DS_Status.0 on
               set DS_Status.1 off
@@ -889,7 +889,7 @@ sub MCP7940_SetSQW(in DS_Value)
          case 0                       ;0 = disable completely
               'turn off the enable bit
               set DS_Status.6 off
-    	
+
          case 4                       ;4 = 4.096kHz
               set DS_Status.0 on
               set DS_Status.1 off
@@ -919,8 +919,8 @@ end sub
 ;-----
 
 sub MCP7940_SetMFP(in MFP_Value)
-	'New function for MCP7940. Sets Multifunction Pin status
-	'set the current value of the register
+  'New function for MCP7940. Sets Multifunction Pin status
+  'set the current value of the register
 
   #ifdef HI2C_DATA
       do
@@ -1020,7 +1020,7 @@ end sub
 
 ;------
 function MCP7940_ReadControl
-	'read the current value of the register
+  'read the current value of the register
 
   #ifdef HI2C_DATA
       do
@@ -1137,7 +1137,7 @@ sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW,
       HI2CSend( DS_Temp )                         ;begin with address for alarm0 and then add the 7 for alarm1
       HI2CSend(DecToBcd(DS_Sec))                  ;send seconds
       HI2CSend(DecToBcd(DS_Min))                  ;send mins
-      HI2CSend(DecToBcd(DS_Hour))               ;send hours	
+      HI2CSend(DecToBcd(DS_Hour))               ;send hours
 
       HI2CReStart                                   ;set DOW by extracting the bits
       HI2CSend(DS_AddrWrite)
@@ -1147,7 +1147,7 @@ sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW,
       HI2CSend(DS_AddrRead)
       HI2CReceive(DS_Temp, NACK)                   ;get the weekday value
 
-      DS_Temp = DS_Temp & 248     	      ;get bit values from bits 7 thru 3
+      DS_Temp = DS_Temp & 248             ;get bit values from bits 7 thru 3
       DS_DOW = DecToBcd(DS_DOW) or DS_Temp        ;set bit values of bits 2 and 0
 
       HI2CReStart                                    ;restart
@@ -1156,8 +1156,8 @@ sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW,
       HI2CSend(DS_Temp)
       HI2CSend(DS_DOW)
 
-      HI2CSend(DecToBcd(DS_Date))		     ;send the date
-      HI2CSend(DecToBcd(DS_Month))		     ;send the month
+      HI2CSend(DecToBcd(DS_Date))        ;send the date
+      HI2CSend(DecToBcd(DS_Month))         ;send the month
 
       HI2CStop
   #endif
@@ -1170,7 +1170,7 @@ sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW,
       I2CSend( DS_Temp )                         ;begin with address for alarm0 and then add the 7 for alarm1
       I2CSend(DecToBcd(DS_Sec))                  ;send seconds
       I2CSend(DecToBcd(DS_Min))                  ;send mins
-      I2CSend(DecToBcd(DS_Hour))               ;send hours	
+      I2CSend(DecToBcd(DS_Hour))               ;send hours
 
       I2CStart                                   ;set DOW by extracting the bits
       I2CSend(DS_AddrWrite)
@@ -1180,7 +1180,7 @@ sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW,
       I2CSend(DS_AddrRead)
       I2CReceive(DS_Temp, NACK)                   ;get the weekday value
 
-      DS_Temp = DS_Temp & 248     	      ;get bit values from bits 7 thru 3
+      DS_Temp = DS_Temp & 248             ;get bit values from bits 7 thru 3
       DS_DOW = DecToBcd(DS_DOW) or DS_Temp        ;set bit values of bits 2 and 0
 
       I2CStart                                    ;restart
@@ -1189,8 +1189,8 @@ sub MCP7940_SetAlarm ( in DS_Value, in DS_Hour, in DS_Min, in DS_Sec, in DS_DOW,
       I2CSend(DS_Temp)
       I2CSend(DS_DOW)
 
-      I2CSend(DecToBcd(DS_Date))		     ;send the date
-      I2CSend(DecToBcd(DS_Month))		     ;send the month
+      I2CSend(DecToBcd(DS_Date))         ;send the date
+      I2CSend(DecToBcd(DS_Month))        ;send the month
 
       I2CStop
   #endif

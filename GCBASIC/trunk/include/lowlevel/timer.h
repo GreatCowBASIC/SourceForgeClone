@@ -1,5 +1,5 @@
 '    Timer control routines for Great Cow BASIC
-'    Copyright (C) 2006-2016 Hugh Considine, William Roth and Evan R. Venn
+'    Copyright (C) 2006-2017 Hugh Considine, Evan R. Venn and  William Roth
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation; either
@@ -83,6 +83,7 @@
 ' 7/12/2016:  Revised to correctly support settimer and cleartimer for 8 bit clock on chips that are tmr0 16 bit capable
 ' 7/12/2016:  Added optimisation Constants
 ' 10/12/2016: Revised Settimer to remove typo
+' 13/01/2017: Updated Timer1/3/5/7 Support for newer chips with TxCLK register
 
 '***********************************************************
 
@@ -253,10 +254,38 @@
 
  #endif
 
-'Clock Sources
+ 'Generic Clock Sources
   #define Osc 1
   #define Ext 2
   #define ExtOsc 3
+
+ #SCRIPT  'Added to support Chips with T1CLK register
+         ' Includes 16F188xx, 16F153xx and others
+
+  #IFDEF PIC
+
+      #IFDEF OneOf(T1CLK,TMR1CLK)  ' has this register
+
+         'keep for compatibility
+         #Define OSC 1      'FOSC/4
+         #Define EXT 0      'T1CKIPPS
+         #Define EXTOSC 6   'SOSC
+
+         'Some Aditional Clock Sources
+         'Some others not included  - can be set manually
+         #Define SOSC 6
+         #Define MFINTOSC 5
+         #Define LFINTOSC 4
+         #DEFINE HFINTOSC 3
+         #Define FOSC  2
+         #Define FOSC4 1
+         #Define TxCKIPPS  0
+
+     #ENDIF
+
+  #ENDIF
+
+#ENDSCRIPT
 
 ' timer for AVR - ERV
   'timer 0
@@ -349,6 +378,9 @@
   #define POST0_14 = 13
   #define POST0_15 = 14
   #define POST0_16 = 15
+
+
+
   'end if support 16f18855 series 8/16 bit timers
 
 
@@ -462,11 +494,29 @@
 #define PS0_128 6
 #define PS0_256 7
 
-'Timer 1 prescales
+'PIC Timer 1 prescales
 #define PS1_1 0
 #define PS1_2 16
 #define PS1_4 32
 #define PS1_8 48
+
+'Timer 3 prescales
+#define PS3_1 0
+#define PS3_2 16
+#define PS3_4 32
+#define PS3_8 48
+
+'Timer 5 prescales
+#define PS5_1 0
+#define PS5_2 16
+#define PS5_4 32
+#define PS5_8 48
+
+'Timer 7 prescales -wmr
+#define PS7_1 0
+#define PS7_2 16
+#define PS7_4 32
+#define PS7_8 48
 
 'Timer 2 prescales for PIC - added Dec 2016
 
@@ -483,6 +533,7 @@
     PS2_128 = 7
 
   End if
+
   if nobit(T2CKPS2) then
     'Pre Dec 2016 constants
     PS2_1  = 0
@@ -493,14 +544,6 @@
   end if
 
 #endscript
-
-
-
-'Timer 3 prescales
-#define PS3_1 0
-#define PS3_2 16
-#define PS3_4 32
-#define PS3_8 48
 
 
 'Timer 4 prescales for PIC - added Dec 2016
@@ -518,7 +561,8 @@
     PS4_128 = 7
 
   End if
-  if nobit(T4CKPS2) then
+
+ if nobit(T4CKPS2) then
     'Pre Dec 2016 constants
     PS4_1  = 0
     PS4_4  = 1
@@ -529,15 +573,7 @@
 
 #endscript
 
-
-'Timer 5 prescales
-#define PS5_1 0
-#define PS5_2 16
-#define PS5_4 32
-#define PS5_8 48
-
 'Timer 6 prescales for PIC - added Dec 2016
-
 #script
 
   if bit(T6CKPS2) then
@@ -551,6 +587,7 @@
     PS6_128 = 7
 
   End if
+
   if nobit(T6CKPS2) then
     'Pre Dec 2016 constants
     PS6_1  = 0
@@ -562,11 +599,6 @@
 
 #endscript
 
-'Timer 7 prescales -wmr
-#define PS7_1 0
-#define PS7_2 16
-#define PS7_4 32
-#define PS7_8 48
 
 'Timer 8 prescales -wmr
 #define PS8_1 0
@@ -1356,58 +1388,93 @@ Sub InitTimer1(In TMRSource, In TMRPres)
 
      #ifdef Var(T1CON) 'ALL Pics w/Timer1 module have T1CON reg
 
-        'Test for valid Pres parameter
-        'uses less memory than multiple boulean "AND"
-        If TMRPres <> 0 then
-           IF TMRPres <> 16 then
-              IF TMRPres <> 32 then
-                 IF TMRPres <> 48 then
-                    TMRPres = 0
+        #IF NoVar(T1CLK)
+
+           'Test for valid Pres parameter
+            'uses less memory than multiple boulean "AND"
+            If TMRPres <> 0 then
+               IF TMRPres <> 16 then
+                  IF TMRPres <> 32 then
+                     IF TMRPres <> 48 then
+                        TMRPres = 0
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+            'Re-Using TMRPres as TxCON Temp Register
+            IF TMR1ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
+
+           'Select Case uses too much memory - changed
+            IF TMRSource = OSC then
+               #ifdef bit(TMR1CS)    'TXCON.1 on some chips
+                   Set TMRPres.1 OFF
+               #endif
+
+               #ifdef Bit(TMR1CS1)   'TXcon.7 on other chips
+                   Set TMRPres.7 OFF
+               #endif
+               Set TMRPres.3 OFF  'SOSCEN and OSCEN are Always Bit 3
+            END IF
+
+            IF TMRSource = EXT then
+               #ifdef bit(TMR1CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR1CS1)
+                  Set TMRPres.7 ON
+               #endif
+               Set TMRPres.3 OFF
+            END IF
+
+            If TMRSource = ExtOsc Then
+               #ifdef bit(TMR1CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR1CS1)
+                   Set TMRPres.7 ON
+               #endif
+                Set TMRPres.3 ON
+            END IF
+           'Done building Temp Variable. Now write register
+           T1CON = TMRPres
+         #endif
+     #ENDIF
+
+
+      ; 33 Newer Chips have TxCLK Register ( TIMER 1/3/5/7 )
+      ;
+      ' 12/16F16xx   Series
+      ' 16F153xx     Series
+      ' 16F188xx     Series
+      ' 18F1xxK40    series
+
+       #IFDEF VAR(T1CLK)  ;
+
+           If TMRPres <> 0 then
+                 IF TMRPres <> 16 then
+                    IF TMRPres <> 32 then
+                       IF TMRPres <> 48 then
+                          TMRPres = 0
+                       END IF
+                    END IF
                  END IF
-              END IF
            END IF
-        END IF
 
-        'Re-Using TMRPres as TxCON Temp Register
-        IF TMR1ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
+          IF TMR1ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
 
-       'Select Case uses too much memory - changed
-        IF TMRSource = OSC then
-           #ifdef bit(TMR1CS)    'TXCON.1 on some chips
-               Set TMRPres.1 OFF
-           #endif
+          IF TMRSource > 15 OR TMRSource <0 then TRMSource = 0  'failsafe
 
-           #ifdef Bit(TMR1CS1)   'TXcon.7 on other chips
-               Set TMRPres.7 OFF
-           #endif
-           Set TMRPres.3 OFF  'SOSCEN and OSCEN are Always Bit 3
-        END IF
+          T1CLK = TMRSource
+          T1CON = TMRPres
+      #ENDIF
 
-        IF TMRSource = EXT then
-           #ifdef bit(TMR1CS)
-               Set TMRPres.1 ON
-           #endif
+  #ENDIF
 
-           #ifdef Bit(TMR1CS1)
-              Set TMRPres.7 ON
-           #endif
-           Set TMRPres.3 OFF
-        END IF
 
-        If TMRSource = ExtOsc Then
-           #ifdef bit(TMR1CS)
-               Set TMRPres.1 ON
-           #endif
 
-           #ifdef Bit(TMR1CS1)
-               Set TMRPres.7 ON
-           #endif
-            Set TMRPres.3 ON
-        END IF
-       'Done building Temp Variable. Now write register
-       T1CON = TMRPres
-     #endif
-   #endif
 
   #ifdef AVR
      TMR1_TMP = TMRPres

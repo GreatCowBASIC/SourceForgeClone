@@ -1,5 +1,5 @@
 ;    Library for reading/writing to Microchip DS1672 RTC for the GCBASIC compiler
-;    Copyright (C) 2013 - 2015 Thomas Henry and Evan Venn
+;    Copyright (C) 2013 - 2017 Thomas Henry and Evan Venn
 ;
 ;    Version 1.1a  29/1/2015
 ;
@@ -59,17 +59,17 @@
 ;----- Constants
 
  ' These are the addresses of the generic DS1672 Real-Time Clock
- #define DS_AddrWrite 0xD0		           'DS1672 uses 0xD0
- #define DS_AddrRead  0xD1		           'DS1672 uses 0xD1
+ #define DS_AddrWrite 0xD0               'DS1672 uses 0xD0
+ #define DS_AddrRead  0xD1               'DS1672 uses 0xD1
 
  'Addresses for DS1672
- #define DS1672_CounterByte1    0x00		'Start of the time registers - 0x00h
+ #define DS1672_CounterByte1    0x00    'Start of the time registers - 0x00h
  #define DS1672_CounterByte2    0x01              'TIMEKEEPING REGISTER - 0x01h
  #define DS1672_CounterByte3    0x02              'TIMEKEEPING REGISTER - 0x02h
- #define DS1672_CounterByte4    0x03		'TIMEKEEPING REGISTER - 0x03h
+ #define DS1672_CounterByte4    0x03    'TIMEKEEPING REGISTER - 0x03h
 
- #define DS1672_ControlRegister   0x04		'Control register
- #define DS1672_TrickleChargeRegister   0x05	'Control Status register
+ #define DS1672_ControlRegister   0x04    'Control register
+ #define DS1672_TrickleChargeRegister   0x05  'Control Status register
 
 ;-----
 #define DS1672_Enable DS1672_EnableOscillator
@@ -271,7 +271,7 @@ end sub
 
 ;------
 function DS1672_ReadControl
-	'read the current value of the register
+  'read the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -305,8 +305,8 @@ end function
 
 
 sub DS1672_SetTrickleCharger(in MFP_Value)
-	'New function for DS1672. Sets Multifunction Pin status
-	'set the current value of the register
+  'New function for DS1672. Sets Multifunction Pin status
+  'set the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -335,7 +335,7 @@ end sub
 
 ;------
 function DS1672_ReadTrickleCharger
-	'read the current value of the register
+  'read the current value of the register
 
 
   #ifdef HI2C_DATA
@@ -456,7 +456,7 @@ end function
 
 ;------
 function DS1672_ReadRegister ( in DS_Value )
-	'read the current value of the register
+  'read the current value of the register
 
   #ifdef HI2C_DATA
 
@@ -491,7 +491,7 @@ end function
 
 ;------
 sub DS1672_WriteRegister ( in DS_Value, in DS_Temp )
-	'read the current value of the register
+  'read the current value of the register
 
 
   #ifdef HI2C_DATA

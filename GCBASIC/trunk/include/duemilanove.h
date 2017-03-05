@@ -1,5 +1,5 @@
 '    Library to allow the Arduino Duemilanove (mega328) to work with GCBASIC
-'    Copyright (C) 2010 Hugh Considine
+'    Copyright (C) 2010-2017 Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -58,7 +58,7 @@
 
 '''@hide
 Sub InitDuemilanove
-	'Set UART pin directions
-	Dir PORTD.0 In
-	Dir PORTD.1 Out
+  'Set UART pin directions
+  Dir PORTD.0 In
+  Dir PORTD.1 Out
 End Sub

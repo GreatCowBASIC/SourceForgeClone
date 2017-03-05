@@ -1,5 +1,5 @@
 '    EMC1001 routines for the GCBASIC compiler
-'    Copyright (C) 2016 Evan Venn
+'    Copyright (C) 2017 Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@
 #define EMC1001_TEMP_LIMIT_HI_L     6       '  temp high limit low byte
 #define EMC1001_TEMP_LIMIT_LO_H     7       '  temp low limit high byte
 #define EMC1001_TEMP_LIMIT_LO_L     8       '  temp low limit low byte
-#define EMC1001_TEMP_ONE_SHOT    		0x0F       '  temp high limit high byte
+#define EMC1001_TEMP_ONE_SHOT       0x0F       '  temp high limit high byte
 #define EMC1001_TEMP_THERM_LIMIT    0x20       '  THERM limit
 #define EMC1001_TEMP_THERM_HYSTERIS 0x21       '  THERM hysteris
 #define EMC1001_TEMP_SMBus_Timeout  0x22       '  SMBus timeout
@@ -43,7 +43,7 @@
 'Return the read data as the second parameter.
 'The first being... the register address
 
-	sub  EMC1001_Read( in _emc_reg, out _emc_Data )
+  sub  EMC1001_Read( in _emc_reg, out _emc_Data )
 
     HI2C2Start
     Hi2C2Send ( EMC1001_ADDRESS )
@@ -53,12 +53,12 @@
     HI2C2Receive( _emc_Data, NACK )           ;read one byte and conclude
     HI2C2Stop
 
-	end sub
+  end sub
 
 'Write the byte data as the second parameter.
 'The first being... the register address
 
-	sub  EMC1001_Write( in _emc_reg, in _emc_Data )
+  sub  EMC1001_Write( in _emc_reg, in _emc_Data )
 
     HI2C2Start
     Hi2C2Send ( EMC1001_ADDRESS )
@@ -66,4 +66,4 @@
     HI2C2Send( _emc_Data )         ; Send the data
     HI2C2Stop
 
-	end sub
+  end sub

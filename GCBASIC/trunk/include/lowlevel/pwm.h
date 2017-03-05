@@ -1,7 +1,5 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2014 Hugh Considine
-'    Copyright (C) 2015 William Roth
-'    Copyright (C) 2016 Evan Venn
+'    Copyright (C) 2006 - 2017 Hugh Considine, William Roth and Evan R. Venn
 
 
 '    This library is free software; you can redistribute it and/or
@@ -37,6 +35,7 @@
 ''' 1/12/2016 Revised to enhance variable usafe when specific registers do not exist
 ''' 3/12/2016 Revised to remove script that is not required
 ''' 4/12/2016 Improved to remove creation of unneeded variables when the register  does not exist
+''' 20/2/2017 Revised to add T2CLKCON to resolve T2CLK issues when using GPASM
 '''
 'Defaults:
 #define PWM_Freq 38      'Frequency of PWM in KHz
@@ -291,10 +290,10 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)
           'Set Clock Source, if required
           #ifdef var(T2CLKCON)
               'Set to FOSC/4 for backward compatibility
-              T2CS0 = 1
-              T2CS1 = 0
-              T2CS2 = 0
-              T2CS3 = 0
+              T2CLKCON.T2CS0 = 1
+              T2CLKCON.T2CS1 = 0
+              T2CLKCON.T2CS2 = 0
+              T2CLKCON.T2CS3 = 0
           #endif
 
   #ifdef HPWM_FAST
