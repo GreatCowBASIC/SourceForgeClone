@@ -85,7 +85,26 @@ PIC and Atmel AVR microcontrollers</td>
 News:</span></td>
 </tr>
 <tr>
-<td><span style="font-weight: bold;">15/12/2016<br>
+<td><span style="font-weight: bold;">1/2/2017<br><br></span><p style="margin-left: 40px;"><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">The Great Cow
+Basic development team have
+published <b>another</b> release that further enhances the
+Great Cow Basic compiler
+capabilities. &nbsp;This release &nbsp;is callled v0.97.00</span><o:p></o:p></p>
+
+<blockquote>What has changed in v.0.97.00 since the previous release? A
+lot! I would recommend this as a mandated update for everyone using
+Great Cow BASIC.<ul><li>Introduction of the PPSTool for Great Cow
+BASIC. This new tool support the easy configuration of PPS when using
+Microchip Pics. Thanks go to Pete Reverett.</li><li>New Software Serial libraries. Optimised for size and performance. Includes Demos and Help. Thanks go to Frank Steinberg.</li><li>Added
+priority to #startup to support PPS methods. You can now prioritise the
+order in which the key methods are called when initialising a chip.
+Updated 65 demonstration files to use the revised #startup for PPS</li><li>Fixes to the installer to handle Windows 10 and revised the Linux installer.</li><li>Added Oscillator Support for PIC18FxxK40</li><li>Refreshed all the .dat files to revert LF files, where required, and, to improve register/bit order</li><li>More
+support for Microchip 8-bit microprocessors. We have updated the
+compiler to support the new instruction set and changed the format of
+the .dat files with Interrupt on Change now supports PortChange for any
+IOC event</li><li>GETUseriD. A new libary to support ID identification of Microchip microcontrollers. See the demo folder for lots of examples.</li><li>Improved Help and IDE Context Help.</li><li>Improved I2C Slave support via a State Library.</li><li>GLCD driver for the SDD1306 now supports SPI.</li><li>Improved support for Microchip and Atmel 8-bit microprocessors with over 900 different processor types now supported.</li><li>Over
+570 demonstration files that showcase the breadth and depth of Great
+Cow Basic capabilities with new CLC demonstration for Xpress board.</li><li>Various fixes for reported bugs and issues.</li></ul></blockquote><span style="font-weight: bold;"><br><br>15/12/2016<br>
 <br>
 </span>
 <p style="margin-left: 40px;"><span style="font-family: &quot;Arial&quot;,&quot;sans-serif&quot;;">The Great Cow
