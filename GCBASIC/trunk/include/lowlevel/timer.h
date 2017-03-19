@@ -84,7 +84,7 @@
 ' 7/12/2016:  Added optimisation Constants
 ' 10/12/2016: Revised Settimer to remove typo
 ' 13/01/2017: Updated Timer1/3/5/7 Support for newer chips with TxCLK register
-
+' 18/04/2017: Corrected OSC(Source)  Support for PIC Timers 3/5/7 - WMR
 '***********************************************************
 
 'Subroutines:
@@ -1538,56 +1538,99 @@ End Sub
 Sub InitTimer3(In TMRSource, In TMRPres)
 
   #ifdef PIC
-   'See Inittimer1 for notes
-     #ifdef Var(T3CON)
-        If TMRPres <> 0 then
-           IF TMRPres <> 16 then
-              IF TMRPres <> 32 then
-                 IF TMRPres <> 48 then
-                    TMRPres = 0
+    'Pwr On Reset State of TxCON for 1/3/5/7 is "0"
+    'TXCON Timer REGISTER for 1/3/5/7 are NOT the Same on ALL PICS
+    'TMRON is Bit0 on all Chips
+
+    '** OSCEN & SOSCEN are always TxCON.3 and perform the same function
+    'See Datasheet for Detailed Register Information
+
+     #ifdef Var(T3CON) 'ALL Pics w/Timer3 module have T3CON reg
+
+        #IF NoVar(T3CLK)
+
+           'Test for valid Pres parameter
+            'uses less memory than multiple boulean "AND"
+            If TMRPres <> 0 then
+               IF TMRPres <> 16 then
+                  IF TMRPres <> 32 then
+                     IF TMRPres <> 48 then
+                        TMRPres = 0
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+            'Re-Using TMRPres as TxCON Temp Register
+            IF TMR3ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
+
+           'Select Case uses too much memory - changed
+            IF TMRSource = OSC then
+               #ifdef bit(TMR1CS)    'TXCON.1 on some chips
+                   Set TMRPres.1 OFF
+               #endif
+
+               #ifdef Bit(TMR3CS1)   'TXcon.7 on other chips
+                   Set TMRPres.7 OFF
+               #endif
+               Set TMRPres.3 OFF  'SOSCEN and OSCEN are Always Bit 3
+            END IF
+
+            IF TMRSource = EXT then
+               #ifdef bit(TMR3CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR3CS1)
+                  Set TMRPres.7 ON
+               #endif
+               Set TMRPres.3 OFF
+            END IF
+
+            If TMRSource = ExtOsc Then
+               #ifdef bit(TMR3CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR3CS1)
+                   Set TMRPres.7 ON
+               #endif
+                Set TMRPres.3 ON
+            END IF
+           'Done building Temp Variable. Now write register
+           T3CON = TMRPres
+         #endif
+     #ENDIF
+
+
+      ; 33 Newer Chips have TxCLK Register ( TIMER 1/3/5/7 )
+      ;
+      ' 12/16F16xx   Series
+      ' 16F153xx     Series
+      ' 16F188xx     Series
+      ' 18F1xxK40    series
+
+       #IFDEF VAR(T3CLK)  ;
+
+           If TMRPres <> 0 then
+                 IF TMRPres <> 16 then
+                    IF TMRPres <> 32 then
+                       IF TMRPres <> 48 then
+                          TMRPres = 0
+                       END IF
+                    END IF
                  END IF
-              END IF
            END IF
-        END IF
 
-        IF TMR3ON = 1 then Set TMRPres.0 ON
+          IF TMR3ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
 
-        IF TMRSource = OSC then
-           #ifdef bit(TMR3CS)
-               Set TMRPres.1 OFF
-           #endif
+          IF TMRSource > 15 OR TMRSource <0 then TRMSource = 0  'failsafe
 
-           #ifdef Bit(TMR3CS1)
-               Set TMRPres.7 OFF
-           #endif
-             Set TMRPres.3 OFF
-        END IF
+          T3CLK = TMRSource
+          T3CON = TMRPres
+      #ENDIF
 
-        IF TMRSource = EXT then
-           #ifdef bit(TMR3CS)
-               Set TMRPres.1 ON
-           #endif
-
-           #ifdef Bit(TMR3CS1)
-              Set TMRPres.7 ON
-           #endif
-             Set TMRPres.3 OFF
-        END IF
-
-        If TMRSource = ExtOsc Then
-           #ifdef bit(TMR3CS)
-               Set TMRPres.1 ON
-           #endif
-
-           #ifdef Bit(TMR3CS1)
-               Set TMRPres.7 ON
-           #endif
-             Set TMRPres.3 ON
-        END IF
-
-       T3CON = TMRPres  'write the register
-     #endif
-  #endif
+  #ENDIF
 
    #ifdef AVR
       TMR3_TMP = TMRPres
@@ -1626,56 +1669,99 @@ End Sub
 
 Sub InitTimer5(In TMRSource, In TMRPres)
   #ifdef PIC
-      #ifdef Var(T5CON)
-       'failsafe
-        If TMRPres <> 0 then
-           IF TMRPres <> 16 then
-              IF TMRPres <> 32 then
-                 IF TMRPres <> 48 then
-                    TMRPres = 0
+    'Pwr On Reset State of TxCON for 1/3/5/7 is "0"
+    'TXCON Timer REGISTER for 1/3/5/7 are NOT the Same on ALL PICS
+    'TMRON is Bit0 on all Chips
+
+    '** OSCEN & SOSCEN are always TxCON.3 and perform the same function
+    'See Datasheet for Detailed Register Information
+
+     #ifdef Var(T3CON) 'ALL Pics w/Timer5 module have T3CON reg
+
+        #IF NoVar(T5CLK)
+
+           'Test for valid Pres parameter
+            'uses less memory than multiple boulean "AND"
+            If TMRPres <> 0 then
+               IF TMRPres <> 16 then
+                  IF TMRPres <> 32 then
+                     IF TMRPres <> 48 then
+                        TMRPres = 0
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+            'Re-Using TMRPres as TxCON Temp Register
+            IF TMR5ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
+
+           'Select Case uses too much memory - changed
+            IF TMRSource = OSC then
+               #ifdef bit(TMR5CS)    'TXCON.1 on some chips
+                   Set TMRPres.1 OFF
+               #endif
+
+               #ifdef Bit(TMR5CS1)   'TXcon.7 on other chips
+                   Set TMRPres.7 OFF
+               #endif
+               Set TMRPres.3 OFF  'SOSCEN and OSCEN are Always Bit 3
+            END IF
+
+            IF TMRSource = EXT then
+               #ifdef bit(TMR5CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR5CS1)
+                  Set TMRPres.7 ON
+               #endif
+               Set TMRPres.3 OFF
+            END IF
+
+            If TMRSource = ExtOsc Then
+               #ifdef bit(TMR5CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR5CS1)
+                   Set TMRPres.7 ON
+               #endif
+                Set TMRPres.3 ON
+            END IF
+           'Done building Temp Variable. Now write register
+           T3CON = TMRPres
+         #endif
+     #ENDIF
+
+
+      ; 33 Newer Chips have TxCLK Register ( TIMER 1/3/5/7 )
+      ;
+      ' 12/16F16xx   Series
+      ' 16F153xx     Series
+      ' 16F188xx     Series
+      ' 18F1xxK40    series
+
+       #IFDEF VAR(T5CLK)  ;
+
+           If TMRPres <> 0 then
+                 IF TMRPres <> 16 then
+                    IF TMRPres <> 32 then
+                       IF TMRPres <> 48 then
+                          TMRPres = 0
+                       END IF
+                    END IF
                  END IF
-              END IF
            END IF
-        END IF
 
-        'Re-Using TMRPres as T5CON Temp Register
-        IF TMR5ON = 1 then Set TMRPres.0 ON
+          IF TMR5ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
 
-        IF TMRSource = OSC then
-             #ifdef bit(TMR5CS)
-                 Set TMRPres.1 OFF
-             #endif
+          IF TMRSource > 15 OR TMRSource <0 then TRMSource = 0  'failsafe
 
-             #ifdef Bit(TMR5CS1)
-                 Set TMRPres.7 OFF
-             #endif
-             Set TMRPres.3 OFF
-        END IF
+          T5CLK = TMRSource
+          T5CON = TMRPres
+      #ENDIF
 
-        IF TMRSource = EXT then
-             #ifdef bit(TMR5CS)
-                 Set TMRPres.1 ON
-             #endif
-
-             #ifdef Bit(TMR5CS1)
-                Set TMRPres.7 ON
-             #endif
-             Set TMRPres.3 OFF
-        END IF
-
-        If TMRSource = ExtOsc Then
-             #ifdef bit(TMR5CS)
-                 Set TMRPres.1 ON
-             #endif
-
-             #ifdef Bit(TMR5CS1)
-                 Set TMRPres.7 ON
-             #endif
-            Set TMRPres.3 ON
-        END IF
-        T5CON = TMRPres 'Write the Register
-     #endif
-  #endif
+  #ENDIF
 
   #ifdef AVR
      TMR5_TMP = TMRPres
@@ -1706,56 +1792,99 @@ End Sub
 
 Sub InitTimer7(In TMRSource, In TMRPres)
   #ifdef PIC
-     'See Intimer1 for notes
-     #ifdef Var(T7CON)
-       'Test for valid Pres parameter
-        If TMRPres <> 0 then
-           IF TMRPres <> 16 then
-              IF TMRPres <> 32 then
-                 IF TMRPres <> 48 then
-                    TMRPres = 0
+    'Pwr On Reset State of TxCON for 1/3/5/7 is "0"
+    'TXCON Timer REGISTER for 1/3/5/7 are NOT the Same on ALL PICS
+    'TMRON is Bit0 on all Chips
+
+    '** OSCEN & SOSCEN are always TxCON.3 and perform the same function
+    'See Datasheet for Detailed Register Information
+
+     #ifdef Var(T3CON) 'ALL Pics w/Timer3 module have T3CON reg
+
+        #IF NoVar(T3CLK)
+
+           'Test for valid Pres parameter
+            'uses less memory than multiple boulean "AND"
+            If TMRPres <> 0 then
+               IF TMRPres <> 16 then
+                  IF TMRPres <> 32 then
+                     IF TMRPres <> 48 then
+                        TMRPres = 0
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+            'Re-Using TMRPres as TxCON Temp Register
+            IF TMR3ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
+
+           'Select Case uses too much memory - changed
+            IF TMRSource = OSC then
+               #ifdef bit(TMR1CS)    'TXCON.1 on some chips
+                   Set TMRPres.1 OFF
+               #endif
+
+               #ifdef Bit(TMR3CS1)   'TXcon.7 on other chips
+                   Set TMRPres.7 OFF
+               #endif
+               Set TMRPres.3 OFF  'SOSCEN and OSCEN are Always Bit 3
+            END IF
+
+            IF TMRSource = EXT then
+               #ifdef bit(TMR3CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR3CS1)
+                  Set TMRPres.7 ON
+               #endif
+               Set TMRPres.3 OFF
+            END IF
+
+            If TMRSource = ExtOsc Then
+               #ifdef bit(TMR3CS)
+                   Set TMRPres.1 ON
+               #endif
+
+               #ifdef Bit(TMR3CS1)
+                   Set TMRPres.7 ON
+               #endif
+                Set TMRPres.3 ON
+            END IF
+           'Done building Temp Variable. Now write register
+           T3CON = TMRPres
+         #endif
+     #ENDIF
+
+
+      ; 33 Newer Chips have TxCLK Register ( TIMER 1/3/5/7 )
+      ;
+      ' 12/16F16xx   Series
+      ' 16F153xx     Series
+      ' 16F188xx     Series
+      ' 18F1xxK40    series
+
+       #IFDEF VAR(T3CLK)  ;
+
+           If TMRPres <> 0 then
+                 IF TMRPres <> 16 then
+                    IF TMRPres <> 32 then
+                       IF TMRPres <> 48 then
+                          TMRPres = 0
+                       END IF
+                    END IF
                  END IF
-              END IF
            END IF
-        END IF
 
-         IF TMR7ON = 1 then Set TMRPres.0 ON
+          IF TMR3ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
 
-        IF TMRSource = OSC then
-           #ifdef bit(TMR7CS)
-               Set TMRPres.1 OFF
-           #endif
+          IF TMRSource > 15 OR TMRSource <0 then TRMSource = 0  'failsafe
 
-           #ifdef Bit(TMR7CS1)
-               Set TMRPres.7 OFF
-           #endif
-           Set TMRPres.3 OFF
-         END IF
+          T3CLK = TMRSource
+          T3CON = TMRPres
+      #ENDIF
 
-        IF TMRSource = EXT then
-           #ifdef bit(TMR7CS)
-                Set TMRPres.1 ON
-            #endif
-
-           #ifdef Bit(TMR7CS1)
-               Set TMRPres.7 ON
-           #endif
-           Set TMRPres.3 OFF
-         END IF
-
-        If TMRSource = ExtOsc Then
-           #ifdef bit(TMR7CS)
-              Set TMRPres.1 ON
-           #endif
-
-           #ifdef Bit(TMR7CS1)
-              Set TMRPres.7 ON
-           #endif
-           Set TMRPres.3 ON
-        END IF
-         T7CON = TMRPres   ' write register
-     #endif
-  #endif
+  #ENDIF
 End Sub
 
 Sub InitTimer8 (In TMRPres, In TMRPost)
