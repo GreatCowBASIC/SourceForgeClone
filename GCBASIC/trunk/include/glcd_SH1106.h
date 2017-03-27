@@ -118,7 +118,7 @@ Sub InitGLCD_SH1106
 
 
       #IFDEF HI2C_DATA
-             HI2C2Mode Master
+             HI2CMode Master
       #ENDIF
 
    'Setup code for SH1106 controllers

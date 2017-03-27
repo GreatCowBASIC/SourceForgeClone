@@ -171,7 +171,7 @@ end sub
 Sub InitGLCD_SSD1306
 
     #IFDEF HI2C_DATA
-           HI2C2Mode Master
+           HI2CMode Master
     #ENDIF
     #ifdef S4Wire_DATA
       dir MOSI_SSD1306 Out
