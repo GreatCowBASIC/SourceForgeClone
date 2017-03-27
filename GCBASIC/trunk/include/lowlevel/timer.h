@@ -84,7 +84,9 @@
 ' 7/12/2016:  Added optimisation Constants
 ' 10/12/2016: Revised Settimer to remove typo
 ' 13/01/2017: Updated Timer1/3/5/7 Support for newer chips with TxCLK register
-' 18/04/2017: Corrected OSC(Source)  Support for PIC Timers 3/5/7 - WMR
+' 18/03/2017: Corrected OSC(Source)  Support for PIC Timers 3/5/7 - WMR
+' 21/03/2017: Corrected Timer0 Clock Source select bits constants for 16f18855 and others
+'             Reverted the missing Settimer for AVR
 '***********************************************************
 
 'Subroutines:
@@ -333,8 +335,8 @@
 
 
   'support 16f18855 series 8/16 bit timers
-  #define   TMR0_CLC1       0xE0
-  #define   TMR0_SOSC       0xC0
+  #define   TMR0_CLC1       0xC0
+  #define   TMR0_SOSC       0xA0
   #define   TMR0_LFINTOSC     0x80
   #define   TMR0_HFINTOSC     0x60
   #define   TMR0_FOSC4      0x40
@@ -1061,6 +1063,43 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
      #endif
     #endif
 
+  #endif
+
+  #ifdef AVR
+    #ifdef Var(TCNT0)
+      If TMRNumber = 0 Then
+        TCNT0 = TMRValue
+      End If
+    #endif
+    #ifdef Var(TCNT1L)
+      If TMRNumber = 1 Then
+        TCNT1H = TMRValue_H
+        TCNT1L = TMRValue
+      End If
+    #endif
+    #ifdef Var(TCNT2)
+      If TMRNumber = 2 Then
+        TCNT2 = TMRValue
+      End If
+    #endif
+    #ifdef Var(TCNT3L)
+      If TMRNumber = 3 Then
+        TCNT3H = TMRValue_H
+        TCNT3L = TMRValue
+      End If
+    #endif
+    #ifdef Var(TCNT4L)
+      If TMRNumber = 4 Then
+        TCNT4H = TMRValue_H
+        TCNT4L = TMRValue
+      End If
+    #endif
+    #ifdef Var(TCNT5L)
+      If TMRNumber = 5 Then
+        TCNT5H = TMRValue_H
+        TCNT5L = TMRValue
+      End If
+    #endif
   #endif
 
 End Sub

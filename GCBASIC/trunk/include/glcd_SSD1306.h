@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015 - 2017 Evan Venn and Kent Schafer
+'    Copyright (C) 2015 - 2017 Kent Schafer and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,8 @@
 ' 1.02 Add soft SPI (Kent Schafer)
 ' 1.03 Revised S4Wire_Data to cater for i2c or hwi2c being used at same time as SPI
 ' 1.04 Revised for performance only. No functional changes
+' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
+
 
 
 #define SSD1306_SETCONTRAST 0x81
@@ -77,7 +79,7 @@
 #define SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL 0x29
 #define SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL 0x2A
 
-#startup InitGLCD_SSD1306
+#startup InitGLCD_SSD1306, 100
 
 'Setup code for SSD1306 controllers
 #if GLCD_TYPE = GLCD_TYPE_SSD1306
@@ -90,7 +92,7 @@
 #endif
 
 '''@hide
-Sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
+sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
 
     #ifdef S4Wire_DATA
 
@@ -123,10 +125,10 @@ Sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
 
     #endif
 
-End Sub
+end sub
 
 '''@hide
-Sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
+sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
 
     #ifdef S4Wire_DATA
 
@@ -160,15 +162,16 @@ Sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
     #endif
 
 
-End Sub
+end sub
 
 
 
 
 '''@hide
 Sub InitGLCD_SSD1306
+
     #IFDEF HI2C_DATA
-           HIC2INIT
+           HI2C2Mode Master
     #ENDIF
     #ifdef S4Wire_DATA
       dir MOSI_SSD1306 Out
@@ -295,7 +298,7 @@ End Sub
 '''@param GLCDX X coordinate of pixel
 '''@param GLCDY Y coordinate of pixel
 '''@param GLCDColour State of pixel ( GLCDBackground | GLCDForeground )
-Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
+sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
 
     'Set pixel at X, Y on LCD to State
     'X is 0 to 127
@@ -304,8 +307,6 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
 
   #if GLCD_TYPE = GLCD_TYPE_SSD1306
 
-
-
           'SSD1306_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
           'faster than /8
           SSD1306_BufferLocationCalc = GLCDY
@@ -313,8 +314,17 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
             Set C Off
             Rotate SSD1306_BufferLocationCalc Right
           End Repeat
-          SSD1306_BufferLocationCalc = SSD1306_BufferLocationCalc * GLCD_WIDTH
 
+          'faster than * 128
+          #if GLCD_WIDTH=128
+            Set C Off
+            Repeat 7
+              Rotate SSD1306_BufferLocationCalc Left
+            End Repeat
+          #endif
+          #if GLCD_WIDTH <> 128
+            SSD1306_BufferLocationCalc = SSD1306_BufferLocationCalc * GLCD_WIDTH
+          #endif
           SSD1306_BufferLocationCalc = GLCDX + SSD1306_BufferLocationCalc+1
           GLCDDataTemp = SSD1306_BufferAlias(SSD1306_BufferLocationCalc)
 
@@ -337,13 +347,14 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
              GLCDDataTemp = GLCDDataTemp Or GLCDChange
           End If
 
-          SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = GLCDDataTemp
-          Cursor_Position_SSD1306 ( GLCDX, GLCDY )
-          Write_Data_SSD1306 ( GLCDDataTemp )
-
+          if SSD1306_BufferAlias(SSD1306_BufferLocationCalc) <> GLCDDataTemp then
+            SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = GLCDDataTemp
+            Cursor_Position_SSD1306 ( GLCDX, GLCDY )
+            Write_Data_SSD1306 ( GLCDDataTemp )
+          end if
   #endif
 
-End Sub
+End sub
 
 
 '''Takes raw pixel positions and translates to XY char positions
