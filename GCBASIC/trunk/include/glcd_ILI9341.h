@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015, 2017 Evan Venn and Paolo Iocco
+'    Copyright (C) 2015, 2017 Paolo Iocco and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -22,10 +22,11 @@
 ' 04/10/2015:      Revised to add ReadID.           Evan R Venn
 ' 14/07/2016:      Revised to resolve Linux build.  Paolo Iocco edited by Evan R Venn
 ' 08/11/2016:      Revised to resolve 18f init issues by Evan R Venn
+' 27/03/2017:       Revised to fix initialisation issue from PIC when using Priority Startup
 
-'
-'Hardware settings
-'Type
+
+' Hardware settings
+' Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_ILI9341"
 
 'Serial lines (ILI9341 only)
@@ -153,11 +154,6 @@ Sub InitGLCD_ILI9341
 
   'Setup code for ILI9341 controllers
   #if GLCD_TYPE = GLCD_TYPE_ILI9341
-
-  ' Init required if using serial for early state debug
-  #if USART_BAUD_RATE
-      INITUSART
-  #endif
 
     'Pin directions
     Dir ILI9341_CS Out

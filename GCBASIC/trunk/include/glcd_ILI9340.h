@@ -30,6 +30,7 @@
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 14/07/2016:      Revised to resolve Linux build.  Paolo Iocco edited by Evan R Venn
 ' 08/11/2016:      Revised to resolve 18f init issues by Evan R Venn
+' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
 '
 'Hardware settings
 'Type
@@ -159,11 +160,6 @@ Sub InitGLCD_ILI9340
 
   'Setup code for ILI9340 controllers
   #if GLCD_TYPE = GLCD_TYPE_ILI9340
-
-  ' Init required if using serial for early state debug
-  #if USART_BAUD_RATE
-      INITUSART
-  #endif
 
     'Pin directions
     Dir ILI9340_CS Out

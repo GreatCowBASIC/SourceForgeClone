@@ -14,7 +14,9 @@
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+'
+' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
+'
 'Notes:
 ' Supports SH1106 controller only.
 
@@ -113,11 +115,11 @@ End Sub
 
 Sub InitGLCD_SH1106
 
-debug = 0
 
-    #IFDEF HI2C_DATA
-           HIC2INIT
-    #ENDIF
+
+      #IFDEF HI2C_DATA
+             HI2C2Mode Master
+      #ENDIF
 
    'Setup code for SH1106 controllers
     'Init sequence for 132x64 OLED module
