@@ -565,11 +565,11 @@ Redim SHARED VarLoc(1) As Integer
 DIM SHARED MemRanges(50) As String: MRC = 0
 Dim Shared NoBankLoc(10) As DataMemBankType: NoBankLocs = 0
 Dim SHARED StringStore(0 To 1000) As ProgString: SSC = 0: SASC = 0
-Dim Shared ConfigOps(200) As ConfigOp: COC = 0
+Dim Shared ConfigOps(700) As ConfigOp: COC = 0
 Dim Shared ConfigSettings As LinkedListElement Pointer
 Dim Shared EqConfigSettings As LinkedListElement Pointer
 Dim Shared ChipConfigCode As CodeSection Pointer
-DIM SHARED DefCONFIG(200) As String: DCOC = 0
+DIM SHARED DefCONFIG(700) As String: DCOC = 0
 DIM SHARED ConfigMask(20) As Integer
 DIM SHARED DataTable(100) As DataTableType: DataTables = 0
 DIM SHARED Messages(1 TO 2, 200) As String: MSGC = 0
@@ -15157,6 +15157,3 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
   'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
   Return 0
 END FUNCTION
-
-
-
