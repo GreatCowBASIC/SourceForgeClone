@@ -22,6 +22,8 @@
 'COMMANDS UNUSABLE!
 '********************************************************************************
 
+'This is full of debug. LEAVE IT IN!  WE NEED IT TO DEBUG THIS !
+
 'Original code by Hugh Considine
 '18Fxx31 code by Kent Schafer
 'added ReadAD12 2/12/2015
@@ -66,6 +68,59 @@
 '11/10/2016 - Reverted READAD and READAD10 commands for compatbility
 '             added ReadAD, ReadAD10 and ReadAD12 for Differential reads
 '18/10/2016 - Added the debug. This was driving me mad!
+'14/4/2017 -  Resolved a host of errors as follows:
+'             Test results and chips used shown below. All tests on ADC0 (just dont have time to test every option!)
+
+'ReadAD
+'          READAD (AN0) – 16f1789, 16f877a, 16f1939, 18f4525, 16f88, 18f45k80
+'             The ADN_PORT call that I must have replicated from other methods was incorrect. As, in this case, no value would have been returned.
+'             Needed to resolve  CHSN ADNREF = ADCON2 = 0x0F;  not being set.  By setting the CHSN3:0 bits.
+'             Also emoved ADN_PORT <> 0, then revised the read registers to return a byte.
+'
+'          READAD (AN0, true) – 16f1789, 16f877a, 16f1939, 18f4525, 16f88, 18f45k80
+'             This needs to return a byte.
+'             Resolved CHSN ADNREF = ADCON2 = 0x0F;  not being set.  By setting the CHSN3:0 bits.
+'
+'          READAD (AN0, AN3) – 16f1789, 18f45k80
+'             using -VREF
+'             This needs to return a byte.
+'             Reverted to READAD = READAD / 16 as the ROTATE command destroyed the integer values
+'
+'
+'READAD10
+'          READAD10(AN0) 16f1789, 16f877a, 16f1939, 18f4525, 16f88, 18f45k80
+'             This needs to return the full range of the ADC module – see the HELP. I have updated the range to 0-4096.  You may not agree with this… but, Hugh insists.
+'             Needed to resolve  CHSN ADNREF = ADCON2 = 0x0F;  not being set.  By setting the CHSN3:0 bits within the existing IF-ENDIF
+'
+'          READ10(AN0, AN2)  – 16f1789, 18f45k80
+'            For differential ADC reading, the returned value is an integer as negative values can be returned.
+'            Works ok
+'
+'          READAD10(AN0, TRUE)  – 16f1789, 18f45k80
+'            Undocumented. Completed test to examine results
+'            Works ok returns correct value
+'
+'READAD12
+'          READAD12(AN0)  – 16f1789, 16f877a, 16f1939, 18f4525, 18f45k80
+'            This needs to return the full range of the ADC module 0-4096.  .
+'            Needed to resolve  CHSN ADNREF = ADCON2 = 0x0F;  not being set.  By setting the CHSN3:0 bits within the existing IF-ENDIF
+'
+'          READAD12(AN0, AN2)  – 16f1789, 18f45k80
+'             For differential ADC reading, the returned value is an integer as negative values can be returned.
+'             Works ok
+'
+'          READAD12(AN0, TRUE)  – 16f1789, 18f45k80
+'             Undocumented. Completed test to examine results
+'             Needed to resolve  CHSN ADNREF = ADCON2 = 0x0F;  not being set.  By setting the CHSN3:0 bits within the existing IF-ENDIF
+'             Now works ok returns correct value
+' End of 11/4/2017 -  changes
+
+
+
+
+
+
+
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
 'ADFormat(type)   Choose Left or Right justified
@@ -96,6 +151,8 @@
 #define MediumSpeed 128
 #define LowSpeed 0
 #define InternalClock 192
+
+#define AD_Acquisition_Time_Select_bits 0b111  'set the three bits
 
 'ADC reference sources (AVR only)
 #define AD_REF_SOURCE AD_REF_AVCC
@@ -732,9 +789,6 @@ macro LLReadAD (ADLeftAdjust)
       'Choose port
       #IFDEF Bit(CHS0)
 
-        ' Future capability.. a lot faster! Sets the bits.
-            ' ADCON0 = ADCON0 or FnLSL (ADReadPort, 2)
-
         #IFDEF DebugADC_H
             NOP '#IFDEF Bit(CHS0). Clear channels bits. @DebugADC_H
         #ENDIF
@@ -1227,6 +1281,10 @@ end macro
 
 'Returns Byte
 function ReadAD( in ADReadPort) as byte
+  'ADFM must be OFF! BACKWARDS Compatbility!
+  'ADFM should be be changed.
+  'Always LEFT justified
+
 
   #IFDEF DebugADC_H
       NOP 'ReadAD( in ADReadPort) as byte. @DebugADC_H
@@ -1245,6 +1303,13 @@ function ReadAD( in ADReadPort) as byte
           ADPCH = ADReadPort
       #ENDIF
 
+      'A differential ADC
+      #IFDEF Bit(CHSN0)
+
+          SetNegativeChannelSelectbits
+
+      #ENDIF
+
   #ENDIF
 
 '***************************************
@@ -1252,27 +1317,65 @@ function ReadAD( in ADReadPort) as byte
 'Perform conversion
 LLReadAD 1
 
-  'Write output
-   #IFDEF PIC
 
-      #IFDEF Var(ADRESH)
-          ReadAD = ADRESH
-      #ENDIF
-      #IFDEF NoVar(ADRESH)
-          ReadAD = ADRES
-      #ENDIF
+ #IFDEF DebugADC_H
+    NOP '@Write output Readad#1
+#ENDIF
+
+ #IFDEF PIC
+
+
+    #IFNDEF Bit(CHSN0)
+
+         #IFDEF DebugADC_H
+            NOP 'Chips with no differential ADC (MOST CHIPS). @DebugADC_H
+        #ENDIF
+
+        #IFDEF Var(ADRESH)
+            ReadAD = ADRESH
+        #ENDIF
+        #IFDEF NoVar(ADRESH)
+            ReadAD = ADRES
+        #ENDIF
+    #ENDIF
+
+
+    ' Support 8-bit differential reads
+    #IFDEF Bit(CHSN0)
+
+        #IFDEF DebugADC_H
+            NOP 'Chip has differential ADC. @DebugADC_H
+        #ENDIF
+
+        'Write output
+          #IFDEF NoVar(ADRESL)
+              ReadAD = ADRES
+          #ENDIF
+
+          #IFDEF Var(ADRESL)
+              #IFDEF DebugADC_H
+                  NOP 'Read registers, to a word var and then divide by 4 to make a representative byte. @DebugADC_H
+              #ENDIF
+
+              'As we are ALWAYS LEFT JUSTIFIED just return the ADRESH ignoring ADRESL
+              #IFDEF Var(ADRESH)
+                  ReadAD = ADRESH
+              #ENDIF
+'
+          #ENDIF
+    #ENDIF
 
       #IFDEF Bit(ADFM)
 
           #IFDEF DebugADC_H
-              NOP '#IFDEF Bit(ADFM). Setting ADFM @DebugADC_H
+              NOP '#IFDEF Bit(ADFM). Setting ADFM. @DebugADC_H
           #ENDIF
 
           SET ADFM OFF
       #ENDIF
 
+ #ENDIF
 
-   #ENDIF
 
    #IFDEF AVR
       ReadAD = ADCH
@@ -1283,6 +1386,7 @@ End Function
 'ReadAD - suppports Differential reads
 function ReadAD( in ADReadPort, in ADN_PORT ) as integer
  'added optional ADN_PORT to support differential ADC
+  'Always LEFT justified
 
   #IFDEF DebugADC_H
       NOP 'ReadAD( in ADReadPort, in ADN_PORT ) as integer. @DebugADC_H
@@ -1290,19 +1394,24 @@ function ReadAD( in ADReadPort, in ADN_PORT ) as integer
 
   #IFDEF PIC
 
-      #IFDEF Bit(ADFM)
-
-          #IFDEF DebugADC_H
-              NOP '#IFDEF Bit(ADFM). Setting ADFM @DebugADC_H
-          #ENDIF
-
-          SET ADFM ON
-      #ENDIF
-
+      'A differential ADC
       #IFDEF Bit(CHSN0)
 
+        'ADFM can be set to ON here as this will not impacted by backwards compatbility
+        'Rational is that the orginal READAD DID not chnage ADFM, so, we need ensure we do not mess up on Differential chips
+         #IFDEF DebugADC_H
+             NOP '#IFDEF Bit(ADFM). Setting ADFM in READAD() @DebugADC_H
+         #ENDIF
+         SET ADFM ON
+
         IF ADN_PORT <> 255 then
+
+
                configNegativeChannel
+        Else
+
+              SetNegativeChannelSelectbits
+
         END IF
 
       #ENDIF
@@ -1311,12 +1420,18 @@ function ReadAD( in ADReadPort, in ADN_PORT ) as integer
       #IFDEF VAR(ADPCH)
           ADPCH = ADReadPort
       #ENDIF
+
   #ENDIF
 
 '***************************************
 
 'Perform conversion
 LLReadAD 1
+
+ #IFDEF DebugADC_H
+    NOP '@Write output Readad#2. @DebugADC_H
+#ENDIF
+
 
 'Write output
  #IFDEF PIC
@@ -1327,14 +1442,37 @@ LLReadAD 1
 
             #IFDEF Var(ADRESL)
                 IF ADN_PORT = True then
-                    'Force an 8 Bit result
-                    ReadAD = FnLSL(ADRESH,8) + ADRESL
-                    ReadAD = FnLSR(ReadAD,2)
+
+
+                    #IFDEF Bit(ADRMD)  'check for 10 or 12 bit register bit
+                        #IFDEF DebugADC_H
+                            NOP 'ADN_PORT = True, so #IFDEF Bit(ADRMD).  @DebugADC_H
+                        #ENDIF
+
+                        'Force an 8 Bit result for a 12bit number
+                        ReadAD = FnLSL(ADRESH,8) + ADRESL
+                        ReadAD = FnLSR(ReadAD,2)
+                    #ENDIF
+                    #IFNDEF Bit(ADRMD)
+                        #IFDEF DebugADC_H
+                            NOP 'ADN_PORT = True, so #IFNDEF Bit(ADRMD).  @DebugADC_H
+                        #ENDIF
+
+'                       'Return an 8 Bit result for a 10bit number, as we are ALWAYS LEFT JUSTIFIED just return the ADRESH ignoring ADRESL
+                        #IFDEF Var(ADRESH)
+                            ReadAD = ADRESH
+                        #ENDIF
+                        #IFDEF NoVar(ADRESH)
+                            ReadAD = ADRES
+                        #ENDIF
+
+                    #ENDIF
+
+
                 End if
             #ENDIF
 
             #IFDEF NoVar(ADRESL)
-                'This is how the code was before v0.95.010
                 'the function just returned ADRESH
                 ReadAD = ADRESH
             #ENDIF
@@ -1362,12 +1500,8 @@ LLReadAD 1
                   ReadAD_H = ADRESH
               #ENDIF
 
+              READAD = READAD / 16
 
-
-              Repeat 4
-                  ' ReadAd = ReadAd / 16
-                  rotate READAD right
-              End Repeat
         END IF
     #ENDIF
 
@@ -1385,11 +1519,11 @@ End Function
 
 'Large ReadAD
 function ReadAD10( ADReadPort ) As Word
+  'Always RIGHT justified
 
   #IFDEF DebugADC_H
       NOP 'function ReadAD10( ADReadPort ) As Word. @DebugADC_H
   #ENDIF
-
 
 
   #IFDEF PIC
@@ -1409,6 +1543,13 @@ function ReadAD10( ADReadPort ) As Word
           #ENDIF
 
           ADPCH = ADReadPort
+      #ENDIF
+
+      'A differential ADC
+      #IFDEF Bit(CHSN0)
+
+          SetNegativeChannelSelectbits
+
       #ENDIF
 
   #ENDIF
@@ -1451,7 +1592,7 @@ end function
 
 'Large ReadAD  - suppports Differential reads
 function ReadAD10(ADReadPort, in ADN_PORT ) As integer
-
+  'Always RIGHT justified
 
   #IFDEF DebugADC_H
       NOP 'ReadAD10(ADReadPort, in ADN_PORT ) As integer. @DebugADC_H
@@ -1469,7 +1610,7 @@ function ReadAD10(ADReadPort, in ADN_PORT ) As integer
           SET ADFM ON
       #ENDIF
 
-
+      'A differential ADC
       #IFDEF Bit(CHSN0)
 
           #IFDEF DebugADC_H
@@ -1487,12 +1628,17 @@ function ReadAD10(ADReadPort, in ADN_PORT ) As integer
 
           IF ADN_PORT <> 255 then
               configNegativeChannel
+          Else
+              SetNegativeChannelSelectbits
           END IF
 
       #ENDIF
 
       #IFDEF VAR(ADPCH)
-          ; #IFDEF VAR(ADPCH)
+          #IFDEF DebugADC_H
+              NOP  '#IFDEF VAR(ADPCH). @DebugADC_H
+          #ENDIF
+
           ADPCH = ADReadPort
       #ENDIF
 
@@ -1525,14 +1671,14 @@ LLReadAD 0
           SET ADFM OFF
       #ENDIF
 
-      #IFDEF Bit(CHSN0)'18F PIC with 12=bit ADC do not support 10-bit result
+      #IFDEF Bit(CHSN0)'18F PIC with 12=bit ADC does not support 10-bit result, so recalc
           IF ADN_PORT <> 0 then
-            ' Added DIV/4 to return 10 bit value -WMR
+               ' Added DIV/4 to return 10 bit value -WMR
                 #IFNDEF Bit(CHSN3)
-                  Repeat 2
-                      ' READAD10 = READAD10/4
-                      rotate READAD10 right
-                  End Repeat
+'                  Repeat 2
+                       READAD10 = READAD10/4
+'                      rotate READAD10 right
+'                  End Repeat
                 #ENDIF
           END IF
       #ENDIF
@@ -1547,12 +1693,11 @@ end function
 
 'Larger ReadAD
 function ReadAD12( ADReadPort ) As Word
+  'Always RIGHT justified
 
   #IFDEF DebugADC_H
       NOP 'function ReadAD12( ADReadPort ) As Word. @DebugADC_H
   #ENDIF
-
-
 
   #IFDEF PIC
 
@@ -1583,6 +1728,12 @@ function ReadAD12( ADReadPort ) As Word
           ADPCH = ADReadPort
       #ENDIF
 
+      'A differential ADC
+      #IFDEF Bit(CHSN0)
+
+          SetNegativeChannelSelectbits
+
+      #ENDIF
 
   #ENDIF
 
@@ -1615,7 +1766,7 @@ end function
 
 'Larger ReadAD - suppports Differential reads
 function ReadAD12(ADReadPort, ADN_PORT ) As integer
-
+  'Always RIGHT justified
 
   #IFDEF DebugADC_H
       NOP 'function ReadAD12(ADReadPort, ADN_PORT ) As integer. @DebugADC_H
@@ -1632,6 +1783,15 @@ function ReadAD12(ADReadPort, ADN_PORT ) As integer
           SET ADFM ON
       #ENDIF
 
+      'A differential ADC
+      #IFDEF Bit(CHSN0)'Chip has Differential ADC Module
+         IF ADN_PORT <> 255 then
+            configNegativeChannel
+         Else
+            SetNegativeChannelSelectbits
+         END IF
+      #ENDIF
+
       'Set A/D Result Mode to 12-Bit  (16F178x) -WMR
       #IFDEF Bit(ADRMD)
           #IFDEF DebugADC_H
@@ -1639,12 +1799,6 @@ function ReadAD12(ADReadPort, ADN_PORT ) As integer
           #ENDIF
 
           SET ADRMD OFF
-      #ENDIF
-
-      #IFDEF Bit(CHSN0)'Chip has Differential ADC Module
-         IF ADN_PORT <> 255 then
-            configNegativeChannel
-         END IF
       #ENDIF
 
       #IFDEF VAR(ADPCH)
@@ -1753,6 +1907,13 @@ Sub ConfigNegativeChannel
             set CHSN1 OFF
             set CHSN0 OFF
        END IF
+
+       'Addeed aqtime
+       #IFDEF bit(ACQT0)
+          ACQT0 = AD_Acquisition_Time_Select_bits.0
+          ACQT1 = AD_Acquisition_Time_Select_bits.1
+          ACQT2 = AD_Acquisition_Time_Select_bits.2
+       #ENDIF
    #ENDIF
 
    #IFDEF Bit(CHSN3) '16F178x
@@ -1763,7 +1924,7 @@ Sub ConfigNegativeChannel
            ADCON2 = ADCON2 AND b'11110000' OR N_CHAN
       END IF
 
-      'exception for (16F1789) where AN21 = channel 14
+      'exception for (16f1789, 16f877a, 16f1939, 18f4525) where AN21 = channel 14
       IF ADN_PORT = 21 then
            N_CHAN = 14
            ADCON2 = ADCON2 AND b'11110000' OR N_CHAN
@@ -1778,3 +1939,292 @@ Sub ConfigNegativeChannel
    #ENDIF
 
 End Sub
+
+
+Macro  SetNegativeChannelSelectbits
+
+          #IFDEF Bit(CHSN3)
+              #IFDEF DebugADC_H
+                  NOP ' #IFDEF Bit(CHSN0) So, set all three CHSN3:0 to 1, so, we get ADC Negative reference – selected by ADNREF. @DebugADC_H
+              #ENDIF
+              CHSN0 = 1
+              CHSN1 = 1
+              CHSN2 = 1
+              CHSN3 = 1
+          #ENDIF
+
+          #IFNDEF Bit(CHSN3)
+              #IFDEF DebugADC_H
+                  NOP ' #IFDEF Bit(CHSN0) So, set all three CHSN2:0 to 0, so, we get ADC Negative reference – selected by ADNREF. @DebugADC_H
+              #ENDIF
+              CHSN0 = 0
+              CHSN1 = 0
+              CHSN2 = 0
+          #ENDIF
+
+end macro
+
+Testprogram:
+
+''  #chip 16F877a, 16
+''  #chip 16F1939
+''  #chip 16F1789   'DIFF CHIP
+''  #chip 18f4525
+''   #chip 16f18877
+''   #chip 16f88,4
+''   #chip 18f45k80, 16:  #define AD_Delay 4 10us
+'
+'    'Generated by PIC PPS Tool for Great Cow Basic
+'    'PPS Tool version: 0.0.5.5
+'    'PinManager data: 07/03/2017
+'    '
+'    'Template comment at the start of the config file
+'    '
+'    #startup InitPPS, 85
+'
+'    Sub InitPPS
+'
+'            'Module: EUSART
+'            RC6PPS = 0x0010    'TX > RC6
+'            TXPPS = 0x0016    'RC6 > TX (bi-directional)
+'
+'    End Sub
+'    'Template comment at the end of the config file
+'
+'
+'    'USART settings
+'        #define USART_BAUD_RATE 9600  'Initializes USART port with 9600 baud
+'        #define USART_TX_BLOCKING ' wait for tx register to be empty
+'        wait 100 ms
+'        HSerPrintCRLF 2
+'        HSerPrint "ADC Test"
+'        HSerPrintCRLF
+'
+''    #define ADReadPreReadCommand  setupADC
+''    #define DebugADC_H
+'
+'
+'    #define ADSpeed LowSpeed
+'
+'    dir porta.0 in
+'
+'    dim user_variable as Integer
+'
+'    do
+'        wait 100 ms
+''tests
+'         user_variable = ReadAD( AN0  )
+''         user_variable = ReadAD( AN0, TRUE )
+''         user_variable = ReadAD( AN0, AN2 )
+''
+''        user_variable = ReadAD10( AN0  )
+''        user_variable = ReadAD10( AN0 , TRUE )
+''        user_variable = ReadAD10( AN0 , AN2 )
+''
+''        user_variable = ReadAD12( AN0  )
+''        user_variable = ReadAD12( AN0 , TRUE )
+''        user_variable = ReadAD12( AN0 , AN2 )
+'
+'        HSerPrint "ADCON0: "
+'        HSerPrint  ADCON0
+'        HSerSend 9
+'        HSerPrint "ADCON1: "
+'        HSerPrint ADCON1
+'        HSerSend 9
+'        #IFDEF Var(ADCON2)
+'          HSerPrint "ADCON2: "
+'          HSerPrint ADCON2
+'          HSerSend 9
+'        #ENDIF
+'        HSerPrint "Reg: "
+'        HSerPrint hex(ADRESH)
+'        HSerPrint  hex(ADRESL)
+'        HSerSend 9
+'        HSerPrint hex(ADRES)
+'        HSerPrint ":"
+'        HSerSend 9
+'        HSerPrint "Returned: "
+'        HSerPrint user_variable
+'        HSerPrintCRLF
+'    '
+'    '
+'    '     HSerPrint "1. Test Run"
+'    '     user_variable = ReadAD( AN0 )
+'    '     HSerPrint "ReadAD( AN0  ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "2. Test Run"
+'    '     user_variable = ReadAD( AN0, TRUE )
+'    '     HSerPrint "ReadAD( AN0, TRUE ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "3. Test Run"
+'    '     user_variable = ReadAD( AN0, AN2 )
+'    '     HSerPrint "ReadAD( AN0, TRUE ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '
+'    '     HSerPrint "1. Test Run"
+'    '     user_variable = ReadAD( AN0 )
+'    '     HSerPrint "ReadAD( AN0 ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "2. Test Run"
+'    '     user_variable = ReadAD( AN0, TRUE )
+'    '     HSerPrint "ReadAD( AN0, TRUE ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "3. Test Run"
+'    '     user_variable = ReadAD( AN0, AN2 )
+'    '     HSerPrint "ReadAD( AN0, AN2 ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '
+'    '     HSerPrint "4. Test Run"
+'    '     user_variable = ReadAD10( AN0 )
+'    '     HSerPrint "ReadAD10( AN0 ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "5. Test Run"
+'    '     user_variable = ReadAD10( AN0, TRUE )
+'    '     HSerPrint "ReadAD10( AN0, TRUE ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "6. Test Run"
+'    '     user_variable = ReadAD10( AN0, AN2 )
+'    '     HSerPrint "ReadAD( AN0, AN2 ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '
+'    '     HSerPrint "7. Test Run"
+'    '     user_variable = ReadAD12( AN0 )
+'    '     HSerPrint "ReadAD12( AN0 ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "8. Test Run"
+'    '     user_variable = ReadAD12( AN0, TRUE )
+'    '     HSerPrint "ReadAD12( AN0, TRUE ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '     HSerPrint "9. Test Run"
+'    '     user_variable = ReadAD12( AN0, AN2 )
+'    '     HSerPrint "ReadAD12( AN0, AN2 ) :"
+'    '     HSerPrint user_variable
+'    '     HSerPrintCRLF
+'    '
+'    '
+'    '     wait 1 s
+'
+'    loop
+'
+'    sub setupADC
+'
+'    end sub
+'
+'
+'''' GCB Optimisation file
+'
+''Optmise PWM.h
+'    #define USE_HPWMCCP1 true
+'    #define USE_HPWMCCP2 true
+'    #define USE_HPWMCCP3 true
+'    #define USE_HPWMCCP4 true
+'    #define USE_HPWMCCP5 true
+'
+'    #define USE_HPWM5 true
+'    #define USE_HPWM6 true
+'    #define USE_HPWM7 true
+'
+'    #define USE_HPWM_TIMER2 true
+'    #define USE_HPWM_TIMER4 true
+'    #define USE_HPWM_TIMER6 true
+'    #define USE_HPWM_TIMER7 true
+'
+''Optimise A-d.h
+'    'Standard family chips
+'    #define USE_AD0 true
+'    #define USE_AD1 true
+'    #define USE_AD2 true
+'    #define USE_AD2 true
+'    #define USE_AD3 true
+'    #define USE_AD4 true
+'    #define USE_AD5 true
+'    #define USE_AD6 true
+'    #define USE_AD7 true
+'    #define USE_AD8 true
+'    #define USE_AD9 true
+'    #define USE_AD10 true
+'    #define USE_AD11 true
+'    #define USE_AD12 true
+'    #define USE_AD13 true
+'    #define USE_AD14 true
+'    #define USE_AD15 true
+'    #define USE_AD16 true
+'    #define USE_AD17 true
+'    #define USE_AD18 true
+'    #define USE_AD19 true
+'    #define USE_AD20 true
+'    #define USE_AD21 true
+'    #define USE_AD22 true
+'    #define USE_AD23 true
+'    #define USE_AD24 true
+'    #define USE_AD25 true
+'    #define USE_AD26 true
+'    #define USE_AD27 true
+'    #define USE_AD28 true
+'    #define USE_AD29 true
+'    #define USE_AD30 true
+'    #define USE_AD31 true
+'    #define USE_AD32 true
+'    #define USE_AD33 true
+'    #define USE_AD34 true
+'
+'    'Family of chips based on 16f1688x with ADCON3 register
+'    #define USE_ADA0 true
+'    #define USE_ADA1 true
+'    #define USE_ADA2 true
+'    #define USE_ADA3 true
+'    #define USE_ADA4 true
+'    #define USE_ADA5 true
+'    #define USE_ADA6 true
+'    #define USE_ADA7 true
+'    #define USE_ADB0 true
+'    #define USE_ADB1 true
+'    #define USE_ADB2 true
+'    #define USE_ADB3 true
+'    #define USE_ADB4 true
+'    #define USE_ADB5 true
+'    #define USE_ADB6 true
+'    #define USE_ADB7 true
+'    #define USE_ADC0 true
+'    #define USE_ADC1 true
+'    #define USE_ADC2 true
+'    #define USE_ADC3 true
+'    #define USE_ADC4 true
+'    #define USE_ADC5 true
+'    #define USE_ADC6 true
+'    #define USE_ADC7 true
+'    #define USE_ADD0 true
+'    #define USE_ADD1 true
+'    #define USE_ADD2 true
+'    #define USE_ADD3 true
+'    #define USE_ADD4 true
+'    #define USE_ADD5 true
+'    #define USE_ADD6 true
+'    #define USE_ADD7 true
+'    #define USE_ADE0 true
+'    #define USE_ADE1 true
+'    #define USE_ADE2 true
+
+EndofTestprogram:
