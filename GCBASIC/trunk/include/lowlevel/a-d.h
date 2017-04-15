@@ -70,7 +70,6 @@
 '18/10/2016 - Added the debug. This was driving me mad!
 '14/4/2017 -  Resolved a host of errors as follows:
 '             Test results and chips used shown below. All tests on ADC0 (just dont have time to test every option!)
-
 'ReadAD
 '          READAD (AN0) – 16f1789, 16f877a, 16f1939, 18f4525, 16f88, 18f45k80
 '             The ADN_PORT call that I must have replicated from other methods was incorrect. As, in this case, no value would have been returned.
@@ -114,7 +113,8 @@
 '             Needed to resolve  CHSN ADNREF = ADCON2 = 0x0F;  not being set.  By setting the CHSN3:0 bits within the existing IF-ENDIF
 '             Now works ok returns correct value
 ' End of 11/4/2017 -  changes
-
+'       15/4/2017 - Adapted AD_Acquisition_Time_Select_bits to  0b100 or decimal 4
+'                   Added to set AD_Acquisition_Time_Select_bits  in SetNegativeChannelSelectbits macro - needed to address timing issue
 
 
 
@@ -152,7 +152,7 @@
 #define LowSpeed 0
 #define InternalClock 192
 
-#define AD_Acquisition_Time_Select_bits 0b111  'set the three bits
+#define AD_Acquisition_Time_Select_bits 0b100  'set the three bits
 
 'ADC reference sources (AVR only)
 #define AD_REF_SOURCE AD_REF_AVCC
@@ -1960,6 +1960,14 @@ Macro  SetNegativeChannelSelectbits
               CHSN0 = 0
               CHSN1 = 0
               CHSN2 = 0
+              'Addeed aqtime
+              #IFDEF bit(ACQT0)
+                  ACQT0 = AD_Acquisition_Time_Select_bits.0
+                  ACQT1 = AD_Acquisition_Time_Select_bits.1
+                  ACQT2 = AD_Acquisition_Time_Select_bits.2
+              #ENDIF
+
+
           #ENDIF
 
 end macro
