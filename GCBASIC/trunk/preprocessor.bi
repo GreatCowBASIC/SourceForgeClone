@@ -1425,8 +1425,8 @@ Sub ReadTableValues
             T = 0
           End If
 
-          'is this an string? of a decimal?
-          if  str(VAL(Value)) <>  str(VALINT(Value)) then
+          'is this an string a decimal ?
+          if  InStr(Value,".") <> 0  then
             LogError( Message("ArrayElementInncorrect"), Value )
           end if
 
