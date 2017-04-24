@@ -42,6 +42,7 @@
   '    tweaked the comments and external documentation
 '    Revised Evan R Venn - Sept 2014 for backwards compatibility added DS1307_WriteRam & DS1307_ReadRam
 '    Revised Evan R Venn - jan 2015 to support hardware i2c
+'    Evan R Venn/Anobium  ---  24/4/2017 - Revised to remove NOT error
 
 '
 '    10 bytes are used as input and output parameters. They are:
@@ -472,7 +473,7 @@ sub DS1307_SetHourMode(in DS_A_P)
     HI2CSend(DS_AddrRead)
     HI2CReceive(DS_Hour, NACK)       ;get current hours and mode
     if DS_A_P = 12 then             ;change to 12-hour mode
-      if !DS_Hour.6 then            ;only if in 24-hour mode
+      if DS_Hour.6 = 0 then            ;only if in 24-hour mode
         DS_Hour = BcdToDec(DS_Hour) ;read current hour
         if DS_Hour > 12 then        ;it's a p.m.
           DS_Hour -= 12             ;reduce to 12-hour mode
@@ -508,7 +509,7 @@ sub DS1307_SetHourMode(in DS_A_P)
     I2CSend(DS_AddrRead)
     I2CReceive(DS_Hour, NACK)       ;get current hours and mode
     if DS_A_P = 12 then             ;change to 12-hour mode
-      if !DS_Hour.6 then            ;only if in 24-hour mode
+      if DS_Hour.6 = 0 then            ;only if in 24-hour mode
         DS_Hour = BcdToDec(DS_Hour) ;read current hour
         if DS_Hour > 12 then        ;it's a p.m.
           DS_Hour -= 12             ;reduce to 12-hour mode
@@ -686,7 +687,6 @@ sub DS1307_Read(in DS_Addr, out DS_Value)
   #endif
 
 end sub
-
 
 
 

@@ -27,6 +27,7 @@
 '    Evan R Venn/Anobium  ---  10/1/2015 - Corrected read protocol for alarms
 '    Evan R Venn/Anobium  ---  11/1/2015 - Added Hardware I2C support
 '    Evan R Venn/Anobium  ---  17/3/2015 - Revised to support AVR it handling
+'    Evan R Venn/Anobium  ---  24/4/2017 - Revised to remove NOT error
 
 
 
@@ -640,7 +641,7 @@ sub DS3231_SetHourMode(in DS_A_P)
       HI2CSend(DS_AddrRead)
       HI2CReceive(DS_Hour, NACK)       ;get current hours and mode
       if DS_A_P = 12 then             ;change to 12-hour mode
-        if !DS_Hour.6 then            ;only if in 24-hour mode
+        if DS_Hour.6 = 0 then            ;only if in 24-hour mode
           DS_Hour = BcdToDec(DS_Hour) ;read current hour
           if DS_Hour > 12 then        ;it's a p.m.
             DS_Hour -= 12             ;reduce to 12-hour mode
@@ -678,7 +679,7 @@ sub DS3231_SetHourMode(in DS_A_P)
       I2CSend(DS_AddrRead)
       I2CReceive(DS_Hour, NACK)       ;get current hours and mode
       if DS_A_P = 12 then             ;change to 12-hour mode
-        if !DS_Hour.6 then            ;only if in 24-hour mode
+        if DS_Hour.6 = 0 then            ;only if in 24-hour mode
           DS_Hour = BcdToDec(DS_Hour) ;read current hour
           if DS_Hour > 12 then        ;it's a p.m.
             DS_Hour -= 12             ;reduce to 12-hour mode

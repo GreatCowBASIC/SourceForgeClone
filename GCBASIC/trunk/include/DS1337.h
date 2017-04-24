@@ -22,7 +22,7 @@
 ;    adapted further by Thomas Henry, May 26, 2014 for DS1307
 ;    adapted further and further for DS1337 to add new functionality to comply with DEVICE datasheet by Evan R Venn - Jan 27 2015
 ;    revised to support AVR bit handling
-
+'    Evan R Venn/Anobium  ---  24/4/2017 - Revised to remove NOT error
 
 
 ;13 bytes are used as input and output parameters. They are:
@@ -633,7 +633,7 @@ sub DS1337_SetHourMode(in DS_A_P)
       HI2CSend(DS_AddrRead)
       HI2CReceive(DS_Hour, NACK)       ;get current hours and mode
       if DS_A_P = 12 then             ;change to 12-hour mode
-        if !DS_Hour.6 then            ;only if in 24-hour mode
+        if DS_Hour.6 = 0 then            ;only if in 24-hour mode
           DS_Hour = BcdToDec(DS_Hour) ;read current hour
           if DS_Hour > 12 then        ;it's a p.m.
             DS_Hour -= 12             ;reduce to 12-hour mode
@@ -671,7 +671,7 @@ sub DS1337_SetHourMode(in DS_A_P)
       I2CSend(DS_AddrRead)
       I2CReceive(DS_Hour, NACK)       ;get current hours and mode
       if DS_A_P = 12 then             ;change to 12-hour mode
-        if !DS_Hour.6 then            ;only if in 24-hour mode
+        if DS_Hour.6 = 0 then            ;only if in 24-hour mode
           DS_Hour = BcdToDec(DS_Hour) ;read current hour
           if DS_Hour > 12 then        ;it's a p.m.
             DS_Hour -= 12             ;reduce to 12-hour mode
