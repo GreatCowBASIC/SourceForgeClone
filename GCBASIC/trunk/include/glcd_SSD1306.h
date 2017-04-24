@@ -29,9 +29,13 @@
 ' 1.02 Add soft SPI (Kent Schafer)
 ' 1.03 Revised S4Wire_Data to cater for i2c or hwi2c being used at same time as SPI
 ' 1.04 Revised for performance only. No functional changes
-' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
-
-
+' 1,05 Revised to fix initialisation issue from PIC when using Priority Startup
+' 1.06 Revised to support 128 * 32 device
+'       Added new init commands and GLCD_SSD1306_HEIGHT define
+'       use #define GLCD_TYPE_SSD1306_32 to setup for 128*32 device
+' 1.07 Added PixelStatus_SSD1306 to read the status of a pixel
+'      and extremes within Pset
+' 1.08 change 32 line buffer to 512 bytes from 1024
 
 #define SSD1306_SETCONTRAST 0x81
 #define SSD1306_DISPLAYALLON_RESUME 0xA4
@@ -91,8 +95,17 @@
 
 #endif
 
+#if GLCD_TYPE = GLCD_TYPE_SSD1306_32
+    dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
+
+       If ChipRAM > 512  Then
+         Dim SSD1306_BufferAlias(512)
+       End if
+
+#endif
+
 '''@hide
-sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
+Sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
 
     #ifdef S4Wire_DATA
 
@@ -125,10 +138,10 @@ sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
 
     #endif
 
-end sub
+End Sub
 
 '''@hide
-sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
+Sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
 
     #ifdef S4Wire_DATA
 
@@ -162,14 +175,13 @@ sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
     #endif
 
 
-end sub
+End Sub
 
 
 
 
 '''@hide
 Sub InitGLCD_SSD1306
-
     #IFDEF HI2C_DATA
            HI2CMode Master
     #ENDIF
@@ -190,7 +202,14 @@ Sub InitGLCD_SSD1306
     Write_Command_SSD1306(SSD1306_SETDISPLAYCLOCKDIV)            ' 0xD5
     Write_Command_SSD1306(0x80)                                  ' the suggested ratio 0x80
     Write_Command_SSD1306(SSD1306_SETMULTIPLEX)                  ' 0xA8
-    Write_Command_SSD1306(0x3F)
+    #if GLCD_HEIGHT = 64
+      Write_Command_SSD1306(0x3f)                                 '64 pixels
+    #endif
+
+    #if GLCD_HEIGHT = 32
+      Write_Command_SSD1306(0x1f)                                 '32 pixels
+    #endif
+
     Write_Command_SSD1306(SSD1306_SETDISPLAYOFFSET)              ' 0xD3
     Write_Command_SSD1306(0x00)                                   ' no offset
     Write_Command_SSD1306(SSD1306_SETSTARTLINE | 0x00)            ' line #0
@@ -207,7 +226,15 @@ Sub InitGLCD_SSD1306
     Write_Command_SSD1306(SSD1306_SEGREMAP | 0x1)
     Write_Command_SSD1306(SSD1306_COMSCANDEC)
     Write_Command_SSD1306(SSD1306_SETCOMPINS)                    ' 0xDA
-    Write_Command_SSD1306(0x12)
+
+    #if GLCD_HEIGHT = 64
+      Write_Command_SSD1306(0x12)                                 '64 pixels
+    #endif
+
+    #if GLCD_HEIGHT = 32
+      Write_Command_SSD1306(0x02)                                 '32 pixels
+    #endif
+
     Write_Command_SSD1306(SSD1306_SETCONTRAST)                   ' 0x81
     if vccstate = SSD1306_EXTERNALVCC then
       Write_Command_SSD1306(0x9F)
@@ -283,7 +310,7 @@ Sub FilledBox_SSD1306(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Li
     LineY2 = GLCDTemp
   End If
 
-  #if GLCD_TYPE = GLCD_TYPE_SSD1306
+  #if GLCD_TYPE = GLCD_TYPE_SSD1306 or GLCD_TYPE = GLCD_TYPE_SSD1306_32
     'Draw lines going across
     For DrawLine = LineX1 To LineX2
       For GLCDTemp = LineY1 To LineY2
@@ -298,14 +325,23 @@ End Sub
 '''@param GLCDX X coordinate of pixel
 '''@param GLCDY Y coordinate of pixel
 '''@param GLCDColour State of pixel ( GLCDBackground | GLCDForeground )
-sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
+Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
 
     'Set pixel at X, Y on LCD to State
     'X is 0 to 127
     'Y is 0 to 63
     'Origin in top left
 
-  #if GLCD_TYPE = GLCD_TYPE_SSD1306
+  #if GLCD_TYPE = GLCD_TYPE_SSD1306 or GLCD_TYPE = GLCD_TYPE_SSD1306_32
+
+
+          #IFDEF GLCD_PROTECTOVERRUN
+              'anything off screen with be rejected
+              if GLCDX => GLCD_WIDTH OR GLCDY => GLCD_HEIGHT Then
+                  exit sub
+              end if
+
+          #ENDIF
 
           'SSD1306_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
           'faster than /8
@@ -326,6 +362,16 @@ sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
             SSD1306_BufferLocationCalc = SSD1306_BufferLocationCalc * GLCD_WIDTH
           #endif
           SSD1306_BufferLocationCalc = GLCDX + SSD1306_BufferLocationCalc+1
+
+          #IFDEF GLCD_PROTECTOVERRUN
+              'anything beyond buffer boundary?
+              'why? X = 127 and Y = 64 (Y is over 63!) will have passed first check....
+              if SSD1306_BufferLocationCalc > 1024 Then
+                  exit sub
+              end if
+
+          #ENDIF
+
           GLCDDataTemp = SSD1306_BufferAlias(SSD1306_BufferLocationCalc)
 
           'Change data to set/clear pixel
@@ -348,13 +394,37 @@ sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
           End If
 
           if SSD1306_BufferAlias(SSD1306_BufferLocationCalc) <> GLCDDataTemp then
-            SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = GLCDDataTemp
-            Cursor_Position_SSD1306 ( GLCDX, GLCDY )
-            Write_Data_SSD1306 ( GLCDDataTemp )
+              SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = GLCDDataTemp
+              Cursor_Position_SSD1306 ( GLCDX, GLCDY )
+              Write_Data_SSD1306 ( GLCDDataTemp )
           end if
   #endif
 
-End sub
+End Sub
+
+
+
+Function PixelStatus_SSD1306(In GLCDX, In GLCDY )
+
+    #if GLCD_TYPE = GLCD_TYPE_SSD1306
+            'Select correct buffer element
+            SSD1306_BufferLocationCalc = GLCDY
+            'Divide by 8
+            Repeat 3
+              Set C Off
+              Rotate SSD1306_BufferLocationCalc Right
+            End Repeat
+            SSD1306_BufferLocationCalc = SSD1306_BufferLocationCalc * GLCD_WIDTH
+            SSD1306_BufferLocationCalc = GLCDX + SSD1306_BufferLocationCalc+1  'add 1 as we dont use element (0)
+            GLCDDataTemp = SSD1306_BufferAlias(SSD1306_BufferLocationCalc)
+            'Change data to examine pixel by rotating our bit to bit zero
+            GLCDBitNo = GLCDY And 7
+            Repeat GLCDBitNo
+              Rotate GLCDDataTemp right
+            End Repeat
+            PixelStatus_SSD1306 = GLCDDataTemp.0
+    #endif
+  end function
 
 
 '''Takes raw pixel positions and translates to XY char positions
@@ -400,12 +470,12 @@ end sub
 '''@param Start row
 '''@param End row
 '''@param Set time interval between each scroll step in terms of frame frequency
-SUB startscrollright_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
+SUB startscrollright_SSD1306 ( IN SSD1306_start , IN SSD1306_stop, Optional In SSD1306_scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_RIGHT_HORIZONTAL_SCROLL)
   Write_Command_SSD1306(0X00)
-  Write_Command_SSD1306(start)
-  Write_Command_SSD1306(scrollspeed)
-  Write_Command_SSD1306(stop)
+  Write_Command_SSD1306(SSD1306_start)
+  Write_Command_SSD1306(SSD1306_scrollspeed)
+  Write_Command_SSD1306(SSD1306_stop)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(0XFF)
   Write_Command_SSD1306(SSD1306_ACTIVATE_SCROLL)
@@ -419,12 +489,12 @@ end sub
 '''@param Start row
 '''@param End row
 '''@param Set time interval between each scroll step in terms of frame frequency
-SUB startscrollleft_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
+SUB startscrollleft_SSD1306 ( IN SSD1306_start , IN SSD1306_stop, Optional In SSD1306_scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_LEFT_HORIZONTAL_SCROLL)
   Write_Command_SSD1306(0X00)
-  Write_Command_SSD1306(start)
-  Write_Command_SSD1306(scrollspeed)
-  Write_Command_SSD1306(stop)
+  Write_Command_SSD1306(SSD1306_start)
+  Write_Command_SSD1306(SSD1306_scrollspeed)
+  Write_Command_SSD1306(SSD1306_stop)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(0XFF)
   Write_Command_SSD1306(SSD1306_ACTIVATE_SCROLL)
@@ -438,15 +508,15 @@ end sub
 '''@param Start row
 '''@param End row
 '''@param Set time interval between each scroll step in terms of frame frequency
-SUB startscrolldiagright_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
+SUB startscrolldiagright_SSD1306 ( IN SSD1306_start , IN SSD1306_stop, Optional In SSD1306_scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_SET_VERTICAL_SCROLL_AREA)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(GLCD_HEIGHT)
   Write_Command_SSD1306(SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL)
-  Write_Command_SSD1306(scrollspeed)
-  Write_Command_SSD1306(start)
+  Write_Command_SSD1306(SSD1306_scrollspeed)
+  Write_Command_SSD1306(SSD1306_start)
   Write_Command_SSD1306(0X00)
-  Write_Command_SSD1306(stop)
+  Write_Command_SSD1306(SSD1306_stop)
   Write_Command_SSD1306(0X01)
   Write_Command_SSD1306(SSD1306_ACTIVATE_SCROLL)
 end sub
@@ -458,15 +528,15 @@ end sub
 '''@param Start row
 '''@param End row
 '''@param Set time interval between each scroll step in terms of frame frequency
-SUB startscrolldiagleft_SSD1306 ( IN start , IN stop, Optional In scrollspeed As byte = 0 )
+SUB startscrolldiagleft_SSD1306 ( IN SSD1306_start , IN SSD1306_stop, Optional In SSD1306_scrollspeed As byte = 0 )
   Write_Command_SSD1306(SSD1306_SET_VERTICAL_SCROLL_AREA)
   Write_Command_SSD1306(0X00)
   Write_Command_SSD1306(GLCD_HEIGHT)
   Write_Command_SSD1306(SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL)
-  Write_Command_SSD1306(scrollspeed)
-  Write_Command_SSD1306(start)
+  Write_Command_SSD1306(SSD1306_scrollspeed)
+  Write_Command_SSD1306(SSD1306_start)
   Write_Command_SSD1306(0X00)
-  Write_Command_SSD1306(stop)
+  Write_Command_SSD1306(SSD1306_stop)
   Write_Command_SSD1306(0X01)
   Write_Command_SSD1306(SSD1306_ACTIVATE_SCROLL)
 end sub
