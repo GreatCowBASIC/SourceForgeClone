@@ -36,6 +36,7 @@
 ' 1.07 Added PixelStatus_SSD1306 to read the status of a pixel
 '      and extremes within Pset
 ' 1.08 change 32 line buffer to 512 bytes from 1024
+' 1.09 correct buffer assignment and resolved buffer overright issue in CLS
 
 #define SSD1306_SETCONTRAST 0x81
 #define SSD1306_DISPLAYALLON_RESUME 0xA4
@@ -89,18 +90,18 @@
 #if GLCD_TYPE = GLCD_TYPE_SSD1306
     dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
 
-       If ChipRAM > 1024  Then
+       #If ChipRAM > 1024
          Dim SSD1306_BufferAlias(1024)
-       End if
+       #Endif
 
 #endif
 
 #if GLCD_TYPE = GLCD_TYPE_SSD1306_32
     dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
 
-       If ChipRAM > 512  Then
+       #If ChipRAM > 512
          Dim SSD1306_BufferAlias(512)
-       End if
+       #Endif
 
 #endif
 
@@ -269,17 +270,17 @@ End Sub
 
 
 '''Clears the GLCD screen
-Sub GLCDCLS_SSD1306
+Sub GLCDCLS_SSD1306 ( Optional In  GLCDBackground as word = GLCDBackground )
  ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
   GLCD_yordinate = 0
 
   #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
-    For SSD1306_BufferLocationCalc = 1 to 1024
+    For SSD1306_BufferLocationCalc = 1 to GLCD_HEIGHT * GLCD_WIDTH / 8
         SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
     Next
   #endif
 
-  for SSD1306_BufferLocationCalc = 0 to 63 step 8
+  for SSD1306_BufferLocationCalc = 0 to GLCD_HEIGHT-1 step 8
       for GLCDTemp = 0 to 127
           Cursor_Position_SSD1306 ( GLCDTemp , SSD1306_BufferLocationCalc )
           Write_Data_SSD1306(GLCDBackground)
@@ -366,7 +367,7 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
           #IFDEF GLCD_PROTECTOVERRUN
               'anything beyond buffer boundary?
               'why? X = 127 and Y = 64 (Y is over 63!) will have passed first check....
-              if SSD1306_BufferLocationCalc > 1024 Then
+              if SSD1306_BufferLocationCalc > GLCD_HEIGHT * GLCD_WIDTH Then
                   exit sub
               end if
 
