@@ -33,6 +33,7 @@
 ' 11/03/2016: Add LOCKPPS and UNLOCKPPS
 ' 16/01/2017: Modified PulseIn & PulseInInV for better functionality - WMR
 ' 29/01/2017: Added overloaded FnLSL and FnLSR to reduce memory overhead
+' 19/05/2017: Revised and corrected DecToBcd_GCB.. overwriting system vars
 
 'Misc settings
 
@@ -267,14 +268,15 @@ Function Swap4(Swap4In)
 End Function
 
 ' Dec to BCD
-Function DecToBcd_GCB( SysCalcTempA as byte ) as Byte
-         DecToBcd_GCB = (SysCalcTempA/10)*16+SysCalcTempA%10
+Function DecToBcd_GCB( in SysInVal as Byte  ) as Byte
+         DecToBcd_GCB = (SysInVal /10)*16+SysInVal%10
 End Function
 
 
 ' BDC to Dec
-Function BcdToDec_GCB( SysCalcTempA as byte ) as byte
-         BcdToDec_GCB = (SysCalcTempA/16)*10+SysCalcTempA%16
+Function BcdToDec_GCB( in SysInVal as byte ) as byte
+         BcdToDec_GCB = (SysInVal/16)*10
+         BcdToDec_GCB = BcdToDec_GCB + SysInVal%16
 End Function
 
 '' Bitwise Functions and Macros by Chris Roper
