@@ -530,7 +530,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 DIM SHARED As Integer APC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg
+DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, PWMTimerVariant1
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount
@@ -630,7 +630,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.97.<<>> 2017-04-22"
+Version = "0.97.<<>> 2017-05-26"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -12918,6 +12918,7 @@ SUB ReadChipData
 
   FirstSFR = &HFFFF
   ChipFamilyVariant = 0
+  PWMTimerVariant1  = 0
 
   ReadDataMode = ""
   DO WHILE NOT EOF(1)
@@ -12957,6 +12958,8 @@ SUB ReadChipData
         Case "pins": ChipPins = Val(TempData)
         Case "family": ChipFamily = Val(TempData)
         Case "familyvariant": ChipFamilyVariant = Val(TempData)
+        Case "pwmtimervariant1": PWMTimerVariant1 = Val(TempData)
+
         Case "configwords": ConfWords = VAL(TempData)
         Case "psp": PSP = VAL(TempData)
         Case "maxaddress": MemSize = VAL(TempData)
