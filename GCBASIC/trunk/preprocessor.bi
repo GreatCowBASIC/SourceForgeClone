@@ -153,6 +153,8 @@ Sub PrepareBuiltIn
   AddConstant("CHIPMHZ", Str(ChipMhz))
   AddConstant("CHIPFAMILY", Str(ChipFamily))
   AddConstant("CHIPOSC", OSCType)
+  AddConstant("PWMTIMERVARIANT1", Str(PWMTimerVariant1))
+
 
   AddConstant("CHIPWORDS", Str(ChipProg))
   AddConstant("CHIPEEPROM", Str(ChipEEPROM))
