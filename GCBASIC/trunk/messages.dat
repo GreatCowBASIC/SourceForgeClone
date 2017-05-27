@@ -233,6 +233,7 @@ UndeclaredVar = "Variable %var% was not explicitly declared"
 MissingSubParam = "Missing value for parameter %param%"
 WarningsAsErrors = "Warnings generated and treated as errors"
 BadBitCompareOp = "Incorrect operator: Only = and <> comparisons can be used with bit variables"
+TableItemInvalid = "Item %item% cannot be stored in the table"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"
@@ -275,4 +276,3 @@ CRRAM = "RAM Allocation"
 CRBank = "Bank"
 CRBankLoc = "Bank Location"
 InternalError = "Internal error in TypeOfVar - processing "
-ArrayElementInncorrect = " Array element not handled"
