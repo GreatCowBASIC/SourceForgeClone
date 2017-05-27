@@ -712,6 +712,12 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 	
 END FUNCTION
 
+Function GetOriginString(OriginIn As OriginType Pointer) As String
+	If OriginIn = 0 Then Return ""
+	
+	Return ";?F" + Str(OriginIn->FileNo) + "L" + Str(OriginIn->LineNo) + "S" + Str(OriginIn->SubNo) + "?"
+End Function
+
 Function GetString (StringName As String, UsedInProgram As Integer = -1) As String
 	
 	Dim As Integer ST
