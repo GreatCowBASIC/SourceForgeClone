@@ -69,6 +69,14 @@ Match=End Repeat, EndRepeat
 Tooltip = Repeats a section of code a certain number of times
 Category=Flow Control
 
+[COM_Else If]
+Icon = ElseIf
+Syntax = Else If %P1% Then
+P1 = Condition, condition, The code between this Else If and the next Else or End If runs only when this is true
+Tooltip = Code below this only runs if the condition here is true, and the If before was false
+Category=Flow Control
+OnlyIn = If
+
 [COM_Else]
 icon = Else
 Syntax = Else

@@ -53,6 +53,9 @@ Imports System.Collections.Generic
 				Dim OutData As String
 				If IsArray Then
 					OutData = "Dim " + Name + "(" + Length + ")"
+					If Type.ToLower <> "byte" Then
+						OutData += " As " + Type
+					End If
 				Else
 					OutData = "Dim " + Name + " As " + Type
 					If Length <> "" And Type.ToLower = "string" Then

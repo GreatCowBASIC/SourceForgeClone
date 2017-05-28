@@ -201,6 +201,13 @@ Line2=%P1%
 Line3=Then
 Texture=if.png
 
+[ElseIf]
+Size=140,60
+Line1=Else If
+Line2=%P1%
+Line3=Then
+Texture=else.png
+
 [Else]
 Size=140,60
 Lines=1
