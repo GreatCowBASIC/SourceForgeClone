@@ -39,7 +39,14 @@ Public Class AsmProgram
 	Public Sub New(IncPath As String, SourceFile As String)
 		Me.IncPath = IncPath
 		Me.pChipModel = ""
-		Lines = LoadFile(SourceFile)
+		Try
+			Lines = LoadFile(SourceFile)
+		Catch Ex As Exception
+			Console.WriteLine("Error loading assembly file:")
+			Console.WriteLine(Ex.Message)
+			Console.WriteLine(Ex.StackTrace)
+			Exit Sub
+		End Try
 		
 		Dim PrevLine, CurrLine As AsmLine
 		
@@ -350,6 +357,11 @@ Public Class AsmProgram
 		
 		Catch ex As FileNotFoundException
 			Console.WriteLine("File " + SourceFile + " was not found")
+			
+		Catch Ex As Exception
+			Console.WriteLine("Unknown error occurred loading file " + SourceFile + ":")
+			Console.WriteLine(Ex.Message)
+			Console.WriteLine(Ex.StackTrace)
 			
 		End Try
 		
