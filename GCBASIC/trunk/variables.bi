@@ -69,6 +69,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	
 	'Do not add SysPointerX pseudo var
 	If UCase(VarName) = "SYSPOINTERX" Then Exit Sub
+	If UCase(VarName) = "SYSPOINTERXINC" Then Exit Sub
 	
 	'If VarName is a constant, exit
 	If IsConst(VarName) Then Exit Sub
