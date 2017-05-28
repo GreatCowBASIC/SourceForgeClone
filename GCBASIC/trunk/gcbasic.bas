@@ -637,7 +637,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.97.<<>> 2017-05-27"
+Version = "0.97.<<>> 2017-05-28"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -9535,26 +9535,47 @@ Sub FixPointerOps (CompSub As SubType Pointer)
 
 	Dim As String DataSource, DataReg
 	Dim As LinkedListElement Pointer CurrLine
+	
+	Dim As Integer AccessType
 
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
-		If WholeINSTR(CurrLine->Value, "SysPointerX") = 2 Then
-			DataSource = CurrLine->Value
-
-			Select Case LCase(Left(Trim(DataSource), 3))
-				Case "lds":
-				DataReg = Mid(Trim(DataSource), 4)
-				DataReg = Trim(Left(DataReg, Instr(DataReg, ",") - 1))
-				CurrLine->Value = " ld " + DataReg + ",X"
-
-				Case "sts":
-				DataReg = Trim(Mid(DataSource, Instr(DataSource, ",") + 1))
-				CurrLine->Value = " st X," + DataReg
-
-				Case Else:
-				LogError "Internal error in FixPointerOps"
-
-			End Select
+		If WholeINSTR(CurrLine->Value, "SysPointerX") > 0 Then
+			
+			AccessType = 0
+			If WholeINSTR(CurrLine->Value, "SysPointerX") = 2 Then
+				AccessType = 1
+			ElseIf WholeINSTR(CurrLine->Value, "SysPointerXInc") = 2 Then
+				AccessType = 2
+			End If
+			
+			If AccessType > 0 Then
+				DataSource = CurrLine->Value
+	
+				Select Case LCase(Left(Trim(DataSource), 3))
+					Case "lds":
+					DataReg = Mid(Trim(DataSource), 4)
+					DataReg = Trim(Left(DataReg, Instr(DataReg, ",") - 1))
+					If AccessType = 1 Then
+						CurrLine->Value = " ld " + DataReg + ",X"
+					Else
+						CurrLine->Value = " ld " + DataReg + ",X+"
+					End If
+					
+	
+					Case "sts":
+					DataReg = Trim(Mid(DataSource, Instr(DataSource, ",") + 1))
+					If AccessType = 1 Then
+						CurrLine->Value = " st X," + DataReg
+					Else
+						CurrLine->Value = " st X+," + DataReg
+					End If
+	
+					Case Else:
+					LogError "Internal error in FixPointerOps"
+	
+				End Select
+			End If
 		End If
 
 		CurrLine = CurrLine->Next
@@ -12574,9 +12595,9 @@ End Sub
 
 SUB ProcessArrays (CompSub As SubType Pointer)
 	Dim As String InLine, Origin, Temp, AV, ArrayName, ArrayType, ArrayPosition
-	Dim As String ArrayHandler, AppendArrayPosition
-	Dim As String NewCode(20)
-	Dim As Integer ATV, ArraysInLine, CD, SS, UseTempVar
+	Dim As String ArrayHandler, AppendArrayPosition, AliasLoc
+	'Dim As String NewCode(20)
+	Dim As Integer ATV, ArraysInLine, CD, SS, UseTempVar, ArrayElementSize, CurrByte
 	Dim As Integer ArrayDir, L, P, ArrayPointer, NCO, MarkBlock
 	Dim As LinkedListElement Pointer CurrLine, NewCodeList, NewCodeLine, LastArray, ArrayFound
 
@@ -12697,8 +12718,9 @@ CheckArrayAgain:
 				ArrayType = .Type
 			End With
 			If ArrayType = "STRING" Then ArrayType = "BYTE"
+			ArrayElementSize = GetTypeSize(ArrayType)
 			UseTempVar = -1
-			If ArraysInLine = 1 And ArrayType = "BYTE" Then UseTempVar = 0
+			If ArraysInLine = 1 And ArrayElementSize = 1 Then UseTempVar = 0
 
 			NewCodeList = LinkedListCreate
 			NewCodeLine = NewCodeList
@@ -12769,7 +12791,15 @@ CheckArrayAgain:
 					'If using a fixed element of a real array, treat it as a single element variable
 					'Create alias to refer to the exact memory location directly and use that
 					AV = "SYS" + ArrayName + "_" + Str(MakeDec(ArrayPosition))
-					AddVar (AV, "BYTE", 1, 0, "ALIAS:" + ArrayName + " + " + Str(MakeDec(ArrayPosition)), Origin, , -1)
+					AliasLoc = ""
+					For CurrByte = ArrayElementSize - 1 To 0 Step -1
+						If AliasLoc = "" Then
+							AliasLoc = ArrayName + " + " + Str(MakeDec(ArrayPosition) * ArrayElementSize + CurrByte)
+						Else
+							AliasLoc += ", " + ArrayName + " + " + Str(MakeDec(ArrayPosition) * ArrayElementSize + CurrByte)
+						End If
+					Next
+					AddVar (AV, ArrayType, 1, 0, "ALIAS:" + AliasLoc, Origin, , -1)
 					'Can't put array name back into line, causes problem if array accessed twice
 					WholeReplace InLine, "[1]" + Temp, TempRemove(AV)
 					CurrLine->Value = InLine + Origin
@@ -12795,13 +12825,17 @@ CheckArrayAgain:
 					If IsConst(ArrayPosition) And MakeDec(ArrayPosition) = 0 Then
 						AppendArrayPosition = ""
 					Else
-						AppendArrayPosition = "+" + ArrayPosition
+						If IsCalc(ArrayPosition) Then
+							AppendArrayPosition = "+(" + ArrayPosition + ")*" + Str(ArrayElementSize)
+						Else
+							AppendArrayPosition = "+" + ArrayPosition + "*" + Str(ArrayElementSize)
+						End If
 					End If
 
 					'Add code to read/set array
 					If ModePIC And (ChipFamily = 12 Or ChipFamily = 14) Then
 						If ArrayPointer = 0 Then
-							NewCodeLine = LinkedListInsert(NewCodeLine, "FSR = [byte]" + ArrayHandler + AppendArrayPosition+ Origin)
+							NewCodeLine = LinkedListInsert(NewCodeLine, "FSR = [byte]" + ArrayHandler + AppendArrayPosition + Origin)
 							If HighFSR Then
 								NewCodeLine = LinkedListInsert(NewCodeLine, " bankisel " + ArrayName)
 							End If
@@ -12814,19 +12848,36 @@ CheckArrayAgain:
 							End If
 						End If
 						If UseTempVar Then
-							IF ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, AV + " = INDF")
-							IF ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "INDF = " + AV)
+							For CurrByte = 0 To ArrayElementSize - 1
+								If ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, GetByte(AV, CurrByte) + " = INDF")
+								IF ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "INDF = " + GetByte(AV, CurrByte))
+								If CurrByte < ArrayElementSize - 1 Then
+									NewCodeLine = LinkedListInsert(NewCodeLine, " incf FSR,F")
+								End If
+							Next
 						End If
 
 					ElseIf ModePIC And ChipFamily = 15 Then
 						NewCodeLine = LinkedListInsert(NewCodeLine, "AFSR0 = " + ArrayHandler + AppendArrayPosition + Origin)
 						If UseTempVar Then
-							IF ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, AV + " = INDF0")
-							IF ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "INDF0 = " + AV)
+							For CurrByte = 0 To ArrayElementSize - 1
+								If ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, GetByte(AV, CurrByte) + " = INDF0")
+								If ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "INDF0 = " + GetByte(AV, CurrByte))
+								If CurrByte < ArrayElementSize - 1 Then
+									NewCodeLine = LinkedListInsert(NewCodeLine, " addfsr 0,1")
+								End If
+							Next
 						End If
 
 					ElseIf ModePIC And ChipFamily = 16 Then
 						If ArrayPointer = 0 Then
+							If ArrayElementSize > 1 Then
+								If IsCalc(ArrayPosition) Then
+									ArrayPosition = "(" + ArrayPosition + ")*" + Str(ArrayElementSize)
+								Else
+									ArrayPosition += "*" + Str(ArrayElementSize)
+								End If
+							End If
 							If IsConst(ArrayPosition) Then
 								NewCodeLine = LinkedListInsert(NewCodeLine, " lfsr 0," + ArrayName + "+" + ArrayPosition)
 							Else
@@ -12837,8 +12888,10 @@ CheckArrayAgain:
 							NewCodeLine = LinkedListInsert(NewCodeLine, "AFSR0 = " + ArrayHandler + AppendArrayPosition + Origin)
 						End If
 						If UseTempVar Then
-							IF ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, AV + " = INDF0")
-							IF ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "INDF0 = " + AV)
+							For CurrByte = 0 To ArrayElementSize - 1
+								If ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, GetByte(AV, CurrByte) + " = POSTINC0")
+								If ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "POSTINC0 = " + GetByte(AV, CurrByte))
+							Next
 						End If
 
 					ElseIf ModeAVR Then
@@ -12849,8 +12902,10 @@ CheckArrayAgain:
 							NewCodeLine = LinkedListInsert(NewCodeLine, "SysStringA = " + ArrayHandler + AppendArrayPosition + Origin)
 						End If
 						If UseTempVar Then
-							If ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, AV + " = SysPointerX")
-							IF ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "SysPointerX = " + AV)
+							For CurrByte = 0 To ArrayElementSize - 1
+								If ArrayDir = 0 THEN NewCodeLine = LinkedListInsert(NewCodeLine, GetByte(AV, CurrByte) + " = SysPointerXInc")
+								IF ArrayDir = 1 THEN NewCodeLine = LinkedListInsert(NewCodeLine, "SysPointerXInc = " + GetByte(AV, CurrByte))
+							Next
 						End If
 					End If
 
