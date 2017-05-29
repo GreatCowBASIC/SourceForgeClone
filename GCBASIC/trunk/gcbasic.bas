@@ -637,7 +637,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.97.<<>> 2017-05-28"
+Version = "0.97.<<>> 2017-05-29"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5427,7 +5427,7 @@ End Sub
 SUB CompileIF (CompSub As SubType Pointer)
 	FoundCount = 0
 	Dim As String Origin, Temp, L1, L2, Condition, EndBlock
-	Dim As Integer FoundIF, IL, ELC, IT, TL, FE, DelSection, DelEndIf, EndIfUsed
+	Dim As Integer FoundIF, IL, ELC, IT, TL, FE, DelSection, DelEndIf, EndIfUsed, PrevSectionSkipped
 	Dim As Integer WD
 
 	Dim As LinkedListElement Pointer CurrLine, NewCode, FindEnd, StartDel
@@ -5440,6 +5440,11 @@ SUB CompileIF (CompSub As SubType Pointer)
 
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
+		
+		'Signalling:
+		' - DelEndIf means that one condition is always true, so all elses after should be removed
+		' - DelSection means that one condition is always false, so everything before the next else should be removed
+		'   - When DelSection is used, StartDel is the first line that should be deleted by the next section
 
 		'IF
 		IF UCase(Left(CurrLine->Value, 3)) = "IF " THEN
@@ -5499,7 +5504,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 					If ModePIC Then CurrLine = LinkedListInsert(CurrLine, " goto " + EndBlock)
 					If ModeAVR Then CurrLine = LinkedListInsert(CurrLine, " rjmp " + EndBlock)
 				End If
-
+				
 				FoundIF = -1
 			END IF
 
@@ -5528,34 +5533,40 @@ SUB CompileIF (CompSub As SubType Pointer)
 			Loop
 			
 			'Add Code
+			PrevSectionSkipped = DelSection
+			If DelSection Then
+				CurrLine = LinkedListDeleteList(StartDel, CurrLine->Prev)->Next
+				DelSection = 0
+			End If
 			If DelEndIf Then
 				If StartDel = 0 Then
 					StartDel = CurrLine
 				End If
-			ElseIf DelSection Then
-				CurrLine = LinkedListDeleteList(StartDel, CurrLine)
-				DelSection = 0
 			Else
 				Condition = Mid(CurrLine->Value, 8)
 				Condition = Left(Condition, INSTR(UCase(Condition), "THEN") - 1)
-				
-				EndIfUsed = -1
-				If ModePIC Then
-					L1 = " goto ENDIF" + Str(ILC)
-					L2 = "ELSE" + Str(ILC) + "_" + Str(ELC)
-
-				ElseIf ModeAVR Then
-					L1 = " rjmp ENDIF" + Str(ILC)
-					L2 = "ELSE" + Str(ILC) + "_" + Str(ELC) + ":"
-
+				If PrevSectionSkipped Then
+					CurrLine = LinkedListDelete(CurrLine)
+				Else
+					EndIfUsed = -1
+					If ModePIC Then
+						L1 = " goto ENDIF" + Str(ILC)
+						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC)
+	
+					ElseIf ModeAVR Then
+						L1 = " rjmp ENDIF" + Str(ILC)
+						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC) + ":"
+	
+					End If
+					CurrLine->Value = L1
+					CurrLine = LinkedListInsert(CurrLine, L2)
 				End If
-				CurrLine->Value = L1
-				CurrLine = LinkedListInsert(CurrLine, L2)
 				
 				'Generate code to test and jump
 				NewCode = CompileConditions(Condition, "FALSE", Origin, CompSub)
 				DelSection = 0
 				DelEndIf = 0
+				StartDel = 0
 				If Condition = "AlwaysTrue" Then
 					'CurrLine = LinkedListDelete(CurrLine)
 					DelEndIf = -1
@@ -5585,27 +5596,33 @@ SUB CompileIF (CompSub As SubType Pointer)
 			END IF
 
 			'Add Code
+			PrevSectionSkipped = DelSection
+			If DelSection Then
+				CurrLine = LinkedListDeleteList(StartDel, CurrLine)
+				DelSection = 0
+			End If
 			If DelEndIf Then
 				If StartDel = 0 Then
 					StartDel = CurrLine
 				End If
-				DelSection = -1
-				DelEndIf = 0
-			ElseIf DelSection Then
-				CurrLine = LinkedListDeleteList(StartDel, CurrLine)
-				DelSection = 0
+				
 			Else
-				EndIfUsed = -1
-				If ModePIC Then
-					L1 = " goto ENDIF" + Str(ILC)
-					L2 = "ELSE" + Str(ILC) + "_" + Str(ELC + 1)
-
-				ElseIf ModeAVR Then
-					L1 = " rjmp ENDIF" + Str(ILC)
-					L2 = "ELSE" + Str(ILC) + "_" + Str(ELC + 1) + ":"
+				If PrevSectionSkipped Then
+					CurrLine = LinkedListDelete(CurrLine)
+					
+				Else
+					EndIfUsed = -1
+					If ModePIC Then
+						L1 = " goto ENDIF" + Str(ILC)
+						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC + 1)
+	
+					ElseIf ModeAVR Then
+						L1 = " rjmp ENDIF" + Str(ILC)
+						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC + 1) + ":"
+					End If
+					CurrLine->Value = L1
+					CurrLine = LinkedListInsert(CurrLine, L2)
 				End If
-				CurrLine->Value = L1
-				CurrLine = LinkedListInsert(CurrLine, L2)
 				
 			End If
 
@@ -5620,8 +5637,8 @@ SUB CompileIF (CompSub As SubType Pointer)
 
 			'Decrement level counter, add end if label if needed
 			IL = IL - 1
-			IF IL = 0 THEN
-				If DelSection Then
+			IF IL = 0 Then
+				If (DelSection Or DelEndIf) And StartDel <> 0 Then
 					LinkedListDeleteList(StartDel, CurrLine->Prev)
 				End If
 				
