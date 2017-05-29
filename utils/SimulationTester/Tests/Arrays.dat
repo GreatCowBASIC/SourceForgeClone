@@ -1,0 +1,23 @@
+'Test for GCBASIC
+[Test]
+Name = Arrays
+SourceFile = Arrays.gcb
+'Source can be UART, LCD, or possibly other
+CaptureSource = UART
+'Runtime needs to be about 300 to complete
+RunTime = 500
+
+'List of words/phrases that must be found in test output to pass
+[MustFind]
+Array test
+Byte fixed:10
+Word fixed:300
+Long fixed:12345678
+Long fixed(2):12345678
+Byte elements:1 2 3 4 5
+Word elements:1000 2000 3000 4000 5000
+Long elements:100000 200000 300000 400000 500000
+Test completed
+
+'List of words/phrases that must not be found
+[MustNotFind]

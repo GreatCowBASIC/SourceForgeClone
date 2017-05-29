@@ -1,0 +1,54 @@
+DebugPrint "Array test"
+DebugPrintCRLF
+Wait 50 ms
+
+Dim TestByteArray(5)
+Dim TestWordArray(5) As Word
+Dim TestLongArray(5) As Long
+
+'Test with fixed location
+TestByteArray(3) = 10
+TestWordArray(1) = 300
+TestLongArray(4) = 12345678
+
+DebugPrint "Byte fixed:"
+DebugPrint TestByteArray(3)
+DebugPrintCRLF
+DebugPrint "Word fixed:"
+DebugPrint TestWordArray(1)
+DebugPrintCRLF
+DebugPrint "Long fixed:"
+DebugPrint TestLongArray(4)
+DebugPrintCRLF
+ArrayLoc = 4
+DebugPrint "Long fixed(2):"
+DebugPrint TestLongArray(ArrayLoc)
+DebugPrintCRLF
+
+'Test with variable location
+For ArrayLoc = 1 to 5
+	TestByteArray(ArrayLoc) = ArrayLoc
+	TestWordArray(ArrayLoc) = 1000 * ArrayLoc
+	TestLongArray(ArrayLoc) = 100000 * ArrayLoc
+Next
+
+DebugPrint "Byte elements:"
+For ArrayLoc = 1 to 5
+	DebugPrint TestByteArray(ArrayLoc)
+	DebugPrint " "
+Next
+DebugPrintCRLF
+DebugPrint "Word elements:"
+For ArrayLoc = 1 to 5
+	DebugPrint TestWordArray(ArrayLoc)
+	DebugPrint " "
+Next
+DebugPrintCRLF
+DebugPrint "Long elements:"
+For ArrayLoc = 1 to 5
+	DebugPrint TestLongArray(ArrayLoc)
+	DebugPrint " "
+Next
+DebugPrintCRLF
+DebugPrint "Test completed"
+DebugPrintCRLF

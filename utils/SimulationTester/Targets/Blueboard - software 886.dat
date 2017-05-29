@@ -1,0 +1,39 @@
+[Target]
+Name = Blue Board (16F886, Software Sim)
+Type = Software
+SimRobot = Robots\Blue Board v2 16F886.gcr
+Ram = 368
+Flash = 8192
+
+[InitCode]
+#include <blueboard-v2.h>
+#chip 16F886
+
+#define DebugPrint SerPrint 1,
+#define DebugPrintCRLF SerNewLine
+#define DebugSendChar SerSend 1,
+
+#define SerSend SerSend2
+
+Set PORTC.6 On
+
+Sub SerSend2 (In Dummy, In ByteOut)
+	Set PORTC.6 Off
+	Wait 104 us
+	Repeat 8
+		If ByteOut.0 Then
+			Set PORTC.6 On
+		Else
+			Set PORTC.6 Off
+		End If
+		Rotate ByteOut Right
+		Wait 104 us
+	End Repeat
+	Set PORTC.6 On
+	Wait 1 ms
+End Sub
+
+Sub SerNewLine
+	SerSend 1, 13
+	SerSend 1, 10
+End Sub

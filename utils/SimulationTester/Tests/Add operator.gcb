@@ -1,0 +1,186 @@
+
+DebugPrint "Add test"
+DebugPrintCRLF
+Wait 100 ms
+
+TestOpt
+TestByte
+TestWord
+TestMixed
+TestBoundaries
+
+Sub ShowOutput(In Source As String, In Value, Optional SuccessValue = 127)
+	'CLS
+	'Print Source
+	'Print Value
+	'Print "/1911"
+	
+	DebugPrint Source
+	DebugPrint Value
+	DebugPrint "/"
+	DebugPrint SuccessValue
+	DebugPrintCRLF
+	
+	Wait 10 ms
+End Sub
+
+Sub TestBoundaries
+	Dim TestsPassed As Byte
+	TestsPassed = 0
+	
+	Dim Word1, Word2, WordR As Word
+	Dim Byte1, Byte2, ByteR As Byte
+	
+	'Word = 256 - Word
+	Word1 = 1
+	WordR = 256 - Word1
+	If WordR = 255 Then TestsPassed.0 = 1
+	
+	Word1 = 2559
+	WordR = Word1 + 1
+	If WordR = 2560 Then TestsPassed.1 = 1
+	
+	ShowOutput "Bounds:", TestsPassed, 3
+End Sub
+
+Sub TestOpt
+	'Test optimisations, make sure result is ok
+	Dim Var1, Var2, VarR As Byte
+	Dim Word1, Word2, WordR As Word
+	Dim LongTest As Long
+	
+	Dim TestsPassed As Byte
+	TestsPassed = 0
+	
+	Var1 = 100
+	VarR = Var1 - 1
+	If VarR = 99 Then TestsPassed.0 = 1
+	VarR = 0
+	VarR = VarR - 1
+	If VarR = 255 Then TestsPassed.1 = 1
+	
+	Var1 = 100
+	VarR = Var1 + 1
+	If VarR = 101 Then TestsPassed.2 = 1
+	VarR = 255
+	VarR = VarR + 1
+	If VarR = 0 Then TestsPassed.3 = 1
+	
+	'Increment tests
+	VarR = 2
+	VarR += 1
+	If VarR = 3 Then TestsPassed.4 = 1
+	WordR = 2559
+	WordR += 1
+	If WordR = 2560 Then TestsPassed.5 = 1
+	WordR += 1
+	If WordR = 2561 Then TestsPassed.6 = 1
+	LongTest = 10000000
+	LongTest += 1
+	If LongTest = 10000001 Then TestsPassed.7 = 1
+	
+	ShowOutput "Opt:", TestsPassed, 255
+	
+End Sub
+
+Sub TestByte
+	'Test Byte logic operations
+	Dim Var1, Var2, VarR As Byte
+	
+	Dim TestsPassed As Byte
+	TestsPassed = 0
+	
+	Var1 = 170
+	Var2 = 35
+	
+	'Byte, const/const
+	VarR = 14 + 50
+	If VarR = 64 Then TestsPassed.0 = 1
+	VarR = 87 - 28
+	If VarR = 59 Then TestsPassed.1 = 1
+	
+	'Byte, const/var
+	VarR = Var1 + 22
+	If VarR = 192 Then TestsPassed.2 = 1
+	VarR = Var1 - 41
+	If VarR = 129 Then TestsPassed.3 = 1
+	VarR = 219 - Var1
+	If VarR = 49 Then TestsPassed.4 = 1
+	
+	'Byte, var/var
+	VarR = Var1 + Var2
+	If VarR = 205 Then TestsPassed.5 = 1
+	VarR = Var1 - Var2
+	If VarR = 135 Then TestsPassed.6 = 1
+	
+	ShowOutput "Byte:", TestsPassed
+	
+End Sub
+
+Sub TestWord
+	Dim Var1, Var2, VarR As Word
+	
+	Dim TestsPassed As Byte
+	TestsPassed = 0
+	
+	Var1 = 41000
+	Var2 = 5000
+	
+	'Word, const/const
+	VarR = 780 + 2000
+	If VarR = 2780 Then TestsPassed.0 = 1
+	VarR = 9000 - 1500
+	If VarR = 7500 Then TestsPassed.1 = 1
+
+	'Word, const/var
+	VarR = Var1 + 4007
+	If VarR = 45007 Then TestsPassed.2 = 1
+	VarR = Var1 - 19799
+	If VarR = 21201 Then TestsPassed.3 = 1
+	VarR = 55002 - Var1
+	If VarR = 14002 Then TestsPassed.4 = 1
+
+	'Word, var/var
+	VarR = Var1 + Var2
+	If VarR = 46000 Then TestsPassed.5 = 1
+	VarR = Var1 - Var2
+	If VarR = 36000 Then TestsPassed.6 = 1
+	
+	ShowOutput "Word:", TestsPassed
+	
+End Sub
+
+Sub TestMixed
+	Dim Var1, VarR As Word
+	Dim Var2 As Byte
+	
+	Dim TestsPassed As Byte
+	TestsPassed = 0
+	
+	Var1 = 2570
+	Var2 = 241
+	
+	'Mixed, const/const
+	VarR = 1471 + 227
+	If VarR = 1698 Then TestsPassed.0 = 1
+	VarR = 1564 - 77
+	If VarR = 1487 Then TestsPassed.1 = 1
+
+	'Mixed, const/var
+	VarR = Var1 + 150
+	If VarR = 2720 Then TestsPassed.2 = 1
+	VarR = Var1 - 143
+	If VarR = 2427 Then TestsPassed.3 = 1
+	VarR = 2335 - Var2
+	If VarR = 2094 Then TestsPassed.4 = 1
+
+	'Mixed, var/var
+	VarR = Var1 + Var2
+	If VarR = 2811 Then TestsPassed.5 = 1
+	VarR = Var1 - Var2
+	If VarR = 2329 Then TestsPassed.6 = 1
+	
+	ShowOutput "Mixed:", TestsPassed
+	
+End Sub
+

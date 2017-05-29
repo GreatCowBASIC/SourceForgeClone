@@ -1,0 +1,22 @@
+[Target]
+Name = Chip 3 (tiny4313, Hardware Sim)
+Type = Hardware
+Slot = 2
+PowerUpDelay = 50
+ChipName = tiny4313
+Ram = 256
+Flash = 2048
+
+[InitCode]
+#chip tiny4313, 1
+
+#define DebugPrint HSerPrint
+#define DebugSendChar HSerSend
+#define DebugPrintCRLF HSerPrintCRLF
+
+#define USART_BAUD_RATE 9600
+#define USART_BLOCKING
+
+Dir PORTD.1 Out
+Set PORTB.0 On
+Wait 50 ms

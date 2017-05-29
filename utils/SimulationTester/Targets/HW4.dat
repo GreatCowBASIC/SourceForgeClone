@@ -1,0 +1,23 @@
+[Target]
+Name = Chip 4 (mega328p, Hardware Sim)
+Type = Hardware
+Slot = 3
+PowerUpDelay = 50
+ChipName = mega328p
+Ram = 2048
+Flash = 16384
+
+[InitCode]
+#chip mega328p, 8
+
+#define DebugPrint HSerPrint
+#define DebugSendChar HSerSend
+#define DebugPrintCRLF HSerPrintCRLF
+
+#define USART_BAUD_RATE 9600
+#define USART_BLOCKING
+
+Dir PORTD.1 Out
+Set PORTB.0 On
+
+Wait 50 ms

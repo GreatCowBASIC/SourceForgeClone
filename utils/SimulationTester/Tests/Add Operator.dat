@@ -1,0 +1,20 @@
+'Test for GCBASIC
+[Test]
+Name = Add Operator
+SourceFile = Add Operator.gcb
+'Source can be UART, LCD, or possibly other
+CaptureSource = UART
+'Runtime needs to be about 300 to complete
+RunTime = 300
+
+'List of words/phrases that must be found in test output to pass
+[MustFind]
+Add test
+Opt:255
+Byte:127
+Word:127
+Mixed:127
+Bounds:3
+
+'List of words/phrases that must not be found
+[MustNotFind]

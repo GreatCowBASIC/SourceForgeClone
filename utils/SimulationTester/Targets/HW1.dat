@@ -1,0 +1,23 @@
+[Target]
+Name = Chip 1 (16F88, Hardware Sim)
+Type = Hardware
+Slot = 0
+PowerUpDelay = 50
+ChipName = 16F88
+Ram = 368
+Flash = 4096
+
+[InitCode]
+#chip 16F88
+#config MCLR = ON
+
+#define DebugPrint HSerPrint
+#define DebugSendChar HSerSend
+#define DebugPrintCRLF HSerPrintCRLF
+
+#define USART_BAUD_RATE 9600
+#define USART_BLOCKING
+
+Dir PORTB.5 Out
+Set PORTB.0 On
+Wait 50 ms

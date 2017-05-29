@@ -1,0 +1,42 @@
+DebugPrint "String Compare test"
+DebugPrintCRLF
+
+'Some variables
+Dim MyStr As String * 20
+Dim MyOtherStr As String * 20
+
+MyStr = ""
+MyOtherStr = ""
+TestStringCompare("Both Blank", MyStr, MyOtherStr)
+
+MyStr = "Bob"
+MyOtherStr = ""
+TestStringCompare("Bob/Blank", MyStr, MyOtherStr)
+
+MyStr = ""
+MyOtherStr = "Bob"
+TestStringCompare("Blank/Bob", MyStr, MyOtherStr)
+
+MyStr = "Amy"
+MyOtherStr = "Bob"
+TestStringCompare("Amy/Bob", MyStr, MyOtherStr)
+
+MyStr = "Bob"
+MyOtherStr = "Bobby"
+TestStringCompare("Bob/Bobby", MyStr, MyOtherStr)
+
+MyStr = "Bob"
+MyOtherStr = "Bob"
+TestStringCompare("Bob/Bob", MyStr, MyOtherStr)
+
+Macro TestStringCompare(Message, Str1, Str2)
+	DebugPrint Message
+	DebugPrint " "
+	If Str1 = Str2 Then
+		DebugPrint "Equal"
+	Else
+		DebugPrint "Not Equal"
+	End If
+	DebugPrintCRLF
+	Wait 10 ms
+End Macro
