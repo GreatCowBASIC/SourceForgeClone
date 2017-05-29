@@ -1,0 +1,312 @@
+
+          Dim teststring As string * 16
+          Dim resultstring As string * 16
+          teststring="ABCDEGHIJKLMNOPQ"
+
+
+          DebugPrintCRLF
+          DebugPrint "AVR Testing"
+          DebugPrintCRLF
+          
+          
+          'left test
+          DebugPrint "Test left string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint left(teststring,2)
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = left(teststring,2)
+          DebugPrint resultstring
+          DebugPrintCRLF
+          DebugSendChar 9
+          if  left(teststring,2) = "AB" then
+                    DebugPrint "Valid Compare Test 001  : "
+                    DebugPrint left(teststring,2)         
+          else
+                    DebugPrint "Invalid Compare Test 001: "
+                    DebugPrint left(teststring,2) 
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test right string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint right(teststring,2)
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = right(teststring,2)
+          DebugPrint resultstring
+          DebugPrintCRLF
+          DebugSendChar 9
+          if  right(teststring,2) = "PQ" then
+                    DebugPrint "Valid Compare Test 002  : "
+                    DebugPrint RIGHT(teststring,2)         
+          else
+                    DebugPrint "Invalid Compare Test 002: "
+                    DebugPrint RIGHT(teststring,2)
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test mid string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint mid(teststring,2,2)
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = mid(teststring,2,2)
+          DebugPrint resultstring
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  MID(teststring,2,2) = "BC" then
+                    DebugPrint "Valid Compare Test 003  : "
+                    DebugPrint MID(teststring,2,2)         
+          else
+                    DebugPrint "Invalid Compare Test 003: "
+                    DebugPrint MID(teststring,2,2)
+          end if
+          DebugPrintCRLF  2
+
+
+          DebugPrint "Test LEN string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint LEN(teststring)
+          DebugPrintCRLF
+          DebugSendChar 9
+          result = LEN(teststring)
+          DebugPrint result
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  LEN(teststring) = 16 then
+                    DebugPrint "Valid Compare Test 004  : "
+          ELSE
+                    DebugPrint "Invalid Compare Test 004: "
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test INSTR string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint INSTR(teststring,"AB")
+          DebugPrintCRLF
+          DebugSendChar 9
+          result = INSTR(teststring,"AB")
+          DebugPrint result
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  INSTR(teststring,"AB") = 1 then
+                    DebugPrint "Valid Compare Test 005  : " 
+                    DebugPrint INSTR(teststring,"AB")
+          ELSE
+                    DebugPrint "Invalid Compare Test 005: "
+                    DebugPrint INSTR(teststring,"AB")
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test STR string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint STR(0x55)
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = STR(0x55)
+          DebugPrint resultstring
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  STR(0x55) = "85" then
+                    DebugPrint "Valid Compare Test 006  : " 
+                    DebugPrint STR(0x55)
+          ELSE
+                    DebugPrint "Invalid Compare Test 006: "
+                    DebugPrint STR(0x55)
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test VAL string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint VAL("85")
+          DebugPrintCRLF
+          DebugSendChar 9
+          result = VAL("55")
+          DebugPrint result
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  VAL("85") = 0x55 then
+                    DebugPrint "Valid Compare Test 007  : " 
+                    DebugPrint VAL("85")
+          ELSE
+                    DebugPrint "Invalid Compare Test 007: "
+                    DebugPrint VAL("85")
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test trim string handling"
+          DebugPrintCRLF
+          DebugSendChar 9 
+          teststring = "   1234    "
+          resultstring = ltrim(teststring)
+          resultstring = rtrim(resultstring)        
+          DebugPrint resultstring
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if   resultstring = "1234" then
+                    DebugPrint "Valid Compare Test 008  : "
+                    DebugPrint  resultstring        
+          else
+                    DebugPrint "Invalid Compare Test 008: "
+                    DebugPrint  resultstring
+          end if
+          DebugPrintCRLF     
+                                  
+          
+          DebugPrint "Test UCASE string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          teststring = "abcdefghijklmnop"
+          DebugPrint ucase(teststring)
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = ucase(teststring)
+          DebugPrint resultstring
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  ucase(teststring,"AB") = "ABCDEFGHIJKLMNOP" then
+                    DebugPrint "Valid Compare Test 009  : " 
+                    DebugPrint resultstring
+          ELSE
+                    DebugPrint "Invalid Compare Test 009: "
+                    DebugPrint resultstring
+          end if
+          DebugPrintCRLF
+          
+
+          DebugPrint "Test ASC string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          teststring = "abcdefghijklmnop"
+          DebugPrint ASC(teststring)
+          DebugPrintCRLF
+          DebugSendChar 9
+          result = ASC(teststring)
+          DebugPrint result
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  ASC(teststring) = 97 then
+                    DebugPrint "Valid Compare Test 010  : " 
+                    DebugPrint result
+          ELSE
+                    DebugPrint "Invalid Compare Test 010: "
+                    DebugPrint result
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test CHR string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint CHR(65)
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = CHR(65)
+          DebugPrint resultstring
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  CHR(65) = "A" then
+                    DebugPrint "Valid Compare Test 011  : " 
+                    DebugPrint resultstring
+          ELSE
+                    DebugPrint "Invalid Compare Test 011: "
+                    DebugPrint resultstring
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test WordToBin string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint WordToBin(0x5555)
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = WordToBin(0x5555)
+          DebugPrint resultstring
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  WordToBin(0x5555) = "0101010101010101" then
+                    DebugPrint "Valid Compare Test 012  : " 
+                    DebugPrint resultstring
+          ELSE
+                    DebugPrint "Invalid Compare Test 012: "
+                    DebugPrint resultstring
+          end if
+          DebugPrintCRLF
+
+
+          DebugPrint "Test Pad string handling"
+          DebugPrintCRLF
+          DebugSendChar 9
+          DebugPrint "["
+          DebugPrint PAD("*",20)
+          DebugPrint "]"
+          DebugPrintCRLF
+          DebugSendChar 9
+          resultstring = "["+  PAD("*",20) + "]"
+          DebugPrint resultstring
+          DebugPrintCRLF 
+          DebugSendChar 9
+          if  resultstring = "[*                   ]" then
+                    DebugPrint "Valid Compare Test 014  : " 
+                    DebugPrint resultstring
+          ELSE
+                    DebugPrint "Invalid Compare Test 014: "
+                    DebugPrint resultstring
+          end if
+          DebugPrintCRLF
+                                 
+
+          DebugPrint "Case Test 001"
+          DebugPrintCRLF
+         for Temp = 0 to 6
+            DebugSendChar 9
+            DebugPrint temp
+            DebugSendChar 9
+            Select Case Temp
+                Case 0
+                    DebugPrint "None!"
+
+
+                Case 1 
+                    DebugPrint "One"
+
+
+                Case 2
+                    DebugPrint "Two"
+
+
+                Case 3: DebugPrint "Three"
+                Case 4: DebugPrint "Four"
+                Case 5: DebugPrint "Five"
+                Case Else
+                    DebugPrint "A lot!"
+            End Select
+            DebugPrintCRLF
+         next
+              
+          end
+          
+Function strtest
+	strtest = true
+          for xloop = 1 to len(global_teststring)
+           if global_testarray(xloop) <> global_teststring(xloop) then
+                    strtest = false
+           end if
+          next
+End Function
+

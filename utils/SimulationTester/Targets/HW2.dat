@@ -1,0 +1,23 @@
+[Target]
+Name = Chip 2 (18F26K80, Hardware Sim)
+Type = Hardware
+Slot = 1
+PowerUpDelay = 50
+ChipName = 18F26K80
+Flash=32768
+Ram=3648
+
+[InitCode]
+#chip 18F26K80, 8
+#config MCLR = ON
+
+#define DebugPrint HSerPrint
+#define DebugSendChar HSerSend
+#define DebugPrintCRLF HSerPrintCRLF
+
+#define USART_BAUD_RATE 9600
+#define USART_BLOCKING
+
+Dir PORTC.6 Out
+Set PORTB.0 On
+Wait 50 ms

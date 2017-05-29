@@ -1,0 +1,20 @@
+'Test for GCBASIC
+[Test]
+Name = String Compare
+SourceFile = String Compare.gcb
+'Source can be UART, LCD, or possibly other
+CaptureSource = UART
+RunTime = 2000
+
+'List of words/phrases that must be found in test output to pass
+[MustFind]
+String Compare test
+Both Blank Equal
+Bob/Blank Not Equal
+Blank/Bob Not Equal
+Amy/Bob Not Equal
+Bob/Bobby Not Equal
+Bob/Bob Equal
+
+'List of words/phrases that must not be found
+[MustNotFind]

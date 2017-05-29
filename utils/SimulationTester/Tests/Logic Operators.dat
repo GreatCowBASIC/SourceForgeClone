@@ -1,0 +1,18 @@
+'Test for GCBASIC
+[Test]
+Name = Logic Operators
+SourceFile = Logic Operators.gcb
+'Source can be UART, LCD, or possibly other
+CaptureSource = UART
+'Runtime needs to be about 300 to complete
+RunTime = 200
+
+'List of words/phrases that must be found in test output to pass
+[MustFind]
+Logic test
+Byte:1911
+Word:1911
+Mixed:1911
+
+'List of words/phrases that must not be found
+[MustNotFind]

@@ -1,0 +1,17 @@
+'Test for GCBASIC
+[Test]
+Name = Data Tables
+SourceFile = Data Tables.gcb
+'Source can be UART, LCD, or possibly other
+CaptureSource = UART
+'Runtime needs to be about 300 to complete
+RunTime = 300
+
+'List of words/phrases that must be found in test output to pass
+[MustFind]
+Data table test
+Expected 0x00
+result 0x00
+
+'List of words/phrases that must not be found
+[MustNotFind]

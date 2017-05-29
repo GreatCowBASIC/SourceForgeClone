@@ -1,0 +1,275 @@
+'Hardware simulator main program
+
+'Chip settings
+'20 Mhz crystal, run at 48 MHz
+#chip 18F4550, 48
+#config FOSC=HSPLL_HS, PLLDIV=5, CPUDIV=OSC1_PLL2, VREGEN = ON, USBDIV = 2, PWRTE = ON
+
+#include <usb.h>
+
+'USB settings
+#define USB_VID 0xF055
+#define USB_PID 0x0101
+#define USB_PRODUCT_NAME "GCB Hardware Simulator"
+'#define USB_ERROR_HANDLER ErrorHandler
+#define USB_SETUP_HANDLER SetupHandler
+
+'LCD settings
+#define LCD_IO 4
+#define LCD_RS PORTC.0
+#define LCD_RW PORTE.0
+#define LCD_Enable PORTA.5
+#define LCD_DB4 PORTA.4
+#define LCD_DB5 PORTA.3
+#define LCD_DB6 PORTA.2
+#define LCD_DB7 PORTA.1
+#define LCD_BL PORTA.0
+
+'PWM Outputs
+#define PUMP_AN_PIN PORTC.1
+#define PUMP_12V_PIN PORTC.2
+#define PUMP_AN 2
+#define PUMP_12V 1
+#define PUMP_AN_FB AN6
+
+'Programmer selector
+#define TSEL_0 PORTB.2
+#define TSEL_1 PORTB.3
+#define TSEL_2 PORTB.4
+
+'Test buses
+#define TEST_BUS PORTD
+#define TEST_BUS_DIR TRISD
+#define TEST_DA PORTB.0
+#define TEST_CL PORTB.1
+#define TEST_TX PORTC.7
+#define TEST_RX PORTC.6
+
+'USART settings
+#define USART_BAUD_RATE 9600
+#define USART_BLOCKING
+
+'USART in circular buffer
+Dim SerialInBuffer(255)
+'RecBufferWrite is next location to write
+'RecBufferRead is next location to read
+'If these are the same, no new data is present
+ReqLen = 0
+
+Initialise
+
+CLS
+Print "Hardware Sim"
+Locate 1, 0
+Print "HC 18/4/2015"
+
+Set LCD_BL On
+BlinkBacklight = False
+
+Wait 1 s
+
+Do
+	If BlinkBacklight Then
+		PulseOut LCD_BL, 450 ms
+		Wait 50 ms
+	End If
+	Locate 1, 0
+	Print RecBufferRead
+	Print " "
+	Print RecBufferWrite
+	Print " "
+	Print SerBufferSize
+	Print "         "
+	Wait 100 ms
+Loop
+
+'''Set up hardware simulator
+Sub Initialise
+	
+	'Set up USB
+	InitUSB
+	
+	'Set up USART
+	Dir TEST_TX Out
+	Dir TEST_RX In
+	
+	'Set up 12V charge pump
+	Dir PUMP_AN_PIN Out
+	Dir PUMP_12V_PIN Out
+	'32 kHz, 50% duty cycle gives good output
+	HPWM PUMP_12V, 32, 128
+	
+	'Select known target
+	SelectTarget 7
+	
+	'Set up serial reception
+	On Interrupt UsartRX1Ready Call USARTReceive
+	RecBufferRead = 0
+	RecBufferWrite = 0
+	
+End Sub
+
+'''Select a target microcontroller
+'''@param Target Target to select (0 to 7)
+Sub SelectTarget(In Target)
+	TSEL_0 = Target.0
+	TSEL_1 = Target.1
+	TSEL_2 = Target.2
+End Sub
+
+Sub SetupHandler
+	'In USBTempBuffer:
+	'0:bmRequestType 1:bRequest 3-2:wValue 5-4:wIndex 7-6:wLength
+	Dim wValue As Word
+	bRequest = USBTempBuffer(1)
+	[byte]wValue = USBTempBuffer(2)
+	wValue_H = USBTempBuffer(3)
+	Dim wLength As Word
+	[byte]wLength = USBTempBuffer(6)
+	wLength_H = USBTempBuffer(7)
+	
+	Select Case bRequest
+		'Internal testing
+		Case 0x00
+			'Show "It works"
+			CLS
+			Print "It works!"
+			USBSendData1Ack
+			
+		Case 0x01
+			'Clear LCD
+			CLS
+			USBSendData1Ack
+			
+		Case 0x02
+			'Append to LCD
+			LCDWriteChar wValue
+			USBSendData1Ack
+			
+		Case 0x03
+			'Move cursor
+			Locate wValue_H, [byte]wValue
+			USBSendData1Ack
+			
+		'Test setup
+		Case 0x10
+			'Set 12V charge pump
+			If wValue.0 Then
+				HPWM PUMP_12V, 32, 128
+			Else
+				HPWM PUMP_12V, 32, 0
+			End If
+			USBSendData1Ack
+			
+		Case 0x11
+			'Select test microcontroller
+			SelectTarget wValue
+			CLS
+			Print "Selected "
+			Print wValue
+			USBSendData1Ack
+			
+		Case 0x12
+			'Data bus LCD mode
+			'(ignore for now)
+			
+		'Test control
+		Case 0x20
+			'AN level
+			HPWM PUMP_AN, 32, wValue
+			USBSendData1Ack
+			
+		Case 0x21
+			'Put USART byte
+			HSerSend wValue
+			USBSendData1Ack
+			
+		Case 0x22
+			'Write data bus
+			TEST_BUS = wValue
+			USBSendData1Ack
+			
+		Case 0x23
+			'Write data bus direction
+			TEST_BUS_DIR = wValue
+			USBSendData1Ack
+			
+		'Test result
+		Case 0x30
+			'Read AN level
+			USB_IN0_CNT = 1
+			Poke USB_IN0_ADDR, ReadAD(PUMP_AN_FB)
+			USBStartSend
+			
+		Case 0x31
+			'Read USART byte
+			If SerBufferSize > 0 Then
+				'Get next byte from circular buffer
+				TempSerByte = SerialInBuffer(RecBufferRead)
+				RecBufferRead += 1
+				
+				'Send
+				USB_IN0_CNT = 1
+				Poke USB_IN0_ADDR, TempSerByte
+				USBStartSend
+			Else
+				USB_IN0_CNT = 0
+				USBStartSend
+			End If
+			
+		Case 0x32
+			'Read data bus
+			USB_IN0_CNT = 1
+			Poke USB_IN0_ADDR, TEST_BUS
+			USBStartSend
+			
+		Case 0x33
+			'Read data bus direction
+			USB_IN0_CNT = 1
+			Poke USB_IN0_ADDR, TEST_BUS_DIR
+			USBStartSend
+			
+		Case 0x34
+			'Dump serial buffer
+			'Send byte count, then up to 100 bytes
+			SerByteCount = SerBufferSize
+			If SerByteCount >= wLength Then
+				SerByteCount = wLength
+			End If
+			If SerByteCount > 100 Then
+				SerByteCount = 100
+			End If
+			USB_IN0_CNT = SerByteCount
+			SerByteCount -= 1
+			For CopyLoc = 0 To SerByteCount
+				TempSerByte = SerialInBuffer(RecBufferRead)
+				Poke USB_IN0_ADDR + CopyLoc, TempSerByte
+				RecBufferRead += 1
+			Next
+			USBStartSend
+			
+	End Select
+End Sub
+
+Sub ErrorHandler
+	CLS
+	Print "Err "
+	Print UEIR
+End Sub
+
+Sub USARTReceive
+	'Read byte into circular buffer unless buffer is full
+	NewWritePos = RecBufferWrite + 1
+	If NewWritePos = RecBufferRead Then
+		'Buffer full, discard byte and exit
+		NewWritePos = HSerReceive
+		Return
+	End If
+	SerialInBuffer(RecBufferWrite) = HSerReceive
+	RecBufferWrite += 1
+End Sub
+
+Function SerBufferSize
+	'Get number of bytes present in buffer
+	SerBufferSize = RecBufferWrite - RecBufferRead
+End Function

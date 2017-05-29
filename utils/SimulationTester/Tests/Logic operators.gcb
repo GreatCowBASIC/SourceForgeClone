@@ -1,0 +1,140 @@
+DebugPrint "Logic test"
+DebugPrintCRLF
+
+TestByte
+TestWord
+TestMixed
+TestInt
+
+Sub ShowOutput(In Source As String, In Value As Word)
+	'CLS
+	'Print Source
+	'Print Value
+	'Print "/1911"
+	
+	DebugPrint Source
+	DebugPrint Value
+	DebugPrint "/1911"
+	DebugPrintCRLF
+	
+	Wait 10 ms
+End Sub
+
+Sub TestByte
+	'Test Byte logic operations
+	Dim Var1, Var2, VarR As Byte
+	
+	Dim TestsPassed As Word
+	TestsPassed = 0
+	
+	Var1 = 0x0A
+	Var2 = 0xF2
+	
+	'Byte, const/const
+	VarR = 0xAA & 0xAA
+	If VarR = 0xAA Then TestsPassed.0 = 1
+	VarR = 0xAA | 0xff
+	If VarR = 0xFF Then TestsPassed.1 = 1
+	VarR = 0xAA Xor 0xAf
+	If VarR = 0x05 Then TestsPassed.2 = 1
+
+	'Byte, const/var
+	VarR = Var1 & 0xAA
+	If VarR = 0x0A Then TestsPassed.4 = 1
+	VarR = Var1 | 0xff
+	If VarR = 0xFF Then TestsPassed.5 = 1
+	VarR = Var1 Xor 0xAf
+	If VarR = 0xA5 Then TestsPassed.6 = 1
+	
+	'Byte, var/var
+	VarR = Var1 & Var2
+	If VarR = 0x02 Then TestsPassed.8 = 1
+	VarR = Var1 | Var2
+	If VarR = 0xFA Then TestsPassed.9 = 1
+	VarR = Var1 Xor Var2
+	If VarR = 0xF8 Then TestsPassed.10 = 1
+	
+	ShowOutput "Byte:", TestsPassed
+	
+End Sub
+
+Sub TestWord
+	Dim Var1, Var2, VarR As Word
+	
+	Dim TestsPassed As Word
+	TestsPassed = 0
+	
+	Var1 = 0x0A0A
+	Var2 = 0xF2F2
+	
+	'Byte, const/const
+	VarR = 0xAAAA & 0xAAAA
+	If VarR = 0xAAAA Then TestsPassed.0 = 1
+	VarR = 0xAAAA | 0xffff
+	If VarR = 0xFFFF Then TestsPassed.1 = 1
+	VarR = 0xAAAA Xor 0xAfAF
+	If VarR = 0x0505 Then TestsPassed.2 = 1
+
+	'Byte, const/var
+	VarR = Var1 & 0xAAAA
+	If VarR = 0x0A0A Then TestsPassed.4 = 1
+	VarR = Var1 | 0xffFF
+	If VarR = 0xFFFF Then TestsPassed.5 = 1
+	VarR = Var1 Xor 0xAfAF
+	If VarR = 0xA5A5 Then TestsPassed.6 = 1
+
+	'Byte, var/var
+	VarR = Var1 & Var2
+	If VarR = 0x0202 Then TestsPassed.8 = 1
+	VarR = Var1 | Var2
+	If VarR = 0xFAFA Then TestsPassed.9 = 1
+	VarR = Var1 Xor Var2
+	If VarR = 0xF8F8 Then TestsPassed.10 = 1
+	
+	ShowOutput "Word:", TestsPassed
+	
+End Sub
+
+Sub TestMixed
+	Dim Var1, VarR As Word
+	Dim Var2 As Byte
+	
+	Dim TestsPassed As Word
+	TestsPassed = 0
+	
+	Var1 = 0x0A0A
+	Var2 = 0xF2
+	
+	'Byte, const/const
+	VarR = 0xAAAA & 0xAA
+	If VarR = 0xAA Then TestsPassed.0 = 1
+	VarR = 0xAAAA | 0xff
+	If VarR = 0xAAFF Then TestsPassed.1 = 1
+	VarR = 0xAAAA Xor 0xAf
+	If VarR = 0xAA05 Then TestsPassed.2 = 1
+
+	'Byte, const/var
+	VarR = Var1 & 0xAA
+	If VarR = 0x0A Then TestsPassed.4 = 1
+	VarR = Var1 | 0xFF
+	If VarR = 0x0AFF Then TestsPassed.5 = 1
+	VarR = Var1 Xor 0xAF
+	If VarR = 0x0AA5 Then TestsPassed.6 = 1
+
+	'Byte, var/var
+	VarR = Var1 & Var2
+	If VarR = 0x02 Then TestsPassed.8 = 1
+	VarR = Var1 | Var2
+	If VarR = 0x0AFA Then TestsPassed.9 = 1
+	VarR = Var1 Xor Var2
+	If VarR = 0x0AF8 Then TestsPassed.10 = 1
+	
+	ShowOutput "Mixed:", TestsPassed
+	
+End Sub
+
+Sub TestInt
+	'Dim Int1, Int2, IntR As Integer
+	
+End Sub
+

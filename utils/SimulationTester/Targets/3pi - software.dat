@@ -1,0 +1,38 @@
+[Target]
+Name = 3pi (mega168, Software Sim)
+Type = Software
+SimRobot = Robots\3pi.gcr
+Flash=8192
+RAM=1024
+
+[InitCode]
+#include <3pi.h>
+#chip mega168, 8
+#define DebugPrint SerPrint 1,
+#define DebugPrintCRLF SerNewLine
+#define DebugSendChar SerSend 1,
+
+#define SerSend SerSend2
+
+Set PORTD.1 On
+
+Sub SerSend2 (In Dummy, In ByteOut)
+	Set PORTD.1 Off
+	Wait 104 us
+	Repeat 8
+		If ByteOut.0 Then
+			Set PORTD.1 On
+		Else
+			Set PORTD.1 Off
+		End If
+		Rotate ByteOut Right
+		Wait 104 us
+	End Repeat
+	Set PORTD.1 On
+	Wait 1 ms
+End Sub
+
+Sub SerNewLine
+	SerSend 1, 13
+	SerSend 1, 10
+End Sub

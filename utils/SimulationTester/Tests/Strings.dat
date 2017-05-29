@@ -1,0 +1,24 @@
+'Test for GCBASIC
+[Test]
+Name = Strings
+SourceFile = Strings.gcb
+'Source can be UART, LCD, or possibly other
+CaptureSource = UART
+RunTime = 2500
+RequiredRam = 570
+RequiredFlash = 4400
+
+'List of words/phrases that must be found in test output to pass
+[MustFind]
+valid
+None!
+One
+Two
+Three
+Four
+Five
+A lot!
+
+'List of words/phrases that must not be found
+[MustNotFind]
+invalid
