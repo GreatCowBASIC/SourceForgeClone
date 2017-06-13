@@ -115,7 +115,8 @@
 ' End of 11/4/2017 -  changes
 '       15/4/2017 - Adapted AD_Acquisition_Time_Select_bits to  0b100 or decimal 4
 '                   Added to set AD_Acquisition_Time_Select_bits  in SetNegativeChannelSelectbits macro - needed to address timing issue
-
+' 4/6/2017  - Removal of Testprogram label set. Put silly labels in ASM!
+' 13/6/2017 - Removal of explicit register definitions
 
 
 
@@ -793,14 +794,14 @@ macro LLReadAD (ADLeftAdjust)
             NOP '#IFDEF Bit(CHS0). Clear channels bits. @DebugADC_H
         #ENDIF
 
-        SET ADCON0.CHS0 OFF
-        SET ADCON0.CHS1 OFF
+        SET CHS0 OFF
+        SET CHS1 OFF
         #IFDEF Bit(CHS2)
-          SET ADCON0.CHS2 OFF
+          SET CHS2 OFF
           #IFDEF Bit(CHS3)
-            SET ADCON0.CHS3 OFF
+            SET CHS3 OFF
             #IFDEF Bit(CHS4)
-              SET ADCON0.CHS4 OFF
+              SET CHS4 OFF
             #ENDIF
           #ENDIF
         #ENDIF
@@ -808,14 +809,14 @@ macro LLReadAD (ADLeftAdjust)
         #IFDEF DebugADC_H
             NOP 'IF ADReadPort.0 thru to IF ADReadPort.4 to set ADCON0. Set channel bits. @DebugADC_H
         #ENDIF
-        IF ADReadPort.0 On Then Set ADCON0.CHS0 On
-        IF ADReadPort.1 On Then Set ADCON0.CHS1 On
+        IF ADReadPort.0 On Then Set CHS0 On
+        IF ADReadPort.1 On Then Set CHS1 On
         #IFDEF Bit(CHS2)
-          IF ADReadPort.2 On Then Set ADCON0.CHS2 On
+          IF ADReadPort.2 On Then Set CHS2 On
           #IFDEF Bit(CHS3)
-            If ADReadPort.3 On Then Set ADCON0.CHS3 On
+            If ADReadPort.3 On Then Set CHS3 On
             #IFDEF Bit(CHS4)
-              If ADReadPort.4 On Then Set ADCON0.CHS4 On
+              If ADReadPort.4 On Then Set CHS4 On
             #ENDIF
           #ENDIF
         #ENDIF
@@ -1091,7 +1092,7 @@ macro LLReadAD (ADLeftAdjust)
     #ENDIF
 
     'Enable A/D
-    SET ADCON0.ADON ON
+    SET ADON ON
 
     #IFDEF DebugADC_H
         NOP 'Acquisition Delay. @DebugADC_H
@@ -1103,22 +1104,24 @@ macro LLReadAD (ADLeftAdjust)
     #IFDEF DebugADC_H
         NOP 'Read A/D. @DebugADC_H
     #ENDIF
+
     'Read A/D
+
     #ifdef bit(GO_NOT_DONE)
-      SET ADCON0.GO_NOT_DONE ON
+      SET GO_NOT_DONE ON
       nop
-      Wait While ADCON0.GO_NOT_DONE ON
+      Wait While GO_NOT_DONE ON
     #endif
 
     #ifndef bit(GO_NOT_DONE)
       #IFDEF Bit(GO_DONE)
-        SET ADCON0.GO_DONE ON
-        Wait While ADCON0.GO_DONE ON
+        SET GO_DONE ON
+        Wait While GO_DONE ON
       #ENDIF
       #IFNDEF Bit(GO_DONE)
         #IFDEF Bit(GO)
-          SET ADCON0.GO ON
-          Wait While ADCON0.GO ON
+          SET GO ON
+          Wait While GO ON
         #ENDIF
       #ENDIF
     #endif
@@ -1848,7 +1851,7 @@ sub ADOff
 'Disable the A/D converter, and set all ports to digital.
 'This sub is deprecated, InitSys automatically turns off A/D
 
- SET ADCON0.ADON OFF
+ SET ADON OFF
 #IFDEF NoBit(PCFG4)
  #IFDEF NoVar(ANSEL)
   #IFDEF NoVar(ADCON2)
@@ -1971,8 +1974,6 @@ Macro  SetNegativeChannelSelectbits
           #ENDIF
 
 end macro
-
-Testprogram:
 
 ''  #chip 16F877a, 16
 ''  #chip 16F1939
@@ -2235,4 +2236,3 @@ Testprogram:
 '    #define USE_ADE1 true
 '    #define USE_ADE2 true
 
-EndofTestprogram:
