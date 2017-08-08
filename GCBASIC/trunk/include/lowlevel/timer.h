@@ -87,6 +87,8 @@
 ' 18/03/2017: Corrected OSC(Source)  Support for PIC Timers 3/5/7 - WMR
 ' 21/03/2017: Corrected Timer0 Clock Source select bits constants for 16f18855 and others
 '             Reverted the missing Settimer for AVR
+' 05/02/2017: Added specific Support for TMR2/4/6/8 for 93 chips with Enhanced Timer2 with TxCKPS2 Bit and TxCLKCON Register.
+' 05/02/2017: Corrected Typos in Inittimer 5/7
 '***********************************************************
 
 'Subroutines:
@@ -285,6 +287,28 @@
 
      #ENDIF
 
+       #IFDEF OneOf(T2CLK,TMR2CLKCON)  'has at least one
+       'This will cover all timers 2/4/6/8 on relevant chips
+
+         'keep for compatibility
+         #Define OSC 1      'FOSC/4
+         #Define EXT 0      'T1CKIPPS
+         #Define EXTOSC 6   'SOSC
+
+         'Some Aditional Clock Sources
+         'Some others not included  - can be set manually
+         #Define SOSC 6
+         #Define MFINTOSC 5
+         #Define LFINTOSC 4
+         #DEFINE HFINTOSC 3
+         #Define FOSC  2
+         #Define FOSC4 1
+         #Define TxCKIPPS  0
+
+     #ENDIF
+
+
+
   #ENDIF
 
 #ENDSCRIPT
@@ -334,18 +358,20 @@
   #define PS_5_1024 5
 
 
-  'support 16f18855 series 8/16 bit timers
+  'support 16f188xx series (and others) 8/16 bit timers
+  '
   #define   TMR0_CLC1       0xC0
   #define   TMR0_SOSC       0xA0
-  #define   TMR0_LFINTOSC     0x80
-  #define   TMR0_HFINTOSC     0x60
+  #define   TMR0_LFINTOSC   0x80
+
+  #define   TMR0_HFINTOSC   0x60
   #define   TMR0_FOSC4      0x40
   #define   TMR0_T0CKIPPS_Inverted  0x20
-  #define   TMR0_T0CKIPPS_True    0
+  #define   TMR0_T0CKIPPS_True      0x00
 
   #define   TMR0_T0ASYNC    0x10
 
-  #define TMR0_T016BIT    0x10
+  #define TMR0_T016BIT     0x10
 
   #define PRE0_1 = 0
   #define PRE0_2 = 1
@@ -381,9 +407,24 @@
   #define POST0_15 = 14
   #define POST0_16 = 15
 
-
-
-  'end if support 16f18855 series 8/16 bit timers
+'Generic Postscaler for TMR2/4/6/8 on chips with TxCLK Register
+' Includes 16F188xx, 16F177x, 16F155xx, 18FxxK40 and others
+  #define POST_1 = 0
+  #define POST_2 = 1
+  #define POST_3 = 2
+  #define POST_4 = 3
+  #define POST_5 = 4
+  #define POST_6 = 5
+  #define POST_7 = 6
+  #define POST_8 = 7
+  #define POST_9 = 8
+  #define POST_10 = 9
+  #define POST_11 = 10
+  #define POST_12 = 11
+  #define POST_13 = 12
+  #define POST_14 = 13
+  #define POST_15 = 14
+  #define POST_16 = 15
 
 
 'Optimisation constants
@@ -602,11 +643,31 @@
 #endscript
 
 
-'Timer 8 prescales -wmr
-#define PS8_1 0
-#define PS8_4 1
-#define PS8_16 2
-#define PS8_64 3
+#Script
+
+  if bit(T8CKPS2) then
+    PS8_1   = 0
+    PS8_2   = 1
+    PS8_4   = 2
+    PS8_8   = 3
+    PS8_16  = 4
+    PS8_32  = 5
+    PS8_64  = 6
+    PS8_128 = 7
+
+  End if
+
+  if nobit(T8CKPS2) then
+    'Pre Dec 2016 constants
+    PS8_1  = 0
+    PS8_4  = 1
+    PS8_16 = 2
+    PS8_64 = 3
+
+  end if
+
+#Endscript
+
 
 'Timer 10 prescales -wmr
 #define PS10_1 0
@@ -1241,13 +1302,15 @@ Sub StopTimer (In TMRNumber)
 End Sub
 
 Sub InitTimer0(In TMRSource, In TMRPres, in TMRPost )
-'Equate to       bit5           T0CON1      T0CON0
+ 'Equate to      T0CON1 7:5      3:0        T0CON0 3:0
 
      'Assumed for code below Timer0 is 16-bit capable as we have been passed three parameters
      'Set prescaler
      #ifdef  Var(T0CON1)
+         'T0CON1 Sets up  CLK Source (7:5)  Sync (4) & Prescale 3:0
+         'T0CON1 POR Val = b'00000000'
 
-        'Re-Use TMRPres as T0CON1 Temp register
+         'Re-Use TMRPres as T0CON1 Temp register
          'Keep T0CON1 7:4 and write bits 3:0 to  register
          'Bits therefore will be cleared!
           TMRPres = (T0CON1 And 240 ) OR TMRPres
@@ -1266,7 +1329,7 @@ Sub InitTimer0(In TMRSource, In TMRPres, in TMRPost )
      'Assumed for code below Timer0 is 16-bit capable
      'Set Postscaler
      #ifdef  Var(T0CON0)
-         'Re-Use TMRPostas T0CON0 Temp register
+         'Re-Use TMRPost as T0CON0 Temp register
          'Keep T0CON0 7:5  and write bits 5:0 to register
          'Bits therefore will be cleared!
           TMRPost = (T0CON0 And 224) OR TMRPost
@@ -1529,38 +1592,81 @@ Sub InitTimer1(In TMRSource, In TMRPres)
   #endif
 End Sub
 
+Sub InitTimer2 (In TMRSource, In TMRPres, In TMRPost)
+   'Overloaded sub to include CLK source newer PIC chips with T2CLK and Multiple timer sources
+   'Supported CLK Sources
+
+       '  SOSC      (Same as EXT_OSC)
+       '  EXT_OSC   (same as SOSC)
+       '  MFINTOSC
+       '  LFINTOSC
+       '  HFINTOSC
+       '  FOSC
+       '  FOSC4     (Same as OSC)
+       '  OSC       (same as FOSC4)
+       '  TxCKIPPS  (Same as EXT)
+       '  EXT       (Same as TxCKIPPS)
+
+  #ifdef PIC
+
+       #ifdef Var(T2CON) 'does the timer exist?
+
+           #IFDEF bit(T2CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and TxCLKCON Register
+
+              IF TMRPres > 7 then  TMRPres = 0 'failsafe
+              IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T2CLKCON = TMRSOurce
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T2CON.7  'Dont change Enable/RUN state
+              T2CON =  TMRPres
+
+           #Endif
+
+       #endif
+
+  #endif
+End SUB
 
 Sub InitTimer2 (In TMRPres, In TMRPost)
-                   'AVR-Src    AVR-Pres
   #ifdef PIC
-     'PIC TIMERs 2/4/6/8/10/12 are all the same.
-     'T2CON Register
-     'Bit7 = Dont Care/ Not implemented
-     'Bits 6:3  (4-Bit Postscaler)
-     'Bit 2  TMRON
-     'Bits 1:0 'Prescaler
 
-     #ifdef Var(T2CON) 'does the timer exist?
-        'Valid Prescales are   0 - 3
-         IF TMRPres > 3 then  TMRPres = 0 'failsafe
-         'Valid PostScales are  0 - 15
-         IF TMRPost > 15 then  TMRPost = 0 'failsafe
+       #ifdef Var(T2CON) 'does the timer exist?
 
-        'Start Building a Temporary Variable
-        'Re-Using tmrpres as TxCON shadow register
-        '
-        ' Alternative Method to Previous inline ASM Method
-         '(Saves 3 byte of Memory)
-        TMRPres = TMRPres OR (TMRPost * 8)
-        If TMR2ON = ON then SET TMRPres.2 ON
+           #IFDEF NoBit(T2CKPS2)  ' TYPE 1 Timer2
 
-       'Write the control register
-        T2CON = TMRPres
-     #endif
+            'Valid Prescales are   0 - 3
+             IF TMRPres > 3 then  TMRPres = 0 'failsafe
+             'Valid PostScales are  0 - 15
+             IF TMRPost > 15 then  TMRPost = 0 'failsafe
 
-     'Set Clock Source, if required by specific chip classes
-     'Set to FOSC/4 for backward compatibility
-     #ifdef var(T2CLKCON): T2CLKCON = 0x01:#ENDIF
+            'Start Building a Temporary Variable
+            'Re-Using tmrpres as TxCON shadow register
+            '
+            ' Alternative Method to Previous inline ASM Method
+             '(Saves 3 byte of Memory)
+            TMRPres = TMRPres OR (TMRPost * 8)
+            If TMR2ON = ON then SET TMRPres.2 ON
+
+           'Write the control register
+            T2CON = TMRPres
+           #endif
+
+
+           #IFDEF bit(T2CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and TxCLKCON Register
+
+              IF TMRPres > 7 then  TMRPres = 0 'failsafe
+              IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T2CLKCON = 1  'CLK Source  = FOSC/4
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T2CON.7  'Dont change Enable/RUN state
+              T2CON =  TMRPres
+           #Endif
+
+       #endif
 
   #endif
 
@@ -1679,21 +1785,83 @@ Sub InitTimer3(In TMRSource, In TMRPres)
    #endif
 End Sub
 
-Sub InitTimer4 (In TMRPres, In TMRPost)
+Sub InitTimer4 (In TMRSource, In TMRPres, In TMRPost)
+   'Overloaded sub to include CLK source newer PIC chips with T2CLK and Multiple timer sources
+   'Supported CLK Sources
+
+       '  SOSC      (Same as EXT_OSC)
+       '  EXT_OSC   (same as SOSC)
+       '  MFINTOSC
+       '  LFINTOSC
+       '  HFINTOSC
+       '  FOSC
+       '  FOSC4     (Same as OSC)
+       '  OSC       (same as FOSC4)
+       '  TxCKIPPS  (Same as EXT)
+       '  EXT       (Same as TxCKIPPS)
 
   #ifdef PIC
-      'See Intimer2 for notes
-     #ifdef Var(T4CON)
-        IF TMRPres > 3 then  TMRPres = 0
-        IF TMRPost > 15 then  TMRPost = 0
-        TMRPres = TMRPres OR (TMRPost * 8)
-        If TMR4ON = ON then SET TMRPres.2 ON
-        T4CON = TMRPres 'write the register
-     #endif
 
-     'Set Clock Source, if required by specific chip classes
-     'Set to FOSC/4 for backward compatibility
-     #ifdef var(T4CLKCON): T4CLKCON = 0x01:#ENDIF
+       #ifdef Var(T4CON) 'does the timer exist?
+
+           #IFDEF bit(T4CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and TxCLKCON Register
+
+              IF TMRPres > 7 then  TMRPres = 0 'failsafe
+              IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T4CLKCON = TMRSOurce
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T4CON.7  'Dont change Enable/RUN state
+              T4CON =  TMRPres
+
+           #Endif
+
+       #endif
+
+  #endif
+End SUB
+
+
+Sub InitTimer4 (In TMRPres, In TMRPost)
+ #ifdef PIC
+
+       #ifdef Var(T4CON) 'does the timer exist?
+
+           #IFDEF NoBit(T4CKPS2)  ' TYPE 1 Timer2
+
+
+            'Valid Prescales are   0 - 3
+             IF TMRPres > 3 then  TMRPres = 0 'failsafe
+             'Valid PostScales are  0 - 15
+             IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+            'Start Building a Temporary Variable
+            'Re-Using tmrpres as TxCON shadow register
+            '
+            ' Alternative Method to Previous inline ASM Method
+             '(Saves 3 byte of Memory)
+            TMRPres = TMRPres OR (TMRPost * 8)
+            If TMR4ON = ON then SET TMRPres.2 ON
+
+           'Write the control register
+            T4CON = TMRPres
+           #endif
+
+
+           #IFDEF bit(T4CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and T2CLKCON Register
+
+             IF TMRPres > 7 then  TMRPres = 0 'failsafe
+             IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T4CLKCON = 1  'CLK Source  = FOSC/4
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T4CON.7  'Dont change Enable/RUN state
+              T4CON =  TMRPres
+           #Endif
+
+       #endif
 
   #endif
 
@@ -1715,7 +1883,7 @@ Sub InitTimer5(In TMRSource, In TMRPres)
     '** OSCEN & SOSCEN are always TxCON.3 and perform the same function
     'See Datasheet for Detailed Register Information
 
-     #ifdef Var(T3CON) 'ALL Pics w/Timer5 module have T3CON reg
+     #ifdef Var(T5CON) 'ALL Pics w/Timer5 module have T5CON reg
 
         #IF NoVar(T5CLK)
 
@@ -1768,7 +1936,7 @@ Sub InitTimer5(In TMRSource, In TMRPres)
                 Set TMRPres.3 ON
             END IF
            'Done building Temp Variable. Now write register
-           T3CON = TMRPres
+           T5CON = TMRPres
          #endif
      #ENDIF
 
@@ -1811,25 +1979,94 @@ Sub InitTimer5(In TMRSource, In TMRPres)
 
 End Sub
 
+Sub InitTimer6 (In TMRSource, In TMRPres, In TMRPost)
+   'Overloaded sub to include CLK source newer PIC chips with T2CLK and Multiple timer sources
+   'Supported CLK Sources
+
+       '  SOSC      (Same as EXT_OSC)
+       '  EXT_OSC   (same as SOSC)
+       '  MFINTOSC
+       '  LFINTOSC
+       '  HFINTOSC
+       '  FOSC
+       '  FOSC4     (Same as OSC)
+       '  OSC       (same as FOSC4)
+       '  TxCKIPPS  (Same as EXT)
+       '  EXT       (Same as TxCKIPPS)
+
+  #ifdef PIC
+
+       #ifdef Var(T6CON) 'does the timer exist?
+
+           #IFDEF bit(T6CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and TxCLKCON Register
+
+              IF TMRPres > 7 then  TMRPres = 0 'failsafe
+              IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T6CLKCON = TMRSOurce
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T6CON.7  'Dont change Enable/RUN state
+              T6CON =  TMRPres
+
+           #Endif
+
+       #endif
+
+  #endif
+End SUB
+
+
 Sub InitTimer6 (In TMRPres, In TMRPost)
     'See Intimer2 for notes
   #ifdef PIC
-     #ifdef Var(T6CON)
-         IF TMRPres > 3 then  TMRPres = 0
-         IF TMRPost > 15 then  TMRPost = 0
-         TMRPres = TMRPres OR (TMRPost * 8)
-         If TMR6ON = ON then SET TMRPres.2 ON
-         T6CON = TMRPres 'write the register
-     #endif
 
-     'Set Clock Source, if required by specific chip classes
-     'Set to FOSC/4 for backward compatibility
-     #ifdef var(T6CLKCON): T6CLKCON = 0x01:#ENDIF
+       #ifdef Var(T6CON) 'does the timer exist?
+
+           #IFDEF NoBit(T6CKPS2)  ' TYPE 1 Timer2
+
+
+            'Valid Prescales are   0 - 3
+             IF TMRPres > 3 then  TMRPres = 0 'failsafe
+             'Valid PostScales are  0 - 15
+             IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+            'Start Building a Temporary Variable
+            'Re-Using tmrpres as TxCON shadow register
+            '
+            ' Alternative Method to Previous inline ASM Method
+             '(Saves 3 byte of Memory)
+            TMRPres = TMRPres OR (TMRPost * 8)
+            If TMR6ON = ON then SET TMRPres.2 ON
+
+           'Write the control register
+            T6CON = TMRPres
+           #endif
+
+
+           #IFDEF bit(T6CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and T2CLKCON Register
+
+             IF TMRPres > 7 then  TMRPres = 0 'failsafe
+             IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T6CLKCON = 1  'CLK Source  = FOSC/4
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T6CON.7  'Dont change Enable/RUN state
+              T6CON =  TMRPres
+           #Endif
+
+       #endif
 
   #endif
 End Sub
 
 Sub InitTimer7(In TMRSource, In TMRPres)
+
+ ''' Timer 7 is only supported by the following PIC CHIPS
+
+
+
   #ifdef PIC
     'Pwr On Reset State of TxCON for 1/3/5/7 is "0"
     'TXCON Timer REGISTER for 1/3/5/7 are NOT the Same on ALL PICS
@@ -1838,9 +2075,9 @@ Sub InitTimer7(In TMRSource, In TMRPres)
     '** OSCEN & SOSCEN are always TxCON.3 and perform the same function
     'See Datasheet for Detailed Register Information
 
-     #ifdef Var(T3CON) 'ALL Pics w/Timer3 module have T3CON reg
+     #ifdef Var(T7CON) 'ALL Pics w/Timer7 module have T7CON reg
 
-        #IF NoVar(T3CLK)
+        #IF NoVar(T7CLK)
 
            'Test for valid Pres parameter
             'uses less memory than multiple boulean "AND"
@@ -1855,43 +2092,45 @@ Sub InitTimer7(In TMRSource, In TMRPres)
             END IF
 
             'Re-Using TMRPres as TxCON Temp Register
-            IF TMR3ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
+            IF TM7ON = 1 then Set TMRPres.0 ON  'The timer is running/ Dont Stop !
 
            'Select Case uses too much memory - changed
             IF TMRSource = OSC then
-               #ifdef bit(TMR1CS)    'TXCON.1 on some chips
+               #ifdef bit(TMR7CS)    'TXCON.1 on some chips
                    Set TMRPres.1 OFF
                #endif
 
-               #ifdef Bit(TMR3CS1)   'TXcon.7 on other chips
+               #ifdef Bit(TMR7CS1)   'TXcon.7 on other chips
                    Set TMRPres.7 OFF
                #endif
                Set TMRPres.3 OFF  'SOSCEN and OSCEN are Always Bit 3
             END IF
 
             IF TMRSource = EXT then
-               #ifdef bit(TMR3CS)
+               #ifdef bit(TMR7CS)
                    Set TMRPres.1 ON
                #endif
 
-               #ifdef Bit(TMR3CS1)
+               #ifdef Bit(TMR7CS1)
                   Set TMRPres.7 ON
                #endif
                Set TMRPres.3 OFF
             END IF
 
             If TMRSource = ExtOsc Then
-               #ifdef bit(TMR3CS)
+               #ifdef bit(TMR7CS)
                    Set TMRPres.1 ON
                #endif
 
-               #ifdef Bit(TMR3CS1)
+               #ifdef Bit(TMR7CS1)
                    Set TMRPres.7 ON
                #endif
                 Set TMRPres.3 ON
             END IF
            'Done building Temp Variable. Now write register
-           T3CON = TMRPres
+
+          T7CON = TMRPres
+
          #endif
      #ENDIF
 
@@ -1915,29 +2154,99 @@ Sub InitTimer7(In TMRSource, In TMRPres)
                  END IF
            END IF
 
-          IF TMR3ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
+          IF TMR7ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
 
           IF TMRSource > 15 OR TMRSource <0 then TRMSource = 0  'failsafe
 
-          T3CLK = TMRSource
-          T3CON = TMRPres
+          T7CLK = TMRSource
+          T7CON = TMRPres
       #ENDIF
 
   #ENDIF
 End Sub
 
-Sub InitTimer8 (In TMRPres, In TMRPost)
-    'See Intimer2 for notes
+Sub InitTimer8 (In TMRSource, In TMRPres, In TMRPost)
+   'Overloaded sub to include CLK source newer PIC chips with T2CLK and Multiple timer sources
+   'Supported CLK Sources
+
+       '  SOSC      (Same as EXT_OSC)
+       '  EXT_OSC   (same as SOSC)
+       '  MFINTOSC
+       '  LFINTOSC
+       '  HFINTOSC
+       '  FOSC
+       '  FOSC4     (Same as OSC)
+       '  OSC       (same as FOSC4)
+       '  TxCKIPPS  (Same as EXT)
+       '  EXT       (Same as TxCKIPPS)
+
   #ifdef PIC
-     #ifdef Var(T8CON)
-        IF TMRPres > 3 then  TMRPres = 0
-        IF TMRPost > 15 then  TMRPost = 0
-        TMRPres = TMRPres OR (TMRPost * 8)
-        If TMR8ON = ON then SET TMRPres.2 ON
-        T8CON = TMRPres 'write the register
-     #endif
+
+       #ifdef Var(T8CON) 'does the timer exist?
+
+           #IFDEF bit(T8CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and TxCLKCON Register
+
+              IF TMRPres > 7 then  TMRPres = 0 'failsafe
+              IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T8CLKCON = TMRSOurce
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T8CON.7  'Dont change Enable/RUN state
+              T8CON =  TMRPres
+
+           #Endif
+
+       #endif
+
   #endif
-End Sub
+End SUB
+
+
+Sub InitTimer8 (In TMRPres, In TMRPost)
+
+ #ifdef PIC
+
+       #ifdef Var(T8CON) 'does the timer exist?
+
+           #IFDEF NoBit(T8CKPS2)  ' TYPE 1 Timer2
+
+
+            'Valid Prescales are   0 - 3
+             IF TMRPres > 3 then  TMRPres = 0 'failsafe
+             'Valid PostScales are  0 - 15
+             IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+            'Start Building a Temporary Variable
+            'Re-Using tmrpres as TxCON shadow register
+            '
+            ' Alternative Method to Previous inline ASM Method
+             '(Saves 3 byte of Memory)
+            TMRPres = TMRPres OR (TMRPost * 8)
+            If TMR8ON = ON then SET TMRPres.2 ON
+
+           'Write the control register
+            T8CON = TMRPres
+           #endif
+
+
+           #IFDEF bit(T8CKPS2)  '// Type 2 Timer 2
+              'Enhanced Chips with 1:128 prescale and T2CLKCON Register
+
+             IF TMRPres > 7 then  TMRPres = 0 'failsafe
+             IF TMRPost > 15 then  TMRPost = 0 'failsafe
+
+              T8CLKCON = 1  'CLK Source  = FOSC/4
+              TMRPres = (TMRPres * 16) + TMRPost
+              TMRPres.7 = T8CON.7  'Dont change Enable/RUN state
+              T8CON =  TMRPres
+           #Endif
+
+       #endif
+
+  #endif
+
+End SUB
 
 Sub InitTimer10 (In TMRPres, In TMRPost)
     'See Intimer2 for notes

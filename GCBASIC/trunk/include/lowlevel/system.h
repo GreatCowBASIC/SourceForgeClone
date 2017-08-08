@@ -35,6 +35,8 @@
 ;    14112016 - Revised OSCCAL Support
 ;    01012017 - Added Oscillator Support for PIC18FxxK40
 ;    01012017 - Added NVMREG fix for PIC18FxxK40 A2/A3 Silicon
+;    11042017 - Corrected Typo on Line 750 Changed AN9 to AN8
+;    23072017 - Added #ifdef Bit(IRCF2) protection
 
 'Constants
 #define ON 1
@@ -310,7 +312,9 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 32 'added for 18F(L)K20 -WMR
-          Set IRCF2 On
+'          #ifdef Bit(IRCF2)  'required to protect 16f707 chips with no BIT
+            Set IRCF2 On
+'          #endif
           Set IRCF1 On
           Set IRCF0 Off
           #ifdef Bit(SPLLMULT)
@@ -325,7 +329,9 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 16 'added for 18F(L)K20 -WMR
-          Set IRCF2 On
+          #ifdef Bit(IRCF2)  'required to protect 16f707 chips with no BIT,,16f707 16f716 16f72 16f720 16f721 16f722 16f722a  16f723  16f723a 16f724z 16f726 16f727
+            Set IRCF2 On
+          #endif
           Set IRCF1 On
           Set IRCF0 On
             'OSCCON = OSCCON OR b'01110000'
@@ -748,7 +754,7 @@ Sub InitSys
 
   #IFDEF VAR(ANCON1)
     #IFDEF BIT(ANSEL8)
-      Set ANSEL9 off
+      Set ANSEL8 off
     #ENDIF
     #IFDEF BIT(ANSEL9)
       Set ANSEL9 off
