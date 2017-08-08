@@ -27,7 +27,7 @@
 '    Updated Oct 2016  - ... Slave10 was NOT defined.
 '    Updated Dec 2016  - ... Added SSPIF = SSP1IF to correct error
 '    Updated Feb 2017  - Added AVRDisable_HI2CAckPollState for AVR performance
-
+'    Updated May 2017 -  Added support for PIC chips with bit "SEN_SSP1CON2"
 
 
 '    This library is free software; you can redistribute it and/or
@@ -119,84 +119,84 @@
 
 
 
-          IF AVR then
-              'Redirects to AVR CODE
-              HI2CMode = AVRHI2CMode
-              HI2CStart = AVRHI2CStart
-              HI2CStop = AVRHI2CStop
-              HI2CReStart = AVRHI2CReStart
-              HI2CSend = AVRHI2CSend
-              HI2CReceive = AVRHI2CReceive
+    IF AVR then
+        'Redirects to AVR CODE
+        HI2CMode = AVRHI2CMode
+        HI2CStart = AVRHI2CStart
+        HI2CStop = AVRHI2CStop
+        HI2CReStart = AVRHI2CReStart
+        HI2CSend = AVRHI2CSend
+        HI2CReceive = AVRHI2CReceive
 
 
-              TWIMode = AVRHI2CMode
-              TWIStart = AVRHI2CStart
-              TWIStop = AVRHI2CStop
-              TWICReStart = AVRHI2CReStart
-              TWISend = AVRHI2CSend
-              TWIReceive = AVRHI2CReceive
-              TWIByte = I2CByte
-              TWIAckPollState = HI2CAckPollState
-              TWIStartOccurred = HI2CStartOccurred
+        TWIMode = AVRHI2CMode
+        TWIStart = AVRHI2CStart
+        TWIStop = AVRHI2CStop
+        TWICReStart = AVRHI2CReStart
+        TWISend = AVRHI2CSend
+        TWIReceive = AVRHI2CReceive
+        TWIByte = I2CByte
+        TWIAckPollState = HI2CAckPollState
+        TWIStartOccurred = HI2CStartOccurred
 
 
-               ' SCL CLOCK
-               ' ---------
-               ' TWBR= (CPU_CLK - SCL_BD * 16)/2 * SCL_BD * PRESC       (328P  PDF 21.5.2)
-               CPU_Clk = ChipMhz * 1e6
-               BD_RATE=1000 * HI2C_BAUD_RATE
+         ' SCL CLOCK
+         ' ---------
+         ' TWBR= (CPU_CLK - SCL_BD * 16)/2 * SCL_BD * PRESC       (328P  PDF 21.5.2)
+         CPU_Clk = ChipMhz * 1e6
+         BD_RATE=1000 * HI2C_BAUD_RATE
 
-               CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*1))
-               If CST_TWBR <= 255 Then
-                   CST_PRESCALER = 0
-               End If
-               If CST_TWBR > 255 Then
-                   CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*4))
-                   If CST_TWBR <= 255 Then
-                      CST_PRESCALER = 1
+         CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*1))
+         If CST_TWBR <= 255 Then
+             CST_PRESCALER = 0
+         End If
+         If CST_TWBR > 255 Then
+             CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*4))
+             If CST_TWBR <= 255 Then
+                CST_PRESCALER = 1
+             End If
+             If CST_TWBR > 255 Then
+                CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*16))
+                If CST_TWBE <= 255 Then
+                   CST_PRESCALER = 2
+                End If
+                If CST_TWBR > 255 Then
+                   CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*64))
+                   If CST_TWBR <=255 Then
+                      CST_PRESCALER = 3
                    End If
                    If CST_TWBR > 255 Then
-                      CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*16))
-                      If CST_TWBE <= 255 Then
-                         CST_PRESCALER = 2
-                      End If
-                      If CST_TWBR > 255 Then
-                         CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*64))
-                         If CST_TWBR <=255 Then
-                            CST_PRESCALER = 3
-                         End If
-                         If CST_TWBR > 255 Then
-                             Compiler Will Show error
-                            Error "Error Computing TWI-I2C BAUD RATE PARAMETERS"
-                            Error "    CPU FREQ    = " ChipMhz " Mhz"
-                            Error "    I2C BAUD RATE " HI2C_BAUD_RATE " kHz"
-                         End If
-                      End If
+                       Compiler Will Show error
+                      Error "Error Computing TWI-I2C BAUD RATE PARAMETERS"
+                      Error "    CPU FREQ    = " ChipMhz " Mhz"
+                      Error "    I2C BAUD RATE " HI2C_BAUD_RATE " kHz"
                    End If
-               End If
-              ' Uncommented Displays Results In GCB Output Window
-              ' warning " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWBR
-          END IF
+                End If
+             End If
+         End If
+        ' Uncommented Displays Results In GCB Output Window
+        ' warning " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWBR
+    END IF
 
-         if novar(SSPCON1) then
+   if novar(SSPCON1) then
 
-            if var(SSP1CON1) then
-                SSPCON1 = SSP1CON1
-                SSPSTAT = SSP1STAT
-                SSPBUF  = SSP1BUF
-                SSPCON2 = SSP1CON2
-                SSPADD  = SSP1ADD
-                SSPIF = SSP1IF
-            end if
+      if var(SSP1CON1) then
+          SSPCON1 = SSP1CON1
+          SSPSTAT = SSP1STAT
+          SSPBUF  = SSP1BUF
+          SSPCON2 = SSP1CON2
+          SSPADD  = SSP1ADD
+          SSPIF = SSP1IF
+      end if
 
-         end if
+   end if
 
 
-         if novar(SSPCON1) then
-            if var(SSPCON) then
-                SSPCON1 = SSPCON
-            end if
-         end if
+   if novar(SSPCON1) then
+      if var(SSPCON) then
+          SSPCON1 = SSPCON
+      end if
+   end if
 
 #endscript
 
@@ -204,15 +204,11 @@ Sub HI2CMode (In HI2CCurrentMode)
 
   #ifdef PIC
 
-
-
-
-
-'    #ifndef Var(SSPCON1)
-'      #ifdef Var(SSPCON)
-'        Dim SSPCON1 Alias SSPCON
-'      #endif
-'    #endif
+      '    #ifndef Var(SSPCON1)
+      '      #ifdef Var(SSPCON)
+      '        Dim SSPCON1 Alias SSPCON
+      '      #endif
+      '    #endif
 
     set SSPSTAT.SMP on
     set SSPCON1.CKP on
@@ -267,6 +263,12 @@ Sub HI2CStart
           HI2CWaitMSSP
       #endif
 
+       ' for device with SEN_SSP1CON2 and therefore devices including the 18FxxK40
+      #ifdef bit(SEN_SSP1CON2)
+          Set SEN_SSP1CON2 On
+          HI2CWaitMSSP
+      #endif
+
     #endif
 
   'Slave mode
@@ -284,8 +286,8 @@ Sub HI2CReStart
   If HI2CCurrentMode > 10 Then
     #ifdef PIC
       #ifdef BIT(RSEN)
-                                        Set RSEN On
-                                        HI2CWaitMSSP
+            Set RSEN On
+            HI2CWaitMSSP
       #endif
     #endif
   End If
@@ -301,10 +303,10 @@ Sub HI2CStop
   If HI2CCurrentMode > 10 Then
     #ifdef PIC
       #ifdef BIT(PEN)
-                                     ' set SSPIE OFF; disable SSP interrupt, tested by Anobium but not implemented.
-                                     wait while R_NOT_W = 1   'wait for completion of activities
-                                     Set SSPCON2.PEN On
-                                     HI2CWaitMSSP
+           ' set SSPIE OFF; disable SSP interrupt, tested by Anobium but not implemented.
+           wait while R_NOT_W = 1   'wait for completion of activities
+           Set SSPCON2.PEN On
+           HI2CWaitMSSP
       #endif
     #endif
 
@@ -367,13 +369,13 @@ Sub HI2CSend(In I2CByte)
       SET SSPCON1.WCOL OFF
       'Load data to send
       SSPBUF = I2CByte
-                              HI2CWaitMSSP
+      HI2CWaitMSSP
 
       if ACKSTAT =  1 then
-                                 HI2CAckPollState = true
-                              else
-                                 HI2CAckPollState = false
-                              end if
+             HI2CAckPollState = true
+          else
+             HI2CAckPollState = false
+          end if
 
     If SSPCON1.WCOL = On Then
       If HI2CCurrentMode <= 10 Then Goto RetryHI2CSend
@@ -388,53 +390,64 @@ End Sub
 
 Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
 
-  #ifdef PIC
+ #ifdef PIC
+
+   'Enable receive
+
+     'Master mode
+     If HI2CCurrentMode > 10 Then
+       if HI2CGetAck.0 = 1 then
+          ' Acknowledge
+           ACKDT = 0
+       else
+           ' Not Acknowledge
+           ACKDT = 1
+       end if
+       RCEN = 1
+     'Slave mode
+     Else
+       SET SSPSTAT.R_NOT_W ON
+     End If
 
 
-
-    'Enable receive
-
-      'Master mode
-      If HI2CCurrentMode > 10 Then
-                                if HI2CGetAck.0 = 1 then
-                                   ' Acknowledge
-                                    ACKDT = 0
-                                else
-                                    ' Not Acknowledge
-                                    ACKDT = 1
-                                end if
-                                RCEN = 1
-      'Slave mode
-      Else
-        SET SSPSTAT.R_NOT_W ON
-      End If
+   'Clear Collisions
+   SET SSPCON1.WCOL OFF
+   SET SSPCON1.SSPOV Off
 
 
-    'Clear Collisions
-    SET SSPCON1.WCOL OFF
-    SET SSPCON1.SSPOV Off
+   #ifdef bit(SSP1IF)
+       'Wait for receive
+       Wait Until SSPSTAT.BF = 1 AND SSP1IF = 1
 
-    'Wait for receive
-    Wait Until SSPSTAT.BF = 1' AND SSPIF = 1
+       I2CByte = SSPBUF
+       ''Support for SSP1IF
+       SSP1IF = 0 ''Support for SSP1IF
 
-    I2CByte = SSPBUF
-                    SSPIF = 0
-                    ACKEN = 1; Send ACK DATA now. ' bsf SSPCON2,ACKEN
-                    ' Clear flag - this is required
-                    SSPSTAT.BF = 0
-                    HI2CWaitMSSP
+   #endif
+   #ifdef bit(SSPIF)
+       'Wait for receive
+       Wait Until SSPSTAT.BF = 1' AND SSPIF = 1
 
-    'Disable receive (master mode)
+       I2CByte = SSPBUF
+       SSPIF = 0''Support for SSPIF
+   #endif
 
-      'Master mode
-      If HI2CCurrentMode > 10 Then
-        Set SSPCON2.RCEN Off
-      'Slave mode
-      Else
-        SET SSPSTAT.R_NOT_W Off
-      End If
+   ACKEN = 1; Send ACK DATA now. ' bsf SSPCON2,ACKEN
+   ' Clear flag - this is required
+   SSPSTAT.BF = 0
+   HI2CWaitMSSP
 
-  #endif
+   'Disable receive (master mode)
+
+   'Master mode
+   If HI2CCurrentMode > 10 Then
+     Set SSPCON2.RCEN Off
+   'Slave mode
+   Else
+     SET SSPSTAT.R_NOT_W Off
+   End If
+
+ #endif
 
 End Sub
 
@@ -456,6 +469,7 @@ sub HI2CWaitMSSP
             SSP1IF = 0
             exit Sub
         #endif
+
         #ifdef bit(SSPIF)
             ''Support for SSPIF
             if SSPIF = 0 then goto HI2CWaitMSSPWait
@@ -472,8 +486,6 @@ sub HI2CWaitMSSP
     end if
 
 end sub
-
-
 
 
 
