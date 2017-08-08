@@ -360,7 +360,8 @@ Declare Sub CreateCallTree
 Declare Sub DisplayProgram
 Declare Sub DisplayCallTree
 Declare Sub ExtAssembler
-Declare Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Origin As String)
+'Declare Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Origin As String)
+Declare Sub ExtractParameters(ByRef NewSubCall As SubCallType, CalledSubName As String, CallParams As String, Origin As String)
 Declare Sub FinalOptimise
 Declare Sub FindAssembly (CompSub As SubType Pointer)
 Declare Function FindPotentialBanks(CurrLine As LinkedListElement Pointer, OutList As LinkedListElement Pointer = 0, CheckedLines As LinkedListElement Pointer = 0) As LinkedListElement Pointer
@@ -637,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.97.<<>> 2017-05-29"
+Version = "0.97.<<>> 2017-05-31"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7193,7 +7194,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 	Dim As String ReturnVar
 	Dim As Integer CD, DS, S, E, BL, FB, F, PD, FoundFunction, MatchScore, BetterMatch
 	Dim As Integer L, D, SL, Temp, UseTempVar, FunctionTypeID, CurrSub, FindMatch
-	Dim As Integer ParamsInBrackets, CurrAliasByte
+	Dim As Integer ParamsInBrackets, CurrAliasByte, FirstBracketLoc, SpaceChars
 
 	Dim As LinkedListElement Pointer CurrLine, NewCallCode, NewCallLine, LineBeforeCall
 
@@ -7298,18 +7299,55 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				FunctionParams = ""
 
 				AfterFn = MID(TempLine, INSTR(UCase(TempLine), UCase(FunctionName)) + LEN(FunctionName))
+				If InStr(AfterFn, ";") <> 0 Then
+					AfterFn = RTrim(Left(AfterFn, InStr(AfterFn, ";") - 1))
+				End If
 
 				'Check to see if parameters are in brackets
 				ParamsInBrackets = 0
+				BL = 0
+				FirstBracketLoc = -1
+				SpaceChars = 0
 				For FB = 1 To Len(AfterFn)
-					If Mid(AfterFn, FB, 1) = "(" Then
-						ParamsInBrackets = -1
-						Exit For
-					ElseIf Mid(AfterFn, FB, 1) <> " " Then
-						Exit For
-					End If
+					'If Mid(AfterFn, FB, 1) = "(" Then
+					'	ParamsInBrackets = -1
+					'	Exit For
+					'ElseIf Mid(AfterFn, FB, 1) <> " " Then
+					'	Exit For
+					'End If
+					
+					Select Case Mid(AfterFn, FB, 1)
+						Case " "
+							SpaceChars += 1
+						Case "("
+							BL += 1
+							If FirstBracketLoc = -1 Then
+								FirstBracketLoc = FB - SpaceChars
+							End If
+						Case ")"
+							BL -= 1
+							If BL = 0 Then
+								Print "Closing, after:" + Mid(AfterFN, FB + 1, 2), "FB:"; FB, "Len:"; Len(AfterFn)
+								If FirstBracketLoc = 1 And FB = Len(AfterFn) Then
+									ParamsInBrackets = -1
+									Exit For
+								Else
+									ParamsInBrackets = 0
+									Exit For
+								End If								
+							End If
+						Case ","
+							If BL = 1 Then
+								ParamsInBrackets = -1
+								Exit For
+							ElseIf BL = 0 Then
+								ParamsInBrackets = 0
+								Exit For
+							End If
+					End Select
+					
 				Next
-
+				
 				If Subroutine(CurrSub)->IsFunction And (ParamsInBrackets Or Not Subroutine(CurrSub)->Overloaded) Then
 					'Function, needs to have parameters in brackets
 					BL = 0
@@ -7347,9 +7385,32 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 					Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
 					Goto SearchLineAgain
 				End If
-
+				
+				'Remove brackets from FunctionParams (if present)
+				If ParamsInBrackets Then
+					Print "Removing brackets: " + FunctionParams
+					BL = 0
+					FirstBracketLoc = -1
+					For FB = 1 To Len(FunctionParams)
+						Select Case Mid(FunctionParams, FB, 1)
+							Case "("
+								BL += 1
+								If FirstBracketLoc <> -1 Then
+									FirstBracketLoc = BL
+								End If
+							Case ")"
+								BL -= 1
+								If BL = 0 Then
+									FunctionParams = Trim(Mid(FunctionParams, FirstBracketLoc + 1, BL - FirstBracketLoc - 1))
+									Exit For
+								End If
+						End Select
+					Next
+					Print "Brackets removed: " + FunctionParams
+				End If
+				
 				'Prepare sub call
-				ExtractParameters(NewSubCall, FunctionName + " " + FunctionParams, Origin)
+				ExtractParameters(NewSubCall, FunctionName, FunctionParams, Origin)
 				With NewSubCall
 					.Called = Subroutine(CurrSub)
 					.Caller = CompSub
@@ -9130,54 +9191,37 @@ Sub ExtAssembler
 
 End Sub
 
-Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Origin As String)
+Sub ExtractParameters(ByRef NewSubCall As SubCallType, CalledSubName As String, CallParams As String, Origin As String)
 
-	Dim As String TrimParams, SubName, SubSig, Temp
+	Dim As String TrimParams, SubSig, Temp
 	Dim As Integer FP, PD
 	Dim As Integer CurrPos, CurrLevel
 	Dim As String CurrChar
-
+	
 	'Clear parameter list
 	With NewSubCall
 		.CalledID = 0
 		.Params = 0
 	End With
-
-	'Get origin (if not set, but present in input line)
-	IF INSTR(InLineCopy, ";?F") <> 0 THEN
-		If Origin = "" Then Origin = Mid(InLineCopy, INSTR(InLineCopy, ";?F"))
-		InLineCopy = RTrim(Left(InLineCopy, INSTR(InLineCopy, ";?F") - 1))
-	END If
-
+	
 	'Get parameters
 	'Find sub calls with parameters in program
-	TrimParams = InLineCopy
-	SubName = ReplaceFnNames(TrimParams)
+	TrimParams = CallParams
 	SubSig = ""
-	IF INSTR(InLineCopy, "(") <> 0 OR INSTR(TrimParams, " ") <> 0 THEN
-
-		'Get parameters
-		'Add brackets
-		FP = INSTR(InLineCopy, " ") + 1
-		IF INSTR(TrimParams, " ") <> 0 AND (INSTR(InLineCopy, "(") = 0 OR INSTR(InLineCopy, "(") > FP) AND (Mid(InLineCopy, FP + 1, 1) <> "(") THEN
-			Temp = Left(InLineCopy, INSTR(InLineCopy, " "))
-			Replace InLineCopy, Temp, Temp + "("
-			InLineCopy = InLineCopy + ")"
-		END If
-
-		'Get sub name
-		SubName = Left(InLineCopy, INSTR(InLineCopy, "(") - 1)
-
-		'Get sub parameters
-		TrimParams =  Trim(Mid(InLineCopy, INSTR(InLineCopy, "(") + 1))
-		IF TrimParams = ")" THEN GOTO NoSubParams
-		IF Right(TrimParams, 1) = ")" THEN TrimParams = RTrim(Left(TrimParams, LEN(TrimParams) - 1))
-
+	
+	If CallParams = "" Then
 		With NewSubCall
-
+			.Params = 0
+			.CallSig = ""
+		End With
+		Exit Sub
+	
+	Else
+		With NewSubCall
+	
 			'Get Origin
 			.Origin = Origin
-
+	
 			'Parse values - split at commas, except if commas are inside brackets
 			CurrLevel = 0
 			.Params = 1
@@ -9201,25 +9245,17 @@ Sub ExtractParameters(ByRef NewSubCall As SubCallType, InLineCopy As String, Ori
 					.Param(.Params, 1) = .Param(.Params, 1) + CurrChar
 				End If
 			Next
-
+	
 			'Get type of final parameter
 			.Param(.Params, 1) = Trim(.Param(.Params, 1))
 			.Param(.Params, 2) = TypeOfValue(ReplaceFnNames(.Param(.Params, 1)), Subroutine(GetSubID(Origin)), -1)
 			'Print .Param(.Params, 1) + " is a " + .Param(.Params, 2)
 			SubSig += GetTypeLetter(.Param(.Params, 2))
-
+	
 			'Print
 			.CallSig = SubSig
 		End With
-
-		Exit Sub
 	End If
-
-	NoSubParams:
-	With NewSubCall
-		.Params = 0
-		.CallSig = ""
-	End With
 End Sub
 
 Sub FinalOptimise
@@ -12727,7 +12763,9 @@ CheckArrayAgain:
 
 		'Array has been found, so generate code to access it
 		IF ArrayFound <> 0 THEN
-
+			
+			'Print "Array found in line " + CurrLine->Value
+			
 			'Get array type
 			CurrVar = ArrayFound->MetaData
 			With *CurrVar
@@ -12786,6 +12824,7 @@ CheckArrayAgain:
 			Loop While L <> 0 AND P < LEN(Temp)
 			IF L <> 0 THEN
 				LogError Message("BadBrackets"), Origin
+				GoTo CompileArraysNextLine
 			Else
 				Temp = Left(Temp, P)
 

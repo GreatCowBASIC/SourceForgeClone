@@ -347,7 +347,7 @@ SUB AssembleProgram
 	Dim As Integer CD, PD, IsSFR, SFL, SP1, CSB, CurrentLocation, T, DT, DataSize
 	Dim As Integer RP1, DWC, RSC, DWIC, SS, CS, RepeatBanksel, B, FB, RepeatPagesel
 	Dim As Integer PRC, KeepReplacing, AW, PB, FP, PVT, TBT, HT, PV
-	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, DataBlockSize
+	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, DataBlockSize, ConfigBaseLoc
 	Dim As LongInt CL, OA, FRA, CHA
 	Dim As AsmCommand Pointer CurrCmd, LDSLoc, STSLoc
 	
@@ -376,6 +376,16 @@ SUB AssembleProgram
 	If ModeAVR Then
 		LDSLoc = IsASM("lds", 0)
 		STSLoc = IsASM("sts", 0)
+	End If
+	
+	'Get config base location (18F)
+	If ChipFamily = 16 Then
+		ConfigBaseLoc = 3145726
+		Dim As ConstMeta Pointer ConfigBaseLocConst
+		ConfigBaseLocConst = HashMapGet(Constants, "CHIPCONFIGBASELOC")
+		If ConfigBaseLocConst <> 0 Then
+			ConfigBaseLoc = MakeDec(ConfigBaseLocConst->Value) - 2
+		End If
 	End If
 	
 	'Build symbol table
@@ -1022,7 +1032,7 @@ SUB AssembleProgram
 				CCI += 1
 				Byte2 = Hex(VAL(TempData(CCI)))
 				Do While LEN(Byte2) < 2: Byte2 = "0" + Byte2: LOOP
-				APC = APC + 1: Prog(APC) = "&H" + HEX(3145726 + CCI) + ":" + Byte2 + Byte1
+				APC = APC + 1: Prog(APC) = "&H" + HEX(ConfigBaseLoc + CCI) + ":" + Byte2 + Byte1
 				
 			Loop While CCI < ConfWordCount
 			
