@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015 - 2017 Kent Schafer and Evan Venn
+'    Copyright (C) 2015 - 2017 Kent Schafer, Evan Venn, and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -37,6 +37,10 @@
 '      and extremes within Pset
 ' 1.08 change 32 line buffer to 512 bytes from 1024
 ' 1.09 correct buffer assignment and resolved buffer overright issue in CLS
+' 1.10 Modified InitGLCD_SSD1306 for cleaner intalization - WMR
+' 1.11 Added low RAM character mode only (Joseph Realmuto) - July 26, 2017
+' 1.12 Corrected script to go into character only mode and assign buffer size (Evan Venn) - July 26, 2017
+
 
 #define SSD1306_SETCONTRAST 0x81
 #define SSD1306_DISPLAYALLON_RESUME 0xA4
@@ -87,23 +91,33 @@
 #startup InitGLCD_SSD1306, 100
 
 'Setup code for SSD1306 controllers
-#if GLCD_TYPE = GLCD_TYPE_SSD1306
-    dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
+  #script     ' This script set the capabilities based upon the amount of RAM
 
-       #If ChipRAM > 1024
-         Dim SSD1306_BufferAlias(1024)
-       #Endif
+     if GLCD_TYPE = GLCD_TYPE_SSD1306 then
 
-#endif
+       If ChipRAM < 1024  Then
+           GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = TRUE
+       End If
+     end if
 
-#if GLCD_TYPE = GLCD_TYPE_SSD1306_32
-    dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
+     if GLCD_TYPE = GLCD_TYPE_SSD1306_32 then
+       If ChipRAM < 512  Then
+           GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = TRUE
+       End If
+     end if
 
-       #If ChipRAM > 512
-         Dim SSD1306_BufferAlias(512)
-       #Endif
+   #endscript
 
-#endif
+   dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
+
+   #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+     #if GLCD_TYPE = GLCD_TYPE_SSD1306
+       Dim SSD1306_BufferAlias(1024)
+     #endif
+     #if GLCD_TYPE = GLCD_TYPE_SSD1306_32
+       Dim SSD1306_BufferAlias(512)
+     #endif
+   #endif
 
 '''@hide
 Sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
@@ -179,14 +193,23 @@ Sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
 End Sub
 
 
-
-
 '''@hide
 Sub InitGLCD_SSD1306
-    #IFDEF HI2C_DATA
-           HI2CMode Master
-    #ENDIF
-    #ifdef S4Wire_DATA
+
+    'Colours //Set these first
+    GLCDBackground = 0
+    GLCDForeground = 1
+    GLCDFontWidth = 6
+    GLCDfntDefault = 0
+    GLCDfntDefaultsize = 1
+
+ #IFDEF HI2C_DATA
+         HI2CMode Master
+         Wait 10 ms
+ #ENDIF
+
+
+ #ifdef S4Wire_DATA
       dir MOSI_SSD1306 Out
       dir SCK_SSD1306 Out
       dir DC_SSD1306 Out
@@ -196,12 +219,15 @@ Sub InitGLCD_SSD1306
       wait 10 us
       RES_SSD1306 = 1
     #endif
-    'Setup code for SSD1306 controllers
+
+   'Setup code for SSD1306 controllers
     'Init sequence for 128x64 OLED module
     Write_Command_SSD1306(SSD1306_DISPLAYOFF)                    ' 0xAE
+
     Write_Command_SSD1306(SSD1306_DEACTIVATE_SCROLL)
     Write_Command_SSD1306(SSD1306_SETDISPLAYCLOCKDIV)            ' 0xD5
     Write_Command_SSD1306(0x80)                                  ' the suggested ratio 0x80
+
     Write_Command_SSD1306(SSD1306_SETMULTIPLEX)                  ' 0xA8
     #if GLCD_HEIGHT = 64
       Write_Command_SSD1306(0x3f)                                 '64 pixels
@@ -213,13 +239,16 @@ Sub InitGLCD_SSD1306
 
     Write_Command_SSD1306(SSD1306_SETDISPLAYOFFSET)              ' 0xD3
     Write_Command_SSD1306(0x00)                                   ' no offset
+
     Write_Command_SSD1306(SSD1306_SETSTARTLINE | 0x00)            ' line #0
     Write_Command_SSD1306(SSD1306_CHARGEPUMP)                    ' 0x8D
+
     if (vccstate = SSD1306_EXTERNALVCC) then
       Write_Command_SSD1306(0x10)
     else
       Write_Command_SSD1306(0x14)
     end if
+
     Write_Command_SSD1306(SSD1306_MEMORYMODE)                    ' 0x20
     'Write_Command_SSD1306(0x00)                                  ' 0x00 act like ks0108 - DO NOT SELECT!!
     Write_Command_SSD1306(0x10)                                  ' 0x01 act like PCD8544
@@ -248,22 +277,17 @@ Sub InitGLCD_SSD1306
     else
       Write_Command_SSD1306(0xF1)
     end if
+
     Write_Command_SSD1306(SSD1306_SETVCOMDETECT)                 ' 0xDB
     Write_Command_SSD1306(0x40)
+
     Write_Command_SSD1306(SSD1306_DISPLAYALLON_RESUME)           ' 0xA4
     Write_Command_SSD1306(SSD1306_NORMALDISPLAY)                 ' 0xA6
-    Write_Command_SSD1306(SSD1306_DISPLAYON)                     '--turn on oled panel
 
-
-    'Colours
-    GLCDBackground = 0
-    GLCDForeground = 1
-    GLCDFontWidth = 6
-    GLCDfntDefault = 0
-    GLCDfntDefaultsize = 1
-
-    'Clear screen
+   'Clear screen Here
     GLCDCLS_SSD1306
+
+    Write_Command_SSD1306(SSD1306_DISPLAYON)                     '--turn on oled panel
 
 End Sub
 
@@ -288,6 +312,79 @@ Sub GLCDCLS_SSD1306 ( Optional In  GLCDBackground as word = GLCDBackground )
   next
 
   Cursor_Position_SSD1306 ( 0 , 0 )
+
+End Sub
+
+'''Draws a character at the specified location on the SSD1306 GLCD
+'''@param StringLocX X coordinate for message
+'''@param CharLocY Y coordinate for message
+'''@param Chars String to display
+'''@param LineColour Line Color, either 1 or 0
+Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
+  'moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc.
+  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+
+    'invert colors if required
+    if LineColour <> GLCDForeground  then
+      'Inverted Colours
+      GLCDBackground = 1
+      GLCDForeground = 0
+    end if
+
+   dim CharCol, CharRow as word
+   CharCode -= 15
+
+    if CharCode>=178 and CharCode<=202 then
+       CharLocY=CharLocY-1
+    end if
+
+    CharCol=1
+
+    For CurrCharCol = 1 to 5
+      Select Case CurrCharCol
+        Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+        Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+        Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+        Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+        Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+      End Select
+    #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+      CharRow=0
+      For CurrCharRow = 1 to 8
+          CharColS=0
+          For Col=1 to GLCDfntDefaultsize
+                CharColS +=1
+                CharRowS=0
+                For Row=1 to GLCDfntDefaultsize
+                    CharRowS +=1
+                    if CurrCharVal.0=1 then
+                       PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
+                    Else
+                       PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                    End if
+                Next Row
+          Next Col
+        Rotate CurrCharVal Right
+        CharRow +=GLCDfntDefaultsize
+      Next
+      CharCol +=GLCDfntDefaultsize
+    #endif
+
+    ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
+    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+      Cursor_Position_SSD1306 ( ( CharLocX + CurrCharCol -1 ) , CharLocY )
+      If LineColour = 1 Then
+       Write_Data_SSD1306( CurrCharVal )
+      else
+       Write_Data_SSD1306( 255 - CurrCharVal )
+      end if
+    #endif
+
+    Next
+
+    'Restore
+    GLCDBackground = 0
+    GLCDForeground = 1
 
 End Sub
 
@@ -335,6 +432,7 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
 
   #if GLCD_TYPE = GLCD_TYPE_SSD1306 or GLCD_TYPE = GLCD_TYPE_SSD1306_32
 
+    #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
 
           #IFDEF GLCD_PROTECTOVERRUN
               'anything off screen with be rejected
@@ -399,6 +497,7 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
               Cursor_Position_SSD1306 ( GLCDX, GLCDY )
               Write_Data_SSD1306 ( GLCDDataTemp )
           end if
+    #endif
   #endif
 
 End Sub
