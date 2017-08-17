@@ -57,6 +57,7 @@
 ''' 06/6/2017 Corrected missing Dim of variable in CCP/PWM
 ''' 03/7/2017 Added HPWM3 and HPWM4 constants
 ''' 15/7/2017 Moved the default constants to prevent entry into ASM
+''' 17/8/2017 Revised to protect CCP1M0-3 being set when no CCP module exists.
 
 
   'define the defaults
@@ -268,10 +269,12 @@ Sub InitPWM
         #endif
 
         'Finish preparing CCP*CON
+        #ifdef Var(CCP1CON)  'added to protect against devices with no CCP1 module
         SET CCPCONCache.CCP1M3 ON
         SET CCPCONCache.CCP1M2 ON
         SET CCPCONCache.CCP1M1 OFF
         SET CCPCONCache.CCP1M0 OFF
+        #endif
         'Enable Timer 2
         SET T2CON.TMR2ON ON
 
