@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-08-08"
+Version = "0.98.<<>> 2017-08-22"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7388,7 +7388,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 
         'Remove brackets from FunctionParams (if present)
         If ParamsInBrackets Then
-          Print "Removing brackets: " + FunctionParams
+          'Print "Removing brackets: " + FunctionParams
           BL = 0
           FirstBracketLoc = -1
           For FB = 1 To Len(FunctionParams)
@@ -7406,7 +7406,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
                 End If
             End Select
           Next
-          Print "Brackets removed: " + FunctionParams
+          'Print "Brackets removed: " + FunctionParams
         End If
 
         'Prepare sub call
