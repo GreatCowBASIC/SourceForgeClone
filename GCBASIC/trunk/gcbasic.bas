@@ -7327,7 +7327,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
             Case ")"
               BL -= 1
               If BL = 0 Then
-                Print "Closing, after:" + Mid(AfterFN, FB + 1, 2), "FB:"; FB, "Len:"; Len(AfterFn)
+                'Print "Closing, after:" + Mid(AfterFN, FB + 1, 2), "FB:"; FB, "Len:"; Len(AfterFn)
                 If FirstBracketLoc = 1 And FB = Len(AfterFn) Then
                   ParamsInBrackets = -1
                   Exit For
