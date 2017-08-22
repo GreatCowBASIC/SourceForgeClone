@@ -1,4 +1,4 @@
-v0.95.010
+For version refer to version.txt in the GreatCowBasic folder
 
 Please READ below:
 
