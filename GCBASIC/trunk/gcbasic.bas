@@ -7353,8 +7353,15 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 					FunctionParams = Mid(AfterFn, FirstBracketLoc + 1, LastBracketLoc - FirstBracketLoc - 1)
 					AfterFn = Mid(AfterFn, LastBracketLoc + 1)
 				Else
-					FunctionParams = AfterFn
-					AfterFn = ""
+					'No brackets - nothing or everything after sub/function name is a parameter
+					If BracketsRequired Then
+						'If we have a function without brackets, no parameters
+						FunctionParams = ""
+					Else
+						'If we have a sub without brackets, everything after the name is a parameter
+						FunctionParams = AfterFn
+						AfterFn = ""
+					End If
 				End If
 
 				'Prepare sub call
