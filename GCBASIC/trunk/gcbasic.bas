@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-08-22"
+Version = "0.98.<<>> 2017-08-23"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7195,6 +7195,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 	Dim As Integer CD, DS, S, E, BL, FB, F, PD, FoundFunction, MatchScore, BetterMatch
 	Dim As Integer L, D, SL, Temp, UseTempVar, FunctionTypeID, CurrSub, FindMatch
 	Dim As Integer ParamsInBrackets, CurrAliasByte, FirstBracketLoc, SpaceChars
+	Dim As Integer CharsBeforeBracket, LastBracketLoc, BracketsRequired
 
 	Dim As LinkedListElement Pointer CurrLine, NewCallCode, NewCallLine, LineBeforeCall
 
@@ -7310,93 +7311,50 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				'SubName (param1 + x), param2 - no
 				'FunctionName(param) ms - yes
 				'So, check for comma inside or outside brackets
-				ParamsInBrackets = 0
+				
+				'Are brackets required?
+				BracketsRequired = Subroutine(CurrSub)->IsFunction
+				'Parse parameters
 				BL = 0
+				FirstBracketLoc = -1
+				LastBracketLoc = -1
+				CharsBeforeBracket = 0
 				For FB = 1 To Len(AfterFn)
 					Select Case Mid(AfterFn, FB, 1)
-						Case " "
-							
 						Case "("
+							'Note position of opening bracket
 							BL += 1
-							If BL = 1 Then ParamsInBrackets = -1
-						Case ")"
-							BL -= 1
-						Case ","
-							If BL = 0 Then
-								ParamsInBrackets = 0
-								Exit For
+							If BL = 1 And FirstBracketLoc = -1 Then
+								FirstBracketLoc = FB
 							End If
-						Case Else
+						Case ")"
+							'Note position of closing bracket
+							BL -= 1
 							If BL = 0 Then
-								'If Not IsDivider(Mid(AfterFn, FB, 1)) Then
-								'	ParamsInBrackets = 0
-								'End If
-								Exit For
+								'If match found and all parameters must be in brackets, this is the end of these parameters
+								If BracketsRequired Then
+									LastBracketLoc = FB
+									Exit For
+								End If
+								'If we haven't seen a comma yet, this could be the end of the parameters
+								If LastBracketLoc <> -2 Then
+									LastBracketLoc = FB
+								End If
+							End If
+						Case ","
+							'If a comma is found outside of brackets, the brackets do not mark the parameters
+							If BL = 0 Then
+								LastBracketLoc = -2
 							End If
 					End Select
 				Next
-				'Color 12
-				'Print AfterFn, ParamsInBrackets
-				'Color 7
-				
-				If Subroutine(CurrSub)->IsFunction And (ParamsInBrackets Or Not Subroutine(CurrSub)->Overloaded) Then
-					'Function, needs to have parameters in brackets
-					BL = 0
-					FOR FB = 1 TO LEN(AfterFn)
-						IF MID(AfterFn, FB, 1) = "(" THEN BL = BL + 1
-						IF MID(AfterFn, FB, 1) = ")" Then
-							BL = BL - 1
-							IF BL = 0 THEN
-								FunctionParams = Trim(Left(AfterFn, FB))
-								AfterFn = MID(AfterFn, FB + 1)
-								'Print "Trimmed, params:"; FunctionParams, "after:"; AfterFn
-								EXIT FOR
-							End If
-						End If
-					Next
-					If BL > 0 Then
-						'Log error
-						LogError Message("BadBrackets"), Origin
-						'Add bracket to end, prevent crash in ProcessArrays
-						FunctionParams = Trim(AfterFn) + ")"
-						AfterFn = ""
-					End If
-
+				'Extract parameters from brackets if brackets used
+				If FirstBracketLoc <> -1 And LastBracketLoc > 0 Then
+					FunctionParams = Mid(AfterFn, FirstBracketLoc + 1, LastBracketLoc - FirstBracketLoc - 1)
+					AfterFn = Mid(AfterFn, LastBracketLoc + 1)
 				Else
-					'Macro/Sub, parameters take up the rest of the line, brackets optional
-					FunctionParams = Trim(AfterFn)
+					FunctionParams = AfterFn
 					AfterFn = ""
-				End If
-
-				'Remove origin from FunctionParams
-				IF INSTR(FunctionParams, ";?F") <> 0 Then
-					FunctionParams = Left(FunctionParams, InStr(FunctionParams, ";?F") - 1)
-				End If
-
-				If Left(FunctionParams, 1) = "=" Then
-					Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
-					Goto SearchLineAgain
-				End If
-
-				'Remove brackets from FunctionParams (if present)
-				If ParamsInBrackets Then
-					BL = 0
-					FirstBracketLoc = -1
-					For FB = 1 To Len(FunctionParams)
-						Select Case Mid(FunctionParams, FB, 1)
-							Case "("
-								BL += 1
-								If FirstBracketLoc = -1 Then
-									FirstBracketLoc = FB
-								End If
-							Case ")"
-								BL -= 1
-								If BL = 0 Then
-									FunctionParams = Trim(Mid(FunctionParams, FirstBracketLoc + 1, FB - FirstBracketLoc - 1))
-									Exit For
-								End If
-						End Select
-					Next
 				End If
 
 				'Prepare sub call
