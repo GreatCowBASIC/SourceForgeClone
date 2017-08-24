@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-08-23"
+Version = "0.98.<<>> 2017-08-24"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7194,8 +7194,8 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 	Dim As String ReturnVar
 	Dim As Integer CD, DS, S, E, BL, FB, F, PD, FoundFunction, MatchScore, BetterMatch
 	Dim As Integer L, D, SL, Temp, UseTempVar, FunctionTypeID, CurrSub, FindMatch
-	Dim As Integer ParamsInBrackets, CurrAliasByte, FirstBracketLoc, SpaceChars
-	Dim As Integer CharsBeforeBracket, LastBracketLoc, BracketsRequired
+	Dim As Integer ParamsInBrackets, CurrAliasByte, FirstBracketLoc
+	Dim As Integer LastBracketLoc, BracketsRequired
 
 	Dim As LinkedListElement Pointer CurrLine, NewCallCode, NewCallLine, LineBeforeCall
 
@@ -7300,9 +7300,6 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				FunctionParams = ""
 
 				AfterFn = MID(TempLine, INSTR(UCase(TempLine), UCase(FunctionName)) + LEN(FunctionName))
-				If InStr(AfterFn, ";?F") <> 0 Then
-					AfterFn = RTrim(Left(AfterFn, InStr(AfterFn, ";?F") - 1))
-				End If
 				
 				'Check to see if parameters are in brackets
 				'FunctionName(params) - yes
@@ -7318,7 +7315,6 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				BL = 0
 				FirstBracketLoc = -1
 				LastBracketLoc = -1
-				CharsBeforeBracket = 0
 				For FB = 1 To Len(AfterFn)
 					Select Case Mid(AfterFn, FB, 1)
 						Case "("
@@ -7346,12 +7342,25 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 							If BL = 0 Then
 								LastBracketLoc = -2
 							End If
+						Case " "
+							'Do nothing
+						Case Else
+							'If any other character is found before brackets, these brackets do not mark parameters
+							'Example: SomeSub SomeFunction(param)
+							If BL = 0 And FirstBracketLoc = -1 Then
+								LastBracketLoc = -2
+							End If
 					End Select
 				Next
 				'Extract parameters from brackets if brackets used
 				If FirstBracketLoc <> -1 And LastBracketLoc > 0 Then
-					FunctionParams = Mid(AfterFn, FirstBracketLoc + 1, LastBracketLoc - FirstBracketLoc - 1)
-					AfterFn = Mid(AfterFn, LastBracketLoc + 1)
+					FunctionParams = Trim(Mid(AfterFn, FirstBracketLoc + 1, LastBracketLoc - FirstBracketLoc - 1))
+					'For a subroutine, remove anything after parameters
+					If Subroutine(CurrSub)->IsFunction Then
+						AfterFn = Mid(AfterFn, LastBracketLoc + 1)
+					Else
+						AfterFn = ""
+					End If
 				Else
 					'No brackets - nothing or everything after sub/function name is a parameter
 					If BracketsRequired Then
@@ -7359,11 +7368,16 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 						FunctionParams = ""
 					Else
 						'If we have a sub without brackets, everything after the name is a parameter
-						FunctionParams = AfterFn
+						FunctionParams = Trim(AfterFn)
 						AfterFn = ""
 					End If
 				End If
-
+				
+				'Remove origin from FunctionParams
+				IF INSTR(FunctionParams, ";?F") <> 0 Then
+					FunctionParams = RTrim(Left(FunctionParams, InStr(FunctionParams, ";?F") - 1))
+				End If
+				
 				'Prepare sub call
 				'Print "Params:", FunctionParams
 				ExtractParameters(NewSubCall, FunctionName, FunctionParams, Origin)
