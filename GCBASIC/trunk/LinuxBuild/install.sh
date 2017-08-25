@@ -3,7 +3,7 @@
 #2016-07-20: Make grep for version number from $VersionFile case-insensitive
 #2017-01-16: Move system-wide path config from /etc/profile to /etc/profile.d/gcbasic.sh
 
-# Great Cow Basic generic Linux installer, Version 0.3
+# Great Cow Basic generic Linux installer, Version 0.2
 # NOT to be used on any other operating system (eg. Windows).
 
 set -e # Halt on errors
