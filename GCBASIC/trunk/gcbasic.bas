@@ -7248,6 +7248,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 			FoundFunction = WholeINSTR(TempLine, FunctionName, 0)
 
 			'Avoid calling functions from themselves
+			'Note: ignores overloaded sub and function with same name, need to detect that later
 			If FoundFunction = 2 And Subroutine(CurrSub)->IsFunction Then
 				If CompSub->Name = Subroutine(CurrSub)->Name Then FoundFunction = 0
 			END IF
@@ -7376,6 +7377,13 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				'Remove origin from FunctionParams
 				IF INSTR(FunctionParams, ";?F") <> 0 Then
 					FunctionParams = RTrim(Left(FunctionParams, InStr(FunctionParams, ";?F") - 1))
+				End If
+				
+				'Detect cases where overloaded sub and function have same name, and return of function is set
+				'Need to detect here or the sub will be called with = return value as a parameter.
+				If Subroutine(CurrSub)->Overloaded And Left(FunctionParams, 1) = "=" Then
+					Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
+					Goto SearchLineAgain
 				End If
 				
 				'Prepare sub call
