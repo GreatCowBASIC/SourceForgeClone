@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-08-24"
+Version = "0.98.<<>> 2017-08-25"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7310,7 +7310,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				'So, check for comma inside or outside brackets
 				
 				'Are brackets required?
-				BracketsRequired = Subroutine(CurrSub)->IsFunction
+				BracketsRequired = BeforeFn <> ""
 				'Parse parameters
 				BL = 0
 				FirstBracketLoc = -1
@@ -7379,7 +7379,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 				End If
 				
 				'Prepare sub call
-				'Print "Params:", FunctionParams
+				'Print "Calling:"; FunctionName, "Params:"; FunctionParams
 				ExtractParameters(NewSubCall, FunctionName, FunctionParams, Origin)
 				With NewSubCall
 					.Called = Subroutine(CurrSub)
