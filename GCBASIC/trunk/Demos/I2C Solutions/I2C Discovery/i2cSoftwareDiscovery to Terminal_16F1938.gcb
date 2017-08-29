@@ -4,10 +4,10 @@
 '''This program uses the software implementation of I2C for the Microchip microprocessors.
 '''The hardware serial connections are shown in the program.
 '''This program requires "DisplayDevices.h" in the same folder.
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	14.02.15
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.0a
+'''@date    14.02.15
 '''********************************************************************************
 
 ; ----- Configuration
@@ -34,7 +34,7 @@
  #define USART_BLOCKING
  wait 500 ms
 
-;----- Variables 
+;----- Variables
   Dim TESTID as Byte
 
 ; ----- Main body of program commences here.
@@ -49,7 +49,6 @@
       for DeviceID = 0 to 255
         I2CStart
         I2CSend ( deviceID )
-        I2CSend ( 0 )
         I2CSend ( 0 )
         i2cstop
 
@@ -69,4 +68,3 @@
       next
       HSerPrint   "End of Search": HSerPrintCRLF 2
   END
-

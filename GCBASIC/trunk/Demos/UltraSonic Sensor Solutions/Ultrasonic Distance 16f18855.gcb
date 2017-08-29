@@ -3,10 +3,10 @@
 '''This program is a GLCD demonstration multifunctional capabilities.
 '''This program reads the SRF04 distance sensor and dispays the results on the serial terminal.
 '''The serial terminal is connected to the microprocessor as shown in the hardware section of this code.
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.0
-'''@date   	17.3.16
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.0
+'''@date    17.3.16
 '''********************************************************************************
 
   'Chip Settings.
@@ -19,10 +19,15 @@
 
 
   'Set the PPS of the PWM and the RS232 ports.
-  UNLOCKPPS
-    RC0PPS = 0x0010		 'RC0->EUSART:TX;
-    RXPPS  = 0x0011 		 'RC1->EUSART:RX;
-  LOCKPPS
+  'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
+    UNLOCKPPS
+    RC0PPS = 0x0010    'RC0->EUSART:TX;
+    RXPPS  = 0x0011      'RC1->EUSART:RX;
+    LOCKPPS
+  End sub
 
 
   #define USART_BAUD_RATE 19200
@@ -74,4 +79,3 @@
 
 
 end
-

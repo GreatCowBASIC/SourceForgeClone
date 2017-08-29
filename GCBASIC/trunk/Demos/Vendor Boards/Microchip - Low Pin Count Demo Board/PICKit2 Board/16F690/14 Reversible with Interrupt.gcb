@@ -84,7 +84,7 @@
 
   'setup Interrupt
    IOCA3 = 1
-   On Interrupt PORTABChange  Call InterruptHandler
+   On Interrupt PORTChange  Call InterruptHandler
 
   do
       mydelay = ReadAD10 ( AN0 )  / ADC_adjustment

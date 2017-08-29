@@ -18,7 +18,7 @@
          #define USART_BLOCKING
          wait 500 ms
 
-;----- Variables 
+;----- Variables
   Dim TESTID as Byte
 
 
@@ -35,7 +35,6 @@
       for DeviceID = 0 to 255
         I2CStart
         I2CSend ( deviceID )
-        I2CSend ( 0 )
         I2CSend ( 0 )
         i2cstop
 
@@ -55,4 +54,3 @@
       next
       HSerPrint   "End of Search": HSerPrintCRLF 2
   END
-

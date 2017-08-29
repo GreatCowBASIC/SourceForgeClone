@@ -31,6 +31,7 @@
 '
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 19/2/16 Revised to ensure compatibility with old code and the help file!
+' 22/4/17 Revised to support () and binary
 '
 'Hardware settings
 'Type
@@ -195,13 +196,13 @@ Sub InitGLCD_ST7920
                         PULSEOUT GLCD_Enable, 5 10us
                         Wait 5 ms
 
-                        WriteByte_ST7920(b'10000000')
+                        WriteByte_ST7920(0b10000000)
                         wait 5 10us
 
-                        WriteByte_ST7920(b'00010000')
+                        WriteByte_ST7920(0b00010000)
                         wait 5 ms
 
-                        WriteByte_ST7920(b'011000000')
+                        WriteByte_ST7920(0b011000000)
                         wait 5 10us
               #ENDIF    'GLCD_TYPE = GLCD_TYPE_ST7920
 
@@ -210,10 +211,10 @@ Sub InitGLCD_ST7920
 
                         'Set Cursor movement
                         SET GLCD_RS OFF
-                        WriteCommand_ST7920(b'00000110')
+                        WriteCommand_ST7920(0b00000110)
                         wait 5 10us
                         'Turn off cursor
-                        WriteCommand_ST7920(b'00001100')
+                        WriteCommand_ST7920(0b00001100)
                         wait 5 10us
 
                         'Clear screen

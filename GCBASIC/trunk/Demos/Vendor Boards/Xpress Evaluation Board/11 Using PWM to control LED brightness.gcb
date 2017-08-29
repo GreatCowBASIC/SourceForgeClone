@@ -28,22 +28,27 @@
   #Config WRT_OFF, CPD_ON, MCLRE_ON
 
   'Set the PPS of the PWM and the RS232 ports.
-  UNLOCKPPS
+  'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
+    UNLOCKPPS
       RA3PPS = 0x000E;   'RA3->PWM6:PWM6OUT;
       RA1PPS = 0x000E;   'RA1->PWM6:PWM6OUT;
       RA2PPS = 0x000E;   'RA2->PWM6:PWM6OUT;
       RA0PPS = 0x000E;   'RA0->PWM6:PWM6OUT;
-  LOCKPPS
+    LOCKPPS
+  End sub
 
   '' -------------------LATA-----------------
   '' Bit#:  -7---6---5---4---3---2---1---0---
   '' LED:   ---------------|D5 |D4 |D3 |D1 |-
   ''-----------------------------------------
   ''
-  #define LEDD2	PORTA.0
-  #define LEDD3	PORTA.1
-  #define LEDD4	PORTA.2
-  #define LEDD5	PORTA.3
+  #define LEDD2 PORTA.0
+  #define LEDD3 PORTA.1
+  #define LEDD4 PORTA.2
+  #define LEDD5 PORTA.3
 
 
   Dir     LEDD2 OUT
@@ -79,4 +84,3 @@
       next
       wait 10 ms
   Loop
-

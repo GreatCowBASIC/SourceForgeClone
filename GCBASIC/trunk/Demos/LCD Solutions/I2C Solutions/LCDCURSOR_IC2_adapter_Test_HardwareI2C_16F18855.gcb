@@ -20,6 +20,10 @@
 
 
 
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
 
       SSP1CLKPPS = 0x14     'RC3->MSSP1:SCL1;
@@ -27,7 +31,8 @@
       RC3PPS = 0x15         'RC3->MSSP1:SCL1;
       RC4PPS = 0x14         'RC4->MSSP1:SDA1;
 
-    LOCKPPS
+      LOCKPPS
+  End sub
 
     #include <lowlevel\hwi2c.h>
   ; ----- Define Hardware settings

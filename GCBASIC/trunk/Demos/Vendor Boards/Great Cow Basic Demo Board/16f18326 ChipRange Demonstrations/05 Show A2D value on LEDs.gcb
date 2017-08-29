@@ -41,7 +41,7 @@
     #define LEDD3  PORTC.1
     #define LEDD4  PORTC.2
     #define LEDD5  PORTC.3
-    #define Potentiometer   PORTA.A
+    #define Potentiometer   PORTA.0
 
     Dir     LEDD2 OUT
     Dir     LEDD3 OUT

@@ -67,7 +67,7 @@
 
 
     IOCA3 = 1
-    On Interrupt PORTaBChange  Call InterruptHandler
+    On Interrupt PORTChange  Call InterruptHandler
 
     do
          EPRead ( 0, restored_value)

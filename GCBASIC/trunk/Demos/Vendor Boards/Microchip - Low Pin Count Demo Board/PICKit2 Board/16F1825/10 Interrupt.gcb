@@ -76,7 +76,7 @@
 
     IOCAN3 = 1
     IOCIE = 1
-    On Interrupt PORTBChange  Call InterruptHandler
+    On Interrupt PORTChange  Call InterruptHandler
 
 
     do

@@ -20,6 +20,10 @@
 
     'Set the PPS of the PWM and the RS232 ports.
     'Set the PPS of the PWM and the RS232 ports.
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
       RXPPS  = 0x15 'Pin RC5 source is an input for RX
       RC4PPS = 0x14 'Pin RC4 source is TX/CK
@@ -28,7 +32,8 @@
       SSP1DATPPS = 0x0002    'RA2->MSSP:SDA;
       SSP1CLKPPS = 0x0004    'RA4->MSSP:SCL;
       RA4PPS = 0x0018        'RA4->MSSP:SCL;
-    LOCKPPS
+      LOCKPPS
+  End sub
 
     #define USART_BAUD_RATE 19200
     #define USART_TX_BLOCKING
@@ -150,4 +155,3 @@
 
 
 end
-

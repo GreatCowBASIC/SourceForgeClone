@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015, 2017 Paolo Iocco and Evan Venn
+'    Copyright (C) 2015, 2017 Paolo Iocco, Stan Cartwright and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,9 @@
 ' 04/10/2015:      Revised to add ReadID.           Evan R Venn
 ' 14/07/2016:      Revised to resolve Linux build.  Paolo Iocco edited by Evan R Venn
 ' 08/11/2016:      Revised to resolve 18f init issues by Evan R Venn
-' 27/03/2017:       Revised to fix initialisation issue from PIC when using Priority Startup
+' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
+' 30/5/2017:       Revised to remove ILI9341_DI GLCD_DI. SDO (MISO) is not used.
+' 17/67/2017:      Reverted ILI9341_DI GLCD_DI
 
 
 ' Hardware settings
@@ -32,7 +34,7 @@
 'Serial lines (ILI9341 only)
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9341; Data/Command; GLCD_DC; IO_Pin
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9341; Chip Select; GLCD_CS; IO_Pin
-'''@hardware GLCD_TYPE GLCD_TYPE_ILI9341; Data In (LCD Out) GLCD_DI; IO_Pin
+''@hardware GLCD_TYPE GLCD_TYPE_ILI9341; Data In (LCD Out) GLCD_DI; IO_Pin
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9341; Data Out (LCD In) GLCD_DO; IO_Pin
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9341; Clock; GLCD_SCK; IO_Pin
 
@@ -43,7 +45,7 @@
 #define ILI9341_CS GLCD_CS
 #define ILI9341_RST GLCD_RESET
 
-#define ILI9341_DI GLCD_DI
+#define ILI9341_DI GLCD_DI ;DI IS NOT USED within the library - presence for completeness
 #define ILI9341_DO GLCD_DO
 #define ILI9341_SCK GLCD_SCK
 
@@ -160,7 +162,9 @@ Sub InitGLCD_ILI9341
     Dir ILI9341_DC Out
     Dir ILI9341_RST Out
 
-    Dir ILI9341_DI In
+    #if bit(ILI9341_DI)
+      Dir ILI9341_DI In
+    #endif
     Dir ILI9341_DO Out
     Dir ILI9341_SCK Out
 

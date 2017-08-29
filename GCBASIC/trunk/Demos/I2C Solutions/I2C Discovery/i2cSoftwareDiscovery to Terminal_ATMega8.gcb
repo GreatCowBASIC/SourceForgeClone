@@ -4,10 +4,10 @@
 '''This program uses the software implementation of TWI for the ATMEL microprocessors.
 '''The hardware serial connections are shown in the program.
 '''This program requires "DisplayDevices.h" in the same folder.
-'''@author 	Theo Loermans plus works of EvanV
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	18.02.15
+'''@author  Theo Loermans plus works of EvanV
+'''@licence GPL
+'''@version 1.0a
+'''@date    18.02.15
 '''********************************************************************************
 
 ; ----- Configuration
@@ -33,7 +33,7 @@
    #define USART_BLOCKING
    wait 500 ms
 
-;----- Variables 
+;----- Variables
   Dim TESTID as Byte
 
 ; ----- Main body of program commences here.
@@ -48,7 +48,6 @@
       for DeviceID = 0 to 255
         I2CStart
         I2CSend ( deviceID )
-        I2CSend ( 0 )
         I2CSend ( 0 )
         i2cstop
 
