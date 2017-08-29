@@ -25,7 +25,8 @@
 '    Revised by Evan R Venn - Jan 4 2015. As follows:
 '            Correct SetAlarm and ReadAlarm usage of the Month parameter and Date and Month respectively.
 '            Improve documentation for SetControl and SetAlarmMask
-'    Revised by Evan R Venn - Jan 11 2015 to add hardware i2c support
+'    Revised by Evan R Venn - Jan 11 2015 to add hardware i2c suppor
+'    Revised 28.08.2017 to resolve non-ANSI characters
 
 
 ;12 bytes are used as input and output parameters. They are:
@@ -1559,7 +1560,7 @@ end sub
 
 ;-----
 sub MCP7940_ClearPowerFail
-  ; Clearing this bit resets the power-fail time-stamp registers to ‘0’.
+  ; Clearing this bit resets the power-fail time-stamp registers to 0.
 
   #ifdef HI2C_DATA
       do

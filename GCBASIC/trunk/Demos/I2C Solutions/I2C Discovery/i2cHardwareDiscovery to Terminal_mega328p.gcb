@@ -4,10 +4,10 @@
 '''This program uses the hardware implementation of I2C and TWI for the Microchip and ATMEL microprocessors.  The microprocessor must have a suitable I2C or TWI module.
 '''The hardware serial connections are shown in the program.
 '''This program requires "DisplayDevices.h" in the same folder.
-'''@author 	TheoL plus works of EvanV
-'''@licence	GPL
-'''@version	1.1a
-'''@date   	22.02.15
+'''@author  TheoL plus works of EvanV
+'''@licence GPL
+'''@version 1.1a
+'''@date    22.02.15
 '''********************************************************************************
 
 ; ----- Configuration
@@ -35,7 +35,7 @@
  #define USART_BLOCKING
  wait 500 ms
 
-;----- Variables 
+;----- Variables
   Dim DEVICEID, TESTID as Byte
 
 ; ----- Main body of program commences here.
@@ -52,14 +52,12 @@
                     HI2CSend ( deviceID )
 
                     if HI2CAckPollState = false then
-                    	HSerPrintCRLF
+                      HSerPrintCRLF
                       HSerPrint   "ID: 0x"
                       HSerPrint   hex(deviceID)
                       HSerSend 9
-                      testid =	deviceID | 1
+                      testid =  deviceID | 1
                       DisplayDevices
-
-                      HI2CSend ( 0 )
                       HI2CSend ( 0 )
 
                     end if

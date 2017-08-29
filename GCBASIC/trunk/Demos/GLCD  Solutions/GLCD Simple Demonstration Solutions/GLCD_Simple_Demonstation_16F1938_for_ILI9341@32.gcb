@@ -5,8 +5,8 @@
 '''This program draws lines, boxes, circles and prints strings and numbers.
 '''The GLCD is connected to the microprocessor as shown in the hardware section of this code.
 '''@author
-'''@licence	GPL
-'''@version	1.0
+'''@licence GPL
+'''@version 1.0
 '''@date
 '''********************************************************************************
 
@@ -21,13 +21,13 @@
     #define GLCD_TYPE GLCD_TYPE_ILI9341
 
     'Pin mappings for SPI - this GLCD driver supports Hardware SPI and Software SPI
-    #define GLCD_DC 			D8					' Data command line
-    #define GLCD_CS 			D10					' Chip select line
-    #define GLCD_RESET 		D9					' Reset line
+    #define GLCD_DC       D8          ' Data command line
+    #define GLCD_CS       D10         ' Chip select line
+    #define GLCD_RESET    D9          ' Reset line
 
-    #define GLCD_DI  			D3 					' Data in | MISO
-    #define GLCD_DO  			D2					' Data out | MOSI
-    #define GLCD_SCK 			D4					' Clock Line
+    #define GLCD_DI       D3          ' Data in | MISO  '   Not required
+    #define GLCD_DO       D2          ' Data out | MOSI
+    #define GLCD_SCK      D4          ' Clock Line
 
     #define ILI9341_HardwareSPI    ' remove/comment out if you want to use software SPI.
 
@@ -46,7 +46,7 @@
 
     'GLCD selected extension font set. ASCII characters 31-254, the extended font uses 1358 bytes of program memory
     #define GLCD_EXTENDEDFONTSET1
-		GLCDfntDefaultsize = 1
+    GLCDfntDefaultsize = 1
 
     'GLCDCLS  supports GLCDBackground as default
     'GLCDCLS  also support passing color parameter.
@@ -54,7 +54,7 @@
     GLCDRotate ( Landscape_rev )     ' optionally you can rotate the screen.
 
 
-		'Available colors
+    'Available colors
     'ILI9341_BLACK
     'ILI9341_RED
     'ILI9341_GREEN
@@ -83,9 +83,9 @@
     byteNumber = 0
 
 
-		repeat 2
+    repeat 2
 
-						GLCDRotate ( Landscape_rev )
+            GLCDRotate ( Landscape_rev )
             GLCDCLS ILI9341_BLUE
 
             GLCDForeground = ILI9341_MAROON
@@ -107,7 +107,7 @@
             byteNumber = 0xFF
 
             GLCDRotate ( Portrait )
-						GLCDCLS ILI9341_WHITE
+            GLCDCLS ILI9341_WHITE
 
             GLCDForeground = ILI9341_MAROON
             GLCDfntDefaultsize = 1
@@ -125,45 +125,45 @@
 
             wait 2 s
 
-		end Repeat
+    end Repeat
 
 
 
-	GLCDCLS ILI9341_BLUE
+  GLCDCLS ILI9341_BLUE
   'Set font size.
   GLCDfntDefaultsize = 2
   longNumber = 0 ' max value = 4294967290
   wordNumber = 0
   byteNumber = 0
 
-		'Using the global variable GLCDfntDefaultsize to show the different capabilities
-		Select Case GLCDfntDefaultsize
+    'Using the global variable GLCDfntDefaultsize to show the different capabilities
+    Select Case GLCDfntDefaultsize
 
-		Case 1
+    Case 1
 
-    	ShowCase1
+      ShowCase1
 
     Case 2
 
-			ShowCase2
+      ShowCase2
 
-  	Case 3
+    Case 3
 
       GLCDDrawString (2, 1, "GLCD font")
       GLCDDrawString (2, 25, "size = 3")
       box 0,0,ILI9341_GLCD_WIDTH-1, ILI9341_GLCD_HEIGHT-1, ILI9341_BLUE
       box ILI9341_GLCD_WIDTH-5, ILI9341_GLCD_HEIGHT-5,ILI9341_GLCD_WIDTH-1, ILI9341_GLCD_HEIGHT-1, ILI9341_WHITE
 
-	End Select
+  End Select
 
 end
 
 
 sub ShowCase1
 
-				GLCDRotate ( Portrait )
+        GLCDRotate ( Portrait )
 
- 				GLCDDrawString (2, 1, "GCB", ILI9341_WHITE )
+        GLCDDrawString (2, 1, "GCB", ILI9341_WHITE )
         GLCDDrawString (56,1,"v.941", ILI9341_YELLOW )
         GLCDDrawString (2, 16, "DrawStr", ILI9341_WHITE )
 
@@ -182,7 +182,7 @@ sub ShowCase1
         line 0,  ILI9341_GLCD_HEIGHT-1 , ILI9341_GLCD_WIDTH/2 +100,  (ILI9341_GLCD_HEIGHT /2) - 50, ILI9341_CYAN
         line  0, (ILI9341_GLCD_HEIGHT /2) - 50, ILI9341_GLCD_WIDTH/2 +100, (ILI9341_GLCD_HEIGHT /2) - 50, ILI9341_CYAN
 
-				filledbox 2,ILI9341_GLCD_HEIGHT/2+10,42,ILI9341_GLCD_HEIGHT/2+50, ILI9341_RED
+        filledbox 2,ILI9341_GLCD_HEIGHT/2+10,42,ILI9341_GLCD_HEIGHT/2+50, ILI9341_RED
 
         oldfont = GLCDfntDefaultsize
         GLCDfntDefaultsize = 3
@@ -191,11 +191,11 @@ sub ShowCase1
         GLCDfntDefaultsize = 1
         GLCDDrawString ( ILI9341_GLCD_WIDTH - 60, 2 , "July 2015" , ILI9341_WHITE )
         #ifdef ILI9341_HardwareSPI
-        		GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "HW SPI" , ILI9341_WHITE )
+            GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "HW SPI" , ILI9341_WHITE )
         #endif
 
-				#ifndef ILI9341_HardwareSPI
-        		GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "SW SPI" , ILI9341_WHITE )
+        #ifndef ILI9341_HardwareSPI
+            GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "SW SPI" , ILI9341_WHITE )
         #endif
 
         'Revert the font size
@@ -208,8 +208,8 @@ sub ShowCase1
             GLCDPrint ( 144 , 39, pad( str(wordnumber),5))
             GLCDPrint ( 144 , 47, pad( str(bytenumber),3))
 
-						GLCDDrawChar(54, 16, CCount )
-            Box 52,15,62,26, ILI9341_WHITE								'Draw a box around the Char below
+            GLCDDrawChar(54, 16, CCount )
+            Box 52,15,62,26, ILI9341_WHITE                'Draw a box around the Char below
 
             GLCDDrawString ( 100, 16 , pad( str(CCount),3) )
 
@@ -227,7 +227,7 @@ end sub
 
 sub ShowCase2
 
-				GLCDRotate ( Landscape_rev )
+        GLCDRotate ( Landscape_rev )
 
         GLCDDrawString (2, 1, "GCB",ILI9341_WHITE)
         GLCDDrawString (56,1,"v.941",ILI9341_YELLOW)
@@ -258,17 +258,17 @@ sub ShowCase2
         GLCDDrawString ( ILI9341_GLCD_WIDTH - 60, 2 , "July 2015" , ILI9341_WHITE )
 
         #ifdef ILI9341_HardwareSPI
-        		GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "HW SPI" , ILI9341_WHITE )
+            GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "HW SPI" , ILI9341_WHITE )
         #endif
 
-				#ifndef ILI9341_HardwareSPI
-        		GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "SW SPI" , ILI9341_WHITE )
+        #ifndef ILI9341_HardwareSPI
+            GLCDDrawString ( ILI9341_GLCD_WIDTH - 42, 10 , "SW SPI" , ILI9341_WHITE )
         #endif
 
         'Revert the font size
         GLCDfntDefaultsize = oldfont
         GLCDForeground = ILI9341_WHITE
-				BigPrint_ILI9341 ( 100 , ILI9341_GLCD_HEIGHT - 60 , "Great Cow Basic" )
+        BigPrint_ILI9341 ( 100 , ILI9341_GLCD_HEIGHT - 60 , "Great Cow Basic" )
 
         DO forever
 
@@ -277,7 +277,7 @@ sub ShowCase2
           GLCDPrint ( 64 , 88, pad( str(bytenumber),3))
 
           GLCDDrawChar(99, 18, CCount )
-          Box 98,18,117,42, ILI9341_WHITE								'Draw a box around the Char below
+          Box 98,18,117,42, ILI9341_WHITE               'Draw a box around the Char below
 
           GLCDDrawString ( 180, 18 , pad( str(CCount),3) )
 

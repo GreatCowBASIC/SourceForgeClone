@@ -4,10 +4,10 @@
  '''You should see it on the aircraft using four 3 Watt Cree XR-E LED's.
  '''Makes runway taxiing a lot safer for these smaller experimental aircraft.  And of course can be used on R/C Planes for a realistic looking beacon.
  '''
- '''@author 	 EvanV on works of William Roth
- '''@licence	 GPL
- '''@version	 1.0a
- '''@date   	 19.03.2016
+ '''@author    EvanV on works of William Roth
+ '''@licence   GPL
+ '''@version   1.0a
+ '''@date      19.03.2016
  '''********************************************************************************
 '********************************************************************************
 
@@ -18,12 +18,17 @@
   #Config WRT_OFF, CPD_ON, MCLRE_OFF
 
   'Set the PPS of the PWM
-  UNLOCKPPS
-      RB5PPS = 0x0B		    'RB5->CCP3:CCP3;
-      RB4PPS = 0x0B		    'RB4->CCP3:CCP3;
-      RB3PPS = 0x0B		    'RB3->CCP3:CCP3;
-      RB2PPS = 0x0B		    'RB2->CCP3:CCP3;
-  LOCKPPS
+  'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
+    UNLOCKPPS
+      RB5PPS = 0x0B       'RB5->CCP3:CCP3;
+      RB4PPS = 0x0B       'RB4->CCP3:CCP3;
+      RB3PPS = 0x0B       'RB3->CCP3:CCP3;
+      RB2PPS = 0x0B       'RB2->CCP3:CCP3;
+    LOCKPPS
+  End sub
 
 
     '' -------------------LATB-----------------
@@ -45,17 +50,17 @@
    #define Delay 20        ' ramp delay
 
  ; ----- Define Hardware settings
-	#define LEDD5	PORTB.5
-	#define LEDD4	PORTB.4
-	#define LEDD3	PORTB.3
-	#define LEDD2	PORTB.2
+  #define LEDD5 PORTB.5
+  #define LEDD4 PORTB.4
+  #define LEDD3 PORTB.3
+  #define LEDD2 PORTB.2
 
   Dir     LEDD5 OUT
   Dir     LEDD4 OUT
   Dir     LEDD3 OUT
   Dir     LEDD2 OUT
 
-	#define SoundOut PORTc.2
+  #define SoundOut PORTc.2
 
  ; ----- Variables
    Dim Duty as Byte
@@ -73,7 +78,7 @@
    repeat 4
          tone 110, 10
          wait 10 ms
-	end repeat
+  end repeat
 
   DO Forever
 
@@ -125,7 +130,7 @@
         #define USE_HPWM_TIMER6 FALSE
 
     'Optimise A-d.h
-    		'Standard family chips
+        'Standard family chips
         #define USE_AD0 FALSE
         #define USE_AD1 FALSE
         #define USE_AD2 FALSE

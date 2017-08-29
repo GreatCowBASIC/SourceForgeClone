@@ -21,6 +21,10 @@
 
 
     'Set the PPS of the PWM and the RS232 ports.
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
       RC0PPS = 0x0010       'RC0->EUSART:TX;
       RXPPS  = 0x0011       'RC1->EUSART:RX;
@@ -30,7 +34,8 @@
       RC3PPS = 0x15         'RC3->MSSP1:SCL1;
       RC4PPS = 0x14         'RC4->MSSP1:SDA1;
 
-    LOCKPPS
+      LOCKPPS
+  End sub
 
     #define SWITCH_DOWN         0
     #define SWITCH_UP           1
@@ -93,7 +98,6 @@
 
           'Did device fail to respond?
           if HI2CAckPollState = false then
-            HI2CSend ( 0 )
             HI2CSend ( 0 )
             HSerPrint   hex(deviceID)
           Else

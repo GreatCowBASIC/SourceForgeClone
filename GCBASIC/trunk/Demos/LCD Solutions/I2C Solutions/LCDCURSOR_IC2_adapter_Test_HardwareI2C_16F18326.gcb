@@ -21,6 +21,10 @@
 
 
 
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
 
         RC1PPS = 0x19            ' RC1<-MSSP1:SDA1
@@ -28,7 +32,8 @@
         SSP1DATPPS = 0x11        ' RC1->MSSP1:SDA1
         RC0PPS = 0x18            ' RC0->MSSP1:SCL1
 
-    LOCKPPS
+      LOCKPPS
+  End sub
 
     #include <lowlevel\hwi2c.h>
   ; ----- Define Hardware settings

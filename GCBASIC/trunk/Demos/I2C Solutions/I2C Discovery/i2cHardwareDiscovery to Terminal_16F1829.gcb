@@ -8,10 +8,10 @@
 '''This will flash the LEDs for the address.  Two sets of flashes for the hex address. Deduct one per flash.
 '''Flashes of 5 and 15 equates to 0x4E when ()(5 - 1 ) * 16 )+ (15 - 1)
 ''':
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	30.05.15
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.0a
+'''@date    30.05.15
 '''********************************************************************************
 
 ; ----- Configuration
@@ -60,14 +60,12 @@
                     HI2CSend ( deviceID )
 
                     if HI2CAckPollState = false then
-                    	HSerPrintCRLF
+                      HSerPrintCRLF
                       HSerPrint   "ID: 0x"
                       HSerPrint   hex(deviceID)
                       HSerSend 9
-                      testid =	deviceID | 1
+                      testid =  deviceID | 1
                       DisplayDevices
-
-                      HI2CSend ( 0 )
                       HI2CSend ( 0 )
 
                     end if

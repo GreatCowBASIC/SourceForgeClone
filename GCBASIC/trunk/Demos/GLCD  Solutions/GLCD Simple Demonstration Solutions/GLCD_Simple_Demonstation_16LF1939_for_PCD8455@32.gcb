@@ -10,10 +10,10 @@
 ''':
 '''The GLCD is connected to the microprocessor as shown in the hardware section of this code.
 ''':
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.4
-'''@date   	26.07.16
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.5
+'''@date    06.05.17
 '''********************************************************************************
 
     ;Chip Settings.
@@ -53,7 +53,7 @@
           byteNumber = 0
 
               dim lengthofpicture, ram_index as word
-
+          Repeat 4
               ' Display a BMP
               GLCDCLS
 
@@ -126,6 +126,10 @@
               end if
               wait 1 s
               GLCDCLS
+              GLCDPrint (0, 0, "Clear Screen")
+              Wait 1 s
+              GLCDCLS
+          End Repeat
 
 
           DO forever
@@ -151,7 +155,7 @@
                   outString = str( CCount )
                   ' draw a box to overwrite existing strings
                   FilledBox(58,9,GLCD_WIDTH-1,17,GLCDBackground )
-									#ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
+                  #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
                       GLCDfntDefaultsize = 2: GLCDFontWidth = 4
                       GLCDDrawString(58, 4, "   " )
                       GLCDDrawString(58, 4, outString )

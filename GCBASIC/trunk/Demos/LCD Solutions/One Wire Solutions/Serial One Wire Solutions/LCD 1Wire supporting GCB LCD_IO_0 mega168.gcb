@@ -5,16 +5,16 @@
 '''    This requires the GCB AXE133 emulator but this demonstration uses the standard LCD command set plus one command to control the remote LCD.
 '''    See www.picaxe.com for details of the AXE133 and the Open Source code this is based upon.
 '''     Supported Commands, see LCD Wire Usage.txt
-'''     0-252	normal ASCII characters
-'''     253, X	display 16 character pre-saved message from EEPROM memory, X can be 0-15
-'''     254, X	LCD command, X can be 0 to 255
-'''     255, X	control outputs A.3, A.2, A.1, A.0 (via lower 4 bits of X)
+'''     0-252 normal ASCII characters
+'''     253, X  display 16 character pre-saved message from EEPROM memory, X can be 0-15
+'''     254, X  LCD command, X can be 0 to 255
+'''     255, X  control outputs A.3, A.2, A.1, A.0 (via lower 4 bits of X)
 '''     So, if using a backlit LCD with the active low transistor driver
 '''     on output A.2, then 255,%000 switches backlight on and 255,%100 switches off
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	14.02.2015
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.0a
+'''@date    14.02.2015
 '''********************************************************************************
 
 ; ----- Configuration
@@ -100,8 +100,8 @@
   end sub
 
   'The AXE133 specific commands to the LCD
-  sub OneWireLCDcmd ( In LCDCmd, LCDValue )
-      HSerSend LCDCmd
-      HSerSend LCDValue
+  sub OneWireLCDcmd ( In _LCDCmd2, _LCDValue )
+      HSerSend _LCDCmd2
+      HSerSend _LCDValue
 
   end sub

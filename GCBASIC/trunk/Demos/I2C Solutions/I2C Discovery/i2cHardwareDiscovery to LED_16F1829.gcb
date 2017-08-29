@@ -8,10 +8,10 @@
 '''This will flash the LEDs for the address.  Two sets of flashes for the hex address. Deduct one per flash.
 '''Flashes of 5 and 15 equates to 0x4E when ()(5 - 1 ) * 16 )+ (15 - 1)
 ''':
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	30.05.15
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.0a
+'''@date    30.05.15
 '''********************************************************************************
 
 ; ----- Configuration
@@ -30,7 +30,7 @@
 
    HI2CMode Master
 
-; ----- Variables 
+; ----- Variables
   Dim LOOPX as Byte
 
 ; ----- Main body of program commences here.
@@ -43,7 +43,6 @@
 
         HI2CStart
         HI2CSend ( deviceID )
-        HI2CSend ( 0 )
         HI2CSend ( 0 )
         Hi2cstop
 
@@ -78,4 +77,3 @@
       next
 
   END
-

@@ -349,32 +349,46 @@ Sub PSet_PCD8544(In GLCDX, In GLCDY, In GLCDColour As Word)
   #if GLCD_TYPE = GLCD_TYPE_PCD8544
 
               #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
-                    PCD8544_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
+
+
+                    'PCD8544_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
+
+                    'faster than /8
+                    PCD8544_BufferLocationCalc = GLCDY
+                    Repeat 3
+                      Set C Off
+                      Rotate PCD8544_BufferLocationCalc Right
+                    End Repeat
+                    PCD8544_BufferLocationCalc = PCD8544_BufferLocationCalc * GLCD_WIDTH
+
+
                     PCD8544_BufferLocationCalc = GLCDX + PCD8544_BufferLocationCalc+1
-    GLCDDataTemp = PCD8544_BufferAlias(PCD8544_BufferLocationCalc)
+                    GLCDDataTemp = PCD8544_BufferAlias(PCD8544_BufferLocationCalc)
 
-    'Change data to set/clear pixel
-    GLCDBitNo = GLCDY And 7
-    If GLCDColour.0 = 0 Then
-      GLCDChange = 254
-      Set C On
-    Else
-      GLCDChange = 1
-      Set C Off
-    End If
-    Repeat GLCDBitNo
-      Rotate GLCDChange Left
-    End Repeat
+                    'Change data to set/clear pixel
+                    GLCDBitNo = GLCDY And 7
+                    If GLCDColour.0 = 0 Then
+                      GLCDChange = 254
+                      Set C On
+                    Else
+                      GLCDChange = 1
+                      Set C Off
+                    End If
+                    Repeat GLCDBitNo
+                      Rotate GLCDChange Left
+                    End Repeat
 
-    If GLCDColour.0 = 0 Then
-      GLCDDataTemp = GLCDDataTemp And GLCDChange
-    Else
-      GLCDDataTemp = GLCDDataTemp Or GLCDChange
-    End If
+                    If GLCDColour.0 = 0 Then
+                      GLCDDataTemp = GLCDDataTemp And GLCDChange
+                    Else
+                      GLCDDataTemp = GLCDDataTemp Or GLCDChange
+                    End If
 
-    PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = GLCDDataTemp
-                    Cursor_Position_PCD8544 ( GLCDX, GLCDY )
-                    Write_Data_PCD8544 ( GLCDDataTemp )
+                    if PCD8544_BufferAlias(PCD8544_BufferLocationCalc) <> GLCDDataTemp then
+                      PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = GLCDDataTemp
+                      Cursor_Position_PCD8544 ( GLCDX, GLCDY )
+                      Write_Data_PCD8544 ( GLCDDataTemp )
+                    end if
               #endif
 
   #endif

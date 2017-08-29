@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2017 Hugh Considine, Evan Venn, and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -18,6 +18,17 @@
 '    9/11/14  New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
 '    26/7/16  Moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc. in Drawstring and DrawChar
 '    22/8/16  removal of X1 and Y1 varibles. these clashed with register addresses
+'    08/4/17  added GLCD_TYPE_SSD1306_32 support
+'    01/5/17  added GLCD_TYPE_ILI9481 support
+'    2/05/17  Reverted to standard line routine. Local version overan Byte values
+'    3/07/17  Add overloaded function to cater for GLCDPrint with color
+'    25/07/17 Added support for low memory SSD1306 usage by adding GLCDDrawChar_SSD1306
+'    17/08/17 Added support for low memory SSD1306 and SH1106 GLCD by adding GLCD_Open_PageTransaction
+'             and GLCD_Close_PageTransaction
+'    21/08/17 Added support for Ellipse methods
+'    22/08/17 Added stubs for Triangle
+'    23/08/17 Revised Circle and FilledCircle, updated Draw_Filled_Ellipse_Points
+'    28/08/17 to resolve non-ANSI characters
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306
@@ -52,8 +63,32 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define GLCD_TYPE_SSD1289 7
 #define GLCD_TYPE_ILI9341 8
 #define GLCD_TYPE_SH1106  9
+#define GLCD_TYPE_SSD1306_32 10
+#define GLCD_TYPE_ILI9486L 11
+#define GLCD_TYPE_ILI9481 12
 
 
+' Color definitions
+' Define Colors
+#define TFT_BLACK       0x0000
+#define TFT_NAVY        0x000F
+#define TFT_DARKGREEN   0x03E0
+#define TFT_DARKCYAN    0x03EF
+#define TFT_MAROON      0x7800
+#define TFT_PURPLE      0x780F
+#define TFT_OLIVE       0x7BE0
+#define TFT_LIGHTGREY   0xC618
+#define TFT_DARKGREY    0x7BEF
+#define TFT_BLUE        0x001F
+#define TFT_GREEN       0x07E0
+#define TFT_CYAN        0x07FF
+#define TFT_RED         0xF800
+#define TFT_MAGENTA     0xF81F
+#define TFT_YELLOW      0xFFE0
+#define TFT_WHITE       0xFFFF
+#define TFT_ORANGE      0xFD20
+#define TFT_GREENYELLOW 0xAFE5
+#define TFT_PINK        0xF81F
 
 
 
@@ -91,8 +126,11 @@ Dim GLCDDeviceWidth as Word
      #include <glcd_SSD1306.h>
      InitGLCD = InitGLCD_SSD1306
      GLCDCLS = GLCDCLS_SSD1306
+     GLCDDrawChar = GLCDDrawChar_SSD1306
      FilledBox = FilledBox_SSD1306
      Pset = Pset_SSD1306
+     GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_SSD1306
+     GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_SSD1306
      glcd_type_string = "SSD1306"
      GLCD_WIDTH = 128
      GLCD_HEIGHT = 64
@@ -101,6 +139,23 @@ Dim GLCDDeviceWidth as Word
 
   End If
 
+
+  If GLCD_TYPE = GLCD_TYPE_SSD1306_32 Then
+     #include <glcd_SSD1306.h>
+     InitGLCD = InitGLCD_SSD1306
+     GLCDCLS = GLCDCLS_SSD1306
+     GLCDDrawChar = GLCDDrawChar_SSD1306
+     FilledBox = FilledBox_SSD1306
+     Pset = Pset_SSD1306
+     GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_SSD1306
+     GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_SSD1306
+     glcd_type_string = "SSD1306_32"
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 32
+     SSD1306_GLCD_HEIGHT = GLCDDeviceHeight
+     SSD1306_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
 
   If GLCD_TYPE = GLCD_TYPE_ILI9341 Then
 
@@ -150,7 +205,7 @@ Dim GLCDDeviceWidth as Word
      GLCDDrawString = Print_SSD1289
      Circle = Circle_SSD1289
      FilledCircle  = FilledCircle_SSD1289
-     Line =  Line_SSD1289
+'     Line =  Line_SSD1289
      Pset = PSet_SSD1289
       GLCDRotate = GLCDRotate_SSD1289
      glcd_type_string = "SSD1289"
@@ -215,8 +270,11 @@ Dim GLCDDeviceWidth as Word
      #include <glcd_SH1106.h>
      InitGLCD = InitGLCD_SH1106
      GLCDCLS = GLCDCLS_SH1106
+     GLCDDrawChar = GLCDDrawChar_SH1106
      FilledBox = FilledBox_SH1106
      Pset = Pset_SH1106
+     GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_SH1106
+     GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_SH1106
      GLCDSetContrast = GLCDSetContrast_SSH1106
      GLCDSetDisplayNormalMode = GLCDSetDisplayNormalMode_SSH1106
      GLCDSetDisplayInvertMode = GLCDSetDisplayInvertMode_SSH1106
@@ -238,6 +296,41 @@ Dim GLCDDeviceWidth as Word
      GLCDCharCol6 = GLCDCharCol6Extended1
      GLCDCharCol7 = GLCDCharCol7Extended1
 
+  End If
+
+
+If GLCD_TYPE = GLCD_TYPE_ILI9486L Then
+
+     #include <glcd_ILI9486L.h>
+     InitGLCD = InitGLCD_ili9486L
+     GLCDCLS = GLCDCLS_ili9486L
+     GLCDDrawChar = GLCDDrawChar_ili9486L
+     GLCDDrawString = GLCDDrawString_ili9486L
+     FilledBox = FilledBox_ili9486L
+     Pset = Pset_ili9486L
+     GLCDRotate = GLCDRotate_ili9486L
+     glcd_type_string = "ili9486L"
+     GLCD_WIDTH = 320
+     GLCD_HEIGHT = 480
+     ili9486L_GLCD_HEIGHT = GLCDDeviceHeight
+     ili9486L_GLCD_WIDTH = GLCDDeviceWidth
+  End If
+
+If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
+
+     #include <glcd_ILI9481.h>
+     InitGLCD = InitGLCD_ili9481
+     GLCDCLS = GLCDCLS_ili9481
+     GLCDDrawChar = GLCDDrawChar_ili9481
+     GLCDDrawString = GLCDDrawString_ili9481
+     FilledBox = FilledBox_ili9481
+     Pset = Pset_ili9481
+     GLCDRotate = GLCDRotate_ili9481
+     glcd_type_string = "ili9481"
+     GLCD_WIDTH = 320
+     GLCD_HEIGHT = 480
+     ili9481_GLCD_HEIGHT = GLCDDeviceHeight
+     ili9481_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
 #endscript
@@ -275,6 +368,23 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as str
   Next
 End Sub
 
+'''@hide
+Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string, In LineColour as word )
+  Dim GLCDPrintLoc as word
+  PrintLen = LCDPrintData(0)
+  If PrintLen = 0 Then Exit Sub
+
+  GLCDPrintLoc = PrintLocX
+  'Write Data
+  For SysPrintTemp = 1 To PrintLen
+    GLCDDrawChar GLCDPrintLoc, PrintLocY, LCDPrintData(SysPrintTemp), LineColour
+    GLCDPrintLoc += GLCDFontWidth * GLCDfntDefaultsize
+  Next
+End Sub
+
+
+
+
 '''Displays a number
 '''@param PrintLocX X coordinate for message
 '''@param PrintLocY Y coordinate for message
@@ -301,7 +411,28 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, In LCDValue As Long)
 
 End Sub
 
+'''@hide
+Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, In LCDValue As Long, In LineColour as word )
+  Dim SysCalcTempA As Long
+  Dim GLCDPrintLoc as word
+  Dim SysPrintBuffer(10)
+  SysPrintBuffLen = 0
 
+  Do
+    'Divide number by 10, remainder into buffer
+    SysPrintBuffLen += 1
+    SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
+    LCDValue = SysCalcTempA
+  Loop While LCDValue <> 0
+
+  'Display
+  GLCDPrintLoc = PrintLocX
+  For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+    GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48, LineColour
+    GLCDPrintLoc += GLCDFontWidth * GLCDfntDefaultsize
+  Next
+
+End Sub
 
 '''Draws a string at the specified location on the ST7920 GLCD
 '''@param StringLocX X coordinate for message
@@ -387,6 +518,7 @@ End Sub
 '''@param LineColour Colour of box border (0 = erase, 1 = draw, default is 1)
 #define GLCDBox Box
 Sub Box(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
+
   'Make sure that starting point (1) is always less than end point (2)
   If LineX1 > LineX2 Then
     GLCDTemp = LineX1
@@ -402,15 +534,16 @@ Sub Box(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as wo
   dim DrawLine as word
   'Draw lines going across
   For DrawLine = LineX1 To LineX2
+
     PSet DrawLine, LineY1, LineColour
     PSet DrawLine, LineY2, LineColour
   Next
-
   'Draw lines going down
   For DrawLine = LineY1 To LineY2
     PSet LineX1, DrawLine, LineColour
     PSet LineX2, DrawLine, LineColour
   Next
+
 End Sub
 
 '''Draws a filled box on the GLCD screen
@@ -427,81 +560,173 @@ End Sub
 '''Draws a circle on the GLCD screen
 '''@param Xoffset X point of circle
 '''@param Yoffset Y point of circle
-'''@param xradius radius of circle
+'''@param Inxradius radius of circle
 '''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
 '''@param yordinate (optional) rounding
 #define GCLDCircle Circle
-sub Circle ( in xoffset as word, in yoffset as word, in xradius as integer, Optional In LineColour as word = GLCDForeground , Optional In yordinate = GLCD_yordinate)
+'sub Circle ( in xoffset as word, in yoffset as word, in Inxradius as integer, Optional In LineColour as word = GLCDForeground , Optional In yordinate = GLCD_yordinate)
+'
+'
+'    dim  radiusErr, xradius as Integer
+'    xradius = Inxradius
+'    radiusErr = -(xradius/2)
+'    Do While xradius >=  yordinate
+'       Pset ((xoffset + xradius), (yoffset + yordinate), LineColour)
+'       Pset ((xoffset + yordinate), (yoffset + xradius), LineColour)
+'       Pset ((xoffset - xradius), (yoffset + yordinate), LineColour)
+'       Pset ((xoffset - yordinate), (yoffset + xradius), LineColour)
+'       Pset ((xoffset - xradius), (yoffset - yordinate), LineColour)
+'       Pset ((xoffset - yordinate), (yoffset - xradius), LineColour)
+'       Pset ((xoffset + xradius), (yoffset - yordinate), LineColour)
+'       Pset ((xoffset + yordinate), (yoffset - xradius), LineColour)
+'       yordinate ++
+'       If radiusErr < 0 Then
+'          radiusErr = radiusErr + 2 * yordinate + 1
+'       else
+'          xradius --
+'          radiusErr = radiusErr + 2 * (yordinate - xradius + 1)
+'       end if
+'    Loop
+'
+'end sub
+'
+'
+''''Fills a circle on the GLCD screen
+''''@param Xoffset X point of circle
+''''@param Yoffset Y point of circle
+''''@param xradius radius of circle
+''''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
+'#define GLCDFilledCircle FilledCircle
+'sub FilledCircle( in xoffset as word, in yoffset as word, in xradius as word, Optional In LineColour as word = GLCDForeground)
+'
+'    'Circle fill Code is merely a modification of the midpoint
+'    ' circle algorithem which is an adaption of Bresenham's line algorithm
+'    ' http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+'    ' http://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+'
+'  dim ff, ddF_x, ddF_y as integer
+'  dim YCalc2, YCalc1 as word
+'  ff = 1 - xradius
+'  ddF_x = 1
+'  ddF_y = -2 * xradius
+'  FillCircleXX = 0
+'  FillCircleYY = xradius
+'
+'  ' Fill in the center between the two halves
+'          YCalc2 = yoffset+xradius
+'          YCalc1 = yoffset-xradius
+'  Line( xoffset, YCalc1 , xoffset, YCalc2, LineColour)
+'
+'  do while (FillCircleXX < FillCircleYY)
+'             if ff >= 0 then
+'                FillCircleYY--
+'                ddF_y += 2
+'                ff += ddF_y
+'             end if
+'     FillCircleXX++
+'     ddF_x += 2
+'     ff += ddF_x
+'             ' Now draw vertical lines between the points on the circle rather than
+'             ' draw the points of the circle. This draws lines between the
+'             ' perimeter points on the upper and lower quadrants of the 2 halves of the circle.
+'
+'     Line(xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour);
+'     Line(xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour);
+'     Line(xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour);
+'     Line(xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour);
+'    loop
+'end sub
 
+Sub Circle( in xoffset as word, in yoffset as word, in Inxradius as word,Optional In LineColour as word = GLCDForeground )
 
-    dim  radiusErr as Integer
-    radiusErr = -(xradius/2)
-    Do While xradius >=  yordinate
-       Pset ((xoffset + xradius), (yoffset + yordinate), LineColour)
-       Pset ((xoffset + yordinate), (yoffset + xradius), LineColour)
-       Pset ((xoffset - xradius), (yoffset + yordinate), LineColour)
-       Pset ((xoffset - yordinate), (yoffset + xradius), LineColour)
-       Pset ((xoffset - xradius), (yoffset - yordinate), LineColour)
-       Pset ((xoffset - yordinate), (yoffset - xradius), LineColour)
-       Pset ((xoffset + xradius), (yoffset - yordinate), LineColour)
-       Pset ((xoffset + yordinate), (yoffset - xradius), LineColour)
-       yordinate ++
-       If radiusErr < 0 Then
-          radiusErr = radiusErr + 2 * yordinate + 1
-       else
-          xradius --
-          radiusErr = radiusErr + 2 * (yordinate - xradius + 1)
-       end if
-    Loop
+'Version 1.00 (08/21/2017) by Joseph Realmuto
+'draws an circle outline at location (xoffset, yoffset)
+'Inxradius is radius of circle
 
-end sub
+  filled_circle = 0
+  DrawCircleRoutine( xoffset, yoffset, Inxradius, LineColour )
 
+End Sub
 
-'''Fills a circle on the GLCD screen
-'''@param Xoffset X point of circle
-'''@param Yoffset Y point of circle
-'''@param xradius radius of circle
-'''@param LineColour Colour of line (0 = blank, 1 = show, default is 1)
-#define GLCDFilledCircle FilledCircle
-sub FilledCircle( in xoffset as word, in yoffset as word, in xradius as word, Optional In LineColour as word = GLCDForeground)
+Sub FilledCircle( in xoffset as word, in yoffset as word, in Inxradius as word,Optional In LineColour as word = GLCDForeground )
 
-    'Circle fill Code is merely a modification of the midpoint
-    ' circle algorithem which is an adaption of Bresenham's line algorithm
-    ' http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
-    ' http://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+'Version 1.00 (08/21/2017) by Joseph Realmuto
+'draws a filled circle at location (xoffset, yoffset)
+'Inxradius is radius of circle
 
-dim ff, ddF_x, ddF_y as integer
-ff = 1 - xradius
-ddF_x = 1
-ddF_y = -2 * xradius
-FillCircleXX = 0
-FillCircleYY = xradius
+  filled_circle = 1
+  DrawCircleRoutine( xoffset, yoffset, Inxradius, LineColour )
 
-  ' Fill in the center between the two halves
-          YCalc2 = yoffset+xradius
-          YCalc1 = yoffset-xradius
-  Line( xoffset, YCalc1 , xoffset, YCalc2, LineColour)
+End Sub
 
-  do while (FillCircleXX < FillCircleYY)
-             if ff >= 0 then
-                FillCircleYY--
-                ddF_y += 2
-                ff += ddF_y
-             end if
-     FillCircleXX++
-     ddF_x += 2
-     ff += ddF_x
-             ' Now draw vertical lines between the points on the circle rather than
-             ' draw the points of the circle. This draws lines between the
-             ' perimeter points on the upper and lower quadrants of the 2 halves of the circle.
+Sub DrawCircleRoutine( in xoffset as word, in yoffset as word, in Inxradius as word,Optional In LineColour as word = GLCDForeground )
 
-     Line(xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour);
-     Line(xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour);
-     Line(xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour);
-     Line(xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour);
-    loop
-end sub
+'Version 1.00 (08/21/2017) by Joseph Realmuto
+'draws an circle outline at location (xoffset, yoffset) if filled_circle = 0
+'draws a filled circle at location (xoffset, yoffset) if filled_circle = 1
+'Inxradius is radius of circle
 
+  IF Inxradius<2 THEN exit sub
+
+  dim circle_xx, circle_yy, circle_pp as Word
+
+  circle_xx = 0
+  circle_yy = Inxradius
+
+  circle_pp = 1 - Inxradius
+
+  DO WHILE circle_xx <= circle_yy
+
+    IF filled_circle = 0 THEN
+     Draw_Circle_Points
+    ELSE
+     Draw_Filled_Circle_Points
+    END IF
+
+    circle_xx++
+
+    IF circle_pp_H.7 = 0 THEN
+     circle_yy--
+     'circle_pp = circle_pp - 2*circle_yy
+     circle_pp = circle_pp - circle_yy
+     circle_pp = circle_pp - circle_yy
+    END IF
+
+    'circle_pp = circle_pp + 2*circle_xx + 1
+    circle_pp = circle_pp + circle_xx
+    circle_pp = circle_pp + circle_xx
+    circle_pp = circle_pp + 1
+
+  LOOP
+
+End Sub
+
+Sub Draw_Circle_Points
+
+  Pset ((xoffset + circle_xx), (yoffset + circle_yy), LineColour)
+  Pset ((xoffset - circle_xx), (yoffset + circle_yy), LineColour)
+  Pset ((xoffset - circle_xx), (yoffset - circle_yy), LineColour)
+  Pset ((xoffset + circle_xx), (yoffset - circle_yy), LineColour)
+  Pset ((xoffset + circle_yy), (yoffset + circle_xx), LineColour)
+  Pset ((xoffset - circle_yy), (yoffset + circle_xx), LineColour)
+  Pset ((xoffset - circle_yy), (yoffset - circle_xx), LineColour)
+  Pset ((xoffset + circle_yy), (yoffset - circle_xx), LineColour)
+
+End Sub
+
+Sub Draw_Filled_Circle_Points
+
+  FOR circle_xx1 = yoffset to (yoffset + 2*circle_yy)
+   Pset ((xoffset + circle_xx), (circle_xx1 - circle_yy), LineColour)
+   Pset ((xoffset - circle_xx), (circle_xx1 - circle_yy), LineColour)
+  NEXT
+
+  FOR circle_xx1 = yoffset to (yoffset + 2*circle_xx)
+   Pset ((xoffset + circle_yy), (circle_xx1 - circle_xx), LineColour)
+   Pset ((xoffset - circle_yy), (circle_xx1 - circle_xx), LineColour)
+  NEXT
+
+End Sub
 
 
 '''Draws a line on the GLCD screen
@@ -1392,7 +1617,7 @@ Table GLCDCharCol3Extended1
 0
 0
 0
-0     '134 ¢
+0     '134 - THE CENT sign
 0
 0
 0
@@ -2482,3 +2707,287 @@ Table GLCDCharCol7Extended1
 60    '253 ý
 60    '254 þ
 End Table
+
+
+Sub Ellipse( in xoffset as word, in yoffset as word, in Inxradius as word,in Inyradius as word,Optional In LineColour as word = GLCDForeground )
+
+'Version 1.00 (08/20/2017) by Joseph Realmuto
+'draws an ellipse outline at location (xoffset, yoffset)
+'Inxradius is x radius of ellipse
+'Inyradius is y radius of ellipse
+
+  filled_ellipse = 0
+  DrawEllipseRoutine( xoffset, yoffset, Inxradius, Inyradius, LineColour )
+
+End Sub
+
+Sub FilledEllipse( in xoffset as word, in yoffset as word, in Inxradius as word,in Inyradius as word,Optional In LineColour as word = GLCDForeground )
+
+'Version 1.00 (08/20/2017) by Joseph Realmuto
+'draws a filled ellipse at location (xoffset, yoffset)
+'Inxradius is x radius of ellipse
+'Inyradius is y radius of ellipse
+
+  filled_ellipse = 1
+  DrawEllipseRoutine( xoffset, yoffset, Inxradius, Inyradius, LineColour )
+
+End Sub
+
+Sub DrawEllipseRoutine( in xoffset as word, in yoffset as word, in Inxradius as word,in Inyradius as word,Optional In LineColour as word = GLCDForeground )
+
+'Version 1.00 (08/20/2017) by Joseph Realmuto
+'draws an ellipse outline at location (xoffset, yoffset) if filled_ellipse = 0
+'draws a filled ellipse at location (xoffset, yoffset) if filled_ellipse = 1
+'Inxradius is x radius of ellipse
+'Inyradius is y radius of ellipse
+
+  'IF Inxradius = Inyradius THEN
+  '  IF filled_ellipse = 0 THEN
+  '    Circle Xoffset, Yoffset, Inxradius, LineColour
+  '  ELSE
+  '    FilledCircle Xoffset, Yoffset, Inxradius, LineColour
+  '  END IF
+  '    GLCD_exit sub
+  'END IF
+
+  IF Inxradius<2 THEN exit sub
+  IF Inyradius<2 THEN exit sub
+
+  dim GLCD_xx, GLCD_yy, GLCD_rx2, GLCD_ry2, GLCD_fx2, GLCD_fy2, GLCD_ex2, GLCD_ey2 as Word
+  dim GLCD_px, GLCD_py, GLCD_pp, GLCD_pp_temp as Long
+
+  GLCD_rx2 = Inxradius * Inxradius
+  GLCD_ry2 = Inyradius * Inyradius
+
+  'GLCD_fx2 = 4 * GLCD_rx2
+  GLCD_fx2 = GLCD_rx2 + GLCD_rx2
+  GLCD_fx2 = GLCD_fx2 + GLCD_fx2
+
+  'GLCD_fy2 = 4 * GLCD_ry2
+  GLCD_fy2 = GLCD_ry2 + GLCD_ry2
+  GLCD_fy2 = GLCD_fy2 + GLCD_fy2
+
+  'GLCD_ex2 = 2 * GLCD_fx2
+  GLCD_ex2 = GLCD_fx2 + GLCD_fx2
+
+  'GLCD_ey2 = 2 * GLCD_fy2
+  GLCD_ey2 = GLCD_fy2 + GLCD_fy2
+
+  GLCD_xx = 0
+  GLCD_yy = Inyradius
+  GLCD_px = 0
+  GLCD_py = GLCD_ex2 * GLCD_yy
+
+  'GLCD_pp = 2 + GLCD_fy2 -  GLCD_fx2 * Inyradius + GLCD_rx2
+  GLCD_pp_temp = GLCD_fx2 * Inyradius
+  GLCD_pp = 2 + GLCD_fy2
+  GLCD_pp = GLCD_pp + GLCD_rx2
+  GLCD_pp = GLCD_pp - GLCD_pp_temp
+
+  IF filled_ellipse = 0 THEN
+   Draw_Ellipse_Points
+  ELSE
+   Draw_Filled_Ellipse_Points
+  END IF
+
+  DO WHILE GLCD_px < GLCD_py
+
+    GLCD_xx++
+
+    GLCD_px = GLCD_px + GLCD_ey2
+
+    IF GLCD_pp_E.7 = 0 THEN
+     GLCD_yy--
+     GLCD_py = GLCD_py - GLCD_ex2
+     GLCD_pp = GLCD_pp - GLCD_py
+    END IF
+
+    'GLCD_pp = GLCD_pp + GLCD_fy2 + GLCD_px
+    GLCD_pp = GLCD_pp + GLCD_fy2
+    GLCD_pp = GLCD_pp + GLCD_px
+
+    IF filled_ellipse = 0 THEN
+     Draw_Ellipse_Points
+    ELSE
+     Draw_Filled_Ellipse_Points
+    END IF
+
+  LOOP
+
+  'GLCD_pp = 2 + GLCD_ry2 * (2 * GLCD_xx + 1) * (2 * GLCD_xx + 1) + GLCD_fx2 * (GLCD_yy - 1) * (GLCD_yy - 1) -  GLCD_fx2 * GLCD_ry2
+
+  'change GLCD_xx and GLCD_yy to do calculation
+  GLCD_xx = GLCD_xx + GLCD_xx
+  GLCD_xx++
+  GLCD_yy--
+  GLCD_pp_temp = GLCD_xx * GLCD_xx
+  GLCD_pp_temp = GLCD_ry2 * GLCD_pp_temp
+  GLCD_pp = 2 + GLCD_pp_temp
+  GLCD_pp_temp = GLCD_yy * GLCD_yy
+  GLCD_pp_temp = GLCD_fx2 * GLCD_pp_temp
+  GLCD_pp = GLCD_pp + GLCD_pp_temp
+  GLCD_pp_temp = GLCD_fx2 * GLCD_ry2
+  GLCD_pp = GLCD_pp - GLCD_pp_temp
+
+  'restore original GLCD_xx and GLCD_yy values
+  GLCD_xx--
+  'GLCD_xx/2
+  set C off
+  rotate GLCD_xx_H right
+  rotate GLCD_xx right
+  GLCD_yy++
+
+  DO WHILE GLCD_yy > 0
+
+    GLCD_yy--
+
+    GLCD_py = GLCD_py - GLCD_ex2
+
+    IF GLCD_pp_E.7 = 1 THEN
+     GLCD_xx++
+     GLCD_px = GLCD_px + GLCD_ey2
+     GLCD_pp = GLCD_pp + GLCD_px
+    END IF
+
+    'GLCD_pp = GLCD_pp + GLCD_fx2 - GLCD_py
+    GLCD_pp = GLCD_pp + GLCD_fx2
+    GLCD_pp = GLCD_pp - GLCD_py
+
+    IF filled_ellipse = 0 THEN
+     Draw_Ellipse_Points
+    ELSE
+     Draw_Filled_Ellipse_Points
+    END IF
+
+  LOOP
+
+End Sub
+
+Sub Draw_Ellipse_Points
+
+  Pset ((xoffset + GLCD_xx), (yoffset + GLCD_yy), LineColour)
+  Pset ((xoffset - GLCD_xx), (yoffset + GLCD_yy), LineColour)
+  Pset ((xoffset - GLCD_xx), (yoffset - GLCD_yy), LineColour)
+  Pset ((xoffset + GLCD_xx), (yoffset - GLCD_yy), LineColour)
+
+End Sub
+
+Sub Draw_Filled_Ellipse_Points
+
+  FOR GLCD_yy1 = (yoffset) to (yoffset + 2 * GLCD_yy)
+   Pset ((xoffset + GLCD_xx), (GLCD_yy1 - GLCD_yy), LineColour)
+   Pset ((xoffset - GLCD_xx), (GLCD_yy1 - GLCD_yy), LineColour)
+  NEXT
+
+End Sub
+
+'***************************************************************************************
+'** Function name:           Triangle
+'** Description:             Draw a triangle outline using 3 arbitrary points
+'***************************************************************************************
+' Draw a triangle
+Sub Triangle(  in xoffset as word, in yoffset as word, in xoffset2 as word, in yoffset2 as word,in xoffset3 as word, in yoffset3 as word ,Optional In LineColour as word = GLCDForeground )
+  Line(xoffset, yoffset,   xoffset2, yoffset2, LineColour)
+  Line(xoffset2, yoffset2, xoffset3, yoffset3, LineColour)
+  Line(xoffset3, yoffset3, xoffset,  yoffset,  LineColour)
+End Sub
+
+'***************************************************************************************
+'** Function name:           FilledTriangle
+'** Description:             Draw a filled triangle using 3 arbitrary points
+'***************************************************************************************
+' Fill a triangle
+Sub FilledTriangle (  in xoffset as word, in yoffset as word, in xoffset2 as word, in yoffset2 as word,in xoffset3 as word, in yoffset3 as word ,Optional In LineColour as word = GLCDForeground )
+
+  dim  GLCD_aa, GLCD_bb, GLCD_last as word
+
+  ' Sort coordinates by Y order (yoffset3 >= yoffset2 >= yoffset)
+  if (yoffset > yoffset2) then
+    swap(yoffset, yoffset2)
+    swap(xoffset, xoffset2)
+  end if
+  if (yoffset2 > yoffset3) then
+    swap(yoffset3, yoffset2)
+    swap(xoffset3, xoffset2)
+  end if
+  if (yoffset > yoffset2) then
+    swap(yoffset, yoffset2)
+    swap(xoffset, xoffset2)
+  end if
+
+
+  ' Handle awkward all-on-same-line case as its own thing
+  if (yoffset = yoffset3) then
+
+          GLCD_bb = xoffset
+          GLCD_aa = xoffset
+
+          if (xoffset2 < GLCD_aa ) Then
+            GLCD_aa = xoffset2
+          else if (xoffset2 > GLCD_bb ) then
+            GLCD_bb = xoffset2
+          end if
+
+          if (xoffset3 < GLCD_aa) Then
+            GLCD_aa = xoffset3
+          else if ( xoffset3 > GLCD_bb) then
+            GLCD_bb = xoffset3
+          end if
+          Line( GLCD_aa, yoffset, GLCD_bb - GLCD_aa + 1, yoffset, LineColour)
+          exit sub
+  end if
+
+  dim dxoffset01, dyoffset01, dxoffset02, dyoffset02, dxoffset12, dyoffset12, glcd_y as word
+  dim glcd_sa, glcd_sb as Integer
+  dxoffset01 = xoffset2 - xoffset
+  dyoffset01 = yoffset2 - yoffset
+  dxoffset02 = xoffset3 - xoffset
+  dyoffset02 = yoffset3 - yoffset
+  dxoffset12 = xoffset3 - xoffset2
+  dyoffset12 = yoffset3 - yoffset2
+  glcd_sa   = 0
+  glcd_sb   = 0
+
+'
+'   For upper part of triangle, find scanline crossings for segments
+'   0-1 and 0-2.  If yoffset2=yoffset3 (flat-bottomed triangle), the scanline yoffset2
+'   is included here (and second loop will be skipped, avoiding a /0
+'   error there), otherwise scanline yoffset2 is skipped here and handled
+'   in the second loop...which also avoids a /0 error here if yoffset=yoffset2
+'   (flat-topped triangle).
+
+  if ( yoffset2 = yoffset3) then
+    GLCD_last = yoffset2 ;   Include yoffset2 scanline
+  else
+    GLCD_last = yoffset2 - 1;  Skip it
+  end if
+
+   for glcd_y = yoffset to glcd_last
+
+    glcd_aa   = xoffset +  glcd_sa / dyoffset01
+    glcd_bb   = xoffset +  glcd_sb / dyoffset02
+    glcd_sa = glcd_sa + dxoffset01
+    glcd_sb = glcd_sb + dxoffset02
+
+    if (glcd_aa > glcd_bb)  then
+      swap(glcd_aa, glcd_bb)
+    end if
+
+    Line(glcd_aa, glcd_y, glcd_bb , glcd_y, LineColour)
+   next
+
+'   For lower part of triangle, find scanline crossings for segments
+'   0-2 and 1-2.  This loop is skipped if yoffset2=yoffset3.
+   glcd_sa = dxoffset12 * (glcd_y - yoffset2);
+   glcd_sb = dxoffset02 * (glcd_y - yoffset);
+   for glcd_y = glcd_last to yoffset3
+    glcd_aa   = xoffset2 +  glcd_sa / dyoffset12
+    glcd_bb   = xoffset +  glcd_sb / dyoffset02
+    glcd_sa = glcd_sa + dxoffset12
+    glcd_sb = glcd_sb + dxoffset02
+      if (glcd_aa > glcd_bb)  then
+        swap(glcd_aa, glcd_bb)
+      end if
+     Line(glcd_aa, glcd_y, glcd_bb , glcd_y, LineColour)
+    next
+End Sub

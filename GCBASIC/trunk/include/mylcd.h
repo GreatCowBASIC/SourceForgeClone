@@ -1,4 +1,4 @@
-'    Liquid Crystal Display routines for Great Cow BASIC
+﻿'    Liquid Crystal Display routines for Great Cow BASIC
 '    Copyright (C) 2006 - 2017 Hugh Considine, Stefano Bonomi
 
 '    This library is free software; you can redistribute it and/or
@@ -26,6 +26,8 @@
 ' 4 and 8 bit routines  Hugh Considine
 ' 2 bit routines  Stefano Bonomi
 ' Testing   Stefano Adami
+'    Revised 28.08.2017 to resolve non-ANSI characters
+
 
 #startup InitLCD
 
@@ -89,7 +91,7 @@ Sub CLS
   SET LCD_RS OFF
 
   'Clear screen
-  LCDWriteByte (b'00000001')
+  LCDWriteByte (0b00000001)
   Wait 2 ms
 
   'Move to start of visible DDRAM
@@ -449,7 +451,7 @@ sub InitLCD
     SET LCD_RS OFF
   #ENDIF
   #IFDEF LCD_IO 8
-    LCDWriteByte(b'00111000')
+    LCDWriteByte(0b00111000)
   #ENDIF
   #IFDEF LCD_IO 4
     DIR LCD_DB4 OUT
@@ -468,17 +470,17 @@ sub InitLCD
     PulseOut LCD_Enable, 5 10us
     Wait 5 ms
 
-    LCDWriteByte(b'00101000')
+    LCDWriteByte(0b00101000)
     wait 25 10us
   #ENDIF
   #IFDEF LCD_IO 4,8
 
     'Set Cursor movement
     SET LCD_RS OFF
-    LCDWriteByte(b'00000110')
+    LCDWriteByte(0b00000110)
     wait 5 10us
     'Turn off cursor
-    LCDWriteByte(b'00001100')
+    LCDWriteByte(0b00001100)
     wait 5 10us
 
     'Clear screen

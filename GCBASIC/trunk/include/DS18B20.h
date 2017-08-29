@@ -58,7 +58,7 @@
         ' Reads 12 bit temperature data from a DS18B20 digital temperature sensor and
         ' store in variable. The conversion takes up to 750ms. Both readtemp and
         ' readtemp12 take the same time to convert.
-        ' This command is for advanced users only. For standard ‘whole degree’ data use the readtemp command.
+        ' This command is for advanced users only. For standard whole degree data use the readtemp command.
         ' The temperature is read back as the raw 12 bit data into a word variable (0.0625
         ' degree resolution). The user must interpret the data through mathematical
         ' manipulation. See the DS18B20 datasheet for more information on the 12 bit
@@ -80,7 +80,7 @@
 '            Loop
   ' The wait of 1ms between one wire commands is unnecessary.
 ' 15/9/2014 - Correct silly errors in the code.  Timings were incorrect.
-
+'    Revised 28.08.2017 to resolve non-ANSI characters
 
 
 
@@ -222,7 +222,7 @@ function readtemp12 as integer
   ' Reads 12 bit temperature data from a DS18B20 digital temperature sensor and
   ' store in variable. The conversion takes up to 750ms. Both readtemp and
   ' readtemp12 take the same time to convert.
-  ' This command is for advanced users only. For standard ‘whole degree’ data use the readtemp command.
+  ' This command is for advanced users only. For standard whole degree data use the readtemp command.
   ' The temperature is read back as the raw 12 bit data into a word variable (0.0625
   ' degree resolution). The user must interpret the data through mathematical
   ' manipulation. See the DS18B20 datasheet for more information on the 12 bit

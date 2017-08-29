@@ -7,10 +7,10 @@
 ''':availalbe with a suffice.
 ''':
 ''':
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.0a
-'''@date   	Aug 2015
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.0a
+'''@date    Aug 2015
 '''*************************************************************************
 
   'Chip Settings.
@@ -39,18 +39,18 @@
  'MASTER Second Port
   HI2C2Mode Master
 
-;----- Variables 
+;----- Variables
   Dim DEVICEID, TESTID as Byte
 
 ; ----- Main body of program commences here.
          ' Now assumes Serial Terminal is operational
          wait 1 s
          repeat 2
-         	SerSend 1,13: SerSend 1,10
+          SerSend 1,13: SerSend 1,10
          end repeat
          SerPrint 1, "Hardware I2C2 Device Search for Microchip"
          repeat 2
-         	SerSend 1,13: SerSend 1,10
+          SerSend 1,13: SerSend 1,10
          end repeat
 
               for deviceID = 0 to 255
@@ -65,7 +65,6 @@
                   testid = deviceID | 1
                   DisplayDevices
                   HI2C2Send ( 0 )
-                  HI2C2Send ( 0 )
                   SerSend 1,13:SerSend 1,10
                 end if
 
@@ -73,7 +72,7 @@
               next
 
               repeat 2
-              	SerSend 1,13:SerSend 1,10
+                SerSend 1,13:SerSend 1,10
               end repeat
               SerPrint 1,  "End of Device Search"
 
@@ -94,11 +93,11 @@ Sub DisplayDevices
          case 97
               SerPrint 1, "GCB Slave Device"
          case 113
-         			SerPrint 1, "PCF8574T IC2/Serial_Expander_Device"    ' can be 113,115,117,119,121,123,125,127
+              SerPrint 1, "PCF8574T IC2/Serial_Expander_Device"    ' can be 113,115,117,119,121,123,125,127
          case 115
-         			SerPrint 1, "PCF8574T IC2/Serial_Expander_Device"    ' can be 113,115,117,119,121,123,125,127
+              SerPrint 1, "PCF8574T IC2/Serial_Expander_Device"    ' can be 113,115,117,119,121,123,125,127
          case 127
-         			SerPrint 1, "PCF8574T IC2/Serial_Expander_Device"    ' can be 113,115,117,119,121,123,125,127
+              SerPrint 1, "PCF8574T IC2/Serial_Expander_Device"    ' can be 113,115,117,119,121,123,125,127
          case 121
               SerPrint 1, "IC2 OLED Display"
          case 161

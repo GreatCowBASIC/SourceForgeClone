@@ -17,7 +17,11 @@
   #option explicit
   #config Osc = intOSC, MCLRE_ON, PLLEN_OFF
 
-  UNLOCKPPS
+  'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
+    UNLOCKPPS
 
     RXPPS=0x0D        'Pin RB5 source is an input for RX
     RB7PPS=0x14       'Pin RB7 source is TX/CK
@@ -27,7 +31,8 @@
     SSPDATPPS = 0x0C  'RB4->MSSP:SDA
     SSPCLKPPS = 0x0E  'RB6->MSSP:SCL
 
-  LOCKPPS
+    LOCKPPS
+  End sub
 
 ; ----- Define Hardware settings
   ' Define I2C settings - CHANGE PORTS if required
@@ -91,7 +96,6 @@
 
           'Did device fail to respond?
           if HI2CAckPollState = false then
-            HI2CSend ( 0 )
             HI2CSend ( 0 )
             HSerPrint   hex(deviceID)
           Else

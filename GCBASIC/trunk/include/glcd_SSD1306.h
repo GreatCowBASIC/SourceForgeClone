@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015 - 2017 Kent Schafer, Evan Venn, and Joseph Realmuto
+'    Copyright (C) 2015 - 2017 Kent Schafer, Evan Venn and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -39,8 +39,68 @@
 ' 1.09 correct buffer assignment and resolved buffer overright issue in CLS
 ' 1.10 Modified InitGLCD_SSD1306 for cleaner intalization - WMR
 ' 1.11 Added low RAM character mode only (Joseph Realmuto) - July 26, 2017
+'      Adding GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY to set configuration
+'      Only TEST commands are supported. No graphics supported.
+'      Y screen positions are similar to LCD. This is an 8 line device.
+'      8 lines of text, any GLCDPrint (xpos, YPOS, text) and YPOS will be translated to Address Line #n.
+'      Address Line #0 = YPOS 0 to 7
+'      Address Line #1 = YPOS 8 to 15
+'      Address Line #2 = YPOS 16 to 23
+'      Address Line #3 = YPOS 14 to 31
+'      Address Line #4 = YPOS 32 to 39
+'      Address Line #5 = YPOS 40 to 47
+'      Address Line #6 = YPOS 48 to 55
+'      Address Line #7 = YPOS 56 to 63
+'
+'   Example of character mode usage
+'    #define GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY    'This defined will be required on high RAM devices to activate low memory capability
+'
+'    GLCDPrint 0,10, "Great Cow BASIC"
+'    GLCDPrint 0,52, "Page 2"
+'
 ' 1.12 Corrected script to go into character only mode and assign buffer size (Evan Venn) - July 26, 2017
+' 1.13 Low memory adaptation and documentation
+'      Low memory mode
+'           8 lines of text, any GLCDPrint (xpos, YPOS, text) and YPOS will be translated to Address Line #n.
+'           Address Line #1 = YPOS 0 to 7
+'           Address Line #2 = YPOS 8 to 15
+'           Address Line #3 = YPOS 16 to 23
+'           Address Line #4 = YPOS 14 to 31
+'           Address Line #5 = YPOS 32 to 39
+'           Address Line #6 = YPOS 40 to 47
+'           Address Line #7 = YPOS 48 to 55
+'           Address Line #8 = YPOS 56 to 63
+'
+'
+'  1.14 Added GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE configuration
+'   GLCD_Open_PageTransaction and GLCD_Close_PageTransaction added to support Low memory configuration
+'   Any commands between GLCD_Open_PageTransaction and GLCD_Close_PageTransaction should be GLCD focused only.
+'   Any commands within the transaction WILL BE called 8 (EIGHT) times. So, if you increment variables... they will be incremented 8 times
+'   Any commands between GLCD_Open_PageTransaction and GLCD_Close_PageTransaction should be GLCD focused only.
+'   Methods such as scroll, pixelstatus WILL NOT work in low memory mode.
+'
+'   Example of low memory usage
+'    #define GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY    'This defined will be required on high RAM devices to activate low memory capability
+'    #define GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+'
+'      GLCD_Open_PageTransaction 0,7
+'        GLCDPrint 0,10, "Great Cow BASIC"
+'        GLCDPrint 0,52, "Page 2"
+'        Box 0,0,127,63
+'      GLCD_Close_PageTransaction
+'
+'
+'  1.15 Fixed shifting of characters by one pixel down and one pixel right when in GLCD mode (Joseph Realmuto)
+'  1.16 improved Pset for text mode
+'  1.17 Improved speed of GLCDDrawChar and Pset in low RAM GLCD mode (Joseph Realmuto)
+'  1.18 Corrected CLS to handle buffer correctly
+'  1.19 Further speed improvements of GLCDDrawChar when in low RAM GLCD mode (Joseph Realmuto)
+'  1.20 Revised 28.08.2017 to resolve non-ANSI characters
+'       Changed vccstate to constant SSD1306_vccstate with a default of 0
+'       Added compulsory wait of 255 ms
 
+
+#define SSD1306_vccstate 0
 
 #define SSD1306_SETCONTRAST 0x81
 #define SSD1306_DISPLAYALLON_RESUME 0xA4
@@ -109,6 +169,10 @@
    #endscript
 
    dim SSD1306_BufferLocationCalc as Word               ' mandated in main program for SSD1306
+   'dim GLCDY_Temp as Integer alias SSD1306_BufferLocationCalc_h, SSD1306_BufferLocationCalc
+   'SSD1306_BufferLocationCalc = 1
+   'GLCDY_Temp = -1
+   'dim GLCDY_Temp as Integer alias SSD1306_BufferLocationCalc_h, SSD1306_BufferLocationCalc
 
    #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
      #if GLCD_TYPE = GLCD_TYPE_SSD1306
@@ -118,6 +182,13 @@
        Dim SSD1306_BufferAlias(512)
      #endif
    #endif
+
+   #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+     #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+       Dim SSD1306_BufferAlias(128)
+     #endif
+   #endif
+
 
 '''@hide
 Sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
@@ -202,10 +273,10 @@ Sub InitGLCD_SSD1306
     GLCDFontWidth = 6
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
-
+    wait 255 ms             'added to ensure the charge pump and power is operational.
  #IFDEF HI2C_DATA
          HI2CMode Master
-         Wait 10 ms
+         Wait 15 ms  'wait for power-up and reset
  #ENDIF
 
 
@@ -243,7 +314,7 @@ Sub InitGLCD_SSD1306
     Write_Command_SSD1306(SSD1306_SETSTARTLINE | 0x00)            ' line #0
     Write_Command_SSD1306(SSD1306_CHARGEPUMP)                    ' 0x8D
 
-    if (vccstate = SSD1306_EXTERNALVCC) then
+    if (SSD1306_vccstate = SSD1306_EXTERNALVCC) then
       Write_Command_SSD1306(0x10)
     else
       Write_Command_SSD1306(0x14)
@@ -266,13 +337,13 @@ Sub InitGLCD_SSD1306
     #endif
 
     Write_Command_SSD1306(SSD1306_SETCONTRAST)                   ' 0x81
-    if vccstate = SSD1306_EXTERNALVCC then
+    if SSD1306_vccstate = SSD1306_EXTERNALVCC then
       Write_Command_SSD1306(0x9F)
     else
       Write_Command_SSD1306(0xCF)
     end if
     Write_Command_SSD1306(SSD1306_SETPRECHARGE)                  ' 0xd9
-    if vccstate = SSD1306_EXTERNALVCC then
+    if SSD1306_vccstate = SSD1306_EXTERNALVCC then
       Write_Command_SSD1306(0x22)
     else
       Write_Command_SSD1306(0xF1)
@@ -298,18 +369,38 @@ Sub GLCDCLS_SSD1306 ( Optional In  GLCDBackground as word = GLCDBackground )
  ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
   GLCD_yordinate = 0
 
-  #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
-    For SSD1306_BufferLocationCalc = 1 to GLCD_HEIGHT * GLCD_WIDTH / 8
-        SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
-    Next
-  #endif
+    #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+      #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+        For SSD1306_BufferLocationCalc = 1 to GLCD_HEIGHT * GLCD_WIDTH / 8
+            SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
+        Next
+      #endif
+    #endif
+    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+      #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+        For SSD1306_BufferLocationCalc = 0 to 128
+            SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
+        Next
+      #endif
+    #endif
 
-  for SSD1306_BufferLocationCalc = 0 to GLCD_HEIGHT-1 step 8
-      for GLCDTemp = 0 to 127
-          Cursor_Position_SSD1306 ( GLCDTemp , SSD1306_BufferLocationCalc )
-          Write_Data_SSD1306(GLCDBackground)
-    Next
-  next
+  '1.14 changed to transaction
+  For SSD1306_BufferLocationCalc = 0 to GLCD_HEIGHT-1 step 8
+    Cursor_Position_SSD1306 ( 0 , SSD1306_BufferLocationCalc )
+    Open_Transaction_SSD1306
+      For GLCDTemp = 0 to 127
+        Write_Transaction_Data_SSD1306(GLCDBackground)
+      Next
+    Close_Transaction_SSD1306
+  Next
+
+  'Removed at 1.14. Retained for documentation only
+    '  Cursor_Position_SSD1306 ( 0 , 0 )
+    '  for SSD1306_BufferLocationCalc = 0 to GLCD_HEIGHT-1 step 8
+    '    for GLCDTemp = 0 to 127
+    '        Write_Data_SSD1306(GLCDBackground)
+    '    Next
+    '  next
 
   Cursor_Position_SSD1306 ( 0 , 0 )
 
@@ -320,9 +411,27 @@ End Sub
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
+
 Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
   'moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc.
   'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+
+   #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+
+   'test if character lies within current page
+     GLCDY_Temp = CharLocY + 7
+     Repeat 3
+       Set C Off
+       Rotate GLCDY_Temp Right
+     End Repeat
+     IF GLCDY_Temp <> _GLCDPage THEN
+      GLCDY_Temp = GLCDY_Temp - 1
+      IF GLCDY_Temp <> _GLCDPage THEN
+        EXIT SUB
+      END IF
+     END IF
+
+   #endif
 
     'invert colors if required
     if LineColour <> GLCDForeground  then
@@ -340,6 +449,13 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
 
     CharCol=1
 
+    Cursor_Position_SSD1306 ( CharLocX , CharLocY )
+
+  '1.14 Added transaction
+   #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+    Open_Transaction_SSD1306
+   #endif
+
     For CurrCharCol = 1 to 5
       Select Case CurrCharCol
         Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
@@ -348,39 +464,99 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
         Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
         Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
       End Select
-    #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
-      CharRow=0
-      For CurrCharRow = 1 to 8
-          CharColS=0
-          For Col=1 to GLCDfntDefaultsize
-                CharColS +=1
-                CharRowS=0
-                For Row=1 to GLCDfntDefaultsize
-                    CharRowS +=1
-                    if CurrCharVal.0=1 then
-                       PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
-                    Else
-                       PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
-                    End if
-                Next Row
-          Next Col
-        Rotate CurrCharVal Right
-        CharRow +=GLCDfntDefaultsize
-      Next
-      CharCol +=GLCDfntDefaultsize
-    #endif
 
-    ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
-    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
-      Cursor_Position_SSD1306 ( ( CharLocX + CurrCharCol -1 ) , CharLocY )
-      If LineColour = 1 Then
-       Write_Data_SSD1306( CurrCharVal )
-      else
-       Write_Data_SSD1306( 255 - CurrCharVal )
-      end if
-    #endif
+      '1.14 Full GLCD mode
+      #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
+        CharRow=0
+        For CurrCharRow = 1 to 8
+            CharColS=0
+            For Col=1 to GLCDfntDefaultsize
+                  CharRowS=0
+                  For Row=1 to GLCDfntDefaultsize
+                      if CurrCharVal.0=1 then
+                         PSet [word]CharLocX + CharCol + CharColS, [word]CharLocY + CharRow + CharRowS, LineColour
+                      Else
+                         PSet [word]CharLocX + CharCol + CharColS, [word]CharLocY + CharRow + CharRowS, GLCDBackground
+                      End if
+                      CharRowS +=1
+                  Next Row
+                  CharColS +=1
+            Next Col
+          Rotate CurrCharVal Right
+          CharRow +=GLCDfntDefaultsize
+        Next
+        CharCol +=GLCDfntDefaultsize
+      #endif
+
+      '1.14 Low Memory GLCD mode
+      #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE         ' Same as code above. Repeated as the Define is the limitation
+        CharRow=0
+        For CurrCharRow = 1 to 8
+            CharColS=0
+            For Col=1 to GLCDfntDefaultsize
+                  CharRowS=0
+                  For Row=1 to GLCDfntDefaultsize
+                      GLCDY = [word]CharLocY + CharRow + CharRowS
+
+                      'if GLCDY/8 = _GLCDPage then
+                      'GLCDY_Temp = GLCDY
+                      'Repeat 3
+                      '  Set C Off
+                      '  Rotate GLCDY_Temp Right
+                      'End Repeat
+                      'if GLCDY_Temp = _GLCDPage then
+                       if CurrCharVal.0=1 then
+                          PSet [word]CharLocX + CharCol + CharColS, GLCDY, LineColour
+                       Else
+                          PSet [word]CharLocX + CharCol + CharColS, GLCDY, GLCDBackground
+                       End if
+                      'End if
+                      CharRowS +=1
+                  Next Row
+                  CharColS +=1
+            Next Col
+          Rotate CurrCharVal Right
+          CharRow +=GLCDfntDefaultsize
+        Next
+        CharCol +=GLCDfntDefaultsize
+      #endif
+
+      '1.12 Character GLCD mode
+      ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
+      #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+
+        'Ensure this is not called with in Low memory mode
+        #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+
+            GLCDX = ( CharLocX + CurrCharCol -1 )
+
+             #IFDEF GLCD_PROTECTOVERRUN
+                'anything off screen with be rejected
+
+                if GLCDX => GLCD_WIDTH OR CharLocY => GLCD_HEIGHT Then
+                    exit for
+                end if
+
+            #ENDIF
+
+            '1.14 Added transaction
+            If LineColour = 1 Then
+             Write_Transaction_Data_SSD1306( CurrCharVal )
+            else
+             Write_Transaction_Data_SSD1306( 255 - CurrCharVal )
+            end if
+
+        #endif
+
+      #endif
 
     Next
+
+   '1.14 Added transaction
+   #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+    Close_Transaction_SSD1306
+   #endif
+
 
     'Restore
     GLCDBackground = 0
@@ -430,37 +606,72 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
     'Y is 0 to 63
     'Origin in top left
 
-  #if GLCD_TYPE = GLCD_TYPE_SSD1306 or GLCD_TYPE = GLCD_TYPE_SSD1306_32
 
-    #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+    #if GLCD_TYPE = GLCD_TYPE_SSD1306 or GLCD_TYPE = GLCD_TYPE_SSD1306_32
 
-          #IFDEF GLCD_PROTECTOVERRUN
-              'anything off screen with be rejected
-              if GLCDX => GLCD_WIDTH OR GLCDY => GLCD_HEIGHT Then
-                  exit sub
-              end if
+        #IFDEF GLCD_PROTECTOVERRUN
+            'anything off screen with be rejected
+            if GLCDX => GLCD_WIDTH OR GLCDY => GLCD_HEIGHT Then
+                exit sub
+            end if
 
-          #ENDIF
+        #ENDIF
 
-          'SSD1306_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
-          'faster than /8
-          SSD1306_BufferLocationCalc = GLCDY
-          Repeat 3
-            Set C Off
-            Rotate SSD1306_BufferLocationCalc Right
-          End Repeat
+        '1.14 Addresses correct device horizonal page
+        #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
 
-          'faster than * 128
-          #if GLCD_WIDTH=128
-            Set C Off
-            Repeat 7
-              Rotate SSD1306_BufferLocationCalc Left
+            'Is YPOS addressing the page we need?
+            'SSD1306_BufferLocationCalc = GLCDY
+            'Repeat 3
+            '  Set C Off
+            '  Rotate SSD1306_BufferLocationCalc Right
+            'End Repeat
+
+            'if SSD1306_BufferLocationCalc = _GLCDPage then
+            'GLCDY_Temp = ( GLCDY / 8 )* GLCD_WIDTH
+            'faster than /8
+            GLCDY_Temp = GLCDY
+            Repeat 3
+              Set C Off
+              Rotate GLCDY_Temp Right
             End Repeat
-          #endif
-          #if GLCD_WIDTH <> 128
-            SSD1306_BufferLocationCalc = SSD1306_BufferLocationCalc * GLCD_WIDTH
-          #endif
-          SSD1306_BufferLocationCalc = GLCDX + SSD1306_BufferLocationCalc+1
+
+            if GLCDY_Temp = _GLCDPage then
+              'Mod the YPOS to get the correct pixel with the page
+              GLCDY = GLCDY mod 8
+            Else
+              'Exit if not the page we are looking for
+              exit sub
+            end if
+            'buffer location in LOWMEMORY_GLCD_MODE always equals GLCDX + 1
+            SSD1306_BufferLocationCalc = GLCDX + 1
+
+        #endif
+
+        'don't need to do these calculations for in LOWMEMORY_GLCD_MODE
+        #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+
+           'SSD1306_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
+           'faster than /8
+           SSD1306_BufferLocationCalc = GLCDY
+           Repeat 3
+             Set C Off
+             Rotate SSD1306_BufferLocationCalc Right
+           End Repeat
+
+           'faster than * 128
+           #if GLCD_WIDTH=128
+             Set C Off
+             Repeat 7
+               Rotate SSD1306_BufferLocationCalc Left
+             End Repeat
+           #endif
+           #if GLCD_WIDTH <> 128
+             SSD1306_BufferLocationCalc = SSD1306_BufferLocationCalc * GLCD_WIDTH
+           #endif
+           SSD1306_BufferLocationCalc = GLCDX + SSD1306_BufferLocationCalc + 1
+
+        #endif
 
           #IFDEF GLCD_PROTECTOVERRUN
               'anything beyond buffer boundary?
@@ -492,13 +703,28 @@ Sub PSet_SSD1306(In GLCDX, In GLCDY, In GLCDColour As Word)
              GLCDDataTemp = GLCDDataTemp Or GLCDChange
           End If
 
-          if SSD1306_BufferAlias(SSD1306_BufferLocationCalc) <> GLCDDataTemp then
-              SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = GLCDDataTemp
-              Cursor_Position_SSD1306 ( GLCDX, GLCDY )
-              Write_Data_SSD1306 ( GLCDDataTemp )
-          end if
+          'added 1.14 to isolate from full glcd mode
+          #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+              'restore address the correct page by adjustng the Y
+              GLCDY = GLCDY + ( 8 * _GLCDPage )
+              if SSD1306_BufferAlias(SSD1306_BufferLocationCalc) <> GLCDDataTemp then
+                SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = GLCDDataTemp
+              end if
+
+          #endif
+
+          'revised 1.14 to isolate from low memory mode
+          #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+            if SSD1306_BufferAlias(SSD1306_BufferLocationCalc) <> GLCDDataTemp then
+                SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = GLCDDataTemp
+                Cursor_Position_SSD1306 ( GLCDX, GLCDY )
+                Write_Data_SSD1306 ( GLCDDataTemp )
+            end if
+          #endif
+
     #endif
-  #endif
+
+
 
 End Sub
 
@@ -667,3 +893,111 @@ sub S4Wire_SSD1306(in SSD1306SendByte as byte)
   Next
 
 end sub
+
+'added 1.14 to support low memory mode
+
+Macro  GLCD_Open_PageTransaction_SSD1306 ( Optional In _GLCDPagesL As byte = 0 , Optional In _GLCDPagesH As byte = 7 )
+  #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+
+      dim _GLCDPage as byte
+      'Clear buffer
+      for _GLCDPage = _GLCDPagesL to _GLCDPagesH    '_GLCDPage is a global variable - DO NOT CHANGE!!!
+
+  #endif
+
+end Macro
+
+
+Macro  GLCD_Close_PageTransaction_SSD1306
+
+  #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+
+          'Set cursor position
+          Cursor_Position_SSD1306 ( 0, 8 * _GLCDPage )
+
+          'Send the buffer to the device using transaction
+          Open_Transaction_SSD1306
+
+          for SSD1306_BufferLocationCalc = 1 to 128
+             Write_Transaction_Data_SSD1306 SSD1306_BufferAlias(SSD1306_BufferLocationCalc)
+             'Clear the buffer byte. We need it to be empty for the next page operation
+             SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
+          next
+
+          Close_Transaction_SSD1306
+
+      next
+
+    #endif
+
+end Macro
+
+
+'added 1.14 to improved performance
+Macro Open_Transaction_SSD1306
+
+    '4wire not supported, see Write_Transaction_Data_SSD1306
+
+     #ifdef I2C_DATA
+
+       I2CStart
+       I2CSend GLCD_I2C_Address
+       I2CSend 0x40
+
+     #endif
+
+     #ifdef HI2C_DATA
+
+       HI2CStart
+       HI2CSend GLCD_I2C_Address
+       HI2CSend 0x40
+
+     #endif
+
+End Macro
+
+'added 1.14 to improved performance
+Macro Write_Transaction_Data_SSD1306 ( in SSD1306SendByte as byte )
+
+        #ifdef S4Wire_DATA
+
+          CS_SSD1306 = 0
+          DC_SSD1306 = 0
+          S4Wire_SSD1306 SSD1306SendByte
+          DC_SSD1306 = 1
+          CS_SSD1306 = 1
+
+        #endif
+
+        #ifdef I2C_DATA
+
+         I2CSend SSD1306SendByte
+
+        #endif
+
+        #ifdef HI2C_DATA
+
+         HI2CSend SSD1306SendByte
+
+        #endif
+
+End Macro
+
+'added 1.14 to improved performance
+Macro Close_Transaction_SSD1306
+
+    '4wire not supported, see Write_Transaction_Data_SSD1306
+
+     #ifdef I2C_DATA
+
+       I2CStop
+
+     #endif
+
+     #ifdef HI2C_DATA
+
+       HI2CStop
+
+     #endif
+
+End Macro

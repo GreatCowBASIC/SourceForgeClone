@@ -19,17 +19,17 @@
 '''These are the user's oriented functions/subroutines:
 '''  HEFreadBlock  : sub to read a HEFM row into a n bytes buffer array
 '''  HEFreadByte   : byte function to read a HEFM row at a given offset
-'''  HEFRead  	   : sub equivalent to EPRead sub for EEPROM
+'''  HEFRead       : sub equivalent to EPRead sub for EEPROM
 '''  HEFwriteBlock : sub to write a buffer array of n bytes in a HEFM row
-'''  HEFWrite 	   : sub equivalent to EPWrite sub for EEPROM
+'''  HEFWrite      : sub equivalent to EPWrite sub for EEPROM
 '''
 '''WORD OF CAUTION:
 '''Whenever you update the hex file of your PIC with your programmer you
 '''will erase the data that are stored in HEFM.  If you want to avoid that
 '''you will have to flash your PIC with a software that allow memory exclusion
 '''when flashing. This is the case of Microchip MPLAB IPE :
-'''(Go In Advanced Mode/Enter password/Select Memory/Tick “Preserve Flash
-'''on Program”/Enter Start and End address of your HEFM).
+'''(Go In Advanced Mode/Enter password/Select Memory/Tick Preserve Flash
+'''on Program/Enter Start and End address of your HEFM).
 '''
 '''This program has been adaptated from the Microchip Application note
 '''AN1673 "Using the PIC16F1XXX High-Endurance Flash (HEF) block
@@ -42,11 +42,14 @@
 '''1.3 FLASH_read/write made private. FLASH_readconfig removed.
 '''    Fews subs and var names changed for better consistency
 '''
-'''@author 	Jacques Nilo
-'''@licence	GPL
-'''@version	1.3
-'''@date   	05.06.2015
+'''@author  Jacques Nilo
+'''@licence GPL
+'''@version 1.3
+'''@date    05.06.2015
 '''*****************************************************************************
+'
+'    Revised 28.08.2017 to resolve non-ANSI characters
+'
 ;
 ; Computes HEF global variables from *.dat file characteristics
 #script
@@ -60,7 +63,7 @@ If ChipEEPROM = 0 And Var(PMDATH) And Bit(LWLO) Then
 End If
 
 if NoVar(PMDATH) And NoBit(LWLO) Then
-	Warning "This is probably NOT a microprocessor with HFEM capabilities"
+  Warning "This is probably NOT a microprocessor with HFEM capabilities"
   Warning "Subsequent error messages may be related to lack of HFEM capabilities"
 end if
 

@@ -42,13 +42,20 @@
 
         For DigitCounter = 0 to 9
 
-            ;Show the value on the 7-Segment displays
-            DisplayValue  1, DigitCounter
-            DisplayValue  2, DigitCounter
-            DisplayValue  3, DigitCounter
-            DisplayValue  4, DigitCounter
+            ;Show the value on all four 7-Segment displays
+          Repeat 125
+            DisplayValue 1, DigitCounter
+            wait 2 ms
+            DisplayValue 2, DigitCounter
+            wait 2 ms
+            DisplayValue 3, DigitCounter
+            wait 2 ms
+            DisplayValue 4, DigitCounter
+            wait 2 ms
+          end Repeat
 
-            Wait 50 ms
+
+            Wait 100 ms
 
         Next
 

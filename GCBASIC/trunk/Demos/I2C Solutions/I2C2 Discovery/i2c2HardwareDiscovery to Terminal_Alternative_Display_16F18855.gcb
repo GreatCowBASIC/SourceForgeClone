@@ -22,7 +22,11 @@
 
 
     'Set the PPS of the PWM and the RS232 ports.
-    UNLOCKPPS
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
+      UNLOCKPPS
       RC0PPS = 0x0010       'RC0->EUSART:TX;
       RXPPS  = 0x0011      'RC1->EUSART:RX;
 
@@ -31,7 +35,8 @@
       SSP2DATPPS = 0x0013   'RC3->MSSP2:SDA2;
       SSP2CLKPPS = 0x0014   'RC4->MSSP2:SCL2;
       RC4PPS = 0x0016       'RC4->MSSP2:SCL2;
-    LOCKPPS
+      LOCKPPS
+  End sub
 
     #define SWITCH_DOWN         0
     #define SWITCH_UP           1
@@ -110,8 +115,6 @@
               HSerPrint "--"
             end if
             HI2C2Send ( 0)
-            HI2C2Send ( 0)
-
           end if
           HI2C2Stop
 

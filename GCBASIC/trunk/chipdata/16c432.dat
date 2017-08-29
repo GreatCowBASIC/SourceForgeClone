@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C432
-'Generated 10/12/2016
+'Generated 22/1/2017
 'Format last revised: 14/11/2009
 
 [ChipData]
@@ -21,6 +21,7 @@ MaxAddress=255
 Comp1Change:CMIE,CMIF
 ExtInt0:INTE,INTF
 PORTBChange:RBIE,RBIF
+PortChange:RBIE,RBIF
 Timer0Overflow:T0IE,T0IF
 
 [Registers]

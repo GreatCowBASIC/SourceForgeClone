@@ -38,12 +38,17 @@
 
 
 
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
       '----------------------------------------------------------------------
       RXPPS  = 0x15 'Pin RC5 source is an input for RX
       RC4PPS = 0x14 'Pin RC4 source is TX/CK
       '----------------------------------------------------------------------
-    LOCKPPS
+      LOCKPPS
+  End sub
 
 
     '' -------------------LATC-----------------

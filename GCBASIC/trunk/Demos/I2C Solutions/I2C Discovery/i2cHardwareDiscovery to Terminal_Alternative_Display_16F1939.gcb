@@ -4,10 +4,10 @@
 '''This program uses the hardware implementation of I2C and TWI for the Microchip and ATMEL microprocessors.  The microprocessor must have a suitable I2C or TWI module.
 '''The hardware serial connections are shown in the program.
 
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.2a
-'''@date   	13.05.16
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.2a
+'''@date    13.05.16
 '''********************************************************************************
 
 ; ----- Configuration
@@ -77,7 +77,6 @@
 
           'Did device fail to respond?
           if HI2CAckPollState = false then
-            HI2CSend ( 0 )
             HI2CSend ( 0 )
             HSerPrint   hex(deviceID)
           Else

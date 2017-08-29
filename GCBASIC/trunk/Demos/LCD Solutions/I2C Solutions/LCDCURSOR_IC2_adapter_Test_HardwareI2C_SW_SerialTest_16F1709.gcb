@@ -19,6 +19,10 @@
     #option explicit
     #config MCLRE_ON
 
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
 
       RXPPS=0x0D        'Pin RB5 source is an input for RX
@@ -29,7 +33,8 @@
       RC0PPS = 0x10      ' RC0->MSSP:SCL
       SSPCLKPPS = 0x10   ' RC0->MSSP:SCL
 
-    LOCKPPS
+      LOCKPPS
+  End sub
 
     ; ----- Define Hardware settings
     ' Define I2C settings - CHANGE PORTS if required

@@ -75,7 +75,7 @@
     On Interrupt Timer0Overflow Call InterruptHandler
 
     IOCA3 = 1
-    On Interrupt PORTABChange  Call InterruptHandler
+    On Interrupt PORTChange  Call InterruptHandler
 
 
     do
@@ -87,7 +87,7 @@
 sub InterruptHandler
 
     if RABIF = 1 then                          ' SW1 was just pressed
-    		RABIF = 0																' must clear the flag in software
+        RABIF = 0                               ' must clear the flag in software
 '        IOCA3 = 0
         wait 5 ms                              ' debounce by waiting and seeing if still held down
         if ( SWITCH = DOWN ) then

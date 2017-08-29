@@ -10,6 +10,7 @@
 '''@licence GPL
 '''@version 2.0a
 '''@date    02.10.2016
+'''modified 10/28/2016 mlo
 '''********************************************************************************
 
 ; ----- Configuration
@@ -45,44 +46,36 @@
 ; ----- Main body of program commences here.
 
     do Forever
-
-        For Counter = 0 to 10000
+ For Counter = 0 to 10000
 
             ;Show the value on the 7-Segment displays
             'Calculate 1000
-            DData = Counter / 1000
+            THOU = Counter / 1000
             DCarry = SysCalcTempX
-'             Optionally clear the char before the new number is displayed
-            DisplayChar 1, " "
-
-            DisplayValue  1, DData
-
+'
 
             'Calculate 100's
-            DData = DCarry / 100
+            HUND = DCarry / 100
             DCarry = SysCalcTempX
-'            Optionally clear the char before the new number is displayed
-            DisplayChar 2, " "
-
-            DisplayValue  2, DData
-
+'
             'Calculate 10's
-            DData = DCarry / 10
-            DCarry = SysCalcTempX
+            TENS = DCarry / 10
+            ONES = SysCalcTempX
 
-'            Optionally clear the char before the new number is displayed
-            DisplayChar 3, " "
+'
+            Repeat 125
+            DisplayValue 1, THOU
+            wait 2 ms
+            DisplayValue 2, HUND
+            wait 2 ms
+            DisplayValue 3, TENS
+            wait 2 ms
+            DisplayValue 4, ONES
+            wait 2 ms
+          end Repeat
 
-            DisplayValue  3, DData
 
-            'We are left with the units in the carry
-
-'            Optionally clear the char before the new number is displayed
-            DisplayChar 4, " "
-
-            DisplayValue  4, DCarry
-
-            Wait 250 ms
+            Wait 5 ms
 
         Next
 

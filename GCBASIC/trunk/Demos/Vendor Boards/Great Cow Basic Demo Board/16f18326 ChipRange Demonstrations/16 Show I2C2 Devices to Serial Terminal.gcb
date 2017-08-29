@@ -31,6 +31,10 @@
 
 
     'Set the PPS of the PWM and the RS232 ports.
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
       RXPPS  = 0x15 'Pin RC5 source is an input for RX
       RC4PPS = 0x14 'Pin RC4 source is TX/CK
@@ -39,7 +43,8 @@
       SSP2DATPPS = 0x0002    'RA2->MSSP2:SDA2;
       SSP2CLKPPS = 0x0004    'RA4->MSSP2:SCL2;
       RA4PPS = 0x001a        'RA4->MSSP2:SCL2;
-    LOCKPPS
+      LOCKPPS
+  End sub
 
     #define SWITCH_DOWN         1
     #define SWITCH_UP           0

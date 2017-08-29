@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Marco Cariboni and Evan Venn
+'    Copyright (C) 2017 Marco Cariboni, Evan Venn and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -15,8 +15,13 @@
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
-' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
-'
+' 27/03/2017: Revised to fix initialisation issue from PIC when using Priority Startup
+' 14/08/2017: Added low-RAM character only support (Joseph Realmuto)
+' 15/08/2017: Revised to support I2C transaction control for low memory usage
+' 17/08/2017: Added support for low-RAM GLCD mode (ported from SSD1306 code) - Joseph Realmuto
+' 17/08/2017: Improved Pset for text mode
+' 18/08/2017: Improved speed of GLCDDrawChar and Pset in low RAM GLCD mode (Joseph Realmuto)
+
 'Notes:
 ' Supports SH1106 controller only.
 
@@ -34,13 +39,14 @@
 #define SH1106_SETSTARTLINE 0x40
 #define SH1106_PAGEADDR   0xB0
 #define SH1106_SETCONTRASTCRTL 0x81
-#define SH1106_SEGREMAP 0xA1
+#define SH1106_SEGREMAP 0xA0
 #define SH1106_NORMALDISPLAY 0xA6
 #define SH1106_INVERTDISPLAY 0xA7
 #define SH1106_SETMULTIPLEX 0xA8
 #define SH1106_CHARGEPUMP 0xAD
 #define SH1106_EXTERNALVCC 0x8B
 #define SH1106_PUMPVOLTAGE 0x30
+#define SH1106_COMSCANINC 0xC0
 #define SH1106_COMSCANDEC 0xC8
 #define SH1106_SETDISPLAYOFFSET 0xD3
 #define SH1106_SETDISPLAYCLOCKDIV 0xD5
@@ -56,18 +62,49 @@
 
 
 'Setup code for SH1106 controllers
+
+#script
+
+    ' This script set the capabilities based upon the amount of RAM
+
+    IF GLCD_TYPE = GLCD_TYPE_SH1106 THEN
+      IF ChipRAM < 1024  THEN
+         GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY = TRUE
+      END IF
+    END IF
+
+#endscript
+
+
 #if GLCD_TYPE = GLCD_TYPE_SH1106
 
     dim SH1106_BufferLocationCalc as Word               ' mandated in main program for SH1106
 
-       If ChipRAM > 1024  Then
-         Dim SH1106_BufferAlias(1024)
-       End if
+    #ifndef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
+        Dim SH1106_BufferAlias(1024)
+    #endif
+
+    #ifdef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
+      #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+        Dim SH1106_BufferAlias(128)
+      #endif
+    #endif
 
 #endif
 
 '''@hide
 Sub Write_Command_SH1106 ( in SH1106SendByte as byte )
+
+    #ifdef S4Wire_DATA
+
+      CS_SH1106 = 0
+      DC_SH1106 = 0
+      S4Wire_SH1106 SH1106SendByte
+      DC_SH1106 = 1
+      CS_SH1106 = 1
+      Exit Sub
+
+    #endif
 
     #ifdef I2C_DATA
 
@@ -80,6 +117,7 @@ Sub Write_Command_SH1106 ( in SH1106SendByte as byte )
     #endif
 
     #ifdef HI2C_DATA
+
       HI2CStart
       HI2CSend GLCD_I2C_Address
       HI2CSend 0x00
@@ -93,7 +131,19 @@ End Sub
 '''@hide
 Sub Write_Data_SH1106 ( in SH1106SendByte as byte )
 
+    #ifdef S4Wire_DATA
+
+      CS_SH1106 = 0
+      DC_SH1106 = 1
+      S4Wire_SH1106 SH1106SendByte
+      DC_SH1106 = 0
+      CS_SH1106 = 1
+      Exit Sub
+
+    #endif
+
     #ifdef I2C_DATA
+
       I2CStart
       I2CSend GLCD_I2C_Address
       I2CSend 0x40
@@ -103,6 +153,7 @@ Sub Write_Data_SH1106 ( in SH1106SendByte as byte )
     #endif
 
     #ifdef HI2C_DATA
+
       HI2CStart
       HI2CSend GLCD_I2C_Address
       HI2CSend 0x40
@@ -110,15 +161,18 @@ Sub Write_Data_SH1106 ( in SH1106SendByte as byte )
       HI2CStop
 
     #endif
+
 End Sub
 
 
 Sub InitGLCD_SH1106
 
-
+    ' added wait time to allow power supplies to stabilize
+    wait 255 ms
 
       #IFDEF HI2C_DATA
              HI2CMode Master
+             Wait 10 ms
       #ENDIF
 
    'Setup code for SH1106 controllers
@@ -133,7 +187,7 @@ Sub InitGLCD_SH1106
     Write_Command_SH1106(SH1106_SETCONTRASTCRTL)               ' 0x81
     Write_Command_SH1106(0x80)                   ' Contrast = 128
 
-    Write_Command_SH1106(SH1106_SEGREMAP)            ' 0xA1
+    Write_Command_SH1106(SH1106_SEGREMAP | 0x1)                ' 0xA1
     Write_Command_SH1106(SH1106_NORMALDISPLAY)                 ' 0xA6
 
     Write_Command_SH1106(SH1106_SETMULTIPLEX)                  ' 0xA8
@@ -141,17 +195,17 @@ Sub InitGLCD_SH1106
 
     Write_Command_SH1106(SH1106_CHARGEPUMP)                    ' 0xAD
     Write_Command_SH1106(SH1106_EXTERNALVCC)                   ' 0x8B
-    Write_Command_SH1106(SH1106_PUMPVOLTAGE)           ' 0x30
-    Write_Command_SH1106(SH1106_COMSCANDEC)            ' 0xC8
+    Write_Command_SH1106(SH1106_PUMPVOLTAGE)                   ' 0x30
+    Write_Command_SH1106(SH1106_COMSCANDEC)                    ' 0xC8
 
     Write_Command_SH1106(SH1106_SETDISPLAYOFFSET)              ' 0xD3
-    Write_Command_SH1106(0x00)                                ' No offset(Y position)
-    Write_Command_SH1106(0x00)                                ' No offset(Y position)
+    Write_Command_SH1106(0x00)                                 ' No offset(Y position)
+    Write_Command_SH1106(0x00)                                 ' No offset(Y position)
 
     Write_Command_SH1106(SH1106_SETDISPLAYCLOCKDIV)            ' 0xD5
     Write_Command_SH1106(0x50)                                 ' Suggested ratio 0x50
 
-    Write_Command_SH1106(SH1106_SETPRECHARGE)                  ' 0xd9
+    Write_Command_SH1106(SH1106_SETPRECHARGE)                  ' 0xD9
     Write_Command_SH1106(0x22)
 
     Write_Command_SH1106(SH1106_SETCOMPINS)                    ' 0xDA
@@ -179,24 +233,196 @@ End Sub
 
 
 '''Clears the GLCD screen
-Sub GLCDCLS_SH1106
+Sub GLCDCLS_SH1106 ( Optional In  GLCDBackground as word = GLCDBackground )
  ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
   GLCD_yordinate = 0
 
-  #ifndef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
-    For SH1106_BufferLocationCalc = 1 to ( GLCD_WIDTH * GLCD_HEIGHT / 8 )
-        SH1106_BufferAlias(SH1106_BufferLocationCalc) = 0
-    Next
-  #endif
+    #ifndef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
+      #ifndef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+        For SH1106_BufferLocationCalc = 1 to GLCD_HEIGHT * GLCD_WIDTH / 8
+            SH1106_BufferAlias(SH1106_BufferLocationCalc) = 0
+        Next
+      #endif
+    #endif
+    #ifdef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
+      #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+        For SH1106_BufferLocationCalc = 0 to 128
+            SH1106_BufferAlias(SH1106_BufferLocationCalc) = 0
+        Next
+      #endif
+    #endif
 
-  for SH1106_BufferLocationCalc = 0 to ( GLCD_HEIGHT - 1 ) step 8
-      for GLCDTemp = 0 to ( GLCD_WIDTH - 1 )
-          Cursor_Position_SH1106 ( GLCDTemp , SH1106_BufferLocationCalc )
-          Write_Data_SH1106(GLCDBackground)
-    Next
-  next
+  '1.14 changed to transaction
+  For SH1106_BufferLocationCalc = 0 to GLCD_HEIGHT-1 step 8
+    Cursor_Position_SH1106 ( 0 , SH1106_BufferLocationCalc )
+    Open_Transaction_SH1106
+      For GLCDTemp = 0 to 127
+        Write_Transaction_Data_SH1106(GLCDBackground)
+      Next
+    Close_Transaction_SH1106
+  Next
+
+  'Removed at 1.14. Retained for documentation only
+    '  Cursor_Position_SH1106 ( 0 , 0 )
+    '  for SH1106_BufferLocationCalc = 0 to GLCD_HEIGHT-1 step 8
+    '    for GLCDTemp = 0 to 127
+    '        Write_Data_SH1106(GLCDBackground)
+    '    Next
+    '  next
 
   Cursor_Position_SH1106 ( 0 , 0 )
+
+End Sub
+
+'''Draws a character at the specified location on the SH1106 GLCD
+'''@param StringLocX X coordinate for message
+'''@param CharLocY Y coordinate for message
+'''@param Chars String to display
+'''@param LineColour Line Color, either 1 or 0
+Sub GLCDDrawChar_SH1106(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
+  'moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc.
+  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+
+    #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+
+     'test if character lies within current page
+      GLCDY_Temp = CharLocY + 7
+      Repeat 3
+        Set C Off
+        Rotate GLCDY_Temp Right
+      End Repeat
+      IF GLCDY_Temp <> _GLCDPage THEN
+       GLCDY_Temp = GLCDY_Temp - 1
+       IF GLCDY_Temp <> _GLCDPage THEN
+         EXIT SUB
+       END IF
+      END IF
+
+    #endif
+
+    'invert colors if required
+    if LineColour <> GLCDForeground  then
+      'Inverted Colours
+      GLCDBackground = 1
+      GLCDForeground = 0
+    end if
+
+    dim CharCol, CharRow as word
+    CharCode -= 15
+
+    #ifdef GLCD_EXTENDEDFONTSET1
+     if CharCode>=178 and CharCode<=202 then
+        CharLocY=CharLocY-1
+     end if
+    #endif
+
+    CharCol=1
+
+    Cursor_Position_SH1106 ( CharLocX, CharLocY )
+
+    #ifndef S4Wire_DATA
+     #ifdef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
+      #ifndef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+       Open_Transaction_SH1106
+      #endif
+     #endif
+    #endif
+
+    For CurrCharCol = 1 to 5
+      Select Case CurrCharCol
+        Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+        Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+        Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+        Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+        Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+      End Select
+
+      #ifndef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
+        CharRow=0
+        For CurrCharRow = 1 to 8
+            CharColS=0
+            For Col=1 to GLCDfntDefaultsize
+                  CharRowS=0
+                  For Row=1 to GLCDfntDefaultsize
+                      if CurrCharVal.0=1 then
+                         PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
+                      Else
+                         PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                      End if
+                      CharRowS +=1
+                  Next Row
+                  CharColS +=1
+            Next Col
+          Rotate CurrCharVal Right
+          CharRow +=GLCDfntDefaultsize
+        Next
+        CharCol +=GLCDfntDefaultsize
+      #endif
+
+      #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE         ' Same as code above. Repeated as the Define is the limitation
+        CharRow=0
+        For CurrCharRow = 1 to 8
+            CharColS=0
+            For Col=1 to GLCDfntDefaultsize
+                  CharRowS=0
+                  For Row=1 to GLCDfntDefaultsize
+                      GLCDY = [word]CharLocY + CharRow + CharRowS
+                       if CurrCharVal.0=1 then
+                          PSet [word]CharLocX + CharCol + CharColS, GLCDY, LineColour
+                       Else
+                          PSet [word]CharLocX + CharCol + CharColS, GLCDY, GLCDBackground
+                       End if
+                      CharRowS +=1
+                  Next Row
+                  CharColS +=1
+            Next Col
+          Rotate CurrCharVal Right
+          CharRow +=GLCDfntDefaultsize
+        Next
+        CharCol +=GLCDfntDefaultsize
+      #endif
+
+    ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
+
+      #ifdef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
+
+        #ifndef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+
+            GLCDX = ( CharLocX + CurrCharCol -1 )
+
+             #IFDEF GLCD_PROTECTOVERRUN
+                'anything off screen with be rejected
+
+
+                if GLCDX => GLCD_WIDTH OR CharLocY => GLCD_HEIGHT Then
+                    exit for
+                end if
+
+            #ENDIF
+
+            If LineColour = 1 Then
+             Write_Transaction_Data_SH1106( CurrCharVal )
+            else
+             Write_Transaction_Data_SH1106( 255 - CurrCharVal )
+            end if
+
+        #endif
+
+      #endif
+
+    Next
+
+    #ifndef S4Wire_DATA
+     #ifdef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
+      #ifndef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+       Close_Transaction_SH1106
+      #endif
+     #endif
+    #endif
+
+    'Restore
+    GLCDBackground = 0
+    GLCDForeground = 1
 
 End Sub
 
@@ -224,7 +450,7 @@ Sub FilledBox_SH1106(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Lin
     'Draw lines going across
     For DrawLine = LineX1 To LineX2
       For GLCDTemp = LineY1 To LineY2
-        PSet_SH1106 DrawLine, GLCDTemp, LineColour
+        PSet DrawLine, GLCDTemp, LineColour
       Next
     Next
   #endif
@@ -244,42 +470,85 @@ Sub PSet_SH1106(In GLCDX, In GLCDY, In GLCDColour As Word)
 
   #if GLCD_TYPE = GLCD_TYPE_SH1106
 
-          dim  PosCharX, PosCharY as Word
+          #IFDEF GLCD_PROTECTOVERRUN
+            'anything off screen with be rejected
+            if GLCDX => GLCD_WIDTH OR GLCDY => GLCD_HEIGHT Then
+                exit sub
+            end if
 
-          'optimised /8 calculation
-          PosCharY = GLCDY
-          Repeat 3
-            Set C Off
-            Rotate PosCharY Right
-          end Repeat
+          #ENDIF
 
-          'optimes * 128 calculation
-          #if GLCD_WIDTH = 128
-            Repeat 7
-              Set C Off
-              Rotate PosCharY Left
-            end Repeat
-            SH1106_BufferLocationCalc = PosCharY
-          #endif
+          #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
 
-          #if GLCD_WIDTH <> 128
-              'optimised /8 calculation
-              PosCharY = GLCDY
+              'Is YPOS addressing the page we need?
+              'SH1106_BufferLocationCalc = GLCDY
+              'Repeat 3
+              '  Set C Off
+              '  Rotate SH1106_BufferLocationCalc Right
+              'End Repeat
+
+              'if SH1106_BufferLocationCalc = _GLCDPage then
+              'GLCDY_Temp = ( GLCDY / 8 )* GLCD_WIDTH
+              'faster than /8
+              GLCDY_Temp = GLCDY
               Repeat 3
                 Set C Off
-                Rotate PosCharY Right
-              end Repeat
-              SH1106_BufferLocationCalc = PosCharY * GLCD_WIDTH
+                Rotate GLCDY_Temp Right
+              End Repeat
+
+              if GLCDY_Temp = _GLCDPage then
+                  'Mod the YPOS to get the correct pixel with the page
+                GLCDY = GLCDY mod 8
+              Else
+                'Exit if not the page we are looking for
+                exit sub
+              end if
+              'buffer location in LOWMEMORY_GLCD_MODE always equals GLCDX + 1
+              SH1106_BufferLocationCalc = GLCDX + 1
+
           #endif
 
+          'don't need to do these calculations in LOWMEMORY_GLCD_MODE
+          #ifndef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+
+          'SH1106_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
+          'faster than /8
+          SH1106_BufferLocationCalc = GLCDY
+          Repeat 3
+            Set C Off
+            Rotate SH1106_BufferLocationCalc Right
+          End Repeat
+
+          'faster than * 128
+          #if GLCD_WIDTH=128
+            Set C Off
+            Repeat 7
+              Rotate SH1106_BufferLocationCalc Left
+            End Repeat
+          #endif
+          #if GLCD_WIDTH <> 128
+            SH1106_BufferLocationCalc = SH1106_BufferLocationCalc * GLCD_WIDTH
+          #endif
+          SH1106_BufferLocationCalc = GLCDX + SH1106_BufferLocationCalc + 1
           'unoptimised is shown on line below.  All the code above... just makes this faster!
           ' SH1106_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
 
-          SH1106_BufferLocationCalc = GLCDX + SH1106_BufferLocationCalc+1
+          #endif
+
+          #IFDEF GLCD_PROTECTOVERRUN
+              'anything beyond buffer boundary?
+              'why? X = 127 and Y = 64 (Y is over 63!) will have passed first check....
+              if SH1106_BufferLocationCalc > GLCD_HEIGHT * GLCD_WIDTH Then
+                  exit sub
+              end if
+
+          #ENDIF
+
           GLCDDataTemp = SH1106_BufferAlias(SH1106_BufferLocationCalc)
 
           'Change data to set/clear pixel
           GLCDBitNo = GLCDY And 7
+
           If GLCDColour.0 = 0 Then
             GLCDChange = 254
             Set C On
@@ -297,11 +566,24 @@ Sub PSet_SH1106(In GLCDX, In GLCDY, In GLCDColour As Word)
              GLCDDataTemp = GLCDDataTemp Or GLCDChange
           End If
 
-          SH1106_BufferAlias(SH1106_BufferLocationCalc) = GLCDDataTemp
-          Cursor_Position_SH1106 ( GLCDX , GLCDY )
-          Write_Data_SH1106 ( GLCDDataTemp )
+          #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+              'restore address the correct page by adjustng the Y
+              GLCDY = GLCDY + ( 8 * _GLCDPage )
+              if SH1106_BufferAlias(SH1106_BufferLocationCalc) <> GLCDDataTemp then
+                SH1106_BufferAlias(SH1106_BufferLocationCalc) = GLCDDataTemp
+              end if
 
-  #endif
+          #endif
+
+          #ifndef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+            if SH1106_BufferAlias(SH1106_BufferLocationCalc) <> GLCDDataTemp then
+                SH1106_BufferAlias(SH1106_BufferLocationCalc) = GLCDDataTemp
+                Cursor_Position_SH1106 ( GLCDX, GLCDY )
+                Write_Data_SH1106  ( GLCDDataTemp )
+            end if
+          #endif
+
+    #endif
 
 End Sub
 
@@ -357,3 +639,104 @@ sub GLCDSetDisplayInvertMode_SSH1106
     Write_Command_SH1106(SH1106_SEGREMAP)            ' 0xA1
     Write_Command_SH1106(SH1106_INVERTDISPLAY)       ' 0xA7
 end sub
+
+Macro  GLCD_Open_PageTransaction_SH1106 ( Optional In _GLCDPagesL As byte = 0 , Optional In _GLCDPagesH As byte = 7 )
+  #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+
+      dim _GLCDPage as byte
+      'Clear buffer
+      for _GLCDPage = _GLCDPagesL to _GLCDPagesH    '_GLCDPage is a global variable - DO NOT CHANGE!!!
+
+  #endif
+
+end Macro
+
+Macro  GLCD_Close_PageTransaction_SH1106
+
+  #ifdef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
+
+          'Set cursor position
+          Cursor_Position_SH1106 ( 0, 8 * _GLCDPage )
+
+          'Send the buffer to the device using transaction
+          Open_Transaction_SH1106
+
+          for SH1106_BufferLocationCalc = 1 to 128
+             Write_Transaction_Data_SH1106 SH1106_BufferAlias(SH1106_BufferLocationCalc)
+             'Clear the buffer byte. We need it to be empty for the next page operation
+             SH1106_BufferAlias(SH1106_BufferLocationCalc) = 0
+          next
+
+          Close_Transaction_SH1106
+
+      next
+
+    #endif
+
+end Macro
+
+Macro Open_Transaction_SH1106
+
+    '4wire not supported, see Write_Transaction_Data_SH1106
+
+     #ifdef I2C_DATA
+
+       I2CStart
+       I2CSend GLCD_I2C_Address
+       I2CSend 0x40
+
+     #endif
+
+     #ifdef HI2C_DATA
+
+       HI2CStart
+       HI2CSend GLCD_I2C_Address
+       HI2CSend 0x40
+
+     #endif
+
+End Macro
+
+Macro Write_Transaction_Data_SH1106 ( in SH1106SendByte as byte )
+
+        #ifdef S4Wire_DATA
+
+          CS_SH1106 = 0
+          DC_SH1106 = 0
+          S4Wire_SH1106 SH1106SendByte
+          DC_SH1106 = 1
+          CS_SH1106 = 1
+
+        #endif
+
+        #ifdef I2C_DATA
+
+         I2CSend SH1106SendByte
+
+        #endif
+
+        #ifdef HI2C_DATA
+
+         HI2CSend SH1106SendByte
+
+        #endif
+
+End Macro
+
+Macro Close_Transaction_SH1106
+
+    '4wire not supported, see Write_Transaction_Data_SH1106
+
+     #ifdef I2C_DATA
+
+       I2CStop
+
+     #endif
+
+     #ifdef HI2C_DATA
+
+       HI2CStop
+
+     #endif
+
+End Macro

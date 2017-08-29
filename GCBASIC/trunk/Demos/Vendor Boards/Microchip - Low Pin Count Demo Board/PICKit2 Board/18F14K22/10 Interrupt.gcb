@@ -65,7 +65,7 @@
   On Interrupt Timer0Overflow Call InterruptHandler
 
   IOCA3 = 1
-  On Interrupt PORTABChange  Call InterruptHandler
+  On Interrupt PORTChange  Call InterruptHandler
 
 
   do

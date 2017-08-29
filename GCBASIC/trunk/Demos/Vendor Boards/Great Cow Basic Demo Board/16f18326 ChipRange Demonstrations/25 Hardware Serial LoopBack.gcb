@@ -25,10 +25,15 @@
 
   ; ----- Define Hardware settings
       'Set the PPS of the RS232 port to USB.
+    'Set the PPS for this solution.
+  #startup InitPPS, 85
+
+  Sub InitPPS
     UNLOCKPPS
       RXPPS  = 0x15 'Pin RC5 source is an input for RX
       RC4PPS = 0x14 'Pin RC4 source is TX/CK
-    LOCKPPS
+      LOCKPPS
+  End sub
 
   #define USART_BAUD_RATE 19200
   #define USART_TX_BLOCKING

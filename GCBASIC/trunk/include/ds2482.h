@@ -24,7 +24,8 @@
 '    to indicate an error condition (invalid code or parameter) or to end the communication. See the I2C Interface section for
 '    details of the I2C protocol including acknowledge.
 '    See http://www.maximintegrated.com/app-notes/index.mvp/id/3684
-
+'
+'    Revised 28.08.2017 to resolve non-ANSI characters
 dim ds2482_status  as Byte
 dim ds2482_short_detected as Byte
 #define        ds2482_temp         SysCalcTempA   ' save memory - oNe byte1!
@@ -148,7 +149,7 @@ end function
 ' The uppper nibble in bitwise inverted when written to the DS2482.
 '
 '         When writing to the Configuration Register
-'         the new data is accepted only if the upper nibble (bits 7 to 4) is the one’s complement of the lower nibble (bits 3 to 0).
+'         the new data is accepted only if the upper nibble (bits 7 to 4) is the ones complement of the lower nibble (bits 3 to 0).
 '         When read, the upper nibble is always 0h.
 ' Returns:  TRUE: config written and response correct
 '           FALSE: response incorrect

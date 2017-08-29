@@ -18,6 +18,8 @@
 '    31st Aug 2015 Initial release
 '    1st Sept 2015 Minor correction to color and other parameters.
 '    25h Oct 2015 Corrected INIT
+'    02.05.2017   Reverted to standard line routine. Local version overan Byte values
+'                 Add PSET limits to prevent memory overwriting
 '
 'Notes:
 ' Supports SSD1289 controller only.
@@ -418,6 +420,8 @@ End Sub
 
 '''@hide
 Sub Pset_SSD1289(In  PX1 as word, In  PY1 as word, Optional In  Color as Word = GLCDForeground)
+
+  if PX1 > SSD1289_GLCD_WIDTH or PY1 > SSD1289_GLCD_HEIGHT then exit sub
   SSD1289_CS  = 0
   Set_Address_SSD1289 (PX1,PY1,PX1,PY1)
   Write_Data_SSD1289 (Color)
@@ -452,8 +456,8 @@ End Sub
 '''@param PX2 X2 coordinate of the other end of the line
 '''@param PY2 Y2 coordinate of the other end of the line
 '''@param LineColour color
-Sub Line_SSD1289(In PX1 as word, In PY1 as word, In PX2 as word, In PY2 as word, Optional In  Color as word = GLCDForeground)
- Dim P1,x1,y1,addx,addy  as integer
+Sub SuperCededLine(In PX1 as word, In PY1 as word, In PX2 as word, In PY2 as word, Optional In  Color as word = GLCDForeground)
+ Dim P1,zx1,y1,addx,addy  as integer
  Dim CI , dx , dy as Word
  dx = abs(PX2-PX1)
  dy = abs(PY2-PY1)
@@ -541,7 +545,7 @@ Sub FilledCircle_SSD1289( In xoffset as Word, In yoffset as Word, In xradius as 
   FillCircleYY = xradius
 
   ' Fill in the center between the two halves
-  Line_SSD1289( xoffset, yoffset-xradius , xoffset, yoffset+xradius, LineColour)
+  Line( xoffset, yoffset-xradius , xoffset, yoffset+xradius, LineColour)
 
   Do while (FillCircleXX < FillCircleYY)
              if ff >= 0 then
@@ -552,10 +556,10 @@ Sub FilledCircle_SSD1289( In xoffset as Word, In yoffset as Word, In xradius as 
      FillCircleXX++
      ddF_x += 2
      ff += ddF_x
-     Line_SSD1289 (xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour)
-     Line_SSD1289 (xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour)
-     Line_SSD1289 (xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour)
-     Line_SSD1289 (xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour)
+     Line (xoffset+FillCircleXX, yoffset+FillCircleYY, xoffset+FillCircleXX, yoffset-FillCircleYY, LineColour)
+     Line (xoffset-FillCircleXX, yoffset+FillCircleYY, xoffset-FillCircleXX, yoffset-FillCircleYY, LineColour)
+     Line (xoffset+FillCircleYY, yoffset+FillCircleXX, FillCircleYY+xoffset, yoffset-FillCircleXX, LineColour)
+     Line (xoffset-FillCircleYY, yoffset+FillCircleXX, xoffset-FillCircleYY, yoffset-FillCircleXX, LineColour)
     Loop
 End Sub
 

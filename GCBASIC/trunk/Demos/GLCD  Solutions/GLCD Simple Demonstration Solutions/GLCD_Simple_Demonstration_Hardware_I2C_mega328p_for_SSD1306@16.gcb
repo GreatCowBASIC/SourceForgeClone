@@ -8,22 +8,25 @@
 '''The display is 38*35 mm, with an active display surface of 0.96inches , and a 128*64 pixel resolution.
 '''The display is easy to interface, using an I2C type of communication.
 '''The GLCD is connected to the microprocessor as shown in the hardware section of this code.
-'''@author 	EvanV
-'''@licence	GPL
-'''@version	1.4
-'''@date   	25.5.15
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.5
+'''@date    25.3.17
 '''********************************************************************************
 
 ; ----- Configuration
-  #chip mega328p,16
-  #option explicit
-  #include <glcd.h>
+    #chip mega328p, 16
+    #option explicit
+
+    #include <glcd.h>
+
+
 
 ; ----- Define Hardware settings
-  ' Define I2C settings
-  #define HI2C_BAUD_RATE 400
-  #define HI2C_DATA
-  HI2CMode Master
+    ' Define I2C settings - CHANGE PORTS if required for your specific device.
+    #define hi2c_BAUD_RATE 400
+    #define hi2c_DATA
+
 
 ; ----- Define GLCD Hardware settings
   #define GLCD_TYPE GLCD_TYPE_SSD1306
@@ -43,10 +46,10 @@
 
 ; ----- Main program
 
-  GLCDCLS
-  GLCDPrint 0, 0, "Great Cow Basic"
-  GLCDPrint (0, 16, "Anobium 2015")
-
+  GLCDPrint 0, 0,   "Great Cow BASIC"
+  GLCDPrint (0, 16, "Anobium 2017")
+  GLCDPrint (0, 32, "Portability Demo")
+  GLCDPrint (0, 48, ChipNameStr )
 
   wait 3 s
   GLCDCLS
@@ -63,7 +66,9 @@
   line 64,31,0,31                                                ; Draw a line
 
   DO forever
+
      for CCount = 31 to 127
+
           GLCDPrint ( 64 ,  36,  hex(longNumber_E ) )                 ; Print a HEX string
           GLCDPrint ( 76 ,  36,  hex(longNumber_U ) )                 ; Print a HEX string
           GLCDPrint ( 88 ,  36,  hex(longNumber_H ) )                 ; Print a HEX string
