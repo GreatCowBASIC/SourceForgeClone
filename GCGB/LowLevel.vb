@@ -294,7 +294,7 @@ Imports System.Collections.Generic
 			If InChar >= "0" And InChar <= "9" Then Return Asc(InChar) - Asc("0")
 			If InChar >= "A" And InChar <= "Z" Then Return Asc(InChar) - Asc("A") + 10
 			If InChar >= "a" And InChar <= "z" Then Return Asc(InChar) - Asc("a") + 10
-			Return 0
+			Return -1
 		End Function
 		
 		Public Shared Function GetDigitValue(InChar As Integer) As Char
@@ -425,19 +425,23 @@ Imports System.Collections.Generic
 			
 		End Function
 		
-		Public Shared Function Other2Dec(ByVal InVal As String, ByVal InBase As Integer) As Integer
+		Public Shared Function Other2Dec(ByVal InVal As String, ByVal InBase As Integer, Optional StopOnInvalid As Boolean = False) As Integer
 			Dim OutVal, Temp, AddVal As Integer
 			
 			OutVal = 0
 			For Temp = 0 To InVal.Length - 1
 				AddVal = GetDecValue(InVal.Substring(Temp, 1))
+				'Is character invalid?
+				If AddVal = -1 And StopOnInvalid Then
+					Return OutVal
+				End If
 				'Check if a character is too big for the current base
-				If (AddVal >= InBase And InBase > 1) Or (AddVal <> 1 And InBase = 1) Then
+				If (AddVal >= InBase And InBase > 1) Or (AddVal <> 1 And InBase = 1) Or AddVal = -1 Then
 					MessageBox.Show(InVal.Substring(Temp, 1) + " is not a valid digit for base-" + InBase.ToString + " numbers", "Great Cow Graphical BASIC", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1)
 					Return -99999
 				End If
 				
-				OutVal = OutVal + AddVal * InBase ^ ((InVal.Length - 1) - Temp)
+				OutVal = OutVal * InBase + AddVal
 			Next
 			
 			Return OutVal
@@ -518,7 +522,7 @@ Imports System.Collections.Generic
 			'Hex
 			IF DataSource.IndexOf("0X") <> -1 THEN
 				DataSource = DataSource.Substring(DataSource.IndexOf("0X") + 2)
-				Return Other2Dec(DataSource, 16)
+				Return Other2Dec(DataSource, 16, True)
 			END IF
 			
 			'Decimal already
@@ -533,7 +537,7 @@ Imports System.Collections.Generic
 			IF DataSource.IndexOf("B'") <> -1 THEN
 				DataSource = DataSource.Substring(DataSource.IndexOf("B'") + 2)
 				If DataSource.IndexOf("'") <> -1 Then DataSource = DataSource.Substring(0, DataSource.IndexOf("'"))
-				Return Other2Dec(DataSource, 2)
+				Return Other2Dec(DataSource, 2, True)
 			END If
 			
 		End Function
