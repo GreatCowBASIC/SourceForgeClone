@@ -519,7 +519,7 @@ DECLARE SUB SCICONV (STemp As String)
 Declare Function ShortFileName(InName As String) As String
 DECLARE FUNCTION ShortName (NameIn As String) As String
 Declare Function LinkedListCreate As LinkedListElement Pointer
-Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewLine As String) As LinkedListElement Pointer
+Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewLine As String, NewNumVal As Integer = 0) As LinkedListElement Pointer
 Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewData As Any Pointer) As LinkedListElement Pointer
 Declare Function LinkedListInsertList (Location As LinkedListElement Pointer, NewList As LinkedListElement Pointer, NewListEndIn As LinkedListElement Pointer = 0) As LinkedListElement Pointer
 Declare Function LinkedListAppend (ListIn As LinkedListElement Pointer, NewList As LinkedListElement Pointer, NewListEndIn As LinkedListElement Pointer = 0) As LinkedListElement Pointer
@@ -535,7 +535,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 
 'Initialise
 'Misc Vars
-DIM SHARED As Integer APC, FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
+DIM SHARED As Integer FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg
@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-08-25"
+Version = "0.98.<<>> 2017-08-31"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"

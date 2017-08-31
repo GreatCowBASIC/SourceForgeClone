@@ -359,11 +359,13 @@ SUB AssembleProgram
 	Dim As Integer PValueCount, CurrentLine, ParamElements, ElementNo
 	
 	Dim As LinkedListElement Pointer AsmLine, AsmSymbolList, CurrItem
-	Dim As String Prog(60000)
+	'Dim As String Prog(60000)
+	Dim As LinkedListElement Pointer OutProgram, CurrProgramLoc
 	Dim As LinkedListElement Pointer HexRecords, CurrHexRecord
 	
 	'Clear compiled program
-	APC = 0
+	OutProgram = LinkedListCreate
+	CurrProgramLoc = OutProgram
 	
 	'Check for RP1 bit
 	If ModePIC Then
@@ -553,7 +555,7 @@ SUB AssembleProgram
 					
 					DO WHILE INSTR(DataSource, ",") <> 0 
 						
-						APC = APC + 1: Prog(APC) = Str(CurrentLine) + ":" + Left(DataSource, INSTR(DataSource, ",") - 1)
+						CurrProgramLoc = LinkedListInsert(CurrProgramLoc, Left(DataSource, INSTR(DataSource, ",") - 1), CurrentLine)
 						DebugOutput += (Left(DataSource, INSTR(DataSource, ",") - 1) + " ")
 						If ChipFamily = 16 Then
 							CurrentLine = CurrentLine + 2
@@ -562,7 +564,7 @@ SUB AssembleProgram
 						End If
 						DataSource = Mid(DataSource, INSTR(DataSource, ",") + 1)
 					LOOP
-					APC = APC + 1: Prog(APC) = Str(CurrentLine) + ":" + DataSource
+					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, DataSource, CurrentLine)
 					
 					DebugOutput += DataSource
 					
@@ -833,8 +835,7 @@ SUB AssembleProgram
 						HTemp = "0" + HTemp
 					LOOP
 					DebugOutput = DebugOutput + HTemp + " "
-					HTemp = Str(CurrentLine) + ":" + HTemp
-					APC = APC + 1: Prog(APC) = HTemp
+					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, HTemp, CurrentLine)
 					If ChipFamily = 16 Then
 						CurrentLine += 2
 					Else
@@ -859,8 +860,7 @@ SUB AssembleProgram
 					DebugLoc = "0" + DebugLoc
 				Loop 
 				Print #1, DebugLoc + Chr(9) + Trim(DebugOutput) + Chr(9) + DebugInput
-				HTemp = Str(CurrentLine) + ":" + HTemp
-				APC = APC + 1: Prog(APC) = HTemp
+				CurrProgramLoc = LinkedListInsert(CurrProgramLoc, HTemp, CurrentLine)
 				
 				'PRINT DataSource, Cmd, HTemp
 				
@@ -924,13 +924,11 @@ SUB AssembleProgram
 				
 				'Store to hex file
 				If ChipFamily = 12 Then
-					APC = APC + 1: Prog(APC) = "&H0FFF:0" + HEX(ConfWord(CurrConfWord))
+					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, "0" + HEX(ConfWord(CurrConfWord)), &HFFF)
 				ElseIf ChipFamily = 14 Then
-					'APC = APC + 1: Prog(APC) = "&H2007:" + HEX(ConfWord(CurrConfWord))
-					APC = APC + 1: Prog(APC) = "&H" + Hex(8198 + CurrConfWord) + ":" + HEX(ConfWord(CurrConfWord))
-					'APC = APC + 1: Prog(APC) = "&H2008:" + HEX(ConfWord2)
+					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, HEX(ConfWord(CurrConfWord)), 8198 + CurrConfWord)
 				ElseIf ChipFamily = 15 Then
-					APC = APC + 1: Prog(APC) = "&H" + Hex(32774 + CurrConfWord) + ":" + HEX(ConfWord(CurrConfWord))
+					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, HEX(ConfWord(CurrConfWord)), 32774 + CurrConfWord)
 				End If
 			Next
 			
@@ -1032,7 +1030,7 @@ SUB AssembleProgram
 				CCI += 1
 				Byte2 = Hex(VAL(TempData(CCI)))
 				Do While LEN(Byte2) < 2: Byte2 = "0" + Byte2: LOOP
-				APC = APC + 1: Prog(APC) = "&H" + HEX(ConfigBaseLoc + CCI) + ":" + Byte2 + Byte1
+				CurrProgramLoc = LinkedListInsert(CurrProgramLoc, Byte2 + Byte1, ConfigBaseLoc + CCI)
 				
 			Loop While CCI < ConfWordCount
 			
@@ -1043,18 +1041,19 @@ SUB AssembleProgram
 	'Dim As Single OA, FRA
 	HexRecords = LinkedListCreate
 	CurrHexRecord = HexRecords
-	OA = 0
+	OA = -1
 	OIR = 0
 	RCC = 0
 	HRTemp = ""
 	FRA = -1
 	CHA = 0 'High address word
-	FOR PD = 1 TO APC
+	CurrProgramLoc = OutProgram->Next
+	Do While CurrProgramLoc <> 0
 		
-		CL = ValLng(Left(Prog(PD), INSTR(Prog(PD), ":") - 1))
+		CL = CurrProgramLoc->NumVal
 		IF ChipFamily <> 16 THEN CL = CL * 2
-		If PD = 1 Then OA = CL
-		NewRecordData = Trim(Mid(Prog(PD), INSTR(Prog(PD), ":") + 1))
+		If OA = -1 Then OA = CL
+		NewRecordData = CurrProgramLoc->Value
 		Do While LEN(NewRecordData) < 4: NewRecordData = "0" + NewRecordData: Loop
 		
 		IF OIR >= 16 OR OA < (CL - 2) Or OA > CL THEN
@@ -1111,7 +1110,8 @@ SUB AssembleProgram
 			IF FRA = -1 THEN FRA = CL
 		END IF
 		
-	NEXT
+		CurrProgramLoc = CurrProgramLoc->Next
+	Loop
 	
 	'Save last record
 			
