@@ -1513,12 +1513,13 @@ Function LinkedListCreate As LinkedListElement Pointer
 	Return NewElement
 End Function
 
-Function LinkedListInsert (Location As LinkedListElement Pointer, NewLine As String) As LinkedListElement Pointer
+Function LinkedListInsert (Location As LinkedListElement Pointer, NewLine As String, NewNumVal As Integer = 0) As LinkedListElement Pointer
 	Dim As LinkedListElement Pointer NewCodeLine
 	NewCodeLine = Callocate(SizeOf(LinkedListElement))
 	
 	With *NewCodeLine
 		.Value = NewLine
+		.NumVal = NewNumVal
 		.Prev = Location
 		.Next = Location->Next
 		Location->Next = NewCodeLine

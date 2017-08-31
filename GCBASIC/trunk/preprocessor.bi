@@ -1275,7 +1275,7 @@ LoadNextFile:
 
 	PercOld = 0
 	CurrPerc = 0.5
-	PercAdd = 1 / APC * 100
+	'PercAdd = 1 / APC * 100
 	CurrPos = Subroutine(0)->CodeStart->Next
 	Do While CurrPos <> 0
 
