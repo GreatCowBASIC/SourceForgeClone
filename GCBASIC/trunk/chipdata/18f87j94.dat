@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F87J94
-'Generated 23/8/2017
-'Format last revised: 14/11/2009
+'Generated 2/9/2017
+'Format last revised: 14/07/2017
 
 [ChipData]
 Prog=65536
@@ -3510,7 +3510,7 @@ DSWDTOSC=LPRC
 DSWDTPS=DSWDTPS1F
 EASHFT=ON
 FOSC=FRCDIV
-FSCM=DEFAULT
+FSCM=OFF
 IESO=ON
 IOL1WAY=ON
 LS48MHZ=SYSX2

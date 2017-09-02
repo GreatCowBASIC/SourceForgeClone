@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF8720
-'Generated 22/1/2017
-'Format last revised: 14/11/2009
+'Generated 2/9/2017
+'Format last revised: 14/07/2017
 
 [ChipData]
 Prog=65536
@@ -1294,7 +1294,7 @@ SP4,STKPTR,4
 [ASMConfig]
 BORV=BORV
 BOR=ON
-CCP2MX=ON
+CCP2MX=OFF
 CP0=OFF
 CP1=OFF
 CP2=OFF
@@ -1324,7 +1324,7 @@ OSCS=OFF
 OSC=LP
 PWRT=ON
 STVR=ON
-WAIT=ON
+WAIT=OFF
 WDTPS=128
 WDT=ON
 WRT0=OFF

@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 12HV615
-'Generated 22/1/2017
-'Format last revised: 14/11/2009
+'Generated 2/9/2017
+'Format last revised: 14/07/2017
 
 [ChipData]
 Prog=1024
