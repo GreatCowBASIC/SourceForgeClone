@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF6720
-'Generated 22/1/2017
-'Format last revised: 14/11/2009
+'Generated 2/9/2017
+'Format last revised: 14/07/2017
 
 [ChipData]
 Prog=65536
@@ -1144,11 +1144,11 @@ EBTR7=OFF
 EBTRB=OFF
 LVP=ON
 OSCS=OFF
-OSC=RCIO
+OSC=LP
 PWRT=OFF
 STVR=ON
 WDTPS=128
-WDT=ON
+WDT=EC
 WRT0=OFF
 WRT1=OFF
 WRT2=OFF

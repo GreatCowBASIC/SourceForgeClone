@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF458
-'Generated 22/1/2017
-'Format last revised: 14/11/2009
+'Generated 2/9/2017
+'Format last revised: 14/07/2017
 
 [ChipData]
 Prog=16384
@@ -1895,7 +1895,7 @@ EBTR3=OFF
 EBTRB=OFF
 LVP=ON
 OSCS=OFF
-OSC=RCIO
+OSC=OSC
 PWRT=OFF
 STVR=ON
 WDTPS=128

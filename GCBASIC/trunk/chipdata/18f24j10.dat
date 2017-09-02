@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F24J10
-'Generated 23/8/2017
-'Format last revised: 14/11/2009
+'Generated 2/9/2017
+'Format last revised: 14/07/2017
 
 [ChipData]
 Prog=8192
@@ -755,7 +755,7 @@ CP0=OFF
 '18FDefaultASMConfig Setting
 DEBUG=OFF
 FCMEN=ON
-FOSC2=ON
+FOSC2=OFF
 FOSC=ECPLL
 IESO=ON
 STVREN=ON
