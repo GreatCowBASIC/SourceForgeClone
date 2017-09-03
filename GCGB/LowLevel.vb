@@ -181,30 +181,20 @@ Imports System.Collections.Generic
 			Dim CurrCharNo As Integer
 			Dim InQuote, InBinConst As Boolean
 			Dim TempBuffer, CurrChar As String
+			Dim AfterThen As String
 			
 			'Change tabs to spaces
 			InLine = InLine.Replace(Convert.ToChar(9), " ").Trim
-			
-	     	'Need to split at newline
-	     	If InLine.IndexOfAny(Convert.ToChar(10) + Convert.ToChar(13)) <> -1 Then
-	     		Dim InLines() As String
-	     		Dim ThisLine As String
-	     		InLines = InLine.Split(Convert.ToChar(10) + Convert.ToChar(13))
-	     		'Get each line
-	     		For Each ThisLine In InLines
-	     			ThisLine = ThisLine.Replace(Convert.ToChar(10), "").Replace(Convert.ToChar(13), "").Trim
-	     			If ThisLine <> "" Then
-	     				OutList.AddRange(GetCommands(ThisLine))
-	     			End If
-	     		Next
-	     		Return OutList
-	     	End If
-	     	
+				     	
 			'Split single line IFs
-     		If Not InLine.StartsWith("'") and InLine.ToLower.IndexOf(" then ") <> -1 And InLine.ToLower.IndexOf(" then '") = -1 Then
-     			Replace(InLine, " then ", " then: ")
-     			If InLine.IndexOf("'") <> -1 Then InLine = InLine.Substring(0, InLine.IndexOf("'"))
-     			InLine = InLine + ": end if"
+     		If Not InLine.StartsWith("'") and InLine.ToLower.IndexOf(" then ") <> -1 Then
+     			AfterThen = InLine.Substring(InLine.ToLower.IndexOf(" then ") + 6).Trim
+     			If Not AfterThen.StartsWith("'") Then
+     				Replace(InLine, " then ", " then: ")
+     				If InLine.IndexOf("'") <> -1 Then InLine = InLine.Substring(0, InLine.IndexOf("'"))
+     				InLine = InLine + ": end if"
+     			End If
+     			
      		End If
 	     	
      		'Replace equivalents
