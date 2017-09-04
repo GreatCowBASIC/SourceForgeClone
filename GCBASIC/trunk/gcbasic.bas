@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-08-31"
+Version = "0.98.<<>> 2017-09-04"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6679,10 +6679,16 @@ End Function
 
 SUB CompileSelect (CompSub As SubType Pointer)
 	FoundCount = 0
-	Dim As String InLine, Origin, Temp, SelectValue, Condition
-	Dim As Integer PD, CC, AL, SCL
+	Dim As String InLine, Origin, Temp, SelectValue, Condition, NextCaseLabel
+	Dim As String ElseCaseLabel
+	Dim As Integer PD, CC, AL, SCL, MinValue, MaxValue, AllNumeric, UseJumpTable
+	Dim As Integer NumVal, HasElse, ElseCaseNo
 	Dim As LinkedListElement Pointer CurrLine, NewCode, FindCase
-
+	Dim As LinkedListElement Pointer CaseStatements, CurrCase, TablePos, SelectPos
+	
+	CaseStatements = LinkedListCreate
+	CurrCase = CaseStatements
+	
 	SCL = 0
 
 	CurrLine = CompSub->CodeStart->Next
@@ -6702,8 +6708,12 @@ SUB CompileSelect (CompSub As SubType Pointer)
 			SCL = 1
 			CC = 0
 			CurrLine = LinkedListDelete(CurrLine)
+			SelectPos = CurrLine
 			SCT = SCT + 1
 
+			'Find case statements in this select case
+			HasElse = 0
+			ElseCaseNo = -1
 			FindCase = CurrLine->Next
 			Do While FindCase <> 0
 				InLine = FindCase->Value
@@ -6712,49 +6722,39 @@ SUB CompileSelect (CompSub As SubType Pointer)
 					SCL += 1
 
 				ElseIf SCL = 1 AND Left(InLine, 5) = "CASE " THEN
-					CC += 1
-
+					
 					'Trim trailing : from line
 					If Right(InLine, 1) = ":" Then
 						InLine = Left(InLine, Len(InLine) - 1)
 					End If
 
-					IF CC = 1 THEN
-						FindCase->Value = "SysSelect" + Str(SCT) + "Case" + Str(CC) + LabelEnd
-					Else
-						If ModePIC Then
-							FindCase->Value = " goto SysSelectEnd" + Str(SCT)
-							FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC))
-						ElseIf ModeAVR Then
-							FindCase->Value = " rjmp SysSelectEnd" + Str(SCT)
-							FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC) + ":")
-						End If
-					END IF
-
 					Condition = Trim(Mid(InLine, 5))
 					IF INSTR(Condition, ";?F") <> 0 THEN
 						Origin = Mid(Condition, INSTR(Condition, ";?F"))
 						Condition = RTrim(Left(Condition, INSTR(Condition, ";?F") - 1))
-					END IF
-
-					IF Condition <> "ELSE" THEN
-						IF CountOccur(Condition, "';=~<>{}") = 0 THEN Condition = "=" + Condition
-						Condition = SelectValue + Condition
-
-						NewCode = CompileConditions(Condition, "FALSE", Origin, CompSub)
-						FindCase = LinkedListInsertList(FindCase, NewCode)
-						If ModePIC Then
-							FindCase = LinkedListInsert(FindCase, " goto SysSelect" + Str(SCT) + "Case" + Str(CC + 1))
-						ElseIf ModeAVR Then
-							FindCase = LinkedListInsert(FindCase, " rjmp SysSelect" + Str(SCT) + "Case" + Str(CC + 1))
-						End If
-					END IF
-
+					END If
+					
+					'Store found condition and reference to line containing case
+					
+					CurrCase = LinkedListInsert(CurrCase, Condition)
+					CurrCase->MetaData = FindCase
+					CC += 1
+					
+					'Anything after case else gets ignored
+					If Condition = "ELSE" Then
+						HasElse = -1
+						ElseCaseNo = CC
+					ElseIf HasElse Then
+						'TODO: Warn about ignored case and remove dead code
+						Color 14
+						Print "Select ignoring code after Case Else"
+						Color 7
+					End If
+					
 				ElseIf Left(InLine, 10) = "END SELECT" THEN
 
 					IF SCL = 1 THEN
-						FindCase->Value = "SysSelect" + Str(SCT) + "Case" + Str(CC + 1) + LabelEnd
-						FindCase = LinkedListInsert(FindCase, "SysSelectEnd" + Str(SCT) + LabelEnd)
+						FindCase->Value = "SysSelectEnd" + Str(SCT) + LabelEnd
 					END IF
 					SCL = SCL - 1
 
@@ -6764,7 +6764,261 @@ SUB CompileSelect (CompSub As SubType Pointer)
 				If SCL = 0 Then Exit Do
 				FindCase = FindCase->Next
 			Loop
-		END IF
+			
+			'Empty select? Skip if yes
+			If CaseStatements->Next <> 0 Then
+				
+				'Compile as jump table or as series of tests?
+				'If all conditions are a number, and range is limited, use jump table
+				MinValue = 65535
+				MaxValue = -32768
+				AllNumeric = -1
+				HasElse = 0
+				CurrCase = CaseStatements->Next
+				Do While CurrCase <> 0
+					CurrCase->NumVal = -32768
+					If IsConst(CurrCase->Value) And Left(CurrCase->Value, 1) <> "@" Then
+						NumVal = MakeDec(CurrCase->Value)
+						If NumVal < MinValue Then MinValue = NumVal
+						If NumVal > MaxValue Then MaxValue = NumVal
+						CurrCase->NumVal = NumVal
+					ElseIf InStr(CurrCase->Value, " TO ") <> 0 Then
+						Temp = RTrim(Left(CurrCase->Value, InStr(CurrCase->Value, " TO ") - 1))
+						If IsConst(Temp) And Left(Temp, 1) <> "@" Then
+							NumVal = MakeDec(Temp)
+							If NumVal < MinValue Then MinValue = NumVal
+							If NumVal > MaxValue Then MaxValue = NumVal
+						Else
+							AllNumeric = 0
+							Exit Do
+						End If
+						
+						Temp = LTrim(Mid(CurrCase->Value, InStr(CurrCase->Value, " TO ") + 4))
+						If IsConst(Temp) And Left(Temp, 1) <> "@" Then
+							NumVal = MakeDec(Temp)
+							If NumVal < MinValue Then MinValue = NumVal
+							If NumVal > MaxValue Then MaxValue = NumVal
+							CurrCase->NumVal = NumVal
+						Else
+							AllNumeric = 0
+							Exit Do
+						End If
+						
+					ElseIf CurrCase->Value = "ELSE" Then
+						HasElse = -1
+					Else
+						AllNumeric = 0
+						Exit Do
+					End If
+					
+					CurrCase = CurrCase->Next
+				Loop
+				UseJumpTable = 0
+				'Jump table takes one word per value in range plus about 14 words overhead
+				'Checking individually takes about 4 words per case - which is smaller?
+				If AllNumeric And (MaxValue - MinValue) < 127 And (14 + MaxValue - MinValue) < CC * 4 Then UseJumpTable = -1
+				
+				'Keep jump table mode off while problem with large Select blocks (over 2047 words on AVR, over 1023 on PIC 18F)
+				If HashMapGet(Constants, "SELECT_USE_JUMP_TABLES") = 0 Then UseJumpTable = 0
+				
+				'Compile case statements (using jump table)
+				If UseJumpTable Then
+					
+					'Prepare
+					If ElseCaseNo = -1 Then
+						ElseCaseLabel = "SysSelectEnd" + Str(SCT)
+					Else
+						ElseCaseLabel = "SysSelect" + Str(SCT) + "Case" + Str(ElseCaseNo)
+					End If
+					
+					'Generate jump table
+					TablePos = SelectPos
+					'Check select value, jump to else if too high
+					If ModePIC Then
+						If MinValue = 0 Then
+							TablePos = LinkedListInsert(TablePos, "SYSBYTETEMPA=" + SelectValue)
+						Else
+							TablePos = LinkedListInsert(TablePos, "SYSBYTETEMPA=" + SelectValue + "-" + Str(MinValue))
+						End If
+						TablePos = LinkedListInsertList(TablePos, CompileConditions("SYSBYTETEMPA>" + Str(MaxValue - MinValue), "TRUE", Origin, CompSub))
+						TablePos = LinkedListInsert(TablePos, " goto " + ElseCaseLabel)
+					ElseIf ModeAVR Then
+						If MinValue = 0 Then
+							TablePos = LinkedListInsert(TablePos, "SYSSTRINGLENGTH=" + SelectValue)
+						Else
+							TablePos = LinkedListInsert(TablePos, "SYSSTRINGLENGTH=" + SelectValue + "-" + Str(MinValue))
+						End If
+						TablePos = LinkedListInsertList(TablePos, CompileConditions("SYSSTRINGLENGTH>" + Str(MaxValue - MinValue), "TRUE", Origin, CompSub))
+						TablePos = LinkedListInsert(TablePos, " rjmp " + ElseCaseLabel)
+					End If
+					'Generate computed goto
+					If ModePIC Then
+						If ChipFamily = 12 THEN
+							TablePos = LinkedListInsert(TablePos, " movf SYSBYTETEMPA, W")
+							TablePos = LinkedListInsert(TablePos, " addwf PCL, F")
+							
+						ElseIf ChipFamily = 15 Then
+							TablePos = LinkedListInsert(TablePos, " movf SYSBYTETEMPA, W")
+							TablePos = LinkedListInsert(TablePos, " brw")
+
+						ElseIf ChipFamily = 14 Or ChipFamily = 16 Then
+							If ChipFamily = 14 Then
+								TablePos = LinkedListInsert(TablePos, " movf SYSBYTETEMPA, W")
+							Else
+								TablePos = LinkedListInsert(TablePos, " rlcf SYSBYTETEMPA, W")
+							End If
+							TablePos = LinkedListInsert(TablePos, " addlw low SysSelect" + Str(SCT) + "Vectors")
+							TablePos = LinkedListInsert(TablePos, " movwf SYSBYTETEMPA")
+							TablePos = LinkedListInsert(TablePos, " movlw high SysSelect" + Str(SCT) + "Vectors")
+							TablePos = LinkedListInsert(TablePos, " btfsc STATUS, C")
+							TablePos = LinkedListInsert(TablePos, " addlw 1")
+							TablePos = LinkedListInsert(TablePos, " movwf PCLATH")
+							TablePos = LinkedListInsert(TablePos, " movf SYSBYTETEMPA, W")
+							TablePos = LinkedListInsert(TablePos, " movwf PCL")
+							TablePos = LinkedListInsert(TablePos, "SysSelect" + Str(SCT) + "Vectors")
+						End If
+					ElseIf ModeAVR Then
+						TablePos = LinkedListInsert(TablePos, " ldi SysReadA, low(SysSelect" + Str(SCT) + "Vectors)")
+						TablePos = LinkedListInsert(TablePos, " ldi SysReadA_H, high(SysSelect" + Str(SCT) + "Vectors)")
+						TablePos = LinkedListInsert(TablePos, " add SysReadA, SYSSTRINGLENGTH")
+						TablePos = LinkedListInsert(TablePos, " brcc PC + 2")
+						TablePos = LinkedListInsert(TablePos, " inc SysReadA_H")
+						
+						TablePos = LinkedListInsert(TablePos, " ijmp")
+						TablePos = LinkedListInsert(TablePos, "SysSelect" + Str(SCT) + "Vectors:")
+						
+						AddVar "SysStringA", "BYTE", 1, 0, "REAL", "", , -1
+						AddVar "SysReadA", "WORD", 1, 0, "REAL", "", , -1
+					End If
+
+					'Generate labels to jump to
+					For NumVal = MinValue To MaxValue
+						CC = 0
+						CurrCase = CaseStatements->Next
+						Do While CurrCase <> 0
+							CC += 1
+							FindCase = CurrCase->MetaData
+							Condition = CurrCase->Value
+							
+							If InStr(Condition, " TO ") <> 0 Then
+								Temp = RTrim(Left(CurrCase->Value, InStr(CurrCase->Value, " TO ") - 1))
+								Condition = LTrim(Mid(CurrCase->Value, InStr(CurrCase->Value, " TO ") + 4))
+								If NumVal < MakeDec(Temp) Or NumVal > MakeDec(Condition) Then GoTo CheckNextCase
+							Else
+								If NumVal <> CurrCase->NumVal Then GoTo CheckNextCase
+							End If
+							
+							'Found correct case
+							'TODO: Make this work if one of the jumps has to go a long way
+							If ModePIC Then
+								If ChipFamily = 16 Then
+									TablePos = LinkedListInsert(TablePos, " bra SysSelect" + Str(SCT) + "Case" + Str(CC))
+								Else
+									TablePos = LinkedListInsert(TablePos, " goto SysSelect" + Str(SCT) + "Case" + Str(CC))
+								End If
+							ElseIf ModeAVR Then
+								TablePos = LinkedListInsert(TablePos, " rjmp SysSelect" + Str(SCT) + "Case" + Str(CC))
+							End If
+							
+							Exit Do
+							CheckNextCase:
+							CurrCase = CurrCase->Next
+						Loop
+					Next
+					
+					'Process case statements
+					CC = 0
+					CurrCase = CaseStatements->Next
+					Do While CurrCase <> 0
+						CC += 1
+						FindCase = CurrCase->MetaData
+						
+						If CC = 1 THEN
+							FindCase->Value = "SysSelect" + Str(SCT) + "Case" + Str(CC) + LabelEnd
+						Else
+							If ModePIC Then
+								FindCase->Value = " goto SysSelectEnd" + Str(SCT)
+								FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC))
+							ElseIf ModeAVR Then
+								FindCase->Value = " rjmp SysSelectEnd" + Str(SCT)
+								FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC) + ":")
+							End If
+						END If
+						
+						CurrCase = CurrCase->Next
+					Loop
+					
+				'Compile case statements (using sequential tests)
+				Else
+					CC = 0
+					CurrCase = CaseStatements->Next
+					Do While CurrCase <> 0
+						CC += 1
+						FindCase = CurrCase->MetaData
+						Condition = CurrCase->Value
+						If CurrCase->Next = 0 Then
+							NextCaseLabel = "SysSelectEnd" + Str(SCT)
+						Else
+							NextCaseLabel = "SysSelect" + Str(SCT) + "Case" + Str(CC + 1)
+						End If
+						
+						If CC = 1 THEN
+							FindCase->Value = "SysSelect" + Str(SCT) + "Case" + Str(CC) + LabelEnd
+						Else
+							If ModePIC Then
+								FindCase->Value = " goto SysSelectEnd" + Str(SCT)
+								FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC))
+							ElseIf ModeAVR Then
+								FindCase->Value = " rjmp SysSelectEnd" + Str(SCT)
+								FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC) + ":")
+							End If
+						END If
+						
+						IF Condition <> "ELSE" THEN
+							'Prepare condition test
+							If InStr(Condition, " TO ") <> 0 Then
+								'Test range
+								Temp = RTrim(Left(CurrCase->Value, InStr(CurrCase->Value, " TO ") - 1))
+								Condition = LTrim(Mid(CurrCase->Value, InStr(CurrCase->Value, " TO ") + 4))
+								'Test lower
+								NewCode = CompileConditions(SelectValue + "<" + Temp, "TRUE", Origin, CompSub)
+								FindCase = LinkedListInsertList(FindCase, NewCode)
+								If ModePIC Then
+									FindCase = LinkedListInsert(FindCase, " goto " + NextCaseLabel)
+								ElseIf ModeAVR Then
+									FindCase = LinkedListInsert(FindCase, " rjmp " + NextCaseLabel)
+								End If
+								'Test upper
+								NewCode = CompileConditions(SelectValue + ">" + Condition, "TRUE", Origin, CompSub)
+								FindCase = LinkedListInsertList(FindCase, NewCode)
+								If ModePIC Then
+									FindCase = LinkedListInsert(FindCase, " goto " + NextCaseLabel)
+								ElseIf ModeAVR Then
+									FindCase = LinkedListInsert(FindCase, " rjmp " + NextCaseLabel)
+								End If
+								
+							Else
+								'Only one value to test
+								IF CountOccur(Condition, "';=~<>{}") = 0 THEN Condition = "=" + Condition
+								Condition = SelectValue + Condition
+								
+								NewCode = CompileConditions(Condition, "FALSE", Origin, CompSub)
+								FindCase = LinkedListInsertList(FindCase, NewCode)
+								If ModePIC Then
+									FindCase = LinkedListInsert(FindCase, " goto " + NextCaseLabel)
+								ElseIf ModeAVR Then
+									FindCase = LinkedListInsert(FindCase, " rjmp " + NextCaseLabel)
+								End If
+							End If
+							
+						END If
+							
+						CurrCase = CurrCase->Next
+					Loop
+				End If
+			END If
+		End If
+		
 		CurrLine = CurrLine->Next
 	Loop
 
@@ -7634,14 +7888,14 @@ Sub CompileTables
 				If VBS = 1 Then Print Spc(10); DataTable(PD).Name
 				DataTable(PD).Item(0) = DataTable(PD).Items
 
-					'Is this a large data table?
+				'Is this a large data table?
 				LargeTable = 0
 				If DataTable(PD).Items > 255 Then
 					LargeTable = -1
 				End If
 
-					'Create sub for data tables
-					'Need to create a table for each byte in data
+				'Create sub for data tables
+				'Need to create a table for each byte in data
 				For CurrTableByte = 0 To GetTypeSize(DataTable(PD).Type) - 1
 					Table = GetByte("Table" + DataTable(PD).Name, CurrTableByte)
 					TableSub = NewSubroutine(GetByte(DataTable(PD).Name, CurrTableByte))
@@ -7650,29 +7904,29 @@ Sub CompileTables
 					CurrLine = TableSub->CodeStart
 					TableSub->Compiled = -1
 					TableSub->Required = -1
-						TableSub->NoReturn = -1
+					TableSub->NoReturn = -1
 
-						'Find last element in table that is non-zero
-						LastNonZeroElement = -1
-						For CurrElement = DataTable(PD).Items To 0 Step -1
-							If ((DataTable(PD).Item(CurrElement) Shr CurrTableByte * 8) And 255) <> 0 Then
-								LastNonZeroElement = CurrElement
-								Exit For
-							End If
-						Next
+					'Find last element in table that is non-zero
+					LastNonZeroElement = -1
+					For CurrElement = DataTable(PD).Items To 0 Step -1
+						If ((DataTable(PD).Item(CurrElement) Shr CurrTableByte * 8) And 255) <> 0 Then
+							LastNonZeroElement = CurrElement
+							Exit For
+						End If
+					Next
 
 					If ModePIC Then
-							If LargeTable Then
-								AddVar "SysStringA", "WORD", 1, Subroutine(0), "REAL", "", , -1
-							Else
-								AddVar "SysStringA", "BYTE", 1, Subroutine(0), "REAL", "", , -1
-							End If
+						If LargeTable Then
+							AddVar "SysStringA", "WORD", 1, Subroutine(0), "REAL", "", , -1
+						Else
+							AddVar "SysStringA", "BYTE", 1, Subroutine(0), "REAL", "", , -1
+						End If
 
-							If ChipFamily = 12 THEN
+						If ChipFamily = 12 THEN
 							CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
 							CurrLine = LinkedListInsert(CurrLine, " addwf PCL, F")
 
-							ElseIf ChipFamily = 14 Or ChipFamily = 15 Then
+						ElseIf ChipFamily = 14 Or ChipFamily = 15 Then
 
 							'Check item number, return 0 if number is too big
 							If LargeTable Then
@@ -7704,7 +7958,7 @@ Sub CompileTables
 								CurrLine = LinkedListInsert(CurrLine, Table)
 							End If
 
-							ElseIf ChipFamily = 16 Then
+						ElseIf ChipFamily = 16 Then
 							If LargeTable Then
 								CurrLine = LinkedListInsertList(CurrLine, CompileConditions("SYSSTRINGA<" + Str(LastNonZeroElement + 1), "FALSE", ""))
 							Else
@@ -7746,12 +8000,13 @@ Sub CompileTables
 							Else
 								CurrLine = LinkedListInsert(CurrLine, " retlw 0")
 							End If
-							END IF
-							If ChipFamily <> 16 Then
+						END IF
+						
+						If ChipFamily <> 16 Then
 							FOR SP = 0 TO LastNonZeroElement
 								CurrLine = LinkedListInsert(CurrLine, " retlw " + GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte))
 							NEXT
-							END If
+						End If
 
 					ElseIf ModeAVR Then
 						'Check requested location
