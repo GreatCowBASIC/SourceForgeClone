@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-09-04"
+Version = "0.98.<<>> 2017-09-06"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6686,10 +6686,8 @@ SUB CompileSelect (CompSub As SubType Pointer)
 	Dim As LinkedListElement Pointer CurrLine, NewCode, FindCase
 	Dim As LinkedListElement Pointer CaseStatements, CurrCase, TablePos, SelectPos
 	
-	CaseStatements = LinkedListCreate
-	CurrCase = CaseStatements
-	
 	SCL = 0
+	CaseStatements = 0
 
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
@@ -6703,6 +6701,9 @@ SUB CompileSelect (CompSub As SubType Pointer)
 			END IF
 
 			FoundCount += 1
+			
+			CaseStatements = LinkedListCreate
+			CurrCase = CaseStatements
 
 			SelectValue = Trim(Mid(InLine, 12))
 			SCL = 1
@@ -7017,6 +7018,11 @@ SUB CompileSelect (CompSub As SubType Pointer)
 					Loop
 				End If
 			END If
+			
+			If CaseStatements <> 0 Then
+				LinkedListDeleteList(CaseStatements, 0)
+			EndIf
+			
 		End If
 		
 		CurrLine = CurrLine->Next
