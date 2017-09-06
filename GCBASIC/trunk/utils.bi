@@ -1517,6 +1517,11 @@ Function LinkedListInsert (Location As LinkedListElement Pointer, NewLine As Str
 	Dim As LinkedListElement Pointer NewCodeLine
 	NewCodeLine = Callocate(SizeOf(LinkedListElement))
 	
+	If Location = 0 Then
+		Print "Internal error in LinkedListInsert: No location for " + NewLine
+		Return 0
+	End If
+	
 	With *NewCodeLine
 		.Value = NewLine
 		.NumVal = NewNumVal
