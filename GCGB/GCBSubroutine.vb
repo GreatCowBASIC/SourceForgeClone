@@ -232,7 +232,7 @@ Imports System.Collections.Generic
 			
 			'Parse parameter string
 			Set
-				Dim SubTemp, ParamTemp As String
+				Dim SubTemp, ParamTemp, DefComment As String
 				Dim ForceIn As Boolean = False
 				
 				'Parameters = New ArrayList
@@ -241,7 +241,19 @@ Imports System.Collections.Generic
 				
 				'Format: {sub | function} name [(param1 [as type][, param2 [as type][, ...]])] [as type] [#nr]
 				SubTemp = Value
-				Dim oldTemp As String = SubTemp
+				'Dim oldTemp As String = SubTemp
+				'Strip comment/s
+				DefComment = ""
+				If SubTemp.Contains("'") Then
+					DefComment = SubTemp.Substring(SubTemp.IndexOf("'") + 1).Trim
+					SubTemp = SubTemp.Substring(0, SubTemp.IndexOf("'")).Trim
+				End If
+				If SubTemp.Contains(";") Then
+					DefComment = SubTemp.Substring(SubTemp.IndexOf(";") + 1).Trim
+					SubTemp = SubTemp.Substring(0, SubTemp.IndexOf(";")).Trim
+				End If
+				
+				'No return?
 				If SubTemp.ToLower.IndexOf("#nr") <> -1 Then
 					SubTemp = SubTemp.Substring(0, SubTemp.ToLower.IndexOf("#nr")).Trim
 					ForceIn = True
@@ -297,6 +309,11 @@ Imports System.Collections.Generic
 						Parameters.Add(New SubParam(thisParam, ForceIn))
 					Next
 				End If
+				
+				'Set comment
+				If DefComment <> "" Then
+					Description = DefComment
+				End If
 			End Set
 		End Property
 		
@@ -328,8 +345,8 @@ Imports System.Collections.Generic
 			outSub.StartCode = CodeIn
 			
 			'Add documentation (if present)
-			outSub.Doc = DocIn
 			If Not DocIn Is Nothing Then
+				outSub.Doc = DocIn
 				Dim currParam As SubParam
 				For Each currParam In outSub.Parameters
 					currParam.Description = DocIn.Params.GetValue(currParam.Name)
