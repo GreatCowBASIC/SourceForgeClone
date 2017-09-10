@@ -98,18 +98,14 @@ Imports System.Collections.Generic
 		
 		Public Shared Function IsLet(ByVal InLine As String) As Boolean
 			Dim ProcessTemp As String
-			Dim EqLoc, SpaceCount, Temp As Integer
 			
 			If InLine.StartsWith("'") Or InLine.StartsWith(";") Then Return False
 			
 			If InLine.IndexOf("=") <> -1 Then
-	     		ProcessTemp = InLine.Trim.Replace("=", "~!~").Replace("~!~", " = ").Replace("  ", " ")
-	     		EqLoc = ProcessTemp.IndexOf("=") - 1
-	     		SpaceCount = 0
-	     		For Temp = EqLoc To 0 Step -1
-	     			If ProcessTemp.Substring(Temp, 1) = " " Then SpaceCount += 1
-	     		Next
-	     		If SpaceCount = 1 Then Return True
+	     		ProcessTemp = InLine.Substring(0, InLine.IndexOf("=") - 1).Trim
+	     		If CheckName(ProcessTemp) = "" Then
+	     			Return True
+	     		End If
 	     	End If
 	     	
 	     	Return False
@@ -136,7 +132,12 @@ Imports System.Collections.Generic
 		Public Shared Function FixLine(ByVal TempData As String) As String
 			
 	     	'Add "LET"
-	     	If LowLevel.IsLet(TempData) Then TempData = "Let " + TempData.Trim
+	     	If LowLevel.IsLet(TempData) Then
+	     		Dim VarName, VarValue As String
+	     		VarName = TempData.Substring(0, TempData.IndexOf("=")).Trim
+	     		VarValue = TempData.Substring(TempData.IndexOf("=") + 1).Trim
+	     		TempData = "Let " + VarName + " = " + VarValue
+	     	End If
 	     	
 	     	'Change Wait to WaitFor
 	     	If TempData.ToLower.StartsWith("wait until ") Or TempData.ToLower.StartsWith("wait while ")
@@ -187,9 +188,9 @@ Imports System.Collections.Generic
 			InLine = InLine.Replace(Convert.ToChar(9), " ").Trim
 				     	
 			'Split single line IFs
-     		If Not InLine.StartsWith("'") and InLine.ToLower.IndexOf(" then ") <> -1 Then
+     		If InLine.ToLower.StartsWith("if ") and InLine.ToLower.IndexOf(" then ") <> -1 Then
      			AfterThen = InLine.Substring(InLine.ToLower.IndexOf(" then ") + 6).Trim
-     			If Not AfterThen.StartsWith("'") Then
+     			If Not (AfterThen.StartsWith("'") Or AfterThen.StartsWith(";")) Then
      				Replace(InLine, " then ", " then: ")
      				If InLine.IndexOf("'") <> -1 Then InLine = InLine.Substring(0, InLine.IndexOf("'"))
      				InLine = InLine + ": end if"
