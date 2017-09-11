@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-09-06"
+Version = "0.98.<<>> 2017-09-12"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -4981,7 +4981,7 @@ SUB CompileDo (CompSub As SubType Pointer)
 	FoundCount = 0
 	Dim As String InLine, Temp, Origin, Mode, Condition, LoopOrigin
 	Dim As Integer DL, CP, ExitFound, WD
-	Dim As LinkedListElement Pointer CurrLine, FindLoop, LoopLoc, NewCode
+	Dim As LinkedListElement Pointer CurrLine, FindLoop, LoopLoc, NewCode, OldLoopLoc
 
 	DL = 0
 	CurrLine = CompSub->CodeStart->Next
@@ -5042,16 +5042,14 @@ SUB CompileDo (CompSub As SubType Pointer)
 					Mode = LTrim(Mid(InLine, 4))
 					Condition = LCase(Mid(Mode, INSTR(Mode, " ") + 1))
 					Mode = UCase(Left(Mode, INSTR(Mode, " ") - 1))
-				END IF
-				IF CP = 2 THEN
+				ElseIf CP = 2 THEN
 					Mode = LTrim(Mid(LoopLoc->Value, 6))
 					Condition = LCase(Mid(Mode, INSTR(Mode, " ") + 1))
 					Mode = UCase(Left(Mode, INSTR(Mode, " ") - 1))
 				END IF
-
-				'Delete Loop
-				LoopLoc = LinkedListDelete(LoopLoc)
-
+				
+				OldLoopLoc = LoopLoc
+				
 				'Compile with no condition
 				If CP = 0 Then
 					If ModePIC Then Temp = " goto SysDoLoop_S" + Str(DLC)
@@ -5080,10 +5078,6 @@ SUB CompileDo (CompSub As SubType Pointer)
 					Temp = "TRUE": IF Mode = "UNTIL" THEN Temp = "FALSE"
 					NewCode = CompileConditions(Condition, Temp, LoopOrigin)
 					If (Mode = "WHILE" And Condition <> "AlwaysFalse") Or (Mode = "UNTIL" And Condition <> "AlwaysTrue") Then
-						'FOR WD = 1 TO COSC
-						' AddLine CheckTemp(WD), LL + WD - 1
-						'NEXT WD
-						'LL = LL + COSC
 						LoopLoc = LinkedListInsertList(LoopLoc, NewCode)
 
 						If ModePIC Then Temp = " goto SysDoLoop_S" + Str(DLC)
@@ -5095,6 +5089,8 @@ SUB CompileDo (CompSub As SubType Pointer)
 
 				'Create label for end of loop
 				LoopLoc = LinkedListInsert(LoopLoc, "SysDoLoop_E" + Str(DLC) + LabelEnd)
+				'Delete Loop
+				LinkedListDelete(OldLoopLoc)
 			End IF
 		End If
 
@@ -13757,8 +13753,12 @@ Sub ReadOptions(OptionsIn As String)
 	CurrElement = OptionElements->Next
 	Do While CurrElement <> 0
 
+		'Ignore Explicit (should have been read earlier)
+		If CurrElement->Value = "EXPLICIT" Then
+			'Do nothing
+		
 		'Get bootloader setting
-		If CurrElement->Value = "BOOTLOADER" Then
+		ElseIf CurrElement->Value = "BOOTLOADER" Then
 			If CurrElement->Next <> 0 Then
 				If IsConst(CurrElement->Next->Value) Then
 					Bootloader = MakeDec(CurrElement->Next->Value)

@@ -1111,12 +1111,11 @@ SUB PreProcessor
 
 					ElseIf Left(DataSource, 8) = "#OPTION " Then
 						DataSource = Trim(Mid(DataSource, 8))
-						If DataSource = "EXPLICIT" Then
+						If WholeINSTR(DataSource, "EXPLICIT") = 2 Then
 							SourceFile(RF).OptionExplicit = -1
-						Else
-							IF gcOPTION <> "" THEN DataSource = "," + DataSource
-							gcOPTION = gcOPTION + DataSource
 						End If
+						IF gcOPTION <> "" THEN DataSource = "," + DataSource
+						gcOPTION = gcOPTION + DataSource
 						GoTo LoadNextLine
 
 					ElseIF Left(DataSource, 5) = "#OSC " Then
