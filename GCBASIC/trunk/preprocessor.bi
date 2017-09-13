@@ -998,7 +998,8 @@ SUB PreProcessor
 							Temp = Mid(Temp, INSTR(Temp, "(") + 1)
 							FOR T = LEN(Temp) TO 1 STEP -1
 								IF Mid(Temp, T, 1) = ")" THEN Temp = Left(Temp, T - 1): EXIT FOR
-							NEXT
+							Next
+							Temp = Trim(Temp)
 
 							Do While Instr(Temp, ",") <> 0
 								.ParamCount += 1
