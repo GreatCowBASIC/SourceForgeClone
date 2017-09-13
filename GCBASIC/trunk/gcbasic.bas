@@ -7594,17 +7594,22 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 									LastBracketLoc = FB
 								End If
 							End If
+						Case " "
+							'Do nothing
 						Case ","
 							'If a comma is found outside of brackets, the brackets do not mark the parameters
 							If BL = 0 Then
 								LastBracketLoc = -2
 							End If
-						Case " "
-							'Do nothing
 						Case Else
 							'If any other character is found before brackets, these brackets do not mark parameters
 							'Example: SomeSub SomeFunction(param)
 							If BL = 0 And FirstBracketLoc = -1 Then
+								LastBracketLoc = -2
+							End If
+							
+							'If a mathematical operator is found after brackets, brackets do not mark parameters
+							If BL = 0 And IsCalcDivider(Mid(AfterFn, FB, 1)) Then
 								LastBracketLoc = -2
 							End If
 					End Select
