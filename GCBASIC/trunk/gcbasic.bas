@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-09-12"
+Version = "0.98.<<>> 2017-09-14"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5425,7 +5425,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 	FoundCount = 0
 	Dim As String Origin, Temp, L1, L2, Condition, EndBlock
 	Dim As Integer FoundIF, IL, ELC, IT, TL, FE, DelSection, DelEndIf, EndIfUsed, PrevSectionSkipped
-	Dim As Integer WD
+	Dim As Integer WD, CurrIfNo
 
 	Dim As LinkedListElement Pointer CurrLine, NewCode, FindEnd, StartDel
 
@@ -5449,6 +5449,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 			IL = IL + 1
 			IF IL = 1 THEN
 				ILC = ILC + 1
+				CurrIfNo = ILC
 				ELC = 0
 
 				'Get origin
@@ -5496,8 +5497,8 @@ SUB CompileIF (CompSub As SubType Pointer)
 				Else
 					CurrLine = LinkedListDelete(CurrLine)
 					CurrLine = LinkedListInsertList(CurrLine, NewCode)
-					If IT = 0 Then EndBlock = "ENDIF" + Str(ILC): EndIfUsed = -1
-					If IT = 1 Then EndBlock = "ELSE" + Str(ILC) + "_" + Str(ELC + 1)
+					If IT = 0 Then EndBlock = "ENDIF" + Str(CurrIfNo): EndIfUsed = -1
+					If IT = 1 Then EndBlock = "ELSE" + Str(CurrIfNo) + "_" + Str(ELC + 1)
 					If ModePIC Then CurrLine = LinkedListInsert(CurrLine, " goto " + EndBlock)
 					If ModeAVR Then CurrLine = LinkedListInsert(CurrLine, " rjmp " + EndBlock)
 				End If
@@ -5547,12 +5548,12 @@ SUB CompileIF (CompSub As SubType Pointer)
 				Else
 					EndIfUsed = -1
 					If ModePIC Then
-						L1 = " goto ENDIF" + Str(ILC)
-						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC)
+						L1 = " goto ENDIF" + Str(CurrIfNo)
+						L2 = "ELSE" + Str(CurrIfNo) + "_" + Str(ELC)
 
 					ElseIf ModeAVR Then
-						L1 = " rjmp ENDIF" + Str(ILC)
-						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC) + ":"
+						L1 = " rjmp ENDIF" + Str(CurrIfNo)
+						L2 = "ELSE" + Str(CurrIfNo) + "_" + Str(ELC) + ":"
 
 					End If
 					CurrLine->Value = L1
@@ -5575,8 +5576,8 @@ SUB CompileIF (CompSub As SubType Pointer)
 				Else
 					'CurrLine = LinkedListDelete(CurrLine)
 					CurrLine = LinkedListInsertList(CurrLine, NewCode)
-					If IT = 0 Then EndBlock = "ENDIF" + Str(ILC): EndIfUsed = -1
-					If IT = 1 Then EndBlock = "ELSE" + Str(ILC) + "_" + Str(ELC + 1)
+					If IT = 0 Then EndBlock = "ENDIF" + Str(CurrIfNo): EndIfUsed = -1
+					If IT = 1 Then EndBlock = "ELSE" + Str(CurrIfNo) + "_" + Str(ELC + 1)
 					If ModePIC Then CurrLine = LinkedListInsert(CurrLine, " goto " + EndBlock)
 					If ModeAVR Then CurrLine = LinkedListInsert(CurrLine, " rjmp " + EndBlock)
 				End If
@@ -5610,12 +5611,12 @@ SUB CompileIF (CompSub As SubType Pointer)
 				Else
 					EndIfUsed = -1
 					If ModePIC Then
-						L1 = " goto ENDIF" + Str(ILC)
-						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC + 1)
+						L1 = " goto ENDIF" + Str(CurrIfNo)
+						L2 = "ELSE" + Str(CurrIfNo) + "_" + Str(ELC + 1)
 
 					ElseIf ModeAVR Then
-						L1 = " rjmp ENDIF" + Str(ILC)
-						L2 = "ELSE" + Str(ILC) + "_" + Str(ELC + 1) + ":"
+						L1 = " rjmp ENDIF" + Str(CurrIfNo)
+						L2 = "ELSE" + Str(CurrIfNo) + "_" + Str(ELC + 1) + ":"
 					End If
 					CurrLine->Value = L1
 					CurrLine = LinkedListInsert(CurrLine, L2)
@@ -5640,7 +5641,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 				End If
 
 				If EndIfUsed Then
-					CurrLine->Value = "ENDIF" + Str(ILC) + LabelEnd
+					CurrLine->Value = "ENDIF" + Str(CurrIfNo) + LabelEnd
 				Else
 					CurrLine = LinkedListDelete(CurrLine)
 				End If
@@ -6007,9 +6008,9 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 
 				'Table not found, show error
 				IF TableID = 0 THEN
-				Temp = Message("TableNotFound")
-				Replace Temp, "%Table%", TableName
-				LogError Temp, Origin
+					Temp = Message("TableNotFound")
+					Replace Temp, "%Table%", TableName
+					LogError Temp, Origin
 					CurrLine = LinkedListDelete(CurrLine)
 
 				'Table found, continue compile
@@ -6046,26 +6047,26 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 						End With
 					Else
 						'Request table
-					DataTable(TableID).Used = -1
+						DataTable(TableID).Used = -1
 
 						'Pseudo code:
 						' movf/movlw TableLoc
 						' call TableName
 						' movwf OutVar
-					If ModePIC Then
+						If ModePIC Then
 							If DataTable(TableID).StoreLoc = 0 Then
 								'Store in program memory
 								For CurrTableByte = 1 To OutBytes
 									If CurrTableByte > TableBytes Then
 										CurrLine = LinkedListInsert(CurrLine, " clrf " + GetByte(OutVar, CurrTableByte - 1))
 									Else
-									If LargeTable Then
-										AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsert(CurrLine, "[WORD]SYSSTRINGA=" + TableLoc + Origin)
-									Else
-										AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
-										CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=" + TableLoc + Origin)
-									End If
+										If LargeTable Then
+											AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
+											CurrLine = LinkedListInsert(CurrLine, "[WORD]SYSSTRINGA=" + TableLoc + Origin)
+										Else
+											AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
+											CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=" + TableLoc + Origin)
+										End If
 
 										CurrLine = LinkedListInsert(CurrLine, " call " + GetByte(TableName, CurrTableByte - 1))
 										CurrLine = LinkedListInsert(CurrLine, " movwf " + GetByte(OutVar, CurrTableByte - 1))
@@ -6073,10 +6074,10 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 								Next
 
 								'If writing to a port, record it
-							CurrPinDir = GetPinDirection(OutVar)
-							If CurrPinDir <> 0 Then
-								CurrPinDir->WrittenTo = -1
-							End If
+								CurrPinDir = GetPinDirection(OutVar)
+								If CurrPinDir <> 0 Then
+									CurrPinDir->WrittenTo = -1
+								End If
 
 							ElseIf DataTable(TableID).StoreLoc = 1 Then
 								'Store in EEPROM
@@ -6114,7 +6115,7 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 								CurrLine = LinkedListInsert(CurrLine, OutVar + "=EEDataValue")
 							End If
 
-					End If
+						End If
 					End If
 				END IF
 
