@@ -196,6 +196,8 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	IF VarName = "V" Then T = 1
 	IF VarName = "W" THEN T = 1
 	IF VarName = "Z" THEN T = 1
+	'Name should not start with a number, this offends MPASM
+	If Left(VarName, 1) >= "0" And Left(VarName, 1) <= "9" Then T = 1
 	IF T = 1 THEN
 		Temp = Message("BadVarName")
 		Replace Temp, "%var%", VarName
