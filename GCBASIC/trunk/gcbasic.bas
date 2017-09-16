@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-09-14"
+Version = "0.98.<<>> 2017-09-16"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7247,6 +7247,8 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					C = -1
 				End If
 				
+				'Print , "Copying "; .Param(CD, 1); " to "; *.Called.Params(CD).Name; " using mode "; C 
+				
 				'Pass by copying
 				If C = 0 OR C = 1 OR C = 2 THEN
 					'Calculate new origins
@@ -7280,9 +7282,10 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						BeforePos = LinkedListInsert(BeforePos, *.Called.Params(CD).Name + " = " + .Param(CD, 1) + SendOrigin)
 					End If
 					'Detect parameters that are functions, don't try returning values in them
+					'(Unless parameter is the current function, in which case treat it as a variable)
 					ParamIsFn = 0
 					LocOfFn = LocationOfSub(.Param(CD, 1), "", .Origin, -1)
-					If LocOfFn <> 0 Then
+					If LocOfFn <> 0 And LocOfFn <> S Then
 						If Subroutine(LocOfFn)->IsFunction Then ParamIsFn = -1
 					End If
 					IF C = 0 AND (*.Called.Params(CD).Dir And 2) <> 0 And Not ParamIsFn THEN
