@@ -638,7 +638,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-09-16"
+Version = "0.98.<<>> 2017-09-19"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5444,8 +5444,8 @@ SUB CompileIF (CompSub As SubType Pointer)
 		'   - When DelSection is used, StartDel is the first line that should be deleted by the next section
 
 		'IF
-		IF UCase(Left(CurrLine->Value, 3)) = "IF " THEN
-
+		IF UCase(Left(CurrLine->Value, 3)) = "IF " Then
+			
 			IL = IL + 1
 			IF IL = 1 THEN
 				ILC = ILC + 1
@@ -5475,12 +5475,14 @@ SUB CompileIF (CompSub As SubType Pointer)
 				If FindEnd = 0 Then
 					'Print "No End If"
 					LogError(Message("NoEndIf"), Origin)
-					Exit Sub
+					'Remove faulty If and continue compilation (to find further errors)
+					CurrLine = LinkedListDelete(CurrLine)
+					GoTo CompileIfs
 				End If
 
 				'Generate code to test and jump
 				Condition = Mid(CurrLine->Value, 4)
-				Condition = Left(Condition, INSTR(UCase(Condition), "THEN") - 1)
+				Condition = Trim(Left(Condition, INSTR(UCase(Condition), "THEN") - 1))
 				NewCode = CompileConditions(Condition, "FALSE", Origin, CompSub)
 				DelSection = 0
 				DelEndIf = 0
