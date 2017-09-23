@@ -340,7 +340,6 @@ Sub InitSys
 		'PLL for higher speeds
 		#if SYS_CLOCK_INT_PLL_USED
 			[canskip] SPLLEN, PLLMULT = b'11'
-          #endif
 		#endif
 
       #endif
