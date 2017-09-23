@@ -37,6 +37,8 @@
 ;    01012017 - Added NVMREG fix for PIC18FxxK40 A2/A3 Silicon
 ;    11042017 - Corrected Typo on Line 750 Changed AN9 to AN8
 ;    23072017 - Added #ifdef Bit(IRCF2) protection
+;    12092017 - Revised #IFDEF bit(C1EN): C1EN = 0: #ENDIF an C2EN
+;    22-09-2017 - Corrected IRCF Bits for 18FxxK20 (Fixes Speeds < 8 MHz) -WMR
 
 'Constants
 #define ON 1
@@ -112,13 +114,11 @@ Sub InitSys
          #IFDEF ChipFamily 16    'is 18Fxxxx
             #IFDEF Bit(NDIV3)    'and has NDIV3 bit
                                  'So must be 18FxxK40
-
                 'Clear NDIV3:0
                 NDIV3 = 0
                 NDIV2 = 0
                 NDIV1 = 0
                 NDIV0 = 0
-
 
                 #IFDEF ChipMHz 64       'No Div
                    OSCFRQ = 0b00001000
@@ -214,7 +214,6 @@ Sub InitSys
                   #ENDIF
                 #ENDIF
 
-
                 #IFDEF ChipMHz 16
                   #IFDEF Var(OSCSTAT)
                     OSCFRQ = 0b00000101
@@ -229,8 +228,6 @@ Sub InitSys
                     OSCFRQ = 0b00000101
                   #ENDIF
                 #ENDIF
-
-
 
                 #IFDEF ChipMHz 8
                   #IFDEF Var(OSCSTAT)
@@ -279,10 +276,7 @@ Sub InitSys
                 #ENDIF
 
           #Endif
-
-
       #ENDIF
-
   #ENDIF
 
 
@@ -303,26 +297,30 @@ Sub InitSys
           #ifdef Bit(SPLLMULT)
             Set SPLLMULT On
           #endif
+
           #ifdef Bit(SPLLEN)
             Set SPLLEN On
           #endif
+
           #ifdef Bit(PLLEN)
             Set PLLEN On
           #endif
         #ENDIF
 
         #IFDEF ChipMHz 32 'added for 18F(L)K20 -WMR
-'          #ifdef Bit(IRCF2)  'required to protect 16f707 chips with no BIT
+           '#ifdef Bit(IRCF2)  'required to protect 16f707 chips with no BIT
             Set IRCF2 On
-'          #endif
+           '#endif
           Set IRCF1 On
           Set IRCF0 Off
           #ifdef Bit(SPLLMULT)
             Set SPLLMULT Off
           #endif
+
           #ifdef Bit(SPLLEN)
             Set SPLLEN On
           #endif
+
           #ifdef Bit(PLLEN)
             Set PLLEN On
           #endif
@@ -338,36 +336,40 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 8
-          OSCCON = OSCCON OR b'01110000'
+          OSCCON = OSCCON AND b'10001111'
+          OSCCON = OSCCON OR  b'01100000'
         #ENDIF
+
         #IFDEF ChipMHz 4
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'01100000'
+          OSCCON = OSCCON OR  b'01010000'
         #ENDIF
+
         #IFDEF ChipMHz 2
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'01010000'
+          OSCCON = OSCCON OR  b'01000000'
         #ENDIF
+
         #IFDEF ChipMHz 1
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'01000000'
+          OSCCON = OSCCON OR  b'00110000'
         #ENDIF
+
         #IFDEF ChipMHz 0.5
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'00110000'
+          OSCCON = OSCCON OR  b'00100000'
         #ENDIF
+
         #IFDEF ChipMHz 0.25
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'00100000'
+          OSCCON = OSCCON OR  b'00010000'
         #ENDIF
-        #IFDEF ChipMHz 0.125
-          OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'00010000'
-        #ENDIF
+
       #endif
 
-      '10F32x chips:
+      '10F32x chips (and others):
       #ifdef Bit(HFIOFS)
+
         #IFDEF ChipMHz 64 'added for 18F25K22-WMR
           Set IRCF2 On
           Set IRCF1 On
@@ -375,12 +377,15 @@ Sub InitSys
           #ifdef Bit(SPLLMULT)
             Set SPLLMULT On
           #endif
+
           #ifdef Bit(SPLLEN)
             Set SPLLEN On
           #endif
+
           #ifdef Bit(PLLEN)
             Set PLLEN On
           #endif
+
         #ENDIF
 
         #IFDEF ChipMHz 32 'added for 18F25K22 WMR
@@ -390,9 +395,11 @@ Sub InitSys
           #ifdef Bit(SPLLMULT)
             Set SPLLMULT Off
           #endif
+
           #ifdef Bit(SPLLEN)
             Set SPLLEN On
           #endif
+
           #ifdef Bit(PLLEN)
             Set PLLEN On
           #endif
@@ -401,30 +408,38 @@ Sub InitSys
         #IFDEF ChipMHz 16
             OSCCON = OSCCON OR b'01110000'
         #ENDIF
+
         #IFDEF ChipMHz 8
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR b'01100000'
+
         #ENDIF
+
         #IFDEF ChipMHz 4
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR b'01010000'
         #ENDIF
+
         #IFDEF ChipMHz 2
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR b'01000000'
         #ENDIF
+
         #IFDEF ChipMHz 1
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR b'00110000'
         #ENDIF
+
         #IFDEF ChipMHz 0.5
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR b'00100000'
         #ENDIF
+
         #IFDEF ChipMHz 0.25
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR b'00010000'
         #ENDIF
+
       #endif
     #endif
 
@@ -807,11 +822,13 @@ Sub InitSys
   #IFDEF Var(CM1CON0)
     #IFDEF Var(CM2CON0)
       #IFDEF bit(C2ON): C2ON = 0: #ENDIF
-      #IFDEF bit(CM2CON0_EN): CM2CON0_EN = 0: #ENDIF
+'      #IFDEF bit(CM2CON0_EN): CM2CON0_EN = 0: #ENDIF
+      #IFDEF bit(C2EN): C2EN = 0: #ENDIF
     #ENDIF
 
     #IFDEF bit(C1ON): C1ON = 0: #ENDIF
-    #IFDEF bit(CM1CON0_EN): CM1CON0_EN = 0: #ENDIF
+'    #IFDEF bit(CM1CON0_EN): CM1CON0_EN = 0: #ENDIF
+    #IFDEF bit(C1EN): C1EN = 0: #ENDIF
 
   #ENDIF
 

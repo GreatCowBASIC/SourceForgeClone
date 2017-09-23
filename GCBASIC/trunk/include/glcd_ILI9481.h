@@ -20,6 +20,8 @@
 
 'Changes
   '6/10/2017 added 16bit data bus interface for Mega2560 board KentS
+  '17/9/2017 revised send command and data to resolve 8bit addressing EvanRVenn.
+  '17/9/2017 revised to handle port output EvanRVenn.
 
 'Hardware settings
 'Type
@@ -221,8 +223,8 @@ Sub InitGLCD_ILI9481
       Dir ILI9481_GLCD_WR Out
       Dir ILI9481_GLCD_RST Out
 
-      Dir PortA out   'Mega Board DB[15:0]
-      Dir PortC out   'Mega Board DB[7:0]
+      Dir ILI9481_DataPortH Out
+      Dir ILI9481_DataPortL Out
 
       Set ILI9481_GLCD_CS On
       Set ILI9481_GLCD_RS On
@@ -477,41 +479,50 @@ End Sub
 '          '''@hide
 sub  SendCommand_ILI9481( IN ILI9481SendByte as byte )
 
-  Set ILI9481_GLCD_CS Off
-  set ILI9481_GLCD_RS OFF
 
   #if GLCD_TYPE = GLCD_TYPE_ILI9481
 
     #ifndef GLCD_ILI9481_16bit
-      #ifdef PIC
-        ILI9481_GLCD_DB7 = ILI9481SendByte.7
-        ILI9481_GLCD_DB6 = ILI9481SendByte.6
-        ILI9481_GLCD_DB5 = ILI9481SendByte.5
-        ILI9481_GLCD_DB4 = ILI9481SendByte.4
-        ILI9481_GLCD_DB3 = ILI9481SendByte.3
-        ILI9481_GLCD_DB2 = ILI9481SendByte.2
-        ILI9481_GLCD_DB1 = ILI9481SendByte.1
-        ILI9481_GLCD_DB0 = ILI9481SendByte.0
-      #endif
+        '  'Set output command
+        #ifdef PIC
+          ILI9481_GLCD_DB7 = ILI9481SendByte.7
+          ILI9481_GLCD_DB6 = ILI9481SendByte.6
+          ILI9481_GLCD_DB5 = ILI9481SendByte.5
+          ILI9481_GLCD_DB4 = ILI9481SendByte.4
+          ILI9481_GLCD_DB3 = ILI9481SendByte.3
+          ILI9481_GLCD_DB2 = ILI9481SendByte.2
+          ILI9481_GLCD_DB1 = ILI9481SendByte.1
+          ILI9481_GLCD_DB0 = ILI9481SendByte.0
+        #endif
+        #ifdef AVR
+        PORTD = (PORTD & 0B00000011) | ((ILI9481SendByte) & 0B11111100);
+        PORTB = (PORTB & 0B11111100) | ((ILI9481SendByte) & 0B00000011);
+        #endif
 
-      #ifdef AVR
-      PORTD = (PORTD & 0B00000011) | ((ILI9481SendByte) & 0B11111100);
-      PORTB = (PORTB & 0B11111100) | ((ILI9481SendByte) & 0B00000011);
-      #endif
+          set ILI9481_GLCD_RS OFF
+          set ILI9481_GLCD_WR OFF
+          set ILI9481_GLCD_WR ON
+          set ILI9481_GLCD_RS ON
+
     #endif
 
     #ifdef GLCD_ILI9481_16bit
+      Set ILI9481_GLCD_CS Off
+      set ILI9481_GLCD_RS OFF
+
       ILI9481_DataPortH = 0
       ILI9481_DataPortL = ILI9481SendByte
+
+      'set ILI9481_GLCD_RS OFF
+      set ILI9481_GLCD_WR OFF
+      set ILI9481_GLCD_WR ON
+      set ILI9481_GLCD_RS ON
+      Set ILI9481_GLCD_CS On
     #endif
 
   #endif
 
-  'set ILI9481_GLCD_RS OFF
-  set ILI9481_GLCD_WR OFF
-  set ILI9481_GLCD_WR ON
-  set ILI9481_GLCD_RS ON
-  Set ILI9481_GLCD_CS On
+
 
 end Sub
 
@@ -519,39 +530,43 @@ end Sub
 '''@param ILI9481SendByte Byte to send
 '''@hide
 sub  SendData_ILI9481( IN ILI9481SendByte as byte )
-Set ILI9481_GLCD_CS Off
 
   #if GLCD_TYPE = GLCD_TYPE_ILI9481
 
     #ifndef GLCD_ILI9481_16bit
-      #ifdef PIC
-        ILI9481_GLCD_DB7 = ILI9481SendByte.7
-        ILI9481_GLCD_DB6 = ILI9481SendByte.6
-        ILI9481_GLCD_DB5 = ILI9481SendByte.5
-        ILI9481_GLCD_DB4 = ILI9481SendByte.4
-        ILI9481_GLCD_DB3 = ILI9481SendByte.3
-        ILI9481_GLCD_DB2 = ILI9481SendByte.2
-        ILI9481_GLCD_DB1 = ILI9481SendByte.1
-        ILI9481_GLCD_DB0 = ILI9481SendByte.0
-      #endif
-
-      #ifdef AVR
+        #ifdef PIC
+          ILI9481_GLCD_DB7 = ILI9481SendByte.7
+          ILI9481_GLCD_DB6 = ILI9481SendByte.6
+          ILI9481_GLCD_DB5 = ILI9481SendByte.5
+          ILI9481_GLCD_DB4 = ILI9481SendByte.4
+          ILI9481_GLCD_DB3 = ILI9481SendByte.3
+          ILI9481_GLCD_DB2 = ILI9481SendByte.2
+          ILI9481_GLCD_DB1 = ILI9481SendByte.1
+          ILI9481_GLCD_DB0 = ILI9481SendByte.0
+        #endif
+        #ifdef AVR
         PORTD = (PORTD & 0B00000011) | ((ILI9481SendByte) & 0B11111100)
         PORTB = (PORTB & 0B11111100) | ((ILI9481SendByte) & 0B00000011)
-      #endif
+        #endif
+
+          set ILI9481_GLCD_WR OFF
+          set ILI9481_GLCD_WR ON
+
     #endif
 
 
     #ifdef GLCD_ILI9481_16bit
+        Set ILI9481_GLCD_CS Off
         ILI9481_DataPortH = 0
         ILI9481_DataPortL = ILI9481SendByte
+        set ILI9481_GLCD_WR OFF
+        set ILI9481_GLCD_WR ON
+
+        Set ILI9481_GLCD_CS On
     #endif
 
   #endif
-  set ILI9481_GLCD_WR OFF
-  set ILI9481_GLCD_WR ON
 
-Set ILI9481_GLCD_CS On
 end Sub
 
 
