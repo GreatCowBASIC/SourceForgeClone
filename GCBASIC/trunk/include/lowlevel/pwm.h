@@ -58,6 +58,8 @@
 ''' 03/7/2017 Added HPWM3 and HPWM4 constants
 ''' 15/7/2017 Moved the default constants to prevent entry into ASM
 ''' 17/8/2017 Revised to protect CCP1M0-3 being set when no CCP module exists.
+''' 08/9/2017 Revised to futher isolate CCP1M0-3 being set when no CCP module exists and added PWM1 and PWM2 support - 
+'''           PWM1 and PWM2 support is disabled by default
 
 
   'define the defaults
@@ -68,6 +70,8 @@
 
   #IFDEF PIC
 
+    #define HPWM1 1
+    #define HPWM2 2
     #define HPWM3 3
     #define HPWM4 4
     #define HPWM5 5
@@ -81,7 +85,8 @@
     #define USE_HPWMCCP4 TRUE
     #define USE_HPWMCCP5 TRUE
 
-
+    #define USE_HPWM1 FALSE
+    #define USE_HPWM2 FAlSE
     #define USE_HPWM3 TRUE
     #define USE_HPWM4 TRUE
     #define USE_HPWM5 TRUE
@@ -112,10 +117,8 @@ Sub InitPWM
 
 
   #ifdef PIC
-      DIM CCPCONCache as BYTE  'Added 27.04.2105 - WMR
-      CCPCONCache = 0          'Added 27.04.2015 = WMR
 
-      Dim PRx_Temp as LONG     'Moved here from Line 144
+      Dim PRx_Temp as LONG
 
       'Script to calculate constants required for given Frequency and Duty Cycle
       #script
@@ -199,84 +202,92 @@ Sub InitPWM
       #endscript
 
 
+        'If CCP1CON does not exist then there is NO CCP1 so no point in setting, as all this is to set up the CCP1 using constants method
+        #ifdef Var(CCP1CON)
 
-        'Set PWM Period
-        PR2 = PR2Temp
-        #ifdef TxPR 1
-          SET T2CON.T2CKPS0 OFF
-          SET T2CON.T2CKPS1 OFF
+
+            DIM CCPCONCache as BYTE  'Added 27.04.2105 - WMR
+            CCPCONCache = 0          'Added 27.04.2015 = WMR
+
+            'Set PWM Period
+            PR2 = PR2Temp
+            #ifdef TxPR 1
+              SET T2CON.T2CKPS0 OFF
+              SET T2CON.T2CKPS1 OFF
+            #endif
+            #ifdef TxPR 4
+              SET T2CON.T2CKPS0 ON
+              SET T2CON.T2CKPS1 OFF
+            #endif
+            #ifdef TxPR 16
+              SET T2CON.T2CKPS0 OFF
+              SET T2CON.T2CKPS1 ON
+            #endif
+
+            'Set Duty cycle
+            CCPR1L = DutyCycleH
+
+            #ifdef DutyCycleL 0
+
+              #ifdef Bit(CCP1X)               '***  NOt Defined
+                SET CCPCONCache.CCP1Y OFF
+                SET CCPCONCache.CCP1X OFF
+              #endif
+              #ifdef Bit(DC1B1)              '*** DEFINED
+                SET CCPCONCache.DC1B1 OFF
+                SET CCPCONCache.DC1B0 OFF
+              #endif
+
+            #endif
+
+            #ifdef DutyCycleL 1
+
+              #ifdef Bit(CCP1X)
+                SET CCPCONCache.CCP1Y ON
+                SET CCPCONCache.CCP1X OFF
+              #endif
+              #ifdef Bit(DC1B1)
+                SET CCPCONCache.DC1B1 OFF
+                SET CCPCONCache.DC1B0 ON
+              #endif
+
+            #endif
+
+
+            #ifdef DutyCycleL 2
+              #ifdef Bit(CCP1X)
+                SET CCPCONCache.CCP1Y OFF
+                SET CCPCONCache.CCP1X ON
+              #endif
+
+              #ifdef Bit(DC1B1)
+                SET CCPCONCache.DC1B1 ON
+                SET CCPCONCache.DC1B0 OFF
+              #endif
+            #endif
+
+            #ifdef DutyCycleL 3
+              #ifdef Bit(CCP1X)
+                SET CCPCONCache.CCP1Y ON
+                SET CCPCONCache.CCP1X ON
+              #endif
+              #ifdef Bit(DC1B1)
+                SET CCPCONCache.DC1B1 ON
+                SET CCPCONCache.DC1B0 ON
+              #endif
+            #endif
+
+            'Finish preparing CCP*CON
+            SET CCPCONCache.CCP1M3 ON
+            SET CCPCONCache.CCP1M2 ON
+            SET CCPCONCache.CCP1M1 OFF
+            SET CCPCONCache.CCP1M0 OFF
+
+            'Enable Timer 2
+            SET T2CON.TMR2ON ON
+
         #endif
-        #ifdef TxPR 4
-          SET T2CON.T2CKPS0 ON
-          SET T2CON.T2CKPS1 OFF
-        #endif
-        #ifdef TxPR 16
-          SET T2CON.T2CKPS0 OFF
-          SET T2CON.T2CKPS1 ON
-        #endif
 
-        'Set Duty cycle
-        CCPR1L = DutyCycleH
-
-        #ifdef DutyCycleL 0
-
-          #ifdef Bit(CCP1X)               '***  NOt Defined
-            SET CCPCONCache.CCP1Y OFF
-            SET CCPCONCache.CCP1X OFF
-          #endif
-          #ifdef Bit(DC1B1)              '*** DEFINED
-            SET CCPCONCache.DC1B1 OFF
-            SET CCPCONCache.DC1B0 OFF
-          #endif
-
-        #endif
-
-        #ifdef DutyCycleL 1
-
-          #ifdef Bit(CCP1X)
-            SET CCPCONCache.CCP1Y ON
-            SET CCPCONCache.CCP1X OFF
-          #endif
-          #ifdef Bit(DC1B1)
-            SET CCPCONCache.DC1B1 OFF
-            SET CCPCONCache.DC1B0 ON
-          #endif
-
-        #endif
-
-
-        #ifdef DutyCycleL 2
-          #ifdef Bit(CCP1X)
-            SET CCPCONCache.CCP1Y OFF
-            SET CCPCONCache.CCP1X ON
-          #endif
-
-          #ifdef Bit(DC1B1)
-            SET CCPCONCache.DC1B1 ON
-            SET CCPCONCache.DC1B0 OFF
-          #endif
-        #endif
-
-        #ifdef DutyCycleL 3
-          #ifdef Bit(CCP1X)
-            SET CCPCONCache.CCP1Y ON
-            SET CCPCONCache.CCP1X ON
-          #endif
-          #ifdef Bit(DC1B1)
-            SET CCPCONCache.DC1B1 ON
-            SET CCPCONCache.DC1B0 ON
-          #endif
-        #endif
-
-        'Finish preparing CCP*CON
-        #ifdef Var(CCP1CON)  'added to protect against devices with no CCP1 module
-        SET CCPCONCache.CCP1M3 ON
-        SET CCPCONCache.CCP1M2 ON
-        SET CCPCONCache.CCP1M1 OFF
-        SET CCPCONCache.CCP1M0 OFF
-        #endif
-        'Enable Timer 2
-        SET T2CON.TMR2ON ON
 
 
       #ifdef HPWM_FAST
@@ -769,31 +780,43 @@ SUB PWMOff (IN Channel, IN PWMHardware)
       Select Case Channel
           #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
             Case 1
-              Set PWM1EN On
+              Set PWM1EN Off
+
+              'Disable PWM output enable bit on chips like the 10f322
+              #IFDEF BIT(PWM1OE)
+                PWM1OE = 0
+              #ENDIF
+
           #ENDIF
           #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
             Case 2
-              Set PWM2EN On
+              Set PWM2EN Off
+
+              'Disable PWM output enable bit
+              #IFDEF BIT(PWM2OE)
+                PWM2OE = 0
+              #ENDIF
+
           #ENDIF
           #IFDEF BIT(PWM3EN) 'this simply stops error messages when the does not exit
             Case 3
-              Set PWM3EN On
+              Set PWM3EN Off
           #ENDIF
           #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
             Case 4
-              Set PWM4EN On
+              Set PWM4EN Off
           #ENDIF
           #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
             Case 5
-              Set PWM5EN On
+              Set PWM5EN Off
           #ENDIF
           #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
             Case 6
-              Set PWM6EN On
+              Set PWM6EN Off
           #ENDIF
           #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
             Case 7
-              Set PWM7EN On
+              Set PWM7EN Off
           #ENDIF
 
       End Select
@@ -1035,6 +1058,107 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
     'Cache the PRx_Temp value ONLY when NOT HPWM_FAST - this can be then used by HPWMUpdate
     #ifndef HPWM_FAST
         PRx_Temp_Cache = PRx_Temp
+    #endif
+
+
+    #ifdef USE_HPWM1 TRUE
+
+      #ifdef AddHPWMSetup1
+        AddHPWMSetup1
+      #endif
+
+      #if var(PWM1DCH)   'If no channel.... no-point in compiling the code
+
+        if PWMChannel = 1 then  'in section USE_HPWM1
+            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+            PWM1DCH = PRx_Temp_H
+            PWM1DCL = PRx_Temp
+
+            ' Select timer by updating CCPTMRS register
+            #if ChipPWMTimerVariant = 1
+              TimerSelectionBits =  (TimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+
+              SetWith ( P1TSEL0, TimerSelectionBits.0 )
+              SetWith ( P1TSEL1, TimerSelectionBits.1 )
+            #endif
+
+            #ifndef ChipPWMTimerVariant
+
+              #IFDEF BIT(P1TSEL0)
+                SetWith ( P1TSEL0, TimerSelected.1 )
+                SetWith ( P1TSEL1, TimerSelected.2 )
+              #ENDIF
+
+              #IFDEF BIT(PWM1OE)
+                PWM1OE = 1
+              #ENDIF
+
+            #endif
+
+            #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
+              'Start PMW1
+              Set PWM1EN On
+            #ENDIF
+
+        End if
+
+      #endif
+
+      #ifdef AddHPWMExit1
+        AddHPWMExit1
+      #endif
+
+    #endif
+
+    #ifdef USE_HPWM2 TRUE
+
+      #ifdef AddHPWMSetup2
+        AddHPWMSetup2
+      #endif
+
+      #if var(PWM2DCH)   'If no channel.... no-point in compiling the code
+
+        if PWMChannel = 2 then  'in section USE_HPWM2
+            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+            PWM2DCH = PRx_Temp_H
+            PWM2DCL = PRx_Temp
+
+            ' Select timer by updating CCPTMRS register
+            #if ChipPWMTimerVariant = 1
+              TimerSelectionBits =  (TimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+
+              SetWith ( P2TSEL0, TimerSelectionBits.0 )
+              SetWith ( P2TSEL1, TimerSelectionBits.1 )
+            #endif
+
+            #ifndef ChipPWMTimerVariant
+
+              #IFDEF BIT(P2TSEL0)
+                SetWith ( P2TSEL0, TimerSelected.1 )
+                SetWith ( P2TSEL1, TimerSelected.2 )
+              #ENDIF
+
+              #IFDEF BIT(PWM2OE)
+                PWM2OE = 1
+              #ENDIF
+
+            #endif
+
+            #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
+              'Start PMW2
+              Set PWM2EN On
+            #ENDIF
+
+        End if
+
+      #endif
+
+      #ifdef AddHPWMExit2
+        AddHPWMExit2
+      #endif
+
     #endif
 
     #ifdef USE_HPWM3 TRUE

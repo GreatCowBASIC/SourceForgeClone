@@ -123,7 +123,9 @@
 '       ADFVR_IsOutputReady returns true or false
 ' 10/7/17  Corrected FVR to set ADC FVR correctly
 ' 18/7/17  Improved Set conversion clock to handle ADCS2
-
+' 15/9/17  Commentted out #define SINGLE 255.  Problem is that the compiler (in some places) already recognises Single as a data type, part of the initial work for supporting floating point
+           ' "Dim MyVar As Single" used to create a 4-byte variable big enough to store a single precision floating point number,
+           ' now it causes an error message because of the constant.
 
 
 
@@ -137,7 +139,7 @@
 
 #define Format_Left 0
 #define Format_Right 255
-#define SINGLE 255
+'#define SINGLE 255
 
 'Acquisition time. Can be reduced in some circumstances - see PIC manual for details
 #define AD_Delay 2 10us

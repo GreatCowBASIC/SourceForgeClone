@@ -1,5 +1,5 @@
 '    EEPROM routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2017 Hugh Considine
+'    Copyright (C) 2006 - 2017 Hugh Considine, William Roth and Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -37,6 +37,7 @@
 ' 4/3/2013: Corrections for PIC16F1847 (EEDAT instead of EEDATA)
 ' 23/2/2016: Use EEDATL instead of EEDATA (16F1825, possibly others)
 ' 16/3/16: Added supported for NVMADRH:NVMADRL
+' 10/9/17: Removed depencies on Register.Bits - just use Bits. This prevents variables being created. And, change Script from NVMADRH to NVMADRL test.
 
 'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 #script
@@ -52,7 +53,8 @@
     EEDATL_REF = EEDATL
   End If
 
-  If var(NVMADRH) Then
+  'Change from NVMADRH test as NVMADRH does not exist on every chip. The 18F25K42 for instance. 10/9/17
+  If var(NVMADRL) Then
     EPWrite = NVMADR_EPWrite
     EPRead  = NVMADR_EPRead
   End If
@@ -66,7 +68,7 @@ sub EPWrite(In EEAddress, In EEDataValue)
 
   'Variable alias
   #IFNDEF Var(EEADRH)
-    Dim EEAddress Alias EEADR
+    Dim EEAddress Alias EEADR  'erv
   #ENDIF
 
   #IFDEF Var(EEADRH)
@@ -82,23 +84,23 @@ sub EPWrite(In EEAddress, In EEDataValue)
 
   'Select data memory
   #IFDEF Bit(EEPGD)
-    SET EECON1.EEPGD OFF
+    SET EEPGD OFF
   #ENDIF
 
  #IFDEF Bit(CFGS)
-    Set EECON1.CFGS OFF
+    Set CFGS OFF
   #ENDIF
 
   'Start write
-  SET EECON1.WREN ON
+  SET WREN ON
   EECON2 = 0x55
   EECON2 = 0xAA
-  SET EECON1.WR ON
-  SET EECON1.WREN OFF
+  SET WR ON
+  SET WREN OFF
 
   'Wait for write to complete
-  WAIT WHILE EECON1.WR ON
-  SET EECON1.WREN OFF
+  WAIT WHILE WR ON
+  SET WREN OFF
 
   'Restore interrupt
   IntOn
@@ -119,22 +121,22 @@ sub EPWrite(In EEAddress, In EEDataValue)
 
   'Enable write
   #IFDEF Bit(EEMWE)
-    Set EECR.EEMWE On
+    Set EEMWE On
   #ENDIF
   #IFNDEF Bit(EEMWE)
     #IFDEF Bit(EEMPE)
-      Set EECR.EEMPE On
+      Set EEMPE On
     #ENDIF
   #ENDIF
   'Start write, wait for it to complete
   #IFDEF Bit(EEWE)
-    Set EECR.EEWE On
-    Wait Until EECR.EEWE Off
+    Set EEWE On
+    Wait Until EEWE Off
   #ENDIF
   #IFNDEF Bit(EEWE)
     #IFDEF Bit(EEPE)
-      Set EECR.EEPE On
-      Wait Until EECR.EEPE Off
+      Set EEPE On
+      Wait Until EEPE Off
     #ENDIF
   #ENDIF
 
@@ -165,14 +167,14 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
 
   'Select data memory
   #IFDEF Bit(EEPGD)
-    SET EECON1.EEPGD OFF
+    SET EEPGD OFF
   #ENDIF
   #IFDEF Bit(CFGS)
-    Set EECON1.CFGS OFF
+    Set CFGS OFF
   #ENDIF
 
   'Read
-  SET EECON1.RD ON
+  SET RD ON
 
   'Restore interrupt
   IntOn
@@ -191,7 +193,7 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
   Dim EEDataValue Alias EEDR
 
   'Start read
-  Set EECR.EERE On
+  Set EERE On
 
 #ENDIF
 
@@ -216,14 +218,14 @@ function ReadEP(EEAddress)
 
   'Select data memory
   #IFDEF Bit(EEPGD)
-    SET EECON1.EEPGD OFF
+    SET EEPGD OFF
   #ENDIF
   #IFDEF Bit(CFGS)
-    Set EECON1.CFGS OFF
+    Set CFGS OFF
   #ENDIF
 
   'Read
-  SET EECON1.RD ON
+  SET RD ON
 
   'Restore interrupt
   IntOn
@@ -242,7 +244,7 @@ function ReadEP(EEAddress)
   Dim EEDataValue Alias EEDR
 
   'Start read
-  Set EECR.EERE On
+  Set EERE On
 #ENDIF
 
 end function
@@ -259,15 +261,15 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
   IntOff
 
   'Select program memory
-  SET EECON1.EEPGD ON
+  SET EEPGD ON
   #IFDEF Bit(CFGS)
-    Set EECON1.CFGS OFF
+    Set CFGS OFF
   #ENDIF
 
   'Enable write
-  SET EECON1.WREN ON
+  SET WREN ON
   #ifdef bit(FREE)
-    SET EECON1.FREE OFF
+    SET FREE OFF
   #endif
 
   'Write enable code
@@ -275,10 +277,10 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
   EECON2 = 0xAA
 
   'Start write, wait for it to finish
-  SET EECON1.WR ON
+  SET WR ON
   NOP
   NOP
-  SET EECON1.WREN OFF
+  SET WREN OFF
 
   'Enable Interrupt
   IntOn
@@ -294,13 +296,13 @@ sub ProgramRead(In EEAddress, Out EEDataWord)
   IntOff
 
   'Select program memory
-  SET EECON1.EEPGD ON
+  SET EEPGD ON
   #IFDEF Bit(CFGS)
-    Set EECON1.CFGS OFF
+    Set CFGS OFF
   #ENDIF
 
   'Start read, wait for it to finish
-  SET EECON1.RD ON
+  SET RD ON
   NOP
   NOP
 
@@ -315,24 +317,24 @@ sub ProgramErase(In EEAddress)
   IntOff
 
   'Select program memory
-  SET EECON1.EEPGD ON
+  SET EEPGD ON
   #IFDEF Bit(CFGS)
-    Set EECON1.CFGS OFF
+    Set CFGS OFF
   #ENDIF
 
-  SET EECON1.WREN ON
+  SET WREN ON
   #ifdef bit(FREE)
-    SET EECON1.FREE ON
+    SET FREE ON
   #endif
   EECON2 = 0x55
   EECON2 = 0xAA
-  SET EECON1.WR ON
+  SET WR ON
   NOP
   NOP
   #ifdef bit(FREE)
-    SET EECON1.FREE OFF
+    SET FREE OFF
   #endif
-  SET EECON1.WREN OFF
+  SET WREN OFF
 
   'Enable interrupt
   IntOn

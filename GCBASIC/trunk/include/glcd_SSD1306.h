@@ -98,7 +98,9 @@
 '  1.20 Revised 28.08.2017 to resolve non-ANSI characters
 '       Changed vccstate to constant SSD1306_vccstate with a default of 0
 '       Added compulsory wait of 255 ms
-
+'  1.21 Added update to handle fonts size in LOWMEMORY_GLCD_MODE
+'  1.22 Added OLED fonts
+'  1.23 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
 
 #define SSD1306_vccstate 0
 
@@ -270,7 +272,9 @@ Sub InitGLCD_SSD1306
     'Colours //Set these first
     GLCDBackground = 0
     GLCDForeground = 1
-    GLCDFontWidth = 6
+    GLCDFontWidth = 5
+
+
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
     wait 255 ms             'added to ensure the charge pump and power is operational.
@@ -413,26 +417,33 @@ End Sub
 '''@param LineColour Line Color, either 1 or 0
 
 Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
-  'moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc.
-  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
+
+  'This is now in four parts
+  '1. Handler for GLCD LM mode
+  '2. Preamble
+  '3. GCB Font set handler
+  '4. OLED Font set handler
+
+'***** Handler for GLCD LM mode
 
    #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
-
-   'test if character lies within current page
-     GLCDY_Temp = CharLocY + 7
-     Repeat 3
-       Set C Off
-       Rotate GLCDY_Temp Right
-     End Repeat
-     IF GLCDY_Temp <> _GLCDPage THEN
-      GLCDY_Temp = GLCDY_Temp - 1
-      IF GLCDY_Temp <> _GLCDPage THEN
-        EXIT SUB
-      END IF
-     END IF
-
+      if GLCDfntDefaultSize = 1 then
+        'test if character lies within current page
+         GLCDY_Temp = CharLocY + 7
+         Repeat 3
+           Set C Off
+           Rotate GLCDY_Temp Right
+         End Repeat
+         IF GLCDY_Temp <> _GLCDPage THEN
+          GLCDY_Temp = GLCDY_Temp - 1
+          IF GLCDY_Temp <> _GLCDPage THEN
+            EXIT SUB
+          END IF
+         END IF
+      end if
    #endif
 
+'****** Preamble
     'invert colors if required
     if LineColour <> GLCDForeground  then
       'Inverted Colours
@@ -443,11 +454,7 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
    dim CharCol, CharRow as word
    CharCode -= 15
 
-    if CharCode>=178 and CharCode<=202 then
-       CharLocY=CharLocY-1
-    end if
-
-    CharCol=1
+    CharCol=0
 
     Cursor_Position_SSD1306 ( CharLocX , CharLocY )
 
@@ -456,101 +463,319 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
     Open_Transaction_SSD1306
    #endif
 
-    For CurrCharCol = 1 to 5
-      Select Case CurrCharCol
-        Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-        Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-        Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-        Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-        Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-      End Select
+'****** GCB Font set handler
 
-      '1.14 Full GLCD mode
-      #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
-        CharRow=0
-        For CurrCharRow = 1 to 8
-            CharColS=0
-            For Col=1 to GLCDfntDefaultsize
-                  CharRowS=0
-                  For Row=1 to GLCDfntDefaultsize
-                      if CurrCharVal.0=1 then
-                         PSet [word]CharLocX + CharCol + CharColS, [word]CharLocY + CharRow + CharRowS, LineColour
-                      Else
-                         PSet [word]CharLocX + CharCol + CharColS, [word]CharLocY + CharRow + CharRowS, GLCDBackground
-                      End if
-                      CharRowS +=1
-                  Next Row
-                  CharColS +=1
-            Next Col
-          Rotate CurrCharVal Right
-          CharRow +=GLCDfntDefaultsize
-        Next
-        CharCol +=GLCDfntDefaultsize
-      #endif
+   #ifndef GLCD_OLED_FONT
 
-      '1.14 Low Memory GLCD mode
-      #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE         ' Same as code above. Repeated as the Define is the limitation
-        CharRow=0
-        For CurrCharRow = 1 to 8
-            CharColS=0
-            For Col=1 to GLCDfntDefaultsize
-                  CharRowS=0
-                  For Row=1 to GLCDfntDefaultsize
-                      GLCDY = [word]CharLocY + CharRow + CharRowS
+        if CharCode>=178 and CharCode<=202 then
+           CharLocY=CharLocY-1
+        end if
 
-                      'if GLCDY/8 = _GLCDPage then
-                      'GLCDY_Temp = GLCDY
-                      'Repeat 3
-                      '  Set C Off
-                      '  Rotate GLCDY_Temp Right
-                      'End Repeat
-                      'if GLCDY_Temp = _GLCDPage then
-                       if CurrCharVal.0=1 then
-                          PSet [word]CharLocX + CharCol + CharColS, GLCDY, LineColour
-                       Else
-                          PSet [word]CharLocX + CharCol + CharColS, GLCDY, GLCDBackground
-                       End if
-                      'End if
-                      CharRowS +=1
-                  Next Row
-                  CharColS +=1
-            Next Col
-          Rotate CurrCharVal Right
-          CharRow +=GLCDfntDefaultsize
-        Next
-        CharCol +=GLCDfntDefaultsize
-      #endif
+        For CurrCharCol = 1 to 5
+          Select Case CurrCharCol
+            Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+            Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+            Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+            Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+            Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+          End Select
 
-      '1.12 Character GLCD mode
-      ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
-      #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+          'Full Memory GLCD mode
+          #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
+            CharRow=0
+            For CurrCharRow = 1 to 8
+                CharColS=0
+                For Col=1 to GLCDfntDefaultsize
+                      CharRowS=0
+                      For Row=1 to GLCDfntDefaultsize
+                          if CurrCharVal.0=1 then
+                             PSet [word]CharLocX + CharCol + CharColS, [word]CharLocY + CharRow + CharRowS, LineColour
+                          Else
+                             PSet [word]CharLocX + CharCol + CharColS, [word]CharLocY + CharRow + CharRowS, GLCDBackground
+                          End if
+                          'Put out a white intercharacter pixel/space
+                          PSet [word]CharLocX + ( GLCDFontWidth * GLCDfntDefaultsize) , [word]CharLocY + CharRow + CharRowS , GLCDBackground
+                          CharRowS +=1
+                      Next Row
+                      CharColS +=1
+                Next Col
 
-        'Ensure this is not called with in Low memory mode
-        #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+              Rotate CurrCharVal Right
+              CharRow +=GLCDfntDefaultsize
+            Next
 
-            GLCDX = ( CharLocX + CurrCharCol -1 )
+            CharCol +=GLCDfntDefaultsize
+          #endif
 
-             #IFDEF GLCD_PROTECTOVERRUN
-                'anything off screen with be rejected
+          '1.14 Low Memory GLCD mode
+          #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE         ' Same as code above. Repeated as the Define is the limitation
+            CharRow=0
+            For CurrCharRow = 1 to 8
+                CharColS=0
+                For Col=1 to GLCDfntDefaultsize
+                      CharRowS=0
+                      For Row=1 to GLCDfntDefaultsize
+                          GLCDY = [word]CharLocY + CharRow + CharRowS
 
-                if GLCDX => GLCD_WIDTH OR CharLocY => GLCD_HEIGHT Then
-                    exit for
+                           if CurrCharVal.0=1 then
+                              PSet [word]CharLocX + CharCol + CharColS, GLCDY, LineColour
+                           Else
+                              PSet [word]CharLocX + CharCol + CharColS, GLCDY, GLCDBackground
+                           End if
+                          'End if
+                          CharRowS +=1
+                          'Put out a white intercharacter pixel/space
+                          if ( CharCol + CharColS ) = ( GLCDFontWidth * GLCDfntDefaultsize) - GLCDfntDefaultsize - 1 then
+                          PSet [word]CharLocX + CharCol + CharColS + 1, [word]CharLocY + CharRow+CharRowS -1, GLCDBackground
+                          end if
+                      Next Row
+                      CharColS +=1
+                Next Col
+              Rotate CurrCharVal Right
+              CharRow +=GLCDfntDefaultsize
+            Next
+            CharCol +=GLCDfntDefaultsize
+          #endif
+
+          '1.12 Character GLCD mode
+          ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
+          #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+
+            'Ensure this is not called with in Low memory mode
+            #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+
+                GLCDX = ( CharLocX + CurrCharCol -1 )
+
+                 #IFDEF GLCD_PROTECTOVERRUN
+                    'anything off screen with be rejected
+
+                    if GLCDX => GLCD_WIDTH OR CharLocY => GLCD_HEIGHT Then
+                        exit for
+                    end if
+
+                #ENDIF
+
+                '1.14 Added transaction
+                If LineColour = 1 Then
+                 Write_Transaction_Data_SSD1306( CurrCharVal )
+                else
+                 Write_Transaction_Data_SSD1306( 255 - CurrCharVal )
                 end if
 
-            #ENDIF
+            #endif
 
-            '1.14 Added transaction
-            If LineColour = 1 Then
-             Write_Transaction_Data_SSD1306( CurrCharVal )
-            else
-             Write_Transaction_Data_SSD1306( 255 - CurrCharVal )
-            end if
+          #endif
 
-        #endif
+        Next
 
-      #endif
+    #endif
 
-    Next
+
+'****** OLED Font set handler
+   #ifdef GLCD_OLED_FONT
+
+        'Calc pointer to the OLED fonts
+
+        Dim LocalCharCode as word
+
+        'Set up the font information
+        Select case GLCDfntDefaultSize
+            case 1 'this is two font tables of an index and data
+              CharCode = CharCode - 16
+              ReadTable OLEDFont1Index, CharCode, LocalCharCode
+              ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
+              GLCDFontWidth = COLSperfont + 1
+              #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+                #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+                  'Only use the correct bits/columns
+                  COLSperfont--
+                #endif
+              #endif
+              ROWSperfont = 7
+
+
+              #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+                #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+                  ROWSperfont = 1
+                #endif
+              #endif
+            case 2 'this is one font table
+              CharCode = CharCode - 17
+              'Pointer to table of font elements
+              LocalCharCode = (CharCode * 20)
+              COLSperfont = 9  'which is really 10 as we start at 0
+
+              ROWSperfont=15  'which is really 16 as we start at 0
+
+
+              #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+                #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+                  ROWSperfont = 2
+                #endif
+              #endif
+
+        End Select
+
+        For CurrCharCol = 0 to COLSperfont 'number of columns in the font , with two row of data
+          'Increment the table pointer
+          LocalCharCode++
+          Select case GLCDfntDefaultSize
+              case 1
+                ReadTable OLEDFont1Data, LocalCharCode, CurrCharVal
+
+              #ifndef GLCD_Disable_OLED_FONT2
+                  case 2
+                    'Read this 20 times... (0..COLSperfont) [ * 2 ]
+                    ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+              #endif
+              #ifdef GLCD_Disable_OLED_FONT2
+                  case 2
+                    CurrCharVal = 255
+              #endif
+
+          End Select
+
+          '1.21 Full GLCD mode
+          #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
+
+            'Handle 16 pixels of height
+            For CurrCharRow = 0 to ROWSperfont
+                If CurrCharVal.0 = 0 Then
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                Else
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
+                End If
+
+                Rotate CurrCharVal Right
+
+                'Set to next row of date, a second row pixels
+                if GLCDfntDefaultSize = 2 and CurrCharRow = 7 then
+                  LocalCharCode++
+                  #ifndef GLCD_Disable_OLED_FONT2
+                      ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                  #endif
+                  #ifdef GLCD_Disable_OLED_FONT2
+                      CurrCharVal = 255
+                  #endif
+
+                end if
+
+                if CurrCharCol = COLSperfont then
+                    'It is the intercharacter space, put out one pixel row
+                    'Put out a white intercharacter pixel/space
+                     GLCDTemp = CharLocX + CurrCharCol
+                     if GLCDfntDefaultSize = 2 then
+                        GLCDTemp++
+                     end if
+                     PSet GLCDTemp , CharLocY + CurrCharRow, GLCDBackground
+                end if
+
+            Next
+
+
+          #endif
+
+          '1.21 Low Memory GLCD mode
+          #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE         ' Same as code above. Repeated as the Define is the limitation
+
+            'Handle 16 pixels of height
+            For CurrCharRow = 0 to ROWSperfont
+                If CurrCharVal.0 = 0 Then
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                Else
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
+                End If
+
+                Rotate CurrCharVal Right
+
+                'Set to next row of date, a second row
+                if GLCDfntDefaultSize = 2 and CurrCharRow = 7 then
+                  LocalCharCode++
+                  #ifndef GLCD_Disable_OLED_FONT2
+                      ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                  #endif
+                  #ifdef GLCD_Disable_OLED_FONT2
+                      CurrCharVal = 255
+                  #endif
+
+                end if
+
+                if CurrCharCol = COLSperfont then
+                    'It is the intercharacter space, put out one pixel row
+                    'Put out a white intercharacter pixel/space
+                     GLCDTemp = CharLocX + CurrCharCol
+                     if GLCDfntDefaultSize = 2 then
+                        GLCDTemp++
+                     end if
+                     PSet GLCDTemp , CharLocY + CurrCharRow , GLCDBackground
+                end if
+
+
+            Next
+
+
+          #endif
+
+          '1.21 Character GLCD mode
+          ' Handles specific draw sequence. This caters for write only of a bit value. No read operation.
+          #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
+
+            'Ensure this is not called with in Low memory mode
+            #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+
+                GLCDX = ( CharLocX + CurrCharCol )
+
+                 #IFDEF GLCD_PROTECTOVERRUN
+                    'anything off screen with be rejected
+
+                    if GLCDX => GLCD_WIDTH OR CharLocY => GLCD_HEIGHT Then
+                        exit for
+                    end if
+
+                #ENDIF
+
+                Close_Transaction_SSD1306
+                Cursor_Position_SSD1306 ( GLCDX , CharLocY )
+
+                Open_Transaction_SSD1306
+                'Support for transaction ... write data out
+                If LineColour = 1 Then
+                 Write_Transaction_Data_SSD1306( CurrCharVal )
+                else
+                 Write_Transaction_Data_SSD1306( 255 - CurrCharVal )
+                end if
+                Close_Transaction_SSD1306
+                'Read the next part of the char data
+                if GLCDfntDefaultSize = 2 then
+                    LocalCharCode++
+
+                    #ifndef GLCD_Disable_OLED_FONT2
+                      ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                    #endif
+                    #ifdef GLCD_Disable_OLED_FONT2
+                      CurrCharVal = 255
+                    #endif
+
+                    Cursor_Position_SSD1306 ( GLCDX , CharLocY + 8 )
+
+                    Open_Transaction_SSD1306
+                    'Support for transaction ... write data out
+                    If LineColour = 1 Then
+                     Write_Transaction_Data_SSD1306( CurrCharVal )
+                    else
+                     Write_Transaction_Data_SSD1306( 255 - CurrCharVal )
+                    end if
+                end if
+
+            #endif
+
+          #endif
+
+        Next
+
+    #endif
+
+
 
    '1.14 Added transaction
    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
