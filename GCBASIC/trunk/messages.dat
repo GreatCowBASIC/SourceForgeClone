@@ -234,6 +234,8 @@ MissingSubParam = "Missing value for parameter %param%"
 WarningsAsErrors = "Warnings generated and treated as errors"
 BadBitCompareOp = "Incorrect operator: Only = and <> comparisons can be used with bit variables"
 TableItemInvalid = "Item %item% cannot be stored in the table"
+InvalidBit = "Bit %bit% is not a valid bit and cannot be set"
+MultiSetLiteral = "Multiple bits can only be set to a fixed value, not a variable"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"
