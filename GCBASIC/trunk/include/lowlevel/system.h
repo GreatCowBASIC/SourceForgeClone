@@ -39,6 +39,7 @@
 ;    23072017 - Added #ifdef Bit(IRCF2) protection
 ;    12092017 - Revised #IFDEF bit(C1EN): C1EN = 0: #ENDIF an C2EN
 ;    22-09-2017 - Corrected IRCF Bits for 18FxxK20 (Fixes Speeds < 8 MHz) -WMR
+'    2017-09-23: Corrected speed of 18Fxx20 chips, hopefully without breaking 18FxxK20 chips
 
 'Constants
 #define ON 1
@@ -57,6 +58,19 @@
 #define CheckDivZero TRUE
 
 #startup InitSys, 80
+
+#samebit SPLLEN, PLLEN
+
+'Calculate intosc division (needed to sort between 18F2620 and 18F26K20, possibly others)
+#script
+	SYS_CLOCK_DIV_NEEDED = ChipIntOsc / ChipMHz
+	SYS_CLOCK_INT_PLL_USED = False
+	If ChipMHz > 16 And ChipIntOsc > 16 Then
+		'PLL used
+		SYS_CLOCK_DIV_NEEDED = SYS_CLOCK_DIV_NEEDED * 4
+		SYS_CLOCK_INT_PLL_USED = True
+	End If
+#endscript
 
 '********************************************************************************
 'System initialisation routine
@@ -281,89 +295,53 @@ Sub InitSys
 
 
   #IFDEF Var(OSCCON)
-    nop             ' This is the routine for the OSCCON config
+    ' This is the routine for the OSCCON config
     #IFDEF Bit(FOSC4)
       Set FOSC4 Off
     #ENDIF
 
-    #if NoBit(SPLLEN) And NoBit(PLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
+    #if NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
       'Most chips:
       #ifndef Bit(HFIOFS)
-
-        #IFDEF ChipMHz 64 'added for 18F(L)K20 -WMR
-          Set IRCF2 On
-          Set IRCF1 On
-          Set IRCF0 On
-          #ifdef Bit(SPLLMULT)
-            Set SPLLMULT On
-          #endif
-
-          #ifdef Bit(SPLLEN)
-            Set SPLLEN On
-          #endif
-
-          #ifdef Bit(PLLEN)
-            Set PLLEN On
-          #endif
+        #IFDEF SYS_CLOCK_DIV_NEEDED 1 'added for 18F(L)K20 -WMR
+			OSCCON = OSCCON OR b'01110000'
         #ENDIF
 
-        #IFDEF ChipMHz 32 'added for 18F(L)K20 -WMR
-           '#ifdef Bit(IRCF2)  'required to protect 16f707 chips with no BIT
-            Set IRCF2 On
-           '#endif
-          Set IRCF1 On
-          Set IRCF0 Off
-          #ifdef Bit(SPLLMULT)
-            Set SPLLMULT Off
-          #endif
-
-          #ifdef Bit(SPLLEN)
-            Set SPLLEN On
-          #endif
-
-          #ifdef Bit(PLLEN)
-            Set PLLEN On
-          #endif
-        #ENDIF
-
-        #IFDEF ChipMHz 16 'added for 18F(L)K20 -WMR
-          #ifdef Bit(IRCF2)  'required to protect 16f707 chips with no BIT,,16f707 16f716 16f72 16f720 16f721 16f722 16f722a  16f723  16f723a 16f724z 16f726 16f727
-            Set IRCF2 On
-          #endif
-          Set IRCF1 On
-          Set IRCF0 On
-            'OSCCON = OSCCON OR b'01110000'
-        #ENDIF
-
-        #IFDEF ChipMHz 8
+        #IFDEF SYS_CLOCK_DIV_NEEDED 2
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR  b'01100000'
         #ENDIF
 
-        #IFDEF ChipMHz 4
+        #IFDEF SYS_CLOCK_DIV_NEEDED 4
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR  b'01010000'
         #ENDIF
 
-        #IFDEF ChipMHz 2
+        #IFDEF SYS_CLOCK_DIV_NEEDED 8
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR  b'01000000'
         #ENDIF
 
-        #IFDEF ChipMHz 1
+        #IFDEF SYS_CLOCK_DIV_NEEDED 16
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR  b'00110000'
         #ENDIF
 
-        #IFDEF ChipMHz 0.5
+        #IFDEF SYS_CLOCK_DIV_NEEDED 32
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR  b'00100000'
         #ENDIF
 
-        #IFDEF ChipMHz 0.25
+        #IFDEF SYS_CLOCK_DIV_NEEDED 64
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR  b'00010000'
         #ENDIF
+		
+		'PLL for higher speeds
+		#if SYS_CLOCK_INT_PLL_USED
+			[canskip] SPLLEN, PLLMULT = b'11'
+          #endif
+		#endif
 
       #endif
 
@@ -371,37 +349,16 @@ Sub InitSys
       #ifdef Bit(HFIOFS)
 
         #IFDEF ChipMHz 64 'added for 18F25K22-WMR
-          Set IRCF2 On
-          Set IRCF1 On
-          Set IRCF0 On
-          #ifdef Bit(SPLLMULT)
+          [canskip] SPLLEN, IRCF2, IRCF1, IRCF0 = b'1111'
+		  #ifdef Bit(SPLLMULT)
             Set SPLLMULT On
           #endif
-
-          #ifdef Bit(SPLLEN)
-            Set SPLLEN On
-          #endif
-
-          #ifdef Bit(PLLEN)
-            Set PLLEN On
-          #endif
-
         #ENDIF
 
         #IFDEF ChipMHz 32 'added for 18F25K22 WMR
-          Set IRCF2 On
-          Set IRCF1 On
-          Set IRCF0 Off
-          #ifdef Bit(SPLLMULT)
+          [canskip] SPLLEN, IRCF2, IRCF1, IRCF0 = b'1110'
+		  #ifdef Bit(SPLLMULT)
             Set SPLLMULT Off
-          #endif
-
-          #ifdef Bit(SPLLEN)
-            Set SPLLEN On
-          #endif
-
-          #ifdef Bit(PLLEN)
-            Set PLLEN On
           #endif
         #ENDIF
 
@@ -443,7 +400,7 @@ Sub InitSys
       #endif
     #endif
 
-    #if Bit(SPLLEN) Or Bit(PLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
+    #if Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
 
       #ifdef Bit(IRCF3)
 
@@ -597,9 +554,6 @@ Sub InitSys
           #ifdef Bit(SPLLEN)
               Set SPLLEN On
           #endif
-          #ifdef Bit(PLLEN)   'Added for 18F14K22 and many others -WMR
-              Set PLLEN On    'that use PLLEN instead of SPLLEN
-          #endif              'for software control of the PLL
         #ENDIF
         #IFDEF ChipMHz 32
           OSCCON = OSCCON AND b'10001111'
@@ -607,9 +561,6 @@ Sub InitSys
           #ifdef Bit(SPLLEN)
               Set SPLLEN On
           #endif
-          #ifdef Bit(PLLEN) 'Added for 18F14K22 and amny others -WMR
-              Set PLLEN On  'that use PLLEN instead of SPLLEN
-          #endif            'for software control of the PLL
         #ENDIF
 
         #IFDEF ChipMHz 16
@@ -675,14 +626,7 @@ Sub InitSys
         #IFDEF NoBit(PCFG4)
           #IFDEF NoVar(ADCON2)
             #IFDEF NoBit(ANS0)
-              #IFDEF Bit(PCFG3)
-                SET PCFG3 OFF
-              #ENDIF
-              #IFDEF Bit(PCFG2)
-                SET PCFG2 ON
-              #ENDIF
-              SET PCFG1 ON
-              SET PCFG0 OFF
+              [canskip] PCFG3, PCFG2, PCFG1, PCFG0 = b'0110'
             #ENDIF
             #IFDEF Bit(ANS0)
               SET ANS0 OFF
