@@ -40,6 +40,7 @@
 ;    12092017 - Revised #IFDEF bit(C1EN): C1EN = 0: #ENDIF an C2EN
 ;    22-09-2017 - Corrected IRCF Bits for 18FxxK20 (Fixes Speeds < 8 MHz) -WMR
 '    2017-09-23: Corrected speed of 18Fxx20 chips, hopefully without breaking 18FxxK20 chips
+'    2017-09-24: Revised to add samevar for HFIOFS and to correctly set SPLLEN after IRF0..3
 
 'Constants
 #define ON 1
@@ -60,16 +61,17 @@
 #startup InitSys, 80
 
 #samebit SPLLEN, PLLEN
+#samebit HFIOFS, IOFS
 
 'Calculate intosc division (needed to sort between 18F2620 and 18F26K20, possibly others)
 #script
-	SYS_CLOCK_DIV_NEEDED = ChipIntOsc / ChipMHz
-	SYS_CLOCK_INT_PLL_USED = False
-	If ChipMHz > 16 And ChipIntOsc > 16 Then
-		'PLL used
-		SYS_CLOCK_DIV_NEEDED = SYS_CLOCK_DIV_NEEDED * 4
-		SYS_CLOCK_INT_PLL_USED = True
-	End If
+  SYS_CLOCK_DIV_NEEDED = ChipIntOsc / ChipMHz
+  SYS_CLOCK_INT_PLL_USED = False
+  If ChipMHz > 16 And ChipIntOsc > 16 Then
+    'PLL used
+    SYS_CLOCK_DIV_NEEDED = SYS_CLOCK_DIV_NEEDED * 4
+    SYS_CLOCK_INT_PLL_USED = True
+  End If
 #endscript
 
 '********************************************************************************
@@ -304,7 +306,7 @@ Sub InitSys
       'Most chips:
       #ifndef Bit(HFIOFS)
         #IFDEF SYS_CLOCK_DIV_NEEDED 1 'added for 18F(L)K20 -WMR
-			OSCCON = OSCCON OR b'01110000'
+      OSCCON = OSCCON OR b'01110000'
         #ENDIF
 
         #IFDEF SYS_CLOCK_DIV_NEEDED 2
@@ -336,27 +338,27 @@ Sub InitSys
           OSCCON = OSCCON AND b'10001111'
           OSCCON = OSCCON OR  b'00010000'
         #ENDIF
-		
-		'PLL for higher speeds
-		#if SYS_CLOCK_INT_PLL_USED
-			[canskip] SPLLEN, PLLMULT = b'11'
-		#endif
+
+    'PLL for higher speeds
+    #if SYS_CLOCK_INT_PLL_USED
+      [canskip] PLLMULT, SPLLEN = b'11'
+    #endif
 
       #endif
 
       '10F32x chips (and others):
       #ifdef Bit(HFIOFS)
 
-        #IFDEF ChipMHz 64 'added for 18F25K22-WMR
-          [canskip] SPLLEN, IRCF2, IRCF1, IRCF0 = b'1111'
-		  #ifdef Bit(SPLLMULT)
+        #IFDEF ChipMHz 64 'the SPLLEN needs to set after the IRCF
+          [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
+      #ifdef Bit(SPLLMULT)
             Set SPLLMULT On
           #endif
         #ENDIF
 
-        #IFDEF ChipMHz 32 'added for 18F25K22 WMR
-          [canskip] SPLLEN, IRCF2, IRCF1, IRCF0 = b'1110'
-		  #ifdef Bit(SPLLMULT)
+        #IFDEF ChipMHz 32 'the SPLLEN needs to set after the IRCF
+          [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'
+      #ifdef Bit(SPLLMULT)
             Set SPLLMULT Off
           #endif
         #ENDIF
