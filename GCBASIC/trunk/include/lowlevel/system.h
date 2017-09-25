@@ -41,6 +41,11 @@
 ;    22-09-2017 - Corrected IRCF Bits for 18FxxK20 (Fixes Speeds < 8 MHz) -WMR
 '    2017-09-23: Corrected speed of 18Fxx20 chips, hopefully without breaking 18FxxK20 chips
 '    2017-09-24: Revised to add samevar for HFIOFS and to correctly set SPLLEN after IRF0..3
+'    25092017 - Revised as follows:
+'                INITSYS now handles two true tables for frequency... between 16 and 0.125x``
+'                Test on 18f2425 (type1 max frq of 8mhz) and 18f26k22 (type2 max frq of 16mhz)
+'                Assumes that testing the ChipMaxMHz = 64 is a valid test for type2 microcontrollers
+'                Supports IntOsc MaxMhz of 64 and not 64 ... there may me others true tables
 
 'Constants
 #define ON 1
@@ -72,6 +77,7 @@
     SYS_CLOCK_DIV_NEEDED = SYS_CLOCK_DIV_NEEDED * 4
     SYS_CLOCK_INT_PLL_USED = True
   End If
+
 #endscript
 
 '********************************************************************************
@@ -306,7 +312,7 @@ Sub InitSys
       'Most chips:
       #ifndef Bit(HFIOFS)
         #IFDEF SYS_CLOCK_DIV_NEEDED 1 'added for 18F(L)K20 -WMR
-      OSCCON = OSCCON OR b'01110000'
+          OSCCON = OSCCON OR b'01110000'
         #ENDIF
 
         #IFDEF SYS_CLOCK_DIV_NEEDED 2
@@ -339,64 +345,133 @@ Sub InitSys
           OSCCON = OSCCON OR  b'00010000'
         #ENDIF
 
-    'PLL for higher speeds
-    #if SYS_CLOCK_INT_PLL_USED
-      [canskip] PLLMULT, SPLLEN = b'11'
-    #endif
+       'PLL for higher speeds
+       #if SYS_CLOCK_INT_PLL_USED
+        [canskip] PLLMULT, SPLLEN = b'11'
+       #endif
 
       #endif
 
-      '10F32x chips (and others):
+      'The section now handles two true table for frequency
+      'Test on 18f2425 (type1 max frq of 8mhz) and 18f26k22 (type2 max frq of 16mhz)
+      'Assumes that testing the ChipMaxMHz = 64 is a valid test for type2 microcontrollers
+      'Supports IntOsc MaxMhz of 64 and not 64 ... there may me others true tables
+
       #ifdef Bit(HFIOFS)
 
         #IFDEF ChipMHz 64 'the SPLLEN needs to set after the IRCF
-          [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
-      #ifdef Bit(SPLLMULT)
-            Set SPLLMULT On
-          #endif
+            [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
+            #ifdef Bit(SPLLMULT)
+              Set SPLLMULT On
+            #endif
         #ENDIF
 
         #IFDEF ChipMHz 32 'the SPLLEN needs to set after the IRCF
-          [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'
-      #ifdef Bit(SPLLMULT)
-            Set SPLLMULT Off
+          #if ChipMaxMHz = 64
+              [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'   ;'1101' with PLL for ChipMHz 32
+              #ifdef Bit(SPLLMULT)
+                Set SPLLMULT Off
+              #endif
           #endif
+
+          #if ChipMaxMHz <> 64
+              [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'   ;'1111' with PLL for ChipMHz 32
+          #endif
+
         #ENDIF
 
         #IFDEF ChipMHz 16
-            OSCCON = OSCCON OR b'01110000'
+          OSCCON = OSCCON OR b'01110000'
+          'Address the two true tables for IRCF
+          #if ChipMaxMHz = 64
+             IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 16 MHz (HFINTOSC drives clock directly)
+          #endif
+
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'    ;110 = 4 MHz with PLL
+          #endif
+
         #ENDIF
 
         #IFDEF ChipMHz 8
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'01100000'
+          'Address the two true tables for IRCF
+          #if ChipMaxMHz = 64
+             IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 8 MHz
+          #endif
 
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 8 MHz (INTOSC drives clock directly)
+          #endif
         #ENDIF
 
         #IFDEF ChipMHz 4
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'01010000'
+          'Address the two true tables for IRCF
+          #if ChipMaxMHz = 64
+             IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 4 MHz
+          #endif
+
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 4 MHz
+          #endif
         #ENDIF
 
         #IFDEF ChipMHz 2
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'01000000'
+          'Address the two true tables for IRCF
+          #if ChipMaxMHz = 64
+             IRCF2, IRCF1, IRCF0 = b'100'    ;100 = 2 MHz
+          #endif
+
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 2 MHz
+          #endif
         #ENDIF
 
         #IFDEF ChipMHz 1
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'00110000'
+          'Address the two true tables for IRCF
+          #if ChipMaxMHz = 64
+             IRCF2, IRCF1, IRCF0 = b'011'          ;011 = 1 MHz(3)
+          #endif
+
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0 = b'100'         ;100 = 1 MHz(3)
+          #endif
         #ENDIF
 
         #IFDEF ChipMHz 0.5
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'00100000'
+          'Address the two true tables for IRCF
+          #if ChipMaxMHz = 64
+             IRCF2, IRCF1, IRCF0 = b'010'          ;010 = 500 kHz
+          #endif
+
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0 = b'011'         ;011 = 500 kHz
+          #endif
         #ENDIF
 
         #IFDEF ChipMHz 0.25
           OSCCON = OSCCON AND b'10001111'
-          OSCCON = OSCCON OR b'00010000'
+          'Address the two true tables for IRCF
+          #if ChipMaxMHz = 64
+             IRCF2, IRCF1, IRCF0 = b'001'          ;001 = 250 kHz
+          #endif
+
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0 = b'010'         ;010 = 250 kHz
+          #endif
         #ENDIF
+
+        #IFDEF ChipMHz 0.125
+          OSCCON = OSCCON AND b'10001111'
+          #if ChipMaxMHz <> 64
+             IRCF2, IRCF1, IRCF0 = b'001'         ;001 = 125 kHz
+          #endif
+        #ENDIF
+
 
       #endif
     #endif
