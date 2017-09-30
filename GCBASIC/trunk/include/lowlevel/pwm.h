@@ -58,15 +58,30 @@
 ''' 03/7/2017 Added HPWM3 and HPWM4 constants
 ''' 15/7/2017 Moved the default constants to prevent entry into ASM
 ''' 17/8/2017 Revised to protect CCP1M0-3 being set when no CCP module exists.
-''' 08/9/2017 Revised to futher isolate CCP1M0-3 being set when no CCP module exists and added PWM1 and PWM2 support - 
+''' 08/9/2017 Revised to futher isolate CCP1M0-3 being set when no CCP module exists and added PWM1 and PWM2 support -
 '''           PWM1 and PWM2 support is disabled by default
-
+''' 28/9/2017 Revised to support CCP/PWM for CCP/PWM 1..5
+'''           Also, supports CCP_PWM_1..5_On and CCP_PWM_1..5_Off to save even more memory.
 
   'define the defaults
   #define AVRTC0
   #define AVRCHAN2
   #define PWM_Freq 38      'Frequency of PWM in KHz
   #define PWM_Duty 50      'Duty cycle of PWM (%)
+
+  'Not Bit or Register checking but this reduce the memory overhead
+  #define CCP_PWM_1_On CCP1CON = CCPCONCache:CCPR1L = DutyCycleH
+  #define CCP_PWM_2_On CCP2CON = CCPCONCache:CCPR2L = DutyCycleH
+  #define CCP_PWM_3_On CCP3CON = CCPCONCache:CCPR3L = DutyCycleH
+  #define CCP_PWM_4_On CCP4CON = CCPCONCache:CCPR4L = DutyCycleH
+  #define CCP_PWM_5_On CCP5CON = CCPCONCache:CCPR5L = DutyCycleH
+
+  'Not Bit or Register checking but this reduce the memory overhead
+  #define CCP_PWM_1_Off CCP1CON = 0
+  #define CCP_PWM_2_Off CCP2CON = 0
+  #define CCP_PWM_3_Off CCP3CON = 0
+  #define CCP_PWM_4_Off CCP4CON = 0
+  #define CCP_PWM_5_Off CCP5CON = 0
 
   #IFDEF PIC
 
@@ -166,7 +181,7 @@ Sub InitPWM
             CCP4CON_EN = CCP4EN
             CCP5CON_EN = CCP5EN
         end if
-
+        'The 5 CCP channels all use timer2, so, this is more about not using the Method to reduce memory
         'T2PR was used in these routines, but, that is now a register, so, Changed to TxPR
           PR2Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
           TxPR = 1
@@ -199,6 +214,18 @@ Sub InitPWM
         PWMOsc4 = int(60000/(960/ChipMHz))    '*** Unused constant ***
         PWMOsc16 = int(60000/(3840/ChipMHz))  '*** Unused constant ***
 
+        ' End of CCP/PWM script
+        ' Start of PWM module script
+
+HPWMScript:
+        '#define HPWM_1_ON                   'A Macro
+        '#define HPWM_1_OFF                  'A Macro
+        '#define HPWM_1_FREQ_Mhz             0 ... range
+        '#define HPWM_1_FREQ_Khz             0 ... range
+        '#define HPWM_1_DUTY_VALUE           0 - 1023
+        '#define HPWM_1_TIMERSOURCE          2 | 4 | 6
+
+
       #endscript
 
 
@@ -206,8 +233,8 @@ Sub InitPWM
         #ifdef Var(CCP1CON)
 
 
-            DIM CCPCONCache as BYTE  'Added 27.04.2105 - WMR
-            CCPCONCache = 0          'Added 27.04.2015 = WMR
+            DIM CCPCONCache as BYTE
+            CCPCONCache = 0
 
             'Set PWM Period
             PR2 = PR2Temp
@@ -225,70 +252,107 @@ Sub InitPWM
             #endif
 
             'Set Duty cycle
+
+            'This is the legacy code to support only one CCPPWM channel
             CCPR1L = DutyCycleH
 
             #ifdef DutyCycleL 0
 
-              #ifdef Bit(CCP1X)               '***  NOt Defined
-                SET CCPCONCache.CCP1Y OFF
-                SET CCPCONCache.CCP1X OFF
-              #endif
-              #ifdef Bit(DC1B1)              '*** DEFINED
-                SET CCPCONCache.DC1B1 OFF
-                SET CCPCONCache.DC1B0 OFF
-              #endif
+              'This is the legacy code to support only 1 CCPPWM1
+              '              #ifdef Bit(CCP1X)               '***  NOt Defined
+              '                SET CCPCONCache.CCP1Y OFF
+              '                SET CCPCONCache.CCP1X OFF
+              '              #endif
+              '              #ifdef Bit(DC1B1)              '*** DEFINED
+              '                SET CCPCONCache.DC1B1 OFF
+              '                SET CCPCONCache.DC1B0 OFF
+              '              #endif
 
+            'v0.98.00+ to support 5 CCPPWM channels
+              #ifdef Bit(CCP1X)
+                  CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'00'
+              #endif
+              #ifdef Bit(DC1B1)
+                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'00'
+              #endif
             #endif
 
             #ifdef DutyCycleL 1
 
+              'This is the legacy code
+              '              #ifdef Bit(CCP1X)
+              '                SET CCPCONCache.CCP1Y ON
+              '                SET CCPCONCache.CCP1X OFF
+              '              #endif
+              '              #ifdef Bit(DC1B1)
+              '                SET CCPCONCache.DC1B1 OFF
+              '                SET CCPCONCache.DC1B0 ON
+              '              #endif
+
+            'v0.98.00+ to support 5 CCPPWM channels
               #ifdef Bit(CCP1X)
-                SET CCPCONCache.CCP1Y ON
-                SET CCPCONCache.CCP1X OFF
+                  CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'10'
               #endif
               #ifdef Bit(DC1B1)
-                SET CCPCONCache.DC1B1 OFF
-                SET CCPCONCache.DC1B0 ON
+                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'01'
               #endif
 
             #endif
 
-
             #ifdef DutyCycleL 2
+                '              #ifdef Bit(CCP1X)
+                '                SET CCPCONCache.CCP1Y OFF
+                '                SET CCPCONCache.CCP1X ON
+                '              #endif
+                '
+                '              #ifdef Bit(DC1B1)
+                '                SET CCPCONCache.DC1B1 ON
+                '                SET CCPCONCache.DC1B0 OFF
+                '              #endif
+
+            'v0.98.00+ to support 5 CCPPWM channels
               #ifdef Bit(CCP1X)
-                SET CCPCONCache.CCP1Y OFF
-                SET CCPCONCache.CCP1X ON
+                CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'01'
+              #endif
+              #ifdef Bit(DC1B1)
+                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'10'
               #endif
 
-              #ifdef Bit(DC1B1)
-                SET CCPCONCache.DC1B1 ON
-                SET CCPCONCache.DC1B0 OFF
-              #endif
             #endif
 
             #ifdef DutyCycleL 3
+                '              #ifdef Bit(CCP1X)
+                '                SET CCPCONCache.CCP1Y ON
+                '                SET CCPCONCache.CCP1X ON
+                '              #endif
+                '              #ifdef Bit(DC1B1)
+                '                SET CCPCONCache.DC1B1 ON
+                '                SET CCPCONCache.DC1B0 ON
+                '              #endif
+
+            'v0.98.00+ to support 5 CCPPWM channels
               #ifdef Bit(CCP1X)
-                SET CCPCONCache.CCP1Y ON
-                SET CCPCONCache.CCP1X ON
+                  CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'11'
               #endif
               #ifdef Bit(DC1B1)
-                SET CCPCONCache.DC1B1 ON
-                SET CCPCONCache.DC1B0 ON
+                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'11'
               #endif
             #endif
 
-            'Finish preparing CCP*CON
-            SET CCPCONCache.CCP1M3 ON
-            SET CCPCONCache.CCP1M2 ON
-            SET CCPCONCache.CCP1M1 OFF
-            SET CCPCONCache.CCP1M0 OFF
+            'legacy code
+                            'Finish preparing CCP*CON
+                '            SET CCPCONCache.CCP1M3 ON
+                '            SET CCPCONCache.CCP1M2 ON
+                '            SET CCPCONCache.CCP1M1 OFF
+                '            SET CCPCONCache.CCP1M0 OFF'
+             [canskip] CCPCONCache.CCP1M3, CCPCONCache.CCP1M2, CCPCONCache.CCP1M1, CCPCONCache.CCP1M0 = b'1100'
 
             'Enable Timer 2
-            SET T2CON.TMR2ON ON
+            'legacy code
+'            SET T2CON.TMR2ON ON
+            [canskip] TMR2ON = b'1'
 
         #endif
-
-
 
       #ifdef HPWM_FAST
         PWMFreqOld = 0
@@ -350,15 +414,104 @@ Sub InitPWM
 End Sub
 
 
-'Enables the CCP1 capability - the setup was completed in the Init script
+'Legacy methd - Enables the CCP1 capability - the setup was completed in the Init script
 #Define HPWMOn PWMOn
 sub PWMOn
   CCP1CON = CCPCONCache
 end sub
 
+sub CCP_PWMOn ( In PWMChannel )
+  'Simply set the channel to the CCPCONCache
+         #ifdef USE_HPWMCCP1 TRUE
+            #ifdef Var(CCP1CON)
+             if PWMChannel =1 then
+                CCP1CON = CCPCONCache
+                CCPR1L = DutyCycleH
+              end if
+
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP2 TRUE
+            #ifdef Var(CCP2CON)
+              if PWMChannel =2 then
+                  CCP2CON = CCPCONCache
+                  CCPR2L = DutyCycleH
+              end if
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP3 TRUE
+            #ifdef Var(CCP3CON)
+                if PWMChannel =3 then
+                    CCP3CON = CCPCONCache
+                    CCPR3L = DutyCycleH
+                end if
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP4 TRUE
+            #ifdef Var(CCP4CON)
+                if PWMChannel =4 then
+                    CCP4CON = CCPCONCache
+                    CCPR4L = DutyCycleH
+                end if
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP5 TRUE
+            #ifdef Var(CCP5CON)
+                if PWMChannel =5 then
+                    CCP5CON = CCPCONCache
+                    CCPR5L = DutyCycleH
+                end if
+            #endif
+         #endif
+end sub
+
+
+
+
 'Disables the CCP1 capability
 sub PWMOff
   CCP1CON = 0
+end sub
+
+
+sub CCP_PWMOff ( In PWMChannel )
+  'Simply set the channel to the CCPCONCache = 0
+         #ifdef USE_HPWMCCP1 TRUE
+            #ifdef Var(CCP1CON)
+             if PWMChannel =1 then
+                CCP1CON = 0
+              end if
+
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP2 TRUE
+            #ifdef Var(CCP2CON)
+              if PWMChannel =2 then
+                  CCP2CON = 0
+              end if
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP3 TRUE
+            #ifdef Var(CCP3CON)
+                if PWMChannel =3 then
+                    CCP3CON = 0
+                end if
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP4 TRUE
+            #ifdef Var(CCP4CON)
+                if PWMChannel =4 then
+                    CCP4CON = 0
+                end if
+            #endif
+         #endif
+         #ifdef USE_HPWMCCP5 TRUE
+            #ifdef Var(CCP5CON)
+                if PWMChannel =5 then
+                    CCP5CON = 0
+                end if
+            #endif
+         #endif
 end sub
 
 
