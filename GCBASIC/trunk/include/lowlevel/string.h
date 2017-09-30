@@ -34,6 +34,7 @@
 ' 21/10/2016: Fixed Pad
 ' 19/12/2015: Addes Str32 AND Val32 for string handling of 32 bit numbers.  Immo Freudenberg <immo-freudenberg@t-online.de>
 ' 24/1/2016: Added LeftPad and correct PAD
+' 20/9/2017: Revised StrInteger to correct labels clash with other methods
 
 'Length/position
 Function Len (LenTemp())
@@ -242,7 +243,7 @@ Function StrInteger(SysValTemp As Word) As String * 6
   if SysValTemp.15 = 1 Then
     SysCharCount += 1
     StrInteger(SysCharCount) = 0x2D
-    SysValTemp = 0xFFFF-SysValTemp
+    SysValTemp = ABS(SysValTemp)
   end if
 
   'Ten Thousands
@@ -251,31 +252,31 @@ Function StrInteger(SysValTemp As Word) As String * 6
     SysValTemp = SysCalcTempX
     SysCharCount += 1
     StrInteger(SysCharCount) = SysStrData + 48
-    Goto SysValThousands
+    Goto __SysValThousands
   End If
 
   'Thousands
   IF SysValTemp >= 1000 then
-    SysValThousands:
+    __SysValThousands:
     SysStrData = SysValTemp / 1000
     SysValTemp = SysCalcTempX
     SysCharCount += 1
     StrInteger(SysCharCount) = SysStrData + 48
-    Goto SysValHundreds
+    Goto __SysValHundreds
   End If
 
   'Hundreds
   IF SysValTemp >= 100 then
-    SysValHundreds:
+    __SysValHundreds:
     SysStrData = SysValTemp / 100
     SysValTemp = SysCalcTempX
     SysCharCount += 1
     StrInteger(SysCharCount) = SysStrData + 48
-    Goto SysValTens
+    Goto __SysValTens
   End If
   'Tens
   IF SysValTemp >= 10 Then
-    SysValTens:
+    __SysValTens:
     SysStrData = SysValTemp / 10
     SysValTemp = SysCalcTempX
     SysCharCount += 1
