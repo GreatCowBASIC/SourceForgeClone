@@ -24,7 +24,8 @@
 ' 08/11/2016:      Revised to resolve 18f init issues by Evan R Venn
 ' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
 ' 30/5/2017:       Revised to remove ILI9341_DI GLCD_DI. SDO (MISO) is not used.
-' 17/67/2017:      Reverted ILI9341_DI GLCD_DI
+' 17/07/2017:      Reverted ILI9341_DI GLCD_DI
+' 30/09/2017:      Added support for OLED Fonts
 
 
 ' Hardware settings
@@ -223,7 +224,7 @@ Sub InitGLCD_ILI9341
   SendData_ILI9341(0x00)
 
   SendCommand_ILI9341(ILI9341_PWCTR1)    'Power control
-  SendData_ILI9341(0x23)   'VRH[5:0]
+  SendData_ILI9341(0x2B)   'VRH[5:0]
 
   SendCommand_ILI9341(ILI9341_PWCTR2)    'Power control
   SendData_ILI9341(0x10)   'SAP[2:0];BT[3:0]
@@ -301,9 +302,16 @@ Sub InitGLCD_ILI9341
   'Variables required for device
   ILI9341_GLCD_WIDTH = GLCD_WIDTH
   ILI9341_GLCD_HEIGHT = GLCD_HEIGHT
-  GLCDFontWidth = 6
+    #ifndef GLCD_OLED_FONT
+      GLCDFontWidth = 6
+    #endif
+
+    #ifdef GLCD_OLED_FONT
+      GLCDFontWidth = 5
+    #endif
+
   GLCDfntDefault = 0
-  GLCDfntDefaultsize = 2
+  GLCDfntDefaultsize = 1
 
   #endif
 
@@ -584,19 +592,34 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
 
 End Sub
 
-'''Draws a string at the specified location on the ST7920 GLCD
+'''Draws a string at the specified location on the GLCD
 '''@param StringLocX X coordinate for message
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString_ILI9341( In StringLocX as word, In CharLocY as word, In Chars as string, Optional In LineColour as word = GLCDForeground )
-    dim TargetCharCol as word
-    for xchar = 1 to Chars(0)
-      ' June 2014
-      ' Corrected error X calcaluation. It was adding an Extra 1!
-      TargetCharCol = StringLocX + ((xchar*( GLCDFontWidth * GLCDfntDefaultsize ))-( GLCDFontWidth * GLCDfntDefaultsize ))
-      GLCDDrawChar TargetCharCol , CharLocY , Chars(xchar), LineColour
-    next
+
+  dim GLCDPrintLoc as word
+
+  GLCDPrintLoc = StringLocX
+
+  #ifdef GLCD_OLED_FONT
+      dim OldGLCDFontWidth as Byte
+      OldGLCDFontWidth = GLCDFontWidth
+  #endif
+
+  for xchar = 1 to Chars(0)
+
+      GLCDDrawChar GLCDPrintLoc , CharLocY , Chars(xchar), LineColour
+      GLCDPrintIncrementPixelPositionMacro
+
+  next
+
+  #ifdef GLCD_OLED_FONT
+      GLCDFontWidth = OldGLCDFontWidth
+  #endif
+
+
 end sub
 
 '''Draws a character at the specified location on the ST7920 GLCD
@@ -606,69 +629,143 @@ end sub
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawChar_ILI9341(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
 
-' 'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-' CharCode -= 15
-'
-'  'Need to read characters from CharColn (n = 0:7) tables
-' '(First 3, ie 0:2 are blank, so can ignore)
-' For CurrCharCol = 1 to 5
-'   Select Case CurrCharCol
-'     Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-'     Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-'     Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-'     Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-'     Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-'   End Select
-'                    For CurrCharRow = 1 to 8
-'                              If CurrCharVal.0 = 0 Then
-'                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
-'                              Else
-'                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
-'                              End If
-'                              Rotate CurrCharVal Right
-'                    Next
-'
-' Next
-  dim CharCol, CharRow as word
-  CharCode -= 15
+  'This has got a tad complex
+  'We have three major pieces
+  '1 The preamble - this just adjusted color and the input character
+  '2 The code that deals with GCB fontset
+  '3 The code that deals with OLED fontset
+  '
+  'You can make independent change to section 2 and 3 but they are mutual exclusive with many common pieces
 
-          if CharCode>=178 and CharCode<=202 then
-             CharLocY=CharLocY-1
-          end if
-          CharCol=1
+   dim CharCol, CharRow, GLCDTemp as word
+   CharCode -= 15
 
-  For CurrCharCol = 1 to 5
-    Select Case CurrCharCol
-      Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-      Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-      Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-      Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-      Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-    End Select
-    CharRow=0
-    For CurrCharRow = 1 to 8
-        CharColS=0
-        For Col=1 to GLCDfntDefaultsize
-              CharColS +=1
-              CharRowS=0
-              For Row=1 to GLCDfntDefaultsize
-                  CharRowS +=1
-                  if CurrCharVal.0=1 then
-                     PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
-                  Else
-                     PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
-                  End if
-              Next Row
-        Next Col
-      Rotate CurrCharVal Right
-      CharRow +=GLCDfntDefaultsize
-    Next
-    CharCol +=GLCDfntDefaultsize
-  Next
+   CharCol=0
 
+   #ifndef GLCD_OLED_FONT
+
+        if CharCode>=178 and CharCode<=202 then
+           CharLocY=CharLocY-1
+        end if
+
+        For CurrCharCol = 1 to 5
+          Select Case CurrCharCol
+            Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+            Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+            Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+            Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+            Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+          End Select
+          CharRow=0
+          For CurrCharRow = 1 to 8
+              CharColS=0
+              For Col=1 to GLCDfntDefaultsize
+                    CharColS +=1
+                    CharRowS=0
+                    For Row=1 to GLCDfntDefaultsize
+                        CharRowS +=1
+                        if CurrCharVal.0=1 then
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
+                        Else
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                        End if
+                    Next Row
+              Next Col
+            Rotate CurrCharVal Right
+            CharRow +=GLCDfntDefaultsize
+          Next
+          CharCol +=GLCDfntDefaultsize
+        Next
+
+    #endif
+
+    #ifdef GLCD_OLED_FONT
+
+        'Calculate the pointer to the OLED fonts.
+        'These fonts are not multiple tables one is a straight list the other is a lookup table with data.
+        Dim LocalCharCode as word
+
+        'Get key information and set up the fonts parameters
+        Select case GLCDfntDefaultSize
+            case 1 'This font is two font tables of an index and data
+              CharCode = CharCode - 16
+              ReadTable OLEDFont1Index, CharCode, LocalCharCode
+              ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
+              GLCDFontWidth = COLSperfont + 1
+              ROWSperfont = 7  'which is really 8 as we start at 0
+
+            case 2 'This is one font table
+              CharCode = CharCode - 17
+              'Pointer to table of font elements
+              LocalCharCode = (CharCode * 20)
+              COLSperfont = 9  'which is really 10 as we start at 0
+
+              ROWSperfont=15  'which is really 16 as we start at 0
+
+        End Select
+
+
+        'The main loop - loop throught the number of columns
+        For CurrCharCol = 0 to COLSperfont  'number of columns in the font , with two row of data
+
+          'Index the pointer to the code that we are looking for as we need to do this lookup many times getting more font data
+          LocalCharCode++
+          Select case GLCDfntDefaultSize
+              case 1
+                ReadTable OLEDFont1Data, LocalCharCode, CurrCharVal
+
+              case 2
+                #ifndef GLCD_Disable_OLED_FONT2
+                  'Read this 20 times... (0..COLSperfont) [ * 2 ]
+                  ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                #endif
+                #ifdef GLCD_Disable_OLED_FONT2
+                  CurrCharVal = GLCDBackground
+                #endif
+          End Select
+
+            'we handle 8 or 16 pixels of height
+            For CurrCharRow = 0 to ROWSperfont
+                'Set the pixel
+                If CurrCharVal.0 = 0 Then
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                Else
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
+                End If
+
+                Rotate CurrCharVal Right
+
+                'Set to next row of date, a second row
+                if GLCDfntDefaultSize = 2 and CurrCharRow = 7 then
+                  LocalCharCode++
+                  #ifndef GLCD_Disable_OLED_FONT2
+                    ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                  #endif
+                  #ifdef GLCD_Disable_OLED_FONT2
+                    CurrCharVal = GLCDBackground
+                  #endif
+                end if
+
+                'It is the intercharacter space, put out one pixel row
+                if CurrCharCol = COLSperfont then
+                    'Put out a white intercharacter pixel/space
+                     GLCDTemp = CharLocX + CurrCharCol
+                     if GLCDfntDefaultSize = 2 then
+                        GLCDTemp++
+                     end if
+                     PSet GLCDTemp , CharLocY + CurrCharRow, GLCDBackground
+                end if
+
+            Next
+
+
+
+        Next
+
+
+    #endif
 
 End Sub
-
 
 '''Draws a filled box on the GLCD screen
 '''@param LineX1 Top left corner X location
@@ -786,6 +883,8 @@ end Sub
 '''@param ILI9341SendByte Word to send
 '''@hide
 Sub SendWord_ILI9341(In ILI9341SendWord As Word)
+
+  dim ILI9341SendWord as word
   set ILI9341_CS OFF;
   set ILI9341_DC ON;
 
