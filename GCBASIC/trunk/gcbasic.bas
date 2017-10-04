@@ -639,7 +639,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-09-23"
+Version = "0.98.<<>> 2017-10-04"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -805,7 +805,7 @@ SUB Add18FBanks(CompSub As SubType Pointer)
 	Do While CurrLine <> 0
 		TempData = UCase(CurrLine->Value)
 		First8 = Left(TempData, 8)
-
+		'Add banking mode where needed
 		IF INSTR(First8, "MOVFF") = 0 AND INSTR(First8, "LFSR") = 0 AND INSTR(First8, "RETFIE") = 0 AND INSTR(TempData, ",ACCESS") = 0 AND INSTR(TempData, ", ACCESS") = 0 AND TempData <> "" AND Left(TempData, 1) <> ";" THEN
 			TempData = Trim(TempData)
 			VarName = Mid(TempData, INSTR(TempData, " ") + 1)
@@ -821,7 +821,7 @@ SUB Add18FBanks(CompSub As SubType Pointer)
 					CurrLine->Value = CurrLine->Value + ",BANKED"
 				End If
 			END IF
-		END If
+		End If
 		CurrLine = CurrLine->Next
 	Loop
 
@@ -13666,20 +13666,41 @@ SUB ReadChipData
 						.EndLoc = &H7F
 					End With
 				Case 16:
-					'Guess where SFR access bank starts
-					'Not earlier than 0xF60, but can be later (0xF80 on 18F2620, for example)
-					If FirstSFR < &HF60 Then FirstSFR = &HF60
-
-					NoBankLocs = 2
-					With NoBankLoc(1)
-						.StartLoc = 0
-						.EndLoc = (FirstSFR - 1) And 255
-					End With
-					'Access RAM for SFRs
-					With NoBankLoc(2)
-						.StartLoc = FirstSFR
-						.EndLoc = &HFFF
-					End With
+					If MemSize >= 4096 Then
+						'18F with larger memory ('K42 and others)
+						'Guess where SFR access bank starts
+						'Not earlier than 0xF60, but can be later (0xF80 on 18F2620, for example)
+						If FirstSFR < &H3F60 Then FirstSFR = &H3F60
+	
+						NoBankLocs = 2
+						With NoBankLoc(1)
+							.StartLoc = 0
+							.EndLoc = (FirstSFR - 1) And 255
+						End With
+						'Access RAM for SFRs
+						With NoBankLoc(2)
+							.StartLoc = FirstSFR
+							.EndLoc = &H3FFF
+						End With
+						
+					Else
+						'Older 18F with smaller RAM
+						'Guess where SFR access bank starts
+						'Not earlier than 0xF60, but can be later (0xF80 on 18F2620, for example)
+						If FirstSFR < &HF60 Then FirstSFR = &HF60
+	
+						NoBankLocs = 2
+						With NoBankLoc(1)
+							.StartLoc = 0
+							.EndLoc = (FirstSFR - 1) And 255
+						End With
+						'Access RAM for SFRs
+						With NoBankLoc(2)
+							.StartLoc = FirstSFR
+							.EndLoc = &HFFF
+						End With
+					End If
+					
 			End Select
 
 			'If on an 18F and there is only one set of non-banked locations, add SFR
