@@ -14,11 +14,11 @@ Imports System.Collections.Generic
 Public Class IntelHexFile
 	Private Dim FileBytes As Dictionary(Of Integer, Byte)
 	Private Dim pMaxLocation As Integer
+	Private Dim FileName As String
 	
 	Public Sub New (FileName As String)
-		FileBytes = New Dictionary(Of Integer, Byte)
-		pMaxLocation = 0
-		Load (FileName)
+		Me.FileName = FileName
+		Reload
 	End Sub
 	
 	Public Sub New()
@@ -31,6 +31,12 @@ Public Class IntelHexFile
 			Return pMaxLocation
 		End Get
 	End Property
+	
+	Public Sub Reload
+		FileBytes = New Dictionary(Of Integer, Byte)
+		pMaxLocation = 0
+		Load (FileName)
+	End Sub
 	
 	Public Sub SetByte(Location As Integer, Value As Byte)
 

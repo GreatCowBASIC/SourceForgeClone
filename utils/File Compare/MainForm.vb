@@ -55,6 +55,7 @@ Public Class MainForm
 		Me.FileContents = New System.Windows.Forms.ListBox
 		Me.diffCountLabel = New System.Windows.Forms.Label
 		Me.nextDiffButton = New System.Windows.Forms.Button
+		Me.buttonReload = New System.Windows.Forms.Button
 		Me.SuspendLayout
 		'
 		'openFileDialogA
@@ -81,7 +82,7 @@ Public Class MainForm
 		'labelB
 		'
 		Me.labelB.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-		Me.labelB.Location = New System.Drawing.Point(256, 176)
+		Me.labelB.Location = New System.Drawing.Point(256, 152)
 		Me.labelB.Name = "labelB"
 		Me.labelB.Size = New System.Drawing.Size(160, 64)
 		Me.labelB.TabIndex = 4
@@ -91,7 +92,7 @@ Public Class MainForm
 		'
 		Me.buttonLoadB.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 		Me.buttonLoadB.FlatStyle = System.Windows.Forms.FlatStyle.System
-		Me.buttonLoadB.Location = New System.Drawing.Point(256, 136)
+		Me.buttonLoadB.Location = New System.Drawing.Point(256, 112)
 		Me.buttonLoadB.Name = "buttonLoadB"
 		Me.buttonLoadB.Size = New System.Drawing.Size(160, 32)
 		Me.buttonLoadB.TabIndex = 1
@@ -141,10 +142,23 @@ Public Class MainForm
 		Me.nextDiffButton.UseVisualStyleBackColor = true
 		AddHandler Me.nextDiffButton.Click, AddressOf Me.NextDiffButtonClick
 		'
+		'buttonReload
+		'
+		Me.buttonReload.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+		Me.buttonReload.Enabled = false
+		Me.buttonReload.Location = New System.Drawing.Point(256, 232)
+		Me.buttonReload.Name = "buttonReload"
+		Me.buttonReload.Size = New System.Drawing.Size(160, 24)
+		Me.buttonReload.TabIndex = 7
+		Me.buttonReload.Text = "Reload files"
+		Me.buttonReload.UseVisualStyleBackColor = true
+		AddHandler Me.buttonReload.Click, AddressOf Me.ButtonReloadClick
+		'
 		'MainForm
 		'
 		Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 		Me.ClientSize = New System.Drawing.Size(424, 426)
+		Me.Controls.Add(Me.buttonReload)
 		Me.Controls.Add(Me.nextDiffButton)
 		Me.Controls.Add(Me.diffCountLabel)
 		Me.Controls.Add(Me.labelB)
@@ -156,6 +170,7 @@ Public Class MainForm
 		Me.Text = "Compare Intel Hex Files"
 		Me.ResumeLayout(false)
 	End Sub
+	Private buttonReload As System.Windows.Forms.Button
 	Private nextDiffButton As System.Windows.Forms.Button
 	Private diffCountLabel As System.Windows.Forms.Label
 	#End Region
@@ -182,6 +197,7 @@ Public Class MainForm
 	
 	Private Sub UpdateDisplay
 		If Not FileA Is Nothing And Not FileB Is Nothing Then
+			buttonReload.Enabled = True
 			
 			DiffCount = 0
 			
@@ -252,6 +268,15 @@ Public Class MainForm
 		
 		If NextPos <> -1 Then
 			FileContents.SelectedIndex = NextPos
+		End If
+	End Sub
+	
+	Sub ButtonReloadClick(sender As Object, e As EventArgs)
+		If Not FileA Is Nothing And Not FileB Is Nothing Then
+			FileA.Reload
+			FileB.Reload
+			
+			UpdateDisplay
 		End If
 	End Sub
 End Class
