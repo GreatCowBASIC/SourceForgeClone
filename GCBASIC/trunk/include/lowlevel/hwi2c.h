@@ -28,6 +28,7 @@
 '    Updated Dec 2016  - ... Added SSPIF = SSP1IF to correct error
 '    Updated Feb 2017  - Added AVRDisable_HI2CAckPollState for AVR performance
 '    Updated May 2017 -  Added support for PIC chips with bit "SEN_SSP1CON2"
+'    Updated Sep 2017 -  Added SAMEVAR and optimised HSerReceive
 
 
 '    This library is free software; you can redistribute it and/or
@@ -201,6 +202,9 @@
 #endscript
 
 Sub HI2CMode (In HI2CCurrentMode)
+
+  #samebit SSPIF, SSP1IF
+  #samebit SSPIF, SSP1IF
 
   #ifdef PIC
 
@@ -415,22 +419,11 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
    SET SSPCON1.SSPOV Off
 
 
-   #ifdef bit(SSP1IF)
-       'Wait for receive
-       Wait Until SSPSTAT.BF = 1 AND SSP1IF = 1
+   'Wait for receive
+   Wait Until SSPSTAT.BF = 1 AND SSPIF = 1
 
-       I2CByte = SSPBUF
-       ''Support for SSP1IF
-       SSP1IF = 0 ''Support for SSP1IF
-
-   #endif
-   #ifdef bit(SSPIF)
-       'Wait for receive
-       Wait Until SSPSTAT.BF = 1' AND SSPIF = 1
-
-       I2CByte = SSPBUF
-       SSPIF = 0''Support for SSPIF
-   #endif
+   I2CByte = SSPBUF
+   SSPIF = 0''Support for SSPIF
 
    ACKEN = 1; Send ACK DATA now. ' bsf SSPCON2,ACKEN
    ' Clear flag - this is required
