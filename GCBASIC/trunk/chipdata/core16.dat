@@ -1,6 +1,6 @@
 'GCBASIC assembler instruction data
 'Suits 16 bit core chips
-'Last updated 11/2/2007
+'Last updated 5/10/2017
 
 'Format: command;words;word1;word2
 'Whitespace does not matter in word1/2
@@ -24,6 +24,7 @@ INFSNZ f,d,a;	1;	0100 10da ffff ffff
 IORWF f,d,a;	1;	0001 00da ffff ffff
 MOVF f,d,a;	1;	0101 00da ffff ffff
 MOVFF s,d;	2;	1100 ssss ssss ssss;	1111 dddd dddd dddd
+MOVFFL s,d;	3;	0000 0000 0110 ssss;	1111 ssss ssss ssdd;	1111 dddd dddd dddd; 1
 MOVWF f,a;	1;	0110 111a ffff ffff
 MULWF f,a;	1;	0000 001a ffff ffff
 NEGF f,a;	1;	0110 110a ffff ffff
@@ -79,7 +80,8 @@ SLEEP;		1;	0000 0000 0000 0011
 ADDLW k;	1;	0000 1111 kkkk kkkk
 ANDLW k;	1;	0000 1011 kkkk kkkk
 IORLW k;	1;	0000 1001 kkkk kkkk
-LFSR f,k;	2;	1110 1110 00ff kkkk;	1111 0000 kkkk kkkk
+LFSR f,k;	2;	1110 1110 00ff kkkk;	1111 0000 kkkk kkkk; 0
+LFSR f,k;	2;	1110 1110 00ff kkkk;	1111 00kk kkkk kkkk; 1
 MOVLB k;	1;	0000 0001 00kk kkkk
 MOVLW k;	1;	0000 1110 kkkk kkkk
 MULLW k;	1;	0000 1101 kkkk kkkk
