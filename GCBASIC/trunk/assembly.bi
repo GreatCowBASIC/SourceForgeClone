@@ -359,7 +359,6 @@ SUB AssembleProgram
 	Dim As Integer PValueCount, CurrentLine, ParamElements, ElementNo
 	
 	Dim As LinkedListElement Pointer AsmLine, AsmSymbolList, CurrItem
-	'Dim As String Prog(60000)
 	Dim As LinkedListElement Pointer OutProgram, CurrProgramLoc
 	Dim As LinkedListElement Pointer HexRecords, CurrHexRecord
 	
@@ -709,17 +708,16 @@ SUB AssembleProgram
 				'Get command binary, and add in parameters
 				Cmd = CurrCmd->Word(1)
 				'IF VAL(ASMCommanDataSource(T, 2)) = 2 THEN Cmd = Cmd + ":" + ASMCommanDataSource(T, 4)
-				If ChipFamily = 16 And Left(UCase(DataSource), 5) <> "LFSR " THEN
-					 With *CurrCmd
-						For AW = 2 To .Words
-							Cmd = .Word(AW) + ":" + Cmd
-						Next
-					End With
-				END IF
-				If ChipFamily <> 16 Or Left(UCase(DataSource), 5) = "LFSR " THEN
+				IF ChipFamily <> 16 Or Left(UCase(DataSource), 5) = "LFSR " Or Left(UCase(DataSource), 7) = "MOVFFL " Then
 					With *CurrCmd
 						For AW = 2 To .Words
 							Cmd = Cmd + ":" + .Word(AW)
+						Next
+					End With
+				Else
+					 With *CurrCmd
+						For AW = 2 To .Words
+							Cmd = .Word(AW) + ":" + Cmd
 						Next
 					End With
 				END IF
@@ -813,15 +811,15 @@ SUB AssembleProgram
 				NEXT
 				
 				'Convert binary > hex
+				'Color 9: Print DataSource, Cmd: Color 7
 				DO WHILE INSTR(Cmd, " ") <> 0: Replace Cmd, " ", "": LOOP
 				DO WHILE INSTR(Cmd, ":") <> 0
-					IF ChipFamily <> 16 Or Left(UCase(DataSource), 5) = "LFSR " THEN
+					IF ChipFamily <> 16 Or Left(UCase(DataSource), 5) = "LFSR " Or Left(UCase(DataSource), 7) = "MOVFFL " THEN
 						NewCmd = Mid(Cmd, INSTR(Cmd, ":") + 1)
 						Cmd = Left(Cmd, INSTR(Cmd, ":") - 1)
-					END IF
-					IF ChipFamily = 16 And Left(UCase(DataSource), 5) <> "LFSR " THEN
-						NewCmd = Left(Cmd, INSTR(Cmd, ":") - 1)
-						Cmd = Mid(Cmd, INSTR(Cmd, ":") + 1)
+					Else
+						NewCmd = Left(Cmd, InStrRev(Cmd, ":") - 1)
+						Cmd = Mid(Cmd, InStrRev(Cmd, ":") + 1)
 					END IF
 					
 					HT = 0

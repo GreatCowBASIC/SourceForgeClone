@@ -639,7 +639,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-10-04"
+Version = "0.98.<<>> 2017-10-05"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -839,7 +839,7 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 	Dim As LinkedListElement Pointer RealNextLine
 	Dim As ProgLineMeta Pointer CurrMeta, DestMeta
 	Dim As String LineToken(100)
-	Dim As Integer LineTokens, CurrToken
+	Dim As Integer LineTokens, CurrToken, UseMOVFFL
 	Dim As SysVarType Pointer FoundSFR
 	Dim As VariableListElement Pointer FoundFinalVar
 
@@ -1189,6 +1189,44 @@ SUB AddBankCommands(CompSub As SubType Pointer)
 			CurrLine = CurrLine->Next
 		End If
 	Loop
+	
+	'On 18F with larger RAM, replace movff with movffl where necessary
+	If ChipFamily = 16 And MemSize >= 4096 Then
+		CurrLine = CompSub->CodeStart->Next
+		Do While CurrLine <> 0
+			If Left(CurrLine->Value, 7) = " movff " Then
+				'Get variables
+				VarName = Trim(Mid(CurrLine->Value, 8))
+				LineToken(2) = Trim(Mid(VarName, InStr(VarName, ",") + 1))
+				LineToken(1) = Trim(Left(VarName, InStr(VarName, ",") - 1))
+				UseMOVFFL = 0
+				
+				'Is either above location 4096?
+				For CurrToken = 1 To 2
+					'Check for system variable
+					FoundSFR = GetSysVar(UCase(LineToken(CurrToken)))
+					If FoundSFR <> 0 Then
+						If FoundSFR->Location > 4096 Then UseMOVFFL = -1
+					Else
+						'Check for user var
+						FoundFinalVar = HashMapGet(FinalVarList, UCase(LineToken(CurrToken)))
+						IF FoundFinalVar <> 0 Then
+							With *FoundFinalVar
+								If Val(.Value) >= 4096 Then UseMOVFFL = -1
+							End With
+						End If
+					End If
+				Next
+				
+				'Make replacement
+				If UseMOVFFL Then
+					CurrLine->Value = " movffl " + LineToken(1) + "," + LineToken(2)
+				End If
+			End If
+			
+			CurrLine = CurrLine->Next
+		Loop
+	End If
 
 End Sub
 
