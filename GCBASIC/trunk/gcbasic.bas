@@ -639,7 +639,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-10-05"
+Version = "0.98.<<>> 2017-10-07"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2167,6 +2167,8 @@ SUB CalcConfig
 					DesiredSetting = "OFF"
 				ElseIf ConfigNameMatch(.Name, "CPUDIV") Then
 					DesiredSetting = "NOCLKDIV"
+				ElseIf ConfigNameMatch(.Name, "MVECEN") Then
+					DesiredSetting = "OFF"
 
 				ElseIf ConfigNameMatch(.Name, "OSC") Then
 					'Get setting from #osc directive
