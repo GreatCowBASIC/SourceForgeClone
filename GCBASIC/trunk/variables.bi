@@ -224,7 +224,8 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	IF VarType = "WORD" Then T = 0
 	IF VarType = "INTEGER" Then T = 0
 	If VarType = "LONG" Then T = 0
-	'IF VarType = "SINGLE" Then T = 0 'Don't allow this yet, maybe in some future version
+	IF VarType = "SINGLE" Then T = 0
+	If VarType = "DOUBLE" Then T = 0
 	IF VarType = "STRING" Then T = 0
 	IF T THEN
 		Temp = Message("BadVarType")

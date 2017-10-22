@@ -491,6 +491,8 @@ Declare Function DelType (InString As String) As String
 DECLARE FUNCTION GetByte (DataSource As String, BS As Integer) As String
 Declare Function GetElements(InData As String, DivChar As String = "", IncludeDividers As Integer = 0) As LinkedListElement Pointer
 Declare Function GetOriginString(OriginIn As OriginType Pointer) As String
+Declare Function GetDoubleBytes (InValue As Double) As ULongInt
+Declare Function GetSingleBytes (InValue As Single) As UInteger
 Declare Function GetString(StringName As String, UsedInProgram As Integer = -1) As String
 Declare Sub GetTokens(InData As String, OutArray() As String, ByRef OutSize As Integer, DivChar As String = "", IncludeDividers As Integer = 0)
 Declare Function GetTypeLetter(InType As String) As String
@@ -2732,8 +2734,9 @@ FUNCTION CastOrder (InType As String) As Integer
 		Case "WORD": Return 2
 		Case "INTEGER": Return 3
 		Case "LONG": Return 4
-		Case "FLOAT": Return 5
-		Case "STRING": Return 6
+		Case "SINGLE": Return 5
+		Case "DOUBLE": Return 6
+		Case "STRING": Return 7
 		Case Else: Return -1
 	End Select
 END FUNCTION
@@ -8136,7 +8139,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 	Dim As String SType, DType, Temp, DestTemp, SourceTemp, CSource, SCastType
 	Dim As String LTemp, HTemp, UTemp, ETemp, STemp, Source, ReferencedSub
-	Dim As Integer CurrVarByte, LastConst, ThisConst
+	Dim As Integer CurrVarByte, LastConst, ThisConst, DestIsDouble
 	Dim As Integer DestReg, DestIO, SourceReg, SourceIO, L, H, U, E, CD
 	Dim As Integer RequiresGlitchFree, DestVarBitNo
 	Dim As LongInt S
@@ -8213,6 +8216,8 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 	DestIO = IsIOReg(Dest)
 	SourceReg = IsRegister(Source)
 	SourceIO = IsIOReg(Source)
+	
+	'Print "Var set " + Dest + "[" + DType + "] = " + Source + "[" + SType + "]"
 
 	'Record reads and writes (for auto pin direction setting)
 	If DType = "BIT" Or DType = "BYTE" Then
@@ -8852,8 +8857,9 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 		End Select
 
-	'Copy to single
-	Case "SINGLE":
+	'Copy to floating point type (single or double)
+	Case "SINGLE", "DOUBLE"
+		DestIsDouble = DType = "DOUBLE"	
 		Select Case SType
 		'bit > single
 		Case "BIT":
@@ -8863,36 +8869,30 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 			End If
 
-		'byte > single
-		Case "BYTE":
-			If ModePIC Then
+		'byte/word/long/integer > single/double
+		Case "BYTE", "WORD", "LONG", "INTEGER":
+			'Need to convert
+			AddVar "Sys" + SType + "Temp", SType, 1, 0, "REAL", "", , -1
+			AddVar "Sys" + DType + "Temp", DType, 1, 0, "REAL", "", , -1
+			RequestSub(CurrentSub, "SysConv" + SType + "To" + DType, "")
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(Source, "Sys" + SType + "Temp", Origin))
+			CurrLine = LinkedListInsert(CurrLine, " call SysConv" + SType + "To" + DType)
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("Sys" + DType + "Temp", Dest, Origin))
 
-			ElseIf ModeAVR Then
-
-			End If
-
-		'word > single
-		Case "WORD":
-			If ModePIC Then
-
-			ElseIf ModeAVR Then
-
-			End If
-
-		'integer > single
-		Case "INTEGER":
-			If ModePIC Then
-
-			ElseIf ModeAVR Then
-
-			End If
-
-		'single > single
-		Case "SINGLE":
-			If ModePIC Then
-
-			ElseIf ModeAVR Then
-
+		'single/double > single/double
+		Case "SINGLE", "DOUBLE":
+			If SType = DType Then
+				For CurrVarByte = 0 To GetTypeSize(SType) - 1
+					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("[byte]" + GetByte(Source, CurrVarByte), "[byte]" + GetByte(Dest, CurrVarByte), Origin))
+				Next
+			Else
+				'Need to convert
+				AddVar "SysSingleTemp", "SINGLE", 1, 0, "REAL", "", , -1
+				AddVar "SysDoubleTemp", "DOUBLE", 1, 0, "REAL", "", , -1
+				RequestSub(CurrentSub, "SysConv" + SType + "To" + DType, "")
+				CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(Source, "Sys" + SType + "Temp", Origin))
+				CurrLine = LinkedListInsert(CurrLine, " call SysConv" + SType + "To" + DType)
+				CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("Sys" + DType + "Temp", Dest, Origin))
 			End If
 
 		'string > single
@@ -8903,14 +8903,18 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 			End If
 
-		'const > single
+		'const > single/double
 		Case "CONST":
-			If ModePIC Then
-
-			ElseIf ModeAVR Then
-
+			If DestIsDouble Then
+				Dim TempDoubleBytes As ULongInt
+				TempDoubleBytes = GetDoubleBytes(Val(Source))
+				For CurrVarByte = 0 To 7
+					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(Str((TempDoubleBytes Shr (CurrVarByte * 8)) And 255), "[byte]" + GetByte(Dest, CurrVarByte), Origin))
+				Next
+			Else
+				OutList = CompileVarSet(Str(GetSingleBytes(Val(Source))), "[long]" + Dest, Origin)
 			End If
-
+			
 		'sconst > single
 		Case "SCONST":
 			If ModePIC Then
