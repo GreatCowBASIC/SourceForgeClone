@@ -683,6 +683,11 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 		IF BS = 1 THEN Return DataSource + "_H"
 		IF BS = 2 THEN Return DataSource + "_U"
 		IF BS = 3 THEN Return DataSource + "_E"
+		
+		IF BS = 4 THEN Return DataSource + "_A"
+		IF BS = 5 THEN Return DataSource + "_B"
+		IF BS = 6 THEN Return DataSource + "_C"
+		IF BS = 7 THEN Return DataSource + "_D"
 	END IF
 	
 	OutVal = 0
@@ -716,6 +721,16 @@ Function GetOriginString(OriginIn As OriginType Pointer) As String
 	If OriginIn = 0 Then Return ""
 	
 	Return ";?F" + Str(OriginIn->FileNo) + "L" + Str(OriginIn->LineNo) + "S" + Str(OriginIn->SubNo) + "?"
+End Function
+
+Function GetDoubleBytes (InValue As Double) As ULongInt
+	'Get raw bytes for a double precision float
+	Return *CPtr(ULongInt Pointer, @InValue)
+End Function
+
+Function GetSingleBytes (InValue As Single) As UInteger
+	'Get raw bytes for a single precision float
+	Return *CPtr(UInteger Pointer, @InValue)
 End Function
 
 Function GetString (StringName As String, UsedInProgram As Integer = -1) As String
@@ -822,7 +837,7 @@ End Function
 
 Function GetTypeLetter(InType As String) As String
 	Select Case UCase(InType)
-		Case "BIT", "BYTE", "WORD", "INTEGER", "LONG", "FLOAT", "STRING": Return UCase(InType) + ":"
+		Case "BIT", "BYTE", "WORD", "INTEGER", "LONG", "SINGLE", "DOUBLE", "STRING": Return UCase(InType) + ":"
 		Case Else: Return "*:"
 	End Select
 	
@@ -841,6 +856,8 @@ Function GetTypeSize(InType As String) As Integer
 			
 		'Single variables take 4 bytes
 		Case "SINGLE": Return 4
+		'Double variables take 8 bytes
+		Case "DOUBLE": Return 8
 		
 		'String variables have a different default size depending on available RAM
 		Case "STRING":

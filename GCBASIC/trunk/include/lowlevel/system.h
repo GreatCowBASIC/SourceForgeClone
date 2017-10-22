@@ -1531,6 +1531,14 @@ sub SysSingleToInt
 
 end sub
 
+Sub SysConvSingleToDouble
+
+End Sub
+
+Sub SysConvDoubleToSingle
+
+End Sub
+
 '********************************************************************************
 'Multiply subroutines
 
