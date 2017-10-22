@@ -639,7 +639,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-10-07"
+Version = "0.98.<<>> 2017-10-22"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1414,6 +1414,7 @@ End Sub
 Sub AddMainInitCode
 	'Add initialisation code to start of Main routine
 	Dim As LinkedListElement Pointer CurrLine, AddPos, InitRoutineFiles
+	Dim As SysVarType Pointer TempBit
 	Dim As Integer CurrInc, SubLoc, OldVBS
 	Dim As String Temp
 
@@ -1477,9 +1478,13 @@ Sub AddMainInitCode
 	If UserInt Or SysInt Then
 		CurrLine = LinkedListInsert(CurrLine, ";Enable interrupts")
 		If ModePIC Then
-			CurrLine = LinkedListInsert(CurrLine, " bsf INTCON,GIE")
-			If HasSFRBit("PEIE") Then
-				CurrLine = LinkedListInsert(CurrLine, " bsf INTCON,PEIE")
+			TempBit = HashMapGet(SysVarBits, "GIE")
+			If TempBit <> 0 Then
+				CurrLine = LinkedListInsert(CurrLine, " bsf " + TempBit->Parent + ",GIE")
+			End If
+			TempBit = HashMapGet(SysVarBits, "PEIE")
+			If TempBit <> 0 Then
+				CurrLine = LinkedListInsert(CurrLine, " bsf " + TempBit->Parent + ",PEIE")
 			End If
 		ElseIf ModeAVR Then
 			CurrLine = LinkedListInsert(CurrLine, " sei")
@@ -5711,9 +5716,12 @@ END SUB
 
 Sub CompileIntOnOff (CompSub As SubType Pointer)
 	Dim As String LineTemp, TempData, Origin
+	Dim As SysVarType Pointer GIEBit
 	Dim NewCode(10) As String
 	Dim As LinkedListElement Pointer CurrLine
-
+	
+	GIEBit = HashMapGet(SysVarBits, "GIE")
+	
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
 		LineTemp = CurrLine->Value
@@ -5737,16 +5745,17 @@ Sub CompileIntOnOff (CompSub As SubType Pointer)
 				CurrLine = LinkedListDelete(CurrLine)
 
 				If ModePIC Then
-					If LineTemp = "INTON" Then
-						'Restore state
-						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(CompSub->IntStateSaveVar, "INTCON.GIE", Origin))
-					Else
-						'Save state
-						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("INTCON.GIE", CompSub->IntStateSaveVar, Origin))
-						'Turn off interrupt
-						CurrLine = LinkedListInsert(CurrLine, " bcf INTCON,GIE")
+					If GIEBit <> 0 Then
+						If LineTemp = "INTON" Then
+							'Restore state
+							CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(CompSub->IntStateSaveVar, GIEBit->Parent + ".GIE", Origin))
+						Else
+							'Save state
+							CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(GIEBit->Parent + ".GIE", CompSub->IntStateSaveVar, Origin))
+							'Turn off interrupt
+							CurrLine = LinkedListInsert(CurrLine, " bcf " + GIEBit->Parent + ",GIE")
+						End If
 					End If
-
 				ElseIf ModeAVR Then
 					If LineTemp = "INTON" Then
 						'Restore state
