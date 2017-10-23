@@ -1515,14 +1515,6 @@ sub SysStringToSingle
 
 end sub
 
-sub SysValToSingle
-
-end sub
-
-sub SysSingleToVal
-
-end sub
-
 sub SysIntToSingle
 
 end sub
@@ -1531,12 +1523,201 @@ sub SysSingleToInt
 
 end sub
 
-Sub SysConvSingleToDouble
+Sub SysConvLongToSingle
+	'Return correct value for 0
+	If SysLongTemp = 0 Then
+		SysSingleTemp = 0
+		Exit Sub
+	End If
+	
+	'Rotate left until there is an invisible leading 1
+	SysSingleTemp_E = 127 + 31
+	Do While SysLongTemp.31 = 0
+		Set C Off
+		Rotate SysLongTemp Left
+		SysSingleTemp_E -= 1
+	Loop
+	
+	Set C Off
+	Rotate SysSingleTemp_E Right
+	SysLongTemp_E.7 = C
+	SysSingleTemp_U = SysLongTemp_E
+	SysSingleTemp_H = SysLongTemp_U
+	[byte]SysSingleTemp = SysLongTemp_H
+	
+End Sub
 
+Sub SysConvLongToDouble
+	Dim SysCalcExpA As Word Alias SysDoubleTemp_D, SysDoubleTemp_C
+	
+	'Return correct value for 0
+	If SysLongTemp = 0 Then
+		SysDoubleTemp = 0
+		Exit Sub
+	End If
+	
+	'Rotate left until there is an invisible leading 1
+	SysCalcExpA = 1023 + 31
+	Do While SysLongTemp.31 = 0
+		Set C Off
+		Rotate SysLongTemp Left
+		SysCalcExpA -= 1
+	Loop
+	
+	'Set exponent and sign
+	Repeat 4
+		Set C Off
+		Rotate SysCalcExpA Left
+	End Repeat
+	SysDoubleTemp_D.7 = 0
+	'Set mantissa
+	SysDoubleTemp_U = 0
+	Repeat 3
+		Set C Off
+		Rotate SysLongTemp Right
+		Rotate SysDoubleTemp_U Right
+	End Repeat
+	SysDoubleTemp_C = SysDoubleTemp_C Or SysLongTemp_E
+	SysDoubleTemp_B = SysLongTemp_U
+	SysDoubleTemp_A = SysLongTemp_H
+	SysDoubleTemp_E = [byte]SysLongTemp
+	'U set above
+	SysDoubleTemp_H = 0
+	[byte]SysDoubleTemp = 0
+	
+End Sub
+
+Sub SysConvSingleToLong
+	
+	'Get mantissa
+	SysLongTemp_E = 0
+	SysLongTemp_U = SysSingleTemp_U
+	SysLongTemp_H = SysSingleTemp_H
+	[byte]SysLongTemp = [byte]SysSingleTemp
+	Set SysLongTemp_U.7 On
+	
+	'Get exponent
+	Rotate SysSingleTemp_U Left
+	Rotate SysSingleTemp_E Left
+	Do While SysSingleTemp_E > 150
+		Set C Off
+		Rotate SysLongTemp Left
+		SysSingleTemp_E -= 1
+	Loop
+	Do While SysSingleTemp_E < 150
+		Set C Off
+		Rotate SysLongTemp Right
+		SysSingleTemp_E += 1
+	Loop
+	
+End Sub
+
+Sub SysConvSingleToDouble
+	Dim SysCalcExpA As Word Alias SysDoubleTemp_D, SysDoubleTemp_C
+	Dim SysCalcMantA As Long
+	
+	'Get exponent and mantissa
+	SysCalcMantA_E = SysSingleTemp_U
+	Set SysCalcMantA_E.7 Off
+	SysCalcMantA_U = SysSingleTemp_H
+	SysCalcMantA_H = [byte]SysSingleTemp
+	[byte]SysCalcMantA = 0
+	SysCalcExpA = SysSingleTemp_E
+	Rotate SysSingleTemp_U Left
+	Rotate [byte]SysCalcExpA Left
+	
+	'Rotate mantissa right 3, add (1023-127) to exponent if not 0
+	Repeat 3
+		Set C Off
+		Rotate SysCalcMantA Right
+	End Repeat
+	If [byte]SysCalcExpA <> 0 Then
+		SysCalcExpA += 896
+	End If
+	
+	'Put into double
+	Repeat 4
+		Set C off
+		Rotate SysCalcExpA Left
+	End Repeat
+	SysCalcExpA.15 = SysSingleTemp_E.7
+	SysDoubleTemp_C += SysCalcMantA_E
+	SysDoubleTemp_B = SysCalcMantA_U
+	SysDoubleTemp_A = SysCalcMantA_H
+	SysDoubleTemp_E = SysCalcMantA
+	SysDoubleTemp_U = 0
+	SysDoubleTemp_H = 0
+	[byte]SysDoubleTemp = 0
+	
+End Sub
+
+Sub SysConvDoubleToLong
+	Dim SysCalcExpA As Word Alias SysDoubleTemp_D, SysDoubleTemp_C
+	
+	'Get mantissa (split between output var, and with extra bits in SysCalcMantA)
+	'This has essentially been shifted right 3 into SysCalcMantA
+	SysLongTemp_E = SysDoubleTemp_C And 0x0F
+	SysLongTemp_U = SysDoubleTemp_B
+	SysLongTemp_H = SysDoubleTemp_A
+	[byte]SysLongTemp = SysDoubleTemp_E
+	SysCalcMantA = SysDoubleTemp_U
+	Set SysLongTemp_E.4 On
+	
+	'Get exponent
+	Repeat 4
+		Set C Off
+		Rotate SysCalcExpA Right
+	End Repeat
+	
+	'1071 = bias + fraction size + current rotation = 1023 + 24 + 3
+	Do While SysCalcExpA > 1051
+		Set C Off
+		Rotate SysCalcMantA Left
+		Rotate SysLongTemp Left
+		SysCalcExpA -= 1
+	Loop
+	Do While SysCalcExpA < 1051
+		Set C Off
+		Rotate SysLongTemp Right
+		SysCalcExpA += 1
+	Loop
 End Sub
 
 Sub SysConvDoubleToSingle
-
+	Dim SysCalcExpA As Word Alias SysDoubleTemp_D, SysDoubleTemp_C
+	Dim SysCalcMantA As Long
+	
+	'Get mantissa, shift left 4
+	'(Need to shift left 3, but it gets shifted right 1 below)
+	SysCalcMantA_E = SysDoubleTemp_C
+	SysCalcMantA_U = SysDoubleTemp_B
+	SysCalcMantA_H = SysDoubleTemp_A
+	[byte]SysCalcMantA = SysDoubleTemp_E
+	Repeat 4
+		Set C Off
+		Rotate SysCalcMantA Left
+	End Repeat
+	'Move sign bit to soon to be discarded low byte of mantissa
+	SysCalcMantA.0 = SysDoubleTemp_D.7
+	SysDoubleTemp_D.7 = 0
+	'Get exponent, subtract bias
+	Repeat 4
+		Set C Off
+		Rotate SysCalcExpA Right
+	End Repeat
+	If SysCalcExpA <> 0 Then
+		SysCalcExpA -= 896
+	End If
+	'If exponent is over 8 bits, an overflow is about to occur. Detect this?
+	
+	'Put into single
+	SysSingleTemp_E = [byte]SysCalcExpA
+	SysSingleTemp_U = SysCalcMantA_E
+	SysSingleTemp_H = SysCalcMantA_U
+	[byte]SysSingleTemp = SysCalcMantA_H
+	C = SysCalcMantA.0
+	Rotate [long]SysSingleTemp Right
+	
 End Sub
 
 '********************************************************************************

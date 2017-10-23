@@ -134,11 +134,11 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		IF UCase(Left(VarName, 11)) = "SYSWAITTEMP" OR UCase(Left(VarName, 9)) = "DELAYTEMP" Then
 			VarPointer = "REGISTER@-2"
 		End If
-		IF UCase(Left(VarName, 11)) = "SYSCALCTEMP" Then VarPointer = "REGISTER@-2"
-		IF UCase(Left(VarName, 11)) = "SYSBYTETEMP" Then VarPointer = "REGISTER@-2"
-		IF UCase(Left(VarName, 11)) = "SYSWORDTEMP" Then VarPointer = "REGISTER@-2"
-		IF UCase(Left(VarName, 14)) = "SYSINTEGERTEMP" Then VarPointer = "REGISTER@-2"
-		IF UCase(Left(VarName, 11)) = "SYSLONGTEMP" Then VarPointer = "REGISTER@-2"
+		IF UCase(Left(VarName, 11)) = "SYSCALCTEMP" And InStr("ABXabx", Mid(VarName, 12, 1)) <> 0 Then VarPointer = "REGISTER@-2"
+		IF UCase(Left(VarName, 11)) = "SYSBYTETEMP" And InStr("ABXabx", Mid(VarName, 12, 1)) <> 0 Then VarPointer = "REGISTER@-2"
+		IF UCase(Left(VarName, 11)) = "SYSWORDTEMP" And InStr("ABXabx", Mid(VarName, 12, 1)) <> 0 Then VarPointer = "REGISTER@-2"
+		IF UCase(Left(VarName, 14)) = "SYSINTEGERTEMP" And InStr("ABXabx", Mid(VarName, 15, 1)) <> 0 Then VarPointer = "REGISTER@-2"
+		IF UCase(Left(VarName, 11)) = "SYSLONGTEMP" And InStr("ABXabx", Mid(VarName, 12, 1)) <> 0 Then VarPointer = "REGISTER@-2"
 		If UCase(Left(VarName, 10)) = "SYSDIVMULT" Then VarPointer = "REGISTER@-2"
 		If VarName = "SYSREADA" Or VarName = "SYSREADA_H" Then VarPointer = "REGISTER@-2"
 		If UCase(Left(VarName, 9)) = "SYSSTRING" Then
@@ -460,7 +460,6 @@ SUB AllocateRAM
 					SubVar = SubVarLoc->MetaData
 					FinalVar = HashMapGet(@Variables, UCase(Trim(SubVar->Name)))
 					
-						
 					'Var not found, create a new one
 					If FinalVar = 0 Then
 						HashMapSet(@Variables, UCase(Trim(SubVar->Name)), SubVar)

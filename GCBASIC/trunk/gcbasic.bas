@@ -641,7 +641,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-10-22"
+Version = "0.98.<<>> 2017-10-23"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6393,16 +6393,29 @@ SUB CompileRotate (CompSub As SubType Pointer)
 			VarName = Mid(InLine, INSTR(InLine, " ") + 1)
 			Direction = Mid(VarName, INSTR(VarName, " ") + 1)
 			VarName = Left(VarName, INSTR(VarName, " ") - 1)
-			VarType = TypeOfVar(VarName, Subroutine(GetSubID(Origin)))
+			VarType = TypeOfVar(VarName, CompSub)
 			CalcVar = "Sys" + VarType + "TempA"
 			IF Direction = "LC" Then Direction = "LEFT"
 			IF Direction = "RC" Then Direction = "RIGHT"
 			IF Direction = "L" Then Direction = "LEFT SIMPLE"
 			IF Direction = "R" Then Direction = "RIGHT SIMPLE"
-
+			
+			'Remove cast from var name
+			If InStr(VarName, "]") <> 0 Then
+				VarName = LTrim(Mid(VarName, InStr(VarName, "]") + 1))
+				'Detect error if cast to larger type, this will result in invalid assembly
+				If GetTypeSize(TypeOfVar(VarName, CompSub)) < GetTypeSize(VarType) Then
+					Temp = Message("BadCast")
+					Replace Temp, "%from%", TypeOfVar(VarName, CompSub)
+					Replace Temp, "%to%", VarType
+					LogError Temp, Origin
+					Goto CompileNextRotate
+				End If
+			End If
+			
 			'Check var type
 			IF VarType = "INTEGER" THEN VarType = "WORD" 'Treated identically by this command
-			If VarType = "SINGLE" Or VarType = "STRING" Then 'Error
+			If VarType = "SINGLE" Or VarType = "DOUBLE" Or VarType = "STRING" Then 'Error
 				Temp = Message("BadCommandType")
 				Replace Temp, "%command%", "Rotate"
 				Replace Temp, "%type%", VarType
@@ -8716,12 +8729,14 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 			End If
 
 		'single > byte
-		Case "SINGLE":
-			If ModePIC Then
-
-			ElseIf ModeAVR Then
-
-			End If
+		Case "SINGLE", "DOUBLE":
+			DType = "LONG"
+			AddVar "Sys" + SType + "Temp", SType, 1, 0, "REAL", "", , -1
+			AddVar "Sys" + DType + "Temp", DType, 1, 0, "REAL", "", , -1
+			RequestSub(CurrentSub, "SysConv" + SType + "To" + DType, "")
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(Source, "Sys" + SType + "Temp", Origin))
+			CurrLine = LinkedListInsert(CurrLine, " call SysConv" + SType + "To" + DType)
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("Sys" + DType + "Temp", Dest, Origin))
 
 		'string > byte
 		Case "STRING":
@@ -8772,12 +8787,14 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 			End If
 
 		'single > word
-			Case "SINGLE":
-			If ModePIC Then
-
-			ElseIf ModeAVR Then
-
-			End If
+		Case "SINGLE", "DOUBLE":
+			DType = "LONG"
+			AddVar "Sys" + SType + "Temp", SType, 1, 0, "REAL", "", , -1
+			AddVar "Sys" + DType + "Temp", DType, 1, 0, "REAL", "", , -1
+			RequestSub(CurrentSub, "SysConv" + SType + "To" + DType, "")
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(Source, "Sys" + SType + "Temp", Origin))
+			CurrLine = LinkedListInsert(CurrLine, " call SysConv" + SType + "To" + DType)
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("Sys" + DType + "Temp", Dest, Origin))
 
 		'string > word
 		Case "STRING":
@@ -8832,12 +8849,13 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 			End If
 
 		'single > long
-		Case "SINGLE":
-			If ModePIC Then
-
-			ElseIf ModeAVR Then
-
-			End If
+		Case "SINGLE", "DOUBLE":
+			AddVar "Sys" + SType + "Temp", SType, 1, 0, "REAL", "", , -1
+			AddVar "Sys" + DType + "Temp", DType, 1, 0, "REAL", "", , -1
+			RequestSub(CurrentSub, "SysConv" + SType + "To" + DType, "")
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(Source, "Sys" + SType + "Temp", Origin))
+			CurrLine = LinkedListInsert(CurrLine, " call SysConv" + SType + "To" + DType)
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("Sys" + DType + "Temp", Dest, Origin))
 
 		'string > long
 		Case "STRING":
@@ -8871,6 +8889,8 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 		'byte/word/long/integer > single/double
 		Case "BYTE", "WORD", "LONG", "INTEGER":
+			'Use long code for word, byte
+			If SType = "BYTE" Or SType = "WORD" Then SType = "LONG"
 			'Need to convert
 			AddVar "Sys" + SType + "Temp", SType, 1, 0, "REAL", "", , -1
 			AddVar "Sys" + DType + "Temp", DType, 1, 0, "REAL", "", , -1
@@ -12247,10 +12267,10 @@ Function IsRegister (VarName As String) As Integer
 	End If
 	IF UCase(Left(VarName, 11)) = "SYSCALCTEMP" Then Return -1
 
-	IF UCase(Left(VarName, 11)) = "SYSBYTETEMP" Then Return -1
-	IF UCase(Left(VarName, 11)) = "SYSWORDTEMP" Then Return -1
-	IF UCase(Left(VarName, 14)) = "SYSINTEGERTEMP" Then Return -1
-	IF UCase(Left(VarName, 11)) = "SYSLONGTEMP" Then Return -1
+	IF UCase(Left(VarName, 11)) = "SYSBYTETEMP" And InStr("ABXabx", Mid(VarName, 12, 1)) <> 0 Then Return -1
+	IF UCase(Left(VarName, 11)) = "SYSWORDTEMP" And InStr("ABXabx", Mid(VarName, 12, 1)) <> 0 Then Return -1
+	IF UCase(Left(VarName, 14)) = "SYSINTEGERTEMP" And InStr("ABXabx", Mid(VarName, 15, 1)) <> 0 Then Return -1
+	IF UCase(Left(VarName, 11)) = "SYSLONGTEMP" And InStr("ABXabx", Mid(VarName, 12, 1)) <> 0 Then Return -1
 
 	IF UCase(Left(VarName, 10)) = "SYSDIVMULT" Then Return -1
 	IF UCase(Left(VarName, 11)) = "SYSWAITTEMP" Then Return -1
@@ -15370,7 +15390,9 @@ FUNCTION TypeOfVar (VarName As String, CurrSub As SubType Pointer) As String
 
 	'Type overrides
 	If INSTR(VarName, "[") <> 0 Then
+		If INSTR(LCase(VarName), "[double]") <> 0 Then Return "DOUBLE"
 		If INSTR(LCase(VarName), "[single]") <> 0 Then Return "SINGLE"
+		If INSTR(LCase(VarName), "[long]") <> 0 Then Return "LONG"
 		If INSTR(LCase(VarName), "[integer]") <> 0 Then Return "INTEGER"
 		If INSTR(LCase(VarName), "[word]") <> 0 Then Return "WORD"
 		If INSTR(LCase(VarName), "[byte]") <> 0 Then Return "BYTE"
