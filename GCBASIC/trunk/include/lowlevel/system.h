@@ -1515,13 +1515,86 @@ sub SysStringToSingle
 
 end sub
 
-sub SysIntToSingle
+Sub SysConvIntegerToSingle
+	'Return correct value for 0
+	If SysIntegerTemp = 0 Then
+		SysSingleTemp = 0
+		Exit Sub
+	End If
+	
+	'Get sign, make integer positive
+	SysSingleTemp.0 = 0
+	If SysIntegerTemp.15 Then
+		SysIntegerTemp = -SysIntegerTemp
+		SysSingleTemp.0 = 1
+	End If
+	
+	'Rotate left until there is an invisible leading 1
+	SysSingleTemp_E = 127 + 15
+	Do While SysIntegerTemp.15 = 0
+		Set C Off
+		Rotate SysIntegerTemp Left
+		SysSingleTemp_E -= 1
+	Loop
+	
+	Set C Off
+	If SysSingleTemp.0 Then
+		Set C On
+	End If
+	Rotate SysSingleTemp_E Right
+	SysIntegerTemp_H.7 = C
+	SysSingleTemp_U = SysIntegerTemp_H
+	SysSingleTemp_H = SysIntegerTemp
+	[byte]SysSingleTemp = 0
+End Sub
 
-end sub
-
-sub SysSingleToInt
-
-end sub
+Sub SysConvIntegerToDouble
+	Dim SysCalcExpA As Word Alias SysDoubleTemp_D, SysDoubleTemp_C
+	
+	'Return correct value for 0
+	If SysIntegerTemp = 0 Then
+		SysDoubleTemp = 0
+		Exit Sub
+	End If
+	
+	'Get sign, make integer positive
+	SysDoubleTemp.0 = 0
+	If SysIntegerTemp.15 Then
+		SysIntegerTemp = -SysIntegerTemp
+		SysDoubleTemp.0 = 1
+	End If
+	
+	'Rotate left until there is an invisible leading 1
+	SysCalcExpA = 1023 + 15
+	Do While SysIntegerTemp.15 = 0
+		Set C Off
+		Rotate SysIntegerTemp Left
+		SysCalcExpA -= 1
+	Loop
+	
+	'Set exponent and sign
+	Repeat 4
+		Set C Off
+		Rotate SysCalcExpA Left
+	End Repeat
+	SysDoubleTemp_D.7 = SysDoubleTemp.0
+	
+	'Set mantissa
+	SysDoubleTemp_A = 0
+	SysIntegerTemp.15 = 0
+	Repeat 3
+		Set C Off
+		Rotate SysIntegerTemp Right
+		Rotate SysDoubleTemp_A Right
+	End Repeat
+	SysDoubleTemp_C = SysDoubleTemp_C Or SysIntegerTemp_H
+	SysDoubleTemp_B = SysIntegerTemp
+	'A set above
+	SysDoubleTemp_E = 0
+	SysDoubleTemp_U = 0
+	SysDoubleTemp_H = 0
+	[byte]SysDoubleTemp = 0
+End Sub
 
 Sub SysConvLongToSingle
 	'Return correct value for 0
@@ -1587,6 +1660,34 @@ Sub SysConvLongToDouble
 	
 End Sub
 
+Sub SysConvSingleToInteger
+	'Get mantissa
+	SysIntegerTemp_H = SysSingleTemp_U
+	[byte]SysIntegerTemp = SysSingleTemp_H
+	Set SysIntegerTemp_H.7 On
+	Set C Off
+	Rotate SysIntegerTemp Right
+	
+	'Get exponent
+	SysSingleTemp_H.7 = SysSingleTemp_E.7 'Save sign bit
+	Rotate SysSingleTemp_U Left
+	Rotate SysSingleTemp_E Left
+	Do While SysSingleTemp_E > 141
+		Set C Off
+		Rotate SysIntegerTemp Left
+		SysSingleTemp_E -= 1
+	Loop
+	Do While SysSingleTemp_E < 141
+		Set C Off
+		Rotate SysIntegerTemp Right
+		SysSingleTemp_E += 1
+	Loop
+	
+	If SysSingleTemp_H.7 Then
+		SysIntegerTemp = -SysIntegerTemp
+	End If
+End Sub
+
 Sub SysConvSingleToLong
 	
 	'Get mantissa
@@ -1649,6 +1750,41 @@ Sub SysConvSingleToDouble
 	SysDoubleTemp_H = 0
 	[byte]SysDoubleTemp = 0
 	
+End Sub
+
+Sub SysConvDoubleToInteger
+	Dim SysCalcExpA As Word Alias SysDoubleTemp_D, SysDoubleTemp_C
+	
+	'Get mantissa
+	SysIntegerTemp_H = SysDoubleTemp_C And 0x0F
+	[byte]SysIntegerTemp = SysDoubleTemp_B
+	Set SysIntegerTemp_H.4 On
+	'A will also hold some of it, and need to set high bit
+	
+	'Get exponent
+	SysDoubleTemp_H.7 = SysDoubleTemp_D.7 'Save sign bit
+	SysDoubleTemp_D.7 = 0
+	'Get exponent
+	Repeat 4
+		Set C Off
+		Rotate SysCalcExpA Right
+	End Repeat
+	
+	Do While SysCalcExpA > 1035
+		Set C Off
+		Rotate SysDoubleTemp_A Left
+		Rotate SysIntegerTemp Left
+		SysCalcExpA -= 1
+	Loop
+	Do While SysCalcExpA < 1035
+		Set C Off
+		Rotate SysIntegerTemp Right
+		SysCalcExpA += 1
+	Loop
+	
+	If SysDoubleTemp_H.7 Then
+		SysIntegerTemp = -SysIntegerTemp
+	End If
 End Sub
 
 Sub SysConvDoubleToLong

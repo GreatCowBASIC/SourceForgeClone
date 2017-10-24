@@ -960,6 +960,18 @@ FUNCTION IsDivider (Temp As String) As Integer
 	
 END FUNCTION
 
+Function IsFloatType(InType As String) As Integer
+	'Returns true (-1) if input type is a floating point variable
+	Dim ThisType As String
+	ThisType = LCase(InType)
+	
+	Select Case ThisType
+		Case "single", "double": Return -1
+		Case Else: Return 0
+	End Select
+	
+End Function
+
 Function IsIntType(InType As String) As Integer
 	'Returns true (-1) if input type is an integer variable
 	Dim ThisType As String
@@ -1080,6 +1092,7 @@ FUNCTION MakeDec (Temp As String) As LongInt
 	If Instr(DataSource, "[INTEGER]") <> 0 Then Replace DataSource, "[INTEGER]", ""
 	If Instr(DataSource, "[LONG]") <> 0 Then Replace DataSource, "[LONG]", ""
 	If Instr(DataSource, "[SINGLE]") <> 0 Then Replace DataSource, "[SINGLE]", ""
+	If Instr(DataSource, "[DOUBLE]") <> 0 Then Replace DataSource, "[DOUBLE]", ""
 	
 	IF INSTR(DataSource, "0X") <> 0 THEN
 		DataSource = Mid(DataSource, INSTR(DataSource, "0X") + 2)
@@ -1103,7 +1116,34 @@ FUNCTION MakeDec (Temp As String) As LongInt
 	StrTemp = GetString(DataSource, 0)
 	IF Len(StrTemp) = 1 Then Return ASC(StrTemp)
 	
-End FUNCTION
+End Function
+
+FUNCTION MakeDecFloat (Temp As String) As Double
+	
+	Dim As String DataSource, StrTemp
+	
+	DataSource = Trim(UCase(Temp))
+	
+	If InStr(DataSource, "@") Then
+		'Print "Trying to make " + Temp + " into a decimal!"
+	End If
+	
+	If Instr(DataSource, "[BYTE]") <> 0 Then Replace DataSource, "[BYTE]", ""
+	If Instr(DataSource, "[WORD]") <> 0 Then Replace DataSource, "[WORD]", ""
+	If Instr(DataSource, "[INTEGER]") <> 0 Then Replace DataSource, "[INTEGER]", ""
+	If Instr(DataSource, "[LONG]") <> 0 Then Replace DataSource, "[LONG]", ""
+	If Instr(DataSource, "[SINGLE]") <> 0 Then Replace DataSource, "[SINGLE]", ""
+	If Instr(DataSource, "[DOUBLE]") <> 0 Then Replace DataSource, "[DOUBLE]", ""
+	
+	IF DataSource = Str(VAL(DataSource)) THEN
+		Return Val(DataSource)
+	END If
+	
+	StrTemp = GetString(DataSource, 0)
+	IF Len(StrTemp) = 1 Then Return ASC(StrTemp)
+	
+	Return 0
+End Function
 
 SUB Replace (DataVar As String, Find As String, Rep As String)
 	Dim As String VarTemp, FindTemp, NewData
