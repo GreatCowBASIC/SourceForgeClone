@@ -510,11 +510,13 @@ DECLARE FUNCTION IsCalc (Temp As String) As Integer
 Declare FUNCTION IsCalcDivider (Temp As String) As Integer
 DECLARE FUNCTION IsConst (Temp As String) As Integer
 DECLARE FUNCTION IsDivider (Temp As String) As Integer
+Declare Function IsFloatType(InType As String) As Integer
 Declare Function IsIntType(InType As String) As Integer
 DECLARE FUNCTION IsLet(Temp As String) As Integer
 Declare Function IsSysTemp(VarNameIn As String) As Integer
 Declare Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
 DECLARE FUNCTION MakeDec (DataSource As String) As LongInt
+DECLARE FUNCTION MakeDecFloat (DataSource As String) As Double
 DECLARE SUB Replace (DataVar As String, Find As String, Rep As String)
 Declare SUB ReplaceAll (DataVar As String, Find As String, Rep As String)
 Declare Function ReplaceToolVariables(InData As String, FNExtension As String = "", FileNameIn As String = "", Tool As ExternalTool Pointer = 0) As String
@@ -641,7 +643,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-10-23"
+Version = "0.98.<<>> 2017-10-24"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3073,23 +3075,28 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 	'Check if both are constants
 	IF IsConst(V1) AND IsConst(V2) Then
 		If InStr(V1, "@") = 0 AND INSTR(V2, "@") = 0 Then
-			OutVal = 0
-			IF Act = "+" THEN OutVal = MakeDec(V1) + MakeDec(V2)
-			IF Act = "-" THEN OutVal = MakeDec(V1) - MakeDec(V2)
-			If CalcType = "BYTE" Then
-				Do While OutVal < 0: OutVal += 256: Loop
-				Do While OutVal > 255: OutVal -= 256: Loop
-			ElseIf CalcType = "WORD" Then
-				Do While OutVal < 0: OutVal += 65536: Loop
-				Do While OutVal > 65535: OutVal -= 65536: Loop
-			ElseIf CalcType = "INTEGER" Then
-				Do While OutVal < -32768: OutVal += 65536: Loop
-				Do While OutVal > 32767: OutVal -= 65536: Loop
-			ElseIf CalcType = "LONG" Then
-				Do While OutVal < 0: OutVal += 2^32: Loop
-				Do While OutVal >= 2^32: OutVal -= 2^32: Loop
+			If IsIntType(CalcType) Then
+				OutVal = 0
+				IF Act = "+" THEN OutVal = MakeDec(V1) + MakeDec(V2)
+				IF Act = "-" THEN OutVal = MakeDec(V1) - MakeDec(V2)
+				If CalcType = "BYTE" Then
+					Do While OutVal < 0: OutVal += 256: Loop
+					Do While OutVal > 255: OutVal -= 256: Loop
+				ElseIf CalcType = "WORD" Then
+					Do While OutVal < 0: OutVal += 65536: Loop
+					Do While OutVal > 65535: OutVal -= 65536: Loop
+				ElseIf CalcType = "INTEGER" Then
+					Do While OutVal < -32768: OutVal += 65536: Loop
+					Do While OutVal > 32767: OutVal -= 65536: Loop
+				ElseIf CalcType = "LONG" Then
+					Do While OutVal < 0: OutVal += 2^32: Loop
+					Do While OutVal >= 2^32: OutVal -= 2^32: Loop
+				End If
+				AV = Str(OutVal)
+			ElseIf IsFloatType(CalcType) Then
+				IF Act = "+" THEN AV = Str(MakeDecFloat(V1) + MakeDecFloat(V2))
+				IF Act = "-" THEN AV = Str(MakeDecFloat(V1) - MakeDecFloat(V2))
 			End If
-			AV = Str(OutVal)
 			GOTO AddSubAnswer
 		Else
 			'CalcAtAsm(T), CAAC
@@ -3153,6 +3160,38 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 			AV = "0"
 			Goto AddSubAnswer
 		End If
+	End If
+	
+	'Handle floating point addition here
+	If IsFloatType(CalcType) Then
+		
+		'Check for zeroes that mean addition or subtraction can be swapped
+		If IsConst(V2) Then
+			If MakeDecFloat(V2) = 0 Then
+				AV = V1
+				GoTo AddSubAnswer
+			End If
+		ElseIf IsConst(V1) And Act = "+" Then
+			If MakeDecFloat(V1) = 0 Then
+				AV = V2
+				GoTo AddSubAnswer
+			End If
+		End If
+		
+		'Copy V1 and V2 into temporary variables, call appropriate sub
+		AddVar("Sys" + CalcType + "TempA", CalcType, 1, 0, "REAL", Origin, ,-1)
+		AddVar("Sys" + CalcType + "TempB", CalcType, 1, 0, "REAL", Origin, ,-1)
+		AddVar("Sys" + CalcType + "TempX", CalcType, 1, 0, "REAL", Origin, ,-1)
+		RequestSub(Subroutine(SourceSub), "SysAddSub" + CalcType, "")
+		CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V1, "Sys" + CalcType + "TempA", Origin))
+		CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2, "Sys" + CalcType + "TempB", Origin))
+		If Act = "+" Then
+			CurrLine = LinkedListInsert(CurrLine, " call SysAddSub" + CalcType)
+		ElseIf Act = "-" Then
+			CurrLine = LinkedListInsert(CurrLine, " call SysSubSub" + CalcType)
+		End If
+		AV = "Sys" + CalcType + "TempX"
+		GoTo AddSubAnswer
 	End If
 
 	'Swap V1, V2 if mode is add and V1 is const
@@ -3762,9 +3801,15 @@ FUNCTION CompileCalcMult (OutList As CodeSection Pointer, V1 As String, Act As S
 	'Generate asm code for sum
 	'Check if both are constants
 	IF IsConst(V1) AND IsConst(V2) And INSTR(V1, "@") = 0 AND INSTR(V2, "@") = 0 THEN
-		IF Act = "*" THEN AV = Str(MakeDec(V1) * MakeDec(V2))
-		IF Act = "/" THEN AV = Str(INT(MakeDec(V1) / MakeDec(V2)))
-		IF Act = "%" THEN AV = Str(MakeDec(V1) MOD MakeDec(V2))
+		If IsIntType(CalcType) Then
+			IF Act = "*" THEN AV = Str(MakeDec(V1) * MakeDec(V2))
+			IF Act = "/" THEN AV = Str(INT(MakeDec(V1) / MakeDec(V2)))
+			IF Act = "%" THEN AV = Str(MakeDec(V1) MOD MakeDec(V2))
+		ElseIf IsFloatType(CalcType) Then
+			IF Act = "*" THEN AV = Str(MakeDecFloat(V1) * MakeDecFloat(V2))
+			IF Act = "/" THEN AV = Str(MakeDecFloat(V1) / MakeDecFloat(V2))
+			IF Act = "%" THEN AV = Str(MakeDecFloat(V1) MOD MakeDecFloat(V2))
+		End If
 		GOTO MultDivAnswer
 	END IF
 
@@ -3879,6 +3924,7 @@ FUNCTION CompileCalcMult (OutList As CodeSection Pointer, V1 As String, Act As S
 	IF CalcType = "INTEGER" THEN SNT += "INT"
 	If CalcType = "LONG" Then SNT += "32"
 	IF CalcType = "SINGLE" THEN SNT += "SINGLE"
+	IF CalcType = "DOUBLE" THEN SNT += "DOUBLE"
 
 	'Call calculation sub
 	CurrLine = LinkedListInsert(CurrLine, " call " + SNT)
@@ -6373,14 +6419,17 @@ SUB CompileRotate (CompSub As SubType Pointer)
 
 	FoundCount = 0
 	Dim As String InLine, Origin, Temp, VarName, VarType, Direction, RotateReg
-	Dim As String CalcVar
-	Dim As Integer UseC, OldType
+	Dim As String CalcVar, AsmDir, AsmMode
+	Dim As Integer UseC, OldType, FirstShift, LastShift, ShiftDir, CurrByte
 	Dim As LinkedListElement Pointer CurrLine
 
 	CurrLine = CompSub->CodeStart->Next
 	Do While CurrLine <> 0
 		InLine = UCase(CurrLine->Value)
-		IF Left(InLine, 7) = "ROTATE " THEN
+		IF Left(InLine, 7) = "ROTATE " Then
+			
+			'Delete BASIC command, makes it a bit neater below
+			CurrLine = LinkedListDelete(CurrLine)
 
 			'Get origin
 			Origin = ""
@@ -6414,8 +6463,7 @@ SUB CompileRotate (CompSub As SubType Pointer)
 			End If
 			
 			'Check var type
-			IF VarType = "INTEGER" THEN VarType = "WORD" 'Treated identically by this command
-			If VarType = "SINGLE" Or VarType = "DOUBLE" Or VarType = "STRING" Then 'Error
+			If Not IsIntType(VarType) Then 'Error
 				Temp = Message("BadCommandType")
 				Replace Temp, "%command%", "Rotate"
 				Replace Temp, "%type%", VarType
@@ -6430,155 +6478,70 @@ SUB CompileRotate (CompSub As SubType Pointer)
 				Replace Direction, "SIMPLE", ""
 				Direction = TRIM(Direction)
 			End If
-
-			'Delete BASIC command, makes it a bit neater below
-			CurrLine = LinkedListDelete(CurrLine)
-
-			'Put into register
-			If ModeAVR Then
-				If IsRegister(VarName) Then
-					RotateReg = VarName
-					OldType = 0
-				ElseIf IsLowIOReg(VarName) Then
-					CurrLine = LinkedListInsert(CurrLine, "in " + CalcVar + "," + VarName)
-					AddVar CalcVar, VarType, 1, CompSub, "REAL", Origin, , -1
-					RotateReg = CalcVar
-					OldType = 1
-				Else
-					AddVar CalcVar, VarType, 1, CompSub, "REAL", Origin, , -1
-					CurrLine = LinkedListInsert(CurrLine, "lds " + CalcVar + "," + VarName)
-					If VarType = "WORD" Then
-						CurrLine = LinkedListInsert(CurrLine, "lds " + CalcVar + "_H," + VarName + "_H")
-					ElseIf VarType = "LONG" Then
-						CurrLine = LinkedListInsert(CurrLine, "lds " + CalcVar + "_H," + VarName + "_H")
-						CurrLine = LinkedListInsert(CurrLine, "lds " + CalcVar + "_U," + VarName + "_U")
-						CurrLine = LinkedListInsert(CurrLine, "lds " + CalcVar + "_E," + VarName + "_E")
-					End If
-					RotateReg = CalcVar
-					OldType = 2
-				End If
+			
+			'Decide how to shift
+			If Direction = "LEFT" Then
+				FirstShift = 0
+				LastShift = GetTypeSize(VarType) - 1
+				ShiftDir = 1
+				AsmDir = "l"
+			Else
+				FirstShift = GetTypeSize(VarType) - 1
+				LastShift = 0
+				ShiftDir = -1
+				AsmDir = "r"
 			End If
-
-			'Save carry
-			If (ChipFamily <> 16 OR VarType = "WORD" Or VarType = "LONG") And Not UseC Then
-				If ModePIC Then
-					If Direction = "RIGHT" Then CurrLine = LinkedListInsert(CurrLine, " rrf " + VarName + ",W")
-					If Direction = "LEFT" Then
-						Select Case VarType
-							Case "BYTE": CurrLine = LinkedListInsert(CurrLine, " rlf " + VarName + ",W")
-							Case "WORD": CurrLine = LinkedListInsert(CurrLine, " rlf " + VarName + "_H,W")
-							Case "LONG": CurrLine = LinkedListInsert(CurrLine, " rlf " + VarName + "_E,W")
-						End Select
-					End If
-
-				ElseIf ModeAVR Then
-					CurrLine = LinkedListInsert(CurrLine, " clc")
-					If Direction = "RIGHT" Then CurrLine = LinkedListInsert(CurrLine, " sbrc " + RotateReg + ",0")
-					If Direction = "LEFT" Then
-						Select Case VarType
-							Case "BYTE": CurrLine = LinkedListInsert(CurrLine, " sbrc " + RotateReg + ",7")
-							Case "WORD": CurrLine = LinkedListInsert(CurrLine, " sbrc " + RotateReg + "_H,7")
-							Case "LONG": CurrLine = LinkedListInsert(CurrLine, " sbrc " + RotateReg + "_E,7")
-						End Select
-					End If
-					CurrLine = LinkedListInsert(CurrLine, " sec")
-				End If
+			
+			If ChipFamily = 16 Then
+				AsmMode = "cf"
+			Else
+				AsmMode = "f"
 			End If
-
-			'Rotate high byte/s (right only)
-			If Direction = "RIGHT" THEN
-				If VarType = "LONG" Then
-					If ModePIC Then
-						If ChipFamily <> 16 Then
-							CurrLine = LinkedListInsert(CurrLine, " rrf " + VarName + "_E,F")
-							CurrLine = LinkedListInsert(CurrLine, " rrf " + VarName + "_U,F")
-						Else
-							CurrLine = LinkedListInsert(CurrLine, " rrcf " + VarName + "_E,F")
-							CurrLine = LinkedListInsert(CurrLine, " rrcf " + VarName + "_U,F")
-						End If
-					ElseIf ModeAVR Then
-						CurrLine = LinkedListInsert(CurrLine, " ror " + RotateReg + "_E")
-						CurrLine = LinkedListInsert(CurrLine, " ror " + RotateReg + "_U")
-					End If
-				End If
-
-				If VarType = "WORD" Or VarType = "LONG" Then
-					If ModePIC Then
-						If ChipFamily <> 16 THEN CurrLine = LinkedListInsert(CurrLine, " rrf " + VarName + "_H,F")
-						If ChipFamily = 16 THEN CurrLine = LinkedListInsert(CurrLine, " rrcf " + VarName + "_H,F")
-					ElseIf ModeAVR Then
-						CurrLine = LinkedListInsert(CurrLine, " ror " + RotateReg + "_H")
-					End If
-				End If
-			END IF
-
-			'Rotate low byte
-			If ModePIC Then
-				IF ChipFamily <> 16 THEN
-					Temp = " rrf "
-					IF Direction = "LEFT" THEN Temp = " rlf "
-				Else
-					If UseC OR VarType = "WORD" Or VarType = "LONG" Then
-						Temp = " rrcf ": IF Direction = "LEFT" THEN Temp = " rlcf "
-					Else
-						Temp = " rrncf ": IF Direction = "LEFT" THEN Temp = " rlncf "
-					End If
-				END IF
-				CurrLine = LinkedListInsert(CurrLine, Temp + VarName + ",F")
+			
+			'Add variable
+			If VarType = "BYTE" Then
 				AddVar VarName, "BYTE", 1, CompSub, "REAL", Origin
-			ElseIf ModeAVR Then
-				Temp = " ror "
-				IF Direction = "LEFT" THEN Temp = " rol "
-				CurrLine = LinkedListInsert(CurrLine, Temp + RotateReg)
 			End If
-
-			'Rotate high byte/s (left only)
-			If Direction = "LEFT" THEN
-				If VarType = "WORD" Or VarType = "LONG" Then
-					If ModePIC Then
-						IF ChipFamily <> 16 THEN CurrLine = LinkedListInsert(CurrLine, " rlf " + VarName + "_H,F")
-						IF ChipFamily = 16 THEN CurrLine = LinkedListInsert(CurrLine, " rlcf " + VarName + "_H,F")
-					ElseIf ModeAVR Then
-						CurrLine = LinkedListInsert(CurrLine, " rol " + RotateReg + "_H")
-					End If
+			
+			'Pre-set C bit?
+			If (Not UseC) And Not (ChipFamily = 16 And VarType = "BYTE") Then
+				RotateReg = GetByte(VarName, LastShift)
+				If ModeAVR And Not IsRegister(RotateReg) Then
+					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(RotateReg, "SysValueCopy", Origin))
+					RotateReg = "SysValueCopy"
 				End If
-
-				If VarType = "LONG" Then
+				If ModePIC Then
+					CurrLine = LinkedListInsert(CurrLine, " r" + AsmDir + AsmMode + " " + RotateReg + ",W")
+				ElseIf ModeAVR Then
+					CurrLine = LinkedListInsert(CurrLine, " ro" + AsmDir + " " + RotateReg)
+				End If
+			End If
+			
+			'Do shift
+			For CurrByte = FirstShift To LastShift Step ShiftDir
+				RotateReg = GetByte(VarName, CurrByte)
+				If ModeAVR And Not IsRegister(RotateReg) Then
+					CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(RotateReg, "SysValueCopy", Origin))
+					RotateReg = "SysValueCopy"
+				End If
+				
+				'Do without carry? (PIC18F and byte only)
+				If ChipFamily = 16 And VarType = "BYTE" And Not UseC Then
+					CurrLine = LinkedListInsert(CurrLine, " r" + AsmDir + "ncf " + RotateReg + ",F")
+					
+				'Do with carry	
+				Else
 					If ModePIC Then
-						IF ChipFamily <> 16 Then
-							CurrLine = LinkedListInsert(CurrLine, " rlf " + VarName + "_U,F")
-							CurrLine = LinkedListInsert(CurrLine, " rlf " + VarName + "_E,F")
-						Else
-							CurrLine = LinkedListInsert(CurrLine, " rlcf " + VarName + "_U,F")
-							CurrLine = LinkedListInsert(CurrLine, " rlcf " + VarName + "_E,F")
+						CurrLine = LinkedListInsert(CurrLine, " r" + AsmDir + AsmMode + " " + RotateReg + ",F")
+					ElseIf ModeAVR Then
+						CurrLine = LinkedListInsert(CurrLine, " ro" + AsmDir + " " + RotateReg)
+						If RotateReg <> GetByte(VarName, CurrByte) Then
+							CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(RotateReg, "[byte]" + GetByte(VarName, CurrByte), Origin))
 						End If
-					ElseIf ModeAVR Then
-						CurrLine = LinkedListInsert(CurrLine, " rol " + RotateReg + "_U")
-						CurrLine = LinkedListInsert(CurrLine, " rol " + RotateReg + "_E")
 					End If
 				End If
-			END IF
-
-			'Put variable back in original location (AVR only)
-			If ModeAVR Then
-				'IO register
-				If OldType = 1 Then
-					CurrLine = LinkedListInsert(CurrLine, " out " + VarName + "," + CalcVar)
-
-				'SRAM variable
-				ElseIf OldType = 2 Then
-					CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + "," + CalcVar)
-					IF VarType = "WORD" Or VarType = "LONG" Then
-						CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + "_H," + CalcVar + "_H")
-					End If
-					If VarType = "LONG" Then
-						CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + "_U," + CalcVar + "_U")
-						CurrLine = LinkedListInsert(CurrLine, " sts " + VarName + "_E," + CalcVar + "_E")
-					End If
-					AddVar VarName, "BYTE", 1, CompSub, "REAL", Origin
-				End If
-			End If
-
+				
+			Next
 			FoundCount = FoundCount + 1
 		END IF
 
@@ -8788,7 +8751,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
 		'single > word
 		Case "SINGLE", "DOUBLE":
-			DType = "LONG"
+			If DType = "WORD" Then DType = "LONG"
 			AddVar "Sys" + SType + "Temp", SType, 1, 0, "REAL", "", , -1
 			AddVar "Sys" + DType + "Temp", DType, 1, 0, "REAL", "", , -1
 			RequestSub(CurrentSub, "SysConv" + SType + "To" + DType, "")
@@ -10475,7 +10438,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 
 	'Show error if used on invalid type
 	Select Case VarType
-	Case "BYTE", "WORD", "INTEGER", "LONG":
+		Case "BYTE", "WORD", "INTEGER", "LONG", "SINGLE", "DOUBLE":
 		'Do nothing
 	Case Else
 		'Show error
@@ -10487,11 +10450,11 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 	End Select
 
 	'If bit > 7, operate on high byte
-	IF Val(VarBit) > 7 And (VarType = "WORD" Or VarType = "INTEGER") THEN
+	IF Val(VarBit) > 7 And GetTypeSize(VarType) >= 2 THEN
 		VarBit = Str(VAL(VarBit) - 8)
 		VarName = VarName + "_H"
 
-	ElseIf Val(VarBit) > 7 And VarType = "LONG" Then
+	ElseIf Val(VarBit) > 7 And GetTypeSize(VarType) >= 4 Then
 		If Val(VarBit) <= 15 Then
 			VarBit = Str(VAL(VarBit) - 8)
 			VarName = VarName + "_H"
