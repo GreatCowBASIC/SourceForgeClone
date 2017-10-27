@@ -643,7 +643,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-10-24"
+Version = "0.98.<<>> 2017-10-27"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2736,9 +2736,11 @@ FUNCTION CastOrder (InType As String) As Integer
 		Case "WORD": Return 2
 		Case "INTEGER": Return 3
 		Case "LONG": Return 4
-		Case "SINGLE": Return 5
-		Case "DOUBLE": Return 6
-		Case "STRING": Return 7
+		Case "ULONGINT": Return 5
+		Case "LONGINT": Return 5
+		Case "SINGLE": Return 6
+		Case "DOUBLE": Return 7
+		Case "STRING": Return 8
 		Case Else: Return -1
 	End Select
 END FUNCTION
@@ -3182,12 +3184,13 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 		AddVar("Sys" + CalcType + "TempA", CalcType, 1, 0, "REAL", Origin, ,-1)
 		AddVar("Sys" + CalcType + "TempB", CalcType, 1, 0, "REAL", Origin, ,-1)
 		AddVar("Sys" + CalcType + "TempX", CalcType, 1, 0, "REAL", Origin, ,-1)
-		RequestSub(Subroutine(SourceSub), "SysAddSub" + CalcType, "")
 		CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V1, "Sys" + CalcType + "TempA", Origin))
 		CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2, "Sys" + CalcType + "TempB", Origin))
 		If Act = "+" Then
+			RequestSub(Subroutine(SourceSub), "SysAddSub" + CalcType, "")
 			CurrLine = LinkedListInsert(CurrLine, " call SysAddSub" + CalcType)
 		ElseIf Act = "-" Then
+			RequestSub(Subroutine(SourceSub), "SysSubSub" + CalcType, "")
 			CurrLine = LinkedListInsert(CurrLine, " call SysSubSub" + CalcType)
 		End If
 		AV = "Sys" + CalcType + "TempX"
@@ -4027,7 +4030,7 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 		If UCase(Left(V2, 11)) = "SYSCALCTEMP" Then Ovr = ""
 
 		NewCode = LinkedListCreate
-		R2 = PutInRegister(NewCode, Ovr + V2, "INTEGER", Origin)
+		R2 = PutInRegister(NewCode, Ovr + V2, CalcType, Origin)
 		AddVar V2, "BYTE", 1, Subroutine(SourceSub), "REAL", Origin
 		CurrLine = LinkedListInsertList(CurrLine, NewCode)
 
@@ -4037,8 +4040,10 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 		Next
 
 		CurrLine = LinkedListInsert(CurrLine, " inc " + GetByte(R2, 0))
-		CurrLine = LinkedListInsert(CurrLine, " brne PC + 2")
-		CurrLine = LinkedListInsert(CurrLine, " inc " + GetByte(R2, 1))
+		For CurrVarByte = 1 To GetTypeSize(CalcType) - 1
+			CurrLine = LinkedListInsert(CurrLine, " brne PC + 2")
+			CurrLine = LinkedListInsert(CurrLine, " inc " + GetByte(R2, CurrVarByte))
+		Next
 
 		'Copy result to output variable
 		NewCode = CompileVarSet(R2, AV, Origin)
@@ -4118,11 +4123,13 @@ Function CompileCalcUnary(OutList As CodeSection Pointer, Act As String, V2 As S
 
 		Next
 
-		If Act = "-" And CalcType = "INTEGER" Then
+		If Act = "-" And CalcType = "INTEGER" Or CalcType = "LONGINT" Then
 			'(PIC only, can't reach here on AVR)
 			CurrLine = LinkedListInsert(CurrLine, " incf " + GetByte(AV, 0) + ",F")
-			CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
-			CurrLine = LinkedListInsert(CurrLine, " incf " + GetByte(AV, 1) + ",F")
+			For CurrVarByte = 1 To GetTypeSize(CalcType) - 1
+				CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
+				CurrLine = LinkedListInsert(CurrLine, " incf " + GetByte(AV, CurrVarByte) + ",F")
+			Next
 		End If
 
 	End If
@@ -7493,7 +7500,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 	Dim As SubCallType NewSubCall
 
 	Dim TempVarCount(10) As Integer
-
+	
 	'Find functions
 	CurrLine = CompSub->CodeStart->Next
 	Origin = ""
@@ -7762,11 +7769,13 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 					RecordSubCall(CompSub, NewSubCall.Called)
 				End If
 
-				If UseTempVar Then
-					CurrLine = LinkedListInsert(CurrLine, TempVarName + "=" + ReturnVar)
-					LinkedListInsert(CurrLine, TempLine)
-				Else
-					LinkedListInsert(CurrLine, TempLine)
+				If TempLine <> "" Then
+					If UseTempVar Then
+						CurrLine = LinkedListInsert(CurrLine, TempVarName + "=" + ReturnVar)
+						LinkedListInsert(CurrLine, TempLine)
+					Else
+						LinkedListInsert(CurrLine, TempLine)
+					End If
 				End If
 
 				'Need to check line again, in case of nested functions
@@ -7803,7 +7812,6 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		End If
 		CurrLine = CurrLine->Next
 	Loop
-
 End Sub
 
 Sub CompileTables
@@ -9792,21 +9800,13 @@ Function FixBit (InBit As String, Origin As String) As String
 	Replace Temp, "%var%", VarName
 	Replace Temp, "%type%", VarType
 	Replace Temp, "%bit%", VarBit
-
-	Select Case VarType
-		Case "BYTE":
-			LogError Temp, Origin
-		Case "WORD", "INTEGER":
-			If B < 16 Then Return VarName + "_H" + DivChar + Trim(Str(B - 8))
-			LogError Temp, Origin
-		Case "LONG":
-			If B < 16 Then Return VarName + "_H" + DivChar + Trim(Str(B - 8))
-			If B < 24 Then Return VarName + "_U" + DivChar + Trim(Str(B - 16))
-			If B < 32 Then Return VarName + "_E" + DivChar + Trim(Str(B - 24))
-			LogError Temp, Origin
-		Case Else:
-			'Error, but should be found elsewhere
-	End Select
+	
+	'Is bit number valid?
+	If B < 8 * GetTypeSize(VarType) Then
+		Return GetByte(VarName, B \ 8) + DivChar + Trim(Str(B Mod 8))
+	Else
+		LogError Temp, Origin
+	End If
 
 	'Return unchanged
 	Return InBit
@@ -10438,7 +10438,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 
 	'Show error if used on invalid type
 	Select Case VarType
-		Case "BYTE", "WORD", "INTEGER", "LONG", "SINGLE", "DOUBLE":
+		Case "BYTE", "WORD", "INTEGER", "LONG", "ULONGINT", "LONGINT", "SINGLE", "DOUBLE":
 		'Do nothing
 	Case Else
 		'Show error
@@ -10450,23 +10450,11 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 	End Select
 
 	'If bit > 7, operate on high byte
-	IF Val(VarBit) > 7 And GetTypeSize(VarType) >= 2 THEN
-		VarBit = Str(VAL(VarBit) - 8)
-		VarName = VarName + "_H"
-
-	ElseIf Val(VarBit) > 7 And GetTypeSize(VarType) >= 4 Then
-		If Val(VarBit) <= 15 Then
-			VarBit = Str(VAL(VarBit) - 8)
-			VarName = VarName + "_H"
-		ElseIf Val(VarBit) <= 23 Then
-			VarBit = Str(VAL(VarBit) - 16)
-			VarName = VarName + "_U"
-		ElseIf Val(VarBit) <= 31 Then
-			VarBit = Str(VAL(VarBit) - 24)
-			VarName = VarName + "_E"
-		End If
+	If Val(VarBit) > 7 And Val(VarBit) < 8 * GetTypeSize(VarType) Then
+		VarName = GetByte(VarName, Val(VarBit) \ 8)
+		VarBit = Str(Val(VarBit) Mod 8)
 	End If
-
+	
 	'If bit still > 7, bit is wrong
 	If Val(VarBit) > 7 Then
 		Temp = Message("BadVarBit")

@@ -1857,6 +1857,201 @@ Sub SysConvDoubleToSingle
 End Sub
 
 '********************************************************************************
+'Addition subroutines
+
+Sub SysAddSubSingle
+	'Aliases to do actual addition
+	Dim SysCalcSingMantA As Long Alias SysSingleTempA_E, SysSingleTempA_U, SysSingleTempA_H, SysSingleTempA
+	Dim SysCalcSingMantB As Long Alias SysSingleTempB_E, SysSingleTempB_U, SysSingleTempB_H, SysSingleTempB
+	
+	'Get signs (Put in X_H.7 and 6)
+	SysSingleTempX_H.7 = SysSingleTempA_E.7
+	SysSingleTempX_H.6 = SysSingleTempB_E.7
+	
+	'Get exponents (Put in X_E and X_U)
+	SysSingleTempX_E = SysSingleTempA_E
+	C = SysSingleTempA_U.7
+	Rotate SysSingleTempX_E Left
+	SysSingleTempX_U = SysSingleTempB_E
+	C = SysSingleTempB_U.7
+	Rotate SysSingleTempX_U Left
+	
+	'Prepare mantissa aliases
+	SysCalcSingMantA_E = 0
+	SysCalcSingMantA_U.7 = 1
+	SysCalcSingMantB_E = 0
+	SysCalcSingMantB_U.7 = 1
+	
+	'Ensure same exponent used for both aliases
+	Do While SysSingleTempX_E > SysSingleTempX_U
+		'While A has higher exponent, make B's bigger by shifting it right
+		Set C Off
+		Rotate SysCalcSingMantB Right
+		SysSingleTempX_U += 1
+	Loop
+	Do While SysSingleTempX_E < SysSingleTempX_U
+		'While B has higher exponent, make A's bigger by shifting it right
+		Set C Off
+		Rotate SysCalcSingMantA Right
+		SysSingleTempX_E += 1
+	Loop
+	'Negate
+	If SysSingleTempX_H.7 Then
+		SysCalcSingMantA = Not SysCalcSingMantA
+		SysCalcSingMantA += 1
+	End If
+	If SysSingleTempX_H.6 Then
+		SysCalcSingMantB = Not SysCalcSingMantB
+		SysCalcSingMantB += 1
+	End If
+	
+	'Add
+	SysCalcSingMantA = SysCalcSingMantA + SysCalcSingMantB
+	
+	'Negative? (store in B.31)
+	SysCalcSingMantB.31 = 0
+	If SysCalcSingMantA.31 Then
+		'Must have positive mantissa
+		SysCalcSingMantA = Not SysCalcSingMantA
+		SysCalcSingMantA += 1
+		SysCalcSingMantB.31 = 1
+	End If
+	
+	'Normalise result (shifted 8 bits left)
+	SysSingleTempX_E += 8
+	Do While SysCalcSingMantA.31 <> 1
+		Set C Off
+		Rotate SysCalcSingMantA Left
+		SysSingleTempX_E -= 1
+	Loop
+	
+	'Set result
+	SysSingleTempX_U = SysSingleTempA_E
+	SysSingleTempX_H = SysSingleTempA_U
+	[byte]SysSingleTempX = SysSingleTempA_H
+	C = SysCalcSingMantB.31
+	Rotate SysSingleTempX_E Right
+	SysSingleTempX_U.7 = C
+	
+End Sub
+
+Sub SysAddSubDouble
+	'Aliases to do actual addition
+	Dim SysCalcDoubMantA As LongInt Alias SysDoubleTempA_D, SysDoubleTempA_C, SysDoubleTempA_B, SysDoubleTempA_A, SysDoubleTempA_E, SysDoubleTempA_U, SysDoubleTempA_H, SysDoubleTempA
+	Dim SysCalcDoubMantB As LongInt Alias SysDoubleTempB_D, SysDoubleTempB_C, SysDoubleTempB_B, SysDoubleTempB_A, SysDoubleTempB_E, SysDoubleTempB_U, SysDoubleTempB_H, SysDoubleTempB
+	
+	Dim SysCalcDoubExpA As Word Alias SysDoubleTempX_D, SysDoubleTempX_C
+	Dim SysCalcDoubExpB As Word Alias SysDoubleTempX_B, SysDoubleTempX_A
+	
+	'Get signs (Put in X_H.7 and 6)
+	SysDoubleTempX_H.7 = SysDoubleTempA_D.7
+	SysDoubleTempX_H.6 = SysDoubleTempB_D.7
+	
+	'Get exponents (Put in X_DC and X_BA)
+	SysCalcDoubExpA_H = SysDoubleTempA_D
+	[byte]SysCalcDoubExpA = SysDoubleTempA_C
+	SysCalcDoubExpB_H = SysDoubleTempB_D
+	[byte]SysCalcDoubExpB = SysDoubleTempB_C
+	Repeat 4
+		Set C Off
+		Rotate SysCalcDoubExpA Right
+	End Repeat
+	SysCalcDoubExpA.11 = 0
+	Repeat 4
+		Set C Off
+		Rotate SysCalcDoubExpB Right
+	End Repeat
+	SysCalcDoubExpB.11 = 0
+	
+	'Prepare mantissa aliases
+	SysCalcDoubMantA_D = 0
+	SysCalcDoubMantA_C = SysCalcDoubMantA_C And 15
+	SysCalcDoubMantA_C.4 = 1
+	SysCalcDoubMantB_D = 0
+	SysCalcDoubMantB_C = SysCalcDoubMantB_C And 15
+	SysCalcDoubMantB_C.4 = 1
+	
+	'Ensure same exponent used for both aliases
+	Do While SysCalcDoubExpA > SysCalcDoubExpB
+		'While A has higher exponent, make B's bigger by shifting it right
+		Set C Off
+		Rotate SysCalcDoubMantB Right
+		SysCalcDoubExpB += 1
+	Loop
+	Do While SysCalcDoubExpA < SysCalcDoubExpB
+		'While B has higher exponent, make A's bigger by shifting it right
+		Set C Off
+		Rotate SysCalcDoubMantA Right
+		SysCalcDoubExpA += 1
+	Loop
+	'Negate
+	If SysDoubleTempX_H.7 Then
+		SysCalcDoubMantA = Not SysCalcDoubMantA
+		SysCalcDoubMantA += 1
+	End If
+	If SysDoubleTempX_H.6 Then
+		SysCalcDoubMantB = Not SysCalcDoubMantB
+		SysCalcDoubMantB += 1
+	End If
+	
+	'Add
+	SysCalcDoubMantA = SysCalcDoubMantA + SysCalcDoubMantB
+	
+	'Negative? (store in B.31)
+	SysCalcDoubMantB.63 = 0
+	If SysCalcDoubMantA.63 Then
+		'Must have positive mantissa
+		SysCalcDoubMantA = Not SysCalcDoubMantA
+		SysCalcDoubMantA += 1
+		SysCalcDoubMantB.63 = 1
+	End If
+	
+	'Normalise result (shifted 8 bits left)
+	SysDoubleTempX_E += 8
+	Do While SysCalcDoubMantA.60 <> 1
+		Set C Off
+		Rotate SysCalcDoubMantA Left
+		SysDoubleTempX_E -= 1
+	Loop
+	
+	'Set result
+	Repeat 4
+		Set C Off
+		Rotate SysCalcDoubExpA Left
+	End Repeat
+	SysDoubleTempX_D.7 = SysCalcDoubMantB.63
+	SysDoubleTempX_C = SysDoubleTempX_C Or SysCalcDoubMantA_D
+	SysDoubleTempX_B = SysCalcDoubMantA_C
+	SysDoubleTempX_A = SysCalcDoubMantA_B
+	SysDoubleTempX_E = SysCalcDoubMantA_A
+	SysDoubleTempX_U = SysCalcDoubMantA_E
+	SysDoubleTempX_H = SysCalcDoubMantA_U
+	[byte]SysDoubleTempX = SysCalcDoubMantA_H
+End Sub
+
+Sub SysSubSubSingle
+	'Negate B, call addition sub
+	If SysSingleTempB_E.7 Then
+		SysSingleTempB_E.7 = 0
+	Else
+		SysSingleTempB_E.7 = 1
+	End If
+	
+	SysAddSubSingle
+End Sub
+
+Sub SysSubSubDouble
+	'Negate B, call addition sub
+	If SysDoubleTempB_D.7 Then
+		SysDoubleTempB_D.7 = 0
+	Else
+		SysDoubleTempB_D.7 = 1
+	End If
+	
+	SysAddSubDouble
+End Sub
+
+'********************************************************************************
 'Multiply subroutines
 
 '8 bit
