@@ -1519,3 +1519,4 @@ Function IsForVariant(FoundCmd As AsmCommand Pointer) As Integer
 	Next
 	Return 0
 End Function
+

@@ -218,15 +218,12 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	END IF
 	
 	'Check Type
-	T = -1
-	IF VarType = "BIT" Then T = 0
-	IF VarType = "BYTE" Then T = 0
-	IF VarType = "WORD" Then T = 0
-	IF VarType = "INTEGER" Then T = 0
-	If VarType = "LONG" Then T = 0
-	IF VarType = "SINGLE" Then T = 0
-	If VarType = "DOUBLE" Then T = 0
-	IF VarType = "STRING" Then T = 0
+	Select Case VarType
+		Case "BIT", "BYTE", "WORD", "INTEGER", "LONG", "ULONGINT", "LONGINT": T = 0
+		Case "SINGLE", "DOUBLE", "STRING": T = 0
+		Case Else: T = -1
+	End Select
+	
 	IF T THEN
 		Temp = Message("BadVarType")
 		Replace Temp, "%type%", VarType

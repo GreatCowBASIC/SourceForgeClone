@@ -710,12 +710,8 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 		OutVal = ValLng(Temp)
 	END IF
 	
-	IF BS = 0 THEN GetByte = Str(OutVal AND 255)
-	IF BS = 1 THEN GetByte = Str((OutVal And 65280) / 256)
-	If BS = 2 Then GetByte = Str((OutVal AND &H00FF0000) / 65536)
-	If BS = 3 Then GetByte = Str((OutVal AND &HFF000000) / 16777216)
-	
-END FUNCTION
+	GetByte = Str(OutVal Shr (8 * BS) And 255)
+End FUNCTION
 
 Function GetOriginString(OriginIn As OriginType Pointer) As String
 	If OriginIn = 0 Then Return ""
@@ -837,7 +833,7 @@ End Function
 
 Function GetTypeLetter(InType As String) As String
 	Select Case UCase(InType)
-		Case "BIT", "BYTE", "WORD", "INTEGER", "LONG", "SINGLE", "DOUBLE", "STRING": Return UCase(InType) + ":"
+		Case "BIT", "BYTE", "WORD", "INTEGER", "LONG", "ULONGINT", "LONGINT", "SINGLE", "DOUBLE", "STRING": Return UCase(InType) + ":"
 		Case Else: Return "*:"
 	End Select
 	
@@ -858,6 +854,9 @@ Function GetTypeSize(InType As String) As Integer
 		Case "SINGLE": Return 4
 		'Double variables take 8 bytes
 		Case "DOUBLE": Return 8
+		
+		'Long Int variables take 8 bytes
+		Case "ULONGINT", "LONGINT": Return 8
 		
 		'String variables have a different default size depending on available RAM
 		Case "STRING":
@@ -978,7 +977,7 @@ Function IsIntType(InType As String) As Integer
 	ThisType = LCase(InType)
 	
 	Select Case ThisType
-		Case "const", "byte", "word", "integer", "long": Return -1
+		Case "const", "byte", "word", "integer", "long", "ulongint", "longint": Return -1
 		Case Else: Return 0
 	End Select
 	
@@ -1042,7 +1041,10 @@ Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
 	'Check if a value is allowed for the given data type
 	Dim ValType As String
 	ValType = LCase(TypeIn)
-	Dim As LongInt MinVal, MaxVal
+	Dim As Double MinVal, MaxVal
+	
+	'Assume float types can handle pretty much anything
+	If IsFloatType(TypeIn) Then Return -1
 	
 	'Find allowed range based on data type
 	Select Case ValType
@@ -1061,6 +1063,12 @@ Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
 		Case "long"
 			MinVal = 0
 			MaxVal = 2 ^ 32 - 1
+		Case "ulongint":
+			MinVal = 0
+			MaxVal = 2 ^ 64 - 1
+		Case "longint":
+			MinVal = - (2 ^ 63)
+			MaxVal = 2 ^ 63 - 1
 		Case Else
 			'Unknown type, assume not compatible
 			Return 0
