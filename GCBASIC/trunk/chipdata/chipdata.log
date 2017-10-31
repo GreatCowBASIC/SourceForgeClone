@@ -176,7 +176,6 @@ Config word for IDLOC3 is unclear
 16C73 (14) 92/973
 16HV785 (14) 93/973
 18F6525 (16) 94/973
-Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 18LF4510 (16) 95/973
 18F66J10 (16) 96/973
 Bad polarity: shared
@@ -383,6 +382,10 @@ Unrecognised interrupt source:            OCIE
 Unrecognised interrupt source:            UVIE
 Chip data file is suspect
 16CR926 (14) 198/973
+(A)Old_and_Legacy             EQU  H'0000'
+(A)Old_and_Legacy             EQU  H'0000'
+(A)Old_and_Legacy             EQU  H'0000'
+(A)Old_and_Legacy             EQU  H'0000'
 Ghost chip, never manufactured
 Chip data file is suspect
 16CR63 (14) 199/973
@@ -432,7 +435,6 @@ Chip data file is suspect
 16F19196 (15) 219/973
 Missing data in chipdata.csv
 Could not build memory map
-Warning: W103: unusual int osc speed:8 (No OSCCON, Has OSCCON2)
 Adding CHS bits to ADCON0
 Chip data file is suspect
 16F1829LIN (15) 220/973
@@ -458,7 +460,6 @@ Added missing SOSCSEL default (set DIG)
 16C65 (14) 232/973
 18LF2539 (16) 233/973
 18F6680 (16) 234/973
-Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 16LF1938 (15) 235/973
 18F47K40 (16) 236/973
 16LF19155 (15) 237/973
@@ -575,7 +576,6 @@ Bad polarity: shared
 18LF24K22 (16) 288/973
 16C55 (12) 289/973
 18LF6525 (16) 290/973
-Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 18LF6620 (16) 291/973
 Config word for LP_OSC is unclear
 Config word for XT_OSC is unclear
@@ -834,6 +834,10 @@ Chip data file is suspect
 18F4410 (16) 412/973
 12CR509A (12) 413/973
 12F520 (12) 414/973
+(A)Product_Not_Released_Legacy             EQU  H'0000'
+(A)Product_Not_Released_Legacy             EQU  H'0000'
+(A)Product_Not_Released_Legacy             EQU  H'0000'
+(A)Product_Not_Released_Legacy             EQU  H'0000'
 Ghost chip, never manufactured
 Chip data file is suspect
 16CR57C (12) 415/973
@@ -874,7 +878,6 @@ Adding CHS bits to ADCON0
 18F14K22 (16) 432/973
 Unrecognised interrupt source:            PIE
 18LF8680 (16) 433/973
-Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 16C620 (14) 434/973
 16F1508 (15) 435/973
 Adding ADCS bits to ADCON1
@@ -930,6 +933,10 @@ Config word for CP1_OFF is unclear
 Config word for CP2_ON is unclear
 Config word for CP2_OFF is unclear
 16F19197 (15) 448/973
+(A)Old_and_Legacy             EQU  H'0000'
+(A)Old_and_Legacy             EQU  H'0000'
+(A)Old_and_Legacy             EQU  H'0000'
+(A)Old_and_Legacy             EQU  H'0000'
 Could not build memory map
 Adding CHS bits to ADCON0
 Chip data file is suspect
@@ -988,6 +995,7 @@ Config word for IDLOC1 is unclear
 Adding CHS bits to ADCON0
 18LF6393 (16) 478/973
 18LF24K42 (16) 479/973
+Adding CHS bits to ADCON0
 16F1786 (15) 480/973
 18F63J11 (16) 481/973
 16F1455 (15) 482/973
@@ -1222,7 +1230,6 @@ Config word for IDLOC2 is unclear
 Config word for IDLOC3 is unclear
 Config word for DEVID1 is unclear
 18F8680 (16) 607/973
-Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 Bad polarity: shared
 16C774 (14) 608/973
 18LF2515 (16) 609/973
@@ -1735,7 +1742,6 @@ MCP25055 (14) 849/973
 Missing data in chipdata.csv
 Chip data file is suspect
 18LF6680 (16) 850/973
-Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 18F26K22 (16) 851/973
 18F83J90 (16) 852/973
 16F18875 (15) 853/973
@@ -1819,6 +1825,7 @@ Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 MCV282B (14) 895/973
 Missing data in chipdata.csv
 Could not build memory map
+Warning: W102: unusual int osc speed:32 (Has OSCCON, No SPLLEN)
 Chip data file is suspect
 16F737 (14) 896/973
 16LF871 (14) 897/973

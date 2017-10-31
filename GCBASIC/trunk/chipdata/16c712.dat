@@ -1,7 +1,8 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C712
-'Generated 2/9/2017
-'Format last revised: 14/07/2017
+'Generated 26/9/2017
+'Main Format last revised:   14/07/2017
+'Header Format last revised: 25/09/2017
 
 [ChipData]
 Prog=1024

@@ -1,7 +1,8 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F25K80
-'Generated 2/9/2017
-'Format last revised: 14/07/2017
+'Generated 26/9/2017
+'Main Format last revised:   14/07/2017
+'Header Format last revised: 25/09/2017
 
 [ChipData]
 Prog=16384
@@ -10,11 +11,12 @@ RAM=3648
 I/O=24
 ADC=8
 MaxMHz=64
-IntOsc=16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+IntOsc=64, 32, 16, 8, 4, 2, 1, 0.5, 0.25
 Pins=28
 Family=16
 PSP=0
 MaxAddress=4095
+IntOSCCONFormat=1
 
 [Interrupts]
 ADCReady:ADIE,ADIF
