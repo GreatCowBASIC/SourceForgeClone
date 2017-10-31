@@ -1,7 +1,8 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 10LF322
-'Generated 2/9/2017
-'Format last revised: 14/07/2017
+'Generated 26/9/2017
+'Main Format last revised:   14/07/2017
+'Header Format last revised: 25/09/2017
 
 [ChipData]
 Prog=512
@@ -16,6 +17,7 @@ Family=14
 ConfigWords=1
 PSP=0
 MaxAddress=127
+IntOSCCONFormat=1
 
 [Interrupts]
 ADCReady:ADIE,ADIF

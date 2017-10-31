@@ -1,12 +1,13 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 10LF320
-'Generated 2/9/2017
-'Format last revised: 14/07/2017
+'Generated 26/9/2017
+'Main Format last revised:   14/07/2017
+'Header Format last revised: 25/09/2017
 
 [ChipData]
 Prog=256
 EEPROM=0
-RAM=32
+RAM=64
 I/O=4
 ADC=3
 MaxMHz=16
@@ -16,6 +17,7 @@ Family=14
 ConfigWords=1
 PSP=0
 MaxAddress=127
+IntOSCCONFormat=1
 
 [Interrupts]
 ADCReady:ADIE,ADIF
@@ -437,10 +439,10 @@ SBOREN,BORCON,7
 _BOREN_SBODEN,BORCON,16379
 
 [FreeRAM]
-60:7F
+20:5F
 
 [NoBankRAM]
-70:7F
+20:5F
 
 [Pins-DIP]
 5,RA0(IO)
