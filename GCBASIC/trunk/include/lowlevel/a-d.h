@@ -1080,18 +1080,35 @@ macro LLReadAD (ADLeftAdjust)
         #ENDIF
 
        'Result formatting
-        if ADLeftadjust = 0 then
-           Set ADCON0.2 ON     '10-bit
+        if ADLeftadjust = 0 then  '10-bit
+           ' Set ADCON0.2 ON
+
+           #ifdef bit(ADFM)
+              Set ADFM ON
+           #endif
+
+           #ifdef bit(ADFM0)
+              Set ADFM0 ON
+           #endif
         Else
-           Set ADCON.2 off     '8-bit
+           ' Set ADCON.2 off     '8-bit
+
+           #ifdef bit(ADFM)
+              Set ADFM OFF
+           #endif
+
+           #ifdef bit(ADFM0)
+              Set ADFM0 OFF
+           #endif
+
         End if
 
         #IFDEF DebugADC_H
-            NOP 'ADCPH = ADReadPort  'Configure AD read Channel. @DebugADC_H
+            NOP 'ADPCH = ADReadPort  'Configure AD read Channel. @DebugADC_H
         #ENDIF
 
        'Select Channel
-        ADCPH = ADReadPort  'Configure AD read Channel
+        ADPCH = ADReadPort  'Configure AD read Channel
 
      #ENDIF   'End of 16F188x Section
 
@@ -1317,6 +1334,8 @@ function ReadAD( in ADReadPort) as byte
 
 
   #IFDEF PIC
+      #samebit ADFM, ADFRM0, ADFM0
+      SET ADFM OFF
 
       'for 16F1885x and possibly future others
       #IFDEF VAR(ADPCH)

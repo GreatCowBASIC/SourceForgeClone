@@ -1,21 +1,21 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
 '    Copyright (C) 2006 - 2017 Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
-
-
+'
+'
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation; either
 '    version 2.1 of the License, or (at your option) any later version.
-
+'
 '    This library is distributed in the hope that it will be useful,
 '    but WITHOUT ANY WARRANTY; without even the implied warranty of
 '    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 '    Lesser General Public License for more details.
-
+'
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+'
 '********************************************************************************
 'IMPORTANT:
 'THIS FILE IS ESSENTIAL FOR SOME OF THE COMMANDS IN GCBASIC. DO NOT ALTER THIS FILE
@@ -62,6 +62,10 @@
 '''           PWM1 and PWM2 support is disabled by default
 ''' 28/9/2017 Revised to support CCP/PWM for CCP/PWM 1..5
 '''           Also, supports CCP_PWM_1..5_On and CCP_PWM_1..5_Off to save even more memory.
+''' 2/10/2017 Revised HPWM CCP method to support chips with T2CKPS2 as these are a different truth table.
+'''           Optional DisableCCPFixedModePWM will disable the Fixed Mode CCP/PWM
+'''           Added Fixed Mode PWM for 8bit and 10bit PWM
+'''30/10/2017 Revised to show overflow issue
 
   'define the defaults
   #define AVRTC0
@@ -69,19 +73,9 @@
   #define PWM_Freq 38      'Frequency of PWM in KHz
   #define PWM_Duty 50      'Duty cycle of PWM (%)
 
-  'Not Bit or Register checking but this reduce the memory overhead
-  #define CCP_PWM_1_On CCP1CON = CCPCONCache:CCPR1L = DutyCycleH
-  #define CCP_PWM_2_On CCP2CON = CCPCONCache:CCPR2L = DutyCycleH
-  #define CCP_PWM_3_On CCP3CON = CCPCONCache:CCPR3L = DutyCycleH
-  #define CCP_PWM_4_On CCP4CON = CCPCONCache:CCPR4L = DutyCycleH
-  #define CCP_PWM_5_On CCP5CON = CCPCONCache:CCPR5L = DutyCycleH
-
-  'Not Bit or Register checking but this reduce the memory overhead
-  #define CCP_PWM_1_Off CCP1CON = 0
-  #define CCP_PWM_2_Off CCP2CON = 0
-  #define CCP_PWM_3_Off CCP3CON = 0
-  #define CCP_PWM_4_Off CCP4CON = 0
-  #define CCP_PWM_5_Off CCP5CON = 0
+  #Define PWMModule true
+  'Optionalal DisableCCPFixedModePWM will disable the Fixed Mode CCP/PWM
+  '#define DisableCCPFixedModePWM
 
   #IFDEF PIC
 
@@ -181,184 +175,1587 @@ Sub InitPWM
             CCP4CON_EN = CCP4EN
             CCP5CON_EN = CCP5EN
         end if
-        'The 5 CCP channels all use timer2, so, this is more about not using the Method to reduce memory
+
+    #endscript
+
+      #script
+        FixedCCPPWMModeDutyHandler:
+
+        'The now supports all 5 CCP channels all use timer2, so, this is more about not using the Method to reduce memory
+
         'T2PR was used in these routines, but, that is now a register, so, Changed to TxPR
-          PR2Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
+          PR2_CPP_PWM_Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
           TxPR = 1
-        if PR2Temp > 255 then
-            PR2Temp = int((1/PWM_Freq)/(16*(1/(ChipMHz*1000))))
-            TxPR = 4
-            if PR2Temp > 255 then
-              PR2Temp = int((1/PWM_Freq)/(64*(1/(ChipMHz*1000))))
-              TxPR = 16
-            if PR2Temp > 255 then
-              'error TxPR, PR2Temp
-              error msg(BadPWMFreq)
+          if PR2_CPP_PWM_Temp > 255 then
+              PR2_CPP_PWM_Temp = int((1/PWM_Freq)/(16*(1/(ChipMHz*1000))))
+              TxPR = 4
+              if PR2_CPP_PWM_Temp > 255 then
+                PR2_CPP_PWM_Temp = int((1/PWM_Freq)/(64*(1/(ChipMHz*1000))))
+                TxPR = 16
+              if PR2_CPP_PWM_Temp > 255 then
+                'error TxPR, PR2_CPP_PWM_Temp
+                error msg(BadPWMFreq)
+              end if
             end if
           end if
-        end if
-
 
         'Global constant for users to use
-        PRxPeriodRegister = PR2Temp
+        PRxPeriodRegister = PR2_CPP_PWM_Temp
         TimerXprescaleselectValue = TxPR
 
         'Code from Early days
-        'DutyCycle = (PWM_Duty*10.24)*PR2Temp/1024
-        DutyCycle = (PWM_Duty / 25) * (PR2Temp + 1)
-        DutyCycleH = (DutyCycle AND 1020)/4
-        DutyCycleL = DutyCycle AND 3
+        'DutyCycle = (PWM_Duty*10.24)*PR2_CPP_PWM_Temp/1024
+        DutyCycle = (PWM_Duty / 25) * (PR2_CPP_PWM_Temp + 1)
+        DutyCycleH = int((DutyCycle AND 1020)/4)
+        DutyCycleL = int(DutyCycle AND 3)
         'End of Code from Early days
 
         PWMOsc1 = int(60000/(240/ChipMHz))    'This is used in the calculations
         PWMOsc4 = int(60000/(960/ChipMHz))    '*** Unused constant ***
         PWMOsc16 = int(60000/(3840/ChipMHz))  '*** Unused constant ***
+        ' End of CCP/PWM script - see end of section for code
 
-        ' End of CCP/PWM script
-        ' Start of PWM module script
+    #endscript
 
-HPWMScript:
-        '#define HPWM_1_ON                   'A Macro
-        '#define HPWM_1_OFF                  'A Macro
-        '#define HPWM_1_FREQ_Mhz             0 ... range
-        '#define HPWM_1_FREQ_Khz             0 ... range
-        '#define HPWM_1_DUTY_VALUE           0 - 1023
-        '#define HPWM_1_TIMERSOURCE          2 | 4 | 6
+StartofFixedCCPPWMModeCode:
+
+      'You can disable all the CCPPWM fixed mode code to reduce program size
+
+      'This section is Library code, so it generates ASM
+      'This section uses the constants defined the script above.
+      'Essentially, sets CCPCONCache with the bits set correctly.
+      'And, timer 2.  Remember tiner 2 is the only timer for CCP/PWN
+
+      #ifndef DisableCCPFixedModePWM
+          'If CCP1CON does not exist then there is NO CCP1 so no point in setting, as all this is to set up the CCP1 using constants method
+          #ifdef Var(CCP1CON)
+
+                DIM CCPCONCache as BYTE
+                CCPCONCache = 0
+
+                'Set PWM Period
+                PR2 = PR2_CPP_PWM_Temp
+                #ifdef TxPR 1
+                  #ifndef bit(T2CKPS2)
+                    SET T2CON.T2CKPS0 OFF
+                    SET T2CON.T2CKPS1 OFF
+                  #endif
+                  #ifdef bit(T2CKPS2)
+                    SET T2CON.T2CKPS0 OFF
+                    SET T2CON.T2CKPS1 OFF
+                    SET T2CON.T2CKPS2 OFF
+                  #endif
+                #endif
+                #ifdef TxPR 4
+                  #ifndef bit(T2CKPS2)
+                    SET T2CON.T2CKPS0 ON
+                    SET T2CON.T2CKPS1 OFF
+                  #endif
+                  #ifdef bit(T2CKPS2)
+                    SET T2CON.T2CKPS0 OFF
+                    SET T2CON.T2CKPS1 ON
+                    SET T2CON.T2CKPS2 OFF
+                  #endif
+                #endif
+                #ifdef TxPR 16
+                  #ifndef bit(T2CKPS2)
+                    SET T2CON.T2CKPS0 OFF
+                    SET T2CON.T2CKPS1 ON
+                  #endif
+                  #ifdef bit(T2CKPS2)
+                    SET T2CON.T2CKPS0 OFF
+                    SET T2CON.T2CKPS1 OFF
+                    SET T2CON.T2CKPS2 ON
+                  #endif
+                #endif
+
+                'Set Duty cycle
+                #ifndef Bit(CCP1FMT)
+                  'This is the legacy code to support only one CCPPWM channel
+                  CCPR1L = DutyCycleH
+                #endif
+
+                #ifdef Bit(CCP1FMT)
+                  CCPCONCache.CCP1FMT = 1
+                  CCPR1H = DutyCycleH
+                  CCPR1L = DutyCycleL*64
+                  [canskip]T2CLKCON = 1
+                  [canskip]CCPCONCache.en = 1
+
+                #endif
 
 
-      #endscript
+
+                #ifdef DutyCycleL 0
+                    #ifdef Bit(CCP1X)               '***  NOt Defined
+                      SET CCPCONCache.CCP1Y OFF
+                      SET CCPCONCache.CCP1X OFF
+                    #endif
+                    #ifdef Bit(DC1B1)              '*** DEFINED
+                      SET CCPCONCache.DC1B1 OFF
+                      SET CCPCONCache.DC1B0 OFF
+                    #endif
+
+                #endif
+
+                #ifdef DutyCycleL 1
+                    #ifdef Bit(CCP1X)
+                      SET CCPCONCache.CCP1Y ON
+                      SET CCPCONCache.CCP1X OFF
+                    #endif
+                    #ifdef Bit(DC1B1)
+                      SET CCPCONCache.DC1B1 OFF
+                      SET CCPCONCache.DC1B0 ON
+                    #endif
+
+                #endif
+
+                #ifdef DutyCycleL 2
+                    #ifdef Bit(CCP1X)
+                      SET CCPCONCache.CCP1Y OFF
+                      SET CCPCONCache.CCP1X ON
+                    #endif
+
+                    #ifdef Bit(DC1B1)
+                      SET CCPCONCache.DC1B1 ON
+                      SET CCPCONCache.DC1B0 OFF
+                    #endif
+
+                #endif
+
+                #ifdef DutyCycleL 3
+                    #ifdef Bit(CCP1X)
+                      SET CCPCONCache.CCP1Y ON
+                      SET CCPCONCache.CCP1X ON
+                    #endif
+                    #ifdef Bit(DC1B1)
+                      SET CCPCONCache.DC1B1 ON
+                      SET CCPCONCache.DC1B0 ON
+                    #endif
+
+                #endif
+
+                'legacy code, replaced by canskip
+                                'Finish preparing CCP*CON
+                    '            SET CCPCONCache.CCP1M3 ON
+                    '            SET CCPCONCache.CCP1M2 ON
+                    '            SET CCPCONCache.CCP1M1 OFF
+                    '            SET CCPCONCache.CCP1M0 OFF'
+                 [canskip] CCPCONCache.CCP1M3, CCPCONCache.CCP1M2, CCPCONCache.CCP1M1, CCPCONCache.CCP1M0 = b'1100'
+
+                'Enable Timer 2
+                SET T2CON.TMR2ON ON
+
+          #endif
+
+          #ifdef HPWM_FAST
+            PWMFreqOld = 0
+            PWMTimerOld = 0
+          #endif
+      #endif
 
 
-        'If CCP1CON does not exist then there is NO CCP1 so no point in setting, as all this is to set up the CCP1 using constants method
-        #ifdef Var(CCP1CON)
+
+    #script
+FixedPWMModeHandler:
+
+       'Fixed mode of Non CCP/PWM o calculate constants required for given Frequency and Duty Cycle
+       'Process:
+       '        Go thru each timer 2, 4 and 6 and calculate the Duty cycle registers.
+       '        This has to be done 27 times for the the PWM channels 9 to 1, as this a constants we cannot use paramters.
+       '        Each section is identical apart for the timer and the PWM channel.
+       '        This therefore sets the Duty registers and based upon the correct timer source as appropiate.
+
+       'Handle Timer 2
+       if PWM_Timer2_Freq Then
+
+          if  PMW_9_Clock_Source then
+
+              Script_PWM9CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
+
+              if PMW_9_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_9_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM9_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM9_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM9_DutyCycleH = int(Script_PWM9_DutyCycleH * 1 )
+                  Script_PWM9_DutyCycleL = int(Script_PWM9_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_8_Clock_Source then
+
+              Script_PWM8CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
+
+              if PMW_8_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_8_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM8_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM8_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM8_DutyCycleH = int(Script_PWM8_DutyCycleH * 1 )
+                  Script_PWM8_DutyCycleL = int(Script_PWM8_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if PMW_7_Clock_Source then
+
+              Script_PWM7CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
+
+              if PMW_7_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_7_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM7_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM7_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM7_DutyCycleH = int(Script_PWM7_DutyCycleH * 1 )
+                  Script_PWM7_DutyCycleL = int(Script_PWM7_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_6_Clock_Source then
+
+              Script_PWM6CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_6_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_6_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM6_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM6_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM6_DutyCycleH = int(Script_PWM6_DutyCycleH * 1 )
+                  Script_PWM6_DutyCycleL = int(Script_PWM6_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_5_Clock_Source then
+
+              Script_PWM5CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_5_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_5_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM5_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM5_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM5_DutyCycleH = int(Script_PWM5_DutyCycleH * 1 )
+                  Script_PWM5_DutyCycleL = int(Script_PWM5_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_4_Clock_Source then
+
+              Script_PWM4CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_4_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_4_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM4_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM4_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM4_DutyCycleH = int(Script_PWM4_DutyCycleH * 1 )
+                  Script_PWM4_DutyCycleL = int(Script_PWM4_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_3_Clock_Source then
+
+              Script_PWM3CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_3_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_3_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM3_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM3_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM3_DutyCycleH = int(Script_PWM3_DutyCycleH * 1 )
+                  Script_PWM3_DutyCycleL = int(Script_PWM3_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_2_Clock_Source then
+
+              Script_PWM2CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_2_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_2_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM2_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM2_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM2_DutyCycleH = int(Script_PWM2_DutyCycleH * 1 )
+                  Script_PWM2_DutyCycleL = int(Script_PWM2_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_1_Clock_Source then
+
+              Script_PWM1CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_1_Clock_Source = 2 then
+                  'Duty Section
+                  PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR2Temp > 255 then
+                      PR2Temp = int((1/PWM_Timer2_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR2Temp > 255 then
+                        PR2Temp = int((1/PWM_Timer2_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR2Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_1_Duty / 25) * (PR2Temp + 1)
+                  Script_PWM1_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM1_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM1_DutyCycleH = int(Script_PWM1_DutyCycleH * 1 )
+                  Script_PWM1_DutyCycleL = int(Script_PWM1_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          'This section, repeated for each timer source, sets constants for the prescaler and ,if required, other bits.
+
+          'Timer section for Timer2
+          PWMOsc1_Calc = 60000/(240/ChipMHz)    'This is used in the calculations
+
+          Script_Tx_PR = 1
+          Script_PR2_Temp_Calc = PWMOsc1_Calc / PWM_Timer2_Freq
+
+          IF Int(Script_PR2_Temp_Calc / 256 ) > 0 then
+            Script_Tx_PR = 4
+            'Divide by 4
+            Script_PR2_Temp_Calc = Script_PR2_Temp_Calc / 4
+
+          end if
+
+          IF Int(Script_PR2_Temp_Calc / 256 ) > 0 then
+            Script_Tx_PR = 16
+            'Divide by 4
+            Script_PR2_Temp_Calc = Script_PR2_Temp_Calc / 4
+          end if
+
+          Script_PR2_Temp_Calc = Int ( Script_PR2_Temp_Calc * 1 )
+
+          if bit(T2CKPS2) then
+
+             'Set Prescaler bits
+              if Script_Tx_PR = 1 Then
+                Script_OR_T2CON = b'0000000'
+              end if
+              if Script_Tx_PR = 4 Then
+                Script_OR_T2CON = b'0100000'
+              end if
+              if Script_Tx_PR = 16 Then
+                Script_OR_T2CON = b'1000000'
+              end if
+              if Script_Tx_PR = 64 Then
+                Script_OR_T2CON = b'1100000'
+              end if
+
+          end if
+
+          if nobit(T2CKPS2) then
+
+              'Set Prescaler bits
+              if Script_Tx_PR = 1 Then
+                Script_OR_T2CON = b'0000000'
+              end if
+              if Script_Tx_PR = 4 Then
+                Script_OR_T2CON = b'0010000'
+              end if
+              if Script_Tx_PR = 16 Then
+                Script_OR_T2CON = b'0100000'
+              end if
+              if Script_Tx_PR = 64 Then
+                Script_OR_T2CON = b'0110000'
+              end if
+          end if
+
+          if var(T2CLKCON) Then
+              Script_T2CLKCON = 1  '0b00000001
+          end if
+
+        end if
 
 
-            DIM CCPCONCache as BYTE
-            CCPCONCache = 0
+      'See timer 2 for documentation
+       if PWM_Timer4_Freq Then
 
-            'Set PWM Period
-            PR2 = PR2Temp
-            #ifdef TxPR 1
-              SET T2CON.T2CKPS0 OFF
-              SET T2CON.T2CKPS1 OFF
-            #endif
-            #ifdef TxPR 4
-              SET T2CON.T2CKPS0 ON
-              SET T2CON.T2CKPS1 OFF
-            #endif
-            #ifdef TxPR 16
-              SET T2CON.T2CKPS0 OFF
-              SET T2CON.T2CKPS1 ON
-            #endif
+          if  PMW_9_Clock_Source then
 
-            'Set Duty cycle
+              Script_PWM9CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-            'This is the legacy code to support only one CCPPWM channel
-            CCPR1L = DutyCycleH
+              if PMW_9_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
 
-            #ifdef DutyCycleL 0
+                  DutyCycle = (PWM_9_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM9_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM9_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM9_DutyCycleH = int(Script_PWM9_DutyCycleH * 1 )
+                  Script_PWM9_DutyCycleL = int(Script_PWM9_DutyCycleL * 1 )
 
-              'This is the legacy code to support only 1 CCPPWM1
-              '              #ifdef Bit(CCP1X)               '***  NOt Defined
-              '                SET CCPCONCache.CCP1Y OFF
-              '                SET CCPCONCache.CCP1X OFF
-              '              #endif
-              '              #ifdef Bit(DC1B1)              '*** DEFINED
-              '                SET CCPCONCache.DC1B1 OFF
-              '                SET CCPCONCache.DC1B0 OFF
-              '              #endif
+              end if
 
-            'v0.98.00+ to support 5 CCPPWM channels
-              #ifdef Bit(CCP1X)
-                  CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'00'
+          end if
+
+          if  PMW_8_Clock_Source then
+
+              Script_PWM8CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
+
+              if PMW_8_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_8_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM8_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM8_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM8_DutyCycleH = int(Script_PWM8_DutyCycleH * 1 )
+                  Script_PWM8_DutyCycleL = int(Script_PWM8_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_7_Clock_Source then
+
+              Script_PWM7CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_7_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_7_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM7_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM7_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM7_DutyCycleH = int(Script_PWM7_DutyCycleH * 1 )
+                  Script_PWM7_DutyCycleL = int(Script_PWM7_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_6_Clock_Source then
+
+              Script_PWM6CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_6_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_6_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM6_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM6_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM6_DutyCycleH = int(Script_PWM6_DutyCycleH * 1 )
+                  Script_PWM6_DutyCycleL = int(Script_PWM6_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_5_Clock_Source then
+
+              Script_PWM5CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_5_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_5_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM5_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM5_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM5_DutyCycleH = int(Script_PWM5_DutyCycleH * 1 )
+                  Script_PWM5_DutyCycleL = int(Script_PWM5_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_4_Clock_Source then
+
+              Script_PWM4CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_4_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_4_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM4_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM4_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM4_DutyCycleH = int(Script_PWM4_DutyCycleH * 1 )
+                  Script_PWM4_DutyCycleL = int(Script_PWM4_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_3_Clock_Source then
+
+              Script_PWM3CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_3_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_3_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM3_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM3_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM3_DutyCycleH = int(Script_PWM3_DutyCycleH * 1 )
+                  Script_PWM3_DutyCycleL = int(Script_PWM3_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_2_Clock_Source then
+
+              Script_PWM2CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_2_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_2_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM2_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM2_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM2_DutyCycleH = int(Script_PWM2_DutyCycleH * 1 )
+                  Script_PWM2_DutyCycleL = int(Script_PWM2_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_1_Clock_Source then
+
+              Script_PWM1CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_1_Clock_Source = 4 then
+                  'Duty Section
+                  PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR4Temp > 255 then
+                      PR4Temp = int((1/PWM_Timer4_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR4Temp > 255 then
+                        PR4Temp = int((1/PWM_Timer4_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR4Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_1_Duty / 25) * (PR4Temp + 1)
+                  Script_PWM1_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM1_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM1_DutyCycleH = int(Script_PWM1_DutyCycleH * 1 )
+                  Script_PWM1_DutyCycleL = int(Script_PWM1_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          'See timer 2 for documentation
+          'Timer section for Timer4
+          PWMOsc1_Calc = 60000/(240/ChipMHz)    'This is used in the calculations
+
+          Script_Tx_PR = 1
+          Script_PR4_Temp_Calc = PWMOsc1_Calc / PWM_Timer4_Freq
+
+          IF Int(Script_PR4_Temp_Calc / 256 ) > 0 then
+            Script_Tx_PR = 4
+            'Divide by 4
+            Script_PR4_Temp_Calc = Script_PR4_Temp_Calc / 4
+
+          end if
+
+          IF Int(Script_PR4_Temp_Calc / 256 ) > 0 then
+            Script_Tx_PR = 16
+            'Divide by 4
+            Script_PR4_Temp_Calc = Script_PR4_Temp_Calc / 4
+          end if
+
+          Script_PR4_Temp_Calc = Int ( Script_PR4_Temp_Calc * 1 )
+
+          if bit(T4CKPS2) then
+
+             'Set Prescaler bits
+              if Script_Tx_PR = 1 Then
+                Script_OR_T4CON = b'0000000'
+              end if
+              if Script_Tx_PR = 4 Then
+                Script_OR_T4CON = b'0100000'
+              end if
+              if Script_Tx_PR = 16 Then
+                Script_OR_T4CON = b'1000000'
+              end if
+              if Script_Tx_PR = 64 Then
+                Script_OR_T4CON = b'1100000'
+              end if
+
+          end if
+
+          if nobit(T4CKPS2) then
+
+              'Set Prescaler bits
+              if Script_Tx_PR = 1 Then
+                Script_OR_T4CON = b'0000000'
+              end if
+              if Script_Tx_PR = 4 Then
+                Script_OR_T4CON = b'0010000'
+              end if
+              if Script_Tx_PR = 16 Then
+                Script_OR_T4CON = b'0100000'
+              end if
+              if Script_Tx_PR = 64 Then
+                Script_OR_T4CON = b'0110000'
+              end if
+          end if
+
+          if var(T4CLKCON) Then
+              Script_T4CLKCON = 1  '0b00000001
+          end if
+
+       end if
+
+       'See timer 2 for documentation
+       if PWM_Timer6_Freq Then
+
+          if  PMW_9_Clock_Source then
+
+              Script_PWM9CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
+
+              if PMW_9_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_9_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM9_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM9_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM9_DutyCycleH = int(Script_PWM9_DutyCycleH * 1 )
+                  Script_PWM9_DutyCycleL = int(Script_PWM9_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_8_Clock_Source then
+
+              Script_PWM8CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
+
+              if PMW_8_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_8_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM8_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM8_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM8_DutyCycleH = int(Script_PWM8_DutyCycleH * 1 )
+                  Script_PWM8_DutyCycleL = int(Script_PWM8_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_7_Clock_Source then
+
+              Script_PWM7CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_7_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_7_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM7_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM7_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM7_DutyCycleH = int(Script_PWM7_DutyCycleH * 1 )
+                  Script_PWM7_DutyCycleL = int(Script_PWM7_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_6_Clock_Source then
+
+              Script_PWM6CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_6_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_6_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM6_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM6_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM6_DutyCycleH = int(Script_PWM6_DutyCycleH * 1 )
+                  Script_PWM6_DutyCycleL = int(Script_PWM6_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_5_Clock_Source then
+
+              Script_PWM5CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_5_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_5_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM5_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM5_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM5_DutyCycleH = int(Script_PWM5_DutyCycleH * 1 )
+                  Script_PWM5_DutyCycleL = int(Script_PWM5_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_4_Clock_Source then
+
+              Script_PWM4CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_4_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_4_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM4_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM4_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM4_DutyCycleH = int(Script_PWM4_DutyCycleH * 1 )
+                  Script_PWM4_DutyCycleL = int(Script_PWM4_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_3_Clock_Source then
+
+              Script_PWM3CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_3_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_3_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM3_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM3_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM3_DutyCycleH = int(Script_PWM3_DutyCycleH * 1 )
+                  Script_PWM3_DutyCycleL = int(Script_PWM3_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_2_Clock_Source then
+
+              Script_PWM2CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_2_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_2_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM2_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM2_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM2_DutyCycleH = int(Script_PWM2_DutyCycleH * 1 )
+                  Script_PWM2_DutyCycleL = int(Script_PWM2_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          if  PMW_1_Clock_Source then
+
+              Script_PWM1CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
+
+              if PMW_1_Clock_Source = 6 then
+                  'Duty Section
+                  PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
+                  TxPR = 1
+                  if PR6Temp > 255 then
+                      PR6Temp = int((1/PWM_Timer6_Freq)/(16*(1/(ChipMHz*1000))))
+                      TxPR = 4
+                      if PR6Temp > 255 then
+                        PR6Temp = int((1/PWM_Timer6_Freq)/(64*(1/(ChipMHz*1000))))
+                        TxPR = 16
+                      if PR6Temp > 255 then
+                        error msg(BadPWMFreq)
+                      end if
+                    end if
+                  end if
+
+                  DutyCycle = (PWM_1_Duty / 25) * (PR6Temp + 1)
+                  Script_PWM1_DutyCycleH = int(DutyCycle AND 1020)/4
+                  Script_PWM1_DutyCycleL = int((DutyCycle AND 3) * 64)
+                  'just for display purposes
+                  Script_PWM1_DutyCycleH = int(Script_PWM1_DutyCycleH * 1 )
+                  Script_PWM1_DutyCycleL = int(Script_PWM1_DutyCycleL * 1 )
+
+              end if
+
+          end if
+
+          'See timer 2 for documentation
+          'Timer section for Timer6
+          PWMOsc1_Calc = 60000/(240/ChipMHz)    'This is used in the calculations
+
+          Script_Tx_PR = 1
+          Script_PR6_Temp_Calc = PWMOsc1_Calc / PWM_Timer6_Freq
+
+          IF Int(Script_PR6_Temp_Calc / 256 ) > 0 then
+            Script_Tx_PR = 4
+            'Divide by 4
+            Script_PR6_Temp_Calc = Script_PR6_Temp_Calc / 4
+
+          end if
+
+          IF Int(Script_PR6_Temp_Calc / 256 ) > 0 then
+            Script_Tx_PR = 16
+            'Divide by 4
+            Script_PR6_Temp_Calc = Script_PR6_Temp_Calc / 4
+          end if
+
+          Script_PR6_Temp_Calc = Int ( Script_PR6_Temp_Calc * 1 )
+
+          if bit(T6CKPS2) then
+
+             'Set Prescaler bits
+              if Script_Tx_PR = 1 Then
+                Script_OR_T6CON = b'0000000'
+              end if
+              if Script_Tx_PR = 4 Then
+                Script_OR_T6CON = b'0100000'
+              end if
+              if Script_Tx_PR = 16 Then
+                Script_OR_T6CON = b'1000000'
+              end if
+              if Script_Tx_PR = 64 Then
+                Script_OR_T6CON = b'1100000'
+              end if
+
+          end if
+
+          if nobit(T6CKPS2) then
+
+              'Set Prescaler bits
+              if Script_Tx_PR = 1 Then
+                Script_OR_T6CON = b'0000000'
+              end if
+              if Script_Tx_PR = 4 Then
+                Script_OR_T6CON = b'0010000'
+              end if
+              if Script_Tx_PR = 16 Then
+                Script_OR_T6CON = b'0100000'
+              end if
+              if Script_Tx_PR = 64 Then
+                Script_OR_T6CON = b'0110000'
+              end if
+          end if
+
+          if var(T6CLKCON) Then
+              Script_T6CLKCON = 1  '0b00000001
+          end if
+
+       end if
+EndFixedPWMModeHandler:
+    #endscript
+    'This is the end of script section, now we use the constants created to updated registers.
+
+StartofFixedPWMModeCode:
+
+      'Set registers using the constants from script
+      'This is repeated for timer 2, 4 and 6 - and the two timer variants and the 9 PWM channels
+      'This uses the user defined constants to set the appropiate registers.
+      #IFDEF PWM_Timer2_Freq
+          T2CON = (T2CON and 143) or Script_OR_T2CON    ' Set Timer x PreScaler
+          #if var(T2CLKCON)
+              T2CLKCON = Script_T2CLKCON 'Select Timer source as FOSC/4
+          #endif
+          TMR2IF = 0
+          TMR2ON = 1
+          PR2 =  Script_PR2_Temp_Calc
+
+          'Set Clock Sources
+          #ifndef ChipPWMTimerVariant
+
+              #if PMW_9_Clock_Source = 2
+                  [canskip]P9TSEL1,P9TSEL0=b'01'   'PWM9 Timer 2 source
               #endif
-              #ifdef Bit(DC1B1)
-                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'00'
-              #endif
-            #endif
 
-            #ifdef DutyCycleL 1
-
-              'This is the legacy code
-              '              #ifdef Bit(CCP1X)
-              '                SET CCPCONCache.CCP1Y ON
-              '                SET CCPCONCache.CCP1X OFF
-              '              #endif
-              '              #ifdef Bit(DC1B1)
-              '                SET CCPCONCache.DC1B1 OFF
-              '                SET CCPCONCache.DC1B0 ON
-              '              #endif
-
-            'v0.98.00+ to support 5 CCPPWM channels
-              #ifdef Bit(CCP1X)
-                  CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'10'
-              #endif
-              #ifdef Bit(DC1B1)
-                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'01'
+              #if PMW_8_Clock_Source = 2
+                  [canskip]P8TSEL1,P8TSEL0=b'01'   'PWM8 Timer 2 source
               #endif
 
-            #endif
-
-            #ifdef DutyCycleL 2
-                '              #ifdef Bit(CCP1X)
-                '                SET CCPCONCache.CCP1Y OFF
-                '                SET CCPCONCache.CCP1X ON
-                '              #endif
-                '
-                '              #ifdef Bit(DC1B1)
-                '                SET CCPCONCache.DC1B1 ON
-                '                SET CCPCONCache.DC1B0 OFF
-                '              #endif
-
-            'v0.98.00+ to support 5 CCPPWM channels
-              #ifdef Bit(CCP1X)
-                CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'01'
-              #endif
-              #ifdef Bit(DC1B1)
-                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'10'
+              #if PMW_7_Clock_Source = 2
+                  [canskip]P7TSEL1,P7TSEL0=b'01'   'PWM7 Timer 2 source
               #endif
 
-            #endif
-
-            #ifdef DutyCycleL 3
-                '              #ifdef Bit(CCP1X)
-                '                SET CCPCONCache.CCP1Y ON
-                '                SET CCPCONCache.CCP1X ON
-                '              #endif
-                '              #ifdef Bit(DC1B1)
-                '                SET CCPCONCache.DC1B1 ON
-                '                SET CCPCONCache.DC1B0 ON
-                '              #endif
-
-            'v0.98.00+ to support 5 CCPPWM channels
-              #ifdef Bit(CCP1X)
-                  CCPCONCache.CCP1Y, CCPCONCache.CCP1X = b'11'
+              #if PMW_6_Clock_Source = 2
+                  [canskip]P6TSEL1,P6TSEL0=b'01'   'PWM6 Timer 2 source
               #endif
-              #ifdef Bit(DC1B1)
-                  CCPCONCache.DC1B1, CCPCONCache.DC1B0 = b'11'
+
+              #if PMW_5_Clock_Source = 2
+                  [canskip]P5TSEL1,P5TSEL0=b'01'   'PWM5 Timer 2 source
               #endif
-            #endif
 
-            'legacy code
-                            'Finish preparing CCP*CON
-                '            SET CCPCONCache.CCP1M3 ON
-                '            SET CCPCONCache.CCP1M2 ON
-                '            SET CCPCONCache.CCP1M1 OFF
-                '            SET CCPCONCache.CCP1M0 OFF'
-             [canskip] CCPCONCache.CCP1M3, CCPCONCache.CCP1M2, CCPCONCache.CCP1M1, CCPCONCache.CCP1M0 = b'1100'
+              #if PMW_4_Clock_Source = 2
+                  [canskip]P4TSEL1,P4TSEL0=b'01'   'PWM4 Timer 2 source
+              #endif
 
-            'Enable Timer 2
-            'legacy code
-'            SET T2CON.TMR2ON ON
-            [canskip] TMR2ON = b'1'
+              #if PMW_3_Clock_Source = 2
+                  [canskip]P3TSEL1,P3TSEL0=b'01'   'PWM3 Timer 2 source
+              #endif
+
+              #if PMW_2_Clock_Source = 2
+                  [canskip]P2TSEL1,P2TSEL0=b'01'   'PWM2 Timer 2 source
+              #endif
+
+              #if PMW_1_Clock_Source = 2
+                  [canskip]P1TSEL1,P1TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+          #endif
+
+          'Set Clock Sources
+          #ifdef ChipPWMTimerVariant
+
+              #if PMW_9_Clock_Source = 2
+                  [canskip]P9TSEL1,P9TSEL0=b'00'   'PWM9 Timer 2 source
+              #endif
+
+              #if PMW_8_Clock_Source = 2
+                  [canskip]P8TSEL1,P8TSEL0=b'00'   'PWM8 Timer 2 source
+              #endif
+
+              #if PMW_7_Clock_Source = 2
+                  [canskip]P7TSEL1,P7TSEL0=b'00'   'PWM7 Timer 2 source
+              #endif
+
+              #if PMW_6_Clock_Source = 2
+                  [canskip]P6TSEL1,P6TSEL0=b'00'   'PWM6 Timer 2 source
+              #endif
+
+              #if PMW_5_Clock_Source = 2
+                  [canskip]P5TSEL1,P5TSEL0=b'00'   'PWM5 Timer 2 source
+              #endif
+
+              #if PMW_4_Clock_Source = 2
+                  [canskip]P4TSEL1,P4TSEL0=b'00'   'PWM4 Timer 2 source
+              #endif
+
+              #if PMW_3_Clock_Source = 2
+                  [canskip]P3TSEL1,P3TSEL0=b'00'   'PWM3 Timer 2 source
+              #endif
+
+              #if PMW_2_Clock_Source = 2
+                  [canskip]P2TSEL1,P2TSEL0=b'00'   'PWM2 Timer 2 source
+              #endif
+
+              #if PMW_1_Clock_Source = 2
+                  [canskip]P1TSEL1,P1TSEL0=b'00'   'PWM1 Timer 2 source
+              #endif
+          #endif
 
         #endif
 
-      #ifdef HPWM_FAST
-        PWMFreqOld = 0
-        PWMTimerOld = 0
-      #endif
+      #IFDEF PWM_Timer4_Freq
+          T4CON = (T4CON and 143) or Script_OR_T4CON    ' Set Timer x PreScaler
+          #if var(T4CLKCON)
+              T4CLKCON = Script_T4CLKCON 'Select Timer source as FOSC/4
+          #endif
+          TMR4IF = 0
+          TMR4ON = 1
+          PR4 =  Script_PR4_Temp_Calc
 
+          'Set Clock Sources
+          #ifndef ChipPWMTimerVariant
+
+              #if PMW_9_Clock_Source = 4
+                  [canskip]P9TSEL1,P9TSEL0=b'10'   'PWM9 Timer 4 source
+              #endif
+
+              #if PMW_8_Clock_Source = 4
+                  [canskip]P8TSEL1,P8TSEL0=b'10'   'PWM8 Timer 4 source
+              #endif
+
+              #if PMW_7_Clock_Source = 4
+                  [canskip]P7TSEL1,P7TSEL0=b'10'   'PWM7 Timer 4 source
+              #endif
+
+              #if PMW_6_Clock_Source = 4
+                  [canskip]P6TSEL1,P6TSEL0=b'10'   'PWM6 Timer 4 source
+              #endif
+
+              #if PMW_5_Clock_Source = 4
+                  [canskip]P5TSEL1,P5TSEL0=b'10'   'PWM5 Timer 4 source
+              #endif
+
+              #if PMW_4_Clock_Source = 4
+                  [canskip]P4TSEL1,P4TSEL0=b'10'   'PWM4 Timer 4 source
+              #endif
+
+              #if PMW_3_Clock_Source = 4
+                  [canskip]P3TSEL1,P3TSEL0=b'10'   'PWM3 Timer 4 source
+              #endif
+
+              #if PMW_2_Clock_Source = 4
+                  [canskip]P2TSEL1,P2TSEL0=b'10'   'PWM2 Timer 4 source
+              #endif
+
+              #if PMW_1_Clock_Source = 4
+                  [canskip]P1TSEL1,P1TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+          #endif
+
+          #ifdef ChipPWMTimerVariant
+
+              #if PMW_9_Clock_Source = 4
+                  [canskip]P9TSEL1,P9TSEL0=b'01'   'PWM9 Timer 4 source
+              #endif
+
+              #if PMW_8_Clock_Source = 4
+                  [canskip]P8TSEL1,P8TSEL0=b'01'   'PWM8 Timer 4 source
+              #endif
+
+              #if PMW_7_Clock_Source = 4
+                  [canskip]P7TSEL1,P7TSEL0=b'01'   'PWM7 Timer 4 source
+              #endif
+
+              #if PMW_6_Clock_Source = 4
+                  [canskip]P6TSEL1,P6TSEL0=b'01'   'PWM6 Timer 4 source
+              #endif
+
+              #if PMW_5_Clock_Source = 4
+                  [canskip]P5TSEL1,P5TSEL0=b'01'   'PWM5 Timer 4 source
+              #endif
+
+              #if PMW_4_Clock_Source = 4
+                  [canskip]P4TSEL1,P4TSEL0=b'01'   'PWM4 Timer 4 source
+              #endif
+
+              #if PMW_3_Clock_Source = 4
+                  [canskip]P3TSEL1,P3TSEL0=b'01'   'PWM3 Timer 4 source
+              #endif
+
+              #if PMW_2_Clock_Source = 4
+                  [canskip]P2TSEL1,P2TSEL0=b'01'   'PWM2 Timer 4 source
+              #endif
+
+              #if PMW_1_Clock_Source = 4
+                  [canskip]P1TSEL1,P1TSEL0=b'01'   'PWM1 Timer 4 source
+              #endif
+          #endif
+
+      #ENDIF
+
+      #IFDEF PWM_Timer6_Freq
+          T6CON = (T6CON and 143) or Script_OR_T6CON    ' Set Timer x PreScaler
+          #if var(T6CLKCON)
+              T6CLKCON = Script_T6CLKCON 'Select Timer source as FOSC/4
+          #ENDIF
+          TMR6IF = 0
+          TMR6ON = 1
+          PR6 =  Script_PR6_Temp_Calc
+
+          #ifndef ChipPWMTimerVariant
+
+              #if PMW_9_Clock_Source = 6
+                  [canskip]P9TSEL1,P9TSEL0=b'11'   'PWM9 Timer 6 source
+              #endif
+
+              #if PMW_8_Clock_Source = 6
+                  [canskip]P8TSEL1,P8TSEL0=b'11'   'PWM8 Timer 6 source
+              #endif
+
+              #if PMW_7_Clock_Source = 6
+                  [canskip]P7TSEL1,P7TSEL0=b'11'   'PWM7 Timer 6 source
+              #endif
+
+              #if PMW_6_Clock_Source = 6
+                  [canskip]P6TSEL1,P6TSEL0=b'11'   'PWM6 Timer 6 source
+              #endif
+
+              #if PMW_5_Clock_Source = 6
+                  [canskip]P5TSEL1,P5TSEL0=b'11'   'PWM5 Timer 6 source
+              #endif
+
+              #if PMW_4_Clock_Source = 6
+                  [canskip]P4TSEL1,P4TSEL0=b'11'   'PWM4 Timer 6 source
+              #endif
+
+              #if PMW_3_Clock_Source = 6
+                  [canskip]P3TSEL1,P3TSEL0=b'11'   'PWM3 Timer 6 source
+              #endif
+
+              #if PMW_2_Clock_Source = 6
+                  [canskip]P2TSEL1,P2TSEL0=b'11'   'PWM2 Timer 6 source
+              #endif
+
+              #if PMW_1_Clock_Source = 6
+                  [canskip]P1TSEL1,P1TSEL0=b'11'   'PWM1 Timer 6 source
+              #endif
+          #endif
+
+          #ifdef ChipPWMTimerVariant
+
+              #if PMW_9_Clock_Source = 6
+                  [canskip]P9TSEL1,P9TSEL0=b'10'   'PWM9 Timer 6 source
+              #endif
+
+              #if PMW_8_Clock_Source = 6
+                  [canskip]P8TSEL1,P8TSEL0=b'10'   'PWM8 Timer 6 source
+              #endif
+
+              #if PMW_7_Clock_Source = 6
+                  [canskip]P7TSEL1,P7TSEL0=b'10'   'PWM7 Timer 6 source
+              #endif
+
+              #if PMW_6_Clock_Source = 6
+                  [canskip]P6TSEL1,P6TSEL0=b'10'   'PWM6 Timer 6 source
+              #endif
+
+              #if PMW_5_Clock_Source = 6
+                  [canskip]P5TSEL1,P5TSEL0=b'10'   'PWM5 Timer 6 source
+              #endif
+
+              #if PMW_4_Clock_Source = 6
+                  [canskip]P4TSEL1,P4TSEL0=b'10'   'PWM4 Timer 6 source
+              #endif
+
+              #if PMW_3_Clock_Source = 6
+                  [canskip]P3TSEL1,P3TSEL0=b'10'   'PWM3 Timer 6 source
+              #endif
+
+              #if PMW_2_Clock_Source = 6
+                  [canskip]P2TSEL1,P2TSEL0=b'10'   'PWM2 Timer 6 source
+              #endif
+
+              #if PMW_1_Clock_Source = 6
+                  [canskip]P1TSEL1,P1TSEL0=b'10'   'PWM1 Timer 6 source
+              #endif
+          #endif
+
+      #ENDIF
+
+      'This section finally, sets the Duty using the constants from the script.
+      'This uses the user defined constants to set the appropiate registers.
+      #IFDEF PWM_1_Duty
+        #IFDEF BIT(P1TSEL0)   'Means this is a PWM Channel chip
+          PWM1CON =  Script_PWM1CON
+          PWM1DCH =  Script_PWM1_DutyCycleH
+          PWM1DCL =  Script_PWM1_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_2_Duty
+        #IFDEF BIT(P2TSEL0)
+          PWM2CON =  Script_PWM2CON
+          PWM2DCH =  Script_PWM2_DutyCycleH
+          PWM2DCL =  Script_PWM2_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_3_Duty
+        #IFDEF BIT(P3TSEL0)
+          PWM3CON =  Script_PWM3CON
+          PWM3DCH =  Script_PWM3_DutyCycleH
+          PWM3DCL =  Script_PWM3_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_4_Duty
+        #IFDEF BIT(P4TSEL0)
+          PWM4CON =  Script_PWM4CON
+          PWM4DCH =  Script_PWM4_DutyCycleH
+          PWM4DCL =  Script_PWM4_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_5_Duty
+        #IFDEF BIT(P5TSEL0)
+          PWM5CON =  Script_PWM5CON
+          PWM5DCH =  Script_PWM5_DutyCycleH
+          PWM5DCL =  Script_PWM5_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_6_Duty
+        #IFDEF BIT(P6TSEL0)
+          PWM6CON =  Script_PWM6CON
+          PWM6DCH =  Script_PWM6_DutyCycleH
+          PWM6DCL =  Script_PWM6_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_7_Duty
+        #IFDEF BIT(P7TSEL0)
+          PWM7CON =  Script_PWM7CON
+          PWM7DCH =  Script_PWM7_DutyCycleH
+          PWM7DCL =  Script_PWM7_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_8_Duty
+        #IFDEF BIT(P8TSEL0)
+          PWM8CON =  Script_PWM8CON
+          PWM8DCH =  Script_PWM8_DutyCycleH
+          PWM8DCL =  Script_PWM8_DutyCycleL
+        #ENDIF
+      #ENDIF
+
+      #IFDEF PWM_9_Duty
+        #IFDEF BIT(P9TSEL0)
+          PWM9CON =  Script_PWM9CON
+          PWM9DCH =  Script_PWM9_DutyCycleH
+          PWM9DCL =  Script_PWM9_DutyCycleL
+        #ENDIF
+      #ENDIF
+EndofFixedPWMModeCode:
+      'This is the end of the fixed PWM Mode handler
   #endif
 
 
@@ -415,27 +1812,48 @@ End Sub
 
 
 'Legacy methd - Enables the CCP1 capability - the setup was completed in the Init script
+'This is an overloaded method
+'PWMOn - no parameters enables Fixed Mode PWM CCPPWM 1 ONLY
+'PWMOn ( PWMChannel )  with ONE parameter enables Fixed Mode PWM CCPPWM1-CCPPWM5 using the same Freq and Duty from the script engage for CCP
+'PWMOn (IN Channel, IN PWMHardware) - with TWO parameters  enables the Fixed Mode PWM module using the same specfic Freq and Duty and clock for each PWM channel. These is NOT the CCPPWM.
+'
+'PWMOff  - no parameters disables Fixed Mode PWM CCPPWM 1 ONLY
+'PWMOff ( In PWMChannel ) with ONE parameter disables Fixed Mode PWM CCPPWM1-CCPPWM5
+'PWMOff (IN Channel, IN PWMHardware)  - with TWO parameters disables the Fixed Mode PWM module channel. Not the CCP!! see previous method for CCP
+
 #Define HPWMOn PWMOn
 sub PWMOn
   CCP1CON = CCPCONCache
 end sub
 
-sub CCP_PWMOn ( In PWMChannel )
+'Enables the CCPn capability - the using the setup completed in the Init script
+sub PWMOn ( In PWMChannel )
   'Simply set the channel to the CCPCONCache
          #ifdef USE_HPWMCCP1 TRUE
             #ifdef Var(CCP1CON)
              if PWMChannel =1 then
                 CCP1CON = CCPCONCache
-                CCPR1L = DutyCycleH
+                #ifndef bit(CCP1FMT)
+                  CCPR1L = DutyCycleH
+                #endif
+                #ifdef bit(CCP1FMT)
+                  CCPR1H = DutyCycleH
+                  CCPR1L = DutyCycleL * 64
+                #endif
               end if
-
             #endif
          #endif
          #ifdef USE_HPWMCCP2 TRUE
             #ifdef Var(CCP2CON)
               if PWMChannel =2 then
                   CCP2CON = CCPCONCache
+                #ifndef bit(CCP2FMT)
                   CCPR2L = DutyCycleH
+                #endif
+                #ifdef bit(CCP2FMT)
+                  CCPR2H = DutyCycleH
+                  CCPR2L = DutyCycleL * 64
+                #endif
               end if
             #endif
          #endif
@@ -443,7 +1861,13 @@ sub CCP_PWMOn ( In PWMChannel )
             #ifdef Var(CCP3CON)
                 if PWMChannel =3 then
                     CCP3CON = CCPCONCache
-                    CCPR3L = DutyCycleH
+                #ifndef bit(CCP3FMT)
+                  CCPR3L = DutyCycleH
+                #endif
+                #ifdef bit(CCP3FMT)
+                  CCPR3H = DutyCycleH
+                  CCPR3L = DutyCycleL * 64
+                #endif
                 end if
             #endif
          #endif
@@ -451,7 +1875,13 @@ sub CCP_PWMOn ( In PWMChannel )
             #ifdef Var(CCP4CON)
                 if PWMChannel =4 then
                     CCP4CON = CCPCONCache
-                    CCPR4L = DutyCycleH
+                #ifndef bit(CCP4FMT)
+                  CCPR4L = DutyCycleH
+                #endif
+                #ifdef bit(CCP4FMT)
+                  CCPR4H = DutyCycleH
+                  CCPR4L = DutyCycleL * 64
+                #endif
                 end if
             #endif
          #endif
@@ -459,23 +1889,80 @@ sub CCP_PWMOn ( In PWMChannel )
             #ifdef Var(CCP5CON)
                 if PWMChannel =5 then
                     CCP5CON = CCPCONCache
-                    CCPR5L = DutyCycleH
+                #ifndef bit(CCP5FMT)
+                  CCPR5L = DutyCycleH
+                #endif
+                #ifdef bit(CCP5FMT)
+                  CCPR5H = DutyCycleH
+                  CCPR5L = DutyCycleL * 64
+                #endif
                 end if
             #endif
          #endif
 end sub
 
 
+'Enable the PWM module channel. Not the CCP/PWM!! See previous method for CCP/PWM
+SUB PWMOn (IN PWMChannel, IN PWMHardware )
 
+    'PWMHardware is used to purely identify this method as the hardware OFF not the CCP OFF
+
+      Select Case PWMChannel
+          #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
+            Case 1
+              Set PWM1EN On
+
+              'Enable PWM output enable bit on chips like the 10f322
+              #IFDEF BIT(PWM1OE)
+                PWM1OE = 1
+              #ENDIF
+
+          #ENDIF
+          #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
+            Case 2
+              Set PWM2EN On
+
+              'Enable PWM output enable bit
+              #IFDEF BIT(PWM2OE)
+                PWM2OE = 1
+              #ENDIF
+
+          #ENDIF
+          #IFDEF BIT(PWM3EN) 'this simply stops error messages when the does not exit
+            Case 3
+              Set PWM3EN On
+          #ENDIF
+          #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
+            Case 4
+              Set PWM4EN On
+          #ENDIF
+          #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
+            Case 5
+              Set PWM5EN On
+          #ENDIF
+          #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
+            Case 6
+              Set PWM6EN On
+          #ENDIF
+          #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
+            Case 7
+              Set PWM7EN On
+          #ENDIF
+
+      End Select
+
+END SUB
+
+
+#Define HPWMOff PWMOff
 
 'Disables the CCP1 capability
 sub PWMOff
   CCP1CON = 0
 end sub
 
-
-sub CCP_PWMOff ( In PWMChannel )
-  'Simply set the channel to the CCPCONCache = 0
+sub PWMOff ( In PWMChannel )
+  'Simply set the channel to ZERO
          #ifdef USE_HPWMCCP1 TRUE
             #ifdef Var(CCP1CON)
              if PWMChannel =1 then
@@ -513,6 +2000,115 @@ sub CCP_PWMOff ( In PWMChannel )
             #endif
          #endif
 end sub
+
+'Disable the CCP channel
+
+'SUB PWMOff (IN Channel)   'Added 27.04.2015
+'
+'    If Channel > 5 OR Channel < 1 then channel = 1
+'
+'    #IF bit(CCP1EN)
+'      Select Case Channel
+'          Case 1
+'              SET CCP1EN OFF
+'          Case 2
+'              SET CCP2CON_EN OFF
+'          Case 3
+'              SET CCP3CON_EN OFF
+'          Case 4
+'              SET CCP4CON_EN OFF
+'          Case 5
+'              SET CCP5CON_EN OFF
+'      End Select
+'      Exit Sub
+'    #ENDIF
+'
+'    #IFNDEF VAR(CCP2CON)  'There is only 1 CCP Module
+'     if channel = 1 then
+'          CCP1CON = 0
+'          exit sub
+'     end if
+'    #ENDIF
+'
+'    #IFDEF VAR(CCP2CON)   '2 or more CCP modules
+'       IF Channel = 1 then CCP1CON = 0
+'       IF Channel = 2 then CCP2CON = 0
+'    #ENDIF
+'
+'    #IFDEF VAR(CCP3CON)
+'       IF Channel = 3 then CCP3CON = 0
+'    #ENDIF
+'
+'    #IFDEF VAR(CCP4CON)
+'       IF Channel = 4 then CCP4CON = 0
+'    #ENDIF
+'
+'    #IFDEF VAR(CCP5CON)
+'       IF Channel = 5 then CCP5CON = 0
+'    #ENDIF
+'
+'END SUB
+
+'Disable the PWM module channel. Not the CCP!! see previous method for CCP
+SUB PWMOff (IN Channel, IN PWMHardware)
+
+    'PWMHardware is used to purely identify this method as the hardware OFF not the CCP OFF
+
+      Select Case Channel
+          #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
+            Case 1
+              Set PWM1EN Off
+
+              'Disable PWM output enable bit on chips like the 10f322
+              #IFDEF BIT(PWM1OE)
+                PWM1OE = 0
+              #ENDIF
+
+          #ENDIF
+          #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
+            Case 2
+              Set PWM2EN Off
+
+              'Disable PWM output enable bit
+              #IFDEF BIT(PWM2OE)
+                PWM2OE = 0
+              #ENDIF
+
+          #ENDIF
+          #IFDEF BIT(PWM3EN) 'this simply stops error messages when the does not exit
+            Case 3
+              Set PWM3EN Off
+          #ENDIF
+          #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
+            Case 4
+              Set PWM4EN Off
+          #ENDIF
+          #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
+            Case 5
+              Set PWM5EN Off
+          #ENDIF
+          #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
+            Case 6
+              Set PWM6EN Off
+          #ENDIF
+          #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
+            Case 7
+              Set PWM7EN Off
+          #ENDIF
+
+      End Select
+
+END SUB
+
+
+
+
+
+
+
+
+
+
 
 
 'Supports CCPx [1-5] the clock souce is always Timer2
@@ -560,14 +2156,40 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)  '8 bit resolution on timer 2
             rotate PRx_Temp right
           end if
 
+          IF PRx_Temp_H > 0 then
+            Tx_PR = 64
+            'Divide by 4
+            set STATUS.C off
+            rotate PRx_Temp right
+            set STATUS.C off
+            rotate PRx_Temp right
+          end if
+
           PR2 = PRx_Temp
 
           'Set the Bits for the Postscaler
-          SET T2CON.T2CKPS0 OFF
-          SET T2CON.T2CKPS1 OFF
-          if Tx_PR = 4 then SET T2CON.T2CKPS0 ON
-          if Tx_PR = 16 then SET T2CON.T2CKPS1 ON
-          SET T2CON.TMR2ON ON
+          'Setup Timerx by clearing the Prescaler bits - it is set next....
+          #ifdef bit(T2CKPS2)
+              SET T2CKPS0 OFF
+              SET T2CKPS1 OFF
+              SET T2CKPS2 OFF
+              'Set Prescaler bits
+              if Tx_PR = 4  then SET T2CKPS1 ON
+              if Tx_PR = 16 then SET T2CKPS2 ON
+              if Tx_PR = 64 then SET T2CKPS2 ON: SET T2CKPS1 ON
+          #endif
+
+          'Revised to show overflow issue
+          #ifndef bit(T2CKPS2)
+              SET T2CKPS0 OFF
+              SET T2CKPS1 OFF
+              'Set Prescaler bits
+              if Tx_PR = 4  then SET T2CKPS0 ON
+              if Tx_PR = 16 then SET T2CKPS1 ON
+              'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
+              'if T2CON and 3 = 3 then an overflow has occured!
+              if Tx_PR = 64 then SET T2CKPS0 ON: SET T2CKPS1 ON
+          #endif
 
           'Set Clock Source, if required
           #ifdef var(T2CLKCON)
@@ -877,104 +2499,6 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty)  '8 bit resolution on timer 2
 
 end sub
 
-'Disable the CCP channel
-#Define HPWMOff PWMOff
-SUB PWMOff (IN Channel)   'Added 27.04.2015
-
-    If Channel > 5 OR Channel < 1 then channel = 1
-
-    #IF bit(SET CCP1EN ON)
-      Select Case Channel
-          Case 1
-              SET CCP1EN OFF
-          Case 2
-              SET CCP2CON_EN OFF
-          Case 3
-              SET CCP3CON_EN OFF
-          Case 4
-              SET CCP4CON_EN OFF
-          Case 5
-              SET CCP5CON_EN OFF
-      End Select
-      Exit Sub
-    #ENDIF
-
-    #IFNDEF VAR(CCP2CON)  'There is only 1 CCP Module
-     if channel = 1 then
-          CCP1CON = 0
-          exit sub
-     end if
-    #ENDIF
-
-    #IFDEF VAR(CCP2CON)   '2 or more CCP modules
-       IF Channel = 1 then CCP1CON = 0
-       IF Channel = 2 then CCP2CON = 0
-    #ENDIF
-
-    #IFDEF VAR(CCP3CON)
-       IF Channel = 3 then CCP3CON = 0
-    #ENDIF
-
-    #IFDEF VAR(CCP4CON)
-       IF Channel = 4 then CCP4CON = 0
-    #ENDIF
-
-    #IFDEF VAR(CCP5CON)
-       IF Channel = 5 then CCP5CON = 0
-    #ENDIF
-
-END SUB
-
-'Disable the PWM module channel. Not the CCP!! see previous method for CCP
-SUB PWMOff (IN Channel, IN PWMHardware)
-
-    'PWMHardware is used to purely identify this method as the hardware OFF not the CCP OFF
-
-      Select Case Channel
-          #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
-            Case 1
-              Set PWM1EN Off
-
-              'Disable PWM output enable bit on chips like the 10f322
-              #IFDEF BIT(PWM1OE)
-                PWM1OE = 0
-              #ENDIF
-
-          #ENDIF
-          #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
-            Case 2
-              Set PWM2EN Off
-
-              'Disable PWM output enable bit
-              #IFDEF BIT(PWM2OE)
-                PWM2OE = 0
-              #ENDIF
-
-          #ENDIF
-          #IFDEF BIT(PWM3EN) 'this simply stops error messages when the does not exit
-            Case 3
-              Set PWM3EN Off
-          #ENDIF
-          #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
-            Case 4
-              Set PWM4EN Off
-          #ENDIF
-          #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
-            Case 5
-              Set PWM5EN Off
-          #ENDIF
-          #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
-            Case 6
-              Set PWM6EN Off
-          #ENDIF
-          #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
-            Case 7
-              Set PWM7EN Off
-          #ENDIF
-
-      End Select
-
-END SUB
 
 ' Byte support for DUTY... folks may not know that they need to pass a 10bit number
 ' Takes a byte in the range of 0-255 and passes the the 10bit method with the PWMResolution set to 255
@@ -1004,9 +2528,8 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
     ' So, start with 1 - check the remainder. If the remainder in the high byte is greater then zero then do same with a prescaler value of 4
     ' So, using 4 - check the remainder. If the remainder in the high byte is greater then zero then do same with a prescaler value of 16
     ' So, using 16
-    'This simply set Tx_PR to 1,4 or 16
-
-    PRx_Temp = PWMOsc1 / PWMFreq
+    'This simply sets up Tx_PR to 1,4 or 16
+    PRx_Temp  = PWMOsc1 / PWMFreq
     Tx_PR = 1
     IF PRx_Temp_H > 0 then
       Tx_PR = 4
@@ -1449,7 +2972,6 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             PWM6DCH = PRx_Temp_H
             PWM6DCL = PRx_Temp
-
             ' Select timer by updating CCPTMRS1 register
             #ifdef bit(P6TSEL0)
               SetWith ( P6TSEL0, TimerSelected.1 )
@@ -2440,3 +3962,60 @@ SUB AVRPWMOff (IN AVRPWMChannel)
   #ENDIF
 
 END SUB
+
+
+'This is the setup section for fixed mode PWM
+
+    'The only options are PWM_Timer2_Freq nn|PWM_Timer4_Freq nn|PWM_Timer6_Freq nn. These are the PWM timers
+    'The PWM_yy_Duty xx' where yy is between 1 and 9 and is a valid PWM module, and, xx is the Duty cycle for specific channels
+    'The PMW_zz_Clock_Source tt.  Where zz is channel and tt is the PWM clock source.
+    'You do not need to define all the timers and channels, just define the constants you need.
+    'The minimum is
+    '   A timer with a frequency
+    '   A PWM channel with a duty
+    '   A PWM channel clock source
+    '   For PWM channel 2 with a frequency of 38Khz with a duty of 50% with a clock source of timer 2, use
+    '     #define PWM_Timer2_Freq 38
+    '     #define PWM_7_Duty 50
+    '     #define PMW_7_Clock_Source 2
+
+'    #define PWM_Timer2_Freq 20        'Set frequency in KHz, just change the number
+'    #define PWM_Timer4_Freq 40        'Set frequency in KHz, just change the number
+'    #define PWM_Timer6_Freq 60        'Set frequency in KHz, just change the number
+
+'    #define PWM_1_Duty 10            'Set duty cycle as percentage 0-100%, just change the number
+'    #define PMW_1_Clock_Source 2
+'
+'    #define PWM_2_Duty 20
+'    #define PMW_2_Clock_Source 4
+'
+'    #define PWM_3_Duty 30
+'    #define PMW_3_Clock_Source 6
+'
+'    #define PWM_4_Duty 40
+'    #define PMW_4_Clock_Source 2
+'
+'    #define PWM_5_Duty 50
+'    #define PMW_5_Clock_Source 4
+'
+'    #define PWM_6_Duty 60
+'    #define PMW_6_Clock_Source 6
+'
+'    #define PWM_7_Duty 70
+'    #define PMW_7_Clock_Source 2
+'
+'    #define PWM_8_Duty 80
+'    #define PMW_8_Clock_Source 4
+'
+'    #define PWM_9_Duty 90
+'    #define PMW_9_Clock_Source 6
+
+
+#define HPWMxCon_Default On   'This will start the PWM channels as on.
+'#define HPWMxCon_Default off   'Disable PWM out by default
+'    wait 2 s
+'    HPWMOn ( 7, PWMModule )
+'    wait 2 s
+'    HPWMOff ( 7, PWMModule)
+'    wait 2 s
+'    HPWMOn ( 7, PWMModule )
