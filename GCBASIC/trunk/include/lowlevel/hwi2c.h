@@ -8,6 +8,7 @@
 '    Version 1.1k
 '    Version 1.1l
 '    Version 1.1m
+'    Version 1.1n
 
 
 
@@ -29,6 +30,8 @@
 '    Updated Feb 2017  - Added AVRDisable_HI2CAckPollState for AVR performance
 '    Updated May 2017 -  Added support for PIC chips with bit "SEN_SSP1CON2"
 '    Updated Sep 2017 -  Added SAMEVAR and optimised HSerReceive
+'    Updated Oct 2017 - Added MASTER for I2C module. No slave.
+'    Updated Oct 2017 - Updated to add SI2C discovery support methods.
 
 
 '    This library is free software; you can redistribute it and/or
@@ -114,9 +117,20 @@
 #script
   HI2C_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) - 1
 
-  If PIC Then
-             HI2CHasData = "BF = On"
-  End If
+    If PIC Then
+          HI2CHasData = "BF = On"
+
+          If Bit(I2C1CON0_EN) Then
+              'Redirects to I2C Module CODE
+              HIC2Init =    SI2CInit
+              HI2CStart =   SI2CStart
+              HI2CStop =    SI2CStop
+              HI2CReStart = SI2CReStart
+              HI2CSend =    SI2CSend
+              HI2CReceive = SI2CReceive
+          end if
+
+    end If
 
 
 
@@ -214,35 +228,38 @@ Sub HI2CMode (In HI2CCurrentMode)
       '      #endif
       '    #endif
 
-    set SSPSTAT.SMP on
-    set SSPCON1.CKP on
-    set SSPCON1.WCOL Off
+    'added to seperate from newer i2C module which does not have an MSSP
+    #ifdef var(SSPCON1)
+        set SSPSTAT.SMP on
+        set SSPCON1.CKP on
+        set SSPCON1.WCOL Off
 
-    'Select mode and clock
-    If HI2CCurrentMode = Master Then
-      set SSPCON1.SSPM3 on
-      set SSPCON1.SSPM2 off
-      set SSPCON1.SSPM1 off
-      set SSPCON1.SSPM0 off
-      SSPADD = HI2C_BAUD_TEMP And 127
-    end if
+        'Select mode and clock
+        If HI2CCurrentMode = Master Then
+          set SSPCON1.SSPM3 on
+          set SSPCON1.SSPM2 off
+          set SSPCON1.SSPM1 off
+          set SSPCON1.SSPM0 off
+          SSPADD = HI2C_BAUD_TEMP And 127
+        end if
 
-    if HI2CCurrentMode = Slave then
-      set SSPCON1.SSPM3 off
-      set SSPCON1.SSPM2 on
-      set SSPCON1.SSPM1 on
-      set SSPCON1.SSPM0 off
-    end if
+        if HI2CCurrentMode = Slave then
+          set SSPCON1.SSPM3 off
+          set SSPCON1.SSPM2 on
+          set SSPCON1.SSPM1 on
+          set SSPCON1.SSPM0 off
+        end if
 
-    if HI2CCurrentMode = Slave10 then
-      set SSPCON1.SSPM3 off
-      set SSPCON1.SSPM2 on
-      set SSPCON1.SSPM1 on
-      set SSPCON1.SSPM0 on
-    end if
+        if HI2CCurrentMode = Slave10 then
+          set SSPCON1.SSPM3 off
+          set SSPCON1.SSPM2 on
+          set SSPCON1.SSPM1 on
+          set SSPCON1.SSPM0 on
+        end if
 
-    'Enable I2C
-    set SSPCON1.SSPEN on
+        'Enable I2C
+        set SSPCON1.SSPEN on
+    #endif
   #ENDIF
 
 End Sub
@@ -251,7 +268,7 @@ Sub HI2CSetAddress(In I2CAddress)
   #ifdef PIC
     'Slave mode only
     If HI2CCurrentMode <= 10 Then
-                      SSPADD = I2CAddress
+       SSPADD = I2CAddress
     End If
   #endif
 End Sub
@@ -647,4 +664,397 @@ End Sub
 
 sub HIC2Init
     HI2CCurrentMode = 0
+
+    'Initialise the I2C module
+    #ifdef var(I2C1CON0)
+        SI2CInit
+    #endif
+
+end sub
+
+
+
+
+'New I2C module support
+
+
+    Dim HI2C1StateMachine as byte
+    Dim HI2CACKPOLLSTATE  as Byte
+    Dim HI2C1lastError as Byte
+
+    #define I2C1_GOOD             0
+    #define I2C1_FAIL_TIMEOUT     1
+    #define I2C1_TXBE_TIMEOUT     2
+    #define I2C1_START_TIMEOUT    4
+    #define I2C1_RESTART_TIMEOUT  8
+    #define I2C1_RXBF_TIMEOUT     16
+    #define I2C1_ACK_TIMEOUT      32
+    #define I2C1_MDR_TIMEOUT      64
+    #define I2C1_STOP_TIMEOUT     128
+
+    #define I2C1Clock_SMT1           0x09
+    #define I2C1Clock_Timer6PSO      0x08
+    #define I2C1Clock_Timer4PSO      0x07
+    #define I2C1Clock_Timer2PSO      0x06
+    #define I2C1Clock_Timer0Overflow 0x05
+    #define I2C1Clock_ReferenceOut   0x04
+    #define I2C1Clock_MFINTOSC       0x03
+    #define I2C1Clock_HFINTOSC       0x02
+    #define I2C1Clock_FOSC           0x01
+    #define I2C1Clock_FOSC4          0x00
+
+    #define I2C1ClockSource         I2C1Clock_MFINTOSC
+
+    #define I2C1I2C1CON0Default     0x04
+    #define I2C1I2C1CON1Default     0x80
+    #define I2C1I2C1CON2Default     0x21
+
+    #define HI2CITSCLWaitPeriod 70    'minimum of twenty plus 5 clock ticks
+
+
+'    Example
+'
+'    #Include <SMT_Timers.h>
+'    #define I2C1ClockSource I2C1Clock_SMT1
+'    SETSMT1PERIOD ( 39 )   400 KHZ @ 64MHZ
+'    SETSMT1PERIOD ( 158 )   '100 KHZ @ 64MHZ
+'    InitSMT1(SMT_FOSC,SMTPres_1)
+'    StartSMT1
+'    #define HI2CITSCLWaitPeriod 100
+
+
+'Check the define above this method
+
+Sub SI2CInit
+
+    Dir HI2C_DATA out
+    Dir HI2C_CLOCK out
+
+    I2C1CON1 = I2C1I2C1CON1Default
+    I2C1CON2 = I2C1I2C1CON2Default
+    I2C1CLK =  I2C1ClockSource
+    I2C1CON0 = I2C1I2C1CON0Default
+
+    I2C1PIR = 0    ;Clear all the error flags
+    I2C1ERR = 0
+    I2C1CON0.EN=1
+
+    'Commence I2C protocol
+    I2C1CON2.ACNT = 0
+    I2C1CON2.ABD=0
+    I2C1CON0.MDR=1
+
+    'Initialise correct state of I2C module. Not sure why this is needed but it is. Awaiting Microchip analysis
+    SI2CStart
+    SI2CSend ( 0xff )
+    SI2CStop
+
+    HI2CCurrentMode = 0
+
+End sub
+
+Sub SI2CStart
+
+  'Current/this release assumes Master Mode ONLY
+        HI2C1StateMachine = 1
+        HI2CWaitMSSPTimeout = false
+        'Clear the errors
+        HI2C1lastError = I2C1_GOOD
+
+End Sub
+
+Sub SI2CReStart
+
+        HI2C1StateMachine = 3
+        HI2CWaitMSSPTimeout = false
+
+End Sub
+
+Sub SI2CStop
+
+  'Current/this release assumes Master Mode ONLY
+    'waits up to 254us then creates error message
+    HI2C1StateMachine = 0
+    HI2CWaitMSSPTimeout = 0
+
+    do while HI2CWaitMSSPTimeout < 255
+
+        HI2CWaitMSSPTimeout++
+
+        'Wait till this event
+        if I2C1PIR.PCIF = 1 then
+            SI2Cwait4Stop
+            'TSCL wait, part of the specificiation of the I2C Module
+            wait HI2CITSCLWaitPeriod us
+            exit sub
+
+        else
+            wait 1 us
+
+        end if
+    loop
+    if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_STOP_TIMEOUT
+
+End Sub
+
+
+Sub SI2CSend ( in I2Cbyte )
+    'This is now a state Machine to cater for the new approach with the I2C module
+
+'Current/this release assumes Master Mode ONLY
+
+    Select Case HI2C1StateMachine
+
+
+      case 2  'send data
+
+        HI2CWaitMSSPTimeout = 0
+        'waits up to 254us then creates error message
+        do while HI2CWaitMSSPTimeout < 255
+
+            HI2CWaitMSSPTimeout++
+            'Wait for this event
+            if I2C1STAT1.TXBE = 1 then
+
+                'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
+                I2C1CNT = 1
+                I2C1TXB = I2Cbyte
+                SI2CWait4Ack
+                SI2Cwait4MDR
+
+                exit Sub
+
+            else
+
+                wait 1 us
+
+            end if
+        loop
+
+        if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_TXBE_TIMEOUT
+
+
+      case 1  'A start
+
+        'Clear the output buffers, set byte count to zero, clear event and place Slave Address in register
+        I2C1STAT1.CLRBF = 1
+        I2C1CNT = 0
+        I2C1PIR.SCIF = 0
+        I2C1ADB1 = I2Cbyte
+
+        HI2CWaitMSSPTimeout = 0
+        'waits up to 254us then creates error message
+        do while HI2CWaitMSSPTimeout < 255
+
+            HI2CWaitMSSPTimeout++
+            'Wait for this event
+            if I2C1PIR.SCIF = 1 then
+                HI2C1StateMachine = 2  'Set state Machine to send data
+                HI2CAckPollState = I2C1CON1.5
+                exit Sub
+
+            else
+                'Set to start
+                I2C1CON0.S = 1
+                wait 1 us
+
+            end if
+        loop
+
+        if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_START_TIMEOUT
+
+      case 3  'A restart
+
+        'wait for hardware machine to settle
+        wait while I2C1STAT0.MMA = 1
+
+        'set count to zero, place Slave address in register and clear event
+        I2C1CNT = 0
+        I2C1ADB1 = I2Cbyte
+        I2C1PIR.SCIF = 0
+
+        HI2CWaitMSSPTimeout = 0
+        'waits up to 254us then creates error message
+        do while HI2CWaitMSSPTimeout < 255
+
+            HI2CWaitMSSPTimeout++
+            'Wait for this event
+            if I2C1PIR.SCIF = 1 then
+                HI2C1StateMachine = 2  'Set state Machine to send data
+                HI2CAckPollState = I2C1CON1.5
+                exit Sub
+
+            else
+                'Set as Start and Clear Restart
+                I2C1CON0.S = 1
+                I2C1CON0.RSEN=0
+                wait 1 us
+
+            end if
+        loop
+
+        if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_RESTART_TIMEOUT
+
+    end select
+
+End Sub
+
+
+Sub SI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
+
+      I2C1CNT = 255
+      HI2CWaitMSSPTimeout = 0
+
+      'waits up to 254us then creates error message
+      do while HI2CWaitMSSPTimeout < 255
+
+          HI2CWaitMSSPTimeout++
+          'Wait for this event
+          if I2C1STAT1.RXBF = 1 then
+              'Read input buffer to output byte
+              I2CByte = I2C1RXB
+              exit Sub
+
+          else
+
+              wait 1 us
+
+          end if
+      loop
+
+      if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_RXBF_TIMEOUT
+
+
+
+End Sub
+
+Sub SI2CWait4Ack
+
+    HI2CWaitMSSPTimeout = 0
+    'waits up to 254us then creates error message
+    do while HI2CWaitMSSPTimeout < 255
+
+        HI2CWaitMSSPTimeout++
+        'Wait for this event
+        if I2C1CON1.ACKSTAT = 0 then
+            'Set status
+            HI2CAckPollState = I2C1CON1.ACKSTAT
+            exit sub
+
+        else
+
+            wait 1 us
+
+        end if
+    loop
+    if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_ACK_TIMEOUT
+    ' HI2CWaitMSSPTimeout is now TRUE = 255
+End Sub
+
+
+
+Sub SI2Cwait4MDR
+
+    HI2CWaitMSSPTimeout = 0
+    'waits up to 254us then creates error message
+    do while HI2CWaitMSSPTimeout < 255
+
+        HI2CWaitMSSPTimeout++
+        'wait for this event
+        if I2C1CON0.MDR = 0 then
+
+            exit sub
+
+        else
+
+            wait 1 us
+
+        end if
+    loop
+    if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_MDR_TIMEOUT
+    ' HI2CWaitMSSPTimeout is now TRUE = 255
+End Sub
+
+
+Sub SI2Cwait4Stop
+
+    HI2CWaitMSSPTimeout = 0
+    'waits up to 254us then creates error message
+    do while HI2CWaitMSSPTimeout < 255
+
+        HI2CWaitMSSPTimeout++
+        'Wait for this event
+        if I2C1PIR.PCIF = 1 then
+
+            exit sub
+
+        else
+
+            wait 1 us
+
+        end if
+    loop
+    if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_STOP_TIMEOUT
+    ' HI2CWaitMSSPTimeout is now TRUE = 255
+End Sub
+
+
+sub SI2CDiscovery ( address )
+
+    SI2CWrite1ByteRegister(  address, reg,  data )
+end sub
+
+sub SI2CWrite1ByteRegister(  address, reg,  data )
+
+    I2C1CON1 = I2C1I2C1CON1Default
+    I2C1CON2 = I2C1I2C1CON2Default
+    I2C1CLK =  I2C1ClockSource
+    I2C1CON0 = I2C1I2C1CON0Default
+
+    I2C1PIR = 0    ;Clear all the error flags
+    I2C1ERR = 0
+    I2C1CON0.EN=1
+
+    'Commence I2C protocol
+    I2C1CON2.ACNT = 0
+    I2C1CON2.ABD=0
+    I2C1CON0.MDR=1
+
+    I2C1ADB1= address
+    I2C1CNT=2
+    I2C1CON0.S=1
+    SI2CDiscoveryByte(reg)
+    SI2CDiscoveryByte(data)
+    HI2CAckPollState = I2C1CON1.5
+    SI2CStop
+
+end Sub
+
+
+sub SI2CDiscoveryByte( data)
+
+        HI2CWaitMSSPTimeout = 0
+        'waits up to 254us then creates error message
+        do while HI2CWaitMSSPTimeout < 255
+
+            HI2CWaitMSSPTimeout++
+            'Wait for this event
+            if I2C1STAT1.TXBE = 1 then
+
+                'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
+                I2C1CNT = 1
+                I2C1TXB = data
+
+                HI2CAckPollState = I2C1CON1.5
+
+
+            else
+
+                wait 1 us
+
+            end if
+        loop
+
+        if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_TXBE_TIMEOUT
+
 end sub

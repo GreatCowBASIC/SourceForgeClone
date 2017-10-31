@@ -1,5 +1,5 @@
 ;    Liquid Crystal Display routines for Great Cow BASIC
-;    Copyright (C) 2006 - 2017 Hugh Considine, Stefano Bonomi, Evan Venn, William Roth and Ruud de Vreugd
+;    Copyright (C) 2006 - 2017 Hugh Considine, Stefano Bonomi William Roth and Ruud de Vreugd and Evan Venn
 
 ;    This library is free software; you can redistribute it and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -116,6 +116,7 @@
 '''   Added a forced write for instant backlightcontrol as suggested by Theo Loermans
 '''   Changed binary number format to not use quotationmarks (to avoid compiler errors)
 '''
+'''   Changed Restart to Start in i2c section
 
 #startup InitLCD
 
@@ -1058,7 +1059,7 @@ sub LCDNormalWriteByte(In LCDByte )
              i2c_lcd_rw  = 0;
              i2c_lcd_bl  = LCD_Backlight.0;
 
-             HI2CReStart                        ;generate a start signal
+             HI2CStart                        ;generate a start signal
              HI2CSend LCD_I2C_Address_Current   ;indicate a write
 
              i2c_lcd_d7 = LCDByte.7
