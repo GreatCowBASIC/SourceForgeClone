@@ -107,7 +107,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		'Check for StringSize constant
 		Dim As ConstMeta Pointer StringSizeConst
 		StringSizeConst = HashMapGet(Constants, "STRINGSIZE")
-		If StringSizeConst <> 0 Then
+		If StringSizeConst <> 0 And VarSize < 2 Then
 			TempSize = MakeDec(StringSizeConst->Value)
 			If TempSize > 0 Or TempSize < ChipRam Then VarSize = TempSize
 		End If
