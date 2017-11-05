@@ -65,7 +65,9 @@
 ''' 2/10/2017 Revised HPWM CCP method to support chips with T2CKPS2 as these are a different truth table.
 '''           Optional DisableCCPFixedModePWM will disable the Fixed Mode CCP/PWM
 '''           Added Fixed Mode PWM for 8bit and 10bit PWM
-'''30/10/2017 Revised to show overflow issue
+''' 30/10/2017 Revised to show overflow issue
+''' 1/11/2017 Revised SetofFixedModePWM to test a VAR not a BIT see section SetPWMDutyCode - EndofFixedPWMModeCode
+''' 4/11/2017 Revised to isolate AVR PWM_Duty setting in Script and rename PMW to PWM
 
   'define the defaults
   #define AVRTC0
@@ -369,11 +371,11 @@ FixedPWMModeHandler:
        'Handle Timer 2
        if PWM_Timer2_Freq Then
 
-          if  PMW_9_Clock_Source then
+          if  PWM_9_Clock_Source then
 
               Script_PWM9CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-              if PMW_9_Clock_Source = 2 then
+              if PWM_9_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -400,11 +402,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_8_Clock_Source then
+          if  PWM_8_Clock_Source then
 
               Script_PWM8CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-              if PMW_8_Clock_Source = 2 then
+              if PWM_8_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -431,11 +433,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if PMW_7_Clock_Source then
+          if PWM_7_Clock_Source then
 
               Script_PWM7CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-              if PMW_7_Clock_Source = 2 then
+              if PWM_7_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -462,11 +464,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_6_Clock_Source then
+          if  PWM_6_Clock_Source then
 
               Script_PWM6CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_6_Clock_Source = 2 then
+              if PWM_6_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -493,11 +495,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_5_Clock_Source then
+          if  PWM_5_Clock_Source then
 
               Script_PWM5CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_5_Clock_Source = 2 then
+              if PWM_5_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -524,11 +526,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_4_Clock_Source then
+          if  PWM_4_Clock_Source then
 
               Script_PWM4CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_4_Clock_Source = 2 then
+              if PWM_4_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -555,11 +557,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_3_Clock_Source then
+          if  PWM_3_Clock_Source then
 
               Script_PWM3CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_3_Clock_Source = 2 then
+              if PWM_3_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -586,11 +588,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_2_Clock_Source then
+          if  PWM_2_Clock_Source then
 
               Script_PWM2CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_2_Clock_Source = 2 then
+              if PWM_2_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -617,11 +619,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_1_Clock_Source then
+          if  PWM_1_Clock_Source then
 
               Script_PWM1CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_1_Clock_Source = 2 then
+              if PWM_1_Clock_Source = 2 then
                   'Duty Section
                   PR2Temp = int((1/PWM_Timer2_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -716,11 +718,11 @@ FixedPWMModeHandler:
       'See timer 2 for documentation
        if PWM_Timer4_Freq Then
 
-          if  PMW_9_Clock_Source then
+          if  PWM_9_Clock_Source then
 
               Script_PWM9CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-              if PMW_9_Clock_Source = 4 then
+              if PWM_9_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -747,11 +749,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_8_Clock_Source then
+          if  PWM_8_Clock_Source then
 
               Script_PWM8CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-              if PMW_8_Clock_Source = 4 then
+              if PWM_8_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -778,11 +780,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_7_Clock_Source then
+          if  PWM_7_Clock_Source then
 
               Script_PWM7CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_7_Clock_Source = 4 then
+              if PWM_7_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -809,11 +811,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_6_Clock_Source then
+          if  PWM_6_Clock_Source then
 
               Script_PWM6CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_6_Clock_Source = 4 then
+              if PWM_6_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -840,11 +842,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_5_Clock_Source then
+          if  PWM_5_Clock_Source then
 
               Script_PWM5CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_5_Clock_Source = 4 then
+              if PWM_5_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -871,11 +873,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_4_Clock_Source then
+          if  PWM_4_Clock_Source then
 
               Script_PWM4CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_4_Clock_Source = 4 then
+              if PWM_4_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -902,11 +904,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_3_Clock_Source then
+          if  PWM_3_Clock_Source then
 
               Script_PWM3CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_3_Clock_Source = 4 then
+              if PWM_3_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -933,11 +935,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_2_Clock_Source then
+          if  PWM_2_Clock_Source then
 
               Script_PWM2CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_2_Clock_Source = 4 then
+              if PWM_2_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -964,11 +966,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_1_Clock_Source then
+          if  PWM_1_Clock_Source then
 
               Script_PWM1CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_1_Clock_Source = 4 then
+              if PWM_1_Clock_Source = 4 then
                   'Duty Section
                   PR4Temp = int((1/PWM_Timer4_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1061,11 +1063,11 @@ FixedPWMModeHandler:
        'See timer 2 for documentation
        if PWM_Timer6_Freq Then
 
-          if  PMW_9_Clock_Source then
+          if  PWM_9_Clock_Source then
 
               Script_PWM9CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-              if PMW_9_Clock_Source = 6 then
+              if PWM_9_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1092,11 +1094,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_8_Clock_Source then
+          if  PWM_8_Clock_Source then
 
               Script_PWM8CON = 0b01000000 + ( HPWMxCon_Default * 128) 'Enable PWM Module, Module Output
 
-              if PMW_8_Clock_Source = 6 then
+              if PWM_8_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1123,11 +1125,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_7_Clock_Source then
+          if  PWM_7_Clock_Source then
 
               Script_PWM7CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_7_Clock_Source = 6 then
+              if PWM_7_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1154,11 +1156,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_6_Clock_Source then
+          if  PWM_6_Clock_Source then
 
               Script_PWM6CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_6_Clock_Source = 6 then
+              if PWM_6_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1185,11 +1187,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_5_Clock_Source then
+          if  PWM_5_Clock_Source then
 
               Script_PWM5CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_5_Clock_Source = 6 then
+              if PWM_5_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1216,11 +1218,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_4_Clock_Source then
+          if  PWM_4_Clock_Source then
 
               Script_PWM4CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_4_Clock_Source = 6 then
+              if PWM_4_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1247,11 +1249,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_3_Clock_Source then
+          if  PWM_3_Clock_Source then
 
               Script_PWM3CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_3_Clock_Source = 6 then
+              if PWM_3_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1278,11 +1280,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_2_Clock_Source then
+          if  PWM_2_Clock_Source then
 
               Script_PWM2CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_2_Clock_Source = 6 then
+              if PWM_2_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1309,11 +1311,11 @@ FixedPWMModeHandler:
 
           end if
 
-          if  PMW_1_Clock_Source then
+          if  PWM_1_Clock_Source then
 
               Script_PWM1CON = 0b01000000 + ( HPWMxCon_Default * 128)   'Enable PWM Module, Module Output
 
-              if PMW_1_Clock_Source = 6 then
+              if PWM_1_Clock_Source = 6 then
                   'Duty Section
                   PR6Temp = int((1/PWM_Timer6_Freq)/(4*(1/(ChipMHz*1000))))
                   TxPR = 1
@@ -1423,39 +1425,39 @@ StartofFixedPWMModeCode:
           'Set Clock Sources
           #ifndef ChipPWMTimerVariant
 
-              #if PMW_9_Clock_Source = 2
+              #if PWM_9_Clock_Source = 2
                   [canskip]P9TSEL1,P9TSEL0=b'01'   'PWM9 Timer 2 source
               #endif
 
-              #if PMW_8_Clock_Source = 2
+              #if PWM_8_Clock_Source = 2
                   [canskip]P8TSEL1,P8TSEL0=b'01'   'PWM8 Timer 2 source
               #endif
 
-              #if PMW_7_Clock_Source = 2
+              #if PWM_7_Clock_Source = 2
                   [canskip]P7TSEL1,P7TSEL0=b'01'   'PWM7 Timer 2 source
               #endif
 
-              #if PMW_6_Clock_Source = 2
+              #if PWM_6_Clock_Source = 2
                   [canskip]P6TSEL1,P6TSEL0=b'01'   'PWM6 Timer 2 source
               #endif
 
-              #if PMW_5_Clock_Source = 2
+              #if PWM_5_Clock_Source = 2
                   [canskip]P5TSEL1,P5TSEL0=b'01'   'PWM5 Timer 2 source
               #endif
 
-              #if PMW_4_Clock_Source = 2
+              #if PWM_4_Clock_Source = 2
                   [canskip]P4TSEL1,P4TSEL0=b'01'   'PWM4 Timer 2 source
               #endif
 
-              #if PMW_3_Clock_Source = 2
+              #if PWM_3_Clock_Source = 2
                   [canskip]P3TSEL1,P3TSEL0=b'01'   'PWM3 Timer 2 source
               #endif
 
-              #if PMW_2_Clock_Source = 2
+              #if PWM_2_Clock_Source = 2
                   [canskip]P2TSEL1,P2TSEL0=b'01'   'PWM2 Timer 2 source
               #endif
 
-              #if PMW_1_Clock_Source = 2
+              #if PWM_1_Clock_Source = 2
                   [canskip]P1TSEL1,P1TSEL0=b'01'   'PWM1 Timer 2 source
               #endif
           #endif
@@ -1463,39 +1465,39 @@ StartofFixedPWMModeCode:
           'Set Clock Sources
           #ifdef ChipPWMTimerVariant
 
-              #if PMW_9_Clock_Source = 2
+              #if PWM_9_Clock_Source = 2
                   [canskip]P9TSEL1,P9TSEL0=b'00'   'PWM9 Timer 2 source
               #endif
 
-              #if PMW_8_Clock_Source = 2
+              #if PWM_8_Clock_Source = 2
                   [canskip]P8TSEL1,P8TSEL0=b'00'   'PWM8 Timer 2 source
               #endif
 
-              #if PMW_7_Clock_Source = 2
+              #if PWM_7_Clock_Source = 2
                   [canskip]P7TSEL1,P7TSEL0=b'00'   'PWM7 Timer 2 source
               #endif
 
-              #if PMW_6_Clock_Source = 2
+              #if PWM_6_Clock_Source = 2
                   [canskip]P6TSEL1,P6TSEL0=b'00'   'PWM6 Timer 2 source
               #endif
 
-              #if PMW_5_Clock_Source = 2
+              #if PWM_5_Clock_Source = 2
                   [canskip]P5TSEL1,P5TSEL0=b'00'   'PWM5 Timer 2 source
               #endif
 
-              #if PMW_4_Clock_Source = 2
+              #if PWM_4_Clock_Source = 2
                   [canskip]P4TSEL1,P4TSEL0=b'00'   'PWM4 Timer 2 source
               #endif
 
-              #if PMW_3_Clock_Source = 2
+              #if PWM_3_Clock_Source = 2
                   [canskip]P3TSEL1,P3TSEL0=b'00'   'PWM3 Timer 2 source
               #endif
 
-              #if PMW_2_Clock_Source = 2
+              #if PWM_2_Clock_Source = 2
                   [canskip]P2TSEL1,P2TSEL0=b'00'   'PWM2 Timer 2 source
               #endif
 
-              #if PMW_1_Clock_Source = 2
+              #if PWM_1_Clock_Source = 2
                   [canskip]P1TSEL1,P1TSEL0=b'00'   'PWM1 Timer 2 source
               #endif
           #endif
@@ -1514,78 +1516,78 @@ StartofFixedPWMModeCode:
           'Set Clock Sources
           #ifndef ChipPWMTimerVariant
 
-              #if PMW_9_Clock_Source = 4
+              #if PWM_9_Clock_Source = 4
                   [canskip]P9TSEL1,P9TSEL0=b'10'   'PWM9 Timer 4 source
               #endif
 
-              #if PMW_8_Clock_Source = 4
+              #if PWM_8_Clock_Source = 4
                   [canskip]P8TSEL1,P8TSEL0=b'10'   'PWM8 Timer 4 source
               #endif
 
-              #if PMW_7_Clock_Source = 4
+              #if PWM_7_Clock_Source = 4
                   [canskip]P7TSEL1,P7TSEL0=b'10'   'PWM7 Timer 4 source
               #endif
 
-              #if PMW_6_Clock_Source = 4
+              #if PWM_6_Clock_Source = 4
                   [canskip]P6TSEL1,P6TSEL0=b'10'   'PWM6 Timer 4 source
               #endif
 
-              #if PMW_5_Clock_Source = 4
+              #if PWM_5_Clock_Source = 4
                   [canskip]P5TSEL1,P5TSEL0=b'10'   'PWM5 Timer 4 source
               #endif
 
-              #if PMW_4_Clock_Source = 4
+              #if PWM_4_Clock_Source = 4
                   [canskip]P4TSEL1,P4TSEL0=b'10'   'PWM4 Timer 4 source
               #endif
 
-              #if PMW_3_Clock_Source = 4
+              #if PWM_3_Clock_Source = 4
                   [canskip]P3TSEL1,P3TSEL0=b'10'   'PWM3 Timer 4 source
               #endif
 
-              #if PMW_2_Clock_Source = 4
+              #if PWM_2_Clock_Source = 4
                   [canskip]P2TSEL1,P2TSEL0=b'10'   'PWM2 Timer 4 source
               #endif
 
-              #if PMW_1_Clock_Source = 4
+              #if PWM_1_Clock_Source = 4
                   [canskip]P1TSEL1,P1TSEL0=b'10'   'PWM1 Timer 4 source
               #endif
           #endif
 
           #ifdef ChipPWMTimerVariant
 
-              #if PMW_9_Clock_Source = 4
+              #if PWM_9_Clock_Source = 4
                   [canskip]P9TSEL1,P9TSEL0=b'01'   'PWM9 Timer 4 source
               #endif
 
-              #if PMW_8_Clock_Source = 4
+              #if PWM_8_Clock_Source = 4
                   [canskip]P8TSEL1,P8TSEL0=b'01'   'PWM8 Timer 4 source
               #endif
 
-              #if PMW_7_Clock_Source = 4
+              #if PWM_7_Clock_Source = 4
                   [canskip]P7TSEL1,P7TSEL0=b'01'   'PWM7 Timer 4 source
               #endif
 
-              #if PMW_6_Clock_Source = 4
+              #if PWM_6_Clock_Source = 4
                   [canskip]P6TSEL1,P6TSEL0=b'01'   'PWM6 Timer 4 source
               #endif
 
-              #if PMW_5_Clock_Source = 4
+              #if PWM_5_Clock_Source = 4
                   [canskip]P5TSEL1,P5TSEL0=b'01'   'PWM5 Timer 4 source
               #endif
 
-              #if PMW_4_Clock_Source = 4
+              #if PWM_4_Clock_Source = 4
                   [canskip]P4TSEL1,P4TSEL0=b'01'   'PWM4 Timer 4 source
               #endif
 
-              #if PMW_3_Clock_Source = 4
+              #if PWM_3_Clock_Source = 4
                   [canskip]P3TSEL1,P3TSEL0=b'01'   'PWM3 Timer 4 source
               #endif
 
-              #if PMW_2_Clock_Source = 4
+              #if PWM_2_Clock_Source = 4
                   [canskip]P2TSEL1,P2TSEL0=b'01'   'PWM2 Timer 4 source
               #endif
 
-              #if PMW_1_Clock_Source = 4
+              #if PWM_1_Clock_Source = 4
                   [canskip]P1TSEL1,P1TSEL0=b'01'   'PWM1 Timer 4 source
               #endif
           #endif
@@ -1603,88 +1605,89 @@ StartofFixedPWMModeCode:
 
           #ifndef ChipPWMTimerVariant
 
-              #if PMW_9_Clock_Source = 6
+              #if PWM_9_Clock_Source = 6
                   [canskip]P9TSEL1,P9TSEL0=b'11'   'PWM9 Timer 6 source
               #endif
 
-              #if PMW_8_Clock_Source = 6
+              #if PWM_8_Clock_Source = 6
                   [canskip]P8TSEL1,P8TSEL0=b'11'   'PWM8 Timer 6 source
               #endif
 
-              #if PMW_7_Clock_Source = 6
+              #if PWM_7_Clock_Source = 6
                   [canskip]P7TSEL1,P7TSEL0=b'11'   'PWM7 Timer 6 source
               #endif
 
-              #if PMW_6_Clock_Source = 6
+              #if PWM_6_Clock_Source = 6
                   [canskip]P6TSEL1,P6TSEL0=b'11'   'PWM6 Timer 6 source
               #endif
 
-              #if PMW_5_Clock_Source = 6
+              #if PWM_5_Clock_Source = 6
                   [canskip]P5TSEL1,P5TSEL0=b'11'   'PWM5 Timer 6 source
               #endif
 
-              #if PMW_4_Clock_Source = 6
+              #if PWM_4_Clock_Source = 6
                   [canskip]P4TSEL1,P4TSEL0=b'11'   'PWM4 Timer 6 source
               #endif
 
-              #if PMW_3_Clock_Source = 6
+              #if PWM_3_Clock_Source = 6
                   [canskip]P3TSEL1,P3TSEL0=b'11'   'PWM3 Timer 6 source
               #endif
 
-              #if PMW_2_Clock_Source = 6
+              #if PWM_2_Clock_Source = 6
                   [canskip]P2TSEL1,P2TSEL0=b'11'   'PWM2 Timer 6 source
               #endif
 
-              #if PMW_1_Clock_Source = 6
+              #if PWM_1_Clock_Source = 6
                   [canskip]P1TSEL1,P1TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
           #endif
 
           #ifdef ChipPWMTimerVariant
 
-              #if PMW_9_Clock_Source = 6
+              #if PWM_9_Clock_Source = 6
                   [canskip]P9TSEL1,P9TSEL0=b'10'   'PWM9 Timer 6 source
               #endif
 
-              #if PMW_8_Clock_Source = 6
+              #if PWM_8_Clock_Source = 6
                   [canskip]P8TSEL1,P8TSEL0=b'10'   'PWM8 Timer 6 source
               #endif
 
-              #if PMW_7_Clock_Source = 6
+              #if PWM_7_Clock_Source = 6
                   [canskip]P7TSEL1,P7TSEL0=b'10'   'PWM7 Timer 6 source
               #endif
 
-              #if PMW_6_Clock_Source = 6
+              #if PWM_6_Clock_Source = 6
                   [canskip]P6TSEL1,P6TSEL0=b'10'   'PWM6 Timer 6 source
               #endif
 
-              #if PMW_5_Clock_Source = 6
+              #if PWM_5_Clock_Source = 6
                   [canskip]P5TSEL1,P5TSEL0=b'10'   'PWM5 Timer 6 source
               #endif
 
-              #if PMW_4_Clock_Source = 6
+              #if PWM_4_Clock_Source = 6
                   [canskip]P4TSEL1,P4TSEL0=b'10'   'PWM4 Timer 6 source
               #endif
 
-              #if PMW_3_Clock_Source = 6
+              #if PWM_3_Clock_Source = 6
                   [canskip]P3TSEL1,P3TSEL0=b'10'   'PWM3 Timer 6 source
               #endif
 
-              #if PMW_2_Clock_Source = 6
+              #if PWM_2_Clock_Source = 6
                   [canskip]P2TSEL1,P2TSEL0=b'10'   'PWM2 Timer 6 source
               #endif
 
-              #if PMW_1_Clock_Source = 6
+              #if PWM_1_Clock_Source = 6
                   [canskip]P1TSEL1,P1TSEL0=b'10'   'PWM1 Timer 6 source
               #endif
           #endif
 
       #ENDIF
 
+SetPWMDutyCode:
       'This section finally, sets the Duty using the constants from the script.
       'This uses the user defined constants to set the appropiate registers.
       #IFDEF PWM_1_Duty
-        #IFDEF BIT(P1TSEL0)   'Means this is a PWM Channel chip
+        #IFDEF VAR(PWM1CON)   'Means this is a PWM Channel chip
           PWM1CON =  Script_PWM1CON
           PWM1DCH =  Script_PWM1_DutyCycleH
           PWM1DCL =  Script_PWM1_DutyCycleL
@@ -1692,7 +1695,7 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_2_Duty
-        #IFDEF BIT(P2TSEL0)
+        #IFDEF VAR(PWM2CON)
           PWM2CON =  Script_PWM2CON
           PWM2DCH =  Script_PWM2_DutyCycleH
           PWM2DCL =  Script_PWM2_DutyCycleL
@@ -1700,7 +1703,7 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_3_Duty
-        #IFDEF BIT(P3TSEL0)
+        #IFDEF VAR(PWM3CON)
           PWM3CON =  Script_PWM3CON
           PWM3DCH =  Script_PWM3_DutyCycleH
           PWM3DCL =  Script_PWM3_DutyCycleL
@@ -1708,7 +1711,7 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_4_Duty
-        #IFDEF BIT(P4TSEL0)
+        #IFDEF VAR(PWM4CON)
           PWM4CON =  Script_PWM4CON
           PWM4DCH =  Script_PWM4_DutyCycleH
           PWM4DCL =  Script_PWM4_DutyCycleL
@@ -1716,7 +1719,7 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_5_Duty
-        #IFDEF BIT(P5TSEL0)
+        #IFDEF VAR(PWM5CON)
           PWM5CON =  Script_PWM5CON
           PWM5DCH =  Script_PWM5_DutyCycleH
           PWM5DCL =  Script_PWM5_DutyCycleL
@@ -1724,7 +1727,7 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_6_Duty
-        #IFDEF BIT(P6TSEL0)
+        #IFDEF VAR(PWM6CON)
           PWM6CON =  Script_PWM6CON
           PWM6DCH =  Script_PWM6_DutyCycleH
           PWM6DCL =  Script_PWM6_DutyCycleL
@@ -1732,7 +1735,7 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_7_Duty
-        #IFDEF BIT(P7TSEL0)
+        #IFDEF VAR(PWM7CON)
           PWM7CON =  Script_PWM7CON
           PWM7DCH =  Script_PWM7_DutyCycleH
           PWM7DCL =  Script_PWM7_DutyCycleL
@@ -1740,7 +1743,7 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_8_Duty
-        #IFDEF BIT(P8TSEL0)
+        #IFDEF VAR(PWM8CON)
           PWM8CON =  Script_PWM8CON
           PWM8DCH =  Script_PWM8_DutyCycleH
           PWM8DCL =  Script_PWM8_DutyCycleL
@@ -1748,12 +1751,13 @@ StartofFixedPWMModeCode:
       #ENDIF
 
       #IFDEF PWM_9_Duty
-        #IFDEF BIT(P9TSEL0)
+        #IFDEF VAR(PWM9CON)
           PWM9CON =  Script_PWM9CON
           PWM9DCH =  Script_PWM9_DutyCycleH
           PWM9DCL =  Script_PWM9_DutyCycleL
         #ENDIF
       #ENDIF
+
 EndofFixedPWMModeCode:
       'This is the end of the fixed PWM Mode handler
   #endif
@@ -1762,23 +1766,28 @@ EndofFixedPWMModeCode:
   #IFDEF AVR
 
     #script
-      ICR1temp = int(((chipMHZ*1000) / PWM_Freq) - 1)
-      PWMPrescaleTemp = 1
-      If ICR1temp > 255 Then
-        ICR1temp = int(ICR1temp / 8)
-        PWMPrescaleTemp = 8
 
+      if AVR then
+        ICR1temp = int(((chipMHZ*1000) / PWM_Freq) - 1)
+        PWMPrescaleTemp = 1
         If ICR1temp > 255 Then
           ICR1temp = int(ICR1temp / 8)
-          PWMPrescaleTemp = 64
-        End If
+          PWMPrescaleTemp = 8
 
           If ICR1temp > 255 Then
-            error msg(BadHPWMFreq)
+            ICR1temp = int(ICR1temp / 8)
+            PWMPrescaleTemp = 64
           End If
-      End If
-      PWM_Duty = int((PWM_Duty * 255)/100)
-      PWMDutyTempAVR = int((PWM_Duty * ICR1temp) / 255)
+
+            If ICR1temp > 255 Then
+              error msg(BadHPWMFreq)
+            End If
+        End If
+        PWM_Duty = int((PWM_Duty * 255)/100)
+        PWMDutyTempAVR = int((PWM_Duty * ICR1temp) / 255)
+
+      end if
+
     #endscript
 
     'Set all defined channel modes, and default channel 2 mode
@@ -3968,7 +3977,7 @@ END SUB
 
     'The only options are PWM_Timer2_Freq nn|PWM_Timer4_Freq nn|PWM_Timer6_Freq nn. These are the PWM timers
     'The PWM_yy_Duty xx' where yy is between 1 and 9 and is a valid PWM module, and, xx is the Duty cycle for specific channels
-    'The PMW_zz_Clock_Source tt.  Where zz is channel and tt is the PWM clock source.
+    'The PWM_zz_Clock_Source tt.  Where zz is channel and tt is the PWM clock source.
     'You do not need to define all the timers and channels, just define the constants you need.
     'The minimum is
     '   A timer with a frequency
@@ -3977,38 +3986,38 @@ END SUB
     '   For PWM channel 2 with a frequency of 38Khz with a duty of 50% with a clock source of timer 2, use
     '     #define PWM_Timer2_Freq 38
     '     #define PWM_7_Duty 50
-    '     #define PMW_7_Clock_Source 2
+    '     #define PWM_7_Clock_Source 2
 
 '    #define PWM_Timer2_Freq 20        'Set frequency in KHz, just change the number
 '    #define PWM_Timer4_Freq 40        'Set frequency in KHz, just change the number
 '    #define PWM_Timer6_Freq 60        'Set frequency in KHz, just change the number
 
 '    #define PWM_1_Duty 10            'Set duty cycle as percentage 0-100%, just change the number
-'    #define PMW_1_Clock_Source 2
+'    #define PWM_1_Clock_Source 2
 '
 '    #define PWM_2_Duty 20
-'    #define PMW_2_Clock_Source 4
+'    #define PWM_2_Clock_Source 4
 '
 '    #define PWM_3_Duty 30
-'    #define PMW_3_Clock_Source 6
+'    #define PWM_3_Clock_Source 6
 '
 '    #define PWM_4_Duty 40
-'    #define PMW_4_Clock_Source 2
+'    #define PWM_4_Clock_Source 2
 '
 '    #define PWM_5_Duty 50
-'    #define PMW_5_Clock_Source 4
+'    #define PWM_5_Clock_Source 4
 '
 '    #define PWM_6_Duty 60
-'    #define PMW_6_Clock_Source 6
+'    #define PWM_6_Clock_Source 6
 '
 '    #define PWM_7_Duty 70
-'    #define PMW_7_Clock_Source 2
+'    #define PWM_7_Clock_Source 2
 '
 '    #define PWM_8_Duty 80
-'    #define PMW_8_Clock_Source 4
+'    #define PWM_8_Clock_Source 4
 '
 '    #define PWM_9_Duty 90
-'    #define PMW_9_Clock_Source 6
+'    #define PWM_9_Clock_Source 6
 
 
 #define HPWMxCon_Default On   'This will start the PWM channels as on.
