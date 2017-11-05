@@ -632,6 +632,8 @@ SUB PreProcessor
 			LineOrigin->LineNo = LC
 
 			'Save copy for Preserve mode
+			'Only save stuff in main file or inside a subroutine
+			'0 = nothing, 1 = comments (K:C), 2 = code (K:A), 3 = line numbers (K:L)
 			PreserveIn = ""
 			If (PreserveMode = 1 Or PreserveMode = 2) And (RF = 1 OR S = 1) Then
 				PreserveIn = DataSource
@@ -639,7 +641,7 @@ SUB PreProcessor
 				PreserveIn = TRIM(PreserveIn)
 
 				'Preserve Comments
-				If Left(DataSource, 1) = "'" OR Left(DataSource, 1) = ";" OR Left(DataSource, 4) = "REM " Then
+				If Left(PreserveIn, 1) = "'" OR Left(PreserveIn, 1) = ";" OR Left(PreserveIn, 4) = "REM " Then
 					IF Left(PreserveIn, 4) = "REM " Then PreserveIn = "'" + Trim(Mid(PreserveIn, 4))
 					PreserveIn = Trim(Mid(PreserveIn, 2))
 					PCC += 1

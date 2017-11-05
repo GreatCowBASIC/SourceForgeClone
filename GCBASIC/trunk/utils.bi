@@ -713,6 +713,43 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 	GetByte = Str(OutVal Shr (8 * BS) And 255)
 End FUNCTION
 
+Function GetNextTempVar(CurrVar As String) As String
+	'Return next name for temporary variable if CurrVar is invalid
+	Dim As String BeforeNumber, Number, AfterNumber
+	Dim As Integer CurrCharNo, CurrChar, State
+	
+	'If name is known and has a number in it, increment number and return that
+	State = 0
+	BeforeNumber = ""
+	Number = ""
+	AfterNumber = ""
+	For CurrCharNo = 1 To Len(CurrVar)
+		CurrChar = Asc(Mid(CurrVar, CurrCharNo, 1))
+		If CurrChar >= 48 And CurrChar <= 57 Then
+			If State = 0 Or State = 1 Then
+				State = 1
+				Number += Mid(CurrVar, CurrCharNo, 1)
+			Else
+				'Found another number, use this one
+				State = 1
+				BeforeNumber = BeforeNumber + Number + AfterNumber
+				Number = Mid(CurrVar, CurrCharNo, 1)
+				AfterNumber = ""
+			End If
+		Else
+			If State = 0 Then
+				BeforeNumber += Mid(CurrVar, CurrCharNo, 1)
+			ElseIf State = 1 Or State = 2Then
+				State = 2
+				AfterNumber += Mid(CurrVar, CurrCharNo, 1)
+			End If
+		End If
+	Next
+	
+	Return BeforeNumber + Trim(Str(Val(Number) + 1)) + AfterNumber
+	
+End Function
+
 Function GetOriginString(OriginIn As OriginType Pointer) As String
 	If OriginIn = 0 Then Return ""
 	

@@ -104,7 +104,7 @@ Sub InitSys
    'Remove this show of DAT format at v0.99.00 when we know is OK
    'This will cause Extraneous arguments on the line when using MPLAB but we need the information for support.
    #if ChipIntOSCCONFormat > 0
-        nop ChipIntOSCCONFormat
+        asm ShowDebug ChipIntOSCCONFormat
    #endif
 
 
@@ -133,7 +133,7 @@ Sub InitSys
 
       #IFDEF Var(OSCCON1)
 
-         NOP 100 'This is the routine to support OSCCON1 config addresss
+        asm showdebug 100 'This is the routine to support OSCCON1 config addresss
         OSCCON1 = 0x60 ' NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
 
         OSCCON3 = 0x00 ' CSWHOLD may proceed; SOSCPWR Low power
@@ -149,7 +149,7 @@ Sub InitSys
 
             #IFDEF Bit(NDIV3)    'and has NDIV3 bit
 
-                NOP 101 '18F and has NDIV3 bit
+                asm showdebug 101 '18F and has NDIV3 bit
 
                 'Clear NDIV3:0
                 NDIV3 = 0
@@ -231,7 +231,7 @@ Sub InitSys
 
          #IFNDEF CHIPFamily 16
 
-                NOP 102 '#IFNDEF CHIPFamily 16
+                asm showdebug 102 '#IFNDEF CHIPFamily 16
 
                 #IFDEF ChipMHz 32
                   #IFDEF Var(OSCSTAT)
@@ -329,7 +329,7 @@ Sub InitSys
       'Most chips
       #ifndef Bit(HFIOFS)
 
-        NOP 103 ' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifNdef Bit(HFIOFS)
+        asm showdebug 103 ' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifNdef Bit(HFIOFS)
 
         #IFDEF SYS_CLOCK_DIV_NEEDED 1 'added for 18F(L)K20 -WMR
           OSCCON = OSCCON OR b'01110000'
@@ -379,8 +379,8 @@ Sub InitSys
 
       #ifdef Bit(HFIOFS)
 
-        NOP 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
-
+        asm showdebug 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
+		
         #IFDEF ChipMHz 64 'the SPLLEN needs to set after the IRCF
             [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
             #ifdef Bit(SPLLMULT)
@@ -502,7 +502,7 @@ Sub InitSys
 
       #ifdef Bit(IRCF3)
 
-        NOP 105 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifdef Bit(IRCF3)
+        asm showdebug 105 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifdef Bit(IRCF3)
 
         #IFDEF ChipMHz 64
           'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
@@ -645,7 +645,7 @@ Sub InitSys
 
       #ifndef Bit(IRCF3)
 
-        NOP 106 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifNdef Bit(IRCF3)
+        asm showdebug 106 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifNdef Bit(IRCF3)
 
         #IFDEF ChipMHz 64
           'OSCCON = OSCCON AND b'10001111'

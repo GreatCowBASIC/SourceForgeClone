@@ -147,7 +147,8 @@ Type SubType
 	ReturnAlias As String
 
 	'Call tree
-	CallList As LinkedListElement Pointer
+	CallList As LinkedListElement Pointer 'Outgoing calls
+	CallerList As LinkedListElement Pointer 'Incoming calls
 
 	'Assembly bit variable used to save IntOn/IntOff state
 	IntStateSaveVar As String
@@ -162,6 +163,9 @@ Type SubType
 	LocationSet As Integer
 	MaxHexSize As Integer 'Highest recorded size
 	CallsFromPage(MAX_PROG_PAGES) As Integer 'Record calls from each page
+	
+	'Temporary variables used (replace if they overlap with variables in a calling subroutine)
+	TemporaryVars As LinkedListElement Pointer
 
 	'Sub code
 	CodeStart As LinkedListElement Pointer
@@ -369,6 +373,7 @@ Declare Function FixBit (InBit As String, Origin As String) As String
 DECLARE SUB FixFunctions (CompSub As SubType Pointer)
 Declare Sub FixPointerOps (CompSub As SubType Pointer)
 Declare Sub FixSinglePinSet
+Declare Sub FixTemporaryVariables
 Declare Sub FreeCalcVar (VarName As String)
 Declare Function GenerateArrayPointerSet(DestVar As String, DestPtr As Integer, CurrSub As SubType Pointer, Origin As String) As LinkedListElement Pointer
 Declare Function GenerateAutoPinDir As LinkedListElement Pointer
@@ -378,7 +383,7 @@ Declare Function GenerateMultiSet(SourceData As String, DestVar As String, Origi
 Declare Function GenerateVectorCode As LinkedListElement Pointer
 Declare Function GetCalcType(VT1 As String, Act As String, VT2 As String, AnswerType As String) As String
 Declare Function GetCalcVar (VarTypeIn As String) As String
-Declare Function GetCalledSubs(CurrSub As SubType Pointer, ExistingList As LinkedListElement Pointer = 0) As LinkedListElement Pointer
+Declare Function GetCalledSubs(CurrSub As SubType Pointer, ExistingList As LinkedListElement Pointer = 0, FindCallers As Integer = 0) As LinkedListElement Pointer
 DECLARE FUNCTION GetDestSub(Origin As String) As Integer
 Declare Sub GetEqConfig
 Declare Function GetLabelList(CompSub As SubType Pointer) As LinkedListElement Pointer
@@ -490,6 +495,7 @@ DECLARE FUNCTION CountOccur (Source As String, Search As String, SearchWhole As 
 Declare Function DelType (InString As String) As String
 DECLARE FUNCTION GetByte (DataSource As String, BS As Integer) As String
 Declare Function GetElements(InData As String, DivChar As String = "", IncludeDividers As Integer = 0) As LinkedListElement Pointer
+Declare Function GetNextTempVar(CurrVar As String) As String
 Declare Function GetOriginString(OriginIn As OriginType Pointer) As String
 Declare Function GetDoubleBytes (InValue As Double) As ULongInt
 Declare Function GetSingleBytes (InValue As Single) As UInteger
@@ -643,7 +649,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-10-27"
+Version = "0.98.<<>> 2017-11-05"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2908,6 +2914,9 @@ Sub CompileProgram
 			CompileIntOnOff (Subroutine(CurrSub))
 		End If
 	Next
+	
+	'Ensure no overlap between temporary variables
+	FixTemporaryVariables
 
 	'Add initialise code to start of main
 	AddMainInitCode
@@ -6506,9 +6515,7 @@ SUB CompileRotate (CompSub As SubType Pointer)
 			End If
 			
 			'Add variable
-			If VarType = "BYTE" Then
-				AddVar VarName, "BYTE", 1, CompSub, "REAL", Origin
-			End If
+			AddVar VarName, "BYTE", 1, CompSub, "REAL", Origin
 			
 			'Pre-set C bit?
 			If (Not UseC) And Not (ChipFamily = 16 And VarType = "BYTE") Then
@@ -7142,6 +7149,7 @@ END SUB
 Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Pointer
 
 	Dim As Integer CD, C, F, L, S, AF, StringConstCount, RP, ParamIsFn, LocOfFn, ST
+	Dim As Integer StringConstLen
 	Dim As String Temp, SendOrigin, ReceiveOrigin, SourceArray, DestArray
 	Dim As String ArrayHandler, SourceArrayHandler, TempData, NextLine, GenName
 	Dim As String CallCmd, MacroLineOrigin, SourceFunction
@@ -7362,11 +7370,14 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
 					'In other situations, copy string constant into temporary variable, then pass reference to that
 					Else
+						StringConstLen = Len(GetString(.Param(CD, 1), 0))
 						StringConstCount += 1
 						BeforePos = LinkedListInsert(BeforePos, "SYSSTRINGPARAM" + Str(StringConstCount) + "=" + .Param(CD, 1) + .Origin)
 						.Param(CD, 1) = "SYSSTRINGPARAM" + Str(StringConstCount)
 						.Param(CD, 2) = "STRING"
-						AddVar("SYSSTRINGPARAM" + Str(StringConstCount), "STRING", 20, Subroutine(0), "REAL", .Origin, , -1)
+						AddVar("SYSSTRINGPARAM" + Str(StringConstCount), "STRING*" + Str(StringConstLen), StringConstLen, Subroutine(0), "REAL", .Origin, , -1)
+						'Record use of temporary variable
+						LinkedListInsert(.Caller->TemporaryVars, "SYSSTRINGPARAM" + Str(StringConstCount))
 						C = 3
 					End If
 				END IF
@@ -9590,7 +9601,12 @@ Sub FindAssembly (CompSub As SubType Pointer)
 
 		IF Left(CurrLine->Value, 4) = "ASM " THEN
 			CurrLine->Value = Trim(Mid(CurrLine->Value, 5))
-			CurrLine->Value = " " + LCase(Left(CurrLine->Value, LEN(Temp))) + Mid(CurrLine->Value, LEN(Temp) + 1)
+			'Allow use of ASM REM x for debugging
+			If Left(CurrLine->Value, 10) = "SHOWDEBUG " Then
+				CurrLine->Value = ";" + LCase(Trim(Mid(CurrLine->Value, 11)))
+			Else
+				CurrLine->Value = " " + LCase(Left(CurrLine->Value, LEN(Temp))) + Mid(CurrLine->Value, LEN(Temp) + 1)
+			End If
 			IF INSTR(CurrLine->Value, ";?") <> 0 THEN CurrLine->Value = RTrim(Left(CurrLine->Value, INSTR(CurrLine->Value, ";?") - 1))
 		Else
 			ThisCmdPos = IsASM(CurrLine->Value)
@@ -10116,6 +10132,162 @@ Sub FixSinglePinSet
 		End If
 	End If
 
+End Sub
+
+Sub FixTemporaryVariables
+	'Find any temporary variables that will be overwritten by subroutines, and rename to prevent
+	Dim As LinkedListElement Pointer CurrVar, CheckVar, CallerList, CallerListPos, CalledListPos
+	Dim As LinkedListElement Pointer UsedVarPos, VisitList, VisitListPos, SearchPos, CheckNewPos
+	Dim As LinkedListElement Pointer CurrLine
+	Dim As String CurrVarName, NewVarName
+	Dim As SubType Pointer CurrSub, CallingSub
+	Dim As Integer CurrSubID, KeepSearching, SearchIn
+	Dim As HashMap Pointer UsedTempVars
+	Dim As VariableType Pointer OldVar
+	
+	'Remove duplicate names from list
+	For CurrSubID = 0 To SBC
+		CurrSub = Subroutine(CurrSubID)
+		If CurrSub->Required Then
+			CurrVar = CurrSub->TemporaryVars
+			Do While CurrVar <> 0
+				CurrVarName = UCase(CurrVar->Value)
+				CurrVar->Value = CurrVarName
+				CheckVar = CurrVar->Next
+				Do While CheckVar <> 0
+					If CurrVarName = UCase(CheckVar->Value) Then
+						CheckVar = LinkedListDelete(CheckVar)
+					End If
+					CheckVar = CheckVar->Next
+				Loop
+				
+				CurrVar = CurrVar->Next
+			Loop
+		End If
+	Next
+	
+	'Search for conflicts
+	'Basic algorithm:
+	'Create visit list, fill with main sub and everything called from it
+	'For each item on visit list
+	' - Check that it does not steal any variables from its callers
+	' - Add all subroutines called to visit list
+	' - Subroutines may be visited multiple times if needed
+	VisitList = LinkedListCreate
+	VisitListPos = VisitList
+	VisitListPos = LinkedListInsert(VisitListPos, Subroutine(0))
+	Do While VisitListPos <> 0
+		CurrSub = VisitListPos->MetaData
+		
+		'Check that this sub does not interfere with callers
+		'Get all subroutines that call current sub, build hash map of used temporary vars
+		UsedTempVars = HashMapCreate
+		CallerList = GetCalledSubs(CurrSub, , -1)
+		CallerListPos = CallerList->Next
+		Do While CallerListPos <> 0
+			CallingSub = CallerListPos->MetaData
+			CurrVar = CallingSub->TemporaryVars->Next
+			Do While CurrVar <> 0
+				HashMapSet(UsedTempVars, CurrVar->Value, CallingSub->Name, -1)
+				CurrVar = CurrVar->Next
+			Loop
+			CallerListPos = CallerListPos->Next
+		Loop
+		LinkedListDelete(CallerList, 0)
+		
+		'Check if any temp variables in this sub are used by callers
+		CheckVar = CurrSub->TemporaryVars->Next
+		Do While CheckVar <> 0
+			If HashMapGetStr(UsedTempVars, CheckVar->Value) <> "" Then
+				'Found problem variable
+				'Decide new temp variable name
+				NewVarName = CheckVar->Value
+				Do
+					KeepSearching = 0
+					'Get name to try
+					NewVarName = GetNextTempVar(NewVarName)
+					
+					'Check for conflict in this sub
+					CurrVar = CurrSub->TemporaryVars->Next
+					Do While CurrVar <> 0
+						If CurrVar->Value = NewVarName Then
+							'Name won't work
+							KeepSearching = -1
+							GoTo TryNextName
+						End If
+						CurrVar = CurrVar->Next
+					Loop
+					
+					'Check for conflict with callers
+					If HashMapGetStr(UsedTempVars, NewVarName) <> "" Then
+						KeepSearching = -1
+						GoTo TryNextName
+					End If
+					
+					'If we got here, new name is valid
+					
+					TryNextName:
+				Loop While KeepSearching
+				
+				'Clone variable to new name
+				OldVar = HashMapGet(@(CurrSub->Variables), CheckVar->Value)
+				If OldVar <> 0 Then
+					'Local variable
+					If OldVar->Type = "STRING" Then
+						AddVar(NewVarName, "STRING*" + Str(OldVar->Size), OldVar->Size, CurrSub, OldVar->Pointer, "", OldVar->FixedLocation, -1, OldVar->Used)
+					Else
+						AddVar(NewVarName, OldVar->Type, OldVar->Size, CurrSub, OldVar->Pointer, "", OldVar->FixedLocation, -1, OldVar->Used)
+					End If
+				Else
+					'Must be global
+					OldVar = HashMapGet(@(Subroutine(0)->Variables), CheckVar->Value)
+					If OldVar <> 0 Then
+						If OldVar->Type = "STRING" Then
+							AddVar(NewVarName, "STRING*" + Str(OldVar->Size), OldVar->Size, 0, OldVar->Pointer, "", OldVar->FixedLocation, -1, OldVar->Used)
+						Else
+							AddVar(NewVarName, OldVar->Type, OldVar->Size, 0, OldVar->Pointer, "", OldVar->FixedLocation, -1, OldVar->Used)
+						End If
+					End If
+				End If
+				
+				'Change code to use new variable
+				CurrLine = CurrSub->CodeStart->Next
+				Do While CurrLine <> 0
+					WholeReplace(CurrLine->Value, CheckVar->Value, NewVarName)
+					CurrLine = CurrLine->Next
+				Loop
+				
+			End If
+			CheckVar = CheckVar->Next
+		Loop
+		
+		'Delete caller list
+		HashMapDestroy(UsedTempVars)
+		
+		'Add called subs to visit list
+		CalledListPos = CurrSub->CallList->Next
+		Do While CalledListPos <> 0
+			'Search visit list, add if not already on list after current sub
+			SearchPos = VisitListPos->Next
+			If SearchPos = 0 Then
+				LinkedListInsert(VisitListPos, CalledListPos->MetaData)
+			Else
+				Do While SearchPos <> 0
+					If SearchPos->MetaData = CalledListPos->MetaData Then Exit Do
+					If SearchPos->Next = 0 Then
+						'TODO: This could cause compiler lockup if recursion used. Fix when possible.
+						LinkedListInsert(SearchPos, CalledListPos->MetaData)
+					End If
+					SearchPos = SearchPos->Next
+				Loop
+			End If
+			
+			CalledListPos = CalledListPos->Next
+		Loop
+		
+		VisitListPos = VisitListPos->Next
+	Loop
+	
 End Sub
 
 Sub FreeCalcVar (VarName As String)
@@ -10930,9 +11102,9 @@ Function GetCalcVar (VarTypeIn As String) As String
 
 End Function
 
-Function GetCalledSubs(CurrSub As SubType Pointer, ExistingList As LinkedListElement Pointer) As LinkedListElement Pointer
-	'Gets a list of all subs called from CurrSub
-	'Will also return subs called by subs
+Function GetCalledSubs(CurrSub As SubType Pointer, ExistingList As LinkedListElement Pointer, FindCallers As Integer) As LinkedListElement Pointer
+	'If FindCallers is 0, gets a list of all subs called from CurrSub, and any subs called from those.
+	'If FindCallers is -1, work in reverse - find all subs that call CurrSub, and any subs that call those.
 
 	Dim As LinkedListElement Pointer OutList, CurrPos, SearchList, CurrCall
 	Dim As Integer CallFound
@@ -10948,7 +11120,11 @@ Function GetCalledSubs(CurrSub As SubType Pointer, ExistingList As LinkedListEle
 	Loop
 
 	With *CurrSub
-		CurrCall = .CallList->Next
+		If FindCallers Then
+			CurrCall = .CallerList->Next
+		Else
+			CurrCall = .CallList->Next
+		End If
 		Do While CurrCall <> 0
 
 			'Check to see if call is already in output list
@@ -10963,7 +11139,7 @@ Function GetCalledSubs(CurrSub As SubType Pointer, ExistingList As LinkedListEle
 			Loop
 			If CallFound = 0 Then
 				CurrPos = LinkedListInsert(CurrPos, CurrCall->MetaData)
-				GetCalledSubs(CurrCall->MetaData, OutList)
+				GetCalledSubs(CurrCall->MetaData, OutList, FindCallers)
 				Do While CurrPos->Next <> 0
 					CurrPos = CurrPos->Next
 				Loop
@@ -13949,8 +14125,8 @@ Sub RecordSubCall(CompSub As SubType Pointer, CalledSub As SubType Pointer)
 	If CompSub = 0 Then Exit Sub
 	If CalledSub = 0 Then Exit Sub
 
+	'Record outgoing call in CompSub
 	With *CompSub
-
 		'Check for sub in list already
 		FindCall = .CallList->Next
 		Do While FindCall <> 0
@@ -13966,7 +14142,26 @@ Sub RecordSubCall(CompSub As SubType Pointer, CalledSub As SubType Pointer)
 		FindCall = LinkedListInsert(.CallList, CalledSub)
 		FindCall->NumVal = 1
 	End With
+	
+	
+	'Record incoming call in CalledSub
+	With *CalledSub
+		'Check for sub in list already
+		FindCall = .CallerList->Next
+		Do While FindCall <> 0
+			If FindCall->MetaData = CompSub Then
+				FindCall->NumVal += 1
+				Exit Sub
+			End If
+			FindCall = FindCall->Next
+		Loop
 
+		'Sub not in list, add it
+		'.Call(.Calls) = CalledSub
+		FindCall = LinkedListInsert(.CallerList, CompSub)
+		FindCall->NumVal = 1
+	End With
+	
 End Sub
 
 Function ReplaceFnNames(InName As String) As String
@@ -15310,6 +15505,8 @@ Function NewSubroutine(SubName As String) As SubType Pointer
 		.Name = SubName
 		.CodeStart = LinkedListCreate
 		.CallList = LinkedListCreate
+		.CallerList = LinkedListCreate
+		.TemporaryVars = LinkedListCreate
 
 		.IntStateSaveVar = ""
 		.ReturnAlias = ""
