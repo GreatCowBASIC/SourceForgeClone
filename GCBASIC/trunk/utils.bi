@@ -1791,6 +1791,40 @@ Function LinkedListDeleteList (StartLoc As LinkedListElement Pointer, EndLoc As 
 	Return LastLine
 End Function
 
+Function LinkedListFind(StartNode As LinkedListElement Pointer, SearchValue As String) As LinkedListElement Pointer
+	'Search list for item with matching metadata value
+	Dim As LinkedListElement Pointer CurrPos
+	Dim As String SearchUpper
+	
+	If StartNode = 0 Then Return 0
+	CurrPos = StartNode->Next
+	SearchUpper = UCase(SearchValue)
+	
+	Do While CurrPos <> 0
+		If UCase(CurrPos->Value) = SearchUpper Then
+			Return CurrPos
+		End If
+		CurrPos = CurrPos->Next
+	Loop
+	
+End Function
+
+Function LinkedListFind(StartNode As LinkedListElement Pointer, SearchMeta As Any Pointer) As LinkedListElement Pointer
+	'Search list for item with matching metadata value
+	Dim As LinkedListElement Pointer CurrPos
+	
+	If StartNode = 0 Then Return 0
+	CurrPos = StartNode->Next
+	
+	Do While CurrPos <> 0
+		If CurrPos->MetaData = SearchMeta Then
+			Return CurrPos
+		End If
+		CurrPos = CurrPos->Next
+	Loop
+	
+End Function
+
 Sub LinkedListPrint(StartNode As LinkedListElement Pointer)
 	Dim As LinkedListElement Pointer CurrPos
 	

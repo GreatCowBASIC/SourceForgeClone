@@ -530,6 +530,8 @@ DECLARE SUB SCICONV (STemp As String)
 Declare Function ShortFileName(InName As String) As String
 DECLARE FUNCTION ShortName (NameIn As String) As String
 Declare Function LinkedListCreate As LinkedListElement Pointer
+Declare Function LinkedListFind OverLoad (StartNode As LinkedListElement Pointer, SearchMeta As Any Pointer) As LinkedListElement Pointer
+Declare Function LinkedListFind OverLoad (StartNode As LinkedListElement Pointer, SearchValue As String) As LinkedListElement Pointer
 Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewLine As String, NewNumVal As Integer = 0) As LinkedListElement Pointer
 Declare Function LinkedListInsert OverLoad (Location As LinkedListElement Pointer, NewData As Any Pointer) As LinkedListElement Pointer
 Declare Function LinkedListInsertList (Location As LinkedListElement Pointer, NewList As LinkedListElement Pointer, NewListEndIn As LinkedListElement Pointer = 0) As LinkedListElement Pointer
@@ -649,7 +651,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-11-05"
+Version = "0.98.<<>> 2017-11-07"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -10193,7 +10195,6 @@ Sub FixTemporaryVariables
 			Loop
 			CallerListPos = CallerListPos->Next
 		Loop
-		LinkedListDelete(CallerList, 0)
 		
 		'Check if any temp variables in this sub are used by callers
 		CheckVar = CurrSub->TemporaryVars->Next
@@ -10208,15 +10209,11 @@ Sub FixTemporaryVariables
 					NewVarName = GetNextTempVar(NewVarName)
 					
 					'Check for conflict in this sub
-					CurrVar = CurrSub->TemporaryVars->Next
-					Do While CurrVar <> 0
-						If CurrVar->Value = NewVarName Then
-							'Name won't work
-							KeepSearching = -1
-							GoTo TryNextName
-						End If
-						CurrVar = CurrVar->Next
-					Loop
+					If LinkedListFind(CurrSub->TemporaryVars, NewVarName) <> 0 Then
+						'Name won't work
+						KeepSearching = -1
+						GoTo TryNextName
+					End If
 					
 					'Check for conflict with callers
 					If HashMapGetStr(UsedTempVars, NewVarName) <> "" Then
@@ -10257,12 +10254,11 @@ Sub FixTemporaryVariables
 					CurrLine = CurrLine->Next
 				Loop
 				
+				'Record use of new temporary variable
+				CheckVar = LinkedListInsert(CheckVar, NewVarName)
 			End If
 			CheckVar = CheckVar->Next
 		Loop
-		
-		'Delete caller list
-		HashMapDestroy(UsedTempVars)
 		
 		'Add called subs to visit list
 		CalledListPos = CurrSub->CallList->Next
@@ -10275,8 +10271,11 @@ Sub FixTemporaryVariables
 				Do While SearchPos <> 0
 					If SearchPos->MetaData = CalledListPos->MetaData Then Exit Do
 					If SearchPos->Next = 0 Then
-						'TODO: This could cause compiler lockup if recursion used. Fix when possible.
-						LinkedListInsert(SearchPos, CalledListPos->MetaData)
+						'Called sub is not later in visit list already, so add
+						'(Unless a called sub calls this one, then we have recursion and adding will lock up compiler)
+						If LinkedListFind(CallerList, CurrSub) = 0 Then
+							LinkedListInsert(SearchPos, CalledListPos->MetaData)
+						End If
 					End If
 					SearchPos = SearchPos->Next
 				Loop
@@ -10284,6 +10283,10 @@ Sub FixTemporaryVariables
 			
 			CalledListPos = CalledListPos->Next
 		Loop
+		
+		'Delete caller list
+		HashMapDestroy(UsedTempVars)
+		LinkedListDelete(CallerList, 0)
 		
 		VisitListPos = VisitListPos->Next
 	Loop
