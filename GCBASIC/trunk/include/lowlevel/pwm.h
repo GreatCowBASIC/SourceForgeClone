@@ -68,6 +68,7 @@
 ''' 30/10/2017 Revised to show overflow issue
 ''' 1/11/2017 Revised SetofFixedModePWM to test a VAR not a BIT see section SetPWMDutyCode - EndofFixedPWMModeCode
 ''' 4/11/2017 Revised to isolate AVR PWM_Duty setting in Script and rename PMW to PWM
+''' 6/11/2017 Restore the cache value in HPWMUpdate
 
   'define the defaults
   #define AVRTC0
@@ -3052,8 +3053,8 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
     dim PWMDuty as word
     dim PWMResolution as word
 
-    dim PRx_Temp as long
-    dim PWMDuty as word
+    'Restore the cache value
+    PRx_Temp = PRx_Temp_Cache
 
     #ifdef USE_HPWM3 TRUE
 
@@ -3065,7 +3066,6 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
         if PWMChannel = 3 then  'in section USE_HPWM3
 
-            PRx_Temp = PRx_Temp_Cache
             ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             'assumes PRx_Temp and PWMDuty are valid
