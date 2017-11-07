@@ -1957,7 +1957,7 @@ SUB RunScripts
 				IF TL > 0 Then
 					TempData = Message("NoENDIF")
 					LogError(TempData, Origin)
-				Else
+				ElseIf ScriptCodePos <> 0 Then
 					ScriptCodePos = ScriptCodePos->Prev
 				End If
 			END IF
