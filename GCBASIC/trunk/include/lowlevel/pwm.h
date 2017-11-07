@@ -69,6 +69,7 @@
 ''' 1/11/2017 Revised SetofFixedModePWM to test a VAR not a BIT see section SetPWMDutyCode - EndofFixedPWMModeCode
 ''' 4/11/2017 Revised to isolate AVR PWM_Duty setting in Script and rename PMW to PWM
 ''' 6/11/2017 Restore the cache value in HPWMUpdate
+''' 7/11/2017 Added _v9081Patch=1 and _v9081Patch=2 for fix
 
   'define the defaults
   #define AVRTC0
@@ -112,12 +113,16 @@
   #ENDIF
 
   #script
+
     If AVR Then
       'redirects to AVR code
       HPWM = AVRHPWM
       PWMOn = AVRPWMOn
       PWMOff = AVRPWMOff
     End If
+
+    _v9081Patch=1
+
   #endscript
 
 
@@ -1788,7 +1793,7 @@ EndofFixedPWMModeCode:
         PWMDutyTempAVR = int((PWM_Duty * ICR1temp) / 255)
 
       end if
-
+      _v9081Patch=2
     #endscript
 
     'Set all defined channel modes, and default channel 2 mode
