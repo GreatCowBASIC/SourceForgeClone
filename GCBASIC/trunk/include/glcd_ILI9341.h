@@ -26,6 +26,7 @@
 ' 30/5/2017:       Revised to remove ILI9341_DI GLCD_DI. SDO (MISO) is not used.
 ' 17/07/2017:      Reverted ILI9341_DI GLCD_DI
 ' 30/09/2017:      Added support for OLED Fonts
+' 11/11/2017       Added support for ReadPixel_ILI9341
 
 
 ' Hardware settings
@@ -1057,3 +1058,39 @@ Sub DrawBigChar_ILI9341 (In CharLocX as Word, In CharLocY as Word, In CharCode, 
         Next
     Next
 End Sub
+
+
+'returns a 24bit pixel color value... as GCB uses a 16bit color value the user will need to complete conversion
+Function  ReadPixel_ILI9341(In ILI9341_GLCDX as word, In ILI9341_GLCDY as word ) as long
+
+    DIM ILI9341TempOut as byte
+
+    set ILI9341_CS OFF
+    set ILI9341_DC OFF
+    SPITransfer  ILI9341_CASET,  ILI9341TempOut
+    set ILI9341_DC ON;
+    SPITransfer  ILI9341_GLCDX_h,  ILI9341TempOut
+    SPITransfer  ILI9341_GLCDX,  ILI9341TempOut
+    SPITransfer  ILI9341_GLCDX_h,  ILI9341TempOut
+    SPITransfer  ILI9341_GLCDX,  ILI9341TempOut
+
+    set ILI9341_DC OFF
+    SPITransfer  ILI9341_PASET,  ILI9341TempOut
+
+    set ILI9341_DC ON
+    SPITransfer  ILI9341_GLCDY_h,  ILI9341TempOut
+    SPITransfer  ILI9341_GLCDY,  ILI9341TempOut
+    SPITransfer  ILI9341_GLCDY_h,  ILI9341TempOut
+    SPITransfer  ILI9341_GLCDY,  ILI9341TempOut
+
+    set ILI9341_DC OFF
+    SPITransfer  ILI9341_RAMRD, ILI9341TempOut
+
+    set ILI9341_DC ON
+    SPITransfer  1,  ReadPixel_ILI9341_e  'dummy read - use the highest byte
+    SPITransfer  2,  ReadPixel_ILI9341_u
+    SPITransfer  3,  ReadPixel_ILI9341_h
+    SPITransfer  4,  [byte]ReadPixel_ILI9341
+    set ILI9341_CS ON
+
+End Function
