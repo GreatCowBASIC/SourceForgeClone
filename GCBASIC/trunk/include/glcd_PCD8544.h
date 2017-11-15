@@ -26,7 +26,7 @@
 '
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 13/12/14: Revised to support Linear array memory addressing.  Now requires the compiler after the date of 13/12/2014
-
+' 15/11/17: Added hardware SPI support
 
 '
 'Hardware settings
@@ -136,6 +136,13 @@ Sub InitGLCD_PCD8544
           #if GLCD_TYPE = GLCD_TYPE_PCD8544
               ' required variables
 
+                        #ifdef PCD8544_HardwareSPI
+                          ' harware SPI mode
+                          SPIMode Master, 0
+                          wait 10 ms
+                        #endif
+
+
                         #IFNDEF GLCD_LAT
                               'Pin directions
                               Dir PCD8544_CS Out
@@ -177,7 +184,7 @@ Sub InitGLCD_PCD8544
                         PCD8544_CS = 1
                         wait 10 us
                         PCD8544_CS = 0
-
+                        wait 10 ms
 
     ' /*********SEE DATASHEET FOR ALL THIS********/
 
@@ -190,7 +197,7 @@ Sub InitGLCD_PCD8544
                         Clear_RAM_PCD8544;               Erase all pixel on the DDRAM.
                         Write_Command_PCD8544(0x08);     Blank the Display.
                         Write_Command_PCD8544(0x0C);     Display Normal.
-                        GOTO_Pixel_PCD8544(0,0);     Cursor Home.
+                        GOTO_Pixel_PCD8544(0,0);         Cursor Home.
 
 
                         'Colours
@@ -198,7 +205,7 @@ Sub InitGLCD_PCD8544
                         GLCDForeground = 1
                         GLCDFontWidth = 6
                         GLCDfntDefault = 0
-      GLCDfntDefaultsize = 1
+                        GLCDfntDefaultsize = 1
 
           #endif
 
@@ -420,21 +427,31 @@ end sub
 
 sub SPI_Send_Data_PCD8544(in PCD8544SendByte)
 
-    repeat 8                      '8 data bits
-      wait PCD8544WriteDelay us
-      if PCD8544SendByte.7 = ON then      'put most significant bit on SDA line
-        set PCD8544_DO ON
-      else
-        set PCD8544_DO OFF
-      end if
+  #ifdef PCD8544_HardwareSPI
+     SPITransfer  PCD8544SendByte,  PCD8544InByte
+     exit sub
+    #endif
 
-      rotate PCD8544SendByte left         'shift in bit for the next time
-      wait PCD8544WriteDelay us
-      SET PCD8544_SCK ON              'now clock it in
-      wait PCD8544ClockDelay us
-      SET PCD8544_SCK OFF               'done clocking that bit
-    end repeat
-    wait PCD8544WriteDelay us
+
+
+  #ifndef PCD8544_HardwareSPI
+        repeat 8                      '8 data bits
+          wait PCD8544WriteDelay us
+          if PCD8544SendByte.7 = ON then      'put most significant bit on SDA line
+            set PCD8544_DO ON
+          else
+            set PCD8544_DO OFF
+          end if
+
+          rotate PCD8544SendByte left         'shift in bit for the next time
+          wait PCD8544WriteDelay us
+          SET PCD8544_SCK ON              'now clock it in
+          wait PCD8544ClockDelay us
+          SET PCD8544_SCK OFF               'done clocking that bit
+        end repeat
+        wait PCD8544WriteDelay us
+    #endif
+
 end sub
 
 sub Clear_RAM_PCD8544
