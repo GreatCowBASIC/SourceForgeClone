@@ -27,6 +27,8 @@
 ' 17/07/2017:      Reverted ILI9341_DI GLCD_DI
 ' 30/09/2017:      Added support for OLED Fonts
 ' 11/11/2017       Added support for ReadPixel_ILI9341
+' 16/11/2017       Revised to support faster CLS for AVR
+
 
 
 ' Hardware settings
@@ -536,9 +538,10 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
 
     set ILI9341_CS OFF
     set ILI9341_DC ON
-    repeat ILI9341_GLCD_WIDTH
+    'repeat 320*240 times... this is faster!
+    repeat 2 ' ILI9341_GLCD_WIDTH
 
-      repeat ILI9341_GLCD_HEIGHT
+      repeat 38400  'ILI9341_GLCD_HEIGHT
 
         #ifdef ILI9341_HardwareSPI
 '         Could use these as an alternative
@@ -576,8 +579,21 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
 
           #endif
           #ifdef AVR
-            FastHWSPITransfer  ILI9341SendWord_h
-            FastHWSPITransfer  ILI9341SendWord
+
+            Do
+              SPDR = ILI9341SendWord_h
+            Loop While SPSR.WCOL
+            'Read buffer
+            'Same for master and slave
+            Wait While SPSR.SPIF = Off
+
+            Do
+              SPDR = ILI9341SendWord
+            Loop While SPSR.WCOL
+            'Read buffer
+            'Same for master and slave
+            Wait While SPSR.SPIF = Off
+
           #endif
 
         #endif

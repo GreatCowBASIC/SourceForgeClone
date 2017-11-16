@@ -341,6 +341,26 @@ If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
      ili9481_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
+
+  If GLCD_TYPE = GLCD_TYPE_HX8347 Then
+
+     #include <glcd_HX8347.h>
+     InitGLCD = InitGLCD_HX8347
+     GLCDCLS = GLCDCLS_HX8347
+     GLCDDrawChar = GLCDDrawChar_HX8347
+     GLCDDrawString = GLCDDrawString_HX8347
+     FilledBox = FilledBox_HX8347
+     Pset = Pset_HX8347
+     GLCDRotate = GLCDRotate_HX8347
+     glcd_type_string = "HX8347"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 320
+     HX8347_GLCD_HEIGHT = GLCDDeviceHeight
+     HX8347_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
+
+
 #endscript
 
 
