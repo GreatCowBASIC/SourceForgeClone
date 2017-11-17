@@ -32,7 +32,7 @@
 '    14/09/17 Added OLED font handler - revised GLCDDrawString to support OLED
 '    19/09/17 Revert Circle and FilledCircle
 '    21/09/17 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
-
+'    17/11/17 Added GLCDPrintLn 
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306
@@ -272,6 +272,7 @@ Dim GLCDDeviceWidth as Word
      GLCD_HEIGHT = 48
      PCD8544_GLCD_HEIGHT = GLCDDeviceHeight
      PCD8544_GLCD_WIDTH = GLCDDeviceWidth
+
   End If
 
   If GLCD_TYPE = GLCD_TYPE_SH1106 Then
@@ -520,6 +521,29 @@ Macro GLCDPrintIncrementPixelPositionMacro
 
 End Macro
 
+
+Sub GLCDPrintString ( in LCDPrintData as string )
+    dim PrintLocX as word
+    GLCDPrint( PrintLocX , PrintLocY , LCDPrintData )
+    PrintLocX = PrintLocX + ( GLCDFontWidth * LCDPrintData (0) )+2  '2 extra pixels
+End Sub
+
+
+Sub GLCDPrintStringLn( in LCDPrintData as string )
+    dim PrintLocX, PrintLocY as word
+
+    GLCDPrint( PrintLocX , PrintLocY , LCDPrintData )
+    PrintLocX = 0
+    PrintLocY = ( PrintLocY + ( 8 * GLCDfntDefaultSize ) ) mod GLCD_HEIGHT
+
+End Sub
+
+Sub GLCDPrintLocate( in PrintLocX as word, in PrintLocY as word )
+    dim PrintLocY as word
+
+    PrintLocY = ( 8 * GLCDfntDefaultSize ) * ( PrintLocY - 1 )
+
+End Sub
 
 '''Draws a string at the specified location on the ST7920 GLCD
 '''@param StringLocX X coordinate for message

@@ -26,7 +26,7 @@
 '
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 13/12/14: Revised to support Linear array memory addressing.  Now requires the compiler after the date of 13/12/2014
-' 15/11/17: Added hardware SPI support
+' 17/11/17: Added GLCDPrintLn methods
 
 '
 'Hardware settings
@@ -220,7 +220,7 @@ End Sub
 Sub GLCDCLS_PCD8544
           ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
           GLCD_yordinate = 0
-
+          PrintLocY = 0
           #if GLCD_TYPE = GLCD_TYPE_PCD8544
               #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
                 For PCD8544_BufferLocationCalc = 1 to 505
@@ -235,6 +235,8 @@ Sub GLCDCLS_PCD8544
               GOTO_Pixel_PCD8544(0,0);  'Goto the pixel specified by the Co-ordinate
 
           #endif
+          PrintLocX = 0
+          PrintLocY = 0
 End Sub
 
 '''Draws a character at the specified location on the ST7920 GLCD
@@ -569,3 +571,4 @@ sub ExtendedCommand_PCD8544 ( in PCD8544SendByte )
                     Write_Command_PCD8544(PCD8544SendByte);         Set PCD8544SendByte
                     Write_Command_PCD8544(0x0C);            LCD in normal mode.
 end sub
+
