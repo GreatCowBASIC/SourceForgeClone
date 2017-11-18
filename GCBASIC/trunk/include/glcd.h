@@ -32,7 +32,7 @@
 '    14/09/17 Added OLED font handler - revised GLCDDrawString to support OLED
 '    19/09/17 Revert Circle and FilledCircle
 '    21/09/17 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
-'    17/11/17 Added GLCDPrintLn 
+'    17/11/17 Added GLCDPrintLn
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306
@@ -538,7 +538,7 @@ Sub GLCDPrintStringLn( in LCDPrintData as string )
 
 End Sub
 
-Sub GLCDPrintLocate( in PrintLocX as word, in PrintLocY as word )
+Sub GLCDLocateString( in PrintLocX as word, in PrintLocY as word )
     dim PrintLocY as word
 
     PrintLocY = ( 8 * GLCDfntDefaultSize ) * ( PrintLocY - 1 )
