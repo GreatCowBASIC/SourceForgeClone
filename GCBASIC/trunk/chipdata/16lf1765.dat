@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16LF1765
-'Generated 26/9/2017
+'Generated 18/11/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -29,7 +29,7 @@ LogicCell1Event:CLC1IE,CLC1IF
 LogicCell2Event:CLC2IE,CLC2IF
 OscillatorFail:OSFIE,OSFIF
 PORTAChange:IOCIE,IOCIF
-PWM5:PWM5IE,PWM5IF
+PWM5MatchEvent:PWM5IE,PWM5IF
 PortChange:IOCIE,IOCIF
 SSP1Collision:BCL1IE,BCL1IF
 SSP1Ready:SSP1IE,SSP1IF
