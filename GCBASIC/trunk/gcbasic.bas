@@ -651,7 +651,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-11-07"
+Version = "0.98.<<>> 2017-11-19"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2931,48 +2931,71 @@ Sub CompileProgram
 End Sub
 
 Sub CompileSubroutine(CompSub As SubType Pointer)
+	Dim EVBS As Integer = 0
 
 	If VBS = 1 Then
 		Print Spc(10); CompSub->Name
 	End If
+	
 
 	'Split any lines at : (these may be inserted through constants)
+	If EVBS Then Print Spc(15); "Splitting lines"
 	SplitLines (CompSub)
 	'Compile calls to other subroutines, insert macros
+	If EVBS Then Print Spc(15); "Compiling sub calls"
 	CompileSubCalls (CompSub)
 
 	'Compile DIMs again, in case any come through from macros
+	If EVBS Then Print Spc(15); "Compiling DIM"
 	CompileDim (CompSub)
 
 	'Compile various commands
+	If EVBS Then Print Spc(15); "Compiling For"
 	CompileFor (CompSub)
+	If EVBS Then Print Spc(15); "Processing arrays"
 	ProcessArrays (CompSub)
+	If EVBS Then Print Spc(15); "Adding sys var bits"
 	AddSysVarBits (CompSub)
+	If EVBS Then Print Spc(15); "Compiling ReadTable"
 	CompileReadTable (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Pot"
 	CompilePot (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Do"
 	CompileDo (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Dir"
 	CompileDir (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Wait"
 	CompileWait (CompSub)
+	If EVBS Then Print Spc(15); "Compiling On Interrupt"
 	CompileOn (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Set"
 	CompileSet (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Rotate"
 	CompileRotate (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Repeat"
 	CompileRepeat (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Select"
 	CompileSelect (CompSub)
 	'Compile If statements and variable assignments last
 	'This allows other commands to generate IFs and assignments rather than having to produce assembly
+	If EVBS Then Print Spc(15); "Compiling If"
 	CompileIF (CompSub)
+	If EVBS Then Print Spc(15); "Compiling var assignments"
 	CompileVars (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Exit Sub"
 	CompileExitSub (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Goto"
 	CompileGoto (CompSub)
 
 	'Recognise ASM
+	If EVBS Then Print Spc(15); "Finding assembly"
 	FindAssembly(CompSub)
 
 	'Replace SysPointerX pseudo variable
 	If ModeAVR Then FixPointerOps (CompSub)
 
 	'CompileIntOnOff (CompSub) Need to do this after all subs compiled
-
+	If EVBS Then Print Spc(15); "Done"
 	CompSub->Compiled = -1
 End Sub
 
@@ -13156,8 +13179,7 @@ End Sub
 
 SUB ProcessArrays (CompSub As SubType Pointer)
 	Dim As String InLine, Origin, Temp, AV, ArrayName, ArrayType, ArrayPosition
-	Dim As String ArrayHandler, AppendArrayPosition, AliasLoc
-	'Dim As String NewCode(20)
+	Dim As String ArrayHandler, AppendArrayPosition, AliasLoc, OldLine
 	Dim As Integer ATV, ArraysInLine, CD, SS, UseTempVar, ArrayElementSize, CurrByte
 	Dim As Integer ArrayDir, L, P, ArrayPointer, NCO, MarkBlock
 	Dim As LinkedListElement Pointer CurrLine, NewCodeList, NewCodeLine, LastArray, ArrayFound
@@ -13339,6 +13361,7 @@ CheckArrayAgain:
 				'Get array index
 				ArrayPosition = Mid(Temp, INSTR(Temp, "(") + 1)
 				ArrayPosition = Left(ArrayPosition, Len(ArrayPosition) - 1)
+				'Print "Accessing "; ArrayName; " index "; ArrayPosition
 
 				'Get array type (real/pointer)
 				IF CurrVar->Pointer = "REAL" THEN
@@ -13381,7 +13404,15 @@ CheckArrayAgain:
 						If ChipFamily = 15 Or ChipFamily = 16 Then AV = "INDF0"
 						If ModeAVR Then AV = "SysPointerX"
 					End If
+					OldLine = InLine
 					WholeReplace InLine, "[1]" + Temp, AV
+					If OldLine = InLine Then
+						'Replace failed, line is invalid
+						Temp = Message("SynErr")
+						LogError Temp, Origin
+						CurrLine = LinkedListDelete(CurrLine)
+						GoTo CompileArraysNextLine
+					End If
 					CurrLine->Value = InLine + Origin
 					If ArrayPointer Then AddVar ArrayHandler, "WORD", 1, 0, "REAL", Origin, , -1
 
