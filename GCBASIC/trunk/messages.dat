@@ -21,19 +21,24 @@ Getting Started with GCBASIC for more info.
 
 Command line parameters:
 GCBASIC [/O:output.asm] [/A:assembler] [/P:programmer] [/K:{C|A}] [/V] [/L]
-        [/R:format] [/NP] filename
+        [/R:format] [/S:settings.ini] [/NP] [/WX] [/F] filename
 
         /O:output.asm   Set an output filename other than the default
         /A:assembler    Batch file used to call assembler. If /A:GCASM is
                           given, GCBASIC will use its internal assembler.
-        /P:programmer   Batch file used to call programmer.
+        /P:programmer   Batch file used to call programmer, or programmer
+		                  name if defined in settings file.
         /K:{C|A}        Keep original code in assembly output. /K:C will
                           save comments, /K:A will preserve all input code.
         /R:format       Write a compilation report. Format can be html, text
 		                  or none.
+		/S:settings.ini Specify name of settings file to load
         /V              Verbose mode
         /L              Show license
         /NP             Do not pause on errors. Use with IDEs.
+		/WX             Treat warnings as errors
+		/F             	Skip compilation if up to date hex file found, call
+		                   programmer immediately and then exit.
         filename        The file to compile.
 		
 You may use - in place of /, such as -V instead of /V.
@@ -63,6 +68,7 @@ End Block
 Startup = "Great Cow BASIC (%Version%)"
 Compiling = "Compiling %Filename% ..."
 NoFile = "Cannot find %Filename%"
+SkippingCompile = "Output file appears up to date, skipping compilation"
 
 'Verbose mode messages
 FindSource = "Finding source files:"

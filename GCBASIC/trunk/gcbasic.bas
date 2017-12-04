@@ -556,7 +556,7 @@ Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabl
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
-Dim Shared As Integer WarningsAsErrors
+Dim Shared As Integer WarningsAsErrors, FlashOnly
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
@@ -700,6 +700,10 @@ ASMCommands = HashMapCreate
 
 'Load files and tidy them up
 PreProcessor
+If FlashOnly Then
+	Print Message("SkippingCompile")
+	GoTo DownloadProgram
+End If
 
 'Compile
 CompileProgram
@@ -781,6 +785,7 @@ WriteErrorLog
 WriteCompilationReport
 
 'Download program
+DownloadProgram:
 IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
 	PRINT
 	PRINT Message("SendToPIC")
@@ -11687,6 +11692,7 @@ SUB InitCompiler
 	PauseOnErr = 1
 	WarningsAsErrors = 0
 	PauseAfterCompile = 0
+	FlashOnly = 0
 	GCGB = 0
 	CompReportFormat = "html"
 
@@ -11728,6 +11734,9 @@ SUB InitCompiler
 		ElseIf ParamUpper = "/WX" Or ParamUpper = "-WX" Then
 			WarningsAsErrors = -1
 			WarnErrorNotSet = 0
+			
+		ElseIf ParamUpper = "/F" Or ParamUpper = "-F" Then
+			FlashOnly = -1
 
 		'Great Cow Graphical BASIC Mode?
 		'(Alters the error listing format)
@@ -12134,12 +12143,15 @@ SUB InitCompiler
 	END IF
 
 	'Decide name for output file if not specified
+	'If name is specified, do not allow flashing only
 	IF OFI = "" THEN
 		OFI = FI
 		For CD = LEN(OFI) TO 1 STEP -1
 			IF Mid(OFI, CD, 1) = "." THEN OFI = Left(OFI, CD - 1): EXIT FOR
 		Next
 		OFI = OFI + ".asm"
+	Else
+		FlashOnly = 0
 	END IF
 
 	'Find directory of source file (used for relative include)

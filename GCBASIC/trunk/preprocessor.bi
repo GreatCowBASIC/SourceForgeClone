@@ -19,6 +19,8 @@
 'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
+#include "file.bi"
+
 Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As String = "", ReplaceExisting As Integer = -1)
 	'Add a new constant to the list of constants
 
@@ -462,7 +464,7 @@ SUB PreProcessor
 	Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
 	Dim As String TempFile, LastTableOrigin, NewFNType, CurrChar, CodeTemp, OtherChar, BinHexTemp
-	Dim As String DataSourceOld, TranslatedFile
+	Dim As String DataSourceOld, TranslatedFile, HFI
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 
 	Dim As String LineToken(100)
@@ -473,6 +475,7 @@ SUB PreProcessor
 	Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro
 	Dim As Integer CurrCharPos, ReadType, ConvertAgain, UnconvertedFiles
 	Dim As Single CurrPerc, PercAdd, PercOld
+	Dim As Double LastCompTime
 
 	CurrentSub = ""
 	UnconvertedFiles = 0
@@ -481,7 +484,19 @@ SUB PreProcessor
 	IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("FindSource")
 	SourceFiles = 1: SourceFile(1).FileName = ShortName(FI)
 	T = 1
-
+	
+	'Get date on output (hex) file
+	If FlashOnly Then
+		HFI = ReplaceToolVariables("%filename%", "hex")
+		If Dir(HFI) <> "" Then
+			LastCompTime = FileDateTime(HFI)
+		Else
+			'If hex file doesn't exist, force compile
+			FlashOnly = 0
+			LastCompTime = 0
+		End If
+	End If
+	
 	'FindIncludeFiles:
 	Do
 		T2 = T
@@ -503,6 +518,13 @@ SUB PreProcessor
 
 			Else
 				IF VBS = 1 THEN PRINT ": " + Message("found")
+				
+				'Is this file newer than output file? If so, cannot skip compile
+				If FlashOnly Then
+					If LastCompTime < FileDateTime(SourceFile(T).FileName) Then
+						FlashOnly = 0
+					End If
+				End If
 
 				If Not SourceFile(T).RequiresConversion Then
 					OPEN SourceFile(T).FileName For INPUT AS #1
@@ -562,7 +584,7 @@ SUB PreProcessor
 		OPEN ID + "/include/lowlevel.dat" FOR INPUT AS #1
 	#ELSE
 		OPEN ID + "\include\lowlevel.dat" FOR INPUT AS #1
-	#ENDIF
+	#EndIf
 
 	DO WHILE NOT EOF(1)
 		LINE INPUT #1, DataSource
@@ -581,20 +603,29 @@ SUB PreProcessor
 				SourceFiles += 1
 				SourceFile(SourceFiles).FileName = DataSource
 				Temp = Dir(DataSource)
-				IF Temp <> "" THEN Temp = ": " + Message("found")
-				IF Temp = "" THEN Temp = ": " + Message("NotFound")
+				IF Temp <> "" Then
+					Temp = ": " + Message("found")
+					If FlashOnly Then
+						If LastCompTime < FileDateTime(DataSource) Then
+							FlashOnly = 0
+						End If
+					End If
+				Else
+					Temp = ": " + Message("NotFound")
+				End If
 				IF VBS = 1 THEN PRINT SPC(10); DataSource; Temp
+				
 			END IF
 		END IF
 	LOOP
-	CLOSE
-
+	Close
+	
 	'Create Main subroutine
 	Subroutine(0) = NewSubroutine("Main")
 	MainCurrPos = Subroutine(0)->CodeStart
 	Subroutine(0)->Required = -1 'Mark as required so that it gets compiled
 
-	'Add any uncoverted files to file list
+	'Add any unconverted files to file list
 	For RF = 1 To UnconvertedFiles
 		SourceFiles += 1
 		SourceFile(SourceFiles) = UnconvertedFile(RF)
@@ -1147,6 +1178,14 @@ SUB PreProcessor
 							End If
 							IF Left(UCase(ChipName), 3) = "PIC" THEN ChipName = Mid(ChipName, 4)
 							IF Left(UCase(ChipName), 1) = "P" THEN ChipName = Mid(ChipName, 2)
+													
+							'Can exit once chip name known if compilation is going to be skipped
+							If FlashOnly Then
+								IF VBS = 1 THEN Print
+								Close
+								Exit Sub
+							End If
+
 						End If
 						GoTo LoadNextLine
 					End If
@@ -1273,7 +1312,10 @@ SUB PreProcessor
 LoadNextFile:
 
 	NEXT
-	IF VBS = 1 THEN PRINT
+	IF VBS = 1 THEN Print
+	
+	'Force exit at this point if compilation is going to be skipped
+	If FlashOnly Then Exit Sub
 
 	'Find compiler directives, except SCRIPT, ENDSCRIPT, IFDEF and ENDIF
 	IF VBS = 1 THEN
