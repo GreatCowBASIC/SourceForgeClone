@@ -145,9 +145,6 @@ Sub PrepareBuiltIn
 	If ModeAVR Then LabelEnd = ":"
 	If ModeZ8 Then LabelEnd = ":"
 
-	'Equivalent config settings (PIC)
-	GetEqConfig
-
 	'Constants set by compiler
 	'Set chip config defines for #IFDEF and #SCRIPT use
 	AddConstant("CHIPNAME", ChipName)
@@ -1178,14 +1175,7 @@ SUB PreProcessor
 							End If
 							IF Left(UCase(ChipName), 3) = "PIC" THEN ChipName = Mid(ChipName, 4)
 							IF Left(UCase(ChipName), 1) = "P" THEN ChipName = Mid(ChipName, 2)
-													
-							'Can exit once chip name known if compilation is going to be skipped
-							If FlashOnly Then
-								IF VBS = 1 THEN Print
-								Close
-								Exit Sub
-							End If
-
+							
 						End If
 						GoTo LoadNextLine
 					End If
@@ -1314,9 +1304,6 @@ LoadNextFile:
 	NEXT
 	IF VBS = 1 THEN Print
 	
-	'Force exit at this point if compilation is going to be skipped
-	If FlashOnly Then Exit Sub
-
 	'Find compiler directives, except SCRIPT, ENDSCRIPT, IFDEF and ENDIF
 	IF VBS = 1 THEN
 		PRINT SPC(5); Message("CompDirs");
@@ -1403,6 +1390,34 @@ LoadNextFile:
 	'Get chip data
 	IF VBS = 1 THEN PRINT: PRINT SPC(5); Message("ReadChipData")
 	ReadChipData
+	
+	'Force exit at this point if compilation is going to be skipped
+	If FlashOnly Then
+		'Do config settings in hex file need to be checked?
+		If PrgTool <> 0 Then
+			If PrgTool->ProgConfig <> "" Then
+				'Check config settings in hex file
+				'If invalid, need to force compilation
+				FlashOnly = IsHexConfigValid(HFI, PrgTool->ProgConfig)
+				GoTo HexConfigChecked
+			End If
+		End If
+		
+		'If no specific programmer settings, make sure LVP = Off and MCLR = Off (compiler default)
+		Temp = ""
+		If WholeInstr(CONFIG, "LVP") = 0 Then
+			Temp = "LVP = OFF"
+		End If
+		If WholeInstr(CONFIG, "MCLR") = 0 Then
+			If Temp <> "" Then Temp += ", "
+			Temp += "MCLR = OFF"
+		End If
+		If Temp <> "" Then FlashOnly = IsHexConfigValid(HFI, Temp)
+				
+		HexConfigChecked:
+	End If
+	'If still skipping compilation, exit sub
+	If FlashOnly Then Exit Sub
 
 	'Correct clock speed
 	CheckClockSpeed

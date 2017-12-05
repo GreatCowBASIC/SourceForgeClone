@@ -251,6 +251,10 @@ Type ExternalTool
 	WorkingDir As String
 	ExtraParam(5, 2) As String
 	ExtraParams As Integer
+	
+	'Allow programmers to require config or option settings
+	ProgConfig As String
+	ProgOptions As String
 End Type
 
 Type FileConverterType
@@ -460,8 +464,10 @@ Declare Sub AsmOptimiser (CompSub As SubType Pointer)
 DECLARE FUNCTION AsmTidy (DataSource As String) As String
 DECLARE SUB AssembleProgram
 Declare Sub BuildAsmSymbolTable
+Declare Function GetConfigBaseLoc As Integer
 Declare FUNCTION IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
 Declare Function IsASMConst (DataSource As String) As Integer
+Declare Function IsHexConfigValid(HexFile As String, ConfigSettings As String) As Integer
 Declare Function IsForVariant(FoundCmd As AsmCommand Pointer) As Integer
 
 'Subs in variables.bi
@@ -651,7 +657,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-11-19"
+Version = "0.98.<<>> 2017-12-05"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -2120,6 +2126,20 @@ SUB CalcConfig
 	Loop
 	If Config <> "" Then
 		UserSettingLoc = LinkedListInsert(UserSettingLoc, Config)
+	End If
+	
+	'Add config for programmer
+	If PrgTool <> 0 Then
+		If PrgTool->ProgConfig <> "" Then
+			Config = PrgTool->ProgConfig
+			Do While InStr(Config, ",") <> 0
+				UserSettingLoc = LinkedListInsert(UserSettingLoc, Trim(Left(Config, InStr(Config, ",") - 1)))
+				Config = Trim(Mid(Config, InStr(Config, ",") + 1))
+			Loop
+			If Config <> "" Then
+				UserSettingLoc = LinkedListInsert(UserSettingLoc, Config)
+			End If
+		End If
 	End If
 
 	'Search through list of user entered config settings
@@ -9357,6 +9377,12 @@ Function CompileWholeArray (InLine As String, Origin As String) As LinkedListEle
 End Function
 
 Function ConfigNameMatch(ConfigIn As String, ConfigNameIn As String) As Integer
+	
+	'Ensure Equivalent config settings are ready
+	If EqConfigSettings = 0 Then
+		GetEqConfig
+	End If
+	
 	'Checks whether an input config setting (ie MCLR_OFF) matches a name (ie MCLR)
 	Dim As String Config, ConfigName
 	Config = ConfigIn
@@ -11985,6 +12011,10 @@ SUB InitCompiler
 									Tool(ToolCount).Params = MsgVal
 								Case "workingdir"
 									Tool(ToolCount).WorkingDir = MsgVal
+								Case "progconfig"
+									Tool(ToolCount).ProgConfig = MsgVal
+								Case "progoptions"
+									Tool(ToolCount).ProgOptions = MsgVal
 								Case Else
 									With Tool(ToolCount)
 										If .ExtraParams < 5 Then
