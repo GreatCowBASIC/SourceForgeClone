@@ -380,14 +380,7 @@ SUB AssembleProgram
 	End If
 	
 	'Get config base location (18F)
-	If ChipFamily = 16 Then
-		ConfigBaseLoc = 3145726
-		Dim As ConstMeta Pointer ConfigBaseLocConst
-		ConfigBaseLocConst = HashMapGet(Constants, "CHIPCONFIGBASELOC")
-		If ConfigBaseLocConst <> 0 Then
-			ConfigBaseLoc = MakeDec(ConfigBaseLocConst->Value) - 2
-		End If
-	End If
+	ConfigBaseLoc = GetConfigBaseLoc
 	
 	'Build symbol table
 	If VBS = 1 Then Print SPC(5); Message("SymbolTable")
@@ -923,10 +916,8 @@ SUB AssembleProgram
 				'Store to hex file
 				If ChipFamily = 12 Then
 					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, "0" + HEX(ConfWord(CurrConfWord)), &HFFF)
-				ElseIf ChipFamily = 14 Then
-					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, HEX(ConfWord(CurrConfWord)), 8198 + CurrConfWord)
-				ElseIf ChipFamily = 15 Then
-					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, HEX(ConfWord(CurrConfWord)), 32774 + CurrConfWord)
+				Else
+					CurrProgramLoc = LinkedListInsert(CurrProgramLoc, HEX(ConfWord(CurrConfWord)), GetConfigBaseLoc - 1 + CurrConfWord)
 				End If
 			Next
 			
@@ -1028,7 +1019,7 @@ SUB AssembleProgram
 				CCI += 1
 				Byte2 = Hex(VAL(TempData(CCI)))
 				Do While LEN(Byte2) < 2: Byte2 = "0" + Byte2: LOOP
-				CurrProgramLoc = LinkedListInsert(CurrProgramLoc, Byte2 + Byte1, ConfigBaseLoc + CCI)
+				CurrProgramLoc = LinkedListInsert(CurrProgramLoc, Byte2 + Byte1, ConfigBaseLoc + CCI - 2)
 				
 			Loop While CCI < ConfWordCount
 			
@@ -1457,6 +1448,25 @@ Sub BuildAsmSymbolTable
 	
 End Sub
 
+Function GetConfigBaseLoc As Integer
+	
+	Select Case ChipFamily
+		Case 12: Return &HFFF
+		Case 14: Return &H2007
+		Case 15: Return &H8007
+		Case 16	
+			Dim As ConstMeta Pointer ConfigBaseLocConst
+			ConfigBaseLocConst = HashMapGet(Constants, "CHIPCONFIGBASELOC")
+			If ConfigBaseLocConst <> 0 Then
+				Return MakeDec(ConfigBaseLocConst->Value)
+			Else
+				Return 3145728
+			End If
+		Case Else
+			Return -1
+	End Select
+End Function
+
 Function IsASM (DataSource As String, ParamCount As Integer = -1) As AsmCommand Pointer
 	'Returns 0 if instruction is not assembly
 	'Returns instruction if it is asm
@@ -1502,6 +1512,124 @@ Function IsASMConst (DataSource As String) As Integer
 	IF Left(Trim(DataSource), 1) = "@" Then Return -1
 	Return 0
 	
+End Function
+
+Function IsHexConfigValid(HexFile As String, ConfigSettings As String) As Integer
+	
+	Dim As UInteger ConfWordVal(ConfWords), CurrAddress, LineLen, LineAddr, LineType
+	Dim As Integer f, ConfigWordLoc, CurrWord, CurrConfConst, BitsVal, DesiredVal
+	Dim As String ReadLine, LineData, SettingName, SettingValue
+	Dim As LinkedListElement Pointer SettingsList, CurrSetting
+	
+	'Not used for AVR, return true
+	If ModeAVR Then Return -1
+	
+	'Guess config word start location
+	ConfigWordLoc = GetConfigBaseLoc
+	
+	'Clear words
+	For CurrWord = 0 To ConfWords
+		ConfWordVal(CurrWord) = &HFFFF
+	Next
+	
+	'Read config words from hex file
+	f = FreeFile
+	CurrAddress = 0
+	Open HexFile For Input As #f
+	Do While Not Eof(f)
+		Line Input #f, ReadLine
+		If Left(ReadLine, 1) = ":" Then
+			LineLen = Val("&H" + Mid(ReadLine, 2, 2))
+			LineAddr = Val("&H" + Mid(ReadLine, 4, 4))
+			LineType = Val("&H" + Mid(ReadLine, 8, 2))
+			
+			Select Case LineType
+				Case 0:
+					LineAddr += CurrAddress
+					If ChipFamily <> 16 Then
+						LineAddr = LineAddr / 2
+					End If
+					If LineAddr >= ConfigWordLoc - 16 And LineAddr <= ConfigWordLoc + ConfWords + 16 Then
+						LineData = Mid(ReadLine, 10)
+						LineData = Left(LineData, Len(LineData) - 2)
+						CurrWord = LineAddr - ConfigWordLoc
+						Do While LineData <> ""
+							If ChipFamily = 16 Then
+								If CurrWord >= 0 And CurrWord <= ConfWords Then
+									ConfWordVal(CurrWord) = Val("&H" + Mid(LineData, 1, 2))
+								End If
+								If (CurrWord  + 1) >= 0 And (CurrWord + 1) <= ConfWords Then
+									ConfWordVal(CurrWord + 1) = Val("&H" + Mid(LineData, 3, 2))
+								End If
+								LineData = Mid(LineData, 5)
+								CurrWord += 2
+							Else
+								If CurrWord >= 0 And CurrWord <= ConfWords Then
+									ConfWordVal(CurrWord) = Val("&H" + Mid(LineData, 3, 2) + Mid(LineData, 1, 2))
+								End If
+								LineData = Mid(LineData, 5)
+								CurrWord += 1
+							End If
+						Loop
+					End If
+					
+				Case 1: Exit Do
+				Case 4: CurrAddress = Val("&H" + Mid(ReadLine, 10, 4)) Shl 16
+				
+			End Select
+			 
+		End If
+		
+	Loop
+	Close #f
+	
+	'For CurrWord = 0 To ConfWords - 1
+	'	Print CurrWord, Hex(ConfigWordLoc + CurrWord), Hex(ConfWordVal(CurrWord))
+	'Next
+	
+	'Config words known, check required settings
+	SettingsList = GetElements(ConfigSettings, ",")
+	CurrSetting = SettingsList->Next
+	Do While CurrSetting <> 0
+		'Print "Checking", CurrSetting->Value
+		If InStr(CurrSetting->Value, "=") <> 0 Then
+			SettingName = Trim(Left(CurrSetting->Value, InStr(CurrSetting->Value, "=") - 1))
+			SettingValue = Trim(Mid(CurrSetting->Value, InStr(CurrSetting->Value, "=") + 1))
+			
+			BitsVal = -1
+			DesiredVal = -1
+			For CurrConfConst = 1 To COC
+				With ConfigOps(CurrConfConst)
+					'Print .Op, .Loc, .Val
+					If ConfigNameMatch(.Op, SettingName) Then
+						If BitsVal = -1 Then
+							BitsVal = .Val
+						Else
+							BitsVal = BitsVal And .Val
+						End If
+						If ConfigValueMatch(.Op, SettingValue) Then
+							DesiredVal = CurrConfConst
+						End If
+					End If
+				End With
+			Next
+			'Ensure that bits masked by BitsVal match
+			If DesiredVal <> -1 Then
+				With ConfigOps(DesiredVal)
+					If (ConfWordVal(.Loc - 1) And (Not BitsVal)) <> (.Val And (Not BitsVal)) Then
+						'Print "Mismatch found"
+						'Print .Op, Hex(.Val), Hex(BitsVal), Hex(ConfWordVal(.Loc - 1))
+						'Print (ConfWordVal(.Loc - 1) And (Not BitsVal)), (.Val And (Not BitsVal))
+						Return 0
+					End If
+				End With
+			End If
+		End If
+		CurrSetting = CurrSetting->Next
+	Loop
+	
+	'No issues found, assume settings are valid
+	Return -1
 End Function
 
 Function IsForVariant(FoundCmd As AsmCommand Pointer) As Integer
