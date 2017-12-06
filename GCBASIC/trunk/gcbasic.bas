@@ -657,7 +657,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-05"
+Version = "0.98.<<>> 2017-12-06"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -11234,6 +11234,7 @@ Sub GetEqConfig
 		EqSettingsLoc = LinkedListInsert(EqSettingsLoc, CurrLoc)
 		CurrLoc = LinkedListInsert(CurrLoc, "MCLR")
 		CurrLoc = LinkedListInsert(CurrLoc, "MCLRE")
+		CurrLoc = LinkedListInsert(CurrLoc, "EXTMCLR")
 
 		'OSC/FOSC/EXTRC/INTRC/INTIO
 		CurrLoc = LinkedListCreate
