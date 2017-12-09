@@ -126,7 +126,7 @@
 ' 15/9/17  Commentted out #define SINGLE 255.  Problem is that the compiler (in some places) already recognises Single as a data type, part of the initial work for supporting floating point
            ' "Dim MyVar As Single" used to create a 4-byte variable big enough to store a single precision floating point number,
            ' now it causes an error message because of the constant.
-
+' 9/11/17  '#samebit GONDONE GO_NOT_DONE
 
 
 'Commands:
@@ -136,6 +136,9 @@
 'attempting to use ports in digital mode
 
 '#define DebugADC_H
+
+
+#samebit GONDONE,GO_NOT_DONE   'to support 16f15313 constants
 
 #define Format_Left 0
 #define Format_Right 255
