@@ -517,7 +517,7 @@ SUB PreProcessor
 				IF VBS = 1 THEN PRINT ": " + Message("found")
 				
 				'Is this file newer than output file? If so, cannot skip compile
-				If FlashOnly Then
+				If FlashOnly And Not SkipHexCheck Then
 					If LastCompTime < FileDateTime(SourceFile(T).FileName) Then
 						FlashOnly = 0
 					End If
