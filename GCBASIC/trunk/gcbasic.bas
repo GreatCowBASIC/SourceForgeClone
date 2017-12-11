@@ -562,7 +562,7 @@ Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabl
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
-Dim Shared As Integer WarningsAsErrors, FlashOnly
+Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
@@ -657,7 +657,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-06"
+Version = "0.98.<<>> 2017-12-11"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -11720,6 +11720,7 @@ SUB InitCompiler
 	WarningsAsErrors = 0
 	PauseAfterCompile = 0
 	FlashOnly = 0
+	SkipHexCheck = 0
 	GCGB = 0
 	CompReportFormat = "html"
 
@@ -11763,6 +11764,10 @@ SUB InitCompiler
 			WarnErrorNotSet = 0
 			
 		ElseIf ParamUpper = "/F" Or ParamUpper = "-F" Then
+			FlashOnly = -1
+			
+		ElseIf ParamUpper = "/FO" Or ParamUpper = "-FO" Then
+			SkipHexCheck = -1
 			FlashOnly = -1
 
 		'Great Cow Graphical BASIC Mode?
