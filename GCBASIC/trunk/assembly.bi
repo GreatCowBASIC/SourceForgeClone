@@ -413,7 +413,7 @@ SUB AssembleProgram
 	Do While AsmLine <> 0
 		
 		'Show percentage assembled
-		IF VBS = 1 THEN
+		IF VBS = 1 And ShowProgressCounters Then
 			CurrPerc += PercAdd
 			If Int(CurrPerc) > Int(PercOld) Then
 				PercOld = CurrPerc
