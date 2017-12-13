@@ -2,8 +2,8 @@
 
 #2016-07-20: Make grep for version number from $VersionFile case-insensitive
 #2017-01-16: Move system-wide path config from /etc/profile to /etc/profile.d/gcbasic.sh
-
-# Great Cow Basic generic Linux installer, Version 0.2
+#2017-12-09: Corrected Check for Freebasic, added check for rsync
+# Great Cow Basic generic Linux installer, Version 0.3
 # NOT to be used on any other operating system (eg. Windows).
 
 set -e # Halt on errors
@@ -40,12 +40,6 @@ EOM
 build()
 # Compiles gcbasic.bas to gcbasic with appropriate architecture option
 {
-	# Check for existence of compiler in path
-	which $FBC &>/dev/null
-	if [ $? -ne 0 ]; then
-		echo -e "FreeBasic Compiler (fbc) not found in path. Cannot continue.\n"
-		exit 1
-	fi
 	# Check for required source and library files
 	for file in $REQUIRES; do
 		if [ ! -f "$file" ]; then
@@ -93,8 +87,8 @@ setpath()
 }
 
 install()
-# Copy exefile to parent (GreatCowBasic) directory, and Sync with installdir.
 {
+# Copy exefile to parent (GreatCowBasic) directory, and Sync with installdir.
 	if [ ! -f "$exefile" ]; then
 		echo "$exefile does not exist. Cannot install."
 		exit 1
@@ -124,6 +118,35 @@ install()
 	else	echo -e "\nThere was a problem during install. Please manually copy the contents of the GreatCowBasic directory to $installdir, and add $installdir to your PATH.\n"
 	fi
 }
+checkrsync()
+{
+# Check for rsync
+RSYNC=rsync
+       if [ -z "$(which $RSYNC)"  ]; then
+                echo "### rsync not found in path.         ###"
+                echo "###         Cannot continue.         ###"
+                echo "###   Please install rsync for your  ###"
+		echo "###   Distribution and try again.    ###"
+                exit 1
+        fi
+
+}
+
+checkfbc()
+{
+# Check for rsync
+FBC=fbc
+       if [ -z "$(which $FBC)"  ]; then
+                echo "### Freebasic Compiler not found in path. ###"
+                echo "###         Cannot continue.              ###"
+                echo "###   Please install Freebasic for your   ###"
+                echo "###   Distribution and try again.         ###"
+                exit 1
+        fi
+
+}
+
+
 
 #--- Main Event ---
 if [ $# -ne 1 ]; then
@@ -132,7 +155,8 @@ if [ $# -ne 1 ]; then
 fi
 
 case $1 in
-	"build") build;;
-	"install") install;;
+	"build") checkfbc; build;;
+	"install") checkrsync; install;;
 	*) echo "Invalid option: '$1'. Type '$myName' for help."
 esac
+
