@@ -252,6 +252,9 @@ Type ExternalTool
 	ExtraParam(5, 2) As String
 	ExtraParams As Integer
 	
+	'Conditions for use
+	UseIf As String
+	
 	'Allow programmers to require config or option settings
 	ProgConfig As String
 	ProgOptions As String
@@ -403,6 +406,7 @@ Declare Function GetSubFullName(SubIndex As Integer) As String
 Declare FUNCTION GetSubID(Origin As String) As Integer
 Declare Function GetSubSig(CurrentSub As SubType) As String
 Declare Function GetSubParam (ParamIn As String, ForceIn As Integer) As SubParam
+Declare Function GetTool(ToolName As String) As ExternalTool Pointer
 DECLARE SUB InitCompiler
 DECLARE FUNCTION IsArray (VarName As String, CurrSub As SubType Pointer) As Integer
 Declare Function IsNonBanked(Location As Integer) As Integer
@@ -431,6 +435,7 @@ Declare Function NewSubroutine(SubName As String) As SubType Pointer
 Declare Sub OptimiseCalls
 DECLARE SUB OptimiseIF(CompSub As SubType Pointer = 0)
 Declare Sub PreparePageData
+Declare Sub PrepareProgrammer
 DECLARE SUB ProcessArrays (CompSub As SubType Pointer)
 DECLARE SUB ProcessWords ()
 Declare Function PutInRegister(ByRef OutList As LinkedListElement Pointer, SourceValue As String, RegType As String, Origin As String) As String
@@ -560,9 +565,9 @@ DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, Int
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
-DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount
+DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
-Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck
+Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCounters
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
@@ -657,7 +662,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-11"
+Version = "0.98.<<>> 2017-12-13"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -672,6 +677,7 @@ StatsUsedProgram = 0
 UseChipOutLatches = -1
 AutoContextSave = -1
 ConfigDisabled = 0
+ExitValue = 0
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -803,7 +809,7 @@ IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
 	SaveCurrDir = CurDir
 	If PrgDir <> "" Then ChDir ReplaceToolVariables(PrgDir, "hex")
 
-	PD = Exec(PrgExe, PrgParams)
+	ExitValue = Exec(PrgExe, PrgParams)
 	'SHELL Chr(34) + SendToPIC + Chr(34)
 
 	ChDir SaveCurrDir
@@ -816,7 +822,8 @@ If PauseAfterCompile Then
 	Print Message("AnyKey")
 	GetKey
 End If
-End
+
+End ExitValue
 
 SUB Add18FBanks(CompSub As SubType Pointer)
 	Dim As String TempData, First8, VarName
@@ -11687,6 +11694,21 @@ Function GetSubParam (ParamIn As String, ForceIn As Integer) As SubParam
 
 End Function
 
+Function GetTool(ToolName As String) As ExternalTool Pointer
+	'Returns a pointer to the tool named by ToolName, or 0 if nothing found
+	
+	If ToolName = "" Then Return 0
+	
+	Dim As Integer FindTool
+	For FindTool = 1 To ToolCount
+		If Tool(FindTool).Name = LCase(ToolName) Then
+			Return @Tool(FindTool)
+		End If
+	Next
+	
+	Return 0
+End Function
+
 SUB InitCompiler
 
 	'Misc temp vars
@@ -11719,6 +11741,7 @@ SUB InitCompiler
 	PauseOnErr = 1
 	WarningsAsErrors = 0
 	PauseAfterCompile = 0
+	ShowProgressCounters = -1
 	FlashOnly = 0
 	SkipHexCheck = 0
 	GCGB = 0
@@ -11925,6 +11948,9 @@ SUB InitCompiler
 								.Cmd = ""
 								.Params = ""
 								.ExtraParams = 0
+								.ProgConfig = ""
+								.ProgOptions = ""
+								.UseIf = ""
 							End With
 						EndIf
 
@@ -11980,6 +12006,12 @@ SUB InitCompiler
 										Case "n", "f", "0": PauseOnErr = 0
 									End Select
 								End If
+								
+								Case "showprogresscounters":
+								Select Case LCase(Left(MsgVal, 1))
+									Case "y", "t", "1": ShowProgressCounters = -1
+									Case "n", "f", "0": ShowProgressCounters = 0
+								End Select
 
 								Case "warningsaserrors"
 								If WarnErrorNotSet Then
@@ -12021,6 +12053,8 @@ SUB InitCompiler
 									Tool(ToolCount).ProgConfig = MsgVal
 								Case "progoptions"
 									Tool(ToolCount).ProgOptions = MsgVal
+								Case "useif"
+									Tool(ToolCount).UseIf = MsgVal
 								Case Else
 									With Tool(ToolCount)
 										If .ExtraParams < 5 Then
@@ -12038,41 +12072,6 @@ SUB InitCompiler
 			Close
 		End If
 	Loop While CurrSettingsFile < SettingsFiles
-
-	'Trim quotes from exe names
-	AsmExe = Trim(AsmExe, Chr(34))
-	PrgExe = Trim(PrgExe, Chr(34))
-
-	'If tool specified for assembler or programmer, use it
-	For FindTool = 1 To ToolCount
-		With Tool(FindTool)
-			If .Name = LCase(AsmExe) Then
-				AsmExe = ReplaceToolVariables(.Cmd, , , @Tool(FindTool))
-				AsmParams = .Params
-				AsmTool = @Tool(FindTool)
-			ElseIf .Name = LCase(PrgExe) Then
-				PrgExe = ReplaceToolVariables(.Cmd, , , @Tool(FindTool))
-				PrgParams = .Params
-				PrgDir = .WorkingDir
-				PrgTool = @Tool(FindTool)
-			End If
-		End With
-	Next
-
-	'Add full path to assembler and programmer names
-	#IFDEF __FB_LINUX__
-		If AsmExe <> "" And Left(AsmExe, 1) = "." Then AsmExe = ID + Mid(AsmExe, 2)
-		If PrgExe <> "" And Left(PrgExe, 1) = "." Then PrgExe = ID + Mid(PrgExe, 2)
-	#ELSE
-		If AsmExe <> "" And Mid(AsmExe, 2, 1) <> ":" And UCASE(AsmExe) <> "GCASM" Then
-			If Left(AsmExe, 1) = "\" Then AsmExe = Mid(AsmExe, 2)
-			AsmExe = ID + "\" + AsmExe
-		End If
-		If PrgExe <> "" And Mid(PrgExe, 2, 1) <> ":" Then
-			If Left(PrgExe, 1) = "\" Then PrgExe = Mid(PrgExe, 2)
-			PrgExe = ID + "\" + PrgExe
-		End If
-	#ENDIF
 
 	'Read message list
 	#IFDEF __FB_LINUX__
@@ -12110,7 +12109,7 @@ SUB InitCompiler
 				ElseIF Left(DataSource, 1) = "'" THEN
 					DataSource = ""
 				ElseIF INSTR(DataSource, "=") <> 0 THEN
-					MsgName = Left(DataSource, INSTR(DataSource, "=") - 1)
+					MsgName = Left(DataSource, InStr(DataSource, "=") - 1)
 					MsgVal = Mid(DataSource, INSTR(DataSource, "=") + 1)
 					IF INSTR(MsgVal, Chr(34)) <> 0 THEN
 						MsgVal = Mid(MsgVal, INSTR(MsgVal, Chr(34)) + 1)
@@ -13223,6 +13222,99 @@ Sub PreparePageData
 		End With
 	Loop
 
+End Sub
+
+Sub PrepareProgrammer
+	'Prepare programmer tool
+	'Need to select appropriate programmer for current chip model
+	'If programmer specified but assembler isn't, use gcasm
+	Dim As LinkedListElement Pointer ProgrammerList, CurrProg
+	Dim As ExternalTool Pointer CurrTool
+	Dim As String Cmd, OldCmd
+	Dim As Integer RecDetect
+	
+	'Trim quotes from exe names
+	AsmExe = Trim(AsmExe, Chr(34))
+	PrgExe = Trim(PrgExe, Chr(34))
+	
+	'If there is a list of programmers, choose the first appropriate one
+	PrgTool = 0
+	If InStr(PrgExe, ",") <> 0 Then
+		ProgrammerList = GetElements(PrgExe, ",")
+		CurrProg = ProgrammerList->Next
+		Do While CurrProg <> 0
+			CurrTool = GetTool(CurrProg->Value)
+			If CurrTool <> 0 Then
+				With *CurrTool
+					If .UseIf = "" Then
+						'Found programmer with no conditions, use
+						PrgTool = CurrTool
+						Exit Do
+					Else
+						'Found programmer with conditions, check
+						Cmd = .UseIf
+						OldCmd = ""
+						RecDetect = 0
+						Do While OldCmd <> Cmd
+							OldCmd = Cmd
+							Cmd = ReplaceConstantsLine(CheckSysVarDef(Cmd), 0)
+							RecDetect += 1
+							'If have looped too many times, there is probably a recursive define
+							If RecDetect > 100 Then Exit Do
+						Loop
+						Calculate Cmd
+						If Val(Cmd) <> 0 Then
+							'Condition is true, use programmer
+							PrgTool = CurrTool
+							Exit Do
+						End If
+						
+					End If
+				End With
+			End If
+			
+			CurrProg = CurrProg->Next
+		Loop
+		
+	End If
+
+	'If tool specified for assembler or programmer, use it
+	AsmTool = GetTool(AsmExe)
+	If AsmTool <> 0 Then
+		With *AsmTool
+			AsmExe = ReplaceToolVariables(.Cmd, , , AsmTool)
+			AsmParams = .Params
+		End With
+	End If
+	If PrgTool = 0 Then PrgTool = GetTool(PrgExe)
+	If PrgTool <> 0 Then
+		With *PrgTool
+			PrgExe = ReplaceToolVariables(.Cmd, , , PrgTool)
+			PrgParams = .Params
+			PrgDir = .WorkingDir
+		End With
+	End If
+	
+	'If we have a programmer but not an assembler, use gcasm
+	If AsmExe = "" And PrgExe <> "" Then
+		AsmExe = "gcasm"
+	End If
+
+	'Add full path to assembler and programmer names
+	#IFDEF __FB_LINUX__
+		If AsmExe <> "" And Left(AsmExe, 1) = "." Then AsmExe = ID + Mid(AsmExe, 2)
+		If PrgExe <> "" And Left(PrgExe, 1) = "." Then PrgExe = ID + Mid(PrgExe, 2)
+	#ELSE
+		If AsmExe <> "" And Mid(AsmExe, 2, 1) <> ":" And UCASE(AsmExe) <> "GCASM" Then
+			If Left(AsmExe, 1) = "\" Then AsmExe = Mid(AsmExe, 2)
+			AsmExe = ID + "\" + AsmExe
+		End If
+		If PrgExe <> "" And Mid(PrgExe, 2, 1) <> ":" Then
+			If Left(PrgExe, 1) = "\" Then PrgExe = Mid(PrgExe, 2)
+			PrgExe = ID + "\" + PrgExe
+		End If
+	#EndIf
+	
 End Sub
 
 SUB ProcessArrays (CompSub As SubType Pointer)
@@ -15050,6 +15142,11 @@ ShowError:
 			END IF
 		NEXT
 	END If
+	
+	'Set return code
+	If ERC > 0 Then
+		ExitValue = &Hdeadbeef
+	End If
 
 	'Write error log
 	PRINT

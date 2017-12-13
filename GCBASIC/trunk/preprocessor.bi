@@ -100,6 +100,35 @@ Function CheckSysVarDef(ConditionIn As String) As String
 
 		Replace Condition, Original, Str(ConstFound) + "=1"
 	Loop
+	
+	'Test for constant?
+	Do While INSTR(Condition, "DEF(") <> 0
+		'Get name of constant, and checking mode
+		FV = 0: IF INSTR(Condition, "NODEF(") = INSTR(Condition, "DEF(") - 2 THEN FV = 1
+		Temp = Mid(Condition, INSTR(Condition, "DEF(") + 4)
+		Temp = Left(Temp, INSTR(Temp, ")") - 1)
+		If FV = 0 Then
+			Original = "DEF(" + Temp + ")"
+		Else
+			Original = "NODEF(" + Temp + ")"
+		End If
+		
+		ConstFound = HashMapGet(Constants, Temp) <> 0
+
+		'Replace result
+		If FV = 1 Then
+			'If ConstFound = 0 Then DelMode = 1 Else DelMode = 2
+			If ConstFound = 0 Then
+				ConstFound = 1
+			Else
+				ConstFound = 0
+			End If
+		Else
+			If ConstFound <> 0 Then ConstFound = 1
+		End If
+
+		Replace Condition, Original, Str(ConstFound) + "=1"
+	Loop
 
 	Return Condition
 End Function
@@ -1289,7 +1318,7 @@ SUB PreProcessor
 			S = 0
 		END IF
 		CLOSE
-		If VBS = 1 THEN
+		If VBS = 1 And ShowProgressCounters Then
 			CurrPerc += PercAdd
 			If Int(CurrPerc) > Int(PercOld) Then
 				PercOld = CurrPerc
@@ -1391,6 +1420,21 @@ LoadNextFile:
 	IF VBS = 1 THEN PRINT: PRINT SPC(5); Message("ReadChipData")
 	ReadChipData
 	
+	'Correct clock speed
+	CheckClockSpeed
+
+	'Process #option
+	ReadOptions(gcOPTION)
+
+	'Prepare program memory page data
+	PreparePageData
+
+	'Initialise built-in data, and prepare built-in subs
+	PrepareBuiltIn
+	
+	'Prepare programmer, need to know chip model and need to do this before checking config
+	PrepareProgrammer
+	
 	'Force exit at this point if compilation is going to be skipped
 	If FlashOnly Then
 		'Do config settings in hex file need to be checked?
@@ -1419,15 +1463,6 @@ LoadNextFile:
 	'If still skipping compilation, exit sub
 	If FlashOnly Then Exit Sub
 
-	'Correct clock speed
-	CheckClockSpeed
-
-	'Process #option
-	ReadOptions(gcOPTION)
-
-	'Prepare program memory page data
-	PreparePageData
-
 	'Display chip data
 	IF VBS = 1 THEN
 		PRINT
@@ -1438,10 +1473,7 @@ LoadNextFile:
 		If ModeZ8 Then PRINT SPC(15); Message("ChipF") + "Z8"
 		PRINT SPC(15); Message("ChipC") + Trim(Str(ChipMhz))
 		PRINT SPC(15); Message("ChipR") + Trim(Str(ChipRam))
-	END IF
-
-	'Initialise built-in data, and prepare built-in subs
-	PrepareBuiltIn
+	END If
 
 	'Find and run compiler scripts
 	IF VBS = 1 THEN PRINT SPC(5); Message("RunScripts")
@@ -1837,7 +1869,7 @@ SUB ReplaceConstants
 	'Replace constants with their values
 	FOR CurrSub = 0 To SBC
 
-		IF VBS = 1 Then
+		IF VBS = 1 And ShowProgressCounters Then
 			CurrPerc += PercAdd
 			If Int(CurrPerc) > Int(PercOld) Then
 				PercOld = CurrPerc
