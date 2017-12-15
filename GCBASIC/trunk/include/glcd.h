@@ -33,6 +33,7 @@
 '    19/09/17 Revert Circle and FilledCircle
 '    21/09/17 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
 '    17/11/17 Added GLCDPrintLn
+'    10/12/17 Added SSD1331 driver
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306
@@ -70,7 +71,7 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define GLCD_TYPE_SSD1306_32 10
 #define GLCD_TYPE_ILI9486L 11
 #define GLCD_TYPE_ILI9481 12
-#define GLCD_TYPE_SDD1331 14
+#define GLCD_TYPE_SSD1331 14
 #define GLCD_TYPE_HX8347  15
 
 
@@ -361,6 +362,24 @@ If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
 
   End If
 
+
+  If GLCD_TYPE = GLCD_TYPE_SSD1331 Then
+
+     #include <glcd_SSD1331.h>
+     InitGLCD = InitGLCD_SSD1331
+     GLCDCLS = GLCDCLS_SSD1331
+     GLCDDrawChar = GLCDDrawChar_SSD1331
+     GLCDDrawString = GLCDDrawString_SSD1331
+     FilledBox = FilledBox_SSD1331
+     Pset = Pset_SSD1331
+     GLCDRotate = GLCDRotate_SSD1331
+     GLCDSetContrast = SetContrast_SSD1331
+     glcd_type_string = "SSD1331"
+     GLCD_WIDTH = 96
+     GLCD_HEIGHT = 64
+     SSD1331_GLCD_HEIGHT = GLCDDeviceHeight
+     SSD1331_GLCD_WIDTH = GLCDDeviceWidth
+  End If
 
 #endscript
 
