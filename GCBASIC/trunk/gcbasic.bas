@@ -662,7 +662,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-13"
+Version = "0.98.<<>> 2017-12-17"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -1462,8 +1462,13 @@ Sub AddMainInitCode
 			CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,high(RAMEND)")
 			CurrLine = LinkedListInsert(CurrLine, " out SPH, SysValueCopy")
 		End If
-		CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,low(RAMEND)")
-		CurrLine = LinkedListInsert(CurrLine, " out SPL, SysValueCopy")
+		If HasSFR("SPL") Then
+			CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,low(RAMEND)")
+			CurrLine = LinkedListInsert(CurrLine, " out SPL, SysValueCopy")
+		ElseIf HasSFR("SP") Then
+			CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,low(RAMEND)")
+			CurrLine = LinkedListInsert(CurrLine, " out SP, SysValueCopy")
+		End If
 	ElseIf ModeZ8 Then
 		CurrLine = LinkedListInsert(CurrLine, ";Initialise stack")
 		CurrLine = LinkedListInsert(CurrLine, " ldx SPH, #HIGH(RAMEND)")
@@ -16095,3 +16100,4 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
