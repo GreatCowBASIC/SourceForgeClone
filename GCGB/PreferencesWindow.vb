@@ -3,13 +3,14 @@
 ' User: Administrator
 ' Date: 1/04/2007
 ' Time: 11:36 PM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 
 Imports System
 Imports System.Drawing
 Imports System.Windows.Forms
+Imports System.Collections.Generic
 
 'Namespace Great_Cow_Graphical_BASIC
 	
@@ -36,6 +37,8 @@ Imports System.Windows.Forms
 		Private CompilerPrefs As System.Windows.Forms.TabPage
 		Private ExtToolsPrefs As System.Windows.Forms.TabPage
 		
+		Private Dim HeadingFont As Font
+		Private Dim ItemFont As Font
 		Private Dim pPreferences As Preferences
 		
 		Public Sub New()
@@ -44,7 +47,7 @@ Imports System.Windows.Forms
 			' The Me.InitializeComponent call is required for Windows Forms designer support.
 			'
 			Me.InitializeComponent
-		
+			
 		End Sub
 		
 		Public Property Preferences As Preferences
@@ -77,15 +80,38 @@ Imports System.Windows.Forms
 				Else
 					'Find all tools
 					Dim section As SettingSection
-					Dim ProgName As String
+					Dim ProgName, ProgID As String
+					'Get preferred programmers
+					Dim PreferredProgrammers As New List(Of String)
+					If pPreferences.GetPref("GCBASIC", "Programmer") <> "" Then
+						PreferredProgrammers.AddRange(pPreferences.GetPref("GCBASIC", "Programmer").ToLower.Replace(" ", "").Split(","))
+					End If
+					
+					'List those that are preferred
+					ProgrammerList.Items.Add("<s>Programmers to use (in order)")
+					For Each ProgID In PreferredProgrammers
+						For Each section In pPreferences.PrefGroups
+							If section.Name.ToLower.StartsWith("tool") Then
+								If section.GetValue("type") = "programmer" Then
+									ProgName = section.Name
+									ProgName = ProgName.Substring(ProgName.IndexOf("=") + 1).Trim
+									If ProgName.ToLower = ProgID Then
+										ProgrammerList.Items.Add(section.GetValue("desc"))
+									End If
+								End If
+							End If
+						Next
+					Next
+					
+					'List others
+					ProgrammerList.Items.Add("<s>Other available programmers")
 					For Each section In pPreferences.PrefGroups
 						If section.Name.ToLower.StartsWith("tool") Then
 							If section.GetValue("type") = "programmer" Then
-								ProgrammerList.Items.Add(section.GetValue("desc"))
 								ProgName = section.Name
 								ProgName = ProgName.Substring(ProgName.IndexOf("=") + 1).Trim
-								If ProgName = pPreferences.GetPref("GCBASIC", "Programmer") Then
-									ProgrammerList.SelectedIndex = ProgrammerList.Items.Count - 1
+								If Not PreferredProgrammers.Contains(ProgName.ToLower) Then
+									ProgrammerList.Items.Add(section.GetValue("desc"))
 								End If
 							End If
 						End If
@@ -107,9 +133,9 @@ Imports System.Windows.Forms
 							End If
 						End If
 					Next
-				End If	
+				End If
 			End Set
-		End Property	
+		End Property
 		
 		#Region " Windows Forms Designer generated code "
 		' This method is required for Windows Forms designer support.
@@ -160,6 +186,7 @@ Imports System.Windows.Forms
 			'
 			'buttonDeleteTool
 			'
+			Me.buttonDeleteTool.Enabled = false
 			Me.buttonDeleteTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonDeleteTool, "Delete an external tool")
 			Me.buttonDeleteTool.Location = New System.Drawing.Point(184, 232)
@@ -172,6 +199,7 @@ Imports System.Windows.Forms
 			'
 			'buttonEditTool
 			'
+			Me.buttonEditTool.Enabled = false
 			Me.buttonEditTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonEditTool, "Edit the settings of an existing external tool")
 			Me.buttonEditTool.Location = New System.Drawing.Point(96, 232)
@@ -196,13 +224,14 @@ Imports System.Windows.Forms
 			'
 			'toolList
 			'
-			Me.PrefsHelp.SetHelpString(Me.toolList, "Shows the external tools that have been set up to work with Great Cow Graphical B"& _ 
+			Me.PrefsHelp.SetHelpString(Me.toolList, "Shows the external tools that have been set up to work with Great Cow Graphical B"& _
 						"ASIC")
 			Me.toolList.Location = New System.Drawing.Point(8, 8)
 			Me.toolList.Name = "toolList"
 			Me.PrefsHelp.SetShowHelp(Me.toolList, true)
 			Me.toolList.Size = New System.Drawing.Size(264, 212)
 			Me.toolList.TabIndex = 0
+			AddHandler Me.toolList.SelectedIndexChanged, AddressOf Me.ToolListSelectedIndexChanged
 			'
 			'CompilerPrefs
 			'
@@ -229,7 +258,7 @@ Imports System.Windows.Forms
 			'CompilerShowBASIC
 			'
 			Me.CompilerShowBASIC.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _ 
+			Me.PrefsHelp.SetHelpString(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _
 						". Useful for showing the link between icons and assembly commands.")
 			Me.CompilerShowBASIC.Location = New System.Drawing.Point(16, 40)
 			Me.CompilerShowBASIC.Name = "CompilerShowBASIC"
@@ -319,6 +348,7 @@ Imports System.Windows.Forms
 			'
 			'Button_DeleteProgrammer
 			'
+			Me.Button_DeleteProgrammer.Enabled = false
 			Me.Button_DeleteProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_DeleteProgrammer, "Delete a programmer")
 			Me.Button_DeleteProgrammer.Location = New System.Drawing.Point(184, 232)
@@ -331,6 +361,7 @@ Imports System.Windows.Forms
 			'
 			'Button_EditProgrammer
 			'
+			Me.Button_EditProgrammer.Enabled = false
 			Me.Button_EditProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_EditProgrammer, "Edit the settings of an existing programmer")
 			Me.Button_EditProgrammer.Location = New System.Drawing.Point(96, 232)
@@ -355,13 +386,19 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerList
 			'
-			Me.PrefsHelp.SetHelpString(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _ 
+			Me.ProgrammerList.AllowDrop = true
+			Me.ProgrammerList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
+			Me.PrefsHelp.SetHelpString(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _
 						"C")
 			Me.ProgrammerList.Location = New System.Drawing.Point(8, 8)
 			Me.ProgrammerList.Name = "ProgrammerList"
 			Me.PrefsHelp.SetShowHelp(Me.ProgrammerList, true)
 			Me.ProgrammerList.Size = New System.Drawing.Size(264, 212)
 			Me.ProgrammerList.TabIndex = 0
+			AddHandler Me.ProgrammerList.DrawItem, AddressOf Me.ProgrammerListDrawItem
+			AddHandler Me.ProgrammerList.DragOver, AddressOf Me.ProgrammerListDragOver
+			AddHandler Me.ProgrammerList.DragDrop, AddressOf Me.ProgrammerListDragDrop
+			AddHandler Me.ProgrammerList.MouseDown, AddressOf Me.ProgrammerListMouseDown
 			'
 			'Button_Cancel
 			'
@@ -383,7 +420,7 @@ Imports System.Windows.Forms
 			Me.Button_OK.Text = "OK"
 			AddHandler Me.Button_OK.Click, AddressOf Me.Button_OKClick
 			'
-			'Preferences
+			'PreferencesWindow
 			'
 			Me.AcceptButton = Me.Button_OK
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
@@ -396,7 +433,7 @@ Imports System.Windows.Forms
 			Me.HelpButton = true
 			Me.MaximizeBox = false
 			Me.MinimizeBox = false
-			Me.Name = "Preferences"
+			Me.Name = "PreferencesWindow"
 			Me.PrefsHelp.SetShowHelp(Me, false)
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
@@ -412,6 +449,8 @@ Imports System.Windows.Forms
 		Private EditorIndentLabel As System.Windows.Forms.Label
 		Private EditorIndentSize As System.Windows.Forms.NumericUpDown
 		#End Region
+		
+		
 		
 		Private Sub Button_OKClick(sender As System.Object, e As System.EventArgs)
 			'Editor
@@ -440,15 +479,32 @@ Imports System.Windows.Forms
 			End If
 			
 			'Programmer
-			If ProgrammerList.SelectedIndex <> -1 Then
-				Dim ProgrammerID As String
-				Dim ProgrammerSection As SettingSection
-				ProgrammerSection = pPreferences.GetToolSettings(ProgrammerList.SelectedItem)
-				ProgrammerID = ProgrammerSection.Name
-				ProgrammerID = ProgrammerID.Substring(ProgrammerID.IndexOf("=") + 1).Trim()
-				pPreferences.SetPref("GCBASIC", "Programmer", ProgrammerID)
+			If Not Preferences.PrefIsYes(pPreferences.GetPref("GCGB", "Restricted"))
+				Dim ProgrammerOutputList As String
+				Dim FindProgrammer As String
+				Dim ProgSectionNo As Integer = 0
+				ProgrammerOutputList = ""
+				For Each FindProgrammer In ProgrammerList.Items
+					If FindProgrammer.StartsWith("<s>") Then
+						ProgSectionNo += 1
+					Else
+						If ProgSectionNo = 1 Then
+							Dim ProgrammerSection As SettingSection
+							Dim ProgrammerID As String
+							ProgrammerSection = pPreferences.GetToolSettings(FindProgrammer)
+							ProgrammerID = ProgrammerSection.Name
+							ProgrammerID = ProgrammerID.Substring(ProgrammerID.IndexOf("=") + 1).Trim()
+							If ProgrammerOutputList = "" Then
+								ProgrammerOutputList = ProgrammerID
+							Else
+								ProgrammerOutputList = ProgrammerOutputList + ", " + ProgrammerID
+							End If
+						End If
+					End If
+				Next
+				pPreferences.SetPref("GCBASIC", "Programmer", ProgrammerOutputList)
+				MainForm.MainFormInstance.UpdateProgrammerList
 			End If
-			MainForm.MainFormInstance.UpdateProgrammerList
 			
 			'Save and Exit
 			pPreferences.SavePreferences
@@ -471,6 +527,7 @@ Imports System.Windows.Forms
 		Private Sub Button_EditProgrammerClick(sender As System.Object, e As System.EventArgs)
 			'Get Existing
 			If ProgrammerList.SelectedIndex = -1 Then Exit Sub
+			If ProgrammerList.SelectedItem.StartsWith("<s>") Then Exit Sub
 			Dim section As SettingSection = pPreferences.GetToolSettings(ProgrammerList.SelectedItem.ToString)
 			Dim ProgEdit As New ProgrammerEditor(pPreferences, section)
 			
@@ -494,6 +551,7 @@ Imports System.Windows.Forms
 		
 		Private Sub Button_DeleteProgrammerClick(sender As System.Object, e As System.EventArgs)
 			If ProgrammerList.SelectedIndex = -1 Then Exit Sub
+			If ProgrammerList.SelectedItem.StartsWith("<s>") Then Exit Sub
 			
 			Dim result As DialogResult = MessageBox.Show("Are you sure that you want to delete the programmer?", "Delete " + programmerList.SelectedItem, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1)
 			Select result
@@ -583,5 +641,74 @@ Imports System.Windows.Forms
 			
 		End Sub
 		
+		Sub ProgrammerListDrawItem(sender As Object, e As DrawItemEventArgs)
+			
+			If ItemFont Is Nothing Then
+				ItemFont = ProgrammerList.Font
+			End If
+			If HeadingFont Is Nothing Then
+				HeadingFont = New Font(ProgrammerList.Font, FontStyle.Bold)
+			End If
+			
+			Dim DisplayName As String
+			Dim DisplayFont As Font
+			Dim DisplayBrush As Brush
+			DisplayName = ProgrammerList.Items(e.Index).ToString()
+			If DisplayName.StartsWith("<s>") Then
+				DisplayName = DisplayName.Substring(3)
+				DisplayFont = HeadingFont
+			Else
+				DisplayFont = ItemFont
+			End If
+			DisplayBrush = New SolidBrush(e.ForeColor)
+			
+			e.DrawBackground
+			e.Graphics.DrawString(DisplayName, DisplayFont, DisplayBrush, e.Bounds)
+		End Sub
+		
+		Sub ProgrammerListMouseDown(sender As Object, e As MouseEventArgs)
+			'Something must be selected
+			If ProgrammerList.SelectedIndex = -1 Then
+				Button_EditProgrammer.Enabled = False
+				Button_DeleteProgrammer.Enabled = False
+				Exit Sub
+			End If
+			
+			'Do not allow dragging of sections
+			If ProgrammerList.SelectedItem.ToString.StartsWith("<s>") Then
+				Button_EditProgrammer.Enabled = False
+				Button_DeleteProgrammer.Enabled = False
+				Exit Sub
+			End If
+			
+			Button_EditProgrammer.Enabled = True
+			Button_DeleteProgrammer.Enabled = True
+			ProgrammerList.DoDragDrop(ProgrammerList.SelectedItem, DragDropEffects.Move)
+		End Sub
+		
+		Sub ProgrammerListDragDrop(sender As Object, e As DragEventArgs)
+			'Get drop index
+			Dim p As Point = ProgrammerList.PointToClient(New Point(e.X, e.Y))
+			Dim NewIndex As Integer = ProgrammerList.IndexFromPoint(p)
+			If NewIndex < 1 Then NewIndex = 1
+			Dim MoveObject As Object = ProgrammerList.SelectedItem
+			ProgrammerList.Items.Remove(MoveObject)
+			ProgrammerList.Items.Insert(NewIndex, MoveObject)
+		End Sub
+		
+		Sub ProgrammerListDragOver(sender As Object, e As DragEventArgs)
+			e.Effect = DragDropEffects.Move
+		End Sub
+		
+		
+		Sub ToolListSelectedIndexChanged(sender As Object, e As EventArgs)
+			If ToolList.SelectedIndex = -1 Then
+				buttonEditTool.Enabled = False
+				buttonDeleteTool.Enabled = False
+			Else
+				buttonEditTool.Enabled = True
+				buttonDeleteTool.Enabled = True
+			End If
+		End Sub
 	End Class
 'End Namespace

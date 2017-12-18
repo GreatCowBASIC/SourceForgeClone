@@ -56,7 +56,7 @@ Imports System.Threading
 		Public Const MaxTableElements As Integer = 10000
 		
 		'Version constants
-		Public Const ProgVersion As String = "1.0 2017-09-10"
+		Public Const ProgVersion As String = "1.0 2017-12-18"
 		Public Const FileVersion As String = "20100130"
 		Public Const ShortVersion As String = "Version 1.0"
 		
@@ -1489,6 +1489,12 @@ Imports System.Threading
 			'Next
 			Me.ToolsDownloadWith.DropDownItems.Clear
 			
+			'Get first programmer in preferred list
+			Dim FirstProgrammer As String = GetPreferences.GetPref("GCBASIC", "Programmer").ToLower
+			If FirstProgrammer.Contains(",") Then
+				FirstProgrammer = FirstProgrammer.Substring(0, FirstProgrammer.IndexOf(",")).Trim
+			End If
+			
 			'Add new list
 			'Find all tools
 			Dim section As SettingSection
@@ -1504,7 +1510,7 @@ Imports System.Threading
 						'Should item be checked?
 						ProgName = section.Name
 						ProgName = ProgName.Substring(ProgName.IndexOf("=") + 1).Trim
-						If ProgName = GetPreferences.GetPref("GCBASIC", "Programmer") Then
+						If ProgName = FirstProgrammer Then
 							NewProg.Checked = True
 						End If
 						
@@ -1565,21 +1571,35 @@ Imports System.Threading
 			progName = progName.Substring(progName.IndexOf("=") + 1).Trim
 			
 			'Update settings
-			GetPreferences.SetPref("GCBASIC", "programmer", progName)
+			'Get preferred programmers
+			Dim PreferredProgrammers As New List(Of String)
+			If GetPreferences.GetPref("GCBASIC", "Programmer") <> "" Then
+				PreferredProgrammers.AddRange(GetPreferences.GetPref("GCBASIC", "Programmer").ToLower.Replace(" ", "").Split(","))
+			End If
+			'Prepare new list with selected programmer first
+			Dim FindProgrammer As String
+			Dim ProgrammerOutputList As String = progName
+			For Each FindProgrammer In PreferredProgrammers
+				If FindProgrammer.ToLower <> progName.ToLower Then
+					ProgrammerOutputList = ProgrammerOutputList + ", " + FindProgrammer
+				End If	
+			Next
+			GetPreferences.SetPref("GCBASIC", "Programmer", ProgrammerOutputList)
 			UpdateProgrammerList
 			GetPreferences.SavePreferences
 			
 			'Download program
 			DownloadProgramNow
-			'Dim CompilerThread As New Thread(AddressOf DownloadProgramNow)
-			'CompilerThread.Start
 			
 		End Sub
 		
 		Private Sub ToolsEditProgrammer_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
 			'Open programmer editor for current programmer
-			'Find current programmer settings
-			Dim CurrentProgrammer As String = GetPreferences.GetPref("GCBASIC", "Programmer")
+			'Get first programmer in preferred list
+			Dim CurrentProgrammer As String = GetPreferences.GetPref("GCBASIC", "Programmer").ToLower
+			If CurrentProgrammer.Contains(",") Then
+				CurrentProgrammer = CurrentProgrammer.Substring(0, CurrentProgrammer.IndexOf(",")).Trim
+			End If
 			Dim ProgrammerSection As SettingSection = GetPreferences.GetToolSettingsFromID(CurrentProgrammer)
 			
 			'Launch editor
