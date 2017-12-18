@@ -102,7 +102,7 @@ Imports System.Collections.Generic
 			If InLine.StartsWith("'") Or InLine.StartsWith(";") Then Return False
 			
 			If InLine.IndexOf("=") <> -1 Then
-	     		ProcessTemp = InLine.Substring(0, InLine.IndexOf("=") - 1).Trim
+	     		ProcessTemp = InLine.Substring(0, InLine.IndexOf("=")).Trim
 	     		If CheckName(ProcessTemp) = "" Then
 	     			Return True
 	     		End If

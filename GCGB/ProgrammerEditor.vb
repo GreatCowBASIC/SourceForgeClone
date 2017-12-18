@@ -69,6 +69,7 @@ Imports System.Windows.Forms
 				ProgrammerFileName.Text = section.GetValue("command")
 				ProgrammerParams.Text = section.GetValue("params")
 				ProgrammerWorkingDir.Text = section.GetValue("workingdir")
+				UseIf.Text = section.GetValue("useif")
 				portList.Text = section.GetValue("port")
 			End If
 			
@@ -80,6 +81,7 @@ Imports System.Windows.Forms
 		' Do not change the method contents inside the source code editor. The Forms designer might
 		' not be able to load this method if it was changed manually.
 		Private Sub InitializeComponent()
+			Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(ProgrammerEditor))
 			Me.cmdLineLabel = New System.Windows.Forms.Label
 			Me.browseWorkingDir = New System.Windows.Forms.Button
 			Me.WorkingDirBrowser = New System.Windows.Forms.FolderBrowserDialog
@@ -95,15 +97,17 @@ Imports System.Windows.Forms
 			Me.ProgBrowse = New System.Windows.Forms.Button
 			Me.ProgrammerName = New System.Windows.Forms.TextBox
 			Me.ProgrammerEditorHelp = New System.Windows.Forms.HelpProvider
-			Me.portLabel = New System.Windows.Forms.Label
 			Me.portList = New System.Windows.Forms.ComboBox
+			Me.UseIf = New System.Windows.Forms.TextBox
+			Me.portLabel = New System.Windows.Forms.Label
+			Me.useIfLabel = New System.Windows.Forms.Label
 			Me.SuspendLayout
 			'
 			'cmdLineLabel
 			'
 			Me.cmdLineLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
 									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.cmdLineLabel.Location = New System.Drawing.Point(8, 120)
+			Me.cmdLineLabel.Location = New System.Drawing.Point(8, 104)
 			Me.cmdLineLabel.Name = "cmdLineLabel"
 			Me.cmdLineLabel.Size = New System.Drawing.Size(256, 16)
 			Me.cmdLineLabel.TabIndex = 13
@@ -114,7 +118,7 @@ Imports System.Windows.Forms
 			Me.browseWorkingDir.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.browseWorkingDir.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.ProgrammerEditorHelp.SetHelpString(Me.browseWorkingDir, "Browse for the program's working directory")
-			Me.browseWorkingDir.Location = New System.Drawing.Point(192, 192)
+			Me.browseWorkingDir.Location = New System.Drawing.Point(192, 168)
 			Me.browseWorkingDir.Name = "browseWorkingDir"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.browseWorkingDir, true)
 			Me.browseWorkingDir.Size = New System.Drawing.Size(72, 24)
@@ -141,7 +145,7 @@ Imports System.Windows.Forms
 			Me.Button_Cancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
 			Me.Button_Cancel.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_Cancel.Location = New System.Drawing.Point(144, 273)
+			Me.Button_Cancel.Location = New System.Drawing.Point(144, 294)
 			Me.Button_Cancel.Name = "Button_Cancel"
 			Me.Button_Cancel.Size = New System.Drawing.Size(80, 24)
 			Me.Button_Cancel.TabIndex = 6
@@ -152,7 +156,7 @@ Imports System.Windows.Forms
 			Me.ProgrammerFileName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
 									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerFileName, "Program file, which Great Cow Graphical BASIC will run.")
-			Me.ProgrammerFileName.Location = New System.Drawing.Point(8, 80)
+			Me.ProgrammerFileName.Location = New System.Drawing.Point(8, 72)
 			Me.ProgrammerFileName.Name = "ProgrammerFileName"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerFileName, true)
 			Me.ProgrammerFileName.Size = New System.Drawing.Size(176, 20)
@@ -162,7 +166,7 @@ Imports System.Windows.Forms
 			'
 			Me.Button_OK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_OK.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_OK.Location = New System.Drawing.Point(48, 273)
+			Me.Button_OK.Location = New System.Drawing.Point(48, 294)
 			Me.Button_OK.Name = "Button_OK"
 			Me.Button_OK.Size = New System.Drawing.Size(80, 24)
 			Me.Button_OK.TabIndex = 5
@@ -176,7 +180,7 @@ Imports System.Windows.Forms
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerParams, "Command line parameters for the program. Please consult your programmer or extern"& _ 
 						"al tool manual and the Configuration > Setting up a programmer section of the GC"& _ 
 						"GB help for details.")
-			Me.ProgrammerParams.Location = New System.Drawing.Point(8, 136)
+			Me.ProgrammerParams.Location = New System.Drawing.Point(8, 120)
 			Me.ProgrammerParams.Name = "ProgrammerParams"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerParams, true)
 			Me.ProgrammerParams.Size = New System.Drawing.Size(256, 20)
@@ -188,7 +192,7 @@ Imports System.Windows.Forms
 			Me.ProgrammerWorkingDir.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
 									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerWorkingDir, "Folder to use as the working directory for the program")
-			Me.ProgrammerWorkingDir.Location = New System.Drawing.Point(8, 192)
+			Me.ProgrammerWorkingDir.Location = New System.Drawing.Point(8, 168)
 			Me.ProgrammerWorkingDir.Name = "ProgrammerWorkingDir"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerWorkingDir, true)
 			Me.ProgrammerWorkingDir.Size = New System.Drawing.Size(176, 20)
@@ -198,7 +202,7 @@ Imports System.Windows.Forms
 			'
 			Me.workingDirLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
 									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.workingDirLabel.Location = New System.Drawing.Point(8, 176)
+			Me.workingDirLabel.Location = New System.Drawing.Point(8, 152)
 			Me.workingDirLabel.Name = "workingDirLabel"
 			Me.workingDirLabel.Size = New System.Drawing.Size(256, 16)
 			Me.workingDirLabel.TabIndex = 14
@@ -216,7 +220,7 @@ Imports System.Windows.Forms
 			'
 			Me.fileLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
 									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.fileLabel.Location = New System.Drawing.Point(8, 64)
+			Me.fileLabel.Location = New System.Drawing.Point(8, 56)
 			Me.fileLabel.Name = "fileLabel"
 			Me.fileLabel.Size = New System.Drawing.Size(256, 16)
 			Me.fileLabel.TabIndex = 12
@@ -227,7 +231,7 @@ Imports System.Windows.Forms
 			Me.ProgBrowse.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgBrowse.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgBrowse, "Browse for the program file")
-			Me.ProgBrowse.Location = New System.Drawing.Point(192, 80)
+			Me.ProgBrowse.Location = New System.Drawing.Point(192, 72)
 			Me.ProgBrowse.Name = "ProgBrowse"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgBrowse, true)
 			Me.ProgBrowse.Size = New System.Drawing.Size(72, 24)
@@ -247,35 +251,58 @@ Imports System.Windows.Forms
 			Me.ProgrammerName.Size = New System.Drawing.Size(256, 20)
 			Me.ProgrammerName.TabIndex = 1
 			'
-			'portLabel
-			'
-			Me.portLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.portLabel.Location = New System.Drawing.Point(8, 224)
-			Me.portLabel.Name = "portLabel"
-			Me.portLabel.Size = New System.Drawing.Size(256, 16)
-			Me.portLabel.TabIndex = 16
-			Me.portLabel.Text = "Port:"
-			Me.portLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
-			'
 			'portList
 			'
 			Me.portList.FormattingEnabled = true
 			Me.ProgrammerEditorHelp.SetHelpString(Me.portList, "Serial port used by the programmer. If %port% is used in the Command Line Paramet"& _ 
 						"ers, this box will display a list of serial ports. The selected port will be use"& _ 
 						"d in place of %port% above.")
-			Me.portList.Location = New System.Drawing.Point(8, 240)
+			Me.portList.Location = New System.Drawing.Point(8, 264)
 			Me.portList.Name = "portList"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.portList, true)
 			Me.portList.Size = New System.Drawing.Size(120, 21)
 			Me.portList.TabIndex = 17
+			'
+			'UseIf
+			'
+			Me.UseIf.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+			Me.ProgrammerEditorHelp.SetHelpString(Me.UseIf, resources.GetString("UseIf.HelpString"))
+			Me.UseIf.Location = New System.Drawing.Point(8, 216)
+			Me.UseIf.Name = "UseIf"
+			Me.ProgrammerEditorHelp.SetShowHelp(Me.UseIf, true)
+			Me.UseIf.Size = New System.Drawing.Size(256, 20)
+			Me.UseIf.TabIndex = 19
+			'
+			'portLabel
+			'
+			Me.portLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+			Me.portLabel.Location = New System.Drawing.Point(8, 248)
+			Me.portLabel.Name = "portLabel"
+			Me.portLabel.Size = New System.Drawing.Size(256, 16)
+			Me.portLabel.TabIndex = 16
+			Me.portLabel.Text = "Port:"
+			Me.portLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+			'
+			'useIfLabel
+			'
+			Me.useIfLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+			Me.useIfLabel.Location = New System.Drawing.Point(8, 200)
+			Me.useIfLabel.Name = "useIfLabel"
+			Me.useIfLabel.Size = New System.Drawing.Size(256, 16)
+			Me.useIfLabel.TabIndex = 18
+			Me.useIfLabel.Text = "Use If:"
 			'
 			'ProgrammerEditor
 			'
 			Me.AcceptButton = Me.Button_OK
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.Button_Cancel
-			Me.ClientSize = New System.Drawing.Size(272, 304)
+			Me.ClientSize = New System.Drawing.Size(272, 325)
+			Me.Controls.Add(Me.UseIf)
+			Me.Controls.Add(Me.useIfLabel)
 			Me.Controls.Add(Me.portList)
 			Me.Controls.Add(Me.portLabel)
 			Me.Controls.Add(Me.browseWorkingDir)
@@ -301,6 +328,8 @@ Imports System.Windows.Forms
 			Me.ResumeLayout(false)
 			Me.PerformLayout
 		End Sub
+		Private UseIf As System.Windows.Forms.TextBox
+		Private useIfLabel As System.Windows.Forms.Label
 		Private portList As System.Windows.Forms.ComboBox
 		Private portLabel As System.Windows.Forms.Label
 		#End Region
@@ -403,6 +432,7 @@ Imports System.Windows.Forms
 						.AddSetting("desc", ProgrammerName.Text)
 						If pMode = Modes.PROGRAMMER Then
 							.AddSetting("type", "programmer")
+							.AddSetting("useif", Me.UseIf.Text)
 						Else
 							.AddSetting("type", "external")
 						End If
@@ -500,6 +530,8 @@ Imports System.Windows.Forms
 			
 			'If in programmer mode, show
 			If pMode = Modes.PROGRAMMER Then
+				Me.useIfLabel.Visible = True
+				Me.UseIf.Visible = True
 				Me.portLabel.Visible = True
 				Me.portList.Visible = True
 				'If a %port% is found in command line parameters, enable
@@ -510,6 +542,8 @@ Imports System.Windows.Forms
 				End If
 			'If not in programmer mode, don't show port selector at all
 			Else
+				Me.useIfLabel.Visible = False
+				Me.UseIf.Visible = False
 				Me.portLabel.Visible = False
 				Me.portList.Visible = False
 			End If
