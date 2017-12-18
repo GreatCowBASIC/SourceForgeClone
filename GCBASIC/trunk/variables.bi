@@ -41,7 +41,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Dim As String VarName, VarType, VarPointer, Origin, Temp, VarAlias, ConstName
 	Dim As String AliasList(16)
 	Dim As Integer VarSize, CL, TempSize, PD, VarSearchStart, T, VarFixedSize
-	Dim As Integer CurrFile, ALC, ParentByte
+	Dim As Integer CurrFile, ALC, ParentByte, CheckSub
 	Dim As VariableType Pointer VarFound, MainVarFound
 	Dim As SubType Pointer VarSub, MainSub
 	Dim As LinkedListElement Pointer SearchConstPos
@@ -304,6 +304,24 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 			Replace Temp, "%name%", VarName
 			LogWarning Temp, Origin
 		End If
+		
+		'Is variable name used for a subroutine/function?
+		For CheckSub = 0 To SBC
+			If Subroutine(CheckSub)->IsFunction Then
+				'Used for function, this is allowed
+				If UCase(Subroutine(CheckSub)->Name) = VarName Then
+					Exit For
+				End If
+			Else
+				'Used for subroutine, not allowed
+				If UCase(Subroutine(CheckSub)->Name) = VarName Then
+					Temp = Message("SubAndVarNameConflict")
+					Replace Temp, "%var%", VarName
+					LogError Temp, Origin
+					Exit For
+				End If
+			End If
+		Next
 		
 		With *VarSub
 			VarFound = Callocate(SizeOf(VariableType))
