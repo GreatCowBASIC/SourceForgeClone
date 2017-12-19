@@ -722,6 +722,7 @@ Imports System.Collections.Generic
 			Dim MoveObject As Object = ProgrammerList.SelectedItem
 			ProgrammerList.Items.Remove(MoveObject)
 			ProgrammerList.Items.Insert(NewIndex, MoveObject)
+			ProgrammerList.SelectedIndex = NewIndex
 		End Sub
 		
 		Sub ProgrammerListDragOver(sender As Object, e As DragEventArgs)
