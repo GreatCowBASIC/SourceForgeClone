@@ -65,12 +65,11 @@ Imports System.Collections.Generic
 				End If
 				
 				'Compiler
-				CompilerVerbose.Checked = False
-				If Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "Verbose")) Then CompilerVerbose.Checked = True
+				CompilerVerbose.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "Verbose"))
 				CompilerShowBASIC.Checked = False
 				If pPreferences.GetPref("GCBASIC", "Preserve") = "a" Then CompilerShowBASIC.Checked = True
-				CompilerPause.Checked = False
-				If Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "PauseAfterCompile")) Then CompilerPause.Checked = True
+				CompilerWarningsAsErrors.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "WarningsAsErrors"))
+				CompilerPause.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "PauseAfterCompile"))
 				
 				'Programmer list
 				'Restricted mode means that GCGB is in a school or other environment where the users may be up to no good
@@ -164,6 +163,7 @@ Imports System.Collections.Generic
 			Me.Button_Cancel = New System.Windows.Forms.Button
 			Me.PrefsHelp = New System.Windows.Forms.HelpProvider
 			Me.Button_OK = New System.Windows.Forms.Button
+			Me.CompilerWarningsAsErrors = New System.Windows.Forms.CheckBox
 			Me.ExtToolsPrefs.SuspendLayout
 			Me.CompilerPrefs.SuspendLayout
 			Me.PrefsTabs.SuspendLayout
@@ -235,6 +235,7 @@ Imports System.Collections.Generic
 			'
 			'CompilerPrefs
 			'
+			Me.CompilerPrefs.Controls.Add(Me.CompilerWarningsAsErrors)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerPause)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerShowBASIC)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerVerbose)
@@ -248,7 +249,7 @@ Imports System.Collections.Generic
 			'
 			Me.CompilerPause.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.CompilerPause, "Keeps the compiler window open until a key is pressed")
-			Me.CompilerPause.Location = New System.Drawing.Point(16, 64)
+			Me.CompilerPause.Location = New System.Drawing.Point(16, 88)
 			Me.CompilerPause.Name = "CompilerPause"
 			Me.PrefsHelp.SetShowHelp(Me.CompilerPause, true)
 			Me.CompilerPause.Size = New System.Drawing.Size(168, 16)
@@ -420,6 +421,18 @@ Imports System.Collections.Generic
 			Me.Button_OK.Text = "OK"
 			AddHandler Me.Button_OK.Click, AddressOf Me.Button_OKClick
 			'
+			'CompilerWarningsAsErrors
+			'
+			Me.CompilerWarningsAsErrors.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Copies the original BASIC program into the assembly file produced by the compiler"& _
+						". Useful for showing the link between icons and assembly commands.")
+			Me.CompilerWarningsAsErrors.Location = New System.Drawing.Point(16, 64)
+			Me.CompilerWarningsAsErrors.Name = "CompilerWarningsAsErrors"
+			Me.PrefsHelp.SetShowHelp(Me.CompilerWarningsAsErrors, true)
+			Me.CompilerWarningsAsErrors.Size = New System.Drawing.Size(224, 16)
+			Me.CompilerWarningsAsErrors.TabIndex = 3
+			Me.CompilerWarningsAsErrors.Text = "Treat warnings as errors"
+			'
 			'PreferencesWindow
 			'
 			Me.AcceptButton = Me.Button_OK
@@ -446,6 +459,7 @@ Imports System.Collections.Generic
 			Me.ProgrammerPrefs.ResumeLayout(false)
 			Me.ResumeLayout(false)
 		End Sub
+		Private CompilerWarningsAsErrors As System.Windows.Forms.CheckBox
 		Private EditorIndentLabel As System.Windows.Forms.Label
 		Private EditorIndentSize As System.Windows.Forms.NumericUpDown
 		#End Region
@@ -471,6 +485,11 @@ Imports System.Collections.Generic
 				pPreferences.SetPref("GCBASIC", "Preserve", "n")
 			Else
 				pPreferences.SetPref("GCBASIC", "Preserve", "a")
+			End If
+			If CompilerWarningsAsErrors.Checked Then
+				pPreferences.SetPref("GCBASIC", "WarningsAsErrors", "y")
+			Else
+				pPreferences.SetPref("GCBASIC", "WarningsAsErrors", "n")
 			End If
 			If CompilerPause.Checked = False Then
 				pPreferences.SetPref("GCBASIC", "PauseAfterCompile", "n")
@@ -710,5 +729,6 @@ Imports System.Collections.Generic
 				buttonDeleteTool.Enabled = True
 			End If
 		End Sub
+		
 	End Class
 'End Namespace
