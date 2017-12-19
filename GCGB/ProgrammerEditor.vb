@@ -69,7 +69,7 @@ Imports System.Windows.Forms
 				ProgrammerParams.Text = section.GetValue("params")
 				ProgrammerWorkingDir.Text = section.GetValue("workingdir")
 				UseIf.Text = section.GetValue("useif")
-				ReqConfig.Text = section.GetValue("reqconfig")
+				ReqConfig.Text = section.GetValue("progconfig")
 				portList.Text = section.GetValue("port")
 			End If
 			
@@ -489,7 +489,7 @@ Imports System.Windows.Forms
 						If pMode = Modes.PROGRAMMER Then
 							.AddSetting("type", "programmer")
 							.AddSetting("useif", Me.UseIf.Text)
-							.AddSetting("reqconfig", ReqConfig.Text)
+							.AddSetting("progconfig", ReqConfig.Text)
 							
 						Else
 							.AddSetting("type", "external")
