@@ -126,6 +126,10 @@ OptimiseIF = "Optimising IFs ..."
 OptimiseVars = "Optimising variable operations ..."
 FixFunctions = "Verifying functions used in WAIT ..."
 
+ChoosingProgrammer = "Choosing programmer ..."
+ProgrammerSkipped = "%prog% skipped"
+ProgrammerSelected = "%prog% selected"
+
 WritingASM = "Writing output to %OutputFile% ..."
 Success = "Program compiled successfully!"
 ASMSuccess = "Program assembled successfully!"
@@ -264,6 +268,7 @@ WarningTableFileNotFound = "Could not load %table% from %file%: File not found"
 WarningBadOption = "Unrecognised compiler option: %option%"
 WarningTimerConst = "Deprecated timer prescaler constant found. Replace PSn_1/x constants with PSn_x"
 WarningVolatileBit = "Invalid volatile option bit %bit%"
+WarningProgrammerFail = "The chip may not have programmed properly. Programmer returned status (%status%)"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."
