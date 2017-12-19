@@ -246,6 +246,7 @@ End Type
 Type ExternalTool
 	Name As String
 	Type As String
+	DispName As String
 	Cmd As String
 	Params As String
 	WorkingDir As String
@@ -662,7 +663,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-18"
+Version = "0.98.<<>> 2017-12-19"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -790,9 +791,6 @@ IF Not ErrorsFound THEN
 	End If
 End If
 
-'Write errors to file
-WriteErrorLog
-
 'Write compilation report
 WriteCompilationReport
 
@@ -810,10 +808,20 @@ IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
 	If PrgDir <> "" Then ChDir ReplaceToolVariables(PrgDir, "hex")
 
 	ExitValue = Exec(PrgExe, PrgParams)
-	'SHELL Chr(34) + SendToPIC + Chr(34)
+	
+	'Check for programmer success, should have 0 exit value
+	If ExitValue <> 0 And (LCase(PrgExe) <> "none" And LCase(Right(PrgExe, 5)) <> "\none") Then
+		Dim Temp As String
+		Temp = Message("WarningProgrammerFail")
+		Replace Temp, "%status%", Trim(Str(ExitValue))
+		LogWarning Temp
+	EndIf
 
 	ChDir SaveCurrDir
-END IF
+END If
+
+'Write errors to file
+WriteErrorLog
 
 'End of program
 'Pause and wait for key at end of compilation?
@@ -12046,6 +12054,8 @@ SUB InitCompiler
 							Select Case MsgName
 								Case "name"
 									Tool(ToolCount).Name = LCase(MsgVal)
+								Case "desc"
+									Tool(ToolCount).DispName = MsgVal
 								Case "type"
 									Tool(ToolCount).Type = LCase(MsgVal)
 								Case "command"
@@ -13235,7 +13245,7 @@ Sub PrepareProgrammer
 	'If programmer specified but assembler isn't, use gcasm
 	Dim As LinkedListElement Pointer ProgrammerList, CurrProg
 	Dim As ExternalTool Pointer CurrTool
-	Dim As String Cmd, OldCmd
+	Dim As String Cmd, OldCmd, Temp
 	Dim As Integer RecDetect
 	
 	'Trim quotes from exe names
@@ -13245,6 +13255,11 @@ Sub PrepareProgrammer
 	'If there is a list of programmers, choose the first appropriate one
 	PrgTool = 0
 	If InStr(PrgExe, ",") <> 0 Then
+		If VBS = 1 Then
+			Print Spc(5)
+			Temp = Message("ChoosingProgrammer")
+			Print Temp
+		End If
 		ProgrammerList = GetElements(PrgExe, ",")
 		CurrProg = ProgrammerList->Next
 		Do While CurrProg <> 0
@@ -13253,6 +13268,12 @@ Sub PrepareProgrammer
 				With *CurrTool
 					If .UseIf = "" Then
 						'Found programmer with no conditions, use
+						If VBS = 1 Then
+							Print Spc(10);
+							Temp = Message("ProgrammerSelected")
+							Replace Temp, "%prog%", .DispName
+							Print Temp
+						End If
 						PrgTool = CurrTool
 						Exit Do
 					Else
@@ -13270,8 +13291,24 @@ Sub PrepareProgrammer
 						Calculate Cmd
 						If Val(Cmd) <> 0 Then
 							'Condition is true, use programmer
+							'Found programmer with no conditions, use
+							If VBS = 1 Then
+								Print Spc(10);
+								Temp = Message("ProgrammerSelected")
+								Replace Temp, "%prog%", .DispName
+								Print Temp
+							End If
+							
 							PrgTool = CurrTool
 							Exit Do
+						Else
+							'Found programmer with no conditions, use
+						If VBS = 1 Then
+							Print Spc(10);
+							Temp = Message("ProgrammerSkipped")
+							Replace Temp, "%prog%", .DispName
+							Print Temp
+						End If
 						End If
 						
 					End If
