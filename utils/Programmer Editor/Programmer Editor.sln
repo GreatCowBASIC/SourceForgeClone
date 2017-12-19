@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+# SharpDevelop 3.2.1.6466
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Programmer Editor", "Programmer Editor.vbproj", "{3C866B89-7BC3-4616-AF9D-EC46CC84B061}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3C866B89-7BC3-4616-AF9D-EC46CC84B061}.Debug|x86.Build.0 = Debug|x86
+		{3C866B89-7BC3-4616-AF9D-EC46CC84B061}.Debug|x86.ActiveCfg = Debug|x86
+		{3C866B89-7BC3-4616-AF9D-EC46CC84B061}.Release|x86.Build.0 = Release|x86
+		{3C866B89-7BC3-4616-AF9D-EC46CC84B061}.Release|x86.ActiveCfg = Release|x86
+	EndGlobalSection
+EndGlobal
