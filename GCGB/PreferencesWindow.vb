@@ -40,6 +40,7 @@ Imports System.Collections.Generic
 		Private Dim HeadingFont As Font
 		Private Dim ItemFont As Font
 		Private Dim pPreferences As Preferences
+		Private Dim GCGBOptionsHidden as Boolean = False
 		
 		Public Sub New()
 			MyBase.New
@@ -464,16 +465,24 @@ Imports System.Collections.Generic
 		Private EditorIndentSize As System.Windows.Forms.NumericUpDown
 		#End Region
 		
-		
+		Public Sub HideGCGBOptions
+			Me.PrefsTabs.Controls.Remove(EditorPrefs)
+			Me.PrefsTabs.Controls.Remove(ExtToolsPrefs)
+			
+			CompilerPause.Visible = False
+			GCGBOptionsHidden = True
+		End Sub
 		
 		Private Sub Button_OKClick(sender As System.Object, e As System.EventArgs)
 			'Editor
-			If Me.EditorWarnRecursion.Checked = False Then
-				pPreferences.SetPref("GCGB", "WarnRecursion", "0")
-			Else
-				pPreferences.SetPref("GCGB", "WarnRecursion", "1")
+			If Not GCGBOptionsHidden Then
+				If Me.EditorWarnRecursion.Checked = False Then
+					pPreferences.SetPref("GCGB", "WarnRecursion", "0")
+				Else
+					pPreferences.SetPref("GCGB", "WarnRecursion", "1")
+				End If
+				pPreferences.SetPref("GCGB", "IndentSize", Me.EditorIndentSize.Value.ToString)
 			End If
-			pPreferences.SetPref("GCGB", "IndentSize", Me.EditorIndentSize.Value.ToString)
 			
 			'Compiler
 			If Me.CompilerVerbose.Checked = False Then
@@ -491,7 +500,7 @@ Imports System.Collections.Generic
 			Else
 				pPreferences.SetPref("GCBASIC", "WarningsAsErrors", "n")
 			End If
-			If CompilerPause.Checked = False Then
+			If CompilerPause.Checked = False Or GCGBOptionsHidden Then
 				pPreferences.SetPref("GCBASIC", "PauseAfterCompile", "n")
 			Else
 				pPreferences.SetPref("GCBASIC", "PauseAfterCompile", "y")

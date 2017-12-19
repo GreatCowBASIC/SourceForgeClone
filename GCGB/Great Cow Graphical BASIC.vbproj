@@ -217,8 +217,8 @@
       <DependentUpon>SubParamEditor.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProgrammerEditor.resources">
-      <LogicalName>Great_Cow_Graphical_BASIC.ProgrammerEditor.resources</LogicalName>
       <DependentUpon>ProgrammerEditor.vb</DependentUpon>
+      <LogicalName>Great_Cow_Graphical_BASIC.ProgrammerEditor.resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="ErrorListBox.resources">
       <LogicalName>Great_Cow_Graphical_BASIC.ErrorListBox.resources</LogicalName>

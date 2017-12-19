@@ -3,7 +3,7 @@
 ' User: Hugh
 ' Date: 21/09/2013
 ' Time: 7:23 PM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 Imports System.Collections.Generic
@@ -69,12 +69,25 @@ Public Class Preferences
 	
 	Public Event Changed
 	
-	Public Dim PrefFile As String = ""
+	Private Dim PrefFile As String = ""
 	Public Dim PrefGroups As New List(Of SettingSection)
+	Private Dim PrefsMode As PrefsModes
+	
+	Public Enum PrefsModes
+		GCGB
+		GCB
+	End Enum
 	
 	Public Sub FireChanged
 		'Notify listeners of change to preferences
 		RaiseEvent Changed
+	End Sub
+	
+	Public Sub New(Optional PrefFile As String = "", Optional PrefsMode As PrefsModes = PrefsModes.GCGB)
+		If PrefFile <> "" Then
+			Me.PrefFile = PrefFile
+		End If
+		Me.PrefsMode = PrefsMode
 	End Sub
 	
 	Public Shared Function PrefIsYes(PrefValue As String) As Boolean
@@ -96,7 +109,9 @@ Public Class Preferences
    		Dim CurrFile, CheckFile As Integer
    		Dim FileNotFound As Boolean
    		
-   		Me.PrefFile = MainForm.InstallDir + Mainform.FilenamePrefs
+   		If Me.PrefFile = "" Then
+   			Me.PrefFile = MainForm.InstallDir + Mainform.FilenamePrefs
+   		End If
    		PrefFile(1) = Me.PrefFile
    		PrefFiles = 1
    		
@@ -149,7 +164,7 @@ Public Class Preferences
 		     				End If
 		     			End If
 		     			
-	     			End If	     		
+	     			End If
 	     		Loop
 	     		
 	     		ReadFile.Close()
@@ -170,7 +185,11 @@ Public Class Preferences
 			'User/Application Data
 			UserIni = New StreamWriter(LowLevel.ReplaceToolVariables(MainForm.FileNameUserPrefs))
 			'Write header
-    		UserIni.WriteLine("'Preferences file for Great Cow Graphical BASIC")
+    		If PrefsMode = PrefsModes.GCGB Then
+    			UserIni.WriteLine("'Preferences file for Great Cow Graphical BASIC")
+    		Else
+    			UserIni.WriteLine("'Preferences file for Great Cow BASIC")
+    		End If
     		UserIni.WriteLine("'Location: [user]/Application Data")
     		UserIni.WriteLine("")
 			
@@ -178,8 +197,13 @@ Public Class Preferences
 			'Open File
     		UserIni = New StreamWriter(PrefFile)
     		'Write header
-    		UserIni.WriteLine("'Preferences file for Great Cow Graphical BASIC")
-    		UserIni.WriteLine("'Location: GCGB install dir")
+    		If PrefsMode = PrefsModes.GCGB Then
+    			UserIni.WriteLine("'Preferences file for Great Cow Graphical BASIC")
+    			UserIni.WriteLine("'Location: GCGB install dir")
+    		Else
+    			UserIni.WriteLine("'Preferences file for Great Cow BASIC")
+    			UserIni.WriteLine("'Location: GCB install (or custom) dir")
+    		End If
     		UserIni.WriteLine("")
     	End If
     	
