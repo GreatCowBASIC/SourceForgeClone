@@ -43,12 +43,16 @@ Imports System.Windows.Forms
 			TOOL
 		End Enum
 		
-		Public Sub New(Source As Preferences)
+		Public Sub New(Source As Preferences, Optional Section As SettingSection = Nothing)
 			MyBase.New
 			'
 			' The Me.InitializeComponent call is required for Windows Forms designer support.
 			'
 			Me.InitializeComponent
+			
+			If pMode = Modes.TOOL Then
+				Me.Width = 288
+			End If
 			
 			changeAccepted = false
 			pSource = Source
@@ -57,11 +61,6 @@ Imports System.Windows.Forms
 			FillPortEditor
 			
 			ApplyTranslation
-			UpdatePortEditor
-		End Sub
-		
-		Public Sub New(Source As Preferences, Section As SettingSection)
-			Me.New (Source)
 			
 			If Not Section Is Nothing Then
 				pSection = Section
@@ -70,6 +69,7 @@ Imports System.Windows.Forms
 				ProgrammerParams.Text = section.GetValue("params")
 				ProgrammerWorkingDir.Text = section.GetValue("workingdir")
 				UseIf.Text = section.GetValue("useif")
+				ReqConfig.Text = section.GetValue("reqconfig")
 				portList.Text = section.GetValue("port")
 			End If
 			
@@ -99,26 +99,30 @@ Imports System.Windows.Forms
 			Me.ProgrammerEditorHelp = New System.Windows.Forms.HelpProvider
 			Me.portList = New System.Windows.Forms.ComboBox
 			Me.UseIf = New System.Windows.Forms.TextBox
+			Me.ReqConfig = New System.Windows.Forms.TextBox
 			Me.portLabel = New System.Windows.Forms.Label
 			Me.useIfLabel = New System.Windows.Forms.Label
+			Me.groupBox1 = New System.Windows.Forms.GroupBox
+			Me.groupBox2 = New System.Windows.Forms.GroupBox
+			Me.ReqConfigLabel = New System.Windows.Forms.Label
+			Me.ItemDescriptionBox = New System.Windows.Forms.TextBox
+			Me.groupBox1.SuspendLayout
+			Me.groupBox2.SuspendLayout
 			Me.SuspendLayout
 			'
 			'cmdLineLabel
 			'
-			Me.cmdLineLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.cmdLineLabel.Location = New System.Drawing.Point(8, 104)
+			Me.cmdLineLabel.Location = New System.Drawing.Point(8, 112)
 			Me.cmdLineLabel.Name = "cmdLineLabel"
-			Me.cmdLineLabel.Size = New System.Drawing.Size(256, 16)
+			Me.cmdLineLabel.Size = New System.Drawing.Size(244, 16)
 			Me.cmdLineLabel.TabIndex = 13
 			Me.cmdLineLabel.Text = "Command Line Parameters:"
 			'
 			'browseWorkingDir
 			'
-			Me.browseWorkingDir.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.browseWorkingDir.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.ProgrammerEditorHelp.SetHelpString(Me.browseWorkingDir, "Browse for the program's working directory")
-			Me.browseWorkingDir.Location = New System.Drawing.Point(192, 168)
+			Me.browseWorkingDir.Location = New System.Drawing.Point(180, 176)
 			Me.browseWorkingDir.Name = "browseWorkingDir"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.browseWorkingDir, true)
 			Me.browseWorkingDir.Size = New System.Drawing.Size(72, 24)
@@ -132,11 +136,9 @@ Imports System.Windows.Forms
 			'
 			'nameLabel
 			'
-			Me.nameLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.nameLabel.Location = New System.Drawing.Point(8, 8)
+			Me.nameLabel.Location = New System.Drawing.Point(8, 16)
 			Me.nameLabel.Name = "nameLabel"
-			Me.nameLabel.Size = New System.Drawing.Size(256, 16)
+			Me.nameLabel.Size = New System.Drawing.Size(244, 16)
 			Me.nameLabel.TabIndex = 11
 			Me.nameLabel.Text = "Name:"
 			'
@@ -145,7 +147,7 @@ Imports System.Windows.Forms
 			Me.Button_Cancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
 			Me.Button_Cancel.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_Cancel.Location = New System.Drawing.Point(144, 294)
+			Me.Button_Cancel.Location = New System.Drawing.Point(285, 341)
 			Me.Button_Cancel.Name = "Button_Cancel"
 			Me.Button_Cancel.Size = New System.Drawing.Size(80, 24)
 			Me.Button_Cancel.TabIndex = 6
@@ -153,20 +155,19 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerFileName
 			'
-			Me.ProgrammerFileName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerFileName, "Program file, which Great Cow Graphical BASIC will run.")
-			Me.ProgrammerFileName.Location = New System.Drawing.Point(8, 72)
+			Me.ProgrammerFileName.Location = New System.Drawing.Point(8, 80)
 			Me.ProgrammerFileName.Name = "ProgrammerFileName"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerFileName, true)
-			Me.ProgrammerFileName.Size = New System.Drawing.Size(176, 20)
+			Me.ProgrammerFileName.Size = New System.Drawing.Size(164, 20)
 			Me.ProgrammerFileName.TabIndex = 2
+			AddHandler Me.ProgrammerFileName.MouseEnter, AddressOf Me.ProgrammerFileNameMouseEnter
 			'
 			'Button_OK
 			'
 			Me.Button_OK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_OK.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_OK.Location = New System.Drawing.Point(48, 294)
+			Me.Button_OK.Location = New System.Drawing.Point(189, 341)
 			Me.Button_OK.Name = "Button_OK"
 			Me.Button_OK.Size = New System.Drawing.Size(80, 24)
 			Me.Button_OK.TabIndex = 5
@@ -175,36 +176,32 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerParams
 			'
-			Me.ProgrammerParams.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerParams, "Command line parameters for the program. Please consult your programmer or extern"& _ 
 						"al tool manual and the Configuration > Setting up a programmer section of the GC"& _ 
 						"GB help for details.")
-			Me.ProgrammerParams.Location = New System.Drawing.Point(8, 120)
+			Me.ProgrammerParams.Location = New System.Drawing.Point(8, 128)
 			Me.ProgrammerParams.Name = "ProgrammerParams"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerParams, true)
-			Me.ProgrammerParams.Size = New System.Drawing.Size(256, 20)
+			Me.ProgrammerParams.Size = New System.Drawing.Size(244, 20)
 			Me.ProgrammerParams.TabIndex = 3
 			AddHandler Me.ProgrammerParams.TextChanged, AddressOf Me.ProgrammerParamsTextChanged
+			AddHandler Me.ProgrammerParams.MouseEnter, AddressOf Me.ProgrammerParamsMouseEnter
 			'
 			'ProgrammerWorkingDir
 			'
-			Me.ProgrammerWorkingDir.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerWorkingDir, "Folder to use as the working directory for the program")
-			Me.ProgrammerWorkingDir.Location = New System.Drawing.Point(8, 168)
+			Me.ProgrammerWorkingDir.Location = New System.Drawing.Point(8, 176)
 			Me.ProgrammerWorkingDir.Name = "ProgrammerWorkingDir"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerWorkingDir, true)
-			Me.ProgrammerWorkingDir.Size = New System.Drawing.Size(176, 20)
+			Me.ProgrammerWorkingDir.Size = New System.Drawing.Size(164, 20)
 			Me.ProgrammerWorkingDir.TabIndex = 4
+			AddHandler Me.ProgrammerWorkingDir.MouseEnter, AddressOf Me.ProgrammerWorkingDirMouseEnter
 			'
 			'workingDirLabel
 			'
-			Me.workingDirLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.workingDirLabel.Location = New System.Drawing.Point(8, 152)
+			Me.workingDirLabel.Location = New System.Drawing.Point(8, 160)
 			Me.workingDirLabel.Name = "workingDirLabel"
-			Me.workingDirLabel.Size = New System.Drawing.Size(256, 16)
+			Me.workingDirLabel.Size = New System.Drawing.Size(244, 16)
 			Me.workingDirLabel.TabIndex = 14
 			Me.workingDirLabel.Text = "Working Directory:"
 			'
@@ -218,20 +215,17 @@ Imports System.Windows.Forms
 			'
 			'fileLabel
 			'
-			Me.fileLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.fileLabel.Location = New System.Drawing.Point(8, 56)
+			Me.fileLabel.Location = New System.Drawing.Point(8, 64)
 			Me.fileLabel.Name = "fileLabel"
-			Me.fileLabel.Size = New System.Drawing.Size(256, 16)
+			Me.fileLabel.Size = New System.Drawing.Size(244, 16)
 			Me.fileLabel.TabIndex = 12
 			Me.fileLabel.Text = "File:"
 			'
 			'ProgBrowse
 			'
-			Me.ProgBrowse.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgBrowse.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgBrowse, "Browse for the program file")
-			Me.ProgBrowse.Location = New System.Drawing.Point(192, 72)
+			Me.ProgBrowse.Location = New System.Drawing.Point(180, 80)
 			Me.ProgBrowse.Name = "ProgBrowse"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgBrowse, true)
 			Me.ProgBrowse.Size = New System.Drawing.Size(72, 24)
@@ -241,15 +235,14 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerName
 			'
-			Me.ProgrammerName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerName, "The name of the programmer or external tool. This will be shown in the list of pr"& _ 
 						"ogrammers or tools")
-			Me.ProgrammerName.Location = New System.Drawing.Point(8, 24)
+			Me.ProgrammerName.Location = New System.Drawing.Point(8, 32)
 			Me.ProgrammerName.Name = "ProgrammerName"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerName, true)
-			Me.ProgrammerName.Size = New System.Drawing.Size(256, 20)
+			Me.ProgrammerName.Size = New System.Drawing.Size(244, 20)
 			Me.ProgrammerName.TabIndex = 1
+			AddHandler Me.ProgrammerName.MouseEnter, AddressOf Me.ProgrammerNameMouseEnter
 			'
 			'portList
 			'
@@ -257,66 +250,119 @@ Imports System.Windows.Forms
 			Me.ProgrammerEditorHelp.SetHelpString(Me.portList, "Serial port used by the programmer. If %port% is used in the Command Line Paramet"& _ 
 						"ers, this box will display a list of serial ports. The selected port will be use"& _ 
 						"d in place of %port% above.")
-			Me.portList.Location = New System.Drawing.Point(8, 264)
+			Me.portList.Location = New System.Drawing.Point(8, 128)
 			Me.portList.Name = "portList"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.portList, true)
 			Me.portList.Size = New System.Drawing.Size(120, 21)
 			Me.portList.TabIndex = 17
+			AddHandler Me.portList.MouseEnter, AddressOf Me.PortListMouseEnter
 			'
 			'UseIf
 			'
-			Me.UseIf.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.UseIf, resources.GetString("UseIf.HelpString"))
-			Me.UseIf.Location = New System.Drawing.Point(8, 216)
+			Me.UseIf.Location = New System.Drawing.Point(8, 32)
 			Me.UseIf.Name = "UseIf"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.UseIf, true)
-			Me.UseIf.Size = New System.Drawing.Size(256, 20)
+			Me.UseIf.Size = New System.Drawing.Size(244, 20)
 			Me.UseIf.TabIndex = 19
+			AddHandler Me.UseIf.MouseEnter, AddressOf Me.UseIfMouseEnter
+			'
+			'ReqConfig
+			'
+			Me.ProgrammerEditorHelp.SetHelpString(Me.ReqConfig, resources.GetString("ReqConfig.HelpString"))
+			Me.ReqConfig.Location = New System.Drawing.Point(8, 80)
+			Me.ReqConfig.Name = "ReqConfig"
+			Me.ProgrammerEditorHelp.SetShowHelp(Me.ReqConfig, true)
+			Me.ReqConfig.Size = New System.Drawing.Size(244, 20)
+			Me.ReqConfig.TabIndex = 21
+			AddHandler Me.ReqConfig.MouseEnter, AddressOf Me.ReqConfigMouseEnter
 			'
 			'portLabel
 			'
-			Me.portLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.portLabel.Location = New System.Drawing.Point(8, 248)
+			Me.portLabel.Location = New System.Drawing.Point(8, 112)
 			Me.portLabel.Name = "portLabel"
-			Me.portLabel.Size = New System.Drawing.Size(256, 16)
+			Me.portLabel.Size = New System.Drawing.Size(244, 16)
 			Me.portLabel.TabIndex = 16
 			Me.portLabel.Text = "Port:"
 			Me.portLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 			'
 			'useIfLabel
 			'
-			Me.useIfLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.useIfLabel.Location = New System.Drawing.Point(8, 200)
+			Me.useIfLabel.Location = New System.Drawing.Point(8, 16)
 			Me.useIfLabel.Name = "useIfLabel"
-			Me.useIfLabel.Size = New System.Drawing.Size(256, 16)
+			Me.useIfLabel.Size = New System.Drawing.Size(244, 16)
 			Me.useIfLabel.TabIndex = 18
 			Me.useIfLabel.Text = "Use If:"
+			'
+			'groupBox1
+			'
+			Me.groupBox1.Controls.Add(Me.ProgrammerName)
+			Me.groupBox1.Controls.Add(Me.ProgrammerParams)
+			Me.groupBox1.Controls.Add(Me.ProgrammerFileName)
+			Me.groupBox1.Controls.Add(Me.ProgBrowse)
+			Me.groupBox1.Controls.Add(Me.nameLabel)
+			Me.groupBox1.Controls.Add(Me.browseWorkingDir)
+			Me.groupBox1.Controls.Add(Me.fileLabel)
+			Me.groupBox1.Controls.Add(Me.ProgrammerWorkingDir)
+			Me.groupBox1.Controls.Add(Me.cmdLineLabel)
+			Me.groupBox1.Controls.Add(Me.workingDirLabel)
+			Me.groupBox1.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.groupBox1.Location = New System.Drawing.Point(8, 8)
+			Me.groupBox1.Name = "groupBox1"
+			Me.groupBox1.Size = New System.Drawing.Size(264, 208)
+			Me.groupBox1.TabIndex = 20
+			Me.groupBox1.TabStop = false
+			Me.groupBox1.Text = "Common Settings"
+			'
+			'groupBox2
+			'
+			Me.groupBox2.Controls.Add(Me.ReqConfig)
+			Me.groupBox2.Controls.Add(Me.ReqConfigLabel)
+			Me.groupBox2.Controls.Add(Me.portList)
+			Me.groupBox2.Controls.Add(Me.portLabel)
+			Me.groupBox2.Controls.Add(Me.UseIf)
+			Me.groupBox2.Controls.Add(Me.useIfLabel)
+			Me.groupBox2.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.groupBox2.Location = New System.Drawing.Point(280, 8)
+			Me.groupBox2.Name = "groupBox2"
+			Me.groupBox2.Size = New System.Drawing.Size(264, 160)
+			Me.groupBox2.TabIndex = 21
+			Me.groupBox2.TabStop = false
+			Me.groupBox2.Text = "Programmer Specific Settings"
+			'
+			'ReqConfigLabel
+			'
+			Me.ReqConfigLabel.Location = New System.Drawing.Point(8, 64)
+			Me.ReqConfigLabel.Name = "ReqConfigLabel"
+			Me.ReqConfigLabel.Size = New System.Drawing.Size(244, 16)
+			Me.ReqConfigLabel.TabIndex = 20
+			Me.ReqConfigLabel.Text = "Required Config:"
+			'
+			'ItemDescriptionBox
+			'
+			Me.ItemDescriptionBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+			Me.ItemDescriptionBox.Location = New System.Drawing.Point(8, 224)
+			Me.ItemDescriptionBox.Multiline = true
+			Me.ItemDescriptionBox.Name = "ItemDescriptionBox"
+			Me.ItemDescriptionBox.ReadOnly = true
+			Me.ItemDescriptionBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+			Me.ItemDescriptionBox.Size = New System.Drawing.Size(536, 111)
+			Me.ItemDescriptionBox.TabIndex = 22
+			Me.ItemDescriptionBox.Text = "Move the mouse over an item on this window to see information about it here"
 			'
 			'ProgrammerEditor
 			'
 			Me.AcceptButton = Me.Button_OK
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.Button_Cancel
-			Me.ClientSize = New System.Drawing.Size(272, 325)
-			Me.Controls.Add(Me.UseIf)
-			Me.Controls.Add(Me.useIfLabel)
-			Me.Controls.Add(Me.portList)
-			Me.Controls.Add(Me.portLabel)
-			Me.Controls.Add(Me.browseWorkingDir)
-			Me.Controls.Add(Me.ProgrammerWorkingDir)
-			Me.Controls.Add(Me.workingDirLabel)
-			Me.Controls.Add(Me.cmdLineLabel)
-			Me.Controls.Add(Me.fileLabel)
-			Me.Controls.Add(Me.nameLabel)
+			Me.ClientSize = New System.Drawing.Size(554, 372)
+			Me.Controls.Add(Me.ItemDescriptionBox)
+			Me.Controls.Add(Me.groupBox2)
+			Me.Controls.Add(Me.groupBox1)
 			Me.Controls.Add(Me.Button_Cancel)
 			Me.Controls.Add(Me.Button_OK)
-			Me.Controls.Add(Me.ProgrammerName)
-			Me.Controls.Add(Me.ProgBrowse)
-			Me.Controls.Add(Me.ProgrammerFileName)
-			Me.Controls.Add(Me.ProgrammerParams)
 			Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
 			Me.HelpButton = true
 			Me.MaximizeBox = false
@@ -325,9 +371,18 @@ Imports System.Windows.Forms
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
 			Me.Text = "Programmer Editor"
+			Me.groupBox1.ResumeLayout(false)
+			Me.groupBox1.PerformLayout
+			Me.groupBox2.ResumeLayout(false)
+			Me.groupBox2.PerformLayout
 			Me.ResumeLayout(false)
 			Me.PerformLayout
 		End Sub
+		Private ReqConfig As System.Windows.Forms.TextBox
+		Private ReqConfigLabel As System.Windows.Forms.Label
+		Private ItemDescriptionBox As System.Windows.Forms.TextBox
+		Private groupBox2 As System.Windows.Forms.GroupBox
+		Private groupBox1 As System.Windows.Forms.GroupBox
 		Private UseIf As System.Windows.Forms.TextBox
 		Private useIfLabel As System.Windows.Forms.Label
 		Private portList As System.Windows.Forms.ComboBox
@@ -405,10 +460,11 @@ Imports System.Windows.Forms
 			Set
 				pMode = Value
 				If pMode = Modes.PROGRAMMER Then
-					
+					'Me.Width = 560
 					
 				Else If pMode = Modes.TOOL Then
 					Me.Text = "External Tool Editor"
+					Me.Width = 288
 				End If
 				UpdatePortEditor
 			End Set
@@ -433,6 +489,8 @@ Imports System.Windows.Forms
 						If pMode = Modes.PROGRAMMER Then
 							.AddSetting("type", "programmer")
 							.AddSetting("useif", Me.UseIf.Text)
+							.AddSetting("reqconfig", ReqConfig.Text)
+							
 						Else
 							.AddSetting("type", "external")
 						End If
@@ -552,6 +610,58 @@ Imports System.Windows.Forms
 		
 		Sub ProgrammerParamsTextChanged(sender As Object, e As EventArgs)
 			UpdatePortEditor
+		End Sub
+		
+		
+		Sub ProgrammerNameMouseEnter(sender As Object, e As EventArgs)
+			Dim Thing As String = "programmer"
+			If pMode = Modes.TOOL Then Thing = "tool"
+			Me.ItemDescriptionBox.Text = "Type in a name for the " + Thing + " here. This will be displayed in the list of " + Thing + "s" + Environment.NewLine + Environment.NewLine + "(Required)"
+		End Sub
+		
+		Sub ProgrammerFileNameMouseEnter(sender As Object, e As EventArgs)
+			Dim Thing As String = "programmer"
+			If pMode = Modes.TOOL Then Thing = "tool"
+			Me.ItemDescriptionBox.Text = "Type in the name of the executable file for the " + Thing + " here, or click the Browse button to select it from a folder (required). When you use the " + Thing + ", this program will be run. If %instdir% is written here, it will be replaced with the folder containing GCBASIC." + Environment.NewLine + Environment.NewLine + "(Required)"
+		End Sub
+		
+		Sub ProgrammerParamsMouseEnter(sender As Object, e As EventArgs)
+			Dim Thing As String = "programmer"
+			If pMode = Modes.TOOL Then Thing = "tool"
+			Me.ItemDescriptionBox.Text = "Type in the command line parameters for the " + Thing + " here. These allow information to be passed to the " + Thing + ". The following things can be typed in here, and will be replaced with the appropriate values:" + Environment.NewLine + _
+			                             "%FileName% - To obtain the name of the current file" + Environment.NewLine + _
+			                             "%ShortFileName% - To obtain the name of the current file in 8.3 format" + Environment.NewLine + _
+			                             "%Fn_NoExt% - To obtain the name of the current file without a file extension" + Environment.NewLine + _
+			                             "%ChipModel% - To get the name of the current microcontroller" + Environment.NewLine + _
+			                             "%AppData% - Gets the AppData folder for the current Windows user" + Environment.NewLine + _
+			                             "%Temp% - Gets the Temp folder for the current Windows user" + Environment.NewLine + _
+			                             "%InstDir% - Gets the folder where GCBASIC is installed" + Environment.NewLine + _
+			                             "%Port% - If the " + Thing + " uses a serial port, use this to prompt for a serial port" + Environment.NewLine + _
+			                             "%NamePart%(n) - Extract only the name of the file n without any path" + Environment.NewLine + _
+			                             "%PathPart%(n) - Extract only the path of the file n without any name" + Environment.NewLine + Environment.NewLine + _
+			                             "These may be combined in any order necessary to run the " + Thing + " correctly."
+		End Sub
+		
+		Sub ProgrammerWorkingDirMouseEnter(sender As Object, e As EventArgs)
+			Dim Thing As String = "programmer"
+			If pMode = Modes.TOOL Then Thing = "tool"
+			Me.ItemDescriptionBox.Text = "Type or select a working directory for the " + Thing + " here. This isn't usually needed, but sometimes may need to be set to the folder containing the " + Thing + " exe file, or the folder containing the current program. To do this, any of the %% variables available for Command Line Parameters can also be used here."
+		End Sub
+		
+		Sub UseIfMouseEnter(sender As Object, e As EventArgs)
+			Me.ItemDescriptionBox.Text = "When multiple programmers are marked as preferred, each one can have a condition assigned to it here. If the condition is true, this programmer will be used. If not, the next programmer will be tried. Some examples:" + Environment.NewLine + _
+			                             "DEF(PIC) to restrict this programmer to PIC microcontrollers" + Environment.NewLine + _
+			                             "DEF(AVR) to restrict this programmer to AVR microcontrollers" + Environment.NewLine + _
+			                             "ChipName = mega328p to restrict this programmer to only ATmega328p chips" + Environment.NewLine + _
+			                             "Conditions can be combined with AND, OR and NOT. Use DEF(const) to check if any constant is defined, or check the value of any constant with ="
+		End Sub
+		
+		Sub ReqConfigMouseEnter(sender As Object, e As EventArgs)
+			Me.ItemDescriptionBox.Text = "Some PIC microcontroller programs may require specific CONFIG settings to be used, like LVP = ON for low voltage programmers. Enter any required settings here, using the same syntax as the GCBASIC #config directive."
+		End Sub
+		
+		Sub PortListMouseEnter(sender As Object, e As EventArgs)
+			Me.ItemDescriptionBox.Text = "This programmer uses a serial (COM) port. Select the port it uses here."
 		End Sub
 	End Class
 'End Namespace
