@@ -31,14 +31,14 @@ GCBASIC [/O:output.asm] [/A:assembler] [/P:programmer] [/K:{C|A}] [/V] [/L]
         /K:{C|A}        Keep original code in assembly output. /K:C will
                           save comments, /K:A will preserve all input code.
         /R:format       Write a compilation report. Format can be html, text
-		                  or none.
-		/S:settings.ini Specify name of settings file to load
+                          or none.
+        /S:settings.ini Specify name of settings file to load
         /V              Verbose mode
         /L              Show license
         /NP             Do not pause on errors. Use with IDEs.
-		/WX             Treat warnings as errors
-		/F             	Skip compilation if up to date hex file found, call
-		                   programmer immediately and then exit.
+        /WX             Treat warnings as errors
+        /F             	Skip compilation if up to date hex file found, call
+                          programmer immediately and then exit.
         filename        The file to compile.
 		
 You may use - in place of /, such as -V instead of /V.
@@ -269,6 +269,7 @@ WarningBadOption = "Unrecognised compiler option: %option%"
 WarningTimerConst = "Deprecated timer prescaler constant found. Replace PSn_1/x constants with PSn_x"
 WarningVolatileBit = "Invalid volatile option bit %bit%"
 WarningProgrammerFail = "The chip may not have programmed properly. Programmer returned status (%status%)"
+WarningNoValidProgrammer = "None of the chosen programmers were suitable for the current program"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."

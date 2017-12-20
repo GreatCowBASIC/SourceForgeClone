@@ -605,7 +605,7 @@ Dim Shared ChipConfigCode As CodeSection Pointer
 DIM SHARED DefCONFIG(700) As String: DCOC = 0
 DIM SHARED ConfigMask(20) As Integer
 DIM SHARED DataTable(100) As DataTableType: DataTables = 0
-DIM SHARED Messages(1 TO 2, 200) As String: MSGC = 0
+DIM SHARED Messages(1 TO 2, 500) As String: MSGC = 0
 DIM SHARED ASMCommands As HashMap Pointer
 DIM SHARED ASMSymbols As HashMap Pointer
 Dim Shared ToAsmSymbol(500, 1 To 2) As String: ToAsmSymbols = 0
@@ -663,7 +663,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-19"
+Version = "0.98.<<>> 2017-12-20"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -13303,12 +13303,12 @@ Sub PrepareProgrammer
 							Exit Do
 						Else
 							'Found programmer with no conditions, use
-						If VBS = 1 Then
-							Print Spc(10);
-							Temp = Message("ProgrammerSkipped")
-							Replace Temp, "%prog%", .DispName
-							Print Temp
-						End If
+							If VBS = 1 Then
+								Print Spc(10);
+								Temp = Message("ProgrammerSkipped")
+								Replace Temp, "%prog%", .DispName
+								Print Temp
+							End If
 						End If
 						
 					End If
@@ -13317,6 +13317,12 @@ Sub PrepareProgrammer
 			
 			CurrProg = CurrProg->Next
 		Loop
+		
+		'If PrgTool is still zero, no programmers were valid
+		If PrgTool = 0 Then
+			PrgExe = "none"
+			LogWarning(Message("WarningNoValidProgrammer"))
+		End If
 		
 	End If
 
