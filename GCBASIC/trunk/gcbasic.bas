@@ -663,7 +663,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-20"
+Version = "0.98.<<>> 2017-12-21"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -815,7 +815,9 @@ IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
 		Temp = Message("WarningProgrammerFail")
 		Replace Temp, "%status%", Trim(Str(ExitValue))
 		LogWarning Temp
-	EndIf
+	Else
+		ExitValue = 0
+	End If
 
 	ChDir SaveCurrDir
 END If
@@ -15192,7 +15194,7 @@ ShowError:
 	END If
 	
 	'Set return code
-	If ERC > 0 Then
+	If ERC > 0 And ExitValue = 0 Then
 		ExitValue = &Hdeadbeef
 	End If
 
