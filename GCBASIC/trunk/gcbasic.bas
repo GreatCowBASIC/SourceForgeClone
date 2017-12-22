@@ -621,7 +621,7 @@ Dim Shared CalcTempType(3) As String
 Dim Shared Interrupts(200) As IntData: IntCount = 0
 Dim Shared IntInitCode As CodeSection Pointer
 Dim Shared IntHandlerCode As CodeSection Pointer
-Dim Shared Tool(20) As ExternalTool: ToolCount = 0
+Dim Shared Tool(200) As ExternalTool: ToolCount = 0
 Dim Shared ProgMemPage(MAX_PROG_PAGES) As ProgMemPageType: ProgMemPages = 0
 Dim Shared IntOscSpeed(20) As Double: IntOscSpeeds = 0
 Dim Shared FileConverter(50) As FileConverterType: FileConverters = 0
@@ -663,7 +663,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-21"
+Version = "0.98.<<>> 2017-12-22"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -16145,4 +16145,5 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
 
