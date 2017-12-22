@@ -64,6 +64,11 @@ Imports System.Collections.Generic
 				If pPreferences.GetPref("GCGB", "IndentSize") <> "" Then
 					EditorIndentSize.Value = pPreferences.GetPref("GCGB", "IndentSize")
 				End If
+				If pPreferences.GetPref("GCGB", "MDI").ToLower = "tabs" Then
+					MDITabs.Checked = True
+				Else
+					MDIWindows.Checked = True
+				End If
 				
 				'Compiler
 				CompilerVerbose.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "Verbose"))
@@ -148,11 +153,15 @@ Imports System.Collections.Generic
 			Me.buttonAddTool = New System.Windows.Forms.Button
 			Me.toolList = New System.Windows.Forms.ListBox
 			Me.CompilerPrefs = New System.Windows.Forms.TabPage
+			Me.CompilerWarningsAsErrors = New System.Windows.Forms.CheckBox
 			Me.CompilerPause = New System.Windows.Forms.CheckBox
 			Me.CompilerShowBASIC = New System.Windows.Forms.CheckBox
 			Me.CompilerVerbose = New System.Windows.Forms.CheckBox
 			Me.PrefsTabs = New System.Windows.Forms.TabControl
 			Me.EditorPrefs = New System.Windows.Forms.TabPage
+			Me.MDILabel = New System.Windows.Forms.GroupBox
+			Me.MDITabs = New System.Windows.Forms.RadioButton
+			Me.MDIWindows = New System.Windows.Forms.RadioButton
 			Me.EditorIndentSize = New System.Windows.Forms.NumericUpDown
 			Me.EditorIndentLabel = New System.Windows.Forms.Label
 			Me.EditorWarnRecursion = New System.Windows.Forms.CheckBox
@@ -164,11 +173,11 @@ Imports System.Collections.Generic
 			Me.Button_Cancel = New System.Windows.Forms.Button
 			Me.PrefsHelp = New System.Windows.Forms.HelpProvider
 			Me.Button_OK = New System.Windows.Forms.Button
-			Me.CompilerWarningsAsErrors = New System.Windows.Forms.CheckBox
 			Me.ExtToolsPrefs.SuspendLayout
 			Me.CompilerPrefs.SuspendLayout
 			Me.PrefsTabs.SuspendLayout
 			Me.EditorPrefs.SuspendLayout
+			Me.MDILabel.SuspendLayout
 			CType(Me.EditorIndentSize,System.ComponentModel.ISupportInitialize).BeginInit
 			Me.ProgrammerPrefs.SuspendLayout
 			Me.SuspendLayout
@@ -225,7 +234,7 @@ Imports System.Collections.Generic
 			'
 			'toolList
 			'
-			Me.PrefsHelp.SetHelpString(Me.toolList, "Shows the external tools that have been set up to work with Great Cow Graphical B"& _
+			Me.PrefsHelp.SetHelpString(Me.toolList, "Shows the external tools that have been set up to work with Great Cow Graphical B"& _ 
 						"ASIC")
 			Me.toolList.Location = New System.Drawing.Point(8, 8)
 			Me.toolList.Name = "toolList"
@@ -246,6 +255,18 @@ Imports System.Collections.Generic
 			Me.CompilerPrefs.TabIndex = 1
 			Me.CompilerPrefs.Text = "Compiler"
 			'
+			'CompilerWarningsAsErrors
+			'
+			Me.CompilerWarningsAsErrors.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Copies the original BASIC program into the assembly file produced by the compiler"& _ 
+						". Useful for showing the link between icons and assembly commands.")
+			Me.CompilerWarningsAsErrors.Location = New System.Drawing.Point(16, 64)
+			Me.CompilerWarningsAsErrors.Name = "CompilerWarningsAsErrors"
+			Me.PrefsHelp.SetShowHelp(Me.CompilerWarningsAsErrors, true)
+			Me.CompilerWarningsAsErrors.Size = New System.Drawing.Size(224, 16)
+			Me.CompilerWarningsAsErrors.TabIndex = 3
+			Me.CompilerWarningsAsErrors.Text = "Treat warnings as errors"
+			'
 			'CompilerPause
 			'
 			Me.CompilerPause.FlatStyle = System.Windows.Forms.FlatStyle.System
@@ -260,7 +281,7 @@ Imports System.Collections.Generic
 			'CompilerShowBASIC
 			'
 			Me.CompilerShowBASIC.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _
+			Me.PrefsHelp.SetHelpString(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _ 
 						". Useful for showing the link between icons and assembly commands.")
 			Me.CompilerShowBASIC.Location = New System.Drawing.Point(16, 40)
 			Me.CompilerShowBASIC.Name = "CompilerShowBASIC"
@@ -294,6 +315,7 @@ Imports System.Collections.Generic
 			'
 			'EditorPrefs
 			'
+			Me.EditorPrefs.Controls.Add(Me.MDILabel)
 			Me.EditorPrefs.Controls.Add(Me.EditorIndentSize)
 			Me.EditorPrefs.Controls.Add(Me.EditorIndentLabel)
 			Me.EditorPrefs.Controls.Add(Me.EditorWarnRecursion)
@@ -302,6 +324,44 @@ Imports System.Collections.Generic
 			Me.EditorPrefs.Size = New System.Drawing.Size(280, 262)
 			Me.EditorPrefs.TabIndex = 0
 			Me.EditorPrefs.Text = "Editor"
+			'
+			'MDILabel
+			'
+			Me.MDILabel.Controls.Add(Me.MDITabs)
+			Me.MDILabel.Controls.Add(Me.MDIWindows)
+			Me.MDILabel.Location = New System.Drawing.Point(8, 80)
+			Me.MDILabel.Name = "MDILabel"
+			Me.MDILabel.Size = New System.Drawing.Size(264, 48)
+			Me.MDILabel.TabIndex = 3
+			Me.MDILabel.TabStop = false
+			Me.MDILabel.Text = "To display multiple programs, use"
+			'
+			'MDITabs
+			'
+			Me.PrefsHelp.SetHelpString(Me.MDITabs, "Show multiple programs in tabs. Easier to change between programs, but offers les"& _ 
+						"s freedom in moving things around.")
+			Me.MDITabs.Location = New System.Drawing.Point(128, 16)
+			Me.MDITabs.Name = "MDITabs"
+			Me.PrefsHelp.SetShowHelp(Me.MDITabs, true)
+			Me.MDITabs.Size = New System.Drawing.Size(88, 24)
+			Me.MDITabs.TabIndex = 1
+			Me.MDITabs.TabStop = true
+			Me.MDITabs.Text = "Tabs"
+			Me.MDITabs.UseVisualStyleBackColor = true
+			'
+			'MDIWindows
+			'
+			Me.PrefsHelp.SetHelpString(Me.MDIWindows, "Show multiple programs in windows inside the main GCGB window. Allows programs to"& _ 
+						" be placed side by side easily, but can also make it harder to find a particular"& _ 
+						" program.")
+			Me.MDIWindows.Location = New System.Drawing.Point(8, 16)
+			Me.MDIWindows.Name = "MDIWindows"
+			Me.PrefsHelp.SetShowHelp(Me.MDIWindows, true)
+			Me.MDIWindows.Size = New System.Drawing.Size(88, 24)
+			Me.MDIWindows.TabIndex = 0
+			Me.MDIWindows.TabStop = true
+			Me.MDIWindows.Text = "Windows"
+			Me.MDIWindows.UseVisualStyleBackColor = true
 			'
 			'EditorIndentSize
 			'
@@ -390,7 +450,7 @@ Imports System.Collections.Generic
 			'
 			Me.ProgrammerList.AllowDrop = true
 			Me.ProgrammerList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
-			Me.PrefsHelp.SetHelpString(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _
+			Me.PrefsHelp.SetHelpString(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _ 
 						"C")
 			Me.ProgrammerList.Location = New System.Drawing.Point(8, 8)
 			Me.ProgrammerList.Name = "ProgrammerList"
@@ -422,18 +482,6 @@ Imports System.Collections.Generic
 			Me.Button_OK.Text = "OK"
 			AddHandler Me.Button_OK.Click, AddressOf Me.Button_OKClick
 			'
-			'CompilerWarningsAsErrors
-			'
-			Me.CompilerWarningsAsErrors.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Copies the original BASIC program into the assembly file produced by the compiler"& _
-						". Useful for showing the link between icons and assembly commands.")
-			Me.CompilerWarningsAsErrors.Location = New System.Drawing.Point(16, 64)
-			Me.CompilerWarningsAsErrors.Name = "CompilerWarningsAsErrors"
-			Me.PrefsHelp.SetShowHelp(Me.CompilerWarningsAsErrors, true)
-			Me.CompilerWarningsAsErrors.Size = New System.Drawing.Size(224, 16)
-			Me.CompilerWarningsAsErrors.TabIndex = 3
-			Me.CompilerWarningsAsErrors.Text = "Treat warnings as errors"
-			'
 			'PreferencesWindow
 			'
 			Me.AcceptButton = Me.Button_OK
@@ -456,10 +504,14 @@ Imports System.Collections.Generic
 			Me.CompilerPrefs.ResumeLayout(false)
 			Me.PrefsTabs.ResumeLayout(false)
 			Me.EditorPrefs.ResumeLayout(false)
+			Me.MDILabel.ResumeLayout(false)
 			CType(Me.EditorIndentSize,System.ComponentModel.ISupportInitialize).EndInit
 			Me.ProgrammerPrefs.ResumeLayout(false)
 			Me.ResumeLayout(false)
 		End Sub
+		Private MDIWindows As System.Windows.Forms.RadioButton
+		Private MDITabs As System.Windows.Forms.RadioButton
+		Private MDILabel As System.Windows.Forms.GroupBox
 		Private CompilerWarningsAsErrors As System.Windows.Forms.CheckBox
 		Private EditorIndentLabel As System.Windows.Forms.Label
 		Private EditorIndentSize As System.Windows.Forms.NumericUpDown
@@ -482,6 +534,11 @@ Imports System.Collections.Generic
 					pPreferences.SetPref("GCGB", "WarnRecursion", "1")
 				End If
 				pPreferences.SetPref("GCGB", "IndentSize", Me.EditorIndentSize.Value.ToString)
+				If MDIWindows.Checked Then
+					pPreferences.SetPref("GCGB", "MDI", "windows")
+				Else If MDITabs.Checked Then
+					pPreferences.SetPref("GCGB", "MDI", "tabs")
+				End If
 			End If
 			
 			'Compiler

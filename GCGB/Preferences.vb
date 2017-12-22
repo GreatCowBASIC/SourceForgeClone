@@ -242,7 +242,7 @@ Public Class Preferences
 				
 				Dim s As Setting
 				For Each s In section.Settings
-					If s.Name = PrefName Then
+					If s.Name.ToLower = PrefName Then
 						Return s.Value
 					End If
 				Next

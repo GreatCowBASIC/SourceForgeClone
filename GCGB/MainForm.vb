@@ -56,7 +56,7 @@ Imports System.Threading
 		Public Const MaxTableElements As Integer = 10000
 		
 		'Version constants
-		Public Const ProgVersion As String = "1.0 2017-12-19"
+		Public Const ProgVersion As String = "1.0 2017-12-22"
 		Public Const FileVersion As String = "20100130"
 		Public Const ShortVersion As String = "Version 1.0"
 		
@@ -116,6 +116,9 @@ Imports System.Threading
 		Public Dim Shared UntitledCount As Integer = 0
 		Public Dim Shared MainformInstance As MainForm
 		
+		'Tabbed MDI interface
+		Private Dim TabbedMDIInterface As TabControl
+		
 		'Events
 		Public Shared Event RefreshCommandList
 		
@@ -130,6 +133,13 @@ Imports System.Threading
 		
 		'Icon joining arrow
 		Public Dim Shared JoinerArrow As Image
+		
+		'Multiple document mode
+		Public Enum DocumentModes
+			TABS
+			WINDOWS
+		End Enum
+		Private Dim pDocumentMode As DocumentModes
 		
 		Public Shared Sub Main
 			
@@ -195,12 +205,31 @@ Imports System.Threading
 			'
 			Me.InitializeComponent
 			
+			pDocumentMode = DocumentModes.WINDOWS
 			MainformInstance = Me
+			
+			UpdatePreferences
 			
 			'Default exception handlers
 			Dim Domain As AppDomain = AppDomain.CurrentDomain
 			AddHandler Domain.UnhandledException, AddressOf UnhandledExceptionHandler
 			AddHandler Application.ThreadException, AddressOf ThreadExceptionHandler
+			
+			'Below was moved from MainFormLoad
+		 	'Redraw Programmer list
+		 	UpdateProgrammerList
+		 	
+		 	'Update file load extension list
+		 	UpdateFileLoadTypeList
+		 	
+		 	'Get list of demo files
+		 	UpdateExamplesList
+		 	
+		 	'If file is specified, open it
+		 	CreateProgramContainer(CommandLine)
+		 	
+			'Translate
+			ApplyTranslation
 			
 		End Sub
 		
@@ -813,7 +842,6 @@ Imports System.Threading
 			Me.Name = "MainForm"
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
 			Me.Text = "Great Cow Graphical BASIC"
-			AddHandler Load, AddressOf Me.MainFormLoad
 			AddHandler MdiChildActivate, AddressOf Me.MainFormMdiChildActivate
 			AddHandler Closing, AddressOf Me.MainFormClosing
 			Me.newIconPanel.ResumeLayout(false)
@@ -902,42 +930,6 @@ Imports System.Threading
 			
 		End Sub
 		
-		Private Sub MainFormLoad(sender As System.Object, e As System.EventArgs)
-		 	
-		 	'Redraw Programmer list
-		 	UpdateProgrammerList
-		 	
-		 	'Update file load extension list
-		 	UpdateFileLoadTypeList
-		 	
-		 	'Get list of demo files
-		 	UpdateExamplesList
-		 	
-		 	'If file is specified, open it
-		 	If CommandLine <> "" Then
-				'MessageBox.Show(CommandLine, "Message", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
-				
-    			Dim fProgContainer As ProgramContainer
-    			fProgContainer = CreateProgramContainer(CommandLine)
-    			'fProgContainer.WindowState = WindowState.Maximized
-    			
-			End If
-			
-			'If no file is specified, show a new blank window but don't maximise
-			If CommandLine = "" Then
-				
-				Dim fProgContainer As ProgramContainer
-				fProgContainer = CreateProgramContainer("")
-			End If
-			
-			'Add event handlers
-			'AddHandler GetCurrentProgram.LibraryListChanged, AddressOf Me.CommandListChanged
-			
-			'Translate
-			ApplyTranslation
-			
-		End Sub
-		
 		'Applies the current translation to the window
 		Private Sub ApplyTranslation
 			
@@ -1004,9 +996,167 @@ Imports System.Threading
 			
 		End Sub
 		
+		Public Property DocumentMode As DocumentModes
+			Get
+				Return pDocumentMode
+			End Get
+			Set
+				Dim oldMode As DocumentModes = pDocumentMode
+				Dim CurrentContainers As New List(Of ProgramWindow)
+				pDocumentMode = Value
+				
+				If oldMode <> pDocumentMode Then
+					'Mode has changed, need to update display
+					
+					'Get list of all current editors, remove current multiple document display
+					If oldMode = DocumentModes.WINDOWS Then
+						'Get windows
+						For Each ProgWindow As Form In Me.MdiChildren
+							If TypeOf ProgWindow Is ProgramWindow Then
+								CurrentContainers.Add(ProgWindow)
+							End If
+							
+							ProgWindow.Visible = False
+							ProgWindow.MdiParent = Nothing
+						Next
+						
+						'Remove windows
+						Me.IsMdiContainer = False
+						
+					ElseIf oldMode = DocumentModes.TABS Then
+						For Each CurrTab As TabPage In TabbedMDIInterface.TabPages
+							Dim CurrWindow As ProgramWindow = CurrTab.Tag
+							CurrentContainers.Add(CurrWindow)
+							CurrTab.Controls.Remove(CurrWindow)
+							CurrWindow.Visible = False
+						Next
+						
+						'Remove tabs
+						Me.Controls.Remove(TabbedMDIInterface)
+					End If
+					
+					'Set up new editors
+					If pDocumentMode = DocumentModes.WINDOWS Then
+						Me.IsMdiContainer = True
+						For Each ProgWindow As ProgramWindow In CurrentContainers
+							With ProgWindow
+								.TopLevel = True
+								.FormBorderStyle = FormBorderStyle.Sizable
+								.MdiParent = Me
+								.Visible = True
+								.WindowState = FormWindowState.Maximized
+							End With
+						Next
+						
+					ElseIf pDocumentMode = DocumentModes.TABS Then
+						'Create tab control
+						TabbedMDIInterface = New TabControl
+						With TabbedMDIInterface
+							.Dock = DockStyle.Fill
+							.ShowToolTips = True
+						End With
+						Me.Controls.Add(TabbedMDIInterface)
+						TabbedMDIInterface.BringToFront
+						
+						'Move program windows onto tab pages
+						For Each ProgWindow As ProgramWindow In CurrentContainers
+							Dim NameOnly As String = ProgWindow.ProgramName
+							If NameOnly.Contains("\") Or NameOnly.Contains("/") Then
+								NameOnly = NameOnly.Substring(NameOnly.LastIndexOfAny("/\".ToCharArray) + 1)
+							End If
+							
+							Dim NewTabPage As New TabPage
+							NewTabPage.Text = NameOnly
+							NewTabPage.ToolTipText = ProgWindow.ProgramName
+							NewTabPage.Tag = ProgWindow
+							
+							With ProgWindow
+								.MdiParent = Nothing
+								.Visible = True
+								.TopLevel = False
+								.FormBorderStyle = FormBorderStyle.None
+								.Dock = DockStyle.Fill
+							End With
+							NewTabPage.Controls.Add(ProgWindow)
+							
+							ProgWindow.BringToFront
+							AddHandler ProgWindow.Closed, AddressOf Me.ProgTabClosed
+							
+							TabbedMDIInterface.TabPages.Add(NewTabPage)
+						Next
+						
+						'Add handler for when selected tab changes
+						AddHandler TabbedMDIInterface.SelectedIndexChanged, AddressOf Me.ProgTabChanged
+						AddHandler TabbedMDIInterface.MouseUp, AddressOf Me.ProgTabMouseUp
+					End If
+					
+					ProgWindowChanged
+				End If
+			End Set
+		End Property
+		
+		Private Sub ProgTabClosed(sender as Object, e As System.EventArgs)
+			'When a ProgramWindow on a tab is closed, remove that tab
+			If pDocumentMode = DocumentModes.TABS Then
+				Dim RemovedPage As TabPage = Nothing
+				Dim ClosedWindow As ProgramWindow = sender
+				For Each CheckPage As TabPage In TabbedMDIInterface.TabPages
+					If CheckPage.Tag Is ClosedWindow Then
+						RemovedPage = CheckPage
+						Exit For
+					End If
+				Next
+				
+				If Not RemovedPage Is Nothing Then
+					TabbedMDIInterface.TabPages.Remove(RemovedPage)
+				End If
+			End If
+			
+		End Sub
+		
+		Private Sub ProgTabChanged(sender As Object, e As System.EventArgs)
+			'Called when selected program tab changes
+			ProgWindowChanged
+		End Sub
+		
+		Private Sub ProgTabMouseUp(sender As Object, e As MouseEventArgs)
+			Dim CheckTab As Integer
+			
+			If e.Button = MouseButtons.Middle Then
+				'Get tab
+				For CheckTab = 0 To TabbedMDIInterface.TabCount - 1
+					If TabbedMDIInterface.GetTabRect(CheckTab).Contains(e.Location) Then
+						'Tab was clicked, close
+						Dim CloseProg As ProgramWindow = TabbedMDIInterface.TabPages.Item(CheckTab).Tag
+						CloseProg.CloseProgram
+						Exit For
+					End If
+				Next
+			End If
+			
+		End Sub
+		
 		'Get the current program's container
 		Public Function GetCurrentContainer As ProgramContainer
-			Return Me.ActiveMdiChild
+			'If using windows, get current window
+			If pDocumentMode = DocumentModes.WINDOWS Then
+				Return Me.ActiveMdiChild
+			
+			'If using tabs, get window contained within current tab
+			ElseIf pDocumentMode = DocumentModes.TABS Then
+				If TabbedMDIInterface Is Nothing Then
+					Return Nothing
+				Else
+					Dim CurrPage As TabPage = TabbedMDIInterface.SelectedTab
+					If CurrPage Is Nothing Then
+						Return Nothing
+					Else
+						Return CurrPage.Tag
+					End If
+				End If
+			End If
+			
+			Return Nothing
 		End Function
 		
 		'Get the GCBProgram object for the current displayed file
@@ -1076,22 +1226,9 @@ Imports System.Threading
 				InProgram.FileName = "Untitled" + Mainform.UntitledCount.ToString
 				Mainform.UntitledCount += 1
 			End If
-			
 			fProgWindow.SyncProgramToEditor
 			
-			'Set up and display window
-			With fProgWindow
-				.MdiParent = Me
-				AddHandler .RefreshUndoRedo, AddressOf Me.UpdateUndoRedo
-				AddHandler .ThisWindowSelected, AddressOf Me.ProgWindowChanged
-				AddHandler .SubAdded, AddressOf Me.RedrawSubList
-				AddHandler .Program.LibraryListChanged, AddressOf Me.CommandListChanged
-				AddHandler .ViewModeChanged, AddressOf Me.RenderCommandList
-				.WindowState = FormWindowState.Maximized
-	    		.Show()
-	    	End With
-	    	
-	    	Return fProgWindow
+	    	Return DisplayProgramWindow(fProgWindow)
 		End Function
 		
 		Public Function CreateProgramContainer(ByVal InFile As String) As ProgramContainer
@@ -1110,26 +1247,57 @@ Imports System.Threading
 			End If
 			
 			'Create window
-			Dim fProgWindow As ProgramWindow
-			fProgWindow = New ProgramWindow(InFile)
+			Return DisplayProgramWindow(New ProgramWindow(InFile))
+		End Function
+		
+		Private Function DisplayProgramWindow(fProgWindow As ProgramWindow) As ProgramContainer
+			If Not fProgWindow Is Nothing Then
+				'Set up and display window
+				With fProgWindow
+					If pDocumentMode = DocumentModes.WINDOWS Then
+						.MdiParent = Me
+						.WindowState = FormWindowState.Maximized
+		    			.Show()
+					Else If pDocumentMode = DocumentModes.TABS Then
+						Dim NewTabPage As New TabPage
+						Dim NameOnly As String = fProgWindow.ProgramName
+						If NameOnly.Contains("\") Or NameOnly.Contains("/") Then
+							NameOnly = NameOnly.Substring(NameOnly.LastIndexOfAny("/\".ToCharArray) + 1)
+						End If
+						NewTabPage.Text = NameOnly
+						NewTabPage.ToolTipText = fProgWindow.ProgramName
+						
+						With fProgWindow
+							.MdiParent = Nothing
+							.TopLevel = False
+							.FormBorderStyle = FormBorderStyle.None
+							.Dock = DockStyle.Fill
+						End With
+						NewTabPage.Tag = fProgWindow
+						NewTabPage.Controls.Add(fProgWindow)
+						fProgWindow.Visible = True
+						fProgWindow.BringToFront
+						AddHandler fProgWindow.Closed, AddressOf Me.ProgTabClosed
+						
+						TabbedMDIInterface.TabPages.Add(NewTabPage)
+						TabbedMDIInterface.SelectedTab = NewTabPage
+						
+						'Have to fire this manually for tab mode on first tab
+						ProgWindowChanged
+					End If
+					AddHandler .RefreshUndoRedo, AddressOf Me.UpdateUndoRedo
+					AddHandler .ThisWindowSelected, AddressOf Me.ProgWindowChanged
+					AddHandler .SubAdded, AddressOf Me.RedrawSubList
+					AddHandler .Program.LibraryListChanged, AddressOf Me.CommandListChanged
+					AddHandler .ViewModeChanged, AddressOf Me.RenderCommandList
+		    	End With
+			End If
 			
-			'Set up and display window
-			With fProgWindow
-				.MdiParent = Me
-				AddHandler .RefreshUndoRedo, AddressOf Me.UpdateUndoRedo
-				AddHandler .ThisWindowSelected, AddressOf Me.ProgWindowChanged
-				AddHandler .SubAdded, AddressOf Me.RedrawSubList
-				AddHandler .Program.LibraryListChanged, AddressOf Me.CommandListChanged
-				AddHandler .ViewModeChanged, AddressOf Me.RenderCommandList
-				.WindowState = FormWindowState.Maximized
-	    		.Show()
-	    	End With
-	    	
-	    	Return fProgWindow
+			Return fProgWindow
 		End Function
 		
 		Private sub FileOpen_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
-		    OpenFileSelect.ShowDialog()		    
+		    OpenFileSelect.ShowDialog()
 		End Sub
 		
 		Private sub EditCut_Click(ByVal sender as System.Object, Byval e As System.EventArgs)
@@ -1177,6 +1345,8 @@ Imports System.Threading
 			Dim fPreferences As New PreferencesWindow
 			fPreferences.Preferences = GetPreferences
 			fPreferences.ShowDialog
+			
+			UpdatePreferences
 		End Sub
 		
 		Private Sub ProgramVars_Click(ByVal sender as System.Object, Byval e As System.EventArgs)
@@ -1291,8 +1461,6 @@ Imports System.Threading
 			Me.EditCut.Enabled = True
 			Me.EditCopy.Enabled = True
 			Me.EditPaste.Enabled = True
-			'Me.EditUndo.Enabled = True
-			'Me.EditRedo.Enabled = True
 			
 			Me.ViewText.Enabled = (TypeOf GetCurrentProgram.Editor Is GuiEditorPanel)
 			Me.ViewIcons.Enabled = (TypeOf GetCurrentProgram.Editor Is TextEditorPanel)
@@ -1382,6 +1550,7 @@ Imports System.Threading
 		 	currFile.ProgramDir = System.IO.Path.GetDirectoryName(OutFile)
 		 	currFile.HasChanged = False
 		 	
+		 	UpdateWindowTitle
 		End Sub
 		
 		Private Sub OpenFileSelectFileOk(sender As System.Object, e As System.ComponentModel.CancelEventArgs)
@@ -1483,10 +1652,6 @@ Imports System.Threading
 		Public Sub UpdateProgrammerList
 			
 			'Clear list of programmers on Tools menu
-			'Dim OldItem As MenuItem
-			'For Each OldItem In ToolsDownloadWith.MenuItems
-			'	RemoveHandler OldItem.Click, AddressOf Me.ToolsDownloadWithItem_Click
-			'Next
 			Me.ToolsDownloadWith.DropDownItems.Clear
 			
 			'Get first programmer in preferred list
@@ -1535,11 +1700,6 @@ Imports System.Threading
 			End If
 			
 			'Update list of external tools
-			'Clear list of external tools on Tools menu
-			'For Each OldItem In ToolsExternal.MenuItems
-			'	RemoveHandler OldItem.Click, AddressOf Me.ToolsExternalItem_Click
-			'Next
-			'ToolsExternal.MenuItems.Clear
 			Me.ToolsExternal.DropDownItems.Clear
 			
 			'Add new list
@@ -1582,7 +1742,7 @@ Imports System.Threading
 			For Each FindProgrammer In PreferredProgrammers
 				If FindProgrammer.ToLower <> progName.ToLower Then
 					ProgrammerOutputList = ProgrammerOutputList + ", " + FindProgrammer
-				End If	
+				End If
 			Next
 			GetPreferences.SetPref("GCBASIC", "Programmer", ProgrammerOutputList)
 			UpdateProgrammerList
@@ -1716,12 +1876,48 @@ Imports System.Threading
 		
 		Private Sub ProgWindowChanged()
 			RenderCommandList
-			UpdateUndoRedo
+			
+			UpdateWindowTitle
+		End Sub
+		
+		Private Sub UpdatePreferences
+			'Process preferences, reapply as needed
+			If Prefs.GetPref("GCGB", "MDI").ToLower = "tabs" Then
+				DocumentMode = DocumentModes.TABS
+			Else
+				DocumentMode = DocumentModes.WINDOWS
+			End If
+		End Sub
+		
+		Private Sub UpdateWindowTitle
+			Dim CurrWindow As ProgramContainer = GetCurrentContainer
+			If CurrWindow Is Nothing Then
+				Me.Text = "Great Cow Graphical BASIC"
+			Else
+				Dim NameOnly As String = CurrWindow.ProgramName
+				If NameOnly.Contains("\") Or NameOnly.Contains("/") Then
+					NameOnly = NameOnly.Substring(NameOnly.LastIndexOfAny("/\".ToCharArray) + 1)
+				End If
+				
+				Me.Text = CurrWindow.ProgramName + " - Great Cow Graphical BASIC"
+				
+				'If in tabs mode, need to update tab title too
+				If pDocumentMode = DocumentModes.TABS Then
+					With TabbedMDIInterface.SelectedTab
+						.Text = NameOnly
+						.ToolTipText = CurrWindow.ProgramName
+					End With
+					
+				End If
+				
+				'Update Close menu item
+				FileClose.Text = "Close " + NameOnly
+				
+			End If
 		End Sub
 		
 		Private Sub MainFormMdiChildActivate(sender As System.Object, e As System.EventArgs)
-			RenderCommandList
-			UpdateUndoRedo
+			ProgWindowChanged
 		End Sub
 		
 		Private Sub IconCategoriesSelectedValueChanged(sender As System.Object, e As System.EventArgs)
@@ -2100,18 +2296,15 @@ Imports System.Threading
 		End Sub
 		
 		Private Sub HelpIconClick(sender As System.Object, e As System.EventArgs)
-			'MessageBox.Show(fProgWindow(CurrentWindow).GetCurrentCommand, "Message", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1)
 			Dim fProgContainer As ProgramContainer = GetCurrentContainer
 			If fProgContainer Is Nothing Then Exit Sub
 			
 			Dim CurrentCommand As String = fProgContainer.GetCurrentCommand.Trim.ToLower
-			'If CurrentCommand.IndexOf("(") <> -1 Then CurrentCommand = CurrentCommand.Substring(0, CurrentCommand.IndexOf("(")).Trim
-			'If CurrentCommand.IndexOf(" ") <> -1 Then CurrentCommand = CurrentCommand.Substring(0, CurrentCommand.IndexOf(" ")).Trim
 			
 			ShowCommandHelp(CurrentCommand)
 		End Sub
 		
-		Public Sub ShowCommandHelp(CurrentCommand As String)	
+		Public Sub ShowCommandHelp(CurrentCommand As String)
 			
 			Dim CommandIndex As Integer = 0
 			Dim TempData As String = ""
@@ -2236,6 +2429,7 @@ Imports System.Threading
 			chooser.ShowDialog
 			
 		End Sub
+		
 	End Class
 ''End Namespace
 
