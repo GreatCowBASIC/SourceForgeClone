@@ -573,7 +573,8 @@ DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
 Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows
-Dim Shared As Single ChipMhz, ChipMaxSpeed, StartTime, FileConverters
+Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
+Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 
 'Assembler vars
 DIM SHARED As Integer ToAsmSymbols
@@ -622,6 +623,7 @@ Dim Shared Interrupts(200) As IntData: IntCount = 0
 Dim Shared IntInitCode As CodeSection Pointer
 Dim Shared IntHandlerCode As CodeSection Pointer
 Dim Shared Tool(200) As ExternalTool: ToolCount = 0
+Dim Shared ToolVariables As LinkedListElement Pointer
 Dim Shared ProgMemPage(MAX_PROG_PAGES) As ProgMemPageType: ProgMemPages = 0
 Dim Shared IntOscSpeed(20) As Double: IntOscSpeeds = 0
 Dim Shared FileConverter(50) As FileConverterType: FileConverters = 0
@@ -663,7 +665,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-22"
+Version = "0.98.<<>> 2017-12-23"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -679,6 +681,7 @@ UseChipOutLatches = -1
 AutoContextSave = -1
 ConfigDisabled = 0
 ExitValue = 0
+ToolVariables = LinkedListCreate
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -743,6 +746,7 @@ End If
 
 If VBS = 1 THEN PRINT : PRINT SPC(5); Message("WritingASM")
 WriteAssembly
+CompEndTime = Timer
 
 'If no errors, show success message and assemble
 IF Not ErrorsFound THEN
@@ -752,7 +756,7 @@ IF Not ErrorsFound THEN
 		PRINT
 	Else
 		Dim Temp As String
-		Temp = Trim(Str(TIMER - StartTime))
+		Temp = Trim(Str(CompEndTime - StartTime))
 		IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
 		PRINT Message("CompTime") + Temp + Message("CompSecs")
 		PRINT
@@ -787,12 +791,16 @@ IF Not ErrorsFound THEN
 		Else
 			ExtAssembler
 
-		END IF
+		END If
+		AsmEndTime = Timer
+		If VBS = 1 Then
+			Dim Temp As String
+			Temp = Trim(Str(AsmEndTime - CompEndTime))
+			IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
+			PRINT Message("AsmTime") + Temp + Message("CompSecs")
+		End If
 	End If
 End If
-
-'Write compilation report
-WriteCompilationReport
 
 'Download program
 DownloadProgram:
@@ -817,13 +825,31 @@ IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
 		LogWarning Temp
 	Else
 		ExitValue = 0
+		ProgEndTime = Timer
+		
+		If VBS = 1 Then
+			Dim Temp As String
+			Temp = Trim(Str(ProgEndTime - AsmEndTime))
+			IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
+			PRINT Message("ProgTime") + Temp + Message("CompSecs")
+		End If
 	End If
 
 	ChDir SaveCurrDir
 END If
 
+'Write compilation report
+WriteCompilationReport
+
 'Write errors to file
 WriteErrorLog
+
+If VBS = 1 Then
+	Dim Temp As String
+	Temp = Trim(Str(ProgEndTime - StartTime))
+	IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
+	PRINT Message("TotalTime") + Temp + Message("CompSecs")
+End If
 
 'End of program
 'Pause and wait for key at end of compilation?
@@ -11755,6 +11781,7 @@ SUB InitCompiler
 	VBS = 0
 	PauseOnErr = 1
 	WarningsAsErrors = 0
+	PreserveMode = 0
 	PauseAfterCompile = 0
 	ShowProgressCounters = -1
 	FlashOnly = 0
@@ -12052,6 +12079,12 @@ SUB InitCompiler
 
 							End Select
 
+						ElseIf CurrentTag = "toolvariables" Then
+							Dim As String Pointer TempStr
+							TempStr = Callocate(SizeOf(String))
+							*TempStr = MsgVal
+							LinkedListInsert(ToolVariables, MsgName)->MetaData = TempStr
+							
 						ElseIf Left(CurrentTag, 4) = "tool" Then
 							Select Case MsgName
 								Case "name"
@@ -12081,7 +12114,7 @@ SUB InitCompiler
 										End If
 									End With
 							End Select
-
+						
 						End If
 					End If
 				End If
@@ -14946,6 +14979,24 @@ Sub WriteCompilationReport
 		Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"
 	ElseIf RF = "text" Then
 		Print #F, Message("CRVersion") + ": " + Version
+		Print #F, ""
+		Print #F, Star80
+		Print #F, ""
+	End If
+	
+	'Write compilation time and messages produced
+	If RF = "html" Then
+		Print #F, "<h2>" + Message("CRCompTime") + "</h2>"
+		Print #F, "<p>" + Message("CompTime") + Str(CompEndTime - StartTime) + Message("CompSecs") + "</p>"
+		Print #F, "<p>" + Message("AsmTime") + Str(AsmEndTime - CompEndTime) + Message("CompSecs") + "</p>"
+		Print #F, "<p>" + Message("ProgTime") + Str(ProgEndTime - AsmEndTime) + Message("CompSecs") + "</p>"
+		Print #F, "<p>" + Message("TotalTime") + Str(ProgEndTime - StartTime) + Message("CompSecs") + "</p>"
+	ElseIf RF = "text" Then
+		Print #F, Message("CRCompTime") + ":"
+		Print #F, Message("CompTime") + Str(CompEndTime - StartTime) + Message("CompSecs")
+		Print #F, Message("AsmTime") + Str(AsmEndTime - CompEndTime) + Message("CompSecs")
+		Print #F, Message("ProgTime") + Str(ProgEndTime - AsmEndTime) + Message("CompSecs")
+		Print #F, Message("TotalTime") + Str(ProgEndTime - StartTime) + Message("CompSecs")
 		Print #F, ""
 		Print #F, Star80
 		Print #F, ""
