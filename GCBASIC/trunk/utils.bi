@@ -1216,6 +1216,7 @@ Function ReplaceToolVariables(InData As String, FNExtension As String = "", File
 	Dim As String FileName, FileNameNoExt, OutData
 	Dim As String FileNoPath, PathNoFile
 	Dim As Integer PD
+	Dim As LinkedListElement Pointer CurrToolVar
 	OutData = InData
 	
 	If FileNameIn = "" Then
@@ -1297,7 +1298,7 @@ Function ReplaceToolVariables(InData As String, FNExtension As String = "", File
 		Loop
 	Next
 	
-	'Other tool variables
+	'Extra tool variables
 	If Tool <> 0 Then
 		With *Tool
 			For PD = 1 To .ExtraParams
@@ -1307,6 +1308,15 @@ Function ReplaceToolVariables(InData As String, FNExtension As String = "", File
 			Next
 		End With
 	End If
+	
+	'Global tool variables
+	CurrToolVar = ToolVariables->Next
+	Do While CurrToolVar <> 0
+		Do While INSTR(LCase(OutData), "%" + CurrToolVar->Value + "%") <> 0
+			Replace OutData, "%" + CurrToolVar->Value+ "%", *CPtr(String Pointer, CurrToolVar->MetaData)
+		Loop
+		CurrToolVar = CurrToolVar->Next
+	Loop
 	
 	'Items typically found in parameters
 	Do While INSTR(UCase(OutData), "%FILENAME%") <> 0: Replace OutData, "%FILENAME%", FileName: Loop
