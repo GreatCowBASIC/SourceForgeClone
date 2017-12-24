@@ -1957,6 +1957,19 @@ Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
 	
 End Function
 
+Sub WaitForKeyOrTimeout
+	
+	If PauseTimeout = 0 Then Exit Sub
+	
+	Print Message("AnyKey")
+	
+	If PauseTimeout = -1 Then
+		GetKey
+	Else
+		Sleep PauseTimeout * 1000
+	End If
+End Sub
+
 FUNCTION WholeINSTR (DataIn As String, FindIn As String, SearchAgain As Integer = -1) As Integer
 	Dim As String DataSource, Temp, Find
 	Dim As Integer T
