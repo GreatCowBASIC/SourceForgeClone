@@ -1877,6 +1877,15 @@ Function NextCodeLine(CodeLine As LinkedListElement Pointer) As LinkedListElemen
 	Return NextLine
 End Function
 
+Function PrefIsYes(CheckVal As String, YesVal As Integer) As Integer
+	Select Case LCase(Left(CheckVal, 1))
+		Case "y", "t", "1": Return YesVal
+		Case "n", "f", "0": Return 0
+	End Select
+	
+	Return 0
+End Function
+
 Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
 	
 	'Print "Finding match for " + SubSigIn + " and " + CallSigIn
