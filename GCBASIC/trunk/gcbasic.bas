@@ -555,6 +555,7 @@ DECLARE SUB SCICONV (STemp As String)
 Declare Function ShortFileName(InName As String) As String
 DECLARE FUNCTION ShortName (NameIn As String) As String
 Declare Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
+Declare Sub WaitForKeyOrTimeout
 DECLARE Function WholeINSTR (DataIn As String, FindIn As String, SearchAgain As Integer = -1) As Integer
 Declare Function WholeInstrLoc(DataSource As String, FindTemp As String) As Integer
 DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
@@ -574,6 +575,7 @@ DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
 Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
+Dim Shared As Integer PauseTimeout
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 
@@ -862,8 +864,7 @@ End If
 'Pause and wait for key at end of compilation?
 If PauseAfterCompile Then
 	Print
-	Print Message("AnyKey")
-	GetKey
+	WaitForKeyOrTimeout
 End If
 
 End ExitValue
@@ -11795,6 +11796,7 @@ SUB InitCompiler
 	SkipHexCheck = 0
 	GCGB = 0
 	CompReportFormat = "html"
+	PauseTimeout = -1
 
 	SettingsFile(1) = "gcbasic.ini"
 	SettingsFiles = 1
@@ -12079,6 +12081,9 @@ SUB InitCompiler
 								Case "pauseaftercompile"
 									PauseAfterCompile = PrefIsYes(MsgVal)
 									
+								Case "pausetimeout"
+									PauseTimeout = Val(MsgVal)
+									
 								Case "language"
 									LangName = MsgVal
 
@@ -12142,12 +12147,13 @@ SUB InitCompiler
 		LangMessagesFile = ID + "/messages-" + LCase(LangName) + ".dat"
 	#ENDIF
 	IF Dir(MessagesFile) = "" THEN
-		PRINT "Cannot find " + MessagesFile + "! Great Cow BASIC cannot operate"
-		PRINT "without this file."
+		PRINT "Cannot find " + MessagesFile
+		Print
+		PRINT "Great Cow BASIC cannot operate without this file"
 		If PauseOnErr = 1 THEN
 			PRINT
 			PRINT "Press any key to continue"
-			DO WHILE INKEY = "": SLEEP 10: LOOP
+			Sleep
 		END IF
 		END
 	END IF
@@ -12228,11 +12234,8 @@ SUB InitCompiler
 	'Message if no filename specified
 	IF FI = "" THEN
 		ShowBlock "NoPrompt"
-		Temp = INKEY
 		If PauseOnErr = 1 THEN
-			PRINT
-			PRINT "Press any key to continue"
-			DO WHILE INKEY = "": SLEEP 10: LOOP
+			WaitForKeyOrTimeout
 		END IF
 		END
 	END IF
@@ -12271,9 +12274,7 @@ SUB InitCompiler
 		PRINT
 		PRINT Message("NoFile")
 		If PauseOnErr = 1 THEN
-			PRINT
-			PRINT "Press any key to continue"
-			DO WHILE INKEY = "": SLEEP 10: LOOP
+			WaitForKeyOrTimeout
 		END IF
 		END
 	END IF
@@ -15280,8 +15281,7 @@ ShowError:
 
 	'Pause if errors found and pause enabled
 	IF PauseOnErr = 1 And ErrorsFound Then
-		PRINT Message("AnyKey")
-		DO WHILE INKEY = "": SLEEP 10: LOOP
+		WaitForKeyOrTimeout
 	END IF
 
 END SUB
