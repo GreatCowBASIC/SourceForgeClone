@@ -533,14 +533,6 @@ Declare Function IsIntType(InType As String) As Integer
 DECLARE FUNCTION IsLet(Temp As String) As Integer
 Declare Function IsSysTemp(VarNameIn As String) As Integer
 Declare Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
-DECLARE FUNCTION MakeDec (DataSource As String) As LongInt
-DECLARE FUNCTION MakeDecFloat (DataSource As String) As Double
-DECLARE SUB Replace (DataVar As String, Find As String, Rep As String)
-Declare SUB ReplaceAll (DataVar As String, Find As String, Rep As String)
-Declare Function ReplaceToolVariables(InData As String, FNExtension As String = "", FileNameIn As String = "", Tool As ExternalTool Pointer = 0) As String
-DECLARE SUB SCICONV (STemp As String)
-Declare Function ShortFileName(InName As String) As String
-DECLARE FUNCTION ShortName (NameIn As String) As String
 Declare Function LinkedListCreate As LinkedListElement Pointer
 Declare Function LinkedListFind OverLoad (StartNode As LinkedListElement Pointer, SearchMeta As Any Pointer) As LinkedListElement Pointer
 Declare Function LinkedListFind OverLoad (StartNode As LinkedListElement Pointer, SearchValue As String) As LinkedListElement Pointer
@@ -552,9 +544,18 @@ Declare Function LinkedListDelete (Location As LinkedListElement Pointer, Delete
 Declare Function LinkedListDeleteList (StartLoc As LinkedListElement Pointer, EndLoc As LinkedListElement Pointer) As LinkedListElement Pointer
 Declare Sub LinkedListPrint(StartNode As LinkedListElement Pointer)
 Declare Function LinkedListSize(StartNode As LinkedListElement Pointer) As Integer
+DECLARE FUNCTION MakeDec (DataSource As String) As LongInt
+DECLARE FUNCTION MakeDecFloat (DataSource As String) As Double
 Declare Function NextCodeLine(CodeLine As LinkedListElement Pointer) As LinkedListElement Pointer
+Declare Function PrefIsYes(CheckVal As String, YesVal As Integer = -1) As Integer
+DECLARE SUB Replace (DataVar As String, Find As String, Rep As String)
+Declare SUB ReplaceAll (DataVar As String, Find As String, Rep As String)
+Declare Function ReplaceToolVariables(InData As String, FNExtension As String = "", FileNameIn As String = "", Tool As ExternalTool Pointer = 0) As String
+DECLARE SUB SCICONV (STemp As String)
+Declare Function ShortFileName(InName As String) As String
+DECLARE FUNCTION ShortName (NameIn As String) As String
 Declare Function SubSigMatch (SubSigIn As String, CallSigIn As String) As Integer
-DECLARE FUNCTION WholeINSTR (DataIn As String, FindIn As String, SearchAgain As Integer = -1) As Integer
+DECLARE Function WholeINSTR (DataIn As String, FindIn As String, SearchAgain As Integer = -1) As Integer
 Declare Function WholeInstrLoc(DataSource As String, FindTemp As String) As Integer
 DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 
@@ -572,7 +573,7 @@ Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCou
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
-Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows
+Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 
@@ -665,7 +666,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-23"
+Version = "0.98.<<>> 2017-12-24"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -682,6 +683,7 @@ AutoContextSave = -1
 ConfigDisabled = 0
 ExitValue = 0
 ToolVariables = LinkedListCreate
+CompileSkipped = 0
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -718,6 +720,9 @@ ASMCommands = HashMapCreate
 PreProcessor
 If FlashOnly Then
 	Print Message("SkippingCompile")
+	CompEndTime = Timer
+	AsmEndTime = CompEndTime
+	CompileSkipped = -1
 	GoTo DownloadProgram
 End If
 
@@ -801,6 +806,7 @@ IF Not ErrorsFound THEN
 		End If
 	End If
 End If
+AsmEndTime = Timer
 
 'Download program
 DownloadProgram:
@@ -837,6 +843,7 @@ IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
 
 	ChDir SaveCurrDir
 END If
+ProgEndTime = Timer
 
 'Write compilation report
 WriteCompilationReport
@@ -11759,7 +11766,7 @@ SUB InitCompiler
 	Dim As Integer SettingsFiles, CurrSettingsFile
 
 	Dim As Integer AsmNotSet, ProgNotSet, OutNotSet, PresNotSet, VbsNotSet, WarnErrorNotSet
-	Dim As Integer PauseNotSet, ReportNotSet
+	Dim As Integer PauseNotSet, ReportNotSet, FlashOnlyNotSet
 
 	'Detect GCBASIC install directory
 	ID = ExePath
@@ -11800,6 +11807,7 @@ SUB InitCompiler
 	WarnErrorNotSet = -1
 	IniNotSet = -1
 	ReportNotSet = -1
+	FlashOnlyNotSet = -1
 
 	'Read parameters
 	CD = 1
@@ -11830,10 +11838,12 @@ SUB InitCompiler
 			
 		ElseIf ParamUpper = "/F" Or ParamUpper = "-F" Then
 			FlashOnly = -1
+			FlashOnlyNotSet = 0
 			
 		ElseIf ParamUpper = "/FO" Or ParamUpper = "-FO" Then
 			SkipHexCheck = -1
 			FlashOnly = -1
+			FlashOnlyNotSet = 0
 
 		'Great Cow Graphical BASIC Mode?
 		'(Alters the error listing format)
@@ -11845,6 +11855,16 @@ SUB InitCompiler
 			End
 
 		'Complex options
+		'Allow verbose mode to be turned off
+		ElseIf LeftThree = "/V:" Or LeftThree = "-V:" Then
+			VBS = PrefIsYes(Mid(ParamUpper, 4), 1)
+			VbsNotSet = 0
+		
+		'Allow flash only to be turned off	
+		ElseIf LeftThree = "/F:" Or LeftThree = "-F:" Then
+			FlashOnly = PrefIsYes(Mid(ParamUpper, 4))
+			FlashOnlyNotSet = 0
+			
 		'Settings file
 		ElseIf LeftThree = "/S:" Or LeftThree = "-S:" Then
 			SettingsFile(1) = Mid(DataSource, 4)
@@ -12035,40 +12055,30 @@ SUB InitCompiler
 
 								Case "verbose"
 								If VbsNotSet Then
-									Select Case LCase(Left(MsgVal, 1))
-										Case "y", "t", "1": VBS = 1
-										Case "n", "f", "0": VBS = 0
-									End Select
+									VBS = PrefIsYes(MsgVal, 1)
 								End If
 
 								Case "pauseonerror"
 								If PauseNotSet Then
-									Select Case LCase(Left(MsgVal, 1))
-										Case "y", "t", "1": PauseOnErr = 1
-										Case "n", "f", "0": PauseOnErr = 0
-									End Select
+									PauseOnErr = PrefIsYes(MsgVal, 1)
 								End If
 								
 								Case "showprogresscounters":
-								Select Case LCase(Left(MsgVal, 1))
-									Case "y", "t", "1": ShowProgressCounters = -1
-									Case "n", "f", "0": ShowProgressCounters = 0
-								End Select
+								ShowProgressCounters = PrefIsYes(MsgVal)
 
 								Case "warningsaserrors"
 								If WarnErrorNotSet Then
-									Select Case LCase(Left(MsgVal, 1))
-										Case "y", "t", "1": WarningsAsErrors = -1
-										Case "n", "f", "0": WarningsAsErrors = 0
-									End Select
+									WarningsAsErrors = PrefIsYes(MsgVal)
+								End If
+								
+								Case "flashonly"
+								If FlashOnlyNotSet Then
+									FlashOnly = PrefIsYes(MsgVal)
 								End If
 
 								Case "pauseaftercompile"
-									Select Case LCase(Left(MsgVal, 1))
-										Case "y", "t", "1": PauseAfterCompile = -1
-										Case "n", "f", "0": PauseAfterCompile = 0
-									End Select
-
+									PauseAfterCompile = PrefIsYes(MsgVal)
+									
 								Case "language"
 									LangName = MsgVal
 
@@ -14947,6 +14957,15 @@ Sub WriteCompilationReport
 
 	'Save typing
 	RF = CompReportFormat
+	
+	'If format starts with "s_", then skip report if no compilation done
+	If Left(RF, 2) = "s_" Then
+		If CompileSkipped Then
+			Exit Sub
+		End If
+		'Not skipping, remove s_ and continue
+		RF = Mid(RF, 3)
+	End If
 
 	'Check requested format: valid options are HTML or plain text
 	If RF <> "html" And RF <> "text" Then Exit Sub
