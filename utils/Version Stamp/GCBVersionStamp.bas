@@ -55,7 +55,7 @@ main:
 
          end
       end if
-      print "Great Cow BASIC build version utility (1.04)"
+
 
       for c=0 to nargs-1
           params(c) = *(szArglist[c])
@@ -102,12 +102,13 @@ main:
 
 
          close #ffilehandle
-         end
+
       else
          Put #ffilehandle, , "'      Invalid methods beware!":Put #ffilehandle, , chr(13) : Put #ffilehandle, , chr(10)
          close #ffilehandle
-         end
+
       end if
+      print "Great Cow BASIC build version utility (1.05)...  Build " & str(VersionData)
 
 end
 
