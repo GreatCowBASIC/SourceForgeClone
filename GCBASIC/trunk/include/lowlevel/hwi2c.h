@@ -164,7 +164,14 @@
          CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*1))
          If CST_TWBR <= 255 Then
              CST_PRESCALER = 0
+             IF CST_TWBR < 0 Then
+                CST_TWBR = 0
+                BD_RATECALC = int((1000 * ChipMHz )/16+((CST_TWBR*2)*4) )
+                warning "Baud Rate below specificiation at" BD_RATECALC "KHz - lower baud rate to remove this warning"
+
+             End if
          End If
+
          If CST_TWBR > 255 Then
              CST_TWBR = Int((CPU_Clk - (16*BD_RATE))/(2*BD_RATE*4))
              If CST_TWBR <= 255 Then
@@ -190,7 +197,7 @@
              End If
          End If
         ' Uncommented Displays Results In GCB Output Window
-        ' warning " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWBR
+         ' warning " CST_PRESCALER = "  CST_PRESCALER  "    CST_TWBR = "  CST_TWBR
     END IF
 
    if novar(SSPCON1) then
