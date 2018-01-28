@@ -1,5 +1,5 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2017 Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
+'    Copyright (C) 2006 - 2018 Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
 '
 '
 '    This library is free software; you can redistribute it and/or
@@ -70,6 +70,8 @@
 ''' 4/11/2017 Revised to isolate AVR PWM_Duty setting in Script and rename PMW to PWM
 ''' 6/11/2017 Restore the cache value in HPWMUpdate
 ''' 7/11/2017 Added _v9081Patch=1 and _v9081Patch=2 for fix
+''' 28/1/2018 AVR canskip and TCCR0B handler added for Mega8 style chips.
+
 
   'define the defaults
   #define AVRTC0
@@ -3274,8 +3276,8 @@ Dim  ICRxTemp as Word   'ChipMHz <= 64
             'no period register like mega128
             'error msg(TMR2 HPWMNot Available)
           #ENDIF
-          Set COM0B1 On
-          Set COM0B0 Off
+          [canskip]COM0B1 = 1
+          [canskip]COM0B0 = 0
         END IF
       #ENDIF
     #ENDIF
@@ -3491,15 +3493,16 @@ sub AVRSetHPWMMode
       #IFNDEF VAR(OCR0)
         #IFNDEF VAR(OCR0AL)
           '8bit 2 channel devices
-          TCCR0B = b'00001000'
-          TCCR0A = b'00000011'
+          asm ShowDebug Canskip handler addded for TCCR0B and TCCR0A
+          [canskip]TCCR0B = b'00001000'
+          [canskip]TCCR0A = b'00000011'
         #ENDIF
 
         #IFDEF VAR(OCR0AL)
           'ATtiny10
           '16bit 2 channel devices
-          TCCR0B = b'00011000'
-          TCCR0A = b'00000011'
+          [canskip]TCCR0B = b'00011000'
+          [canskip]TCCR0A = b'00000011'
         #ENDIF
       #ENDIF
     #ENDIF
@@ -3600,10 +3603,12 @@ sub AVRSetPrescale (AVRTimer)
   If PWMPrescale = 1 Then
     #IFDEF AVRTC0
       If AVRTimer = 0 Then
-        lds SysValueCopy,TCCR0B
-        andi SysValueCopy, 0xf8
-        inc SysValueCopy
-        sts TCCR0B, SysValueCopy
+        #ifdef var(TCCR0B)  'not all chips have this register
+          lds SysValueCopy,TCCR0B
+          andi SysValueCopy, 0xf8
+          inc SysValueCopy
+          sts TCCR0B, SysValueCopy
+        #endif
       End If
     #ENDIF
 
@@ -3683,10 +3688,12 @@ sub AVRSetPrescale (AVRTimer)
   If PWMPrescale = 8 Then
     #IFDEF AVRTC0
       If AVRTimer = 0 Then
-        lds SysValueCopy,TCCR0B
-        andi SysValueCopy, 0xf8
-        ori SysValueCopy, 0x02
-        sts TCCR0B, SysValueCopy
+        #ifdef var(TCCR0B)  'not all chips have this register
+          lds SysValueCopy,TCCR0B
+          andi SysValueCopy, 0xf8
+          ori SysValueCopy, 0x02
+          sts TCCR0B, SysValueCopy
+        #endif
       End If
     #ENDIF
 
@@ -3766,10 +3773,12 @@ sub AVRSetPrescale (AVRTimer)
   If PWMPrescale = 64 Then
     #IFDEF AVRTC0
       If AVRTimer = 0 Then
-        lds SysValueCopy,TCCR0B
-        andi SysValueCopy, 0xf8
-        ori SysValueCopy, 0x03
-        sts TCCR0B, SysValueCopy
+        #ifdef var(TCCR0B)  'not all chips have this register
+          lds SysValueCopy,TCCR0B
+          andi SysValueCopy, 0xf8
+          ori SysValueCopy, 0x03
+          sts TCCR0B, SysValueCopy
+        #endif
       End If
     #ENDIF
 
@@ -3851,16 +3860,16 @@ end sub
 
 sub AVRPWMOn
 
-    Set COM0B1 ON
-    Set COM0B0 OFF
+    [canskip]COM0B1 = 1
+    [canskip]COM0B0 = 0
 
 end sub
 
 
 sub AVRPWMOff
 
-    Set COM0B1 OFF
-    Set COM0B0 OFF
+    [canskip]COM0B1 = 0
+    [canskip]COM0B0 = 0
 
 end sub
 
@@ -3870,8 +3879,8 @@ SUB AVRPWMOff (IN AVRPWMChannel)
   'channels 1 and 6 not available, see Help
   #IFDEF AVRCHAN2
     If AVRPWMChannel = 2 Then
-      Set COM0B1 OFF
-      Set COM0B0 OFF
+      [canskip]COM0B1 = 0
+      [canskip]COM0B0 = 0
     End If
   #ENDIF
 
