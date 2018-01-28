@@ -167,7 +167,7 @@
              IF CST_TWBR < 0 Then
                 CST_TWBR = 0
                 BD_RATECALC = int((1000 * ChipMHz )/16+((CST_TWBR*2)*4) )
-                warning "Baud Rate below specificiation at" BD_RATECALC "KHz - lower baud rate to remove this warning"
+                warning "Baud Rate below specificiation at" BD_RATECALC "KHz - lower baud rate or increase clock frequency to remove this warning"
 
              End if
          End If
