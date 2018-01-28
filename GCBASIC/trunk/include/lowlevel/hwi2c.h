@@ -1,16 +1,5 @@
 '    Hardware I2C routines for Great Cow BASIC
-'    Copyright (C) 2010 - 2017 Hugh Considine, Evan R. Venn & Jacques Erdemaal
-'    Version 1.1f
-'    Version 1.1g
-'    Version 1.1h
-'    Version 1.1i
-'    Version 1.1j
-'    Version 1.1k
-'    Version 1.1l
-'    Version 1.1m
-'    Version 1.1n
-
-
+'    Copyright (C) 2010 - 2018 Hugh Considine, Jacques Erdemaal and Evan R. Venn
 
 
 '    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
@@ -32,6 +21,8 @@
 '    Updated Sep 2017 -  Added SAMEVAR and optimised HSerReceive
 '    Updated Oct 2017 - Added MASTER for I2C module. No slave.
 '    Updated Oct 2017 - Updated to add SI2C discovery support methods.
+'    Updated Jan 2018 - Updated to handle AVR frequency and I2C baud rate. Warning added
+
 
 
 '    This library is free software; you can redistribute it and/or
