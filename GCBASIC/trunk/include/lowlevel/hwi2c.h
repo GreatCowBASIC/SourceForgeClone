@@ -22,6 +22,7 @@
 '    Updated Oct 2017 - Added MASTER for I2C module. No slave.
 '    Updated Oct 2017 - Updated to add SI2C discovery support methods.
 '    Updated Jan 2018 - Updated to handle AVR frequency and I2C baud rate. Warning added
+'    Updated Jan 2018 - Updated to handle AVR I2C message handling
 
 
 
@@ -158,8 +159,11 @@
              IF CST_TWBR < 0 Then
                 CST_TWBR = 0
                 BD_RATECALC = int((1000 * ChipMHz )/16+((CST_TWBR*2)*4) )
-                warning "Baud Rate below specificiation at" BD_RATECALC "KHz - lower baud rate or increase clock frequency to remove this warning"
 
+                'Ensure this warning only happens when HI2C is used.
+                if HI2C_CLOCK <> "HI2C_CLOCK" then
+                    warning "Baud Rate below specificiation at" BD_RATECALC "KHz - lower baud rate or increase clock frequency to remove this warning."
+                end if
              End if
          End If
 
