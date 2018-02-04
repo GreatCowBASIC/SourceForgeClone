@@ -1,5 +1,5 @@
 '    7 Segment LED/LCD display routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2017 Hugh Considine, Evan R. Venn, Kent Shafer and Mike Otte
+'    Copyright (C) 2006 - 2018 Hugh Considine, Evan R. Venn, Kent Shafer and Mike Otte
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -29,9 +29,10 @@
 '            Also extended the DisplayValue to support 0x0 to 0xF. It was 0x0 to 0x9. Also added an example to an update to the help file.
 ; 1/4/2014:  Added two new defines, #define 7Seg_CommonAnode, and #define 7Seg_HighSide to support common anode devices and high side drivers
 ' 9/10/2016: Revised to support turning off the selects and added Deselect(S)
-'26/10/2016 changed selects, added dot parameter to DisplayValue to display decimal point
+'26/10/2016 changed selects, added Dot parameter to DisplayValue to display decimal point
 '16/11/2016 revised to correct commonanode support
 '16/11/2016 revised to add decimal point and - to DisplayChar
+'1/1/2018   revised to support variable naming with new compiler
 
 'When using DisplayPortx constants, the following setup is assumed:
 ' PIC Pin   Display Segment
@@ -195,19 +196,19 @@ Sub DisplaySegment(In DispPort, In DispTemp)
 End Sub
 
 'Write integer between 0 and 9 inclusive
-Sub DisplayValue(In DispPort, In DispChar, Optional In Dot = 0 )
+Sub DisplayValue(In DispPort, In DispChar, Optional In _DispDot = 0 )
 
   'Convert to code for output
   ReadTable SevenSegDispDigit, DispChar + 1, DispTemp
-  'Add decimal point if dot = 1
-  If Dot.0 = 1 Then DispTemp= DispTemp OR 128
+  'Add decimal point if _DispDot = 1
+  If _DispDot.0 = 1 Then DispTemp= DispTemp OR 128
   'Select display and show integer
   DisplaySevenSeg
 
 End Sub
 
 'Write ASCII character
-Sub DisplayChar(In DispPort, In DispChar, Optional In Dot = 0 )
+Sub DisplayChar(In DispPort, In DispChar, Optional In _DispDot = 0 )
 
   'Only accept letters A-Z
   'Space
@@ -242,8 +243,8 @@ Sub DisplayChar(In DispPort, In DispChar, Optional In Dot = 0 )
   ReadTable SevenSegDispLetter, DispChar - 64, DispTemp
 
 ShowChar:
-  'Add decimal point if dot = 1
-  If Dot.0 = 1 Then DispTemp= DispTemp OR 128
+  'Add decimal point if _DispDot = 1
+  If _DispDot.0 = 1 Then DispTemp= DispTemp OR 128
   DisplaySevenSeg
 End Sub
 
