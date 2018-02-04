@@ -35,6 +35,7 @@
 ' 02/10/17   Added HPWM16On and HPWM16Off commands for fixed frequency/duty PWM
 ' 05/11/17   Revised to handle fixed mode operations, changed constants to map to PWM.h
 '            revised script hanlder, new init and code validation
+' 11/11/17   Fixed problem with calculation of duty cycle
 
 'By default, compile code for all PWM modeules
 'Set to false in user code to save on program space if module is not required
@@ -93,6 +94,119 @@
 '
 '    #define HPWM16_12_Duty 40
 '    #define HPWM16_12_Freq 120
+
+
+ 'Create some alias, used by Phase and Offset
+      #ifdef var(PWM1DCH)
+      DIM HPWM16_1_Duty_RegWord alias PWM1DCH,PWM1DCL As Word
+      #endif
+      #ifdef var(PWM2DCH)
+      DIM HPWM16_2_Duty_RegWord alias PWM2DCH,PWM2DCL As Word
+      #endif
+      #ifdef var(PWM3DCH)
+      DIM HPWM16_3_Duty_RegWord alias PWM3DCH,PWM3DCL As Word
+      #endif
+      #ifdef var(PWM4DCH)
+      DIM HPWM16_4_Duty_RegWord alias PWM4DCH,PWM4DCL As Word
+      #endif
+      #ifdef var(PWM5DCH)
+      DIM HPWM16_5_Duty_RegWord alias PWM5DCH,PWM5DCL As Word
+      #endif
+      #ifdef var(PWM6DCH)
+      DIM HPWM16_6_Duty_RegWord alias PWM6DCH,PWM6DCL As Word
+      #endif
+      #ifdef var(PWM7DCH)
+      DIM HPWM16_7_Duty_RegWord alias PWM7DCH,PWM7DCL As Word
+      #endif
+      #ifdef var(PWM8DCH)
+      DIM HPWM16_8_Duty_RegWord alias PWM8DCH,PWM8DCL As Word
+      #endif
+      #ifdef var(PWM9DCH)
+      DIM HPWM16_9_Duty_RegWord alias PWM9DCH,PWM9DCL As Word
+      #endif
+      #ifdef var(PWM10DCH)
+      DIM HPWM16_10_Duty_RegWord alias PWM10DCH,PWM10DCL As Word
+      #endif
+      #ifdef var(PWM11DCH)
+      DIM HPWM16_11_Duty_RegWord alias PWM11DCH,PWM11DCL As Word
+      #endif
+      #ifdef var(PWM12DCH)
+      DIM HPWM16_12_Duty_RegWord alias PWM12DCH,PWM12DCL As Word
+      #endif
+
+      #ifdef var(PWM1PRH)
+      DIM HPWM16_1_Period_RegWord alias PWM1PRH,PWM1PRL As Word
+      #endif
+      #ifdef var(PWM2PRH)
+      DIM HPWM16_2_Period_RegWord alias PWM2PRH,PWM2PRL As Word
+      #endif
+      #ifdef var(PWM3PRH)
+      DIM HPWM16_3_Period_RegWord alias PWM3PRH,PWM3PRL As Word
+      #endif
+      #ifdef var(PWM4PRH)
+      DIM HPWM16_4_Period_RegWord alias PWM4PRH,PWM4PRL As Word
+      #endif
+      #ifdef var(PWM5PRH)
+      DIM HPWM16_5_Period_RegWord alias PWM5PRH,PWM5PRL As Word
+      #endif
+      #ifdef var(PWM6PRH)
+      DIM HPWM16_6_Period_RegWord alias PWM6PRH,PWM6PRL As Word
+      #endif
+      #ifdef var(PWM7PRH)
+      DIM HPWM16_7_Period_RegWord alias PWM7PRH,PWM7PRL As Word
+      #endif
+      #ifdef var(PWM8PRH)
+      DIM HPWM16_8_Period_RegWord alias PWM8PRH,PWM8PRL As Word
+      #endif
+      #ifdef var(PWM9PRH)
+      DIM HPWM16_9_Period_RegWord alias PWM9PRH,PWM9PRL As Word
+      #endif
+      #ifdef var(PWM10PRH)
+      DIM HPWM1610__Period_RegWord alias PWM10PRH,PWM10PRL As Word
+      #endif
+      #ifdef var(PWM11PRH)
+      DIM HPWM16_11_Period_RegWord alias PWM11PRH,PWM11PRL As Word
+      #endif
+      #ifdef var(PWM12PRH)
+      DIM HPWM16_12_Period_RegWord alias PWM12PRH,PWM12PRL As Word
+      #endif
+
+      #ifdef var(PWM1PHH)
+      DIM HPWM16_1_Phase_RegWord alias PWM1PHH,PWM1PHL As Word
+      #endif
+      #ifdef var(PWM2PHH)
+      DIM HPWM16_2_Phase_RegWord alias PWM2PHH,PWM2PHL As Word
+      #endif
+      #ifdef var(PWM2PHH)
+      DIM HPWM16_3_Phase_RegWord alias PWM3PHH,PWM3PHL As Word
+      #endif
+      #ifdef var(PWM4PHH)
+      DIM HPWM16_4_Phase_RegWord alias PWM4PHH,PWM4PHL As Word
+      #endif
+      #ifdef var(PWM5PHH)
+      DIM HPWM16_5_Phase_RegWord alias PWM5PHH,PWM5PHL As Word
+      #endif
+      #ifdef var(PWM6PHH)
+      DIM HPWM16_6_Phase_RegWord alias PWM6PHH,PWM6PHL As Word
+      #endif
+      #ifdef var(PWM7PHH)
+      DIM HPWM16_7_Phase_RegWord alias PWM7PHH,PWM7PHL As Word
+      #endif
+      #ifdef var(PWM8PHH)
+      DIM HPWM16_8_Phase_RegWord alias PWM8PHH,PWM8PHL As Word
+      #endif
+      #ifdef var(PWM9PHH)
+      DIM HPWM16_9_Phase_RegWord alias PWM9PHH,PWM9PHL As Word
+      #endif
+      #ifdef var(PWM10PHH)
+      DIM HPWM16_10_Phase_RegWord alias PWM10PHH,PWM10PHL As Word
+      #endif
+      #ifdef var(PWM11PHH)
+      DIM HPWM16_11_Phase_RegWord alias PWM11PHH,PWM11PHL As Word
+      #endif
+      #ifdef var(PWM12PHH)
+      DIM HPWM16_12_Phase_RegWord alias PWM12PHH,PWM12PHL As Word
+      #endif
 
 
 #startup HPWM16Init
@@ -667,8 +781,17 @@ Sub HPWM16_setDC
 
 dim HPWM16_HPWM16_DCyA as Word
 dim HPWM16_HPWM16_DCyB as Word
+dim HPWM16_HPWM16_DCyB1 as Word
+dim HPWM16_HPWM16_DCyB2 as Word
 dim HPWM16_DCy as Word
+Dim PWMDuty as Word
+Dim HPWM16_PRPS_Req as Word
 
+'If the DutyCycle is 1 then make sure it is on
+If PWMDuty = 65535 Then
+  HPWM16_DCy = HPWM16_PRPS_Req + 1
+  Goto SetDC
+End If
 'Calculate the product of PR and duty, but all divided by 2^16
 'but only using 16 bit Word variables to use
 
@@ -676,10 +799,15 @@ dim HPWM16_DCy as Word
 HPWM16_HPWM16_DCyA = (HPWM16_PRPS_Req_H * PWMDuty_h)
 'Multiply and add the upper/lower bytes
 'Add 1 to PRL, because duty cycle is based on PR+1 (+1 only affects lower Byte)
-HPWM16_HPWM16_DCyB = ((HPWM16_PRPS_Req_L + 1) * PWMDuty_h) + (HPWM16_PRPS_Req_H * PWMDuty_l)
+'Use intermediate variables for the two multiplications, because doing it in 1 line seems to break it
+HPWM16_HPWM16_DCyB1 = ((HPWM16_PRPS_Req + 1) * PWMDuty_h)
+HPWM16_HPWM16_DCyB2 = (HPWM16_PRPS_Req_h * PWMDuty)
+HPWM16_HPWM16_DCyB = HPWM16_HPWM16_DCyB1 + HPWM16_HPWM16_DCyB2
 'Sum A*2^16 and B*2^8, but all divided by 2^16
 'i.e. A + B/2^8
 HPWM16_DCy = HPWM16_HPWM16_DCyA + HPWM16_HPWM16_DCyB / 256
+
+SetDC:
 
 'Set the registers
 'Set the PHH register because this is 'undefined' at power up
