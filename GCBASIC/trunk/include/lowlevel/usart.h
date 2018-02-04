@@ -52,6 +52,7 @@
 ' 21/01/2017: Revised to support standardised .dat files - ERV
 ' 04/02/2017: Revised HSerGetNum to suppor long and prevent buffer overrun - Motte
 ' 07/10/2017: Added U1CON1 and U2 UART support.
+' 01/12/2017: Added HSerPrintStringLN
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -1103,7 +1104,7 @@ sub HSerGetString (Out HSerString As String, optional In comport = 1)
 End Sub
 
 
-sub HSerPrintLN (In PrintData As String, optional In comport = 1)
+sub HSerPrintStringLN (In PrintData As String, optional In comport = 1)
   'PrintLen = LEN(PrintData$)
   PrintLen = PrintData(0)
 
