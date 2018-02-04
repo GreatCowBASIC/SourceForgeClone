@@ -20,6 +20,7 @@
 
 'Changes
   '16/11/2017 Initial release including OLED fonts
+  '19/11/2017 Added PrintLocX and PrintLocY initialisation for character mode printing.
 
 'Hardware settings
 'Type
@@ -250,8 +251,10 @@ End Sub
 Sub GLCDCLS_HX8347 ( Optional In  GLCDBackground as word = GLCDBackground )
 
   ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
-  Dim HX8347SendWord as word
+  Dim HX8347SendWord, PrintLocX, PrintLocY as word
   GLCD_yordinate = 0
+  PrintLocX = 0
+  PrintLocY = 0
 
 
 
