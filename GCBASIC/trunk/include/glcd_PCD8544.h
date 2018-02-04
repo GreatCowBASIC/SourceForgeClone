@@ -93,11 +93,21 @@
     #script     ' This script set the capabilities based upon the amount of RAM
 
         If ChipRAM < 512  Then
-    '               Error "Not enough RAM for GLCD buffer on this chip model"
-    '               Error "."
-    '               Error "Please use #Define GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY to use PCD8544 in text mode only"
-    '               Error ""
-            GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY = TRUE
+'            if novar( GLCD_TYPE_PCD8544_IGNORE_MEMORY_WARNING  ) then
+'                   warning "Not enough RAM for GLCD buffer on this chip model = Picture/text mode only "
+'                   warning "."
+'                   warning "Please use #Define GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY to use PCD8544 in text mode only"
+'                   warning ""
+'                   warning "Use #define GLCD_TYPE_PCD8544_IGNORE_MEMORY_WARNING to remove this warning"
+'            end if
+
+         GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY = TRUE
+         end if
+
+
+
+
+
         End If
 
     #endscript
@@ -223,13 +233,13 @@ Sub GLCDCLS_PCD8544
           PrintLocY = 0
           #if GLCD_TYPE = GLCD_TYPE_PCD8544
               #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
-                For PCD8544_BufferLocationCalc = 1 to 505
+                For PCD8544_BufferLocationCalc = 1 to 504
                     PCD8544_BufferAlias(PCD8544_BufferLocationCalc) = 0
                 Next
               #endif
 
               GOTO_Pixel_PCD8544(0,0);  'Goto the pixel specified by the Co-ordinate
-              for PCD8544_BufferLocationCalc = 503 to 0 step - 1
+              for PCD8544_BufferLocationCalc = 504 to 1 step - 1
                   Write_Data_PCD8544(0x00);
               next
               GOTO_Pixel_PCD8544(0,0);  'Goto the pixel specified by the Co-ordinate
@@ -327,6 +337,7 @@ End Sub
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox_PCD8544(In LineX1, In LineY1, In LineX2, In LineY2, Optional In LineColour As Word = GLCDForeground)
 
+  dim GLCDTemp  as byte
   'Make sure that starting point (1) is always less than end point (2)
   If LineX1 > LineX2 Then
     GLCDTemp = LineX1
@@ -339,14 +350,13 @@ Sub FilledBox_PCD8544(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Li
     LineY2 = GLCDTemp
   End If
 
-  #if GLCD_TYPE = GLCD_TYPE_PCD8544
     'Draw lines going across
     For DrawLine = LineX1 To LineX2
       For GLCDTemp = LineY1 To LineY2
         PSet DrawLine, GLCDTemp, LineColour
       Next
     Next
-  #endif
+
 End Sub
 
 '''Draws a pixel on the GLCD
@@ -356,9 +366,10 @@ End Sub
 Sub PSet_PCD8544(In GLCDX, In GLCDY, In GLCDColour As Word)
 
   #if GLCD_TYPE = GLCD_TYPE_PCD8544
+              if GLCDX => GLCD_WIDTH then exit sub
+              if GLCDY => GLCD_HEIGHT then exit sub
 
               #ifndef GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY
-
 
                     'PCD8544_BufferLocationCalc = ( GLCDY / 8 )* GLCD_WIDTH
 
@@ -406,24 +417,24 @@ End Sub
 
 sub Write_Command_PCD8544(in  PCD8544SendByte)
 
-  SET PCD8544_DC OFF;   'Data/Command is set to zero to give Command of PCD8544 Controller
-          WAIT PCD8544WriteDelay us
-  set PCD8544_CS off ;  'Select the Chip, Chip Enable is an Active Low Signal
-          WAIT PCD8544WriteDelay us
-  SPI_Send_Data_PCD8544(PCD8544SendByte);
-  set PCD8544_CS on;  'Disable the Chip again by providing active high Signal
-          WAIT PCD8544WriteDelay us
+      SET PCD8544_DC OFF;   'Data/Command is set to zero to give Command of PCD8544 Controller
+      WAIT PCD8544WriteDelay us
+      set PCD8544_CS off ;  'Select the Chip, Chip Enable is an Active Low Signal
+      WAIT PCD8544WriteDelay us
+      SPI_Send_Data_PCD8544(PCD8544SendByte);
+      set PCD8544_CS on;  'Disable the Chip again by providing active high Signal
+      WAIT PCD8544WriteDelay us
 end sub
 
 sub Write_Data_PCD8544(in PCD8544SendByte)
 
-          SET PCD8544_DC ON;        'Data/Command is set to One to give Data of PCD8544 Controller
-          WAIT PCD8544WriteDelay us
-  set PCD8544_CS off; 'Select the Chip, Chip Enable is an Active Low Signal
-          WAIT PCD8544WriteDelay us
-  SPI_Send_Data_PCD8544(PCD8544SendByte);
-  set PCD8544_CS on;  'Disable the Chip again by providing active high Signal
-          WAIT PCD8544WriteDelay us
+      SET PCD8544_DC ON;        'Data/Command is set to One to give Data of PCD8544 Controller
+      WAIT PCD8544WriteDelay us
+      set PCD8544_CS off; 'Select the Chip, Chip Enable is an Active Low Signal
+      WAIT PCD8544WriteDelay us
+      SPI_Send_Data_PCD8544(PCD8544SendByte);
+      set PCD8544_CS on;  'Disable the Chip again by providing active high Signal
+      WAIT PCD8544WriteDelay us
 end sub
 
 
@@ -476,7 +487,7 @@ sub  GOTO_Pixel_PCD8544( In LocX, In  LocY)
   'How to set Y-RAM Address and
   'How to set X-RAM Address
   Write_Command_PCD8544( 0x80 | (0x7F & LocX ));  'Set X-Address of RAM 0 <= x <= 83
-          Write_Command_PCD8544( 0x40 | (0x07 & LocY ));  'Set Y-Address of RAM 0 <= y <= 5
+  Write_Command_PCD8544( 0x40 | (0x07 & LocY ));  'Set Y-Address of RAM 0 <= y <= 5
 
 
 end sub
@@ -571,4 +582,3 @@ sub ExtendedCommand_PCD8544 ( in PCD8544SendByte )
                     Write_Command_PCD8544(PCD8544SendByte);         Set PCD8544SendByte
                     Write_Command_PCD8544(0x0C);            LCD in normal mode.
 end sub
-
