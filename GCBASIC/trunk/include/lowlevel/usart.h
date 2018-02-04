@@ -1103,6 +1103,25 @@ sub HSerGetString (Out HSerString As String, optional In comport = 1)
 End Sub
 
 
+sub HSerPrintLN (In PrintData As String, optional In comport = 1)
+  'PrintLen = LEN(PrintData$)
+  PrintLen = PrintData(0)
+
+  If PrintLen <> 0 then
+    'Write Data
+    for SysPrintTemp = 1 to PrintLen
+      HSerSend(PrintData(SysPrintTemp),comport )
+      Wait USART_DELAY
+    next
+  End If
+
+  HSerSend(13,comport)
+  Wait USART_DELAY
+  HSerSend(10,comport)
+  Wait USART_DELAY
+
+End Sub
+
 sub HSerPrint (In PrintData As String, optional In comport = 1)
   'PrintLen = LEN(PrintData$)
   PrintLen = PrintData(0)
