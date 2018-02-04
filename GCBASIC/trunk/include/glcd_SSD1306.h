@@ -101,6 +101,7 @@
 '  1.21 Added update to handle fonts size in LOWMEMORY_GLCD_MODE
 '  1.22 Added OLED fonts
 '  1.23 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
+'  1.24 Added support for GLCDPrintStringLN etc. Setting variables to zero on print screen
 
 #define SSD1306_vccstate 0
 
@@ -273,7 +274,7 @@ Sub InitGLCD_SSD1306
     GLCDBackground = 0
     GLCDForeground = 1
     GLCDFontWidth = 5
-
+    dim PrintLocX, PrintLocY as word
 
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
@@ -407,7 +408,8 @@ Sub GLCDCLS_SSD1306 ( Optional In  GLCDBackground as word = GLCDBackground )
     '  next
 
   Cursor_Position_SSD1306 ( 0 , 0 )
-
+  PrintLocX =0
+  PrintLocY =0
 End Sub
 
 '''Draws a character at the specified location on the SSD1306 GLCD
