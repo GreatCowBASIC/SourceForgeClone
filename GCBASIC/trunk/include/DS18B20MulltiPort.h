@@ -18,6 +18,7 @@
 
 '    Release notes
 '    03/02/2018     Updated to improve error handling and to work on the 18f
+'    04/02/2018     Added DS18B20DeviceReadRetry to improve retry handling
 
 '    Supports a multiport DS18B20 reads.
 
@@ -59,6 +60,8 @@
   Dim DSint as integer 'need this to return minus sign (set bit 15 = 1 (= negative))
   dim readtemp as Integer ' need this return the temperature
   dim readtemp12 as Integer
+
+#define DS18B20DeviceReadRetry 0xffff
 
 ' Define device ROM Commands for 1-Wire DS18B20
 #define SearchRom 240   '0xF0 (240)
@@ -145,7 +148,7 @@ Macro DS18B20DeviceRead ( DQPort )
    wait 1 ms
    OWout DQPort, ConvertT  ' Instruct ds18b20 to begin temperature conversion to digital
 
-   repeat 0xffff  'try 0xffff times - sets DS18B20DeviceReadBusy = true if not valid read
+   repeat DS18B20DeviceReadRetry  'try a number of times - sets DS18B20DeviceReadBusy = true if not valid read
       dir DQPort  out
       Set DQPort  Off
       wait 4 us
