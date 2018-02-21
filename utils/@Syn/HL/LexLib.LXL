@@ -4,21 +4,20 @@ object SyntaxManager: TSyntaxManager
   object SyntAnal1: TLibSyntAnalyzer
     Formats = <
       item
+        DisplayName = 'Default'
+        Font.Charset = ANSI_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Courier New'
+        Font.Style = []
+      end
+      item
         DisplayName = 'Label'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clFuchsia
         Font.Height = -13
         Font.Name = 'Courier New'
         Font.Style = []
-      end
-      item
-        DisplayName = 'Default'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -13
-        Font.Name = 'Courier New'
-        Font.Style = []
-        FormatType = ftCustomFont
       end
       item
         DisplayName = 'Marked block'
@@ -32,12 +31,12 @@ object SyntaxManager: TSyntaxManager
       end
       item
         DisplayName = 'Current Line'
-        Font.Charset = RUSSIAN_CHARSET
+        Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -13
         Font.Name = 'Courier New'
         Font.Style = []
-        BgColor = 16772341
+        BgColor = 15721469
         FormatType = ftBackGround
       end
       item
@@ -113,12 +112,12 @@ object SyntaxManager: TSyntaxManager
         Font.Height = -13
         Font.Name = 'Courier New'
         Font.Style = []
-        BgColor = 16774389
+        BgColor = 15204085
         FormatType = ftBackGround
       end
       item
         DisplayName = 'Current block bound'
-        Font.Charset = RUSSIAN_CHARSET
+        Font.Charset = DEFAULT_CHARSET
         Font.Color = clMaroon
         Font.Height = -13
         Font.Name = 'Courier New'
@@ -148,8 +147,17 @@ object SyntaxManager: TSyntaxManager
         Font.Color = clNavy
         Font.Height = -13
         Font.Name = 'Courier New'
-        Font.Style = [fsBold]
-        FormatFlags = [ffBold, ffItalic, ffUnderline, ffStrikeOut, ffReadOnly, ffHidden]
+        Font.Style = []
+        FormatFlags = [ffItalic, ffUnderline, ffReadOnly, ffHidden]
+      end
+      item
+        DisplayName = 'Errors'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clRed
+        Font.Height = -13
+        Font.Name = 'Courier New'
+        Font.Style = []
+        FormatFlags = [ffItalic, ffUnderline, ffReadOnly, ffHidden, ffFontName, ffFontSize, ffFontCharset, ffVertAlign]
       end>
     TokenRules = <
       item
@@ -158,7 +166,30 @@ object SyntaxManager: TSyntaxManager
         TokenType = 1
         Expression = 
           '#all chars after '#39' or ; to end of line'#13#10'#all chars after rem plu' +
-          's whitespace to end of line'#13#10#39'.*|'#13#10';.*|'#13#10'rem\s.*'
+          's whitespace to end of line'#13#10#39'.*|'#13#10';.*|'#13#10'rem\s.*|'#13#10#13#10#13#10
+        ColumnFrom = 0
+        ColumnTo = 0
+      end
+      item
+        DisplayName = 'Parser_IfBegin'
+        StyleName = 'Reserved word'
+        TokenType = 10
+        Expression = 
+          '###########################################'#13#10'##   find "if-then"' +
+          '  but not one-liner   ##'#13#10'######################################' +
+          '#####'#13#10'(?i)^[\x20\x09]*if(?=.*?then[\s]*?[\r\n'#39';])'#13#10'#(?i)     = ' +
+          'case insensitive'#13#10'#^[\s]*if = line-begin then spaces then "if"'#13#10 +
+          '#           (only "if" has Token Style)'#13#10'#(?=    ) = followed by' +
+          ' ...'#13#10'#.*?then  = any char then "then"'#13#10'#[\s]*?   = spaces'#13#10'#[\r' +
+          '\n'#39';] = line-end or comment'#13#10
+        ColumnFrom = 0
+        ColumnTo = 0
+      end
+      item
+        DisplayName = 'Parser_IfEnd'
+        StyleName = 'Reserved word'
+        TokenType = 11
+        Expression = '# find "end if" '#13#10'(?i)^\s*end\s+if(?=[\s'#39';])'
         ColumnFrom = 0
         ColumnTo = 0
       end
@@ -177,24 +208,8 @@ object SyntaxManager: TSyntaxManager
         DisplayName = 'Label'
         StyleName = 'Label'
         Expression = 
-          '# ^    search from begin of line '#13#10'# \s*  allow leading spaces  ' +
-          '(don'#39't work)'#13#10'# \S+: 1-n chars followed by :'#13#10'^\s*\S+:'
-        ColumnFrom = 0
-        ColumnTo = 0
-      end
-      item
-        DisplayName = 'end'
-        StyleName = 'Identifier'
-        TokenType = 2
-        Expression = 'end\b'#13#10
-        ColumnFrom = 0
-        ColumnTo = 0
-      end
-      item
-        DisplayName = 'Any name'
-        StyleName = 'Identifier'
-        TokenType = 2
-        Expression = '#first charecter can'#39't be digit'#13#10'[\#,_,a-z_]\w*'
+          '# ^    search from begin of line '#13#10'# [\x20\x09]*  allow leading ' +
+          'spaces '#13#10'# \w+: 1-n chars followed by :'#13#10'^[\x20\x09]*\w+:'
         ColumnFrom = 0
         ColumnTo = 0
       end
@@ -243,264 +258,100 @@ object SyntaxManager: TSyntaxManager
         Expression = '[/,\.;:\(\)=<>\+\-&%\$]+'
         ColumnFrom = 0
         ColumnTo = 0
+      end
+      item
+        DisplayName = 'Any name'
+        StyleName = 'Identifier'
+        TokenType = 2
+        Expression = '#first character can'#39't be digit'#13#10'[\#,_,a-z_]\w*'
+        ColumnFrom = 0
+        ColumnTo = 0
       end>
     BlockRules = <
       item
-        DisplayName = 'Tag block rule 1'
-        StyleName = 'Reserved word'
-        BlockType = btTagDetect
-        ConditionList = <
-          item
-            TagList.Strings = (
-              ' '
-              '#bootloader'
-              '#chip'
-              '#config'
-              '#define'
-              '#endif'
-              '#endscript'
-              '#if'
-              '#ifdef'
-              '#ifndef'
-              '#include'
-              '#mem'
-              '#option'
-              '#script'
-              '#startup'
-              '10ms'
-              '10us'
-              'ABS'
-              'ADOff'
-              'Alias'
-              'AND'
-              'As'
-              'Asc'
-              'At'
-              'Average'
-              'BcdToDec_GCB'
-              'BIT'
-              'Bootloader'
-              'Box'
-              'Byte'
-              'ByteToBin'
-              'Call'
-              'Case'
-              'CHR'
-              'Circle'
-              'ClearTimer'
-              'CLS'
-              'DecToBcd_GCB'
-              'Dim'
-              'Dir'
-              'DisplayChar'
-              'DisplayValue'
-              'Do'
-              'Else'
-              'End'
-              'End Table'
-              'EPRead'
-              'EPWrite'
-              'Exit'
-              'Exit Sub'
-              'FilledBox'
-              'FilledCircle'
-              'For'
-              'Function'
-              'Get'
-              'GLCDCLS'
-              'GLCDDrawChar'
-              'GLCDDrawString'
-              'GLCDPrint'
-              'GLCDReadByte'
-              'GLCDTimeDelay'
-              'GLCDWriteByte'
-              'Gosub'
-              'Goto'
-              'h'
-              'Hex'
-              'HI2CMode'
-              'HI2CReceive '
-              'HI2CReStart'
-              'HI2CSend'
-              'HI2CSetAddress'
-              'HI2CStart'
-              'HI2CStartOccurred'
-              'HI2CStop'
-              'HI2CWaitMSSP'
-              'HPWM'
-              'HSerPrint'
-              'HSerPrintByteCRLF'
-              'HSerPrintCRLF'
-              'HSerReceive'
-              'HSerSend'
-              'I2CAckpoll'
-              'I2CReceive'
-              'I2CReset'
-              'i2cRestart'
-              'I2CSend'
-              'I2CSlaveDeviceReceive'
-              'I2CStart'
-              'I2CStartOccurred'
-              'I2CStop'
-              'If'
-              'Ignore'
-              'In'
-              'IndCall'
-              'InitGLCD'
-              'InitSer'
-              'InitTimer0'
-              'InitTimer1'
-              'INKEY'
-              'Instr'
-              'Integer'
-              'Interrupt'
-              'IntOff'
-              'IntOn'
-              'KeypadData'
-              'KeypadRaw'
-              'LCase'
-              'LCDBacklight'
-              'LCDCMD'
-              'LCDCreateChar'
-              'LCDCreateGraph'
-              'LCDCursor'
-              'LCDDisplayOff'
-              'LCDDisplayOn'
-              'LCDHex'
-              'LCDHome'
-              'LCDSpace'
-              'LCDWriteChar'
-              'Left'
-              'Len'
-              'Line'
-              'Locate'
-              'Log10'
-              'Log2'
-              'Loge'
-              'Loop'
-              'Ltrim'
-              'm'
-              'Mid'
-              'ms'
-              'Next'
-              'NOT'
-              'Off'
-              'On'
-              'On Interrupt'
-              'OR'
-              'Out'
-              'Pad'
-              'Peek'
-              'Poke'
-              'Pot'
-              'Power'
-              'Print'
-              'ProgramErase'
-              'ProgramRead'
-              'ProgramWrite'
-              'PS2ReadByte'
-              'PS2SetKBLeds'
-              'PS2WriteByte'
-              'Pset'
-              'Pulsein'
-              'PulseOut'
-              'PulseOutInv'
-              'Put'
-              'PWMOff'
-              'PWMOn'
-              'PWMOut'
-              'Random'
-              'Randomize'
-              'ReadAD'
-              'ReadAD10'
-              'ReadDigitalTemp'
-              'ReadTable'
-              'readtemp'
-              'readtemp12'
-              'Repeat'
-              'Return'
-              'Right'
-              'Rotate'
-              'Rtrim'
-              's'
-              'Select'
-              'SerPrint'
-              'SerReceive'
-              'SerSend'
-              'Set'
-              'ShortTone'
-              'Simple'
-              'SPIMode'
-              'SPITransfer'
-              'Sqrt'
-              'ST7920cTile'
-              'ST7920GLCDClearGraphics'
-              'ST7920GLCDDisableGraphics'
-              'ST7920GLCDEnableGraphics'
-              'ST7920GLCDReadByte'
-              'ST7920gLocate'
-              'ST7920GraphicTest'
-              'ST7920gReaddata'
-              'ST7920gTile'
-              'ST7920lineh'
-              'ST7920LineHs'
-              'ST7920linev'
-              'ST7920Locate'
-              'ST7920Tile'
-              'ST7920WriteByte'
-              'ST7920WriteCommand'
-              'ST7920WriteData'
-              'StartTimer'
-              'Step'
-              'StopTimer'
-              'Str'
-              'Sub'
-              'SWAP'
-              'SWAP4'
-              'Table'
-              'Then'
-              'To'
-              'Tone'
-              'UCase'
-              'Until'
-              'us'
-              'Val'
-              'Wait'
-              'While'
-              'Word'
-              'WORDTOBIN'
-              'XOR')
-            TokenTypes = 4
-            IgnoreCase = True
-          end>
-        HighlightPos = cpBound
-        IgnoreAsParent = False
-      end
-      item
-        DisplayName = 'Sub begin line break'
-        StyleName = 'Function separator'
-        BlockName = 'Sub'
-        NotParent = True
-        BlockType = btLineBreak
+        DisplayName = 'Sub'
+        StyleName = 'Function background'
         ConditionList = <
           item
             TagList.Strings = (
               'function'
+              'macro'
               'sub')
             TokenTypes = 4
             IgnoreCase = True
+          end
+          item
+            TagList.Strings = (
+              'end'
+              'exit')
+            CondType = tcNotEqual
+            TokenTypes = 4
+            IgnoreCase = True
+          end>
+        BlockEnd = 'Sub End'
+        Highlight = True
+        NameFmt = '%s0 %s-1'
+        DynHighlight = dhRange
+        HighlightPos = cpBoundTagBegin
+        CollapseFmt = '%s0 %s-1'
+        TreeItemStyle = 'Reserved word'
+        TreeItemImage = 5
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'Sub End'
+        BlockType = btRangeEnd
+        ConditionList = <
+          item
+            TagList.Strings = (
+              'function'
+              'macro'
+              'sub')
+            TokenTypes = 4
+            IgnoreCase = True
+          end
+          item
+            TagList.Strings = (
+              'end')
+            TokenTypes = 4
+            IgnoreCase = True
           end>
         HighlightPos = cpBound
         IgnoreAsParent = False
       end
       item
-        DisplayName = 'Sub end line break'
+        DisplayName = 'Sub Begin Line Break'
         StyleName = 'Function separator'
         BlockType = btLineBreak
         ConditionList = <
           item
             TagList.Strings = (
               'function'
+              'macro'
+              'sub')
+            TokenTypes = 4
+            IgnoreCase = True
+          end
+          item
+            TagList.Strings = (
+              'end'
+              'exit')
+            CondType = tcNotEqual
+            TokenTypes = 4
+            IgnoreCase = True
+          end>
+        HighlightPos = cpBound
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'Sub End Line Break'
+        StyleName = 'Function separator'
+        BlockType = btLineBreak
+        ConditionList = <
+          item
+            TagList.Strings = (
+              'function'
+              'macro'
               'sub')
             TokenTypes = 4
             IgnoreCase = True
@@ -516,50 +367,51 @@ object SyntaxManager: TSyntaxManager
         IgnoreAsParent = False
       end
       item
-        DisplayName = 'Sub end'
-        BlockType = btRangeEnd
+        DisplayName = 'Label End Line Break'
+        StyleName = 'Function separator'
+        BlockType = btLineBreak
         ConditionList = <
           item
             TagList.Strings = (
-              'function'
-              'sub')
-            TokenTypes = 4
-            IgnoreCase = True
-          end
-          item
-            TagList.Strings = (
-              'end')
+              'return')
             TokenTypes = 4
             IgnoreCase = True
           end>
-        HighlightPos = cpBound
-        CancelNextRules = True
+        LinePos = lbBottom
+        HighlightPos = cpAny
         IgnoreAsParent = False
       end
       item
-        DisplayName = 'Sub'
+        DisplayName = 'Label Begin Line Break'
+        StyleName = 'Function separator'
+        BlockName = 'Label'
+        NotParent = True
+        BlockType = btLineBreak
+        ConditionList = <
+          item
+            TagList.Strings = (
+              '^\s*\w+:')
+            CondType = tcMask
+            IgnoreCase = True
+          end>
+        HighlightPos = cpAny
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'Label'
         StyleName = 'Function background'
         ConditionList = <
           item
             TagList.Strings = (
-              'function'
-              'macro'
-              'sub')
-            TokenTypes = 4
-            IgnoreCase = True
-          end
-          item
-            TagList.Strings = (
-              'exit')
-            CondType = tcNotEqual
-            IgnoreCase = True
+              '\w+:')
+            CondType = tcStrictMask
           end>
-        BlockEnd = 'Sub end'
+        BlockEnd = 'Gosub End'
         Highlight = True
-        NameFmt = '%s0 %s-1'
+        NameFmt = '%s0'
         DynHighlight = dhRange
-        HighlightPos = cpBound
-        CollapseFmt = '%s0 %s-1'
+        HighlightPos = cpBoundTagBegin
+        CollapseFmt = '%s0'
         TreeItemStyle = 'Reserved word'
         TreeItemImage = 5
         IgnoreAsParent = False
@@ -578,98 +430,434 @@ object SyntaxManager: TSyntaxManager
         IgnoreAsParent = False
       end
       item
-        DisplayName = 'Label'
-        StyleName = 'Function background'
+        DisplayName = 'Reserved Words'
+        StyleName = 'Reserved word'
+        BlockType = btTagDetect
         ConditionList = <
           item
             TagList.Strings = (
-              '^\s*\S+:')
-            CondType = tcStrictMask
+              '#bootloader'
+              '#chip'
+              '#config'
+              '#define'
+              '#endif'
+              '#endscript'
+              '#if'
+              '#ifdef'
+              '#ifndef'
+              '#include'
+              '#mem'
+              '#option'
+              '#samebit'
+              '#samevar'
+              '#script'
+              '#startup'
+              '10ms'
+              '10us'
+              'ABS'
+              'ADOff'
+              'Alias'
+              'AllOf'
+              'AND'
+              'Array'
+              'As'
+              'Asc'
+              'At'
+              'Average'
+              'BcdToDec_GCB'
+              'BIT'
+              'Bootloader'
+              'Box'
+              'Byte'
+              'ByteToBin'
+              'Call'
+              'canskip'
+              'Case'
+              'ChipFamily'
+              'ChipMHz'
+              'ChipName'
+              'ChipNameStr'
+              'ChipRAM'
+              'ChipWords'
+              'CHR'
+              'Circle'
+              'ClearSMT1'
+              'ClearSMT2'
+              'ClearTimer'
+              'CLS'
+              'CreateButton'
+              'CURSOROFF'
+              'CURSORON'
+              'DecToBcd_GCB'
+              'Difference'
+              'Dim'
+              'Dir'
+              'DisplayChar'
+              'DisplayValue'
+              'Do'
+              'do until'
+              'do while'
+              'EERAM_AutoStore'
+              'EERAM_Backup'
+              'EERAM_HS'
+              'EERAM_HS '
+              'EERAM_HWStore'
+              'EERAM_I2C_Adr'
+              'EERAM_Read'
+              'EERAM_Recall'
+              'EERAM_Status'
+              'EERAM_Trecall'
+              'EERAM_Tstore'
+              'EERAM_Write'
+              'EERAM_Write_Command'
+              'Ellipse'
+              'Else'
+              'Else If'
+              'End'
+              'End Macro'
+              'End Table'
+              'EPRead'
+              'EPWrite'
+              'Exit'
+              'Exit Do'
+              'Exit Sub'
+              'Explicit'
+              'False'
+              'Fast'
+              'FastHWSPITransfer'
+              'Fill'
+              'FilledBox'
+              'FilledCircle'
+              'FilledEllipse'
+              'FilledTriangle'
+              'FillRoundRect'
+              'FLASH'
+              'FLASHOFF'
+              'FLASHON'
+              'FnLSL'
+              'FnLSR'
+              'For'
+              'Forever'
+              'FOSC'
+              'FOSC4'
+              'Function'
+              'FVR_1x'
+              'FVR_2x'
+              'FVR_4x'
+              'FVR_off'
+              'FVRInitialize'
+              'FVRIsOutputReady'
+              'Get'
+              'GLCD_Close_PageTransaction'
+              'GLCD_Open_PageTransaction'
+              'GLCDBackground'
+              'GLCDCLS'
+              'GLCDDrawChar'
+              'GLCDDrawString'
+              'GLCDfntDefaultSize'
+              'GLCDFontWidth'
+              'GLCDForeground'
+              'GLCDLocateString'
+              'GLCDPrint'
+              'GLCDPrintString'
+              'GLCDPrintStringLn'
+              'GLCDReadByte'
+              'GLCDRotate'
+              'GLCDSetContrast'
+              'GLCDTimeDelay'
+              'GLCDWriteByte'
+              'Gosub'
+              'Goto'
+              'h'
+              'HEFRead'
+              'HEFReadBlock'
+              'HEFReadByte'
+              'HEFWrite'
+              'HEFWriteBlock'
+              'Hex'
+              'HFINTOSC'
+              'HI2C2AckpollState'
+              'HI2C2Mode'
+              'HI2C2Receive'
+              'HI2C2Receive '
+              'HI2C2ReStart'
+              'HI2C2Send'
+              'HI2C2SetAddress'
+              'HI2C2Start'
+              'HI2C2StartOccurred'
+              'HI2C2Stop'
+              'HI2C2Stopped'
+              'HI2C2WaitMSSP'
+              'HI2CAckpollState'
+              'HI2CMode'
+              'HI2CReceive'
+              'HI2CReceive '
+              'HI2CReStart'
+              'HI2CSend'
+              'HI2CSetAddress'
+              'HI2CStart'
+              'HI2CStartOccurred'
+              'HI2CStop'
+              'HI2CStopped'
+              'HI2CWaitMSSP'
+              'HI2CWaitMSSPTimeout'
+              'HLine'
+              'HPWM'
+              'HPWM_Fast'
+              'HPWMOff'
+              'HPWMUpdate'
+              'HSerGetNum'
+              'HSerGetString'
+              'HSerPrint'
+              'HSerPrintByteCRLF'
+              'HSerPrintCRLF'
+              'HSerPrintStringCRLF'
+              'HSerReceive'
+              'HSerReceive1'
+              'HSerReceive2'
+              'HSerReceiveFrom'
+              'HSerSend'
+              'I2C_Adr_EERAM'
+              'I2C_Adr_EERAM '
+              'I2CAckpoll'
+              'I2CReceive'
+              'I2CReset'
+              'i2cRestart'
+              'I2CSend'
+              'I2CSlaveDeviceReceive'
+              'I2CStart'
+              'I2CStartOccurred'
+              'I2CStop'
+              'If'
+              'Ignore'
+              'In'
+              'IndCall'
+              'InitGLCD'
+              'InitSer'
+              'InitSMT1'
+              'InitSMT2'
+              'InitTimer0'
+              'InitTimer1'
+              'InitTimer10'
+              'InitTimer12'
+              'InitTimer2'
+              'InitTimer3'
+              'InitTimer4'
+              'InitTimer5'
+              'InitTimer6'
+              'InitTimer7'
+              'InitTimer8'
+              'INKEY'
+              'Instr'
+              'Integer'
+              'Interrupt'
+              'IntOff'
+              'IntOn'
+              'KeypadData'
+              'KeypadRaw'
+              'Landscape'
+              'Landscape_Rev'
+              'LCase'
+              'LCD_I2C_Address_1'
+              'LCD_I2C_Address_2'
+              'LCD_I2C_Address_3'
+              'LCD_I2C_Address_4'
+              'LCD_I2C_Address_Current'
+              'LCD_IO'
+              'LCD_Speed'
+              'LCDBacklight'
+              'LCDCMD'
+              'LCDCreateChar'
+              'LCDCreateGraph'
+              'LCDCursor'
+              'LCDDisplayOff'
+              'LCDDisplayOn'
+              'LCDHex'
+              'LCDHome'
+              'LCDOFF'
+              'LCDON'
+              'LCDSpace'
+              'LCDWriteChar'
+              'Left'
+              'leftpad'
+              'Len'
+              'LFINTOSC'
+              'Line'
+              'Locate'
+              'LOCKPPS'
+              'Log10'
+              'Log2'
+              'Loge'
+              'Long'
+              'Loop'
+              'Ltrim'
+              'm'
+              'Macro'
+              'Medium'
+              'MFINTOSC'
+              'Mid'
+              'ms'
+              'Next'
+              'NoBit'
+              'NoConfig'
+              'NoContextSave'
+              'NoLatch'
+              'NOT'
+              'NoVar'
+              'Off'
+              'On'
+              'On Interrupt'
+              'OneOf'
+              'Optional'
+              'OR'
+              'Out'
+              'Pad'
+              'Peek'
+              'play'
+              'playrtttl'
+              'Poke'
+              'Portrait'
+              'Portrait_Rev'
+              'Pot'
+              'Power'
+              'Print'
+              'ProgramErase'
+              'ProgramRead'
+              'ProgramWrite'
+              'PS2ReadByte'
+              'PS2SetKBLeds'
+              'PS2WriteByte'
+              'Pset'
+              'Pulsein'
+              'PulseOut'
+              'PulseOutInv'
+              'Put'
+              'PWMModule'
+              'PWMOff'
+              'PWMOn'
+              'PWMOut'
+              'Random'
+              'Randomize'
+              'ReadAD'
+              'ReadAD10'
+              'ReadAD12'
+              'ReadDigitalTemp'
+              'ReadTable'
+              'ReadTemp'
+              'ReadTemp12'
+              'Repeat'
+              'Return'
+              'Right'
+              'Rotate'
+              'RoundRect'
+              'Rtrim'
+              's'
+              'Select'
+              'Ser1Print'
+              'Ser1Receive'
+              'Ser1Send'
+              'Ser2Print'
+              'Ser2Receive'
+              'Ser2Send'
+              'Ser3Print'
+              'Ser3Receive'
+              'Ser3Send'
+              'SerPrint'
+              'SerReceive'
+              'SerSend'
+              'Set'
+              'SetSMT1'
+              'SetSMT1Period'
+              'SetSMT2'
+              'SetSMT2Period'
+              'SetTimer'
+              'SetWith'
+              'ShortTone'
+              'Simple'
+              'Slow'
+              'SOSC'
+              'SPIMode'
+              'SPITransfer'
+              'Sqrt'
+              'ST7735_BLACK'
+              'ST7735_BLUE'
+              'ST7735_CYAN'
+              'ST7735_GREEN'
+              'ST7735_MAGENTA'
+              'ST7735_RED'
+              'ST7735_WHITE'
+              'ST7735_YELLOW'
+              'ST7735Rotation'
+              'ST7735SendCommand'
+              'ST7920cTile'
+              'ST7920GLCDClearGraphics'
+              'ST7920GLCDDisableGraphics'
+              'ST7920GLCDEnableGraphics'
+              'ST7920GLCDReadByte'
+              'ST7920gLocate'
+              'ST7920GraphicTest'
+              'ST7920gReaddata'
+              'ST7920gTile'
+              'ST7920lineh'
+              'ST7920LineHs'
+              'ST7920linev'
+              'ST7920Locate'
+              'ST7920Tile'
+              'ST7920WriteByte'
+              'ST7920WriteCommand'
+              'ST7920WriteData'
+              'StartSMT1'
+              'StartSMT2'
+              'StartTimer'
+              'Step'
+              'StopSMT1'
+              'StopSMT2'
+              'StopTimer'
+              'Str'
+              'Str32'
+              'String'
+              'StrInteger'
+              'Sub'
+              'SWAP'
+              'SWAP4'
+              'Table'
+              'Then'
+              'Timer0'
+              'Timer1'
+              'Timer10'
+              'Timer12'
+              'Timer2'
+              'Timer3'
+              'Timer4'
+              'Timer5'
+              'Timer6'
+              'Timer7'
+              'Timer8'
+              'To'
+              'Tone'
+              'Triangle'
+              'Trim'
+              'True'
+              'TxCKIPPS'
+              'UCase'
+              'UNLOCKPPS'
+              'Until'
+              'us'
+              'Val'
+              'Val32'
+              'Var'
+              'Vline'
+              'Volatile'
+              'Wait'
+              'While'
+              'Word'
+              'WORDTOBIN'
+              'XOR')
+            TokenTypes = 4
+            IgnoreCase = True
           end>
-        BlockEnd = 'Gosub End'
-        Highlight = True
-        NameFmt = '%s0'
-        DynHighlight = dhRange
         HighlightPos = cpBound
-        DynSelectMin = True
-        CollapseFmt = '%sz0'
-        SelfClose = True
-        NoEndRule = True
-        TreeItemStyle = 'Reserved word'
-        TreeItemImage = 7
-        IgnoreAsParent = False
-      end
-      item
-        DisplayName = 'Begin'
-        StyleName = 'Current block bound'
-        ConditionList = <
-          item
-            TagList.Strings = (
-              'end')
-            CondType = tcNotEqual
-            TokenTypes = 4
-            IgnoreCase = True
-          end
-          item
-            TagList.Strings = (
-              'if'
-              'repeat'
-              'select')
-            TokenTypes = 4
-            IgnoreCase = True
-          end
-          item
-            TagList.Strings = (
-              'end')
-            CondType = tcNotEqual
-            TokenTypes = 4
-            IgnoreCase = True
-          end>
-        IdentIndex = 1
-        BlockOffset = 1
-        BlockEnd = 'End'
-        NotCollapsed = True
-        DisplayInTree = False
-        DynHighlight = dhBound
-        HighlightPos = cpRange
-        DynSelectMin = True
-        DrawStaple = True
-        CollapseFmt = '%s1 ...'
-        IgnoreAsParent = False
-      end
-      item
-        DisplayName = 'End'
-        BlockType = btRangeEnd
-        ConditionList = <
-          item
-            TokenTypes = 4
-          end
-          item
-            TagList.Strings = (
-              'end')
-            TokenTypes = 4
-            IgnoreCase = True
-          end>
-        SameIdent = True
-        HighlightPos = cpBound
-        IgnoreAsParent = False
-      end
-      item
-        DisplayName = 'Dim decl'
-        ConditionList = <
-          item
-            TokenTypes = 4
-          end
-          item
-            TagList.Strings = (
-              'dim')
-            TokenTypes = 4
-            IgnoreCase = True
-          end>
-        GroupFmt = 'Variables'
-        HighlightPos = cpBound
-        TreeItemImage = 4
-        TreeGroupImage = 0
+        Pen.Color = clRed
         IgnoreAsParent = False
       end
       item
@@ -677,7 +865,14 @@ object SyntaxManager: TSyntaxManager
         ConditionList = <
           item
             TagList.Strings = (
-              'Do')
+              'do')
+            TokenTypes = 4
+            IgnoreCase = True
+          end
+          item
+            TagList.Strings = (
+              'exit')
+            CondType = tcNotEqual
             TokenTypes = 4
             IgnoreCase = True
           end>
@@ -707,7 +902,14 @@ object SyntaxManager: TSyntaxManager
         ConditionList = <
           item
             TagList.Strings = (
-              'For')
+              'for')
+            TokenTypes = 4
+            IgnoreCase = True
+          end
+          item
+            TagList.Strings = (
+              'exit')
+            CondType = tcNotEqual
             IgnoreCase = True
           end>
         BlockEnd = 'Next'
@@ -715,6 +917,7 @@ object SyntaxManager: TSyntaxManager
         DisplayInTree = False
         HighlightPos = cpAny
         DrawStaple = True
+        Pen.Style = psDot
         IgnoreAsParent = False
       end
       item
@@ -727,23 +930,118 @@ object SyntaxManager: TSyntaxManager
             TokenTypes = 4
             IgnoreCase = True
           end>
+        BlockEnd = 'For'
         HighlightPos = cpAny
         IgnoreAsParent = False
       end
       item
-        DisplayName = 'Block comment'
-        BlockName = 'Block comment'
+        DisplayName = 'X Begin'
+        ConditionList = <
+          item
+            TagList.Strings = (
+              'repeat'
+              'select')
+            TokenTypes = 4
+            IgnoreCase = True
+          end
+          item
+            TagList.Strings = (
+              'end'
+              'exit')
+            CondType = tcNotEqual
+            TokenTypes = 4
+            IgnoreCase = True
+          end>
+        BlockEnd = 'X End'
+        NotCollapsed = True
+        DisplayInTree = False
+        HighlightPos = cpAny
+        DrawStaple = True
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'X End'
+        BlockType = btRangeEnd
+        ConditionList = <
+          item
+            TagList.Strings = (
+              'repeat'
+              'select')
+            TokenTypes = 4
+            IgnoreCase = True
+          end
+          item
+            TagList.Strings = (
+              'end')
+            TokenTypes = 4
+            IgnoreCase = True
+          end>
+        BlockEnd = 'X Begin'
+        DisplayInTree = False
+        HighlightPos = cpAny
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'If Begin'
+        ConditionList = <
+          item
+            CondType = tcMask
+            TokenTypes = 1024
+          end>
+        BlockEnd = 'If End'
+        NotCollapsed = True
+        DisplayInTree = False
+        HighlightPos = cpAny
+        DrawStaple = True
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'If End'
+        BlockType = btRangeEnd
+        ConditionList = <
+          item
+            CondType = tcMask
+            TokenTypes = 2048
+          end>
+        BlockEnd = 'If Begin'
+        NotCollapsed = True
+        DisplayInTree = False
+        HighlightPos = cpAny
+        DrawStaple = True
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'Dim decl'
+        ConditionList = <
+          item
+            TokenTypes = 4
+          end
+          item
+            TagList.Strings = (
+              'dim')
+            TokenTypes = 4
+            IgnoreCase = True
+          end>
+        GroupFmt = 'Variables'
+        HighlightPos = cpBound
+        TreeItemImage = 4
+        TreeGroupImage = 0
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'Block Comment'
+        BlockName = 'Block Comment'
         ConditionList = <
           item
             TokenTypes = 2
           end>
-        BlockEnd = 'Block comment end'
+        BlockEnd = 'Block Comment End'
         DisplayInTree = False
         HighlightPos = cpBound
         IgnoreAsParent = False
       end
       item
-        DisplayName = 'Block comment end'
+        DisplayName = 'Block Comment End'
         BlockType = btRangeEnd
         ConditionList = <
           item
@@ -812,25 +1110,132 @@ object SyntaxManager: TSyntaxManager
           end>
         HighlightPos = cpBound
         IgnoreAsParent = False
+      end
+      item
+        DisplayName = '#if'
+        ConditionList = <
+          item
+            TagList.Strings = (
+              '#if'
+              '#ifdef'
+              '#ifndef')
+            TokenTypes = 4
+            IgnoreCase = True
+          end>
+        BlockEnd = '#endif'
+        DisplayInTree = False
+        DynHighlight = dhBound
+        HighlightPos = cpAny
+        DrawStaple = True
+        IgnoreAsParent = False
+        AutoCloseMode = acmCloseNearest
+      end
+      item
+        DisplayName = '#endif'
+        BlockType = btRangeEnd
+        ConditionList = <
+          item
+            TagList.Strings = (
+              '#endif')
+            TokenTypes = 4
+            IgnoreCase = True
+          end>
+        HighlightPos = cpAny
+        IgnoreAsParent = False
+      end
+      item
+        DisplayName = 'Errors'
+        StyleName = 'Errors'
+        BlockType = btTagDetect
+        ConditionList = <
+          item
+            TagList.Strings = (
+              'else if')
+            TokenTypes = 1
+            IgnoreCase = True
+          end>
+        DisplayInTree = False
+        HighlightPos = cpBound
+        Pen.Color = clRed
+        IgnoreAsParent = False
       end>
     CodeTemplates = <>
     SubAnalyzers = <>
     SampleText.Strings = (
-      #39' Syntax highlighting'
-      'Function PrintNumber'
-      '  Dim Number'
-      '  Dim X '
-      '    #define'
-      '  Number = 123'
-      '  Response.Write "The number is " & number'
-      '  For I = 0 To Number'
-      '    X = X + h'#39'A012'#39' '
-      '    X = X - 0x10101'
-      '    X = X + b'#39'01'#39
-      '  Next'
+      #39' Comment: 1'
+      '; Comment: 2'
+      'REM Comment: 3'
+      ' '
+      ' !not                 '
+      ' #chip mega328p, 16 '
       ''
-      '  I = I + @;  '
-      'End Function')
+      '  #if'
+      ' '
+      '  #endif'
+      ' '
+      '  Do Forever'
+      '    PulseOut PortB.5, 100 ms'
+      '    Wait 900 ms'
+      '  Loop'
+      ''
+      ''
+      ' Label2:'
+      ''
+      '  Do Forever'
+      '  '
+      '    Do'
+      '     Exit Do'
+      '    Loop While A>1'
+      '  '
+      '    Select Case X'
+      '     Case = 1'
+      '      If A>B Then X=1'
+      '     Case = 2'
+      '      If A<B Then X=2'
+      '     Case Else'
+      ''
+      '    End Select'
+      '   '
+      '  Loop'
+      ''
+      'Return'
+      ''
+      ''
+      'Sub Sub2'
+      ''
+      '  For ii = 1 To 10'
+      '    '
+      '    Repeat 8'
+      '        '
+      '       '#39'one-line if-then: '
+      
+        '       If X=1 Then Y=2  '#39'bug, if "then" is comment'#39's last word  ' +
+        'then'
+      '               '
+      '       If A=X Then  '#39'comment'
+      '           if b then '
+      '            Exit For'
+      '           End If'
+      '        Else If X=2 Then '
+      '           Exit If'
+      '        Else If X=3 Then'
+      '           Exit Repeat'
+      '       End If'
+      '    '
+      '    End Repeat'
+      '  '
+      '  Next  '
+      ''
+      'End Sub'
+      ''
+      'Function Func1'
+      ''
+      ' Exit Function'
+      ''
+      'End Function'
+      ''
+      ''
+      '')
     TokenTypeNames.Strings = (
       'Unknown'
       'Comment'
@@ -840,20 +1245,16 @@ object SyntaxManager: TSyntaxManager
       'Integer const'
       'Float const'
       'Hex const'
-      'Char const')
-    Gramma.Gramma = 
-      'Skip = <Comment>;'#13#10#13#10'// Used'#13#10'NameDetector = <Identifier> Braket' +
-      '? '#39'.'#39';'#13#10#13#10'FuncCall = <Identifier> Braket;'#13#10#13#10'Braket = Braket1 | ' +
-      'Braket2;'#13#10#13#10'Braket1 = LeftBraket1 '#39')'#39';'#13#10#13#10'LeftBraket1 = LeftBrak' +
-      'et1 <Unknown> |'#13#10'             '#39'('#39';'#13#10'             '#13#10'Braket2 = Lef' +
-      'tBraket2 '#39']'#39';'#13#10#13#10'LeftBraket2 = LeftBraket2 <Unknown> |'#13#10'        ' +
-      '     '#39'['#39';'
+      'Char const'
+      'Token_IfBegin'
+      'Token_IfEnd')
     MarkedBlockStyle = 'Marked block'
     SearchMatchStyle = 'Search Match'
     CurrentLineStyle = 'Current Line'
     DefaultStyleName = 'Default'
     Extentions = 'gcb bas pbs h'
     LexerName = 'GreatCowBasic'
+    SkipSpaces = False
     LineComment = #39
     Charset = DEFAULT_CHARSET
   end
@@ -866,7 +1267,6 @@ object SyntaxManager: TSyntaxManager
         Font.Height = -13
         Font.Name = 'Courier New'
         Font.Style = []
-        FormatType = ftCustomFont
       end
       item
         DisplayName = 'Comment'
@@ -1233,12 +1633,11 @@ object SyntaxManager: TSyntaxManager
     Formats = <
       item
         DisplayName = 'Default'
-        Font.Charset = DEFAULT_CHARSET
+        Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
         Font.Height = -13
-        Font.Name = 'Courier New'
+        Font.Name = 'Verdana'
         Font.Style = []
-        FormatType = ftCustomFont
       end
       item
         DisplayName = 'Comment'
@@ -1719,6 +2118,7 @@ object SyntaxManager: TSyntaxManager
       'Char const'
       'Preprocessor')
     MarkedBlockStyle = 'Marked block'
+    DefaultStyleName = 'Default'
     Extentions = 'asm'
     LexerName = 'Assembler'
     Notes.Strings = (
