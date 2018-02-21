@@ -127,6 +127,9 @@
            ' "Dim MyVar As Single" used to create a 4-byte variable big enough to store a single precision floating point number,
            ' now it causes an error message because of the constant.
 ' 9/11/17  '#samebit GONDONE GO_NOT_DONE
+' 18/2/18  'Adapted AVR Reference settings, see #180218.  Left old code as is but testing for MUX4.
+' 19/2/18  'Revised AD_REF_SOURCE = AD_REF_AVCC section to handle TINYx chips.  The VCC reference is different from MEGA devices o the Tiny devices!
+           'Reverted adaption AVR Reference settings, see #180218.  Left old code as is but now test suitable bit for MUX4.
 
 
 'Commands:
@@ -334,7 +337,6 @@
 #define USE_ADE0 TRUE
 #define USE_ADE1 TRUE
 #define USE_ADE2 TRUE
-
 
 
 macro LLReadAD (ADLeftAdjust)
@@ -1242,6 +1244,7 @@ macro LLReadAD (ADLeftAdjust)
 
   #IFDEF AVR
 
+   #IF ChipADC > 0
     'Select channel
     #IFNDEF Bit(MUX5)
       ADMUX = ADReadPort
@@ -1271,13 +1274,29 @@ macro LLReadAD (ADLeftAdjust)
     #endif
 
     'Select reference source
+
+
     #ifndef Bit(REFS2)
       If AD_REF_SOURCE = AD_REF_AVCC Then
-        Set ADMUX.REFS0 On
+          #ifndef Bit(REFS1)
+            ASM showdebug  'Bit(REFS1) does not exist, so assume 'VCC used as analog reference' REFS0=b'0'
+           [canskip]REFS0=b'0'
+          #endif
+          #ifdef Bit(REFS1)
+           #IFDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
+              ASM showdebug  'Assume REFS0 is set to 0 for AD_REF_AVCC
+              [canskip]REFS0=b'0
+           #ENDIF
+
+           #IFNDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
+              ASM showdebug  'Bit(REFS1) does exist, so assume 'VCC used as analog reference' REFS0=b'1'
+              [canskip]REFS0=b'1'
+           #ENDIF
+          #endif
       End If
       If AD_REF_SOURCE = AD_REF_256 Then
-        Set ADMUX.REFS0 On
-        Set ADMUX.REFS1 On
+        [canskip]REFS0=b'1'
+        [canskip]REFS1=b'1'
       End If
     #endif
     #ifdef Bit(REFS2)
@@ -1320,6 +1339,7 @@ macro LLReadAD (ADLeftAdjust)
     Wait While ADSC On
     Set ADEN Off
 
+   #ENDIF  'CHIPADC>0
   #ENDIF
 
 end macro
