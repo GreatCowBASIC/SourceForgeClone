@@ -1,5 +1,5 @@
 ' GCBASIC - A BASIC Compiler for microcontrollers
-' Copyright (C) 2006 - 2017 Hugh Considine and the Great Cow BASIC team
+' Copyright (C) 2006 - 2018 Hugh Considine and the Great Cow BASIC team
 '
 ' This program is free software; you can redistribute it and/or modify
 ' it under the terms of the GNU General Public License as published by
@@ -435,6 +435,7 @@ Declare Function NewProgLineMeta As ProgLineMeta Pointer
 Declare Function NewSubroutine(SubName As String) As SubType Pointer
 Declare Sub OptimiseCalls
 DECLARE SUB OptimiseIF(CompSub As SubType Pointer = 0)
+Declare Sub OptimiseIncrement(CompSub As SubType Pointer)
 Declare Sub PreparePageData
 Declare Sub PrepareProgrammer
 DECLARE SUB ProcessArrays (CompSub As SubType Pointer)
@@ -562,7 +563,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 
 'Initialise
 'Misc Vars
-DIM SHARED As Integer FRLC, FALC, SBC, IFC, WSC, FLC, DLC, SSC, SASC, POC
+DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg
@@ -668,7 +669,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2017-12-24"
+Version = "0.98.<<>> 2018-02-27"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -3149,7 +3150,7 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 	Dim As Integer SourceSub, DestSub
 	Dim As String CurrV1, CurrV2
 	Dim As String Cmd, Ovr, TempVar
-	Dim As Integer CD, CurrVarByte, CheckCarry
+	Dim As Integer CD, CurrVarByte, CheckCarry, AddEndIf
 
 	Dim As LinkedListElement Pointer CurrLine, NewCode
 	CurrLine = OutList->CodeEnd
@@ -3162,6 +3163,7 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 	' impossible to store result anyway. No point calculating more bytes!
 	' - Remember references! (@variable)
 	' - addlw/sublw not implemented on 12 bit core
+	' - in long addition, need incfsz instruction on 16F to handle carry properly
 	'Optimisations:
 	' - A +/- 0 = A
 	' - B +/- 0 = B
@@ -3333,7 +3335,9 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 
 	'Deal with each byte
 	For CurrVarByte = 0 To GetTypeSize(CalcType) - 1
-
+		
+		AddEndIf = 0
+		
 		'Get current byte of V1 and V2 (if they exist) or 0
 		If GetTypeSize(V1Type) > CurrVarByte Then
 			CurrV1 = GetByte(V1, CurrVarByte)
@@ -3421,8 +3425,6 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 				GoTo AddSubNextByte
 			End If
 
-			'Large chunk of troublesome optimisation code deleted here 8/2/2013
-
 		End If
 
 		'Need to calculate AV
@@ -3452,7 +3454,15 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 					FreeCalcVar TempVar
 				Else
 					CurrLine = LinkedListInsert(CurrLine, Temp + "STATUS,C")
-					CurrLine = LinkedListInsert(CurrLine, " addlw 1")
+					'CurrLine = LinkedListInsert(CurrLine, " addlw 1")
+					If IsConst(CurrV2) Then
+						CurrLine = LinkedListInsert(CurrLine, " movlw " + CurrV2 + " + 1")
+					Else
+						CurrLine = LinkedListInsert(CurrLine, " incf " + CurrV2 + ",W")
+						ILC += 1: AddEndIf = -1
+						CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS,Z")
+						CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
+					End If
 				End If
 			End If
 
@@ -3466,11 +3476,20 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 						If Act = "+" Then CurrLine = LinkedListInsert(CurrLine, " addwf " + CurrV1 + ",W")
 						If Act = "-" Then CurrLine = LinkedListInsert(CurrLine, " subwf " + CurrV1 + ",W")
 					End If
+					If AddEndIf Then
+						AddEndIf = 0
+						CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+					EndIf
 					CurrLine = LinkedListInsert(CurrLine, " movwf " + GetByte(AV, CurrVarByte))
 				Else
 					IF Act = "+" THEN CurrLine = LinkedListInsert(CurrLine, " addwf " + CurrV1 + ",F")
 					IF Act = "-" THEN CurrLine = LinkedListInsert(CurrLine, " subwf " + CurrV1 + ",F")
+					If AddEndIf Then
+						AddEndIf = 0
+						CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+					EndIf
 				End If
+				
 			'Add W to V1, store - 18F, carry needed
 			ElseIf ChipFamily = 15 Or ChipFamily = 16 Then
 				If AV <> V1 Then
@@ -13109,6 +13128,8 @@ SUB OptimiseIF (CompSub As SubType Pointer = 0)
 	'it is possible that single call instructions will become multiple instruction
 	'page select, call, page select. If being called before page selection,
 	'CompSub will be non-zero, and so calls should not be optimised yet.
+	
+	'Should leave labels, in case there is an else if
 
 	Dim As String Temp, InLine
 	Dim As Integer T
@@ -13165,7 +13186,7 @@ SUB OptimiseIF (CompSub As SubType Pointer = 0)
 					IF T = 1 THEN Replace PL(3)->Value, "btfss", "btfsc"
 					LinkedListDelete(PL(2))
 					If Left(PL(1)->Value, 4) <> "ELSE" Then
-						CurrLine = LinkedListDelete(CurrLine)
+						'CurrLine = LinkedListDelete(CurrLine)
 					End If
 				END If
 
@@ -13189,7 +13210,7 @@ SUB OptimiseIF (CompSub As SubType Pointer = 0)
 						LinkedListDelete(PL(2))
 						'CurrLine = LinkedListDelete(CurrLine)
 						If Left(PL(1)->Value, 4) <> "ELSE" Then
-							CurrLine = LinkedListDelete(CurrLine)
+							'CurrLine = LinkedListDelete(CurrLine)
 						End If
 					End If
 				END IF
@@ -13202,6 +13223,32 @@ SUB OptimiseIF (CompSub As SubType Pointer = 0)
 	Loop
 
 END SUB
+
+Sub OptimiseIncrement(CompSub As SubType Pointer)
+	'PIC only
+	'Find uses of incf followed by btfss STATUS, Z, replace with single incfsz
+	'Mainly for output of CompileCalcAddition, which would use an incfsz but must allow for bank selection
+	If Not ModePIC Then Exit Sub
+	
+	Dim As LinkedListElement Pointer CurrLine
+
+	CurrLine = CompSub->CodeStart->Next
+
+	Do While CurrLine <> 0
+		
+		If Left(CurrLine->Value, 6) = " incf " Then
+			If CurrLine->Next <> 0 Then
+				If CurrLine->Next->Value = " btfss STATUS,Z" Then
+					CurrLine->Value = " incfsz " + Mid(CurrLine->Value, 7)
+					LinkedListDelete(CurrLine->Next)
+				End If
+			EndIf
+		End If
+		
+		CurrLine = CurrLine->Next
+	Loop
+	
+End Sub
 
 Sub PreparePageData
 	'Generate prog mem page data
@@ -14699,6 +14746,9 @@ Sub TidySubroutine(CompSub As SubType Pointer)
 
 	'Tidy up IFs
 	OptimiseIF (CompSub)
+	
+	'Replace incf/btfss Z with incfsz (PIC)
+	OptimiseIncrement (CompSub)
 
 End Sub
 
