@@ -34,7 +34,7 @@
 ' 16/01/2017: Modified PulseIn & PulseInInV for better functionality - WMR
 ' 29/01/2017: Added overloaded FnLSL and FnLSR to reduce memory overhead
 ' 19/05/2017: Revised and corrected DecToBcd_GCB.. overwriting system vars
-
+' 04/03/2018: Added Scale() and a mapping to Map
 'Misc settings
 
 'Bit rate delays
@@ -228,6 +228,34 @@ function Average(SysCalcTempA, SysCalcTempB)
   Average = SysCalcTempA + SysCalcTempB
   ROTATE Average RIGHT
 end function
+
+
+; Re-Scales a number from one range to another. That is, a value of fromLow would get Scaled to toLow, a value of fromHigh to toHigh, values in-between to values in-between, etc.
+; Does not constrain values to within the range, because out-of-range values are sometimes intended and useful. The constrain() function may be used either before or after this function, if limits to the ranges are desired.
+; Note that the "lower bounds" of either range may be larger or smaller than the "upper bounds" so the Scale() function may be used to reverse a range of numbers, for example
+;       myvalue = Scale( InValue , 0, 255, -30, 30 )
+;
+; The function also handles negative numbers well, so that this example
+;      myvalue = Scale( inValue, 1, 1023, 50, -100) is also valid and works well.
+;
+; The Scale() function uses integer maths.
+;
+; You can calibrate the scale also with an optiona calibration parameter
+;      myvalue = Scale( InValue , 0, 255, -30, 30, 2 )  'will always offset the result by a calibration offset of 2.
+;
+;    27.02.2018    Second release to the world, faster, smarter and with optional calibration
+#define map scale
+function scale ( in l_map as word, in l_fromLow as integer, in l_fromHigh as integer, in l_toLow as integer, in l_toHigh  as integer, Optional in l_calibrate as integer = 0) as integer
+
+  dim l_syscalc as integer
+  dim l_syscalcF as long
+
+  l_syscalcf =  [long]( l_map - l_fromLow ) * [long](l_toHigh   - l_toLow)
+  l_syscalc = (  l_fromHigh - l_fromLow )
+  scale = (l_syscalcf / l_syscalc) + l_toLow + l_calibrate
+
+end function
+
 
 'Miscellaneous Variable handling subs
 
