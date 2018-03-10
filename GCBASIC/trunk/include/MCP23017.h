@@ -1,6 +1,31 @@
+'    MicroChip PIC specific to read GetUserID routines for Great Cow BASIC
+'    Copyright (C) 2013 .. 2018.  Perry, Evan Venn and Jack James
+
+'    This library is free software; you can redistribute it and/or
+'    modify it under the terms of the GNU Lesser General Public
+'    License as published by the Free Software Foundation; either
+'    version 2.1 of the License, or (at your option) any later version.
+
+'    This library is distributed in the hope that it will be useful,
+'    but WITHOUT ANY WARRANTY; without even the implied warranty of
+'    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+'    Lesser General Public License for more details.
+
+'    You should have received a copy of the GNU Lesser General Public
+'    License along with this library; if not, write to the Free Software
+'    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+'********************************************************************************
+'IMPORTANT:
+'THIS FILE IS ESSENTIAL FOR SOME OF THE COMMANDS IN GCBASIC. DO NOT ALTER THIS FILE
+'UNLESS YOU KNOW WHAT YOU ARE DOING. CHANGING THIS FILE COULD RENDER SOME GCBASIC
+'COMMANDS UNUSABLE!
+'********************************************************************************
+
 '
 '    Created Evan R Venn - Oct 2013 - 2017
 '    Thanks to Perry'
+'    10.03.2018     Updated to correct constants MCP23017_IOCONA and MCP23017_IOCONB
 
 
 
@@ -17,8 +42,8 @@
 #define MCP23017_DEFVALB  0x07
 #define MCP23017_INTCONA  0x08 ' I/O EXPANDER CONFIGURATION .2 1= Open Drain [wire together interrupts]
 #define MCP23017_INTCONB  0x09
-#define MCP23017_IOCON  0x0A ' 0= Interrupt on change , 1= Interrupt on Difference
-#define MCP23017_IOCON  0x0B
+#define MCP23017_IOCONA  0x0A ' 0= Interrupt on change , 1= Interrupt on Difference
+#define MCP23017_IOCONB  0x0B
 #define MCP23017_GPPUA  0x0C ' weak pull up resistors [~100kOhhm] very handy
 #define MCP23017_GPPUB  0x0D
 #define MCP23017_ITFA 0x0E ' who done it, the interrupt
