@@ -1,4 +1,4 @@
-'    MicroChip PIC specific to read GetUserID routines for Great Cow BASIC
+'    MicroChip specific methods to support MCP23017 device for Great Cow BASIC
 '    Copyright (C) 2013 .. 2018.  Perry, Evan Venn and Jack James
 
 '    This library is free software; you can redistribute it and/or
