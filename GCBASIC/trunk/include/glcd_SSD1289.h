@@ -450,7 +450,7 @@ Sub SetScrollPosition_SSD1289 (In scrollPosition as Integer)
 End Sub
 
 
-'''Draws a Line on the GLCD with a
+'''Draws a Line on the GLCD with pset - legacy. No longer used.
 '''@param PX1 X1 coordinate of one end of the line
 '''@param PY1 Y1 coordinate of one end of the line
 '''@param PX2 X2 coordinate of the other end of the line

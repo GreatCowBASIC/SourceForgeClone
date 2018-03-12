@@ -935,19 +935,19 @@ End Sub
 '''@param ILI9341Start Starting address
 '''@param ILI9341End Ending address
 '''@hide
-Sub SetAddressWindow_ILI9341( In x1 as word, in y1 as word, in x2 as word, in y2 as word)
+Sub SetAddressWindow_ILI9341( In _x1 as word, in _y1 as word, in _x2 as word, in _y2 as word)
 
   SendCommand_ILI9341(ILI9341_CASET); // Column addr set
-  SendData_ILI9341 x1_H
-  SendData_ILI9341 x1
-  SendData_ILI9341 x2_H
-  SendData_ILI9341 x2
+  SendData_ILI9341 _x1_H
+  SendData_ILI9341 _x1
+  SendData_ILI9341 _x2_H
+  SendData_ILI9341 _x2
 
   SendCommand_ILI9341(ILI9341_PASET); // Row addr set
-  SendData_ILI9341 y1_H
-  SendData_ILI9341 y1
-  SendData_ILI9341 y2_H
-  SendData_ILI9341 y2
+  SendData_ILI9341 _y1_H
+  SendData_ILI9341 _y1
+  SendData_ILI9341 _y2_H
+  SendData_ILI9341 _y2
 
   SendCommand_ILI9341(ILI9341_RAMWR); // write to RAM
 
@@ -955,18 +955,18 @@ End Sub
 
 
 
-Sub SetCursorPosition_ILI9341( In x1 as word, in y1 as word, in x2 as word, in y2 as word)
+Sub SetCursorPosition_ILI9341( In _x1 as word, in _y1 as word, in _x2 as word, in _y2 as word)
   SendCommand_ILI9341(ILI9341_CASET); // Column addr set
-  SendData_ILI9341 x1_H
-  SendData_ILI9341 x1
-  SendData_ILI9341 x2_H
-  SendData_ILI9341 x2
+  SendData_ILI9341 _x1_H
+  SendData_ILI9341 _x1
+  SendData_ILI9341 _x2_H
+  SendData_ILI9341 _x2
 
   SendCommand_ILI9341(ILI9341_PASET); // Row addr set
-  SendData_ILI9341 y1_H
-  SendData_ILI9341 y1
-  SendData_ILI9341 y2_H
-  SendData_ILI9341 y2
+  SendData_ILI9341 _y1_H
+  SendData_ILI9341 _y1
+  SendData_ILI9341 _y2_H
+  SendData_ILI9341 _y2
 
 End Sub
 

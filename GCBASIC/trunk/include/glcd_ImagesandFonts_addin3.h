@@ -355,7 +355,7 @@ sub loadEEPROM
   'paints an image stored in eeprom, identified by objId
   'the upper left corner is set with dotX, dotY
 
-  x1 = dotX
+  _x1 = dotX
   getObjHeader ( objId )
   hBytes = objHeight /  8
   onPageBoundary = ( dotY % 8 ) = 0
@@ -411,7 +411,7 @@ sub loadEEPROM
                  end if
 
             next wCount
-            dotX =  x1
+            dotX =  _x1
             dotY = dotY + 8
 
       next hCount
