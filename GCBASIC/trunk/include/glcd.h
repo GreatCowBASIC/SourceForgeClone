@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2017 Hugh Considine, Evan Venn, and Joseph Realmuto
+'    Copyright (C) 2012 - 2018 Hugh Considine, Joseph Realmuto and Evan Venn,
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -34,9 +34,29 @@
 '    21/09/17 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
 '    17/11/17 Added GLCDPrintLn
 '    10/12/17 Added SSD1331 driver
+'    22/02/18 Added Nexion driver
+'    13/03/18 Correct Ypixel position of putting out a white intercharacter pixel/space
+
 
 'Constants that might need to be set
-'#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306
+'#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
+
+'GLCD types - add new types here!
+#define GLCD_TYPE_KS0108  1
+#define GLCD_TYPE_ST7735  2
+#define GLCD_TYPE_ST7920  3
+#define GLCD_TYPE_PCD8544 4
+#define GLCD_TYPE_SSD1306 5
+#define GLCD_TYPE_ILI9340 6
+#define GLCD_TYPE_SSD1289 7
+#define GLCD_TYPE_ILI9341 8
+#define GLCD_TYPE_SH1106  9
+#define GLCD_TYPE_SSD1306_32 10
+#define GLCD_TYPE_ILI9486L 11
+#define GLCD_TYPE_ILI9481 12
+#define GLCD_TYPE_SSD1331 14
+#define GLCD_TYPE_HX8347  15
+#define GLCD_TYPE_NEXION320x480L 16
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
@@ -58,21 +78,7 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define LANDSCAPE_REV 3
 #define PORTRAIT 4
 
-'GLCD types - add new types here!
-#define GLCD_TYPE_KS0108  1
-#define GLCD_TYPE_ST7735  2
-#define GLCD_TYPE_ST7920  3
-#define GLCD_TYPE_PCD8544 4
-#define GLCD_TYPE_SSD1306 5
-#define GLCD_TYPE_ILI9340 6
-#define GLCD_TYPE_SSD1289 7
-#define GLCD_TYPE_ILI9341 8
-#define GLCD_TYPE_SH1106  9
-#define GLCD_TYPE_SSD1306_32 10
-#define GLCD_TYPE_ILI9486L 11
-#define GLCD_TYPE_ILI9481 12
-#define GLCD_TYPE_SSD1331 14
-#define GLCD_TYPE_HX8347  15
+
 
 
 ' Color definitions
@@ -381,6 +387,36 @@ If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
      SSD1331_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
+
+
+If GLCD_TYPE = GLCD_TYPE_NEXION320x480L Then
+
+     #include <GLCD_NEXION320x480L.h>
+     InitGLCD = InitGLCD_NXN320x480L
+     GLCDCLS = GLCDCLS_NXN320x480L
+     Circle = Circle_NXN320x480L
+     FilledCircle=FilledCircle_NXN320x480L
+     Box = Box_NXN320x480L
+     FilledBox = FilledBox_NXN320x480L
+     Line =  Line_NXN320x480L
+     GLCDDrawChar = GLCDDrawChar_NXN320x480L
+     GLCDDrawString = GLCDDrawString_NXN320x480L
+     Pset = Pset_NXN320x480L
+     GLCDRotate = GLCDRotate_NXN320x480L
+     GLCDPrintDefaultFont_Nextion = GLCDPrintDefaultFont_NXN320x480L
+     GLCDPrintString_Nexion = GLCDPrintString_NXN320x480L
+     GLCDPrintStringLn_Nexion = GLCDPrintStringLn_NXN320x480L
+     GLCDLocateString_Nexion = GLCDLocateString_NXN320x480L
+     GLCDPrint_Nexion = GLCDPrint_NXN320x480L 'Landscape
+     GLCDUpdateObject_Nexion = GLCDUpdateObject_NXN320x480L
+     glcd_type_string = "NEXION320x480L"
+     GLCD_WIDTH = 480
+     GLCD_HEIGHT = 320
+     NXN320x480L_GLCD_HEIGHT = GLCDDeviceHeight
+     NXN320x480L_GLCD_WIDTH = GLCDDeviceWidth
+  End If
+
+
 #endscript
 
 
@@ -654,9 +690,9 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
                         Else
                            PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
                         End if
-                        CharRowS +=1
                         'Put out a white intercharacter pixel/space
                          PSet [word]CharLocX + ( GLCDFontWidth * GLCDfntDefaultsize) , [word]CharLocY + CharRow + CharRowS , GLCDBackground
+                        CharRowS +=1
 
 
                     Next Row
