@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Evan Venn and Kent Schafer
+'    Copyright (C) 2018 Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,8 @@
 'Notes:
 ' Supports NXN320x480L controller only.
 
-'Changes
+'Changes 
+'01/03/2018 Initial Release
 
 
 #define GLCD_NEXIONSerialPrint HSerPrint
