@@ -1,5 +1,5 @@
 ;    Liquid Crystal Display routines for Great Cow BASIC
-;    Copyright (C) 2006 - 2017 Hugh Considine, Stefano Bonomi William Roth and Ruud de Vreugd and Evan Venn
+;    Copyright (C) 2006 - 2018 Hugh Considine, Stefano Bonomi William Roth and Ruud de Vreugd and Evan Venn
 
 ;    This library is free software; you can redistribute it and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -117,6 +117,8 @@
 '''   Changed binary number format to not use quotationmarks (to avoid compiler errors)
 '''
 '''   Changed Restart to Start in i2c section
+'''   29-03-2018 by Evan Added LCD_WIDTH to support variable LCD widths.
+'''   use #define LCD_WIDTH 16 to change the standard of 20 character width to 16.
 
 #startup InitLCD
 
@@ -170,6 +172,8 @@ Dim SysLCDTemp as Byte
 #define LCD_RSTemp SysLCDTemp.2
 
 'Misc Settings
+
+#define LCD_WIDTH 20
 
 #define LCD_Write_Delay 2 us  ' now change all delays
 #define slow_us 80
@@ -259,7 +263,7 @@ Sub LOCATE (In LCDLine, In LCDColumn)
           Set LCD_RS Off
           If LCDLine > 1 Then
                     LCDLine = LCDLine - 2
-                    LCDColumn = LCDColumn + 20
+                    LCDColumn = LCDColumn + LCD_WIDTH
           End If
 
           LCDWriteByte(0x80 or 0x40 * LCDLine + LCDColumn)
@@ -1566,7 +1570,7 @@ Sub LOCATE404 (In LCDLine, In LCDColumn)
 
           If LCDLine > 1 Then
                     LCDLine = LCDLine - 2
-                    LCDColumn = LCDColumn + 20
+                    LCDColumn = LCDColumn + LCD_WIDTH
           End If
 
           LCDWriteByte(0x80 or 0x40 * LCDLine + LCDColumn)
