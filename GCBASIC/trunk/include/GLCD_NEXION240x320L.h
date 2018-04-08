@@ -18,13 +18,11 @@
 '    https://nextion.itead.cc/resources/documents/instruction-set/#s1
 
 'Notes:
-' Supports NXN320x480L controller only.
+' Supports NX240x320L controller only.
 
 'Changes
-'01/03/2018 Initial Release
-'24/03/2018 Revised to send 255 rather than the character
-'25/03/2018 Removed typo.
-'08/04/2018 Change type from Integer to Word in CIR and CIRS methods
+'08/04/2018 Initial Release
+
 
 #define GLCD_NEXIONSerialPrint HSerPrint
 #define GLCD_NEXIONSerialSend  HSerSend
@@ -32,13 +30,13 @@
 #define NextionFont1      1, 12, 24   '24point 12x24 charset
 #define NextionFont2      2, 16, 32   '32point 16x32 charset
 
-#startup InitGLCD_NXN320x480L
+#startup InitGLCD_NXN240x320L
 
 dim GLCDDeviceWidth, GLCDDeviceHeight as word
 
-Sub InitGLCD_NXN320x480L
+Sub InitGLCD_NXN240x320L
 
-  'Setup code for NXN320x480L controllers
+  'Setup code for NX240x320L controllers
 
    dim PrintLocX, PrintLocY as word
    ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
@@ -51,7 +49,7 @@ Sub InitGLCD_NXN320x480L
   GLCD_NEXIONSerialSend 255
   GLCD_NEXIONSerialSend 255
   GLCD_NEXIONSerialSend 255
-  SendParam_NXN320x480L ( "rest", true )  '  reset the device
+  SendParam_NXN240x320L ( "rest", true )  '  reset the device
   GLCDBackground = TFT_BLACK
   GLCDForeground = TFT_WHITE
 
@@ -74,12 +72,12 @@ End Sub
 
 'Subs
 '''Clears the GLCD screen
-Sub GLCDCLS_NXN320x480L ( Optional In  GLCDBackground as word = GLCDBackground )
+Sub GLCDCLS_NXN240x320L ( Optional In  GLCDBackground as word = GLCDBackground )
 
   ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
   GLCD_yordinate = 0
 
-  #if GLCD_TYPE = GLCD_TYPE_NEXION320x480L
+  #if GLCD_TYPE = GLCD_TYPE_NEXION240x320L
 
     GLCD_NEXIONSerialPrint "cls "+str(GLCDBackground)
     GLCD_NEXIONSerialSend 255
@@ -90,7 +88,7 @@ Sub GLCDCLS_NXN320x480L ( Optional In  GLCDBackground as word = GLCDBackground )
 
 End Sub
 
-Sub SendParam_NXN320x480L ( in outstring as string, Optional In outstate  = False  )
+Sub SendParam_NXN240x320L ( in outstring as string, Optional In outstate  = False  )
 
   GLCD_NEXIONSerialPrint outstring
   if outstate = false then
@@ -103,7 +101,7 @@ Sub SendParam_NXN320x480L ( in outstring as string, Optional In outstate  = Fals
 
 end sub
 
-Sub SendParam_NXN320x480L ( in outval as word, Optional In outstate  = False  )
+Sub SendParam_NXN240x320L ( in outval as word, Optional In outstate  = False  )
 
   GLCD_NEXIONSerialPrint outval
   if outstate = false then
@@ -120,14 +118,14 @@ end sub
 '''@param GLCDX X coordinate of pixel
 '''@param GLCDY Y coordinate of pixel
 '''@param GLCDColour State of pixel (0 = erase, 1 = display)
-Sub PSet_NXN320x480L(In GLCDX as word , In GLCDY as word, In GLCDColour As Word)
+Sub PSet_NXN240x320L(In GLCDX as word , In GLCDY as word, In GLCDColour As Word)
 
   GLCD_NEXIONSerialPrint "draw "
-  SendParam_NXN320x480L GLCDX
-  SendParam_NXN320x480L GLCDY
-  SendParam_NXN320x480L GLCDX
-  SendParam_NXN320x480L GLCDY
-  SendParam_NXN320x480L GLCDColour, true
+  SendParam_NXN240x320L GLCDX
+  SendParam_NXN240x320L GLCDY
+  SendParam_NXN240x320L GLCDX
+  SendParam_NXN240x320L GLCDY
+  SendParam_NXN240x320L GLCDColour, true
 
 End Sub
 
@@ -137,7 +135,7 @@ End Sub
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
-Sub GLCDDrawString_NXN320x480L( In StringLocX as word, In CharLocY as word, In Chars as string, Optional In LineColour as word = GLCDForeground )
+Sub GLCDDrawString_NXN240x320L( In StringLocX as word, In CharLocY as word, In Chars as string, Optional In LineColour as word = GLCDForeground )
     dim TargetCharCol as word
     for xchar = 1 to Chars(0)
       TargetCharCol = StringLocX + ((xchar*( GLCDFontWidth * GLCDfntDefaultsize ))-( GLCDFontWidth * GLCDfntDefaultsize ))
@@ -150,7 +148,7 @@ end sub
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
-Sub GLCDDrawChar_NXN320x480L(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
+Sub GLCDDrawChar_NXN240x320L(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
 
   dim CharCol, CharRow as word
   CharCode -= 15
@@ -193,43 +191,43 @@ Sub GLCDDrawChar_NXN320x480L(In CharLocX as word, In CharLocY as word, In CharCo
 End Sub
 
 
-Sub GLCDRotate_NXN320x480L( in ILI9481AddressType as byte )
+Sub GLCDRotate_NXN240x320L( in ILI9481AddressType as byte )
 
   set ILI9481_GLCD_CS OFF
   select case ILI9481AddressType
         case PORTRAIT  '0 degree
 
-              SendCommand_NXN320x480L(0x36)
-              SendData_NXN320x480L(0x0E)
+              SendCommand_NXN240x320L(0x36)
+              SendData_NXN240x320L(0x0E)
               GLCDDeviceHeight = GLCD_HEIGHT - 1
               GLCDDeviceWidth  = GLCD_WIDTH - 1
 
         case LANDSCAPE
 
-              SendCommand_NXN320x480L(0x36)
-              SendData_NXN320x480L(0x2b)
+              SendCommand_NXN240x320L(0x36)
+              SendData_NXN240x320L(0x2b)
               GLCDDeviceHeight = GLCD_WIDTH - 1
               GLCDDeviceWidth  = GLCD_HEIGHT - 1
 
 
         case PORTRAIT_REV
 
-              SendCommand_NXN320x480L(0x36)
-              SendData_NXN320x480L(0x0D)
+              SendCommand_NXN240x320L(0x36)
+              SendData_NXN240x320L(0x0D)
               GLCDDeviceHeight = GLCD_HEIGHT - 1
               GLCDDeviceWidth  = GLCD_WIDTH - 1
 
 
         case LANDSCAPE_REV
 
-              SendCommand_NXN320x480L(0x36)
-              SendData_NXN320x480L(0x2c)
+              SendCommand_NXN240x320L(0x36)
+              SendData_NXN240x320L(0x2c)
               GLCDDeviceHeight = GLCD_WIDTH - 1
               GLCDDeviceWidth  = GLCD_HEIGHT - 1
 
         case else
-              SendCommand_NXN320x480L(0x36)
-              SendData_NXN320x480L(0x0E)
+              SendCommand_NXN240x320L(0x36)
+              SendData_NXN240x320L(0x0E)
               GLCDDeviceHeight = GLCD_HEIGHT - 1
               GLCDDeviceWidth  = GLCD_WIDTH - 1
 
@@ -240,27 +238,27 @@ Sub GLCDRotate_NXN320x480L( in ILI9481AddressType as byte )
 end sub
 
 
-Sub Circle_NXN320x480L ( in xoffset as word, in yoffset as word, in Inxradius as word, Optional In LineColour as word = GLCDForeground )
+Sub Circle_NXN240x320L ( in xoffset as word, in yoffset as word, in Inxradius as word, Optional In LineColour as word = GLCDForeground )
 
   GLCD_NEXIONSerialPrint "cir "
-  SendParam_NXN320x480L xoffset
-  SendParam_NXN320x480L  yoffset
-  SendParam_NXN320x480L Inxradius
-  SendParam_NXN320x480L LineColour, True
+  SendParam_NXN240x320L xoffset
+  SendParam_NXN240x320L  yoffset
+  SendParam_NXN240x320L Inxradius
+  SendParam_NXN240x320L LineColour, True
 
 end Sub
 
-Sub FilledCircle_NXN320x480L ( in xoffset as word, in yoffset as word, in Inxradius as word, Optional In LineColour as word = GLCDForeground )
+Sub FilledCircle_NXN240x320L ( in xoffset as word, in yoffset as word, in Inxradius as word, Optional In LineColour as word = GLCDForeground )
 
   GLCD_NEXIONSerialPrint "cirs "
-  SendParam_NXN320x480L xoffset
-  SendParam_NXN320x480L  yoffset
-  SendParam_NXN320x480L Inxradius
-  SendParam_NXN320x480L LineColour, True
+  SendParam_NXN240x320L xoffset
+  SendParam_NXN240x320L  yoffset
+  SendParam_NXN240x320L Inxradius
+  SendParam_NXN240x320L LineColour, True
 
 end Sub
 
-Sub Box_NXN320x480L(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
+Sub Box_NXN240x320L(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
 
   'Make sure that starting point (1) is always less than end point (2)
   If LineX1 > LineX2 Then
@@ -275,15 +273,15 @@ Sub Box_NXN320x480L(In LineX1 as word, In LineY1 as word, In LineX2 as word, In 
   End If
 
   GLCD_NEXIONSerialPrint "draw "
-  SendParam_NXN320x480L LineX1
-  SendParam_NXN320x480L LineY1
-  SendParam_NXN320x480L LineX2
-  SendParam_NXN320x480L LineY2
-  SendParam_NXN320x480L LineColour, true
+  SendParam_NXN240x320L LineX1
+  SendParam_NXN240x320L LineY1
+  SendParam_NXN240x320L LineX2
+  SendParam_NXN240x320L LineY2
+  SendParam_NXN240x320L LineColour, true
 
 End Sub
 
-Sub FilledBox_NXN320x480L(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
+Sub FilledBox_NXN240x320L(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
 
   'Make sure that starting point (1) is always less than end point (2)
   If LineX1 > LineX2 Then
@@ -298,22 +296,22 @@ Sub FilledBox_NXN320x480L(In LineX1 as word, In LineY1 as word, In LineX2 as wor
   End If
 
   GLCD_NEXIONSerialPrint "fill "
-  SendParam_NXN320x480L LineX1
-  SendParam_NXN320x480L LineY1
-  SendParam_NXN320x480L LineX2 - LineX1
-  SendParam_NXN320x480L LineY2 - LineY1
-  SendParam_NXN320x480L LineColour, true
+  SendParam_NXN240x320L LineX1
+  SendParam_NXN240x320L LineY1
+  SendParam_NXN240x320L LineX2 - LineX1
+  SendParam_NXN240x320L LineY2 - LineY1
+  SendParam_NXN240x320L LineColour, true
 
 End Sub
 
-sub Line_NXN320x480L (In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour as word = GLCDForeground)
+sub Line_NXN240x320L (In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour as word = GLCDForeground)
 
   GLCD_NEXIONSerialPrint "line "
-  SendParam_NXN320x480L LineX1
-  SendParam_NXN320x480L LineY1
-  SendParam_NXN320x480L LineX2
-  SendParam_NXN320x480L LineY2
-  SendParam_NXN320x480L LineColour, true
+  SendParam_NXN240x320L LineX1
+  SendParam_NXN240x320L LineY1
+  SendParam_NXN240x320L LineX2
+  SendParam_NXN240x320L LineY2
+  SendParam_NXN240x320L LineColour, true
 
 end sub
 
@@ -322,7 +320,7 @@ end sub
 '''@param PrintLocX X coordinate for message
 '''@param PrintLocY Y coordinate for message
 '''@param PrintData Message to display
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string,  In GLCDForeground as word , in GLCDfntDefault,  in GLCDFontWidth , In  GLCDfntDefaultsize )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string,  In GLCDForeground as word , in GLCDfntDefault,  in GLCDFontWidth , In  GLCDfntDefaultsize )
 
   Dim GLCDPrintLoc  as word
   Dim GLCDPrint_String_Counter, GLCDPrintLen as byte
@@ -330,17 +328,17 @@ Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in LCDPri
   If GLCDPrintLen = 0 Then Exit Sub
 
   GLCD_NEXIONSerialPrint "xstr "
-  SendParam_NXN320x480L PrintLocX
-  SendParam_NXN320x480L PrintLocY
+  SendParam_NXN240x320L PrintLocX
+  SendParam_NXN240x320L PrintLocY
 
-  SendParam_NXN320x480L ( GLCDPrintLen+1)*GLCDFontWidth
-  SendParam_NXN320x480L GLCDfntDefaultsize
-  SendParam_NXN320x480L GLCDfntDefault
-  SendParam_NXN320x480L GLCDForeground
-  SendParam_NXN320x480L GLCDBackground
-  SendParam_NXN320x480L 0
-  SendParam_NXN320x480L 0
-  SendParam_NXN320x480L 1
+  SendParam_NXN240x320L ( GLCDPrintLen+1)*GLCDFontWidth
+  SendParam_NXN240x320L GLCDfntDefaultsize
+  SendParam_NXN240x320L GLCDfntDefault
+  SendParam_NXN240x320L GLCDForeground
+  SendParam_NXN240x320L GLCDBackground
+  SendParam_NXN240x320L 0
+  SendParam_NXN240x320L 0
+  SendParam_NXN240x320L 1
   GLCD_NEXIONSerialSend 34
   GLCD_NEXIONSerialPrint LCDPrintData
   GLCD_NEXIONSerialSend 34
@@ -351,24 +349,24 @@ Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in LCDPri
 End Sub
 
 'stub to handle the various methods of calling - this one handles the Colour being omitted, so, the color is assumed
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string, In GLCDfntDefault, In GLCDFontWidth, In  GLCDfntDefaultsize  )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string, In GLCDfntDefault, In GLCDFontWidth, In  GLCDfntDefaultsize  )
 
-    GLCDPrint_NXN320x480L ( PrintLocX, PrintLocY , LCDPrintData , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
+    GLCDPrint_NXN240x320L ( PrintLocX, PrintLocY , LCDPrintData , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
 
 End Sub
 
 
 'stub to handle the various methods of calling - this one handles just the string
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string  )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string  )
 
-    GLCDPrint_NXN320x480L ( PrintLocX, PrintLocY , LCDPrintData , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
+    GLCDPrint_NXN240x320L ( PrintLocX, PrintLocY , LCDPrintData , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
 
 End Sub
 
 'stub to handle the various methods of calling - this one handles the Colour
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string , In GLCDForeground as word  )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string , In GLCDForeground as word  )
 
-    GLCDPrint_NXN320x480L ( PrintLocX, PrintLocY , LCDPrintData , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
+    GLCDPrint_NXN240x320L ( PrintLocX, PrintLocY , LCDPrintData , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
 
 End Sub
 
@@ -376,24 +374,24 @@ End Sub
 '''@param PrintLocX X coordinate for message
 '''@param PrintLocY Y coordinate for message
 '''@param PrintData Message to display
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, In LCDValue As Long,  In GLCDForeground as word , in GLCDfntDefault,  in GLCDFontWidth , In  GLCDfntDefaultsize )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, In LCDValue As Long,  In GLCDForeground as word , in GLCDfntDefault,  in GLCDFontWidth , In  GLCDfntDefaultsize )
 
   Dim GLCDPrintLen as byte
   GLCDPrintLen = str(LCDValue)
   If GLCDPrintLen = 0 Then Exit Sub
 
   GLCD_NEXIONSerialPrint "xstr "
-  SendParam_NXN320x480L PrintLocX
-  SendParam_NXN320x480L PrintLocY
+  SendParam_NXN240x320L PrintLocX
+  SendParam_NXN240x320L PrintLocY
 
-  SendParam_NXN320x480L ( GLCDPrintLen+1)*GLCDFontWidth
-  SendParam_NXN320x480L GLCDfntDefaultsize
-  SendParam_NXN320x480L GLCDfntDefault
-  SendParam_NXN320x480L GLCDForeground
-  SendParam_NXN320x480L GLCDBackground
-  SendParam_NXN320x480L 0
-  SendParam_NXN320x480L 0
-  SendParam_NXN320x480L 1
+  SendParam_NXN240x320L ( GLCDPrintLen+1)*GLCDFontWidth
+  SendParam_NXN240x320L GLCDfntDefaultsize
+  SendParam_NXN240x320L GLCDfntDefault
+  SendParam_NXN240x320L GLCDForeground
+  SendParam_NXN240x320L GLCDBackground
+  SendParam_NXN240x320L 0
+  SendParam_NXN240x320L 0
+  SendParam_NXN240x320L 1
   GLCD_NEXIONSerialSend 34
   GLCD_NEXIONSerialPrint str(LCDValue)
   GLCD_NEXIONSerialSend 34
@@ -404,64 +402,64 @@ Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, In LCDVal
 End Sub
 
 'stub to handle the various methods of calling - this one handles the Colour being omitted, so, the color is assumed
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, In LCDValue As Long, In GLCDfntDefault, In GLCDFontWidth, In  GLCDfntDefaultsize  )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, In LCDValue As Long, In GLCDfntDefault, In GLCDFontWidth, In  GLCDfntDefaultsize  )
 
-    GLCDPrint_NXN320x480L ( PrintLocX, PrintLocY , LCDValue , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
+    GLCDPrint_NXN240x320L ( PrintLocX, PrintLocY , LCDValue , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
 
 End Sub
 
 
 'stub to handle the various methods of calling - this one handles just the string
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in In LCDValue As Long  )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, in In LCDValue As Long  )
 
-    GLCDPrint_NXN320x480L ( PrintLocX, PrintLocY , LCDValue , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
+    GLCDPrint_NXN240x320L ( PrintLocX, PrintLocY , LCDValue , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
 
 End Sub
 
 'stub to handle the various methods of calling - this one handles the Colour
-Sub GLCDPrint_NXN320x480L (In PrintLocX as word, In PrintLocY as word, in In LCDValue As Long , In GLCDForeground as word  )
+Sub GLCDPrint_NXN240x320L (In PrintLocX as word, In PrintLocY as word, in In LCDValue As Long , In GLCDForeground as word  )
 
-    GLCDPrint_NXN320x480L ( PrintLocX, PrintLocY , LCDValue , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
+    GLCDPrint_NXN240x320L ( PrintLocX, PrintLocY , LCDValue , GLCDForeground, GLCDfntDefault,  GLCDFontWidth , GLCDfntDefaultsize )
 
 End Sub
 
-Sub GLCDPrintString_NXN320x480L ( in LCDPrintData as string )
+Sub GLCDPrintString_NXN240x320L ( in LCDPrintData as string )
     dim PrintLocX as word
-    GLCDPrint_NXN320x480L( PrintLocX , PrintLocY , LCDPrintData )
+    GLCDPrint_NXN240x320L( PrintLocX , PrintLocY , LCDPrintData )
     PrintLocX = PrintLocX + ( GLCDFontWidth * LCDPrintData (0) )+2  '2 extra pixels
 End Sub
 
 
-Sub GLCDPrintStringLn_NXN320x480L( in LCDPrintData as string )
+Sub GLCDPrintStringLn_NXN240x320L( in LCDPrintData as string )
     dim PrintLocX, PrintLocY as word
 
-    GLCDPrint_NXN320x480L( PrintLocX , PrintLocY , LCDPrintData )
+    GLCDPrint_NXN240x320L( PrintLocX , PrintLocY , LCDPrintData )
     PrintLocX = 0
     PrintLocY = ( PrintLocY +  GLCDfntDefaultSize ) mod GLCD_HEIGHT
 
 End Sub
 
-Sub GLCDLocateString_NXN320x480L( in PrintLocX as word, in PrintLocY as word )
+Sub GLCDLocateString_NXN240x320L( in PrintLocX as word, in PrintLocY as word )
     dim PrintLocY as word
 
 '    dim xxx, yyy as word
 '    xxx=PrintLocX
 '    yyy=PrintLocY
-'GLCDPrint_NXN320x480L ( 30, 50, xxx )
-'GLCDPrint_NXN320x480L ( 30, 70, xxx )
+'GLCDPrint_NXN240x320L ( 30, 50, xxx )
+'GLCDPrint_NXN240x320L ( 30, 70, xxx )
 
     PrintLocY = GLCDfntDefaultSize * ( PrintLocY - 1 )
 '    yyy=PrintLocY
-'GLCDPrint_NXN320x480L ( 30, 50, xxx )
-'GLCDPrint_NXN320x480L ( 30, 70, xxx )
+'GLCDPrint_NXN240x320L ( 30, 50, xxx )
+'GLCDPrint_NXN240x320L ( 30, 70, xxx )
 
 End Sub
 
-Sub GLCDPrintDefaultFont_NXN320x480L ( in GLCDfntDefault,  in GLCDFontWidth , In  GLCDfntDefaultsize )
+Sub GLCDPrintDefaultFont_NXN240x320L ( in GLCDfntDefault,  in GLCDFontWidth , In  GLCDfntDefaultsize )
   'this will the set the defaults by purely calling this method
 End Sub
 
-sub GLCDUpdateObject_NXN320x480L ( in nextionobject as string , in nextionstringData as string )
+sub GLCDUpdateObject_NXN240x320L ( in nextionobject as string , in nextionstringData as string )
 
   GLCD_NEXIONSerialPrint nextionobject
   GLCD_NEXIONSerialPrint"="
@@ -475,7 +473,7 @@ sub GLCDUpdateObject_NXN320x480L ( in nextionobject as string , in nextionstring
 
 end sub
 
-sub GLCDUpdateObject_NXN320x480L ( in nextionobject as string , in nextionnumberData as long )
+sub GLCDUpdateObject_NXN240x320L ( in nextionobject as string , in nextionnumberData as long )
 
   GLCD_NEXIONSerialPrint nextionobject
   GLCD_NEXIONSerialPrint"="
@@ -486,7 +484,7 @@ sub GLCDUpdateObject_NXN320x480L ( in nextionobject as string , in nextionnumber
 
 end sub
 
-sub GLCDUpdateObject_NXN320x480L ( in nextionobject as string , in nextionnumberData as integer )
+sub GLCDUpdateObject_NXN240x320L ( in nextionobject as string , in nextionnumberData as integer )
 
   GLCD_NEXIONSerialPrint nextionobject
   GLCD_NEXIONSerialPrint"="
