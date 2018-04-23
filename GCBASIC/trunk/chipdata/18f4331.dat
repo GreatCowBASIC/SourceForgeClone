@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F4331
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -977,11 +977,11 @@ WRTD=OFF
 157
 133
 255
-3
+15
 192
-3
+15
 224
-3
+15
 64
 
 [ConfigOps]

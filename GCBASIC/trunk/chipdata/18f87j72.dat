@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F87J72
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -1572,18 +1572,18 @@ XINST=OFF
 DEBUG=OFF
 
 [ConfigMask]
+225
+252
+223
 255
-255
-255
-255
-255
-255
+2
+241
 128
 255
 97
 4
 223
-15
+255
 2
 1
 

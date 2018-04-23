@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF47J53
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -2024,12 +2024,12 @@ DEBUG=OFF
 255
 255
 255
-128
 255
-127
+251
+255
 7
 255
-15
+255
 255
 11
 255

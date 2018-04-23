@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F2682
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -3439,11 +3439,11 @@ XINST=OFF
 134
 245
 255
-31
+63
 192
-31
+63
 224
-31
+63
 64
 
 [ConfigOps]
