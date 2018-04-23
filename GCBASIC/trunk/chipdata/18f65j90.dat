@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F65J90
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -1582,7 +1582,7 @@ CP0=OFF
 '18FDefaultASMConfig Setting
 DEBUG=OFF
 FCMEN=ON
-FOSC2=ON
+FOSC2=OFF
 FOSC=ECPLL
 IESO=ON
 STVREN=ON
@@ -1593,8 +1593,8 @@ XINST=OFF
 [ConfigMask]
 225
 4
-199
-15
+255
+255
 255
 1
 

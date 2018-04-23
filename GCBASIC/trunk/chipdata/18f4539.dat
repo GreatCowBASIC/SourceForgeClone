@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F4539
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -732,18 +732,18 @@ WRTD=OFF
 
 [ConfigMask]
 255
-7
+39
 15
 15
 255
 255
 133
 255
-7
+15
 192
-7
+15
 224
-7
+15
 64
 
 [ConfigOps]

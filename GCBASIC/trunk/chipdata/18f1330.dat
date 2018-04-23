@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F1330
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -625,7 +625,7 @@ XINST=OFF
 31
 14
 137
-241
+249
 255
 3
 192

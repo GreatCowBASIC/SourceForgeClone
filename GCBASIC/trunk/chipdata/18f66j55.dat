@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F66J55
-'Generated 26/9/2017
+'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -1804,7 +1804,7 @@ XINST=OFF
 239
 7
 199
-15
+255
 255
 9
 
