@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF45K42
-'Generated 8/12/2017
+'Generated 22/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -46,7 +46,7 @@ ExtInt2:INT2IE,INT2IF
 I2C1ErrorInterrupt:I2C1EIE,I2C1EIF
 I2C1Interrupt:I2C1IE,I2C1IF
 I2C1ReceiveInterrupt:I2C1RXIE,I2C1RXIF
-I2C1Transmit Interrupt:I2C1TXIE,I2C1TXIF
+I2C1TransmitInterrupt:I2C1TXIE,I2C1TXIF
 I2C2ErrorInterrupt:I2C2EIE,I2C2EIF
 I2C2Interrupt:I2C2IE,I2C2IF
 I2C2ReceiveInterrupt:I2C2RXIE,I2C2RXIF
