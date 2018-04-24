@@ -34,9 +34,9 @@
 '    21/09/17 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
 '    17/11/17 Added GLCDPrintLn
 '    10/12/17 Added SSD1331 driver
-'    22/02/18 Added Nexion driver
+'    22/02/18 Added Nextion driver
 '    13/03/18 Correct Ypixel position of putting out a white intercharacter pixel/space
-
+'    24/04/18 Added Nextion support
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
@@ -56,8 +56,8 @@
 #define GLCD_TYPE_ILI9481 12
 #define GLCD_TYPE_SSD1331 14
 #define GLCD_TYPE_HX8347  15
-#define GLCD_TYPE_NEXION320x480L 16
-#define GLCD_TYPE_NEXION240x320L 17
+#define GLCD_TYPE_Nextion 16
+
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
@@ -390,59 +390,33 @@ If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
 
 
 
-If GLCD_TYPE = GLCD_TYPE_NEXION320x480L Then
+If GLCD_TYPE = GLCD_TYPE_Nextion Then
 
-     #include <GLCD_NEXION320x480L.h>
-     InitGLCD = InitGLCD_NXN320x480L
-     GLCDCLS = GLCDCLS_NXN320x480L
-     Circle = Circle_NXN320x480L
-     FilledCircle=FilledCircle_NXN320x480L
-     Box = Box_NXN320x480L
-     FilledBox = FilledBox_NXN320x480L
-     Line =  Line_NXN320x480L
-     GLCDDrawChar = GLCDDrawChar_NXN320x480L
-     GLCDDrawString = GLCDDrawString_NXN320x480L
-     Pset = Pset_NXN320x480L
-     GLCDRotate = GLCDRotate_NXN320x480L
-     GLCDPrintDefaultFont_Nextion = GLCDPrintDefaultFont_NXN320x480L
-     GLCDPrintString_Nexion = GLCDPrintString_NXN320x480L
-     GLCDPrintStringLn_Nexion = GLCDPrintStringLn_NXN320x480L
-     GLCDLocateString_Nexion = GLCDLocateString_NXN320x480L
-     GLCDPrint_Nexion = GLCDPrint_NXN320x480L 'Landscape
-     GLCDUpdateObject_Nexion = GLCDUpdateObject_NXN320x480L
-     glcd_type_string = "NEXION320x480L"
-     GLCD_WIDTH = 480
-     GLCD_HEIGHT = 320
-     NXN320x480L_GLCD_HEIGHT = GLCDDeviceHeight
-     NXN320x480L_GLCD_WIDTH = GLCDDeviceWidth
-  End If
-
-
-If GLCD_TYPE = GLCD_TYPE_NEXION240x320L Then
-
-     #include <GLCD_NEXION240x320L.h>
-     InitGLCD = InitGLCD_NXN240x320L
-     GLCDCLS = GLCDCLS_NXN240x320L
-     Circle = Circle_NXN240x320L
-     FilledCircle=FilledCircle_NXN240x320L
-     Box = Box_NXN240x320L
-     FilledBox = FilledBox_NXN240x320L
-     Line =  Line_NXN240x320L
-     GLCDDrawChar = GLCDDrawChar_NXN240x320L
-     GLCDDrawString = GLCDDrawString_NXN240x320L
-     Pset = Pset_NXN240x320L
-     GLCDRotate = GLCDRotate_NXN240x320L
-     GLCDPrintDefaultFont_Nextion = GLCDPrintDefaultFont_NXN240x320L
-     GLCDPrintString_Nexion = GLCDPrintString_NXN240x320L
-     GLCDPrintStringLn_Nexion = GLCDPrintStringLn_NXN240x320L
-     GLCDLocateString_Nexion = GLCDLocateString_NXN240x320L
-     GLCDPrint_Nexion = GLCDPrint_NXN240x320L 'Landscape
-     GLCDUpdateObject_Nexion = GLCDUpdateObject_NXN240x320L
-     glcd_type_string = "NEXION320x480L"
-     GLCD_WIDTH = 320
-     GLCD_HEIGHT = 240
-     240x320L_GLCD_HEIGHT = GLCDDeviceHeight
-     240x320L_GLCD_WIDTH = GLCDDeviceWidth
+     #include <GLCD_Nextion.h>
+     InitGLCD = InitGLCD_Nextion
+     GLCDCLS = GLCDCLS_Nextion
+     Circle = Circle_Nextion
+     FilledCircle=FilledCircle_Nextion
+     Box = Box_Nextion
+     FilledBox = FilledBox_Nextion
+     Line =  Line_Nextion
+     GLCDDrawChar = GLCDDrawChar_Nextion
+     GLCDDrawString = GLCDDrawString_Nextion
+     Pset = Pset_Nextion
+     GLCDRotate = GLCDRotate_Nextion
+     'The following methods are not needed as you can call directly
+'     GLCDPrintDefaultFont_Nextion = GLCDPrintDefaultFont_NXN320x480L
+'     GLCDPrintString_Nextion = GLCDPrintString_NXN320x480L
+'     GLCDPrintStringLn_Nextion = GLCDPrintStringLn_NXN320x480L
+'     GLCDLocateString_Nextion = GLCDLocateString_NXN320x480L
+'     GLCDPrint_Nextion = GLCDPrint_NXN320x480L 'Landscape
+'     GLCDUpdateObject_Nextion = GLCDUpdateObject_NXN320x480L
+     glcd_type_string = "Nextion"
+     'Not required. THESE MUST BE SPECIFIED IN THE USE PROGRAM!!
+'     GLCD_WIDTH = 480
+'     GLCD_HEIGHT = 320
+     Nextion_GLCD_HEIGHT = GLCDDeviceHeight
+     Nextion_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
 
