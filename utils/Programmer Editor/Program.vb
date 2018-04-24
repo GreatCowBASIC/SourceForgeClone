@@ -13,7 +13,7 @@ Namespace My
 	Partial Class MyApplication
 		Public Sub New()
 			MyBase.New(AuthenticationMode.Windows)
-			Me.IsSingleInstance = False
+			Me.IsSingleInstance = True
 			Me.EnableVisualStyles = True
 			Me.SaveMySettingsOnExit = False ' MySettings are not supported in SharpDevelop.
 			Me.ShutDownStyle = ShutdownMode.AfterMainFormCloses
