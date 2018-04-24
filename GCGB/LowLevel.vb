@@ -52,7 +52,8 @@ Imports System.Collections.Generic
 						End If
 						'Match matches searched command
 						If .MatchSyntax <> "" Then
-							If CommandName.IndexOf(.MatchSyntax.ToLower) <> -1 Then IsMatch = -1: CommandPointer = IndexTemp: Exit For
+							'If CommandName.IndexOf(.MatchSyntax.ToLower) <> -1 Then IsMatch = -1: CommandPointer = IndexTemp: Exit For
+							If CommandName.Trim = .MatchSyntax.ToLower.Trim Then IsMatch = -1: CommandPointer = IndexTemp: Exit For
 						End If
 					End If
 				End With

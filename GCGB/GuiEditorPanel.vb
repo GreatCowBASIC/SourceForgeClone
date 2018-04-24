@@ -2489,13 +2489,13 @@ Imports System.Collections.Generic
 		End Sub
 		
 		Private Sub FormSplitterSplitterMoved(sender As System.Object, e As System.Windows.Forms.SplitterEventArgs)
-			MainForm.GetPreferences.SetPref("GCGB", "SettingsPanelWidth", formSplitter.SplitPosition)
+			MainForm.GetPreferences.SetPref("GCGB", "SettingsPanelWidth", formSplitter.SplitPosition.ToString)
 			MainForm.GetPreferences.SavePreferences
 			
 		End Sub
 		
 		Private Sub RightPaneSplitterSplitterMoved(sender As System.Object, e As System.Windows.Forms.SplitterEventArgs)
-			MainForm.GetPreferences.SetPref("GCGB", "SubListHeight", Me.RightPaneSplitter.SplitPosition)
+			MainForm.GetPreferences.SetPref("GCGB", "SubListHeight", Me.RightPaneSplitter.SplitPosition.ToString)
 			MainForm.GetPreferences.SavePreferences
 			
 		End Sub
