@@ -1,4 +1,4 @@
-'    MicroChip specific to read GetUserID routines for Great Cow BASIC
+'    MicroChip specific to support Sotfware Serial for Great Cow BASIC
 '    Copyright (C) 2017 Frank Steinberg
 
 '    This library is free software; you can redistribute it and/or
@@ -37,6 +37,7 @@
 '''@version 1.21
 '''@date    25.02.2017
 '''******************************************************************************
+'  20.02.2018     Updated license only
 
   '*** Set default value of SER3_INVERT if no user value:
   #ifndef SER3_INVERT
