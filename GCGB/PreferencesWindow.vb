@@ -40,7 +40,9 @@ Imports System.Collections.Generic
 		Private Dim HeadingFont As Font
 		Private Dim ItemFont As Font
 		Private Dim pPreferences As Preferences
+		
 		Private Dim GCGBOptionsHidden as Boolean = False
+		Private Dim ExternalToolVarsPage As TabPage
 		
 		Public Sub New()
 			MyBase.New
@@ -48,6 +50,10 @@ Imports System.Collections.Generic
 			' The Me.InitializeComponent call is required for Windows Forms designer support.
 			'
 			Me.InitializeComponent
+			
+			'Hide external tool vars page by default
+			ExternalToolVarsPage = ToolVarsPrefs
+			Me.PrefsTabs.TabPages.Remove(ToolVarsPrefs)
 			
 		End Sub
 		
@@ -75,6 +81,7 @@ Imports System.Collections.Generic
 				CompilerShowBASIC.Checked = False
 				If pPreferences.GetPref("GCBASIC", "Preserve") = "a" Then CompilerShowBASIC.Checked = True
 				CompilerWarningsAsErrors.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "WarningsAsErrors"))
+				CompilerNoRecompile.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "FlashOnly"))
 				CompilerPause.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "PauseAfterCompile"))
 				
 				'Programmer list
@@ -139,6 +146,22 @@ Imports System.Collections.Generic
 						End If
 					Next
 				End If
+				
+				'Tool variables list
+				'Restricted mode means that GCGB is in a school or other environment where the users may be up to no good
+				'If restricted, don't allow them to define programmers.
+				If Preferences.PrefIsYes(pPreferences.GetPref("GCGB", "Restricted")) Then
+					Me.PrefsTabs.Controls.Remove(ToolVarsPrefs)
+				Else
+					'Find all tools
+					Me.ToolVarDataGrid.Rows.Clear
+					Dim section As SettingSection = pPreferences.GetSection("toolvariables")
+					If Not section is Nothing Then
+						For Each currSetting As Setting In section.Settings
+							Me.ToolVarDataGrid.Rows.Add(New Object(){currSetting.Name, currSetting.Value})
+						Next
+					End If
+				End If
 			End Set
 		End Property
 		
@@ -147,12 +170,14 @@ Imports System.Collections.Generic
 		' Do not change the method contents inside the source code editor. The Forms designer might
 		' not be able to load this method if it was changed manually.
 		Private Sub InitializeComponent()
+			Me.components = New System.ComponentModel.Container
 			Me.ExtToolsPrefs = New System.Windows.Forms.TabPage
 			Me.buttonDeleteTool = New System.Windows.Forms.Button
 			Me.buttonEditTool = New System.Windows.Forms.Button
 			Me.buttonAddTool = New System.Windows.Forms.Button
 			Me.toolList = New System.Windows.Forms.ListBox
 			Me.CompilerPrefs = New System.Windows.Forms.TabPage
+			Me.CompilerNoRecompile = New System.Windows.Forms.CheckBox
 			Me.CompilerWarningsAsErrors = New System.Windows.Forms.CheckBox
 			Me.CompilerPause = New System.Windows.Forms.CheckBox
 			Me.CompilerShowBASIC = New System.Windows.Forms.CheckBox
@@ -170,9 +195,14 @@ Imports System.Collections.Generic
 			Me.Button_EditProgrammer = New System.Windows.Forms.Button
 			Me.Button_AddProgrammer = New System.Windows.Forms.Button
 			Me.ProgrammerList = New System.Windows.Forms.ListBox
+			Me.ToolVarsPrefs = New System.Windows.Forms.TabPage
+			Me.ToolVarDataGrid = New System.Windows.Forms.DataGridView
+			Me.Variable = New System.Windows.Forms.DataGridViewTextBoxColumn
+			Me.Value = New System.Windows.Forms.DataGridViewTextBoxColumn
 			Me.Button_Cancel = New System.Windows.Forms.Button
 			Me.PrefsHelp = New System.Windows.Forms.HelpProvider
 			Me.Button_OK = New System.Windows.Forms.Button
+			Me.prefsToolTip = New System.Windows.Forms.ToolTip(Me.components)
 			Me.ExtToolsPrefs.SuspendLayout
 			Me.CompilerPrefs.SuspendLayout
 			Me.PrefsTabs.SuspendLayout
@@ -180,6 +210,8 @@ Imports System.Collections.Generic
 			Me.MDILabel.SuspendLayout
 			CType(Me.EditorIndentSize,System.ComponentModel.ISupportInitialize).BeginInit
 			Me.ProgrammerPrefs.SuspendLayout
+			Me.ToolVarsPrefs.SuspendLayout
+			CType(Me.ToolVarDataGrid,System.ComponentModel.ISupportInitialize).BeginInit
 			Me.SuspendLayout
 			'
 			'ExtToolsPrefs
@@ -205,6 +237,7 @@ Imports System.Collections.Generic
 			Me.buttonDeleteTool.Size = New System.Drawing.Size(88, 24)
 			Me.buttonDeleteTool.TabIndex = 3
 			Me.buttonDeleteTool.Text = "Delete"
+			Me.prefsToolTip.SetToolTip(Me.buttonDeleteTool, "Delete the selected external tool")
 			AddHandler Me.buttonDeleteTool.Click, AddressOf Me.ButtonDeleteToolClick
 			'
 			'buttonEditTool
@@ -218,6 +251,7 @@ Imports System.Collections.Generic
 			Me.buttonEditTool.Size = New System.Drawing.Size(88, 24)
 			Me.buttonEditTool.TabIndex = 2
 			Me.buttonEditTool.Text = "Edit..."
+			Me.prefsToolTip.SetToolTip(Me.buttonEditTool, "Edit the selected external tool")
 			AddHandler Me.buttonEditTool.Click, AddressOf Me.ButtonEditToolClick
 			'
 			'buttonAddTool
@@ -230,6 +264,7 @@ Imports System.Collections.Generic
 			Me.buttonAddTool.Size = New System.Drawing.Size(88, 24)
 			Me.buttonAddTool.TabIndex = 1
 			Me.buttonAddTool.Text = "Add..."
+			Me.prefsToolTip.SetToolTip(Me.buttonAddTool, "Add a new external tool")
 			AddHandler Me.buttonAddTool.Click, AddressOf Me.ButtonAddToolClick
 			'
 			'toolList
@@ -241,10 +276,12 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me.toolList, true)
 			Me.toolList.Size = New System.Drawing.Size(264, 212)
 			Me.toolList.TabIndex = 0
+			Me.prefsToolTip.SetToolTip(Me.toolList, "List of all currently defined external tools")
 			AddHandler Me.toolList.SelectedIndexChanged, AddressOf Me.ToolListSelectedIndexChanged
 			'
 			'CompilerPrefs
 			'
+			Me.CompilerPrefs.Controls.Add(Me.CompilerNoRecompile)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerWarningsAsErrors)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerPause)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerShowBASIC)
@@ -255,28 +292,45 @@ Imports System.Collections.Generic
 			Me.CompilerPrefs.TabIndex = 1
 			Me.CompilerPrefs.Text = "Compiler"
 			'
+			'CompilerNoRecompile
+			'
+			Me.CompilerNoRecompile.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.PrefsHelp.SetHelpString(Me.CompilerNoRecompile, "Prevent the compiler from taking time to recompile a program if the program has n"& _ 
+						"ot changed since it was last compiled.")
+			Me.CompilerNoRecompile.Location = New System.Drawing.Point(16, 88)
+			Me.CompilerNoRecompile.Name = "CompilerNoRecompile"
+			Me.PrefsHelp.SetShowHelp(Me.CompilerNoRecompile, true)
+			Me.CompilerNoRecompile.Size = New System.Drawing.Size(224, 16)
+			Me.CompilerNoRecompile.TabIndex = 4
+			Me.CompilerNoRecompile.Text = "Prevent recompile if code is unchanged"
+			Me.prefsToolTip.SetToolTip(Me.CompilerNoRecompile, "Prevent the compiler from taking time to recompile a program if the program has n"& _ 
+						"ot changed since it was last compiled.")
+			'
 			'CompilerWarningsAsErrors
 			'
 			Me.CompilerWarningsAsErrors.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Copies the original BASIC program into the assembly file produced by the compiler"& _ 
-						". Useful for showing the link between icons and assembly commands.")
+			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Stops the program from being downloaded to the chip if any warnings are generated"& _ 
+						" while compiling it")
 			Me.CompilerWarningsAsErrors.Location = New System.Drawing.Point(16, 64)
 			Me.CompilerWarningsAsErrors.Name = "CompilerWarningsAsErrors"
 			Me.PrefsHelp.SetShowHelp(Me.CompilerWarningsAsErrors, true)
 			Me.CompilerWarningsAsErrors.Size = New System.Drawing.Size(224, 16)
 			Me.CompilerWarningsAsErrors.TabIndex = 3
 			Me.CompilerWarningsAsErrors.Text = "Treat warnings as errors"
+			Me.prefsToolTip.SetToolTip(Me.CompilerWarningsAsErrors, "Stops the program from being downloaded to the chip if any warnings are generated"& _ 
+						" while compiling it")
 			'
 			'CompilerPause
 			'
 			Me.CompilerPause.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.CompilerPause, "Keeps the compiler window open until a key is pressed")
-			Me.CompilerPause.Location = New System.Drawing.Point(16, 88)
+			Me.CompilerPause.Location = New System.Drawing.Point(16, 112)
 			Me.CompilerPause.Name = "CompilerPause"
 			Me.PrefsHelp.SetShowHelp(Me.CompilerPause, true)
 			Me.CompilerPause.Size = New System.Drawing.Size(168, 16)
 			Me.CompilerPause.TabIndex = 2
 			Me.CompilerPause.Text = "Pause after compilation"
+			Me.prefsToolTip.SetToolTip(Me.CompilerPause, "Keeps the compiler window open until a key is pressed")
 			'
 			'CompilerShowBASIC
 			'
@@ -289,6 +343,8 @@ Imports System.Collections.Generic
 			Me.CompilerShowBASIC.Size = New System.Drawing.Size(224, 16)
 			Me.CompilerShowBASIC.TabIndex = 1
 			Me.CompilerShowBASIC.Text = "Show BASIC in assembly listing"
+			Me.prefsToolTip.SetToolTip(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _ 
+						". Useful for showing the link between icons and assembly commands.")
 			'
 			'CompilerVerbose
 			'
@@ -300,6 +356,7 @@ Imports System.Collections.Generic
 			Me.CompilerVerbose.Size = New System.Drawing.Size(160, 16)
 			Me.CompilerVerbose.TabIndex = 0
 			Me.CompilerVerbose.Text = "Verbose Mode"
+			Me.prefsToolTip.SetToolTip(Me.CompilerVerbose, "Makes compiler display detailed information about the compilation process.")
 			'
 			'PrefsTabs
 			'
@@ -307,6 +364,7 @@ Imports System.Collections.Generic
 			Me.PrefsTabs.Controls.Add(Me.CompilerPrefs)
 			Me.PrefsTabs.Controls.Add(Me.ProgrammerPrefs)
 			Me.PrefsTabs.Controls.Add(Me.ExtToolsPrefs)
+			Me.PrefsTabs.Controls.Add(Me.ToolVarsPrefs)
 			Me.PrefsTabs.Location = New System.Drawing.Point(8, 8)
 			Me.PrefsTabs.Name = "PrefsTabs"
 			Me.PrefsTabs.SelectedIndex = 0
@@ -347,6 +405,8 @@ Imports System.Collections.Generic
 			Me.MDITabs.TabIndex = 1
 			Me.MDITabs.TabStop = true
 			Me.MDITabs.Text = "Tabs"
+			Me.prefsToolTip.SetToolTip(Me.MDITabs, "Show multiple programs in tabs. Easier to change between programs, but offers les"& _ 
+						"s freedom in moving things around.")
 			Me.MDITabs.UseVisualStyleBackColor = true
 			'
 			'MDIWindows
@@ -361,6 +421,9 @@ Imports System.Collections.Generic
 			Me.MDIWindows.TabIndex = 0
 			Me.MDIWindows.TabStop = true
 			Me.MDIWindows.Text = "Windows"
+			Me.prefsToolTip.SetToolTip(Me.MDIWindows, "Show multiple programs in windows inside the main GCGB window. Allows programs to"& _ 
+						" be placed side by side easily, but can also make it harder to find a particular"& _ 
+						" program.")
 			Me.MDIWindows.UseVisualStyleBackColor = true
 			'
 			'EditorIndentSize
@@ -372,6 +435,7 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me.EditorIndentSize, true)
 			Me.EditorIndentSize.Size = New System.Drawing.Size(48, 20)
 			Me.EditorIndentSize.TabIndex = 2
+			Me.prefsToolTip.SetToolTip(Me.EditorIndentSize, "Amount to indent nested icons (like contents of If icon)")
 			Me.EditorIndentSize.Value = New Decimal(New Integer() {20, 0, 0, 0})
 			'
 			'EditorIndentLabel
@@ -395,6 +459,7 @@ Imports System.Collections.Generic
 			Me.EditorWarnRecursion.Size = New System.Drawing.Size(192, 16)
 			Me.EditorWarnRecursion.TabIndex = 0
 			Me.EditorWarnRecursion.Text = "Subroutine Recursion Warning"
+			Me.prefsToolTip.SetToolTip(Me.EditorWarnRecursion, "Warn whenever a subroutine is called from itself.")
 			'
 			'ProgrammerPrefs
 			'
@@ -419,6 +484,7 @@ Imports System.Collections.Generic
 			Me.Button_DeleteProgrammer.Size = New System.Drawing.Size(88, 24)
 			Me.Button_DeleteProgrammer.TabIndex = 3
 			Me.Button_DeleteProgrammer.Text = "Delete"
+			Me.prefsToolTip.SetToolTip(Me.Button_DeleteProgrammer, "Delete the selected programmer")
 			AddHandler Me.Button_DeleteProgrammer.Click, AddressOf Me.Button_DeleteProgrammerClick
 			'
 			'Button_EditProgrammer
@@ -432,6 +498,7 @@ Imports System.Collections.Generic
 			Me.Button_EditProgrammer.Size = New System.Drawing.Size(88, 24)
 			Me.Button_EditProgrammer.TabIndex = 2
 			Me.Button_EditProgrammer.Text = "Edit..."
+			Me.prefsToolTip.SetToolTip(Me.Button_EditProgrammer, "Edit the selected programmer")
 			AddHandler Me.Button_EditProgrammer.Click, AddressOf Me.Button_EditProgrammerClick
 			'
 			'Button_AddProgrammer
@@ -444,6 +511,7 @@ Imports System.Collections.Generic
 			Me.Button_AddProgrammer.Size = New System.Drawing.Size(88, 24)
 			Me.Button_AddProgrammer.TabIndex = 1
 			Me.Button_AddProgrammer.Text = "Add..."
+			Me.prefsToolTip.SetToolTip(Me.Button_AddProgrammer, "Add a new programmer")
 			AddHandler Me.Button_AddProgrammer.Click, AddressOf Me.Button_AddProgrammerClick
 			'
 			'ProgrammerList
@@ -457,10 +525,42 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me.ProgrammerList, true)
 			Me.ProgrammerList.Size = New System.Drawing.Size(264, 212)
 			Me.ProgrammerList.TabIndex = 0
+			Me.prefsToolTip.SetToolTip(Me.ProgrammerList, "Drag and drop to reorder, and use buttons below to add, edit or remove")
 			AddHandler Me.ProgrammerList.DrawItem, AddressOf Me.ProgrammerListDrawItem
 			AddHandler Me.ProgrammerList.DragOver, AddressOf Me.ProgrammerListDragOver
 			AddHandler Me.ProgrammerList.DragDrop, AddressOf Me.ProgrammerListDragDrop
 			AddHandler Me.ProgrammerList.MouseDown, AddressOf Me.ProgrammerListMouseDown
+			'
+			'ToolVarsPrefs
+			'
+			Me.ToolVarsPrefs.Controls.Add(Me.ToolVarDataGrid)
+			Me.ToolVarsPrefs.Location = New System.Drawing.Point(4, 22)
+			Me.ToolVarsPrefs.Name = "ToolVarsPrefs"
+			Me.ToolVarsPrefs.Padding = New System.Windows.Forms.Padding(3)
+			Me.ToolVarsPrefs.Size = New System.Drawing.Size(280, 262)
+			Me.ToolVarsPrefs.TabIndex = 4
+			Me.ToolVarsPrefs.Text = "Tool Variables"
+			Me.ToolVarsPrefs.UseVisualStyleBackColor = true
+			'
+			'ToolVarDataGrid
+			'
+			Me.ToolVarDataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+			Me.ToolVarDataGrid.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.Variable, Me.Value})
+			Me.ToolVarDataGrid.Location = New System.Drawing.Point(8, 16)
+			Me.ToolVarDataGrid.Name = "ToolVarDataGrid"
+			Me.ToolVarDataGrid.Size = New System.Drawing.Size(264, 240)
+			Me.ToolVarDataGrid.TabIndex = 1
+			Me.prefsToolTip.SetToolTip(Me.ToolVarDataGrid, "Set up extra variables that can be used to configure all programmers")
+			'
+			'Variable
+			'
+			Me.Variable.HeaderText = "Variable"
+			Me.Variable.Name = "Variable"
+			'
+			'Value
+			'
+			Me.Value.HeaderText = "Value"
+			Me.Value.Name = "Value"
 			'
 			'Button_Cancel
 			'
@@ -507,8 +607,17 @@ Imports System.Collections.Generic
 			Me.MDILabel.ResumeLayout(false)
 			CType(Me.EditorIndentSize,System.ComponentModel.ISupportInitialize).EndInit
 			Me.ProgrammerPrefs.ResumeLayout(false)
+			Me.ToolVarsPrefs.ResumeLayout(false)
+			CType(Me.ToolVarDataGrid,System.ComponentModel.ISupportInitialize).EndInit
 			Me.ResumeLayout(false)
 		End Sub
+		Private components As System.ComponentModel.IContainer
+		Private prefsToolTip As System.Windows.Forms.ToolTip
+		Private ToolVarDataGrid As System.Windows.Forms.DataGridView
+		Private Value As System.Windows.Forms.DataGridViewTextBoxColumn
+		Private Variable As System.Windows.Forms.DataGridViewTextBoxColumn
+		Private ToolVarsPrefs As System.Windows.Forms.TabPage
+		Private CompilerNoRecompile As System.Windows.Forms.CheckBox
 		Private MDIWindows As System.Windows.Forms.RadioButton
 		Private MDITabs As System.Windows.Forms.RadioButton
 		Private MDILabel As System.Windows.Forms.GroupBox
@@ -518,8 +627,12 @@ Imports System.Collections.Generic
 		#End Region
 		
 		Public Sub HideGCGBOptions
+			'Remove tabs that don't get shown outside of GCGB
 			Me.PrefsTabs.Controls.Remove(EditorPrefs)
 			Me.PrefsTabs.Controls.Remove(ExtToolsPrefs)
+			
+			'Add tab that doesn't get shown in GCGB
+			Me.PrefsTabs.Controls.Add(ExternalToolVarsPage)
 			
 			CompilerPause.Visible = False
 			GCGBOptionsHidden = True
@@ -542,21 +655,14 @@ Imports System.Collections.Generic
 			End If
 			
 			'Compiler
-			If Me.CompilerVerbose.Checked = False Then
-				pPreferences.SetPref("GCBASIC", "Verbose", "n")
-			Else
-				pPreferences.SetPref("GCBASIC", "Verbose", "y")
-			End If
+			pPreferences.SetPref("GCBASIC", "Verbose", CompilerVerbose.Checked)
 			If Me.CompilerShowBASIC.Checked = False Then
 				pPreferences.SetPref("GCBASIC", "Preserve", "n")
 			Else
 				pPreferences.SetPref("GCBASIC", "Preserve", "a")
 			End If
-			If CompilerWarningsAsErrors.Checked Then
-				pPreferences.SetPref("GCBASIC", "WarningsAsErrors", "y")
-			Else
-				pPreferences.SetPref("GCBASIC", "WarningsAsErrors", "n")
-			End If
+			pPreferences.SetPref("GCBASIC", "WarningsAsErrors", CompilerWarningsAsErrors.Checked)
+			pPreferences.SetPref("GCBASIC", "FlashOnly", CompilerNoRecompile.Checked)
 			If CompilerPause.Checked = False Or GCGBOptionsHidden Then
 				pPreferences.SetPref("GCBASIC", "PauseAfterCompile", "n")
 			Else
@@ -589,6 +695,24 @@ Imports System.Collections.Generic
 				Next
 				pPreferences.SetPref("GCBASIC", "Programmer", ProgrammerOutputList)
 				MainForm.MainFormInstance.UpdateProgrammerList
+			End If
+			
+			'Tool variables
+			'Clear out old list
+			If GCGBOptionsHidden Then
+				Dim ToolVarsSection As SettingSection = pPreferences.GetSection("toolvariables")
+				If Not ToolVarsSection Is Nothing Then
+					pPreferences.PrefGroups.Remove(ToolVarsSection)
+				End If
+				'Create new list from table
+				Dim RowName, RowValue As String
+				For Each Row As DataGridViewRow In ToolVarDataGrid.Rows
+					RowName = Row.Cells.Item(0).FormattedValue
+					RowValue = Row.Cells.Item(1).FormattedValue
+					If RowName <> "" Then
+						pPreferences.SetPref("toolvariables", RowName, RowValue)
+					End If
+				Next
 			End If
 			
 			'Save and Exit

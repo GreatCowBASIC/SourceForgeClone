@@ -224,7 +224,37 @@ Public Class Preferences
     	UserIni.Close()
     	
 	End Sub
-			
+	
+	Public Function GetSection(SectionName As String) As SettingSection
+		If PrefGroups Is Nothing Then
+			Return Nothing
+		End If
+		
+		For Each section As SettingSection In PrefGroups
+			If section.Name.ToLower = SectionName.ToLower Then
+				Return section
+			End If
+		Next
+		
+		Return Nothing
+	End Function
+	
+	Public Function RemoveSection(SectionName As String) As Boolean
+		'Return true if successfully removed
+		If PrefGroups Is Nothing Then
+			Return False
+		End If
+		
+		For Each section As SettingSection In PrefGroups
+			If section.Name.ToLower = SectionName.ToLower Then
+				PrefGroups.Remove(section)
+				Return True
+			End If
+		Next
+		
+		Return False
+	End Function
+	
 	Public Function GetPref(ByVal SectionName As String, ByVal PrefName As String) As String
 		Dim Temp As Integer = 0
 		Dim PrefLoc As Integer = 0
@@ -253,6 +283,12 @@ Public Class Preferences
 		Return ""
 		
 	End Function
+	
+	Public Sub SetPref(ByVal SectionName As String, ByVal PrefName As String, PrefValue As Boolean)
+		Dim ValueStr As String = "n"
+		If PrefValue Then ValueStr = "y"
+		SetPref(SectionName, PrefName, ValueStr)
+	End Sub
 	
 	Public Sub SetPref(ByVal SectionName As String, ByVal PrefName As String, ByVal PrefValue As String)
 		Dim Temp As Integer = 0
