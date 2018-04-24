@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F87J10
-'Generated 8/12/2017
+'Generated 15/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -1524,7 +1524,7 @@ DEBUG=OFF
 EASHFT=ON
 ECCPMX=DEFAULT
 FCMEN=ON
-FOSC2=OFF
+FOSC2=ON
 FOSC=ECPLL
 IESO=ON
 MODE=MM

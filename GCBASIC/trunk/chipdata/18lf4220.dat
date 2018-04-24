@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF4220
-'Generated 8/12/2017
+'Generated 15/12/2017
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 25/09/2017
 
@@ -828,7 +828,7 @@ SP4,STKPTR,4
 BORV=20
 BOR=ON
 CCP2MX=ON
-CP0=OFF
+CP0=CCP2MX
 CP1=OFF
 CPB=OFF
 CPD=OFF
@@ -840,7 +840,7 @@ EBTRB=OFF
 FSCM=ON
 IESO=ON
 LVP=ON
-MCLRE=ON
+MCLRE=OFF
 OSC=LP
 PBAD=ANA
 PWRT=OFF
