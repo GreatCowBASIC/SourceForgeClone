@@ -64,6 +64,7 @@ Public Partial Class MainForm
 		Translator = New LanguageTranslator(Prefs)
 		
 		Dim fPrefsWindow As New PreferencesWindow
+		fPrefsWindow.Icon = MainformInstance.Icon
 		fPrefsWindow.Preferences = Prefs
 		fPrefsWindow.StartPosition = FormStartPosition.CenterScreen
 		fPrefsWindow.ShowInTaskbar = True
