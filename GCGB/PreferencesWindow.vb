@@ -44,6 +44,8 @@ Imports System.Collections.Generic
 		Private Dim GCGBOptionsHidden as Boolean = False
 		Private Dim ExternalToolVarsPage As TabPage
 		
+		Private Dim ClickedToolVarRow As Integer
+		
 		Public Sub New()
 			MyBase.New
 			'
@@ -54,6 +56,8 @@ Imports System.Collections.Generic
 			'Hide external tool vars page by default
 			ExternalToolVarsPage = ToolVarsPrefs
 			Me.PrefsTabs.TabPages.Remove(ToolVarsPrefs)
+			
+			ClickedToolVarRow = -1
 			
 		End Sub
 		
@@ -199,10 +203,16 @@ Imports System.Collections.Generic
 			Me.ToolVarDataGrid = New System.Windows.Forms.DataGridView
 			Me.Variable = New System.Windows.Forms.DataGridViewTextBoxColumn
 			Me.Value = New System.Windows.Forms.DataGridViewTextBoxColumn
+			Me.BrowseColumn = New System.Windows.Forms.DataGridViewButtonColumn
+			Me.toolVariableEditMenu = New System.Windows.Forms.ContextMenuStrip(Me.components)
+			Me.browseForFileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+			Me.browseForFolderToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
 			Me.Button_Cancel = New System.Windows.Forms.Button
 			Me.PrefsHelp = New System.Windows.Forms.HelpProvider
 			Me.Button_OK = New System.Windows.Forms.Button
 			Me.prefsToolTip = New System.Windows.Forms.ToolTip(Me.components)
+			Me.toolVarFolderBrowserDialog = New System.Windows.Forms.FolderBrowserDialog
+			Me.toolVarOpenFileDialog = New System.Windows.Forms.OpenFileDialog
 			Me.ExtToolsPrefs.SuspendLayout
 			Me.CompilerPrefs.SuspendLayout
 			Me.PrefsTabs.SuspendLayout
@@ -212,6 +222,7 @@ Imports System.Collections.Generic
 			Me.ProgrammerPrefs.SuspendLayout
 			Me.ToolVarsPrefs.SuspendLayout
 			CType(Me.ToolVarDataGrid,System.ComponentModel.ISupportInitialize).BeginInit
+			Me.toolVariableEditMenu.SuspendLayout
 			Me.SuspendLayout
 			'
 			'ExtToolsPrefs
@@ -228,6 +239,7 @@ Imports System.Collections.Generic
 			'
 			'buttonDeleteTool
 			'
+			Me.buttonDeleteTool.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.buttonDeleteTool.Enabled = false
 			Me.buttonDeleteTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonDeleteTool, "Delete an external tool")
@@ -242,6 +254,7 @@ Imports System.Collections.Generic
 			'
 			'buttonEditTool
 			'
+			Me.buttonEditTool.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.buttonEditTool.Enabled = false
 			Me.buttonEditTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonEditTool, "Edit the settings of an existing external tool")
@@ -256,6 +269,7 @@ Imports System.Collections.Generic
 			'
 			'buttonAddTool
 			'
+			Me.buttonAddTool.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.buttonAddTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonAddTool, "Add a new external tool")
 			Me.buttonAddTool.Location = New System.Drawing.Point(8, 232)
@@ -269,8 +283,12 @@ Imports System.Collections.Generic
 			'
 			'toolList
 			'
+			Me.toolList.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.PrefsHelp.SetHelpString(Me.toolList, "Shows the external tools that have been set up to work with Great Cow Graphical B"& _ 
 						"ASIC")
+			Me.toolList.IntegralHeight = false
 			Me.toolList.Location = New System.Drawing.Point(8, 8)
 			Me.toolList.Name = "toolList"
 			Me.PrefsHelp.SetShowHelp(Me.toolList, true)
@@ -360,6 +378,9 @@ Imports System.Collections.Generic
 			'
 			'PrefsTabs
 			'
+			Me.PrefsTabs.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.PrefsTabs.Controls.Add(Me.EditorPrefs)
 			Me.PrefsTabs.Controls.Add(Me.CompilerPrefs)
 			Me.PrefsTabs.Controls.Add(Me.ProgrammerPrefs)
@@ -475,6 +496,7 @@ Imports System.Collections.Generic
 			'
 			'Button_DeleteProgrammer
 			'
+			Me.Button_DeleteProgrammer.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_DeleteProgrammer.Enabled = false
 			Me.Button_DeleteProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_DeleteProgrammer, "Delete a programmer")
@@ -489,6 +511,7 @@ Imports System.Collections.Generic
 			'
 			'Button_EditProgrammer
 			'
+			Me.Button_EditProgrammer.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_EditProgrammer.Enabled = false
 			Me.Button_EditProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_EditProgrammer, "Edit the settings of an existing programmer")
@@ -503,6 +526,7 @@ Imports System.Collections.Generic
 			'
 			'Button_AddProgrammer
 			'
+			Me.Button_AddProgrammer.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_AddProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_AddProgrammer, "Add a new programmer")
 			Me.Button_AddProgrammer.Location = New System.Drawing.Point(8, 232)
@@ -517,9 +541,13 @@ Imports System.Collections.Generic
 			'ProgrammerList
 			'
 			Me.ProgrammerList.AllowDrop = true
+			Me.ProgrammerList.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
 			Me.PrefsHelp.SetHelpString(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _ 
 						"C")
+			Me.ProgrammerList.IntegralHeight = false
 			Me.ProgrammerList.Location = New System.Drawing.Point(8, 8)
 			Me.ProgrammerList.Name = "ProgrammerList"
 			Me.PrefsHelp.SetShowHelp(Me.ProgrammerList, true)
@@ -544,16 +572,22 @@ Imports System.Collections.Generic
 			'
 			'ToolVarDataGrid
 			'
+			Me.ToolVarDataGrid.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+			Me.ToolVarDataGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
 			Me.ToolVarDataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-			Me.ToolVarDataGrid.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.Variable, Me.Value})
+			Me.ToolVarDataGrid.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.Variable, Me.Value, Me.BrowseColumn})
 			Me.ToolVarDataGrid.Location = New System.Drawing.Point(8, 16)
 			Me.ToolVarDataGrid.Name = "ToolVarDataGrid"
 			Me.ToolVarDataGrid.Size = New System.Drawing.Size(264, 240)
 			Me.ToolVarDataGrid.TabIndex = 1
 			Me.prefsToolTip.SetToolTip(Me.ToolVarDataGrid, "Set up extra variables that can be used to configure all programmers")
+			AddHandler Me.ToolVarDataGrid.CellClick, AddressOf Me.ToolVarDataGridCellClick
 			'
 			'Variable
 			'
+			Me.Variable.FillWeight = 40!
 			Me.Variable.HeaderText = "Variable"
 			Me.Variable.Name = "Variable"
 			'
@@ -562,8 +596,37 @@ Imports System.Collections.Generic
 			Me.Value.HeaderText = "Value"
 			Me.Value.Name = "Value"
 			'
+			'BrowseColumn
+			'
+			Me.BrowseColumn.FillWeight = 20!
+			Me.BrowseColumn.HeaderText = ""
+			Me.BrowseColumn.Name = "BrowseColumn"
+			Me.BrowseColumn.Text = "..."
+			Me.BrowseColumn.UseColumnTextForButtonValue = true
+			'
+			'toolVariableEditMenu
+			'
+			Me.toolVariableEditMenu.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.browseForFileToolStripMenuItem, Me.browseForFolderToolStripMenuItem})
+			Me.toolVariableEditMenu.Name = "contextMenuStrip1"
+			Me.toolVariableEditMenu.Size = New System.Drawing.Size(177, 48)
+			'
+			'browseForFileToolStripMenuItem
+			'
+			Me.browseForFileToolStripMenuItem.Name = "browseForFileToolStripMenuItem"
+			Me.browseForFileToolStripMenuItem.Size = New System.Drawing.Size(176, 22)
+			Me.browseForFileToolStripMenuItem.Text = "Browse for file ..."
+			AddHandler Me.browseForFileToolStripMenuItem.Click, AddressOf Me.BrowseForFileToolStripMenuItemClick
+			'
+			'browseForFolderToolStripMenuItem
+			'
+			Me.browseForFolderToolStripMenuItem.Name = "browseForFolderToolStripMenuItem"
+			Me.browseForFolderToolStripMenuItem.Size = New System.Drawing.Size(176, 22)
+			Me.browseForFolderToolStripMenuItem.Text = "Browse for folder ..."
+			AddHandler Me.browseForFolderToolStripMenuItem.Click, AddressOf Me.BrowseForFolderToolStripMenuItemClick
+			'
 			'Button_Cancel
 			'
+			Me.Button_Cancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
 			Me.Button_Cancel.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.Button_Cancel.Location = New System.Drawing.Point(160, 304)
@@ -574,6 +637,7 @@ Imports System.Collections.Generic
 			'
 			'Button_OK
 			'
+			Me.Button_OK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_OK.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.Button_OK.Location = New System.Drawing.Point(72, 304)
 			Me.Button_OK.Name = "Button_OK"
@@ -581,6 +645,10 @@ Imports System.Collections.Generic
 			Me.Button_OK.TabIndex = 1
 			Me.Button_OK.Text = "OK"
 			AddHandler Me.Button_OK.Click, AddressOf Me.Button_OKClick
+			'
+			'toolVarOpenFileDialog
+			'
+			AddHandler Me.toolVarOpenFileDialog.FileOk, AddressOf Me.ToolVarOpenFileDialogFileOk
 			'
 			'PreferencesWindow
 			'
@@ -591,10 +659,10 @@ Imports System.Collections.Generic
 			Me.Controls.Add(Me.Button_Cancel)
 			Me.Controls.Add(Me.Button_OK)
 			Me.Controls.Add(Me.PrefsTabs)
-			Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
 			Me.HelpButton = true
 			Me.MaximizeBox = false
 			Me.MinimizeBox = false
+			Me.MinimumSize = New System.Drawing.Size(322, 373)
 			Me.Name = "PreferencesWindow"
 			Me.PrefsHelp.SetShowHelp(Me, false)
 			Me.ShowInTaskbar = false
@@ -609,8 +677,15 @@ Imports System.Collections.Generic
 			Me.ProgrammerPrefs.ResumeLayout(false)
 			Me.ToolVarsPrefs.ResumeLayout(false)
 			CType(Me.ToolVarDataGrid,System.ComponentModel.ISupportInitialize).EndInit
+			Me.toolVariableEditMenu.ResumeLayout(false)
 			Me.ResumeLayout(false)
 		End Sub
+		Private toolVarOpenFileDialog As System.Windows.Forms.OpenFileDialog
+		Private toolVarFolderBrowserDialog As System.Windows.Forms.FolderBrowserDialog
+		Private BrowseColumn As System.Windows.Forms.DataGridViewButtonColumn
+		Private toolVariableEditMenu As System.Windows.Forms.ContextMenuStrip
+		Private browseForFolderToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+		Private browseForFileToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 		Private components As System.ComponentModel.IContainer
 		Private prefsToolTip As System.Windows.Forms.ToolTip
 		Private ToolVarDataGrid As System.Windows.Forms.DataGridView
@@ -910,7 +985,6 @@ Imports System.Collections.Generic
 			e.Effect = DragDropEffects.Move
 		End Sub
 		
-		
 		Sub ToolListSelectedIndexChanged(sender As Object, e As EventArgs)
 			If ToolList.SelectedIndex = -1 Then
 				buttonEditTool.Enabled = False
@@ -921,5 +995,46 @@ Imports System.Collections.Generic
 			End If
 		End Sub
 		
+		Sub BrowseForFileToolStripMenuItemClick(sender As Object, e As EventArgs)
+			If ClickedToolVarRow <> -1 Then
+				toolVarOpenFileDialog.FileName = ToolVarDataGrid.Rows(ClickedToolVarRow).Cells(1).Value
+				toolVarOpenFileDialog.ShowDialog
+			End If
+		End Sub
+		
+		Sub BrowseForFolderToolStripMenuItemClick(sender As Object, e As EventArgs)
+			If ClickedToolVarRow <> -1 Then
+				'Set folder browser to current path, show
+				toolVarFolderBrowserDialog.SelectedPath = ToolVarDataGrid.Rows(ClickedToolVarRow).Cells(1).Value
+				toolVarFolderBrowserDialog.ShowDialog
+				'If new path was set, update cell
+				If toolVarFolderBrowserDialog.SelectedPath <> "" Then
+					ToolVarDataGrid.Rows(ClickedToolVarRow).Cells(1).Value = toolVarFolderBrowserDialog.SelectedPath
+				End If
+				ClickedToolVarRow = -1
+			End If
+		End Sub
+		
+		Sub ToolVarDataGridCellClick(sender As Object, e As DataGridViewCellEventArgs)
+			Dim table As DataGridView = sender
+			
+			'Button cell?
+			If e.ColumnIndex = 2 Then
+				If e.RowIndex >= 0 And e.RowIndex < table.Rows.Count - 1 Then
+					ClickedToolVarRow = e.RowIndex
+					
+					Dim buttonLocation As Point = table.PointToScreen(table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, False).Location)
+					toolVariableEditMenu.Show(Point.Add(buttonLocation, New Size(0, table.Rows(e.RowIndex).Height)))
+					
+				End If
+			End If
+		End Sub
+		
+		Sub ToolVarOpenFileDialogFileOk(sender As Object, e As System.ComponentModel.CancelEventArgs)
+			If ClickedToolVarRow <> -1 Then
+				ToolVarDataGrid.Rows(ClickedToolVarRow).Cells(1).Value = toolVarOpenFileDialog.FileName
+				ClickedToolVarRow = -1
+			End If
+		End Sub
 	End Class
 'End Namespace
