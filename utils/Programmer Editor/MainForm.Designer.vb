@@ -33,6 +33,7 @@ Partial Class MainForm
 	''' not be able to load this method if it was changed manually.
 	''' </summary>
 	Private Sub InitializeComponent()
+		Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(MainForm))
 		Me.SuspendLayout
 		'
 		'MainForm
@@ -40,6 +41,7 @@ Partial Class MainForm
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6!, 13!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
 		Me.ClientSize = New System.Drawing.Size(284, 262)
+		Me.Icon = CType(resources.GetObject("$this.Icon"),System.Drawing.Icon)
 		Me.Name = "MainForm"
 		Me.Text = "Programmer Editor"
 		Me.WindowState = System.Windows.Forms.FormWindowState.Minimized
