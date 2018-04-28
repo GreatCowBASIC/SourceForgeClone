@@ -119,6 +119,7 @@
 '''   Changed Restart to Start in i2c section
 '''   29-03-2018 by Evan Added LCD_WIDTH to support variable LCD widths.
 '''   use #define LCD_WIDTH 16 to change the standard of 20 character width to 16.
+'''   Revised 8-bit init from 200us to 20ms and revised LCDReady for 8bit schmitt trigger ports added 1 us delay
 
 #startup InitLCD
 
@@ -459,19 +460,19 @@ sub InitLCD
           #IFDEF LCD_IO 8
                'wakeup
                LCDWriteByte 0x30
-               wait 5 ms
+               wait 20 ms
                repeat 3
                    LCDWriteByte 0x30
-                   wait 200 us
+                   wait 20 ms
                end repeat
 
                LCDWriteByte 0x38     '2 line mode
-               wait 5 ms
+               wait 20 ms
                LCDWriteByte 0x06     'Cursor movement
-               wait 5 ms
+               wait 20 ms
                LCDWriteByte 0x0C     'Entry mode
 
-               wait 5 ms
+               wait 20 ms
                CLS   'Clear screen
 
           #ENDIF
@@ -855,6 +856,7 @@ function LCDReady
                               LCD_RSTemp = LCD_RS
 
                               SET LCD_RW ON
+                              Wait 5 10us
                               SET LCD_RS OFF
                               Wait 5 10us
                               SET LCD_Enable ON
