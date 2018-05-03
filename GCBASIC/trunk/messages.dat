@@ -68,7 +68,7 @@ End Block
 Startup = "Great Cow BASIC (%Version%)"
 Compiling = "Compiling %Filename% ..."
 NoFile = "Cannot find %Filename%"
-SkippingCompile = "Output file appears up to date, skipping compilation"
+SkippingCompile = "Search for an existing hexFile, compile if not found, then program"
 
 'Verbose mode messages
 FindSource = "Finding source files:"
