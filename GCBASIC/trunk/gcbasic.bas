@@ -533,6 +533,7 @@ Declare Function IsFloatType(InType As String) As Integer
 Declare Function IsIntType(InType As String) As Integer
 DECLARE FUNCTION IsLet(Temp As String) As Integer
 Declare Function IsSysTemp(VarNameIn As String) As Integer
+Declare Function IsValidName(InName As String) As Integer
 Declare Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
 Declare Function LinkedListCreate As LinkedListElement Pointer
 Declare Function LinkedListFind OverLoad (StartNode As LinkedListElement Pointer, SearchMeta As Any Pointer) As LinkedListElement Pointer
@@ -547,6 +548,7 @@ Declare Sub LinkedListPrint(StartNode As LinkedListElement Pointer)
 Declare Function LinkedListSize(StartNode As LinkedListElement Pointer) As Integer
 DECLARE FUNCTION MakeDec (DataSource As String) As LongInt
 DECLARE FUNCTION MakeDecFloat (DataSource As String) As Double
+Declare Function NCase(InValue As String) As String
 Declare Function NextCodeLine(CodeLine As LinkedListElement Pointer) As LinkedListElement Pointer
 Declare Function PrefIsYes(CheckVal As String, YesVal As Integer = -1) As Integer
 DECLARE SUB Replace (DataVar As String, Find As String, Rep As String)
@@ -669,7 +671,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-02-27"
+Version = "0.98.<<>> 2018-05-03"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -6808,15 +6810,14 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
 
 		'Anything else, show error
 		Case Else:
-			Temp = Message("BadValueType")
+			Temp = Message("CannotConcat")
 			Replace Temp, "%value%", Source
-			Replace Temp, "%type%", "string"
-			Replace Temp, "%var%", DestArrayName
+			Replace Temp, "%type%", NCase(SourceType)
 			LogError Temp, Origin
 
 		End Select
 
-	NEXT
+	Next
 
 	'Set length
 	IF TC > 1 Then
@@ -13564,7 +13565,7 @@ CheckArrayAgain:
 
 			'Check if brackets follow a calculation symbol, show error if they don't
 			IF InLine <> "" THEN
-				IF Not IsCalc(RIGHT(InLine, 1)) THEN
+				IF Not IsCalc(RIGHT(InLine, 1)) And InLine <> "IF" Then
 					Temp = Message("ArrayNoDec")
 					Replace Temp, "%Name%", InLine
 					LogError Temp, Origin
@@ -15345,7 +15346,7 @@ Sub MergeSubroutines
 	Dim As AllocationOrderType AllocationOrder(MAX_PROG_PAGES)
 	Dim As SubType Pointer CurrSubPtr
 	Dim As LinkedListElement Pointer CurrLine
-	Dim As String SubNameOut
+	Dim As String SubNameOut, ErrTemp
 
 	Dim As SubType Pointer IntSub
 	Dim As Integer IntSubLoc
@@ -15396,6 +15397,13 @@ Sub MergeSubroutines
 			If Subroutine(CurrSub)->Required Then
 				CalcSubSize(Subroutine(CurrSub))
 				TotalProgSize += Subroutine(CurrSub)->HexSize
+				'Is subroutine too big to fit anywhere?
+				If Subroutine(CurrSub)->HexSize > 2047 Then
+					ErrTemp = Message("SubToBigForPage")
+					Replace ErrTemp, "%sub%", Subroutine(CurrSub)->Name
+					Replace ErrTemp, "%size%", Str(Subroutine(CurrSub)->HexSize)
+					LogError ErrTemp, ""
+				End If
 				'Clear location set flag as well
 				Subroutine(CurrSub)->LocationSet = 0
 			End If
