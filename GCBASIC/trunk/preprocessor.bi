@@ -894,6 +894,11 @@ SUB PreProcessor
 	MultiCommand:
 
 				'Make adjustments to line if needed
+				
+				'Convert If( to If (
+				If Left(DataSource, 3) = "IF(" Then
+					DataSource = "IF (" + Mid(DataSource, 4)
+				End If
 
 				'Convert single-line IFs to multiple line
 				IF INSTR(DataSource, "IF") <> 0 AND INSTR(DataSource, "THEN") <> 0 AND LEN(DataSource) > INSTR(DataSource, "THEN") + 3 THEN
@@ -1211,13 +1216,14 @@ SUB PreProcessor
 
 				End If
 
+				'Split line at colons, unless line is a label or a #define
 				RestOfLine = ""
-				IF INSTR(DataSource, ":") <> 0 AND Right(DataSource, 1) <> ":" AND Left(DataSource, 8) <> "#DEFINE " THEN
-					'IF INSTR(DataSource, ":") > INSTR(DataSource, Chr(34)) AND INSTR(INSTR(DataSource, ":"), DataSource, Chr(34)) <> 0 THEN GOTO DontSplitLoad
+				If InStr(DataSource, ":") <> 0 And Left(DataSource, 8) <> "#DEFINE " And _
+					Not (Right(DataSource, 1) = ":" And IsValidName(Left(DataSource, Len(DataSource) - 1))) Then
 					RestOfLine = LTrim(Mid(DataSource, INSTR(DataSource, ":") + 1))
 					DataSource = RTrim(Left(DataSource, INSTR(DataSource, ":") - 1))
 
-				END IF
+				END If
 
 				DontSplitLoad:
 

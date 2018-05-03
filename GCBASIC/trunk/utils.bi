@@ -1074,6 +1074,26 @@ Function IsSysTemp(VarNameIn As String) As Integer
 	Return -1
 End Function
 
+Function IsValidName(InName As String) As Integer
+	'Check if a name is a valid name for a variable, label or subroutine
+	Dim CurrCharNo As Integer
+	Dim CurrChar As String
+	For CurrCharNo = 1 To Len(InName)
+		CurrChar = Mid(InName, CurrCharNo, 1)
+		If CurrChar >= "A" And CurrChar <= "Z" Then GoTo ThisCharValid
+		If CurrChar >= "a" And CurrChar <= "z" Then GoTo ThisCharValid
+		If CurrCharNo > 1 And (CurrChar >= "0" And CurrChar <= "9") Then GoTo ThisCharValid
+		If CurrChar = "_" Then GoTo ThisCharValid
+		
+		'Character wasn't valid
+		Return 0
+		
+		ThisCharValid:
+	Next
+	
+	Return -1
+End Function
+
 Function IsValidValue(InValue As LongInt, TypeIn As String) As Integer
 	'Check if a value is allowed for the given data type
 	Dim ValType As String
@@ -1188,6 +1208,10 @@ FUNCTION MakeDecFloat (Temp As String) As Double
 	IF Len(StrTemp) = 1 Then Return ASC(StrTemp)
 	
 	Return 0
+End Function
+
+Function NCase(InValue As String) As String
+	Return UCase(Left(InValue, 1)) + LCase(Mid(InValue, 2))
 End Function
 
 SUB Replace (DataVar As String, Find As String, Rep As String)

@@ -179,11 +179,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	
 	'Check Name
 	T = 0
-	IF INSTR(VarName, " ") <> 0 THEN T = 1
-	IF INSTR(VarName, ",") <> 0 THEN T = 1
-	IF INSTR(VarName, "(") <> 0 THEN T = 1
-	IF INSTR(VarName, ")") <> 0 THEN T = 1
-	If IsCalc(VarName) Then T = 1
+	If Not IsValidName(VarName) Then T = 1
 	'Names for status flags or destination locations, cannot reuse
 	IF VarName = "B" THEN T = 1
 	IF VarName = "C" THEN T = 1
@@ -196,8 +192,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	IF VarName = "V" Then T = 1
 	IF VarName = "W" THEN T = 1
 	IF VarName = "Z" THEN T = 1
-	'Name should not start with a number, this offends MPASM
-	If Left(VarName, 1) >= "0" And Left(VarName, 1) <= "9" Then T = 1
+	
 	IF T = 1 THEN
 		Temp = Message("BadVarName")
 		Replace Temp, "%var%", VarName
