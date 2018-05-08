@@ -5261,13 +5261,14 @@ SUB CompileDo (CompSub As SubType Pointer)
 
 			'Show error if no loop
 			If LoopLoc = 0 Then
+				LogError(Message("DoWithoutLoop"), Origin)
 
 			'Otherwise, compile normally
 			Else
 				'Get origin of LOOP command
 				LoopOrigin = ""
 				IF INSTR(LoopLoc->Value, ";?F") <> 0 THEN
-					LoopOrigin = Mid(InLine, INSTR(InLine, ";?F"))
+					LoopOrigin = Mid(LoopLoc->Value, INSTR(LoopLoc->Value, ";?F"))
 					LoopLoc->Value = RTrim(Left(LoopLoc->Value, INSTR(LoopLoc->Value, ";?F") - 1))
 				END If
 				If LoopOrigin = "" Then LoopOrigin = Origin
@@ -5278,12 +5279,28 @@ SUB CompileDo (CompSub As SubType Pointer)
 				'Get mode {UNTIL | WHILE}, condition
 				IF CP = 1 THEN
 					Mode = LTrim(Mid(InLine, 4))
-					Condition = LCase(Mid(Mode, INSTR(Mode, " ") + 1))
-					Mode = UCase(Left(Mode, INSTR(Mode, " ") - 1))
+					If InStr(Mode, " ") <> 0 Then
+						Condition = LCase(Mid(Mode, INSTR(Mode, " ") + 1))
+						Mode = UCase(Left(Mode, INSTR(Mode, " ") - 1))
+					End If
+					
+					If Mode <> "UNTIL" And Mode <> "WHILE" Then
+						Temp = Message("InvalidDoMode")
+						Replace Temp, "%mode%", Mode
+						LogError Temp, Origin
+					End If
 				ElseIf CP = 2 THEN
 					Mode = LTrim(Mid(LoopLoc->Value, 6))
-					Condition = LCase(Mid(Mode, INSTR(Mode, " ") + 1))
-					Mode = UCase(Left(Mode, INSTR(Mode, " ") - 1))
+					If InStr(Mode, " ") <> 0 Then
+						Condition = LCase(Mid(Mode, INSTR(Mode, " ") + 1))
+						Mode = UCase(Left(Mode, INSTR(Mode, " ") - 1))
+					End If
+					
+					If Mode <> "UNTIL" And Mode <> "WHILE" Then
+						Temp = Message("InvalidDoMode")
+						Replace Temp, "%mode%", Mode
+						LogError Temp, LoopOrigin
+					End If
 				END IF
 
 				OldLoopLoc = LoopLoc

@@ -253,6 +253,8 @@ BadCast = "Cannot cast from %from% to %to%, cast here must be from larger to sma
 SubAndVarNameConflict = "Variable %var% cannot be created, a subroutine already has this name"
 SubToBigForPage = "Subroutine %sub% is %size% words, the size limit on the current chip is 2048 words"
 CannotConcat = "%type% %value% cannot be appended to a string variable"
+DoWithoutLoop = "Do without matching Loop"
+InvalidDoMode = "Invalid loop mode %mode%, mode (if specified) must be While or Until"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"
