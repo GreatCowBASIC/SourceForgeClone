@@ -255,6 +255,7 @@ SubToBigForPage = "Subroutine %sub% is %size% words, the size limit on the curre
 CannotConcat = "%type% %value% cannot be appended to a string variable"
 DoWithoutLoop = "Do without matching Loop"
 InvalidDoMode = "Invalid loop mode %mode%, mode (if specified) must be While or Until"
+DoWithoutCondition = "Missing condition after %mode%"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"

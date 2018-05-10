@@ -671,7 +671,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-05-03"
+Version = "0.98.<<>> 2018-05-10"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5284,10 +5284,18 @@ SUB CompileDo (CompSub As SubType Pointer)
 						Mode = UCase(Left(Mode, INSTR(Mode, " ") - 1))
 					End If
 					
+					'Is mode valid?
 					If Mode <> "UNTIL" And Mode <> "WHILE" Then
 						Temp = Message("InvalidDoMode")
 						Replace Temp, "%mode%", Mode
 						LogError Temp, Origin
+					Else
+						'Is condition present?
+						If Condition = "" Then
+							Temp = Message("DoWithoutCondition")
+							Replace Temp, "%mode%", Mode
+							LogError Temp, Origin
+						End If
 					End If
 				ElseIf CP = 2 THEN
 					Mode = LTrim(Mid(LoopLoc->Value, 6))
@@ -5300,6 +5308,13 @@ SUB CompileDo (CompSub As SubType Pointer)
 						Temp = Message("InvalidDoMode")
 						Replace Temp, "%mode%", Mode
 						LogError Temp, LoopOrigin
+					Else
+						'Is condition present?
+						If Condition = "" Then
+							Temp = Message("DoWithoutCondition")
+							Replace Temp, "%mode%", Mode
+							LogError Temp, LoopOrigin
+						End If
 					End If
 				END IF
 
