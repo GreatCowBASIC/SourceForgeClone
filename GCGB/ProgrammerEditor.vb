@@ -155,7 +155,8 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerFileName
 			'
-			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerFileName, "Program file, which Great Cow Graphical BASIC will run.")
+			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerFileName, "Program file (.exe) which will be run by the compiler when a program is ready to "& _ 
+						"download.")
 			Me.ProgrammerFileName.Location = New System.Drawing.Point(8, 80)
 			Me.ProgrammerFileName.Name = "ProgrammerFileName"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerFileName, true)
@@ -177,8 +178,7 @@ Imports System.Windows.Forms
 			'ProgrammerParams
 			'
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerParams, "Command line parameters for the program. Please consult your programmer or extern"& _ 
-						"al tool manual and the Configuration > Setting up a programmer section of the GC"& _ 
-						"GB help for details.")
+						"al tool manual and the hints below for details.")
 			Me.ProgrammerParams.Location = New System.Drawing.Point(8, 128)
 			Me.ProgrammerParams.Name = "ProgrammerParams"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerParams, true)
@@ -269,7 +269,7 @@ Imports System.Windows.Forms
 			'
 			'ReqConfig
 			'
-			Me.ProgrammerEditorHelp.SetHelpString(Me.ReqConfig, resources.GetString("ReqConfig.HelpString"))
+			Me.ProgrammerEditorHelp.SetHelpString(Me.ReqConfig, "If certain config settings must be used with this programmer, enter them here.")
 			Me.ReqConfig.Location = New System.Drawing.Point(8, 80)
 			Me.ReqConfig.Name = "ReqConfig"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ReqConfig, true)
@@ -364,7 +364,6 @@ Imports System.Windows.Forms
 			Me.Controls.Add(Me.Button_Cancel)
 			Me.Controls.Add(Me.Button_OK)
 			Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
-			Me.HelpButton = true
 			Me.MaximizeBox = false
 			Me.MinimizeBox = false
 			Me.Name = "ProgrammerEditor"
