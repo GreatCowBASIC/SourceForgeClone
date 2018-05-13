@@ -1,5 +1,5 @@
 '    System routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2017 Hugh Considine,  William Roth and Evan Venn
+'    Copyright (C) 2006 - 2018 Hugh Considine,  William Roth and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -51,6 +51,7 @@
 '               Supports IntOsc MaxMhz of >=48 and not <48 ... there may me others true tables
 '    26092017 - Added  NOPs to assist support.  This will cause Extraneous arguments on the line when using MPLAB but we need the information for support.
 '               Added [canskip] where appropiate
+'    26042018 - Comments tidy up. No functional changes.
 
 'Constants
 #define ON 1
@@ -90,9 +91,9 @@
 Sub InitSys
 
    #Ifdef PIC
-       ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
-       ' Sets NVRAM pointer to Static RAM as default location.
        #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+           ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+           ' Sets NVRAM pointer to Static RAM as default location.
             #Ifdef Var(NVMCON1)
                NVMCON1.7 = 1
                NVMCON1.6 = 0
@@ -101,25 +102,20 @@ Sub InitSys
 
     #ENDIF
 
-   'Remove this show of DAT format at v0.99.00 when we know is OK
-   'This will cause Extraneous arguments on the line when using MPLAB but we need the information for support.
    #if ChipIntOSCCONFormat > 0
+
         asm ShowDebug ChipIntOSCCONFormat is ChipIntOSCCONFormat
    #endif
 
 
-  'added 03102016 to resolve OSCCAL calibration
-  'GCB does not load saved calibration data into OSCCAL register on Baseline PIC. Therefore the FOSC is inaccurate when using internal RC oscillator.
-  'Solution:  Add following as the FIRST lines in the INITSYS sub in the System.h file
-  '#Ifdef PIC
-  '     #Ifdef Var(OSCCAL)
-  '           movwf OSCCAL
-  '    #Endif
-  '#Endif
-  'This loads the saved calibration data from the last flash memory location at POR or any time the chip is reset.
+
 
     #ifdef PIC
         #ifdef Var(OSCCAL)
+            'Resolve OSCCAL calibration
+            'GCB does not load saved calibration data into OSCCAL register on Baseline PIC. Therefore the FOSC is inaccurate when using internal RC oscillator.
+            'Solution:  Add following as the FIRST lines in the INITSYS sub in the System.h file
+            'This loads the saved calibration data from the last flash memory location at POR or any time the chip is reset.
             #ifdef  chipfamily 14
                  CALL 0x3ff
             #endif
@@ -127,10 +123,12 @@ Sub InitSys
         #endif
     #endif
 
-  'Set up internal oscillator
-  #IFNDEF Var(OSCCON)
-    'handle OSCCON1 chips 16f and some 18f that have this register
 
+  #IFNDEF Var(OSCCON)
+      #ifdef PIC
+     'Set up internal oscillator
+     'Handle OSCCON1 register for parts that have this register
+      #endif
       #IFDEF Var(OSCCON1)
 
         asm showdebug OSCCON type is 100 'This is the routine to support OSCCON1 config addresss
@@ -143,10 +141,10 @@ Sub InitSys
         OSCTUNE = 0x00 ' HFTUN 0
 
 
-         'Section added by WMR  for 18FxxK40 chips with PPS and
-         'Oscillator block similar to 16F188xx Chips
-         #IFDEF ChipFamily 16    'is 18Fxxxx
 
+         #IFDEF ChipFamily 16    'is 18Fxxxx
+           'Section added by WMR  for 18FxxK40 chips with PPS and
+           'Oscillator block similar to 16F188xx Chips
             #IFDEF Bit(NDIV3)    'and has NDIV3 bit
 
                 asm showdebug OSCCON type is 101 '18F and has NDIV3 bit
@@ -320,18 +318,20 @@ Sub InitSys
 
 
   #IFDEF Var(OSCCON)
-    ' This is the routine for the OSCCON config
+
     #IFDEF Bit(FOSC4)
+    ' This is the routine for the OSCCON config
       Set FOSC4 Off
     #ENDIF
 
     #if NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
-      'Most chips
-      #ifndef Bit(HFIOFS)
 
+      #ifndef Bit(HFIOFS)
+        'Most part have Bit(HFIOFS)
         asm showdebug OSCCON type is 103 ' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifNdef Bit(HFIOFS)
 
-        #IFDEF SYS_CLOCK_DIV_NEEDED 1 'added for 18F(L)K20 -WMR
+        #IFDEF SYS_CLOCK_DIV_NEEDED 1
+          'added for 18F(L)K20 -WMR
           OSCCON = OSCCON OR b'01110000'
         #ENDIF
 
@@ -365,19 +365,20 @@ Sub InitSys
           OSCCON = OSCCON OR  b'00010000'
         #ENDIF
 
-       'PLL for higher speeds
+
        #if SYS_CLOCK_INT_PLL_USED
+        'PLL for higher speeds
         [canskip] PLLMULT, SPLLEN = b'11'
        #endif
 
       #endif
 
-      'The section now handles two true table for frequency
-      'Test on 18f2425 (type1 max frq of 8mhz) and 18f26k22 (type2 max frq of 16mhz)
-      'Assumes that testing the ChipMaxMHz >= 48 is a valid test for type2 microcontrollers
-      'Supports IntOsc MaxMhz of 64 and not 64 ... there may me others true tables
 
       #ifdef Bit(HFIOFS)
+        'The section now handles two true table for frequency
+        'Supports 18f2425 (type1 max frq of 8mhz) classes and 18f26k22 (type2 max frq of 16mhz) classes
+        'Assumes that testing the ChipMaxMHz >= 48 is a valid test for type2 microcontrollers
+        'Supports IntOsc MaxMhz of 64 and not 64 ... there may be others true tables that GCB needs to support
 
         asm showdebug OSCCON type is 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
 
@@ -703,8 +704,8 @@ Sub InitSys
 
   #ENDIF
 
-  'Clear BSR on 18F chips
   #IFDEF ChipFamily 16
+   'Clear BSR on 18F chips
     BSR = 0
   #ENDIF
 
@@ -712,17 +713,19 @@ Sub InitSys
     TBLPTRU = 0
   #ENDIF
 
-  'Ensure all ports are set for digital I/O
-  'Turn off A/D
+
   #IF Var(ADCON0) OR Var(ADCON)
+    'Ensure all ports are set for digital I/O and, turn off A/D
     #IFDEF Bit(ADFM)
       SET ADFM OFF
     #ENDIF
-    'Switch off A/D
+
     #ifdef NoVar(ADCON0)
+      'Switch off A/D with NoVar(ADCON0)
       Set ADCON.ADON Off
     #endif
     #IFDEF Var(ADCON0)
+      'Switch off A/D Var(ADCON0)
       SET ADCON0.ADON OFF
       #IF NoVar(ANSEL) AND NoVar(ANSELA) AND NoVar(ANSEL0)
         #IFDEF NoBit(PCFG4)
@@ -746,14 +749,15 @@ Sub InitSys
           #ENDIF
         #ENDIF
 
-        'For 18F1320, which uses ADCON1 as an ANSEL register
+
         #IFDEF Bit(PCFG4)
+          'For 18F1320, which uses ADCON1 as an ANSEL register
           ADCON1 = 0
         #ENDIF
       #ENDIF
     #ENDIF
 
-    'Clear whatever ANSEL variants the chip has
+    'Commence clearing any ANSEL variants in the part
     #IFDEF Var(ANSEL)
       ANSEL = 0
     #ENDIF
@@ -781,11 +785,12 @@ Sub InitSys
     #IFDEF Var(ANSELE)
       ANSELE = 0
     #ENDIF
+    'End clearing any ANSEL variants in the part
   #ENDIF
 
 
-  'For 18f devices
   #IFDEF VAR(ANCON0)
+   'For 18f devices
     #IFDEF BIT(ANSEL0)
       Set ANSEL0 off
     #ENDIF
@@ -841,15 +846,16 @@ Sub InitSys
 
   #ENDIF
 
-  'Turn off comparator
+
   #IFDEF Var(CMCON)
-    'defaults - same since 2013
+
     #IFNDEF BIT(CMEN0)
+      'Turn off comparator - this default setting not changed since 2013
       CMCON = 7
     #ENDIF
 
     #IFDEF BIT(CMEN0)
-    'fix for following chips
+      'Applied for following chips
       '    18f1230.dat:CMEN1,CMCON,1
       '    18f1231.dat:CMEN1,CMCON,1
       '    18f1330.dat:CMEN1,CMCON,1
@@ -863,21 +869,30 @@ Sub InitSys
   #IFDEF Var(CMCON0)
     CMCON0 = 7
   #ENDIF
-  '12F510,16F506 and other devices? (Thanks to Kent for suggesting these lines!)
-  'Revised for PIC16F15355 class of chips
+
   #IFDEF Var(CM1CON0)
+    'Comparator register bits for 12F510,16F506, PIC16F1535 classes
     #IFDEF Var(CM2CON0)
-      #IFDEF bit(C2ON): C2ON = 0: #ENDIF
-      #IFDEF bit(C2EN): C2EN = 0: #ENDIF
+      #IFDEF bit(C2ON)
+        C2ON = 0
+      #ENDIF
+      #IFDEF bit(C2EN)
+        C2EN = 0
+      #ENDIF
     #ENDIF
 
-    #IFDEF bit(C1ON): C1ON = 0: #ENDIF
-    #IFDEF bit(C1EN): C1EN = 0: #ENDIF
+    #IFDEF bit(C1ON)
+      C1ON = 0
+    #ENDIF
+    #IFDEF bit(C1EN)
+      C1EN = 0
+    #ENDIF
 
   #ENDIF
 
-  'Set GPIO.2 to digital (clear T0CS bit)
+
   #IFDEF ChipFamily 12
+    'Set GPIO.2 to digital (clear T0CS bit)
     #IFDEF Bit(T0CS)
       movlw b'11000111'
       option
