@@ -1,8 +1,8 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F45K42
-'Generated 22/12/2017
+'Generated 30/4/2018
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 25/09/2017
+'Header Format last revised: 30/04/2018
 
 [ChipData]
 Prog=16384
@@ -17,6 +17,7 @@ Family=16
 FamilyVariant=1
 PSP=0
 MaxAddress=16383
+ReadAD10BitForceVariant=4
 
 [Interrupts]
 ADCReady:ADIE,ADIF
@@ -6047,6 +6048,7 @@ BOREN=SBORDIS
 BORV=VBOR_2P45
 CLKOUTEN=OFF
 CP=OFF
+'18FDefaultASMConfig Setting
 CSWEN=ON
 '18FDefaultASMConfig Setting
 DEBUG=OFF
