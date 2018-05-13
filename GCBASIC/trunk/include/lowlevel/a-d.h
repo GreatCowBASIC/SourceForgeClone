@@ -130,7 +130,7 @@
 ' 18/2/18  'Adapted AVR Reference settings, see #180218.  Left old code as is but testing for MUX4.
 ' 19/2/18  'Revised AD_REF_SOURCE = AD_REF_AVCC section to handle TINYx chips.  The VCC reference is different from MEGA devices o the Tiny devices!
            'Reverted adaption AVR Reference settings, see #180218.  Left old code as is but now test suitable bit for MUX4.
-
+' 31/4/19  Added ChipReadAD10BitForceVariant to ensure 12 bit ADC force a 10 bit ADC result.
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -1738,17 +1738,31 @@ LLReadAD 0
           SET ADFM OFF
       #ENDIF
 
-      #IFDEF Bit(CHSN0)'18F PIC with 12=bit ADC does not support 10-bit result, so recalc
-          IF ADN_PORT <> 0 then
-               ' Added DIV/4 to return 10 bit value -WMR
-                #IFNDEF Bit(CHSN3)
-'                  Repeat 2
-                       READAD10 = READAD10/4
-'                      rotate READAD10 right
-'                  End Repeat
-                #ENDIF
-          END IF
+      #IFNDEF ChipReadAD10BitForceVariant
+          #IFDEF Bit(CHSN0)'18F PIC with 12=bit ADC does not support 10-bit result, so recalc
+              IF ADN_PORT <> 0 then
+                   ' Added DIV/4 to return 10 bit value -WMR
+                    #IFNDEF Bit(CHSN3)
+    '                  Repeat 2
+                           READAD10 = READAD10/4
+    '                      rotate READAD10 right
+    '                  End Repeat
+                    #ENDIF
+              END IF
+          #ENDIF
       #ENDIF
+
+      #IFDEF ChipReadAD10BitForceVariant
+              'Shift the data to 10bits when a 12bit ADC
+              IF ADN_PORT <> 0 then
+                  READAD10 = READAD10/ChipReadAD10BitForceVariant
+              END IF
+      #ENDIF
+#script
+
+
+#endscript
+
   #ENDIF
 
   #IFDEF AVR
