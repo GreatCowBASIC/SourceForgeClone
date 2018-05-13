@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega328p
-'Generated 18/12/2017
+'Generated 16/7/2015
 'Format last revised: 23/9/2007
 
 [ChipData]
@@ -10,7 +10,7 @@ RAM=2048
 I/O=23
 ADC=8
 MaxMHz=20
-Pins=32
+Pins=28
 Family=120
 ConfigWords=0
 GPR=32
@@ -714,40 +714,6 @@ EEDR7,EEDR,7
 26,PC3(IO),ADC3(I)
 27,PC4(IO),ADC4(I)
 28,PC5(IO),ADC5(I)
-
-[Pins-TQFP]
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
 
 [ConfigOps]
 NoConfig-PRG

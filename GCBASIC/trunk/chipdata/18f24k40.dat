@@ -1,8 +1,8 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F24K40
-'Generated 15/12/2017
+'Generated 30/4/2018
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 25/09/2017
+'Header Format last revised: 30/04/2018
 
 [ChipData]
 Prog=8192
@@ -2893,6 +2893,7 @@ BORV=VBOR_2P45
 CLKOUTEN=OFF
 CPD=OFF
 CP=OFF
+'18FDefaultASMConfig Setting
 CSWEN=ON
 '18FDefaultASMConfig Setting
 DEBUG=OFF
