@@ -27,6 +27,8 @@
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 13/12/14: Revised to support Linear array memory addressing.  Now requires the compiler after the date of 13/12/2014
 ' 17/11/17: Added GLCDPrintLn methods
+' 26/04/18: Revised fontwidth now 5
+
 
 '
 'Hardware settings
@@ -213,7 +215,7 @@ Sub InitGLCD_PCD8544
                         'Colours
                         GLCDBackground = 0
                         GLCDForeground = 1
-                        GLCDFontWidth = 6
+                        GLCDFontWidth = 5
                         GLCDfntDefault = 0
                         GLCDfntDefaultsize = 1
 
