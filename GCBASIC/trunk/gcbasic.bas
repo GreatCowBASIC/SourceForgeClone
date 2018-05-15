@@ -13382,9 +13382,8 @@ Sub PrepareProgrammer
 	PrgTool = 0
 	If InStr(PrgExe, ",") <> 0 Then
 		If VBS = 1 Then
-			Print Spc(5)
 			Temp = Message("ChoosingProgrammer")
-			Print Temp
+			Print Spc(5); Temp
 		End If
 		ProgrammerList = GetElements(PrgExe, ",")
 		CurrProg = ProgrammerList->Next
@@ -13395,10 +13394,9 @@ Sub PrepareProgrammer
 					If .UseIf = "" Then
 						'Found programmer with no conditions, use
 						If VBS = 1 Then
-							Print Spc(10);
 							Temp = Message("ProgrammerSelected")
 							Replace Temp, "%prog%", .DispName
-							Print Temp
+							Print Spc(10); Temp
 						End If
 						PrgTool = CurrTool
 						Exit Do
