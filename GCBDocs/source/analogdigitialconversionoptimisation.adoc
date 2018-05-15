@@ -309,7 +309,7 @@ This will save 146 bytes of program memory.
 
     'USART settings
     #define USART_BAUD_RATE 9600
-
+    #define USART_TX_BLOCKING
 
     'Set the input pin direction
     Dir PORTA.0 In

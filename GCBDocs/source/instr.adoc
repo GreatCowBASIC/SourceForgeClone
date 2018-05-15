@@ -20,7 +20,8 @@ The `Instr` function will search one string to find the location of another stri
 
     'Set up hardware serial connection
     #define USART_BAUD_RATE 9600
-    #define USART_BLOCKING
+    #define USART_TX_BLOCKING
+
 
     'Fill a string with a message
     Dim TestData As String

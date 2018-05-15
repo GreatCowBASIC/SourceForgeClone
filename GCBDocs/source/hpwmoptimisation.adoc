@@ -2,12 +2,11 @@
 
 *About Hardware PWM Code Optimisation*
 
-The Hardware PWM module support is implemented by Great Cow BASIC to up to four channels.
+For compatibility all channels are supported by default.  This is maintains backward compatibility. +
 
-For compatibility all channels are supported.
+To mimise the code, use the following to disable support for a specific Capture/Compare/PWM (CCP) module, timers or the PWM module. +
 
-To mimise the code, use the following to disable support for a specific Capture/Compare/PWM (CCP) module.
-
+Setting a constant to _FALSE_ will remove the support of the capability from the method and therefore will reduce the program size.
 ----
 
     #define USE_HPWMCCP1 FALSE
@@ -22,6 +21,8 @@ To further mimise the code, use the following to disable support for a specific 
 
 ----
 
+    #define USE_HPWM3 FALSE
+    #define USE_HPWM4 FALSE
     #define USE_HPWM5 FALSE
     #define USE_HPWM6 FALSE
     #define USE_HPWM7 FALSE

@@ -1,6 +1,5 @@
-// Edit EvanV 171016
 === #Option Volatile
-
+// Edit EvanV 171016
 *Syntax:*
 ----
     #option volatile `bit`

@@ -10,7 +10,7 @@
 
 Rotate the GLCD display to a relative position.
 
-GLCD rotation needs to be supported by the GLCD chipset.
+GLCD rotation needs to be supported by the GLCD chipset. *NOT* all GLCD chipset support these commands.
 
 The options are:
 ----

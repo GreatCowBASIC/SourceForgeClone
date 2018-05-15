@@ -20,7 +20,8 @@ The `Hex` function will convert a number into hexadecimal format. The input `_nu
 
     'Set up hardware serial connection
     #define USART_BAUD_RATE 9600
-    #define USART_BLOCKING
+    #define USART_TX_BLOCKING
+
 
     'Send EEPROM data over serial connection
     'Uses Hex to display as hexadecimal

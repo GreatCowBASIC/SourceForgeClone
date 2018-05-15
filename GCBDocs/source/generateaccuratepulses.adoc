@@ -77,6 +77,7 @@ These tests were completed using a Saleae Logic Analyzer.
     CLS
     ; ---- USART settings
     #define USART_BAUD_RATE 38400
+    #define USART_TX_BLOCKING
     DIR PORTB.7 OUT
 
     ; ---- Setup Pulse parameters

@@ -43,6 +43,14 @@ location before it jumps to a new subroutine. Some Great Cow BASIC commands are
 subroutines, so you should always allow for 2 or 3 subroutine calls more
 than your program has.
 
+On 16F chips, the program memory is divided into pages. Each page holds 2048 instructions.&#160;&#160;&#160;
+If the program jumps from code on one page to code on another, the compiler has to select the new page.&#160;&#160;&#160;Having to do this makes the program bigger, so try to avoid this.
+To keep jumps between pages down, Great Cow BASIC imposes a rule that each subroutine must be entirely within one page, so that only jumps to other subroutines require the page selection.&#160;&#160;&#160;
+As an example, say you have two pages of memory, each 2048 instructions (words) long. + 
+If you have a main sub that is 1500 words, and four other subroutines each 600 words long, your total program size would be 3900 words and you might expect it to fit into the 4096 words available. &#160;&#160;&#160;
+The problem though is that once the main routine takes 1500 words from page 1, nothing else will fit after it. Three of the 600 word subroutines would fit onto page 2, but that leaves one 600 word subroutine that will not fit into the 500 left on page 1 or the 200 left on page 2.&#160;&#160;&#160;
+If you want to reduce the chance of this happening, the best option is to keep your subroutines smaller - move anything out of the main routine and into another one - this will resolve memory page constraints.&#160;&#160;&#160;
+
 Atmel AVR microcontrollers have no fixed limit on how many subroutines can be
 called at a time, but if too many are called then some variables on the
 chip may be corrupted. To check if there are too many subroutines, work

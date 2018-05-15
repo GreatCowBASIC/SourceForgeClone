@@ -3,7 +3,7 @@
 *Syntax:*
 [subs="quotes"]
 ----
-InitTimer12 _source_, _prescaler_
+InitTimer12 _prescaler_, _postscaler_
 ----
 *Command Availability:*
 

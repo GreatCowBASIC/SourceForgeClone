@@ -1,3 +1,4 @@
+//added function clarification
 === Conditions
 
 *About Conditions*
@@ -32,7 +33,7 @@ Great Cow BASIC supports these relative operators:
 |Less than or equal to
 
 |`>=`
-|Equal to or greater than
+|Greater than or equal to
 |===
 In addition, these logical operators can be used to combine several
 conditions into one:
@@ -99,3 +100,52 @@ NOT, AND, OR and XOR will not work.
 |Temp.0 ON
 |True if Temp bit 0 is on
 |===
+
+
+*Constraints when using Conditional Test*
+
+As Great Cow BASIC is very flexible with the use of variables type this can cause issues when testing constants and/or functions.
+
+A few simple rules. *Always put the function or constant first, or, always call the function with the addition of the braces.*
+
+The example code below shows the correct method and an example that does compile but will not work as expected.
+
+----
+    'Example A - works
+    'Call the function by adding the braces
+    '
+    Do
+    Loop While HSerReceive() <> 62
+
+    'Example B - works
+    'Please the constant first - this is the general rule - put the constant first.
+    '
+    Do
+    Loop While 62 <> HSerReceive
+----
+
+
+This fails as the function will not be called
+
+----
+    'Example C - compiles but does not operate as expected
+    Do
+    Loop While HSerReceive <> 62
+----
+{empty} +
+{empty} +
+{empty} +
+{empty} +
+{empty} +
+
+
+
+
+
+
+
+
+
+
+
+

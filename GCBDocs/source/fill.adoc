@@ -30,7 +30,8 @@ A typical use is to fill a string to be displayed on an LCD or serial terminal.
 
     'Set up hardware serial connection
     #define USART_BAUD_RATE 9600
-    #define USART_BLOCKING
+   #define USART_TX_BLOCKING
+
 
 
     HserPrint Fill ( 16, "*" ) ;will print a string of '****************'

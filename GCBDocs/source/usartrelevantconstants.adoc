@@ -10,8 +10,9 @@ Initialization of the USART module is handled automatically from your program by
 
 *Example:*
 ----
-	#chip mega328p, 16
-	#define USART_BAUD_RATE 9600
+  #chip mega328p, 16
+  #define USART_BAUD_RATE 9600
+  #define USART_TX_BLOCKING
 ----
 *Command Availability:*
 

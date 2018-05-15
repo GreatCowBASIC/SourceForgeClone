@@ -8,9 +8,10 @@ of the chip, which can be accessed using the `ReadTable` command.
 The advantage of lookup tables is that they are memory efficient,
 compared to an equivalent set of IF statements.
 
-Data tables can be define by
+Data tables are defined as
 
 . a single value on each line
+. byte, word, longs and integer values are valid (no strings or decimals!)
 . multiple elements on a single line separated by commas
 . constants and calculations within the single line data table entries are permitted
 . an external data source file
@@ -19,20 +20,20 @@ Data tables can be define by
 
 A single value on each line
 ----
-Table TestDataSource as Integer
-    12
-    24
-    36
-    48
-    60
-    72
+    Table TestDataSource as Integer
+        12
+        24
+        36
+        48
+        60
+        72
     End Table
 ----
 Multiple elements on a single line separated by commas:
 ----
-Table TestDataSource as Integer
-    12,  24, 36
-    48,  60, 72
+    Table TestDataSource as Integer
+        12,  24, 36
+        48,  60, 72
     End Table
 ----
 
@@ -40,13 +41,13 @@ Constants and calculations within the single line:
 ----
 #define calculation_constant 2
 
-Table TestDataSource as Integer
-    1 * calculation_constant
-    2 * calculation_constant
-    4 * calculation_constant
-    8 * calculation_constant
-    16 * calculation_constant
-    32 * calculation_constant
+    Table TestDataSource as Integer
+      1 * calculation_constant
+      2 * calculation_constant
+      4 * calculation_constant
+      8 * calculation_constant
+      16 * calculation_constant
+      32 * calculation_constant
     End Table
 ----
 Data tables can now be loaded directly from a file.  The source file will be read as a hexidecimal raw file.
@@ -73,12 +74,12 @@ in it. Great Cow BASIC can be explicitly instructed to cast the table to a
 variable type, as follows:
 ----
     Table TestDataSource as Integer
-    12
-    24
-    36
-    48
-    60
-    72
+        12
+        24
+        36
+        48
+        60
+        72
     End Table
 ----
 Item 0 of a lookup table stores the size of the table. If the `ReadTable`
@@ -145,12 +146,12 @@ Here is some example code:
     'Subsequent locations will each store a value
 
     Table TestDataSource Store Data
-    12
-    24
-    36
-    48
-    60
-    72
+        12
+        24
+        36
+        48
+        60
+        72
     End Table
 ----
 *For more help, see* <<_readtable,ReadTable>>

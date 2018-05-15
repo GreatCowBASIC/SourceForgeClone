@@ -1,78 +1,101 @@
-==== PWM Overview
+==== Microchip PIC PWM Overview
 
 *Introduction:*
 
 The methods described in this section allow the generation of Pulse
 Width Modulation (PWM) signals. PWM signals enables the microcontroller to control
-items like the speed of a motor, or the brightness of a LED or lamp. The methods can
-also be used to generate the appropriate frequency signal to drive an
-infrared LED for remote control applications.
+items like the speed of a motor, or the brightness of a LED or lamp. +
 
-The `PWMOn`, `PWMOff` and `HPWM` methods use the hardware PWM generation module on the
-microcontroller.   They will only work on some microcontrollers - see the
-section on each command for details. `PWMOn` and `HPWM` will cause the hardware PWM
-module on the microcontroller to start generating a PWM signal, which
-will then continue to be generated until the `PWMOff` instruction is run.
+The methods can also be used to generate the appropriate frequency signal to drive an
+infrared LED for remote control applications. +
 
-The method `PWMOut` does not make use of any special hardware within the microcontroller.
-The PWM signal is generated only while the `PWMOut` command is executing - therefore, when the `PWMOut` is not executing
-by moving onto the next command, the PWM signal will stop.
+Great Cow BASIC support the four different method shown below: +
+&#160;&#160;&#160; - Two methods use the microcontroller CCP module +
+&#160;&#160;&#160; - One method uses the microcontroller PWM module, and +
+&#160;&#160;&#160; - One method is a software emulation of PWM. +
+
+
+
+*_Hardware PWM using a CCP module_*
+
+Using PWM with the CCP module:  This option requires a CCP module within the microcontroller. +
+
+
+Hardware PWM is only available through the "CCP" or "CCPx" pin. This is a hardware limitation of Microchip PIC microcontrollers. +
+
+
+Microcontrollers with PPS can change the pin - use the PPS tool to set the desired output pin. +
+
+This method uses three parameters to setup the PWM.
+
+
+----
+
+    'HPWM channel, frequency, duty cycle
+    HPWM 1, 76, 80
+
+----
+
+
+*_Hardware PWM using a PWM module_*
+
+Using microcontroller PWM module.  This option requires a PWM module within the microcontroller
+Microcontrollers with PPS can change the pin - use the PPS tool to set the desired output pin. +
+
+This method uses four parameters to setup the PWM.
+
+----
+
+    'HPWM channel, frequency, duty cycle, timer
+    HPWM 5, 76, 80, 2
+
+----
+
+
+*_Hardware PWM using the CCP1 in fixed mode_*
+
+Using Hardware PWM on fixed mode PWM requires a CCP1 module.
+
+The fixed mode can use CCP1 only, and, the parameters of the PWM cannot be dynamically changed in the user program.&#160;&#160;&#160;The parameters are fixed by the definition of two constants.
+
+----
+    #define PWM_Freq 76    'Set frequency in KHz
+    #define PWM_Duty 80    'Set duty cycle to 80 %
+
+    HPWMOn
+
+    wait 5 s
+
+    HPWMOff
+----
+
+*_Software PWM_*
+
+Using Software PWM on requires no specific modules with the microcontroller. +
+
+
+The PWM parameters for duty and the number of pulses can be changed dynamically in the user program. +
+
+
+The PWM is *only* operational for the number of cycles stated in the calling method. +
+
+----
+    'A call to use the software PWM on the specific port, with a duty of 127 for 100 cycles
+
+    ; ----- Constants
+    'PWM constant. This is a required constant.
+    #define PWM_Out1 portb.0
+
+  ; ----- Define Hardware settings
+    'PWM port out.  This is not required but a good practice.
+    dir PWM_Out1 out
+
+    'Pulse the PWM
+    PWMOut 1, 127, 100
+----
 
 *Relevant Constants:*
 
 A number of constants are used to control settings for the PWM hardware module of the microcontroller.
 To set them, place a line in the main program file that uses #define to assign a value to the particular
-constant.
-
-There are two sets of constants: one set for Hardware PWM, and one set
-for Software PWM.
-
-
-*_Hardware PWM_*
-
-Hardware PWM requires a CCP, CCP1, CCP2, CCP3 or CCP4 module on the microcontroller and Software PWM has no requirements regarding a supporting hardware modle within the microcontroller.
-Hardware PWM is only available through the "CCP" or "CCPx" pin. This is
-a hardware limitation of Microchip PIC microcontrollers.
-
-These constants are required for PWMOn.
-
-[cols=3, options="header,autowidth"]
-|===
-|*Constant Name*
-|*Controls*
-|*Default Value*
-
-|`PWM_Freq`
-|Specifies the output frequency of the PWM module in KHz.
-|38
-
-|`PWM_Duty`
-|Sets the duty cycle of the PWM module output. Given as percentage.
-|50
-|===
-
-HPWM and PWMOff do not require any constants to operate.
-
-Optimisation of the hardware PWM code can be implemented within Great Cow BASIC, see <<_hardware_pwm_code_optimisation, Hardware PWM Code Optimisation>>
-
-
-*_Software PWM_*
-[cols=3, options="header,autowidth"]
-[subs="specialcharacters,quotes"]
-|===
-|*Constant Name*
-|*Controls*
-|*Default Value*
-
-|`PWM_Delay`
-|The PWM Period. The length of any delay used will be multiplied by 255.
-If no value is specified, no delays will be inserted into the PWM
-routine.
-|Not defined - no delay
-
-|`PWM_Out _n_`
-|The port physical port on the Microchip PIC microcontroller that corresponds to channel _n_. +
-_n_ can represent 1, 2, 3 or 4.
-|Not Defined
-|===
-
+constant. +

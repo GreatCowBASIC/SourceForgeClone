@@ -37,6 +37,12 @@ Parameters are required as detailed in the table below:
 |`_source_`
 |The clock source for this specific timer. Can be either `Osc` or `Ext` where`Osc` is an internal oscillator and `Ext` is an external oscillator.
 
+{empty} +
+{empty} +
+`Osc` - Selects the clock source in use, as set by the microcontroller specific configuration (fuses or #config).&#160;&#160;This could be an internal clock or an external clock source ( external clock sources are typically attached to the XTAL pins).
+
+`Ext` - Selects the clock source attached to a specific exernal interrupt input port.&#160;&#160;This allows a different clock frequency than the main clock to be used, such as 32.768 kHz crystals commonly used for real time circuits.
+
 |`_prescaler_`
 |The value of the prescaler for this specific timer.  See the tables below for permitted values for Microchip PIC or the Atmel AVR microcontrollers.
 
@@ -100,8 +106,22 @@ speed where the oscillator speed is (FOSC/4). The prescaler applies to
 both the internal oscillator or the external clock.
 {empty} +
 {empty} +
+
+
+*Timer0 Match (8/16-bit Timer0)*
+
+On Chips with 8/16-bit Timer0, when in 8-bit mode, Timer0 behaves much like Timers2/4/6. In 8-bit mode the TMR0H register does not increment. It instead becomes the Period or Match register and is aliased as "PR0"  (Period Register 0).
+
+In 8-bit mode, Timer0 does not technically overflow. Instead when TMR0L increments and matches the value in the PR0 register, TMR0L is reset to 0. The interrupt flag bit (TMR0IF) bit is then set (based upon Postscaler).
+
+The default value in the PR0 "match register" is 255.  This value can be set/changed in the user program to set/change the timer period. This can be used to fine tune the timer period.
 {empty} +
 {empty} +
+
+
+
+
+
 *Microchip PIC microcontrollers 16bit Timer 0 support:*
 
 To configure PIC Timer 0 for 16_bit operation add the following line to the source code.
@@ -127,11 +147,13 @@ In this example specfic values have been passed to the method.
 Great Cow BASIC supports passing specfic values to setup Timer 0.  These specfic values be obtained from the MicroChip Configurator.
 
 ----
-    InitTimer0 Osc, 0x91 ,  0x48			' Where these values are specfic to the timer setup.
+    InitTimer0 Osc, 0x91 ,  0x48      ' Where these values are specfic to the timer setup.
 ----
 
 
 
+{empty} +
+{empty} +
 {empty} +
 {empty} +
 
@@ -145,7 +167,7 @@ Great Cow BASIC constants as detailed in the table below:
 |Description
 
 |`_source_`
-|The clock source for this specific timer. Can be either `Osc` or `Ext` where`Osc` is an internal oscillator and `Ext` is an external oscillator.
+|The clock source for this specific timer. Can be either `Osc` or `Ext` where `Osc` is an internal oscillator and `Ext` is an external oscillator.
 
 |`_prescaler_`
 |The value of the prescaler for this specific timer.  See the tables below for permitted values for Microchip PIC or the Atmel AVR microcontrollers.

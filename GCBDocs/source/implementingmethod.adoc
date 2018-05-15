@@ -20,7 +20,6 @@ A macro will use more program memory as the macro will be compiled as inline cod
 
     'USART settings
     #define USART_BAUD_RATE 9600
-    #define USART_BLOCKING
     #define USART_TX_BLOCKING
 
     ;======== MAIN PROGRAM LOOP ================

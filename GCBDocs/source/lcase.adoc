@@ -20,7 +20,8 @@ The `LCase` function will convert all of the letters in the string `_source_` to
 
     'Set up hardware serial connection
     #define USART_BAUD_RATE 9600
-    #define USART_BLOCKING
+    #define USART_TX_BLOCKING
+
 
     'Fill a string with a message
     Dim TestData As String
