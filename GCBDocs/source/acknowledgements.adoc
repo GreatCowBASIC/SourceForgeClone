@@ -39,7 +39,7 @@ William Roth for the LCD code and supporting diagrams.
 
 Theo Loermans for the revised LCD sections and the library.
 
-Chris Roper for the bitwise methods including the library including FnEquBit, FnNotBit, FnlslBit, FnlsrBit and SetWith.
+Chris Roper for the bitwise methods including the library including FnEquBit, FnNotBit, FnlslBit, FnlsrBit, SetWith and 47xxx.
 
 
 *Conversion of asciidoctor documentation files*:

@@ -21,7 +21,8 @@ Testing `bkbhit` will set to True when a byte has been received. Reading the fun
     ' turn on the RS232 and terminal port.
     ' Define the USART port
     #define USART_BAUD_RATE 9600
-    #define USART_BLOCKING true
+    #define USART_TX_BLOCKING
+    #define USART_BLOCKING
     ' [change to your config] Ensure these port addresses are correct
     #define SerInPort PORTc.7
     #define SerOutPort PORTc.6

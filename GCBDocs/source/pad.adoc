@@ -24,7 +24,8 @@ A typical use is to pad a string to be displayed on a LCD display.
 
     'Set up hardware serial connection
     #define USART_BAUD_RATE 9600
-    #define USART_BLOCKING
+    #define USART_TX_BLOCKING
+
 
     'Defibe a string
     Dim TestData As String * 16

@@ -20,20 +20,25 @@ Also, see http://microchip.wikidot.com/8bit:pps for more information.
 *Example:*
 
 ----
-    'Set the PPS of the PWM and the RS232 ports on a 16f18855.
     'Please check configuration before using on an alternative microcontroller.
 
-    UNLOCKPPS
-        RC0PPS = 0x0010		 		'RC0->EUSART:TX;
-        RXPPS  = 0x0011 		  'RC1->EUSART:RX;
+    #chip 16f18855,32
+    #option explicit
+    #config RSTOSC_HFINT32
 
-        RC0PPS = 0x0010				'RC0->EUSART:TX;
-        RC3PPS = 0x0017				'RC3->MSSP2:SDA2;
-        SSP2DATPPS = 0x0013		'RC3->MSSP2:SDA2;
-        SSP2CLKPPS = 0x0014		'RC4->MSSP2:SCL2;
-        RC4PPS = 0x0016				'RC4->MSSP2:SCL2;
-    LOCKPPS
+    'Set the PPS of the I2C and the RS232 ports.
+    #startup InitPPS, 85
+    Sub InitPPS
+      LOCKPPS
+        RC0PPS = 0x0010       'RC0->EUSART:TX;
+        RXPPS  = 0x0011       'RC1->EUSART:RX;
 
+        SSP1CLKPPS = 0x14     'RC3->MSSP1:SCL1;
+        SSP1DATPPS = 0x13     'RC4->MSSP1:SDA1;
+        RC3PPS = 0x15         'RC3->MSSP1:SCL1;
+        RC4PPS = 0x14         'RC4->MSSP1:SDA1;
+      UnLockPPS
+    End Sub
 ----
 
 *For more help, see: <<_unlockpps,UnlockPPS>> and <<_lockpps,LockPPS>>.*

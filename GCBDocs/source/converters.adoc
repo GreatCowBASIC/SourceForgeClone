@@ -55,12 +55,12 @@ The configuration file MUST have the extension of `.INI`.  No leading spaces are
 Specification of the configuration file.
 The file has four items: `desc`, `in`, `out` and `exe`. Where:
 +
- desc      : Is the description shown in GCGB
- in        : Is the source file extension to be transformed
- out       : Is the target transformed file extension.
- exe       : Is the executable to be run for this specific configuration file.
- params    : Optional, is the required parameter to be passed from the compiler.  Example:  params = %filename% %chipmodel%
- purge     : Optional, will always recreate the target transformed file. The default is to retain the target transformed file unless source has changed.
+ desc         : Is the description shown in GCGB
+ in           : Is the source file extension to be transformed
+ out          : Is the target transformed file extension.
+ exe          : Is the executable to be run for this specific configuration file.
+ params       : Optional, is the required parameter to be passed from the compiler.  Example:  params = %filename% %chipmodel%
+ deletetarget : Optional, will always recreate the target transformed file. The default is to retain the target transformed file unless source has changed. Options are Y or N
 +
 You can have multiple configuration files within the `..\converters folder structure`.
 +
@@ -166,16 +166,58 @@ This example is located in the converter folder of the Great Cow BASIC installat
     DataIn  ( Rx, RC6 )  'this method is created during the convert process. They do not exist withiut the converter.
 ----
 
-This example would use the optional parameters of `params` and `purge` in the converter configuration file as follows:
+This example would use the optional parameters of `params` and `deletetarget` in the converter configuration file as follows:
 ----
     desc = PPS file (*.PPS)
     params = %filename% %chipmodel%
     in = mcc
     out = GCB
     exe = DataHandler.exe
-    purge = on
+    deletetarget= y
 ----
 ====
-+
-+
-+
+
+
+*Example 5 : Add build numbers and time/date details to your programs*
+
+This converter is used to expose two string variables as follows:
+
+----
+    GCBBuildStr
+    GCBBuildTimeStr
+----
+
+The user code is simple. Using the #include statement specify any filename with an extension must be `cnt`. As follows:
+
+----
+    #include "GCBVersionNumber.cnt"
+----
+
+
+Complete code would like this - this not optimised - this shows the use of the exposed strings.
+
+----
+    #include "GCBVersionNumber.cnt"
+
+    dim versionString as string * 40
+    versionString = "Max7219 build"+GCBBuildStr
+    versionString = versionString + "@"+GCBBuildTimeStr
+    Print versionString
+----
+
+This outputs the following - where #20 is the current build and the date/time is correct for build time.
+
+----
+    Max7219 build20@01-06-2018 08:00:21
+    Commence main program
+----
+
+This works as the support INI file instructs the compiler to call a utility that automatically creates a build number tracker file and the supportting string functions.
+The utility creates a tracker file and the methods files in the same folder as your source program - so, each tracker is specific to each project.
+The converter requires the following files - these are included within your Installation.
+
+----
+    GCBVersionStamp.exe - the utility called by the converter capability.
+    cnt2gcb.ini - the supporting ini file used by the compiler to handle this converter.
+----
+

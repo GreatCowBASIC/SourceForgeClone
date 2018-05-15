@@ -54,50 +54,52 @@ part of your solution
 This example examines the IC2 devices and displays on a terminal.
 This code will require adaption but the code shows an approach to discover the IC2 devices.
 ----
-	' I2C Overview - using the ChipIno board, see here for information
-	#chip 16F886, 8
-	#config MCLRE_ON
+  ' I2C Overview - using the ChipIno board, see here for information
+  #chip 16F886, 8
+  #config MCLRE_ON
 
-	' Define I2C settings
-	#define I2C_MODE Master
-	#define I2C_DATA PORTC.4
-	#define I2C_CLOCK PORTC.3
-	#define I2C_DISABLE_INTERRUPTS ON
+  ' Define I2C settings
+  #define I2C_MODE Master
+  #define I2C_DATA PORTC.4
+  #define I2C_CLOCK PORTC.3
+  #define I2C_DISABLE_INTERRUPTS ON
 
-	'USART/SERIAL PORT via a MAX232 TO PC Terminal
-	#define USART_BAUD_RATE 9600
-	Dir PORTc.6 Out
-	#define USART_DELAY 5 ms
+  'USART/SERIAL PORT via a MAX232 TO PC Terminal
+  #define USART_BAUD_RATE 9600
+  #define USART_TX_BLOCKING
 
-	HSerPrintCRLF 2
-	HSerPrint "I2C Discover using the ChipIno"
-	HSerPrintCRLF 2
+  Dir PORTc.6 Out
+  #define USART_DELAY 5 ms
 
-	HSerPrint "Started: "
-	HSerPrint "Searching I2C address space: v0.85"
-	HSerPrintCRLF
+  HSerPrintCRLF 2
+  HSerPrint "I2C Discover using the ChipIno"
+  HSerPrintCRLF 2
 
-	wait 100 ms
-	dim DeviceID as byte
-	for DeviceID = 0 to 255
-		I2CStart
-		I2CSend ( deviceID )
-		I2CSend ( 0 )
-		I2CSend ( 0 )
-		i2cstop
+  HSerPrint "Started: "
+  HSerPrint "Searching I2C address space: v0.85"
+  HSerPrintCRLF
 
-		if I2CSendState = True  then
+  wait 100 ms
+  dim DeviceID as byte
+  for DeviceID = 0 to 255
+    I2CStart
+    I2CSend ( deviceID )
+    I2CSend ( 0 )
+    I2CSend ( 0 )
+    i2cstop
 
-		  HSerPrint   "__"
-		  HSerPrint   "ID: 0x"
-		  HSerPrint   hex(deviceID)
-		  HSerPrint   " (d"
-		  HSerPrint   Str(deviceID)
-		  HSerPrint   ")"
-		  HSerPrintCRLF
-		end if
-	next
-	HSerPrint   "End of Device Search": HSerPrintCRLF 2
-	End
+    if I2CSendState = True  then
+
+      HSerPrint   "__"
+      HSerPrint   "ID: 0x"
+      HSerPrint   hex(deviceID)
+      HSerPrint   " (d"
+      HSerPrint   Str(deviceID)
+      HSerPrint   ")"
+      HSerPrintCRLF
+    end if
+  next
+  HSerPrint   "End of Device Search": HSerPrintCRLF 2
+  End
 ----
 Supported in <I2C.H>

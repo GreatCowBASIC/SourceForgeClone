@@ -11,14 +11,16 @@
 Only available on Microchip PIC microcontrollers with Capture/Compare/PWM (CCP)
 module.
 
-This command supports the CCP 8 bit support with Timer 2 only.  For PWM 10 Bit support with only timer see here <<_hpwm_10_bit,HPWM 10 Bit>>
+This command supports the CCP 8 bit support with *Timer 2 only*. +
+
+For PWM 10 Bit support with other timers - see here <<_hpwm_10_bit,HPWM 10 Bit>>
 
 *Explanation:*
 
 This command sets up the hardware PWM module of the Microchip PIC microcontroller to generate
-a PWM waveform of the given frequency and duty cycle. Once this command
-is called, the PWM will be emitted until PWMOff is called. If you only
-need one particular frequency and duty cycle, you should use PWMOn and
+a PWM waveform of the given frequency and duty cycle. +
+
+If you only need one particular frequency and duty cycle, you should use PWMOn and
 the constants PWM_Freq and PWM_Duty instead.
 
 `_channel_` is 1, 2, 3, 4 or 5, and corresponds to the pins CCP1, CCP2, CCP3, CCP4 and CCP5
@@ -38,15 +40,24 @@ resolution possible.
 `_duty cycle_` specifies the desired duty cycle of the PWM signal, and
 ranges from 0 to 255 where 255 is 100% duty cycle.
 
+To stop the PWM signal use the `HPWMOff` method with the parameter of the channel.
+
+----
+    'Stop the CCP/PWM signal
+    HPWMOff ( 1 )
+----
+
 The optional constant `HPWM_FAST` can be defined to enable the recalculation of the
 timer prescaler when needed.  This will provide faster operation, but uses extra byte
 of RAM and may cause problems if `HPWM` and `PWMOn` are used together in a program.
 This will not cause any issue when using `HPWM` and `PWMOff` in the same program with `HPWM_FAST`.
 
+The optional constant `DisableCCPFixedModePWM` can be defined to prevent Timer2 from being enabled.  This constant may be required when you need to use Timer2 for non-CCP/PWM support.
+
 *Example:*
 ----
     'This program will alter the brightness of an LED using
-    'hardware PWM.
+    'CCP/PWM.
 
     'Select chip model and speed
     #chip 16F877A, 20
@@ -56,16 +67,15 @@ This will not cause any issue when using `HPWM` and `PWMOff` in the same program
 
     'Main code
     do
-        'Turn up brightness over 2.5 seconds
+        'Turn up brightness over the range
         For Bright = 1 to 255
             HPWM 1, 40, Bright
             wait 10 ms
         next
-        'Turn down brightness over 2.5 seconds
+        'Turn down brightness over the range
         For Bright = 255 to 1
             HPWM 1, 40, Bright
             wait 10 ms
         next
     loop
 ----
-*For more help, see* <<_pwmoff,PWMOff>>

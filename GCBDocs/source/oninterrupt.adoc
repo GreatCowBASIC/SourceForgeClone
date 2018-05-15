@@ -1,3 +1,4 @@
+// Edit EvanV 210117 to add PORTCHANGE
 ==== On Interrupt
 
 *Syntax:*
@@ -169,35 +170,35 @@ variables to control the unsupported peripherals.
 |Microchip
 
 |[gray]#*ExtInt0*#
-|External Interrupt pin 0 has been ed
+|External Interrupt pin 0 has been detected
 |Microchip&AVR
 
 |[gray]#*ExtInt1*#
-|External Interrupt pin 1 has been ed
+|External Interrupt pin 1 has been detected
 |Microchip&AVR
 
 |[gray]#*ExtInt2*#
-|External Interrupt pin 2 has been ed
+|External Interrupt pin 2 has been detected
 |Microchip&AVR
 
 |[gray]#*ExtInt3*#
-|External Interrupt pin 3 has been ed
+|External Interrupt pin 3 has been detected
 |Microchip&AVR
 
 |[red]#*ExtInt4*#
-|External Interrupt pin 4 has been ed
+|External Interrupt pin 4 has been detected
 |AVR
 
 |[red]#*ExtInt5*#
-|External Interrupt pin 5 has been ed
+|External Interrupt pin 5 has been detected
 |AVR
 
 |[red]#*ExtInt6*#
-|External Interrupt pin 6 has been ed
+|External Interrupt pin 6 has been detected
 |AVR
 
 |[red]#*ExtInt7*#
-|External Interrupt pin 7 has been ed
+|External Interrupt pin 7 has been detected
 |AVR
 
 |[blue]#*GPIOChange*#
@@ -209,7 +210,7 @@ variables to control the unsupported peripherals.
 |Microchip&AVR
 
 |[blue]#*LPWU*#
-|The Low Power Wake Up has been ed
+|The Low Power Wake Up has been detected
 |Microchip
 
 |[blue]#*OscillatorFail*#
@@ -254,6 +255,10 @@ variables to control the unsupported peripherals.
 
 |[blue]#*PMPReady*#
 |A Parallel Master Port read or write has finished
+|Microchip
+
+|[blue]#*PORTChange*#
+|The pins on ports ABCEDEF have changed.  This is generic port change interrupt.  You must inspect the source to ensure you are handlign the correct interrupt.
 |Microchip
 
 |[blue]#*PORTAChange*#
@@ -357,7 +362,7 @@ captured in the ICR1 register
 |AVR
 
 |[red]#*Timer1Error*#
-|The Timer 1 Fault Protection unit has been ed by an input on the INT0
+|The Timer 1 Fault Protection unit has been detected by an input on the INT0
 pin
 |AVR
 
@@ -608,8 +613,9 @@ the handler.
 |AVR
 
 |===
-
-*Example:*
+{empty} +
+{empty} +
+*Example 1:*
 
 ----
     'This program increments a counter every time Timer1 overflows
@@ -644,6 +650,81 @@ the handler.
         CounterValue ++
     End Sub
 ----
+{empty} +
+{empty} +
+*Example 2:*
+----
+    'This example reflects the input signal on the output port.
+    #chip mega328p, 16
+    #option explicit
+
+    'set out SOURCE interrupt port as an output
+    dir portb.0 in
+
+    'set/enable the mask for the specific input port
+    'this is crutial - for a lot of the On Interrupt methods you will need to specify the interrupt source via a mask.bit.
+    PCINT0 = 1
+
+    'set out signal port as an output
+    dir portB.5 out
+
+    'setup the On Interrupt method
+    On Interrupt PinChange0 Call TogglePin
+
+    'maintain a loop
+    do
+
+    loop
+
+    'handle the output signal
+    'Note. The AVR automatically clears the Interrupt. Please study the datasheet for each specific microcontroller
+
+    sub togglePin
+        portb.5 =  !pinb.5
+    end sub
+----
+{empty} +
+{empty} +
+*Example 3:*
+----
+    'This example reflects the input signal on the output port from the external interrupt port.
+    #Chip mega328p, 16
+    #option explicit
+
+    'Set external interrupt INTO input pin as an input
+    dir portd.2 in
+
+    'set out signal port as an output
+    dir portB.5 out
+
+    'hardware interrupt on Port D2
+    INT0 = 1
+
+    'set interrupt to a failing or rising edge
+    'interrupt on falling edge
+    EICRA = b'00000010'
+        'or, alternatively you can set to a rising edge
+    'EICRA = b'00000011'
+
+    'set out signal port as an output
+    dir portB.5 out
+
+    'setup the On Interrupt method on external interrupt 0
+    On Interrupt EXTINT0 Call togglePin
+
+    'maintain a loop
+    do
+
+    loop
+
+    'handle the output signal
+    'Note. The AVR automatically clears the Interrupt. Please study the datasheet for each specific microcontroller
+
+    sub togglePin
+        portb.5 =  !pinb.5
+    end sub
+----
+
 *For more help, see* <<_inittimer0,InitTimer0>> article contains
 an example of using Timer 0 and On Interrupt to generate a Pulse Width
 Modulation signal to control a motor.

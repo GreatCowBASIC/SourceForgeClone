@@ -5,12 +5,13 @@
 ----
     PWMOff
 ----
+
 *Command Availability:*
 
 Only available on Microchip PIC microcontrollers with Capture/Compare/PWM
 module CCP1.
 
-This command does not operate on any other CCP channel except for CCP1.
+This command does not operate on any other CCP channel.
 
 *Explanation:*
 
@@ -26,4 +27,6 @@ This command will disable the output of the CCP1/PWM module on the Microchip PIC
     WAIT 10 s              'Wait 10 seconds
     PWMOff                 'Turn off the PWM
 ----
-*For more help, see* <<_pwmon,PWMOn>>
+{empty} +
+{empty} +
+*For more help, also see* <<_pwmon,PWMOn>>

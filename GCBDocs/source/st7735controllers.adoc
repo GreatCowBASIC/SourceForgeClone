@@ -1,17 +1,23 @@
 ==== ST7735 Controllers
 
-See below for an example of using the ST7735 GLCD. This section contains
-the relevant information for this type of device.
+This section covers GLCD devices that use the ST7735 graphics controller.  The ST7735 is a single-chip controller/driver for 262K-color, graphic type TFT-LCD.
 
-The Great Cow BASIC constants for control of the connectivity are shown
-in the table below. The only connectivity option the serial mode where
-connection between the microcontroller and the GLCD to control the data
-bus is managed the data in and data out lines.
+The Great Cow BASIC constants shown below control the configuration of the ILI9340 controller. &#160;&#160;&#160;Great Cow BASIC supports an 8 bit bus connectivity. The 8 bit must be a single port of consective bits  - this is shown in the tables below.
 
-To use the ST7735 drivers simply include the following:
+To use the ST7735 driver simply include the following in your user code.  This will initialise the driver.
+
 ----
     #include <glcd.h>
     #DEFINE GLCD_TYPE GLCD_TYPE_ST7735
+
+    'Pin mappings for ST7735
+    #define GLCD_DC     porta.0           'example port setting
+    #define GLCD_CS     porta.1           'example port setting
+    #define GLCD_RESET  porta.2           'example port setting
+    #define GLCD_DI     porta.3           'example port setting
+    #define GLCD_DO     porta.4           'example port setting
+    #define GLCD_SCK    porta.5           'example port setting
+
 ----
 
 The Great Cow BASIC constants for control display characteristics are shown in the table below.
@@ -60,8 +66,10 @@ the GLCD.
 GLCD.
 |Required
 |===
-The Great Cow BASIC constants for control display characteristics are
-shown in the table below. +
+
+The Great Cow BASIC constants for control display characteristics are shown in the table below. +
+
+
 [cols="1,1,^1", options="header,autowidth"]
 |===
 |*Constants*
@@ -70,16 +78,24 @@ shown in the table below. +
 
 |`GLCD_WIDTH`
 |The width parameter of the GLCD
-|`160`
+|`160` +
+This cannot be changed
+
 |`GLCD_HEIGHT`
 |The height parameter of the GLCD
-|`128`
+|`128` +
+This cannot be changed
+
 |`GLCDFontWidth`
 |Specifies the font width of the Great Cow BASIC font set.
 |`6`
 |===
-The Great Cow BASIC commands supported for this GLCD are shown in the
-table below.
+
+
+The Great Cow BASIC commands supported for this GLCD are shown in the table below.&#160;&#160;&#160;Always review the appropiate library for the latest full set of supported commands.
+
+
+
 [cols=3, options="header,autowidth"]
 |===
 |*Command*
@@ -131,7 +147,27 @@ specific attribute.
 |`GLCDReadByte`
 |Read a byte value from the controller, see the datasheet for usage.
 |`bytevariable = GLCDReadByte`
+
+|`ST7735_[color]`
+|Specify color as a parameter for many GLCD commands
+|Color constants for this device are shown in the list below. +
+
+
+ Any color can be defined using a valid hexidecimal word value between 0x0000 to 0xFFFF.
 |===
+
+
+----
+   ST7735_BLACK   'hexidecimal value 0x0000
+   ST7735_BLUE    'hexidecimal value 0xF800
+   ST7735_RED     'hexidecimal value 0x001F
+   ST7735_GREEN   'hexidecimal value 0x07E0
+   ST7735_CYAN    'hexidecimal value 0xFFE0
+   ST7735_MAGENTA 'hexidecimal value 0xF81F
+   ST7735_YELLOW  'hexidecimal value 0x07FF
+   ST7735_WHITE   'hexidecimal value 0xFFFF
+----
+
 For a ST7735 datasheet, please refer
 http://www.crystalfontz.com/controllers/ST7735_V2.1_20100505.pdf[here.]
 
@@ -142,7 +178,7 @@ http://www.crystalfontz.com/controllers/ST7735_V2.1_20100505.pdf[here.]
     #chip 16F1937,32
     #config Osc = INT, VCAPEN_OFF, MCLRE_ON, PLLEN_ON, CLKOUTEN_OFF
 
-    #include <lowlevel\glcd.h>
+    #include <glcd.h>
 
     'Defines for ST7735
     #define GLCD_TYPE GLCD_TYPE_ST7735
@@ -157,9 +193,10 @@ http://www.crystalfontz.com/controllers/ST7735_V2.1_20100505.pdf[here.]
     GLCDPrint(0, 0, "Test of the ST7735 Device")
     end
 ----
+
+
+
 *For more help, see*
-<<_lcd_io_0,LCD_IO 0>>, <<_lcd_io_2,LCD_IO 2>>
-<<_lcd_io_4,LCD_IO 4>>, <<_lcd_io_8,LCD_IO 8>>,
-<<_lcd_io_10,LCD_IO 10>> or <<_lcd_io_12,LCD_IO 12>>
+<<_glcdcls,GLCDCLS>>, <<_glcddrawchar,GLCDDrawChar>>, <<_glcdprint,GLCDPrint>>, <<_glcdreadbyte,GLCDReadByte>>, <<_glcdwritebyte,GLCDWriteByte>> or <<_pset,Pset>>
 
 Supported in <GLCD.H>

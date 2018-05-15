@@ -1,20 +1,40 @@
 ==== PCD8544 Controllers
 
-See below for an example of using the PCD844 GLCD display device. This
-section contains the relevant information for this type of device.
 
-The Great Cow BASIC constants for control of the connectivity are shown
-in the table below. The only connectivity option the serial mode where
-connection between the microcontroller and the GLCD to control the data
-bus is managed the data in and data out lines.
+This section covers GLCD devices that use the PCD844 graphics controller. +
 
-To use the PCD8544 drivers simply include the following:
+
+The PCD8544 is a low power CMOS LCD controller/driver,
+designed to drive a graphic display of 48 rows and
+84 columns.  All necessary functions for the display are
+provided in a single chip, including on-chip generation of
+LCD supply and bias voltages, resulting in a minimum of
+external components and low power consumption.
+The PCD8544 interfaces to microcontrollers through a
+serial bus interface.
+
+The Great Cow BASIC constants shown below control the configuration of the PCD844 controller. &#160;&#160;&#160;Great Cow BASIC supports SPI software connectivity only - this is shown in the tables below.
+
+The PCD8544 is a monochrome device.
+
+The PCD844can operate in two modes. Full GLCD mode and Text/JPG mode the full GLCD mode requires a minimum of 512 bytes.  For microcontrollers with limited memory the text only can be selected by setting the correct constant.
+
+To use the PCD844 driver simply include the following in your user code.  This will initialise the driver.
+
 ----
     #include <glcd.h>
-    #DEFINE GLCD_TYPE GLCD_TYPE_PCD8544
+    #define GLCD_TYPE GLCD_TYPE_PCD8544
+
+    ' Pin mappings for software SPI for Nokia 3310 Device
+    #define GLCD_DO     portc.5              'example port setting
+    #define GLCD_SCK    portc.3              'example port setting
+    #define GLCD_DC     portc.2              'example port setting
+    #define GLCD_CS     portc.1              'example port setting
+    #define GLCD_RESET  portc.0              'example port setting
+
 ----
 
-The Great Cow BASIC constants for control display characteristics are shown in the table below.
+The Great Cow BASIC constants for the interface to the controller are shown in the table below.
 
 
 [cols=3, options="header,autowidth"]
@@ -26,10 +46,6 @@ The Great Cow BASIC constants for control display characteristics are shown in t
 |`GLCD_TYPE`
 |`GLCD_TYPE_PCD8544`
 |
-
-|`GLCD_DATA_PORT`
-|Not Available for this controller
-|Not applicable
 
 |`GLCD_DC`
 |Specifies the output pin that is connected to Data/Command IO pin on the
@@ -55,6 +71,19 @@ the GLCD.
 GLCD.
 |Required
 
+
+|===
+
+
+The Great Cow BASIC constants for control display characteristics are shown in the table below.
+
+
+[cols="1,1,^1", options="header,autowidth"]
+|===
+|*Constants*
+|*Controls*
+|*Default*
+
 |`GLCD_TYPE_PCD8544_CHARACTER_MODE_ONLY`
 |Specifies that the display controller will operate in text mode and BMP
 draw mode only. +
@@ -69,29 +98,26 @@ default.
 |`PCD8544WriteDelay`
 |Specifies the write delay, if required for slower microcontroller,
 |Optional. Set to 0 as the default value
-|===
-The Great Cow BASIC constants for control display characteristics are
-shown in the table below.
-[cols="1,1,^1", options="header,autowidth"]
-|===
-|*Constants*
-|*Controls*
-|*Default*
 
 |`GLCD_WIDTH`
 |The width parameter of the GLCD
-|160
+|160 +
+This cannot be changed
 
 |`GLCD_HEIGHT`
 |The height parameter of the GLCD
-|128
+|128 +
+This cannot be changed
 
 |`GLCDFontWidth`
 |Specifies the font width of the Great Cow BASIC font set.
 |6
 |===
-The Great Cow BASIC commands supported for this GLCD are shown in the
-table below.
+
+
+The Great Cow BASIC commands supported for this GLCD are shown in the table below.&#160;&#160;&#160;Always review the appropiate library for the latest full set of supported commands.
+
+
 [cols=3, options="header,autowidth"]
 |===
 |*Command*
@@ -144,76 +170,83 @@ specific attribute.
 |Read a byte value from the controller, see the datasheet for usage.
 |`bytevariable = GLCDReadByte`
 |===
+
+
 *For a PCD8544 datasheet, please refer
 https://www.google.co.uk/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CCMQFjAA&url=https%3A%2F%2Fwww.sparkfun.com%2Fdatasheets%2FLCD%2FMonochrome%2FNokia5110.pdf&ei=bmjDVKePM83datDIgYgH&usg=AFQjCNFa7N9WMhSg849oXejlfP3FRvQqpA&sig2=ZFpG-ubTxvrBRAV4dRvhVw[here] +
 
-This example shows how to drive a PCD8544 based Graphic LCD module with
-the built in commands of Great Cow BASIC.
+This example shows how to drive a PCD8544 based Graphic LCD module with the built in commands of Great Cow BASIC.
 
 Example:
 ----
-    #chip 16lf1939,32
-    #config Osc = INT, MCLRE_ON, PLLEN_Off, CLKOUTEN_OFF
+      #chip 16lf1939,32
+      #option Explicit
+      #config Osc = INT, MCLRE_ON, PLLEN_Off, CLKOUTEN_OFF
 
-        #include <glcd.h>
+      #include <glcd.h>
 
-        #DEFINE GLCD_TYPE GLCD_TYPE_PCD8544
+      #DEFINE GLCD_TYPE GLCD_TYPE_PCD8544
 
-          ' Pin mappings for SPI for Nokia 3310 Device
-              #define GLCD_DO portc.5
-              #define GLCD_SCK portc.3
-              #define GLCD_DC portc.2
-              #define GLCD_CS portc.1
-              #define GLCD_RESET portc.0
+      ' Pin mappings for software SPI for Nokia 3310 Device
+      #define GLCD_DO portc.5
+      #define GLCD_SCK portc.3
+      #define GLCD_DC portc.2
+      #define GLCD_CS portc.1
+      #define GLCD_RESET portc.0
+
+      Dim outString as string
+      Dim ccount, byteNumber as Byte
+      Dim longNumber as Long
+      Dim wordNumber as Word
+      GLCDCLS
+
+      DO forever
+         for CCount = 31 to 127
+              GLCDPrint (0, 0, "PrintStr")
+              GLCDDrawString (0, 9, "DrawStr")
+              GLCDPrint ( 44 ,  21, "     ")
+              GLCDPrint ( 44 ,  29, "     ") ' word value
+              GLCDPrint ( 44 ,  37, "   ") ' Byte value
+
+              outstring = hex( longNumber_U)
+              GLCDPrint ( 44 , 21,outstring )
+              outstring = hex( longNumber_H)
+              GLCDPrint ( 55 , 21, outstring)
+              outstring = hex( longNumber)
+              GLCDPrint ( 67 , 21,  outstring )
+              GLCDPrint ( 44 , 29, mid( str(wordNumber),1, 6))
+              GLCDPrint ( 44 , 37, byteNumber)
+
+              box 46,9,57,19
+              GLCDDrawChar(48, 9, CCount )
+              outString = str( CCount )
+              ' draw a box to overwrite existing strings
+              FilledBox(58,9,GLCD_WIDTH-1,17,GLCDBackground )
+              GLCDDrawString(58, 9, outString )
+
+               box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
+               box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH- 1, GLCD_HEIGHT-1
+               filledbox 2,30,6,38, wordNumber
+               Circle( 25,30,8,1)            ;center
+               FilledCircle( 25,30,4,longNumber xor 1) ;center
+
+               line 0,  GLCD_HEIGHT-1 , GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1
+               line  GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1 ,0, (GLCD_HEIGHT /2) +1
 
 
-          GLCDCLS
-
-          DO forever
-             for CCount = 31 to 127
-                  GLCDPrint (0, 0, "PrintStr")
-                  GLCDDrawString (0, 9, "DrawStr")
-                  GLCDPrint ( 44 ,  21, "     ")
-                  GLCDPrint ( 44 ,  29, "     ") ' word value
-                  GLCDPrint ( 44 ,  37, "   ") ' Byte value
-
-                  outstring = hex( longNumber_U)
-                  GLCDPrint ( 44 , 21,outstring )
-                  outstring = hex( longNumber_H)
-                  GLCDPrint ( 55 , 21, outstring)
-                  outstring = hex( longNumber)
-                  GLCDPrint ( 67 , 21,  outstring )
-                  GLCDPrint ( 44 , 29, mid( str(wordNumber),1, 6))
-                  GLCDPrint ( 44 , 37, byteNumber)
-
-                  box 46,9,57,19
-                  GLCDDrawChar(48, 9, CCount )
-                  outString = str( CCount )
-                  ' draw a box to overwrite existing strings
-                  FilledBox(58,9,GLCD_WIDTH-1,17,GLCDBackground )
-                  GLCDDrawString(58, 9, outString )
-
-                   box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
-                   box GLCD_WIDTH-5, GLCD_HEIGHT-5,GLCD_WIDTH- 1, GLCD_HEIGHT-1
-                   filledbox 2,30,6,38, wordNumber
-                   Circle( 25,30,8,1)            ;center
-                   FilledCircle( 25,30,4,longNumber xor 1) ;center
-
-                   line 0,  GLCD_HEIGHT-1 , GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1
-                   line  GLCD_WIDTH/2, (GLCD_HEIGHT /2) +1 ,0, (GLCD_HEIGHT /2) +1
-
-
-                  longNumber = longNumber + 7
-                  wordNumber = wordNumber + 3
-                  byteNumber++
-              NEXT
-          LOOP
+              longNumber = longNumber + 7
+              wordNumber = wordNumber + 3
+              byteNumber++
+          NEXT
+      LOOP
 
       end
+
 ----
-*See also*
-<<_glcdcls,GLCDCLS>>, <<_glcddrawchar,GLCDDrawChar>>,
-<<_glcdprint,GLCDPrint>>, <<_glcdreadbyte,GLCDReadByte>>, <<_glcdwritebyte,GLCDWriteByte>>,
-<<_pset,Pset>>
+
+
+
+*For more help, see*
+<<_glcdcls,GLCDCLS>>, <<_glcddrawchar,GLCDDrawChar>>, <<_glcdprint,GLCDPrint>>, <<_glcdreadbyte,GLCDReadByte>>, <<_glcdwritebyte,GLCDWriteByte>> or <<_pset,Pset>>
 
 Supported in <GLCD.H> and <glcd_PCD8544.h>
