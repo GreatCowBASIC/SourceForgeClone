@@ -52,6 +52,8 @@
 '    26092017 - Added  NOPs to assist support.  This will cause Extraneous arguments on the line when using MPLAB but we need the information for support.
 '               Added [canskip] where appropiate
 '    26042018 - Comments tidy up. No functional changes.
+'    27052018 - Added 48mhz clock treatment for 18f USB parts for type 104 oscillator
+
 
 'Constants
 #define ON 1
@@ -388,6 +390,29 @@ Sub InitSys
               Set SPLLMULT On
             #endif
         #ENDIF
+
+
+        #IFDEF ChipMHz 48 'the PLLEN needs to set after the IRCF
+          asm showdebug The chip mhz is 48, therefore probably an 18f USB part
+
+          [canskip] IRCF2, IRCF1, IRCF0 = b'111'   ;'111' for ChipMHz 48
+
+          #ifdef Bit(SPLLMULT)
+            Set SPLLMULT On
+          #endif
+
+          #ifdef Bit(PLLEN)
+            Set PLLEN On
+          #endif
+
+          'Wait for PLL to stabilize
+          #ifdef Bit(PLLRDY)
+              wait while (PLLRDY = 0)
+          #endif
+
+        #ENDIF
+
+
 
         #IFDEF ChipMHz 32 'the SPLLEN needs to set after the IRCF
           #if ChipIntOSCCONFormat = 1
