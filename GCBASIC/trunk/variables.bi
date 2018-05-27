@@ -369,7 +369,11 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		GetTokens (VarAlias, AliasList(), ALC, ",")
 		For PD = 1 To ALC
 			If Not IsConst(AliasList(PD)) And Not IsCalc(AliasList(PD)) Then
-				AddVar AliasList(PD), "BYTE", 1, VarSub, "REAL", Origin, -1, -1
+				If InStr(AliasList(PD), "(") = 0 Then
+					AddVar AliasList(PD), "BYTE", 1, VarSub, "REAL", Origin, -1, -1
+				Else
+					AddVar Left(AliasList(PD), InStr(AliasList(PD), "(") - 1), "BYTE", 2, VarSub, "REAL", Origin, -1, -1
+				End If
 			End If
 		Next
 	End If
@@ -434,9 +438,6 @@ SUB AllocateRAM
 	Dim As VariableType Pointer SubVar, FinalVar, SearchVar
 	
 	Dim As LinkedListElement Pointer AllVarsUnsorted, AllVars, CurrVarItem, InsertPos
-	
-	'Testing: is call tree known here? Seems to be
-	'DisplayCallTree
 	
 	'Add calc vars to list
 	For SV = 1 to TCVC
@@ -587,7 +588,6 @@ SUB AllocateRAM
 	'Allocate common (non-banked) RAM or register space to system variables
 	Dim As Integer DesiredLoc, RegBytesLocated, FinalRegLoc
 	RegCount = 0
-	'For PD = 1 To VarCount
 	CurrVarItem = AllVars->Next
 	Do While CurrVarItem <> 0
 		FinalVar = CurrVarItem->MetaData
@@ -851,7 +851,6 @@ SUB AllocateRAM
 									ElseIf .Location <> -1 Then
 										MakeSFR GetByte(.Name, CurrByte), .Location
 										FinalAliasList(FALC + CurrByte + 1).Name = GetByte(.Name, CurrByte)
-										'FinalAliasList(FALC + CurrByte + 1).Value = AliasList(ALC - CurrByte)
 										FinalAliasList(FALC + CurrByte + 1).Value = Str(.Location)
 									Else
 										'Could not find location, try again
@@ -1008,6 +1007,7 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 	'Can handle:
 	' - SFR names
 	' - Normal variable names
+	' - Variable names with brackets immediately after, which are assumed to be arrays
 	' - literals
 	' - calculations containing a mix of those
 	
@@ -1015,8 +1015,6 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 	Dim As Integer FC, LineTokens, CurrToken
 	Dim As SysVarType Pointer TempVar
 	Dim As VariableListElement Pointer FinalVar
-	
-	'Print "Location: " + LocationIn
 	
 	'Split line into tokens
 	GetTokens LocationIn, LineToken(), LineTokens, , -1
@@ -1041,6 +1039,10 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 			FinalVar = HashMapGet(FinalVarList, LineToken(CurrToken))
 			If FinalVar <> 0 Then
 				LineToken(CurrToken) = FinalVar->Value
+				'Array? If so, and if it's followed by brackets, add whatever is in the brackets
+				If LineToken(CurrToken + 1) = "(" Then
+					LineToken(CurrToken) += "+"
+				End If
 				GoTo AliasConstReplaced
 			End If
 			
@@ -1055,9 +1057,7 @@ Function CalcAliasLoc(LocationIn As String) As Integer
 	Next	
 	
 	'Calculate location, return
-	'Print " = "; OutTemp;
 	Calculate OutTemp
-	'Print " = "; OutTemp
 	Return GetNonLinearLoc(Val(OutTemp))
 End Function
 
