@@ -419,7 +419,6 @@ Declare Function IsLowRegister(VarName As String) As Integer
 Declare Function IsRegister (VarName As String) As Integer
 Declare FUNCTION IsString (InData As String, CurrSub As SubType Pointer) As Integer
 Declare Function IsUnaryOp (InData As String) As Integer
-DECLARE FUNCTION IsWord (InData As String, CurrentSub As Integer) As Integer
 Declare Sub LoadConverters
 DECLARE FUNCTION LocationOfSub (SubNameIn As String, SubSigIn As String, Origin As String = "", AllowVague As Integer = 0) As Integer
 Declare Sub LogError(InMessage As String, Origin As String = "")
@@ -458,6 +457,7 @@ Declare Function TranslateFile(InFile As String) As String
 Declare FUNCTION TypeOfVar (VarName As String, CurrSub As SubType Pointer) As String
 Declare FUNCTION TypeOfValue (ValueNameIn As String, CurrentSub As SubType Pointer, SingCharString As Integer = 0) As String
 Declare Sub UpdateOutgoingCalls (CompSub As SubType Pointer)
+Declare Sub UpdateSubMap
 Declare Sub UpgradeCalcVar (VarName As String, VarType As String)
 Declare Sub ValueChanged(VarName As String, VarValue As String)
 DECLARE FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As VariableType Pointer
@@ -578,9 +578,9 @@ DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
 Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
-Dim Shared As Integer PauseTimeout
+Dim Shared As Integer PauseTimeout, OldSBC
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
-Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
+Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime, DebugTime
 
 'Assembler vars
 DIM SHARED As Integer ToAsmSymbols
@@ -591,6 +591,7 @@ DIM SHARED As LinkedListElement Pointer AsmProg, AsmProgLoc
 
 'Sub arrays
 Dim Shared Subroutine(10000) As SubType Pointer: SBC = 0
+Dim Shared Subroutines As HashMap Pointer
 
 'Processing Arrays
 DIM SHARED Constants As HashMap Pointer
@@ -671,7 +672,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-05-10"
+Version = "0.98.<<>> 2018-05-27"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -689,6 +690,8 @@ ConfigDisabled = 0
 ExitValue = 0
 ToolVariables = LinkedListCreate
 CompileSkipped = 0
+OldSBC = -1
+DebugTime = 0
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -862,6 +865,10 @@ If VBS = 1 Then
 	IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
 	PRINT Message("TotalTime") + Temp + Message("CompSecs")
 End If
+
+'Color 14
+'Print "Time in CompileSubCalls:"; DebugTime; " s"
+'Color 7
 
 'End of program
 'Pause and wait for key at end of compilation?
@@ -3021,7 +3028,6 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 		Print Spc(10); CompSub->Name
 	End If
 	
-
 	'Split any lines at : (these may be inserted through constants)
 	If EVBS Then Print Spc(15); "Splitting lines"
 	SplitLines (CompSub)
@@ -7660,15 +7666,20 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 	Dim As String FunctionType, Origin, NewOrigin, TempVarName, TempData
 	Dim As String ReturnVar
 	Dim As Integer CD, DS, S, E, BL, FB, F, PD, FoundFunction, MatchScore, BetterMatch
-	Dim As Integer L, D, SL, Temp, UseTempVar, FunctionTypeID, CurrSub, FindMatch
+	Dim As Integer L, D, SL, Temp, UseTempVar, FunctionTypeID, CurrSub
 	Dim As Integer ParamsInBrackets, CurrAliasByte, FirstBracketLoc
 	Dim As Integer LastBracketLoc, BracketsRequired
 
 	Dim As LinkedListElement Pointer CurrLine, NewCallCode, NewCallLine, LineBeforeCall
+	Dim As LinkedListElement Pointer LineElements, CurrElement, MatchingSubs, MatchingSub
+	Dim As LinkedListElement Pointer FindMatch
 
 	Dim As SubCallType NewSubCall
 
 	Dim TempVarCount(10) As Integer
+	
+	'Prepare hash map of subs
+	UpdateSubMap
 	
 	'Find functions
 	CurrLine = CompSub->CodeStart->Next
@@ -7700,270 +7711,287 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 
 		'Don't check "ON " statements for functions
 		If UCASE(Left(TempLine, 3)) = "ON " Then Goto NextLineFunctions
+		
+		'Split up line
+		LineElements = GetElements(TempLine)
 
 		'Run through list of functions
-		FOR CurrSub = 1 To SBC
-
-			FunctionName = Subroutine(CurrSub)->Name
-			FunctionType = Subroutine(CurrSub)->ReturnType
-			FunctionTypeID = CastOrder(FunctionType)
-
-			'Check to see if a line contains a function
-			If INSTR(UCASE(TempLine), UCase(FunctionName)) = 0 THEN Goto CheckForNextFunction
-
-			SearchLineAgain:
-			FoundFunction = WholeINSTR(TempLine, FunctionName, 0)
-
-			'Avoid calling functions from themselves
-			'Note: ignores overloaded sub and function with same name, need to detect that later
-			If FoundFunction = 2 And Subroutine(CurrSub)->IsFunction Then
-				If CompSub->Name = Subroutine(CurrSub)->Name Then FoundFunction = 0
-			END IF
-
-			'Have already dealt with line
-			If NewOrigin = "" And Left(TempLine, 6) = " call " Then
-				FoundFunction = 0
-			End If
-
-			IF FoundFunction <> 2 And INSTR(UCase(TempLine), UCase(FunctionName)) <> 0 THEN
-				Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
-				Goto SearchLineAgain
-			END IF
-
-			'If it does, call a sub, and get the value after
-			IF FoundFunction = 2 THEN
-				'Print "Found function: "; FunctionName
-				'Check if a temp variable should be used
-				UseTempVar = 0
-				If Subroutine(CurrSub)->IsFunction Then
-					If CountOccur(TempLine, FunctionName, -1) > 1 Then
-						UseTempVar = -1
-						TempVarCount(FunctionTypeID) += 1
-						TempVarName = "SysFn" + FunctionType + Str(TempVarCount(FunctionTypeID))
-						AddVar TempVarName, FunctionType, 1, CompSub, "REAL", Origin, , -1
-					End If
-					'Add a variable for the function result
-					AddVar Subroutine(CurrSub)->Name, FunctionType, 1, Subroutine(CurrSub), "REAL", Origin, , -1
-					AddVar Subroutine(CurrSub)->Name, FunctionType, 1, CompSub, "REAL", Origin, , -1
+		CurrElement = LineElements->Next
+		Do While CurrElement <> 0
+			
+			MatchingSubs = HashMapGet(Subroutines, UCase(CurrElement->Value))
+			MatchingSub = MatchingSubs
+			Do While MatchingSub <> 0
+				'Line contains call to this subroutine
+				CurrSub = MatchingSub->NumVal
+				
+				FunctionName = Subroutine(CurrSub)->Name
+				FunctionType = Subroutine(CurrSub)->ReturnType
+				FunctionTypeID = CastOrder(FunctionType)
+	
+				'Check to see if a line contains a function
+				If INSTR(UCASE(TempLine), UCase(FunctionName)) = 0 THEN Goto CheckForNextFunction
+	
+				SearchLineAgain:
+				FoundFunction = WholeINSTR(TempLine, FunctionName, 0)
+	
+				'Avoid calling functions from themselves
+				'Note: ignores overloaded sub and function with same name, need to detect that later
+				If FoundFunction = 2 And Subroutine(CurrSub)->IsFunction Then
+					If CompSub->Name = Subroutine(CurrSub)->Name Then FoundFunction = 0
+				END IF
+	
+				'Have already dealt with line
+				If NewOrigin = "" And Left(TempLine, 6) = " call " Then
+					FoundFunction = 0
 				End If
-
-				'If line starts with call or GOSUB, remove call
-				If Left(TempLine, 5) = "CALL " Then
-					TempLine = Trim(Mid(TempLine, 6))
-				ElseIf Left(TempLine, 6) = "GOSUB " Then
-					TempLine = Trim(Mid(TempLine, 7))
-				End If
-
-				'Replace the function in the line
-				'Get whatever is to the left of the function
-				BeforeFn = LEFT(TempLine, INSTR(UCase(TempLine), FunctionName) - 1)
-
-				'If there's something before, make sure we actually have a function
-				If BeforeFn <> "" And Not Subroutine(CurrSub)->IsFunction Then
+	
+				IF FoundFunction <> 2 And INSTR(UCase(TempLine), UCase(FunctionName)) <> 0 THEN
 					Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
 					Goto SearchLineAgain
-				End If
-
-				'Get the parameters of the function and the text after it
-				FunctionParams = ""
-
-				AfterFn = MID(TempLine, INSTR(UCase(TempLine), UCase(FunctionName)) + LEN(FunctionName))
-
-				'Check to see if parameters are in brackets
-				'FunctionName(params) - yes
-				'SubName(param) - yes
-				'SubName param - no
-				'SubName (param1 + x), param2 - no
-				'FunctionName(param) ms - yes
-				'So, check for comma inside or outside brackets
-
-				'Are brackets required?
-				BracketsRequired = BeforeFn <> ""
-				'Parse parameters
-				BL = 0
-				FirstBracketLoc = -1
-				LastBracketLoc = -1
-				For FB = 1 To Len(AfterFn)
-					Select Case Mid(AfterFn, FB, 1)
-						Case "("
-							'Note position of opening bracket
-							BL += 1
-							If BL = 1 And FirstBracketLoc = -1 Then
-								FirstBracketLoc = FB
-							End If
-						Case ")"
-							'Note position of closing bracket
-							BL -= 1
-							If BL = 0 Then
-								'If match found and all parameters must be in brackets, this is the end of these parameters
-								If BracketsRequired Then
-									LastBracketLoc = FB
-									Exit For
-								End If
-								'If we haven't seen a comma yet, this could be the end of the parameters
-								If LastBracketLoc <> -2 Then
-									LastBracketLoc = FB
-								End If
-							End If
-						Case " "
-							'Do nothing
-						Case ","
-							'If a comma is found outside of brackets, the brackets do not mark the parameters
-							If BL = 0 Then
-								LastBracketLoc = -2
-							End If
-						Case Else
-							'If any other character is found before brackets, these brackets do not mark parameters
-							'Example: SomeSub SomeFunction(param)
-							If BL = 0 And FirstBracketLoc = -1 Then
-								LastBracketLoc = -2
-							End If
-
-							'If a mathematical operator is found after brackets, brackets do not mark parameters
-							If BL = 0 And IsCalcDivider(Mid(AfterFn, FB, 1)) Then
-								LastBracketLoc = -2
-							End If
-					End Select
-				Next
-				'Extract parameters from brackets if brackets used
-				If FirstBracketLoc <> -1 And LastBracketLoc > 0 Then
-					FunctionParams = Trim(Mid(AfterFn, FirstBracketLoc + 1, LastBracketLoc - FirstBracketLoc - 1))
-					'For a subroutine, remove anything after parameters
+				END IF
+	
+				'If it does, call a sub, and get the value after
+				IF FoundFunction = 2 THEN
+					'Print "Found function: "; FunctionName
+					'Check if a temp variable should be used
+					UseTempVar = 0
 					If Subroutine(CurrSub)->IsFunction Then
-						AfterFn = Mid(AfterFn, LastBracketLoc + 1)
-					Else
-						AfterFn = ""
-					End If
-				Else
-					'No brackets - nothing or everything after sub/function name is a parameter
-					If BracketsRequired Then
-						'If we have a function without brackets, no parameters
-						FunctionParams = ""
-					Else
-						'If we have a sub without brackets, everything after the name is a parameter
-						FunctionParams = Trim(AfterFn)
-						AfterFn = ""
-					End If
-				End If
-
-				'Remove origin from FunctionParams
-				IF INSTR(FunctionParams, ";?F") <> 0 Then
-					FunctionParams = RTrim(Left(FunctionParams, InStr(FunctionParams, ";?F") - 1))
-				End If
-
-				'Detect cases where overloaded sub and function have same name, and return of function is set
-				'Need to detect here or the sub will be called with = return value as a parameter.
-				If Subroutine(CurrSub)->Overloaded And Left(FunctionParams, 1) = "=" Then
-					Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
-					Goto SearchLineAgain
-				End If
-
-				'Prepare sub call
-				'Print "Calling:"; FunctionName, "Params:"; FunctionParams
-				ExtractParameters(NewSubCall, FunctionName, FunctionParams, Origin)
-				With NewSubCall
-					.Called = Subroutine(CurrSub)
-					.Caller = CompSub
-					.CalledID = CurrSub
-					.Origin = Origin
-				End With
-
-				'Check function being called matches current function best
-				If Subroutine(CurrSub)->Overloaded Then
-					MatchScore = SubSigMatch(GetSubSig(*Subroutine(CurrSub)), NewSubCall.CallSig)
-					BetterMatch = 0
-					'Check for better matches
-					For FindMatch = CurrSub + 1 To SBC
-						If Subroutine(CurrSub)->Name = Subroutine(FindMatch)->Name Then
-							If SubSigMatch(GetSubSig(*Subroutine(FindMatch)), NewSubCall.CallSig) > MatchScore Then
-								BetterMatch = -1
-								Exit For
-							End If
+						If CountOccur(TempLine, FunctionName, -1) > 1 Then
+							UseTempVar = -1
+							TempVarCount(FunctionTypeID) += 1
+							TempVarName = "SysFn" + FunctionType + Str(TempVarCount(FunctionTypeID))
+							AddVar TempVarName, FunctionType, 1, CompSub, "REAL", Origin, , -1
 						End If
-					Next
-
-					'Skip this sub if it's not the best
-					If BetterMatch Then
+						'Add a variable for the function result
+						AddVar Subroutine(CurrSub)->Name, FunctionType, 1, Subroutine(CurrSub), "REAL", Origin, , -1
+						AddVar Subroutine(CurrSub)->Name, FunctionType, 1, CompSub, "REAL", Origin, , -1
+					End If
+	
+					'If line starts with call or GOSUB, remove call
+					If Left(TempLine, 5) = "CALL " Then
+						TempLine = Trim(Mid(TempLine, 6))
+					ElseIf Left(TempLine, 6) = "GOSUB " Then
+						TempLine = Trim(Mid(TempLine, 7))
+					End If
+	
+					'Replace the function in the line
+					'Get whatever is to the left of the function
+					BeforeFn = LEFT(TempLine, INSTR(UCase(TempLine), FunctionName) - 1)
+	
+					'If there's something before, make sure we actually have a function
+					If BeforeFn <> "" And Not Subroutine(CurrSub)->IsFunction Then
 						Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
 						Goto SearchLineAgain
 					End If
-				End If
-
-				'Get return variable
-				ReturnVar = ""
-				If NewSubCall.Called->IsFunction Then
-					If NewSubCall.Called->Overloaded Then
-						ReturnVar = "SYS" + Chr(31) + Str(CurrSub) + CHR(31) + UCase(NewSubCall.Called->ReturnType)
-
-						'Add alias for return variable with appropriate type
-						If NewSubCall.Called->ReturnAlias = "" Then
-							For CurrAliasByte = GetTypeSize(NewSubCall.Called->ReturnType) - 1 To 0 Step -1
-								If NewSubCall.Called->ReturnAlias = "" Then
-									NewSubCall.Called->ReturnAlias = GetByte(NewSubCall.Called->Name, CurrAliasByte)
-								Else
-									NewSubCall.Called->ReturnAlias += "," + GetByte(NewSubCall.Called->Name, CurrAliasByte)
+	
+					'Get the parameters of the function and the text after it
+					FunctionParams = ""
+	
+					AfterFn = MID(TempLine, INSTR(UCase(TempLine), UCase(FunctionName)) + LEN(FunctionName))
+	
+					'Check to see if parameters are in brackets
+					'FunctionName(params) - yes
+					'SubName(param) - yes
+					'SubName param - no
+					'SubName (param1 + x), param2 - no
+					'FunctionName(param) ms - yes
+					'So, check for comma inside or outside brackets
+	
+					'Are brackets required?
+					BracketsRequired = BeforeFn <> ""
+					'Parse parameters
+					BL = 0
+					FirstBracketLoc = -1
+					LastBracketLoc = -1
+					For FB = 1 To Len(AfterFn)
+						Select Case Mid(AfterFn, FB, 1)
+							Case "("
+								'Note position of opening bracket
+								BL += 1
+								If BL = 1 And FirstBracketLoc = -1 Then
+									FirstBracketLoc = FB
 								End If
-							Next
-							AddVar("SYS" + UCase(NewSubCall.Called->Name + NewSubCall.Called->ReturnType), NewSubCall.Called->ReturnType, 1, 0, "ALIAS:" + NewSubCall.Called->ReturnAlias, Origin,, -1)
+							Case ")"
+								'Note position of closing bracket
+								BL -= 1
+								If BL = 0 Then
+									'If match found and all parameters must be in brackets, this is the end of these parameters
+									If BracketsRequired Then
+										LastBracketLoc = FB
+										Exit For
+									End If
+									'If we haven't seen a comma yet, this could be the end of the parameters
+									If LastBracketLoc <> -2 Then
+										LastBracketLoc = FB
+									End If
+								End If
+							Case " "
+								'Do nothing
+							Case ","
+								'If a comma is found outside of brackets, the brackets do not mark the parameters
+								If BL = 0 Then
+									LastBracketLoc = -2
+								End If
+							Case Else
+								'If any other character is found before brackets, these brackets do not mark parameters
+								'Example: SomeSub SomeFunction(param)
+								If BL = 0 And FirstBracketLoc = -1 Then
+									LastBracketLoc = -2
+								End If
+	
+								'If a mathematical operator is found after brackets, brackets do not mark parameters
+								If BL = 0 And IsCalcDivider(Mid(AfterFn, FB, 1)) Then
+									LastBracketLoc = -2
+								End If
+						End Select
+					Next
+					'Extract parameters from brackets if brackets used
+					If FirstBracketLoc <> -1 And LastBracketLoc > 0 Then
+						FunctionParams = Trim(Mid(AfterFn, FirstBracketLoc + 1, LastBracketLoc - FirstBracketLoc - 1))
+						'For a subroutine, remove anything after parameters
+						If Subroutine(CurrSub)->IsFunction Then
+							AfterFn = Mid(AfterFn, LastBracketLoc + 1)
+						Else
+							AfterFn = ""
 						End If
 					Else
-						ReturnVar = CHR(31) + Str(CurrSub) + CHR(31)
+						'No brackets - nothing or everything after sub/function name is a parameter
+						If BracketsRequired Then
+							'If we have a function without brackets, no parameters
+							FunctionParams = ""
+						Else
+							'If we have a sub without brackets, everything after the name is a parameter
+							FunctionParams = Trim(AfterFn)
+							AfterFn = ""
+						End If
 					End If
-				End If
-
-				'Adjust line
-				'Use 31 where name needs removal to prevent trying to handle it twice
-				If UseTempVar Then
-					TempLine = BeforeFn + TempVarName + AfterFn
-				Else
-					TempLine = BeforeFn + ReturnVar + AfterFn
-				End If
-
-				'Write back code
-				'Print DS, BeforeFn, FunctionName, FunctionParams, AfterFn
-				If Subroutine(CurrSub)->IsFunction Then
-					If NewSubCall.Called->Overloaded Then
-						CurrLine->Value = ";FNSTART," + CHR(31) + Str(CurrSub) + CHR(31) + Str(CurrSub)
-					Else
-						CurrLine->Value = ";FNSTART," + CHR(31) + Str(CurrSub) + CHR(31)
+	
+					'Remove origin from FunctionParams
+					IF INSTR(FunctionParams, ";?F") <> 0 Then
+						FunctionParams = RTrim(Left(FunctionParams, InStr(FunctionParams, ";?F") - 1))
 					End If
-				Else
-					CurrLine = LinkedListDelete(CurrLine)
-				End If
-				LineBeforeCall = CurrLine
-				CurrLine = LinkedListInsertList(CurrLine, CompileSubCall(@NewSubCall))
-
-				'Record call
-				If Not NewSubCall.Called->IsMacro Then
-					RecordSubCall(CompSub, NewSubCall.Called)
-				End If
-
-				If TempLine <> "" Then
+	
+					'Detect cases where overloaded sub and function have same name, and return of function is set
+					'Need to detect here or the sub will be called with = return value as a parameter.
+					If Subroutine(CurrSub)->Overloaded And Left(FunctionParams, 1) = "=" Then
+						Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
+						Goto SearchLineAgain
+					End If
+	
+					'Prepare sub call
+					'Print "Calling:"; FunctionName, "Params:"; FunctionParams
+					ExtractParameters(NewSubCall, FunctionName, FunctionParams, Origin)
+					With NewSubCall
+						.Called = Subroutine(CurrSub)
+						.Caller = CompSub
+						.CalledID = CurrSub
+						.Origin = Origin
+					End With
+	
+					'Check function being called matches current function best
+					If Subroutine(CurrSub)->Overloaded Then
+						MatchScore = SubSigMatch(GetSubSig(*Subroutine(CurrSub)), NewSubCall.CallSig)
+						BetterMatch = 0
+						'Check for better matches
+						FindMatch = MatchingSub->Next
+						Do While FindMatch <> 0
+							If Subroutine(CurrSub)->Name = Subroutine(FindMatch->NumVal)->Name Then
+								If SubSigMatch(GetSubSig(*Subroutine(FindMatch->NumVal)), NewSubCall.CallSig) > MatchScore Then
+									BetterMatch = -1
+									Exit Do
+								End If
+							End If
+							
+							FindMatch = FindMatch->Next
+						Loop
+	
+						'Skip this sub if it's not the best
+						If BetterMatch Then
+							Replace TempLine, FunctionName, CHR(30) + STR(CurrSub) + CHR(30)
+							Goto SearchLineAgain
+						End If
+					End If
+	
+					'Get return variable
+					ReturnVar = ""
+					If NewSubCall.Called->IsFunction Then
+						If NewSubCall.Called->Overloaded Then
+							ReturnVar = "SYS" + Chr(31) + Str(CurrSub) + CHR(31) + UCase(NewSubCall.Called->ReturnType)
+	
+							'Add alias for return variable with appropriate type
+							If NewSubCall.Called->ReturnAlias = "" Then
+								For CurrAliasByte = GetTypeSize(NewSubCall.Called->ReturnType) - 1 To 0 Step -1
+									If NewSubCall.Called->ReturnAlias = "" Then
+										NewSubCall.Called->ReturnAlias = GetByte(NewSubCall.Called->Name, CurrAliasByte)
+									Else
+										NewSubCall.Called->ReturnAlias += "," + GetByte(NewSubCall.Called->Name, CurrAliasByte)
+									End If
+								Next
+								AddVar("SYS" + UCase(NewSubCall.Called->Name + NewSubCall.Called->ReturnType), NewSubCall.Called->ReturnType, 1, 0, "ALIAS:" + NewSubCall.Called->ReturnAlias, Origin,, -1)
+							End If
+						Else
+							ReturnVar = CHR(31) + Str(CurrSub) + CHR(31)
+						End If
+					End If
+	
+					'Adjust line
+					'Use 31 where name needs removal to prevent trying to handle it twice
 					If UseTempVar Then
-						CurrLine = LinkedListInsert(CurrLine, TempVarName + "=" + ReturnVar)
-						LinkedListInsert(CurrLine, TempLine)
+						TempLine = BeforeFn + TempVarName + AfterFn
 					Else
-						LinkedListInsert(CurrLine, TempLine)
+						TempLine = BeforeFn + ReturnVar + AfterFn
 					End If
-				End If
-
-				'Need to check line again, in case of nested functions
-				CurrLine = LineBeforeCall
-				GoTo NextLineFunctions
-
-			END If
-
-			CheckForNextFunction:
-			'Use 30 for temporarily removing name, ie when close match occurs
-			Dim OldName As String
-			Do While Instr(TempLine, Chr(30)) <> 0
-				OldName = MID(TempLine, Instr(TempLine, Chr(30)) + 1)
-				OldName = Left(OldName, INSTR(OldName, Chr(30)) - 1)
-				Replace TempLine, Chr(30) + OldName + Chr(30), Subroutine(Val(OldName))->Name
+	
+					'Write back code
+					'Print DS, BeforeFn, FunctionName, FunctionParams, AfterFn
+					If Subroutine(CurrSub)->IsFunction Then
+						If NewSubCall.Called->Overloaded Then
+							CurrLine->Value = ";FNSTART," + CHR(31) + Str(CurrSub) + CHR(31) + Str(CurrSub)
+						Else
+							CurrLine->Value = ";FNSTART," + CHR(31) + Str(CurrSub) + CHR(31)
+						End If
+					Else
+						CurrLine = LinkedListDelete(CurrLine)
+					End If
+					LineBeforeCall = CurrLine
+					CurrLine = LinkedListInsertList(CurrLine, CompileSubCall(@NewSubCall))
+	
+					'Record call
+					If Not NewSubCall.Called->IsMacro Then
+						RecordSubCall(CompSub, NewSubCall.Called)
+					End If
+	
+					If TempLine <> "" Then
+						If UseTempVar Then
+							CurrLine = LinkedListInsert(CurrLine, TempVarName + "=" + ReturnVar)
+							LinkedListInsert(CurrLine, TempLine)
+						Else
+							LinkedListInsert(CurrLine, TempLine)
+						End If
+					End If
+	
+					'Need to check line again, in case of nested functions
+					CurrLine = LineBeforeCall
+					GoTo NextLineFunctions
+	
+				END If
+	
+				CheckForNextFunction:
+				'Use 30 for temporarily removing name, ie when close match occurs
+				Dim OldName As String
+				Do While Instr(TempLine, Chr(30)) <> 0
+					OldName = MID(TempLine, Instr(TempLine, Chr(30)) + 1)
+					OldName = Left(OldName, INSTR(OldName, Chr(30)) - 1)
+					Replace TempLine, Chr(30) + OldName + Chr(30), Subroutine(Val(OldName))->Name
+				Loop
+				
+				MatchingSub = MatchingSub->Next
 			Loop
-
-		NEXT
-
+			
+			CurrElement = CurrElement->Next
+		Loop
+		
 		NextLineFunctions:
 		CurrLine = CurrLine->Next
 	Loop
@@ -7981,6 +8009,7 @@ Sub CompileSubCalls(CompSub As SubType Pointer)
 		End If
 		CurrLine = CurrLine->Next
 	Loop
+	
 End Sub
 
 Sub CompileTables
@@ -12651,14 +12680,6 @@ FUNCTION IsString (InData As String, CurrSub As SubType Pointer) As Integer
 	IF INSTR(InData, "$") <> 0 OR INSTR(InData, ";STRING") <> 0 THEN Return -1
 
 	'String var?
-	'FOR PD = 1 TO CurrSub->Variables
-	' 'IF WholeINSTR(UCase(InData), UCase(Variables(PD).Name)) = 2 THEN
-	' ' IF UCase(Variables(PD).Type) = "STRING" THEN IsString = -1: Exit Function
-	' 'END IF
-	' IF UCase(CurrSub->Variable(PD).Type) = "STRING" THEN
-	'   IF WholeINSTR(UCase(InData), UCase(CurrSub->Variable(PD).Name)) = 2 THEN Return -1
-	' END IF
-	'NEXT
 	If TypeOfVar(InData, CurrSub) = "STRING" Then Return -1
 END Function
 
@@ -12669,54 +12690,6 @@ Function IsUnaryOp (InData As String) As Integer
 	Return 0
 
 End Function
-
-FUNCTION IsWord (InData As String, CurrentSub As Integer) As Integer
-
-	Dim As String Temp, SubParam
-	Dim As Integer T, FindFn
-	Dim As SubType Pointer CurrSub, MainSub
-	Dim As VariableType Pointer FoundVar
-	CurrSub = Subroutine(CurrentSub)
-	MainSub = Subroutine(0)
-
-	IsWord = 0
-
-	'Word mode forced?
-	IF INSTR(UCase(InData), "[WORD]") <> 0 THEN Return -1
-	IF Trim(InData) = "" THEN Exit Function
-
-	'Check for word function
-	For FindFn = 1 To SBC
-		If Subroutine(FindFn)->IsFunction Then
-			IF WholeINSTR(UCase(InData), UCase(Subroutine(FindFn)->Name)) = 2 And UCASE(Subroutine(FindFn)->ReturnType) = "WORD" Then
-				Return -1
-			End If
-		End If
-	Next
-
-	'To proceed any further, sub needs to have dim commands compiled
-	If Not CurrSub->VarsRead Then CompileDim(CurrSub)
-
-	'Check for local word var
-	FoundVar = HashMapGet(@(CurrSub->Variables), UCase(InData))
-	IF FoundVar <> 0 THEN
-		IF UCase(FoundVar->Type) = "WORD" Then
-			Return -1
-		Else
-			'It's not a word in this sub, ignore global type
-			Return 0
-		End If
-	END IF
-
-
-	'Check for global word var
-	FoundVar = HashMapGet(@(MainSub->Variables), UCase(InData))
-	IF FoundVar <> 0 Then
-		If UCase(FoundVar->Type) = "WORD" Then Return -1
-	End If
-
-	Return 0
-END FUNCTION
 
 Sub LoadConverters
 	'Loads file format converters
@@ -12793,6 +12766,9 @@ FUNCTION LocationOfSub (SubNameIn As String, SubSigIn As String, Origin As Strin
 	'AllowVague - Set to -1 to suppress error if multiple overloaded subs are
 	'             found and no signature provided. First matching sub will be
 	'             returned.
+	
+	'Sub name coming in can be just the name with parameters seperate or missing,
+	'or can be output name (FN_READAD54, for example)
 
 	'Returns:
 	' Location in Subroutines() of match
@@ -12801,6 +12777,7 @@ FUNCTION LocationOfSub (SubNameIn As String, SubSigIn As String, Origin As Strin
 
 	Dim As String SubName, SubSig, Temp, ParamTemp, ErrorTemp
 	Dim As Integer T, FoundSameName, BestMatch, BestMatchLoc, ThisScore
+	Dim As LinkedListElement Pointer SubElement
 
 	SubName = UCase(LTrim(SubNameIn))
 	SubSig = SubSigIn
@@ -12836,83 +12813,75 @@ FUNCTION LocationOfSub (SubNameIn As String, SubSigIn As String, Origin As Strin
 	'Returns the position of DataSource in SUBDATA()
 	SubName = Trim(SubName)
 	FoundSameName = 0
-
+	
+	'Prepare hash map for searching
+	UpdateSubMap
+	
+	'Prepare to find best match
 	BestMatch = 0
 	BestMatchLoc = -2
 
-	FOR T = 1 TO SBC
+	SubElement = HashMapGet(Subroutines, SubName)
+	Do While SubElement <> 0
+		T = SubElement->NumVal
 		Temp = UCase(Trim(Subroutine(T)->Name))
-
-		If Temp = SubName THEN
-
-			'Early exit if sub not overloaded
-			If Not Subroutine(T)->Overloaded Or AllowVague Then
+		
+		'Early exit if sub not overloaded or vague allowed, return first found sub
+		If Not Subroutine(T)->Overloaded Or AllowVague Then
+			Return T
+		End If
+		
+		'Is the supplied name the same name as in output code?
+		'Full name will be unique, so have found the right one
+		If SubName = UCase(GetSubFullName(T)) Then
+			Return T
+		End If
+		
+		'Record that a sub was found with the right name
+		FoundSameName = -1
+		
+		'Check if found sub signature matches call signature
+		If SubSig <> "" Then
+			ThisScore = SubSigMatch(GetSubSig(*Subroutine(T)), SubSig)
+			If ThisScore > BestMatch Then
+				BestMatch = ThisScore
+				BestMatchLoc = T
+			End If
+		
+		'No call signature supplied	
+		Else
+			'If this happens, there is a bug in the compiler
+			'Or there is a sub with no params
+			
+			'Found sub has no parameters, so it matches
+			If Subroutine(T)->ParamCount = 0 Then
 				Return T
-			End If
-
-			FoundSameName = -1
-			If SubSig <> "" Then
-				ThisScore = SubSigMatch(GetSubSig(*Subroutine(T)), SubSig)
-				If ThisScore > BestMatch Then
-					BestMatch = ThisScore
-					BestMatchLoc = T
-				End If
+			
+			'Sub does have parameters, but call does not so cannot find the best match
 			Else
-				'Handle calls to overloaded subs (ie call PRINT60 to call sub #60)
-				'Exact sig will not be known
-				If Len(SubName) > Len(Temp) Then
-					If Left(SubName, Len(Temp)) = Temp Then
-						Return Val(Mid(SubName, Len(Temp) + 1))
-					End If
-
-				'No number, so we've got an ambigious sub reference, error
-				'If this happens, there is a bug in the compiler
-				'Or there is a sub with no params
-				Else
-					'Sub may not actually have any parameters
-					If Subroutine(T)->ParamCount = 0 Then
-						Return T
-
-					Else
-						'Print "Internal error, ambigiuous sub reference"
-						'Print "Sub: " + SubName + ", signature needed but not given"
-						ErrorTemp = Message("DuplicateSub")
-						Replace ErrorTemp, "%sub%", SubName
-						LogError ErrorTemp, Origin
-						Return -1 'Should cause a runtime error, giving location of bug
-					End If
-				End If
+				ErrorTemp = Message("DuplicateSub")
+				Replace ErrorTemp, "%sub%", SubName
+				LogError ErrorTemp, Origin
+				Return -1
 			End If
-		END If
-
-	NEXT
-
-	'If no matches, check for full name match
-	If BestMatchLoc = -2 Then
-		For T = 1 TO SBC
-			'Temp = UCase(Trim(Subroutine(T)->Name))
-			Temp = UCase(Trim(GetSubFullName(T)))
-			If Temp = SubName Then
-				'On first match, set best match loc
-				If BestMatchLoc = -2 Then
-					BestMatchLoc = T
-
-				'On second match, return to error state
-				Else
-					BestMatchLoc = 0
-					Exit For
-				End If
-
-			End If
-		Next
-
-		'If still couldn't find match, set BestMatchLoc back to 0.
-		If BestMatchLoc = -2 Then BestMatchLoc = 0
+		End If
+		
+		SubElement = SubElement->Next
+	Loop
+	
+	'Found same name but none with valid sig, return -1 for error
+	If BestMatchLoc = -2 And FoundSameName Then
+		Return -1
+	
+	'Didn't find anything with the right name
+	ElseIf FoundSameName = 0 Then
+		Return 0
+	
+	'Found a match that may/should work
+	Else
+		Return BestMatchLoc
 	End If
-
-	If BestMatchLoc = 0 And FoundSameName Then Return -1 'Found same name but not same sig, error
-	Return BestMatchLoc 'Found same name and sig, or found no match
-
+	
 END FUNCTION
 
 Sub LogError(InMessage As String, Origin As String = "")
@@ -16230,6 +16199,39 @@ Sub UpdateOutgoingCalls (CompSub As SubType Pointer)
 		CalledSub->CallsFromPage(CompSub->DestPage) += ListItem->NumVal
 		ListItem = ListItem->Next
 	Loop
+End Sub
+
+Sub UpdateSubMap
+	'Ensure that the hash map of subroutines is up to date
+	Dim As LinkedListElement Pointer SubElement
+	Dim As Integer T
+	
+	'Regenerate if new subroutines have been added and old map is out of date
+	If OldSBC <> SBC Then
+		Subroutines = HashMapCreate
+		'Copy every sub into map
+		For T = 1 To SBC
+			'Add sub name to hash map, with reference to location in array
+			SubElement = HashMapGet(Subroutines, UCase(Trim(Subroutine(T)->Name)))
+			If SubElement = 0 Then
+				SubElement = LinkedListCreate
+				HashMapSet(Subroutines, UCase(Trim(Subroutine(T)->Name)), SubElement)
+				SubElement->NumVal = T
+			Else
+				'Name already found in hash map, add this one to list of overloads
+				SubElement = LinkedListInsert(SubElement, UCase(Subroutine(T)->Name), T)
+			End If
+			
+			'Add name in output code as well
+			SubElement = HashMapGet(Subroutines, UCase(GetSubFullName(T)))
+			If SubElement = 0 Then
+				SubElement = LinkedListCreate
+				HashMapSet(Subroutines, UCase(GetSubFullName(T)), SubElement)
+				SubElement->NumVal = T
+			End If
+		Next
+		OldSBC = SBC
+	End If
 End Sub
 
 Sub UpgradeCalcVar (VarName As String, VarType As String)

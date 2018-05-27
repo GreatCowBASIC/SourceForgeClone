@@ -1505,7 +1505,7 @@ LoadNextFile:
 	RemIfDefs
 
 	'Replace constants with their values
-	IF VBS = 1 THEN PRINT SPC(5); Message("RepDefs");
+	If VBS = 1 THEN PRINT SPC(5); Message("RepDefs");
 	ReplaceConstants
 	IF VBS = 1 THEN PRINT
 
