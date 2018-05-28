@@ -915,12 +915,12 @@ SUB AllocateRAM
 							Else
 								CurrBlockSize = VarLoc(SR + VarSize - 1) - VarLoc(SR)
 							End If
-							IF CurrBlockSize = VarSize - 1 And (.FixedLocation = -1 Or .FixedLocation = VarLoc(SR)) Then
+							IF CurrBlockSize = VarSize - 1 And (.FixedLocation = -1 Or GetNonLinearLoc(.FixedLocation) = VarLoc(SR)) Then
 								'Allocate RAM to variable
 								If UseLinear Then
 									.Location = GetLinearLoc(VarLoc(SR))
 								Else
-									.Location = VarLoc(SR)
+									.Location = GetNonLinearLoc(VarLoc(SR))
 								End If
 								If .Size > 1 Or LCase(.Type) = "string" Then
 									'For an array, need to name first location only

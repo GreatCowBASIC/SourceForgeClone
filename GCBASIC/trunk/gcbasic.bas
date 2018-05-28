@@ -2134,7 +2134,7 @@ SUB BuildMemoryMap
 	REDIM FreeMem (MemSize + 10) As Integer
 	REDIM VarLoc (MemSize + 10) As Integer
 	Dim As String TempData
-	Dim As Integer PD, Range, Min, Max, L, T
+	Dim As Integer PD, Range, Min, Max, L, T, CheckNonBanked
 
 	'Mark all locations as used
 	For PD = 0 To MemSize + 10
@@ -2142,17 +2142,29 @@ SUB BuildMemoryMap
 	Next
 
 	'Mark locations as free if specified by a range
+	'Do not mark non-banked locations as free yet
 	For Range = 1 to MRC
 		TempData = MemRanges(Range)
 		Min = VAL("&h" + Left(TempData, INSTR(TempData, ":") - 1))
 		Max = VAL("&h" + Mid(TempData, INSTR(TempData, ":") + 1))
 		For L = Min To Max
+			'On 16F1 chips, keep non-banked locations at end of list to make allocation of linear memory simpler
+			If ChipFamily = 15 Then
+				For CheckNonBanked = 1 To NoBankLocs
+					If L >= NoBankLoc(CheckNonBanked).StartLoc And L <= NoBankLoc(CheckNonBanked).EndLoc Then
+						FreeMem(L) = 2
+						GoTo LocationIsNonBanked
+					End If
+				Next
+			End If
 			FreeMem(L) = 0
+			LocationIsNonBanked:
 		Next
 	Next
-
+	
 	'Produce list of free memory locations
 	T = 0
+	'Banked locations first
 	For PD = 1 To MemSize
 		If FreeMem(PD) = 0 Then
 			T += 1
@@ -2160,6 +2172,16 @@ SUB BuildMemoryMap
 			If T = ChipRam Then Exit For
 		End If
 	Next
+	'Then non-banked locations
+	If ChipFamily = 15 Then
+		For PD = 1 To MemSize
+			If FreeMem(PD) = 2 Then
+				T += 1
+				VarLoc(T) = PD
+				If T = ChipRam Then Exit For
+			End If
+		Next
+	End If
 	FreeRAM = T
 
 End SUB
