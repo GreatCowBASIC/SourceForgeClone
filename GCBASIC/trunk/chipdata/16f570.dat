@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16F570
-'Generated 30/4/2018
+'Generated 28/5/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -14,6 +14,7 @@ MaxMHz=20
 IntOsc=8
 Pins=28
 Family=12
+FamilyVariant=1
 ConfigWords=1
 PSP=0
 MaxAddress=255

@@ -346,7 +346,7 @@ SUB AssembleProgram
 	
 	Dim As Integer CD, PD, IsSFR, SFL, SP1, CSB, CurrentLocation, T, DT, DataSize
 	Dim As Integer RP1, DWC, RSC, DWIC, SS, CS, RepeatBanksel, B, FB, RepeatPagesel
-	Dim As Integer PRC, KeepReplacing, AW, PB, FP, PVT, TBT, HT, PV
+	Dim As Integer PRC, KeepReplacing, AW, PB, FP, PVT, TBT, HT, PV, UseBSR
 	Dim As Integer FCO, COI, CCI, HRC, OIR, RCC, DataBlockSize, ConfigBaseLoc
 	Dim As LongInt CL, OA, FRA, CHA
 	Dim As AsmCommand Pointer CurrCmd, LDSLoc, STSLoc
@@ -371,6 +371,13 @@ SUB AssembleProgram
 		'Should banksel set 1 or 2 STATUS bits?
 		RP1 = HasSFRBit("RP1")
 		If MemSize <= 256 Then RP1 = 0 'If 256 or less addresses, there is no RP1
+	End If
+	'Is this a 16F5 with a BSR register
+	UseBSR = 0
+	If ModePIC Then
+		If IsASM("movlb", 1) Then
+			UseBSR = -1
+		End If
 	End If
 	
 	'Get index of LDS and STS commands (AVR)
@@ -445,25 +452,36 @@ SUB AssembleProgram
 					B = Val(HashMapGetStr(ASMSymbols, Temp))
 					
 					IF ChipFamily = 12 Or ChipFamily = 14 THEN
-						B = (B AND 384) / 128
-						RepeatBanksel = 0
-						AddMoreBanksel:
-						RepeatBanksel = RepeatBanksel + 1
-						If RepeatBanksel = 2 THEN
-							CurrentLine = CurrentLine + 1
-							DataSource = "BCF STATUS,RP1"
-							IF (B AND 2) > 0 THEN DataSource = "BSF STATUS,RP1"
+						If UseBSR Then
+							B = (B AND 96) / 32
+							DataSource = "MOVLB " + Str(B)
 							AsmLine->Value = DataSource
-							CurrCmd = IsASM(DataSource)
-						END IF
-						If RepeatBanksel = 1 THEN
-							IF RP1 = 0 THEN RepeatBanksel = 2
-							DataSource = "BCF STATUS,RP0"
-							IF (B AND 1) > 0 THEN DataSource = "BSF STATUS,RP0"
-							AsmLine->Value = DataSource
-							CurrCmd = IsASM(DataSource)
-						END IF
-					
+							CurrCmd = IsASM(DataSource)						
+						Else
+							If ChipFamily = 12 Then
+								B = (B AND 96) / 32
+							Else
+								B = (B AND 384) / 128
+							End If
+							RepeatBanksel = 0
+							AddMoreBanksel:
+							RepeatBanksel = RepeatBanksel + 1
+							If RepeatBanksel = 2 THEN
+								CurrentLine = CurrentLine + 1
+								DataSource = "BCF STATUS,RP1"
+								IF (B AND 2) > 0 THEN DataSource = "BSF STATUS,RP1"
+								AsmLine->Value = DataSource
+								CurrCmd = IsASM(DataSource)
+							END IF
+							If RepeatBanksel = 1 THEN
+								IF RP1 = 0 THEN RepeatBanksel = 2
+								DataSource = "BCF STATUS,RP0"
+								IF (B AND 1) > 0 THEN DataSource = "BSF STATUS,RP0"
+								AsmLine->Value = DataSource
+								CurrCmd = IsASM(DataSource)
+							END If
+						End If
+											
 					ElseIf ChipFamily = 15 Then
 						'Print DataSource + ": Location " + Hex(B) + " Bank ";
 						If ChipFamilyVariant = 0 Then
@@ -495,11 +513,29 @@ SUB AssembleProgram
 					If PCUpper = 0 Then
 						CurrCmd = 0
 					Else
-						If ChipFamily <> 15 Then
+						RepeatPagesel = 0
+						AddMorePagesel:
+						
+						If ChipFamily = 12 Then
+							B = (B AND 1536) / 512
+							RepeatPagesel = RepeatPagesel + 1
+							If RepeatPagesel = 2 THEN
+								CurrentLine = CurrentLine + 1
+								DataSource = "BCF STATUS,PA1"
+								IF (B AND 2) > 0 THEN DataSource = "BSF STATUS,PA1"
+								AsmLine->Value = DataSource
+								CurrCmd = IsASM(DataSource)
+							ElseIf RepeatPagesel = 1 THEN
+								If PCUpper = 1 THEN RepeatPagesel = 2
+								DataSource = "BCF STATUS,PA0"
+								IF (B AND 1) > 0 THEN DataSource = "BSF STATUS,PA0"
+								AsmLine->Value = DataSource
+								CurrCmd = IsASM(DataSource)
+							END If
+							
+						ElseIf ChipFamily <> 15 Then
 						
 							B = (B AND 6144) / 2048
-							RepeatPagesel = 0
-							AddMorePagesel:
 							RepeatPagesel = RepeatPagesel + 1
 							If RepeatPagesel = 2 THEN
 								CurrentLine = CurrentLine + 1
