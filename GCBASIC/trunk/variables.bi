@@ -1081,7 +1081,6 @@ Function GetWholeSFR(BitName As String) As String
 End Function
 
 Function HasSFR(SFRName As String) As Integer
-	Dim As Integer PD
 	Dim As String TidiedName
 	
 	'Search system variable list to find register

@@ -672,7 +672,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-05-27"
+Version = "0.98.<<>> 2018-05-28"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -865,10 +865,6 @@ If VBS = 1 Then
 	IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
 	PRINT Message("TotalTime") + Temp + Message("CompSecs")
 End If
-
-'Color 14
-'Print "Time in CompileSubCalls:"; DebugTime; " s"
-'Color 7
 
 'End of program
 'Pause and wait for key at end of compilation?
@@ -2651,7 +2647,9 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Asm
 		If ModePIC Then
 			'Bank selection directives
 			If Left(CurrLineVal, 9) = " banksel " Then
-				If ChipFamily = 14 Then
+				If ChipFamily = 12 Then
+					InstSize = 1
+				ElseIf ChipFamily = 14 Then
 					If HasSFRBit("RP1") Then
 						InstSize = 2
 					Else
@@ -2666,7 +2664,7 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Asm
 				InstSize = 1
 
 			ElseIf Left(CurrLineVal, 9) = " pagesel " Then
-				If ChipFamily = 15 Then
+				If ChipFamily = 12 Or ChipFamily = 15 Then
 					InstSize = 1
 				Else
 					InstSize = 2
@@ -2998,7 +2996,6 @@ Sub CompileProgram
 
 	'Add context save/restore and int handlers to Interrupt
 	AddInterruptCode
-
 
 	'Compile IntOn/IntOff
 	'(Need to compile here, after all On Interrupt commands in all subs have been found, but before AddMainInitCode)
@@ -12595,7 +12592,7 @@ Function IsRegister (VarName As String) As Integer
 	Dim As String Temp, Source, SourceLowByte
 	Dim As Integer CurrSub, MinAliasSize
 	Dim As VariableType Pointer FoundVar
-
+	
 	'System vars that are always registers
 	'SysTemp vars are only registers on AVR, no room to be registers on PIC
 	If ModeAVR Then
@@ -14159,8 +14156,11 @@ SUB ReadChipData
 	If ModePIC Then
 		'Calculate the number of high PC bits
 		PCUpper = 0
-		IF ChipFamily = 12 Or ChipFamily = 14 Or ChipFamily = 15 Then
-			IF ChipProg > 2048 THEN PCUpper = 1
+		IF ChipFamily = 12 Then
+			If ChipProg > 512 THEN PCUpper = 1
+			If ChipProg > 1024 THEN PCUpper = 2
+		ElseIf ChipFamily = 14 Or ChipFamily = 15 Then
+			If ChipProg > 2048 THEN PCUpper = 1
 			IF ChipProg > 4096 THEN PCUpper = 2
 		END If
 
@@ -15637,6 +15637,28 @@ Sub MergeSubroutines
 				CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc + IntSub->HexSize))
 				CurrPagePos = ProgMemPage(CurrPage).StartLoc + IntSub->HexSize
 			End If
+			
+			'On 12 bit, insert list of GOTOs to allow calls to second half of pages
+			If ChipFamily = 12 Then
+				CurrLine = LinkedListInsert(CurrLine, ";Indirect jumps to allow calls to second half of page")
+				For CurrSub = 1 To SubQueueCount
+					CurrSubPtr = Subroutine(SubQueue(CurrSub))
+					If CurrSubPtr->Required And CurrSubPtr->LocationSet And CurrSubPtr->DestPage = CurrPage Then
+						'Need to put the sub here
+						'Name of sub
+						If SubQueue(CurrSub) <> 0 Then
+							SubNameOut = GetSubFullName(SubQueue(CurrSub))
+							CurrPagePos += 1
+							StatsUsedProgram += 1
+			
+							CurrLine = LinkedListInsert(CurrLine, SubNameOut)
+							CurrLine = LinkedListInsert(CurrLine, " goto SysInd_" + SubNameOut)
+						End If
+						
+					End If
+				Next
+				CurrLine = LinkedListInsert(CurrLine, "")
+			End If
 
 		ElseIf ModeAVR Then
 			CurrLine = LinkedListInsert(CurrLine, ".ORG " + Str(ProgMemPage(CurrPage).StartLoc))
@@ -15655,6 +15677,9 @@ Sub MergeSubroutines
 					SubNameOut = "BASPROGRAMSTART"
 				Else
 					SubNameOut = GetSubFullName(SubQueue(CurrSub))
+					If ChipFamily = 12 Then
+						SubNameOut = "SysInd_" + SubNameOut
+					End If
 				End If
 				'Print "Placing " + SubNameOut + " at 0x" + Hex(CurrPagePos) + " (size:" + Str(CurrSubPtr->HexSize) + ")"
 				CurrPagePos += CurrSubPtr->HexSize
@@ -15665,7 +15690,7 @@ Sub MergeSubroutines
 				End If
 				'CurrLine = LinkedListInsert(CurrLine, ";Subroutine size:" + Str(CurrSubPtr->HexSize) + " words")
 				CurrLine = LinkedListInsert(CurrLine, SubNameOut + LabelEnd)
-
+				
 				'Alter calls in sub (Use long/short calls as needed)
 				AddPageCommands(CurrSubPtr)
 				'Add sub code
@@ -16305,5 +16330,6 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
 
 
