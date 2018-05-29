@@ -106,23 +106,26 @@ Imports System.Windows.Forms
 			Me.groupBox2 = New System.Windows.Forms.GroupBox
 			Me.ReqConfigLabel = New System.Windows.Forms.Label
 			Me.ItemDescriptionBox = New System.Windows.Forms.TextBox
+			Me.tableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel
 			Me.groupBox1.SuspendLayout
 			Me.groupBox2.SuspendLayout
+			Me.tableLayoutPanel1.SuspendLayout
 			Me.SuspendLayout
 			'
 			'cmdLineLabel
 			'
 			Me.cmdLineLabel.Location = New System.Drawing.Point(8, 112)
 			Me.cmdLineLabel.Name = "cmdLineLabel"
-			Me.cmdLineLabel.Size = New System.Drawing.Size(244, 16)
+			Me.cmdLineLabel.Size = New System.Drawing.Size(232, 16)
 			Me.cmdLineLabel.TabIndex = 13
 			Me.cmdLineLabel.Text = "Command Line Parameters:"
 			'
 			'browseWorkingDir
 			'
+			Me.browseWorkingDir.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.browseWorkingDir.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.ProgrammerEditorHelp.SetHelpString(Me.browseWorkingDir, "Browse for the program's working directory")
-			Me.browseWorkingDir.Location = New System.Drawing.Point(180, 176)
+			Me.browseWorkingDir.Location = New System.Drawing.Point(175, 176)
 			Me.browseWorkingDir.Name = "browseWorkingDir"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.browseWorkingDir, true)
 			Me.browseWorkingDir.Size = New System.Drawing.Size(72, 24)
@@ -138,7 +141,7 @@ Imports System.Windows.Forms
 			'
 			Me.nameLabel.Location = New System.Drawing.Point(8, 16)
 			Me.nameLabel.Name = "nameLabel"
-			Me.nameLabel.Size = New System.Drawing.Size(244, 16)
+			Me.nameLabel.Size = New System.Drawing.Size(232, 16)
 			Me.nameLabel.TabIndex = 11
 			Me.nameLabel.Text = "Name:"
 			'
@@ -147,7 +150,7 @@ Imports System.Windows.Forms
 			Me.Button_Cancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
 			Me.Button_Cancel.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_Cancel.Location = New System.Drawing.Point(285, 341)
+			Me.Button_Cancel.Location = New System.Drawing.Point(267, 308)
 			Me.Button_Cancel.Name = "Button_Cancel"
 			Me.Button_Cancel.Size = New System.Drawing.Size(80, 24)
 			Me.Button_Cancel.TabIndex = 6
@@ -155,12 +158,14 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerFileName
 			'
+			Me.ProgrammerFileName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerFileName, "Program file (.exe) which will be run by the compiler when a program is ready to "& _ 
 						"download.")
 			Me.ProgrammerFileName.Location = New System.Drawing.Point(8, 80)
 			Me.ProgrammerFileName.Name = "ProgrammerFileName"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerFileName, true)
-			Me.ProgrammerFileName.Size = New System.Drawing.Size(164, 20)
+			Me.ProgrammerFileName.Size = New System.Drawing.Size(159, 20)
 			Me.ProgrammerFileName.TabIndex = 2
 			AddHandler Me.ProgrammerFileName.MouseEnter, AddressOf Me.ProgrammerFileNameMouseEnter
 			'
@@ -168,7 +173,7 @@ Imports System.Windows.Forms
 			'
 			Me.Button_OK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_OK.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_OK.Location = New System.Drawing.Point(189, 341)
+			Me.Button_OK.Location = New System.Drawing.Point(171, 308)
 			Me.Button_OK.Name = "Button_OK"
 			Me.Button_OK.Size = New System.Drawing.Size(80, 24)
 			Me.Button_OK.TabIndex = 5
@@ -177,23 +182,27 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerParams
 			'
+			Me.ProgrammerParams.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerParams, "Command line parameters for the program. Please consult your programmer or extern"& _ 
 						"al tool manual and the hints below for details.")
 			Me.ProgrammerParams.Location = New System.Drawing.Point(8, 128)
 			Me.ProgrammerParams.Name = "ProgrammerParams"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerParams, true)
-			Me.ProgrammerParams.Size = New System.Drawing.Size(244, 20)
+			Me.ProgrammerParams.Size = New System.Drawing.Size(239, 20)
 			Me.ProgrammerParams.TabIndex = 3
 			AddHandler Me.ProgrammerParams.TextChanged, AddressOf Me.ProgrammerParamsTextChanged
 			AddHandler Me.ProgrammerParams.MouseEnter, AddressOf Me.ProgrammerParamsMouseEnter
 			'
 			'ProgrammerWorkingDir
 			'
+			Me.ProgrammerWorkingDir.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerWorkingDir, "Folder to use as the working directory for the program")
 			Me.ProgrammerWorkingDir.Location = New System.Drawing.Point(8, 176)
 			Me.ProgrammerWorkingDir.Name = "ProgrammerWorkingDir"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerWorkingDir, true)
-			Me.ProgrammerWorkingDir.Size = New System.Drawing.Size(164, 20)
+			Me.ProgrammerWorkingDir.Size = New System.Drawing.Size(159, 20)
 			Me.ProgrammerWorkingDir.TabIndex = 4
 			AddHandler Me.ProgrammerWorkingDir.MouseEnter, AddressOf Me.ProgrammerWorkingDirMouseEnter
 			'
@@ -201,7 +210,7 @@ Imports System.Windows.Forms
 			'
 			Me.workingDirLabel.Location = New System.Drawing.Point(8, 160)
 			Me.workingDirLabel.Name = "workingDirLabel"
-			Me.workingDirLabel.Size = New System.Drawing.Size(244, 16)
+			Me.workingDirLabel.Size = New System.Drawing.Size(232, 16)
 			Me.workingDirLabel.TabIndex = 14
 			Me.workingDirLabel.Text = "Working Directory:"
 			'
@@ -217,15 +226,16 @@ Imports System.Windows.Forms
 			'
 			Me.fileLabel.Location = New System.Drawing.Point(8, 64)
 			Me.fileLabel.Name = "fileLabel"
-			Me.fileLabel.Size = New System.Drawing.Size(244, 16)
+			Me.fileLabel.Size = New System.Drawing.Size(232, 16)
 			Me.fileLabel.TabIndex = 12
 			Me.fileLabel.Text = "File:"
 			'
 			'ProgBrowse
 			'
+			Me.ProgBrowse.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgBrowse.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgBrowse, "Browse for the program file")
-			Me.ProgBrowse.Location = New System.Drawing.Point(180, 80)
+			Me.ProgBrowse.Location = New System.Drawing.Point(175, 80)
 			Me.ProgBrowse.Name = "ProgBrowse"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgBrowse, true)
 			Me.ProgBrowse.Size = New System.Drawing.Size(72, 24)
@@ -235,12 +245,14 @@ Imports System.Windows.Forms
 			'
 			'ProgrammerName
 			'
+			Me.ProgrammerName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ProgrammerName, "The name of the programmer or external tool. This will be shown in the list of pr"& _ 
 						"ogrammers or tools")
 			Me.ProgrammerName.Location = New System.Drawing.Point(8, 32)
 			Me.ProgrammerName.Name = "ProgrammerName"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ProgrammerName, true)
-			Me.ProgrammerName.Size = New System.Drawing.Size(244, 20)
+			Me.ProgrammerName.Size = New System.Drawing.Size(239, 20)
 			Me.ProgrammerName.TabIndex = 1
 			AddHandler Me.ProgrammerName.MouseEnter, AddressOf Me.ProgrammerNameMouseEnter
 			'
@@ -259,21 +271,25 @@ Imports System.Windows.Forms
 			'
 			'UseIf
 			'
+			Me.UseIf.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.UseIf, resources.GetString("UseIf.HelpString"))
 			Me.UseIf.Location = New System.Drawing.Point(8, 32)
 			Me.UseIf.Name = "UseIf"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.UseIf, true)
-			Me.UseIf.Size = New System.Drawing.Size(244, 20)
+			Me.UseIf.Size = New System.Drawing.Size(240, 20)
 			Me.UseIf.TabIndex = 19
 			AddHandler Me.UseIf.MouseEnter, AddressOf Me.UseIfMouseEnter
 			'
 			'ReqConfig
 			'
+			Me.ReqConfig.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerEditorHelp.SetHelpString(Me.ReqConfig, "If certain config settings must be used with this programmer, enter them here.")
 			Me.ReqConfig.Location = New System.Drawing.Point(8, 80)
 			Me.ReqConfig.Name = "ReqConfig"
 			Me.ProgrammerEditorHelp.SetShowHelp(Me.ReqConfig, true)
-			Me.ReqConfig.Size = New System.Drawing.Size(244, 20)
+			Me.ReqConfig.Size = New System.Drawing.Size(240, 20)
 			Me.ReqConfig.TabIndex = 21
 			AddHandler Me.ReqConfig.MouseEnter, AddressOf Me.ReqConfigMouseEnter
 			'
@@ -281,7 +297,7 @@ Imports System.Windows.Forms
 			'
 			Me.portLabel.Location = New System.Drawing.Point(8, 112)
 			Me.portLabel.Name = "portLabel"
-			Me.portLabel.Size = New System.Drawing.Size(244, 16)
+			Me.portLabel.Size = New System.Drawing.Size(232, 16)
 			Me.portLabel.TabIndex = 16
 			Me.portLabel.Text = "Port:"
 			Me.portLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
@@ -290,12 +306,14 @@ Imports System.Windows.Forms
 			'
 			Me.useIfLabel.Location = New System.Drawing.Point(8, 16)
 			Me.useIfLabel.Name = "useIfLabel"
-			Me.useIfLabel.Size = New System.Drawing.Size(244, 16)
+			Me.useIfLabel.Size = New System.Drawing.Size(232, 16)
 			Me.useIfLabel.TabIndex = 18
 			Me.useIfLabel.Text = "Use If:"
 			'
 			'groupBox1
 			'
+			Me.groupBox1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.groupBox1.Controls.Add(Me.ProgrammerName)
 			Me.groupBox1.Controls.Add(Me.ProgrammerParams)
 			Me.groupBox1.Controls.Add(Me.ProgrammerFileName)
@@ -307,15 +325,17 @@ Imports System.Windows.Forms
 			Me.groupBox1.Controls.Add(Me.cmdLineLabel)
 			Me.groupBox1.Controls.Add(Me.workingDirLabel)
 			Me.groupBox1.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.groupBox1.Location = New System.Drawing.Point(8, 8)
+			Me.groupBox1.Location = New System.Drawing.Point(3, 3)
 			Me.groupBox1.Name = "groupBox1"
-			Me.groupBox1.Size = New System.Drawing.Size(264, 208)
+			Me.groupBox1.Size = New System.Drawing.Size(252, 208)
 			Me.groupBox1.TabIndex = 20
 			Me.groupBox1.TabStop = false
 			Me.groupBox1.Text = "Common Settings"
 			'
 			'groupBox2
 			'
+			Me.groupBox2.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.groupBox2.Controls.Add(Me.ReqConfig)
 			Me.groupBox2.Controls.Add(Me.ReqConfigLabel)
 			Me.groupBox2.Controls.Add(Me.portList)
@@ -323,9 +343,9 @@ Imports System.Windows.Forms
 			Me.groupBox2.Controls.Add(Me.UseIf)
 			Me.groupBox2.Controls.Add(Me.useIfLabel)
 			Me.groupBox2.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.groupBox2.Location = New System.Drawing.Point(280, 8)
+			Me.groupBox2.Location = New System.Drawing.Point(261, 3)
 			Me.groupBox2.Name = "groupBox2"
-			Me.groupBox2.Size = New System.Drawing.Size(264, 160)
+			Me.groupBox2.Size = New System.Drawing.Size(253, 160)
 			Me.groupBox2.TabIndex = 21
 			Me.groupBox2.TabStop = false
 			Me.groupBox2.Text = "Programmer Specific Settings"
@@ -334,7 +354,7 @@ Imports System.Windows.Forms
 			'
 			Me.ReqConfigLabel.Location = New System.Drawing.Point(8, 64)
 			Me.ReqConfigLabel.Name = "ReqConfigLabel"
-			Me.ReqConfigLabel.Size = New System.Drawing.Size(244, 16)
+			Me.ReqConfigLabel.Size = New System.Drawing.Size(232, 16)
 			Me.ReqConfigLabel.TabIndex = 20
 			Me.ReqConfigLabel.Text = "Required Config:"
 			'
@@ -348,24 +368,40 @@ Imports System.Windows.Forms
 			Me.ItemDescriptionBox.Name = "ItemDescriptionBox"
 			Me.ItemDescriptionBox.ReadOnly = true
 			Me.ItemDescriptionBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-			Me.ItemDescriptionBox.Size = New System.Drawing.Size(536, 111)
+			Me.ItemDescriptionBox.Size = New System.Drawing.Size(501, 78)
 			Me.ItemDescriptionBox.TabIndex = 22
 			Me.ItemDescriptionBox.Text = "Move the mouse over an item on this window to see information about it here"
+			'
+			'tableLayoutPanel1
+			'
+			Me.tableLayoutPanel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+			Me.tableLayoutPanel1.ColumnCount = 2
+			Me.tableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50!))
+			Me.tableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50!))
+			Me.tableLayoutPanel1.Controls.Add(Me.groupBox2, 1, 0)
+			Me.tableLayoutPanel1.Controls.Add(Me.groupBox1, 0, 0)
+			Me.tableLayoutPanel1.Location = New System.Drawing.Point(0, 0)
+			Me.tableLayoutPanel1.Name = "tableLayoutPanel1"
+			Me.tableLayoutPanel1.RowCount = 1
+			Me.tableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100!))
+			Me.tableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 216!))
+			Me.tableLayoutPanel1.Size = New System.Drawing.Size(517, 216)
+			Me.tableLayoutPanel1.TabIndex = 23
 			'
 			'ProgrammerEditor
 			'
 			Me.AcceptButton = Me.Button_OK
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.Button_Cancel
-			Me.ClientSize = New System.Drawing.Size(554, 372)
+			Me.ClientSize = New System.Drawing.Size(519, 339)
+			Me.Controls.Add(Me.tableLayoutPanel1)
 			Me.Controls.Add(Me.ItemDescriptionBox)
-			Me.Controls.Add(Me.groupBox2)
-			Me.Controls.Add(Me.groupBox1)
 			Me.Controls.Add(Me.Button_Cancel)
 			Me.Controls.Add(Me.Button_OK)
-			Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
 			Me.MaximizeBox = false
 			Me.MinimizeBox = false
+			Me.MinimumSize = New System.Drawing.Size(535, 377)
 			Me.Name = "ProgrammerEditor"
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
@@ -374,9 +410,11 @@ Imports System.Windows.Forms
 			Me.groupBox1.PerformLayout
 			Me.groupBox2.ResumeLayout(false)
 			Me.groupBox2.PerformLayout
+			Me.tableLayoutPanel1.ResumeLayout(false)
 			Me.ResumeLayout(false)
 			Me.PerformLayout
 		End Sub
+		Private tableLayoutPanel1 As System.Windows.Forms.TableLayoutPanel
 		Private ReqConfig As System.Windows.Forms.TextBox
 		Private ReqConfigLabel As System.Windows.Forms.Label
 		Private ItemDescriptionBox As System.Windows.Forms.TextBox

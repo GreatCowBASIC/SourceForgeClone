@@ -819,7 +819,7 @@ Imports System.Collections.Generic
 		Private Sub Button_AddProgrammerClick(sender As System.Object, e As System.EventArgs)
 			'Hidden option to display version number
 			If My.Computer.Keyboard.AltKeyDown Then
-				Me.Text = "Preferences (editor revision 13)"
+				Me.Text = "Preferences (editor revision 14)"
 				Exit Sub
 			End If
 			
