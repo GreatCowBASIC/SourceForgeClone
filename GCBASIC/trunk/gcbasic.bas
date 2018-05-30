@@ -6629,11 +6629,13 @@ Sub CompileReturn (CompSub As SubType Pointer)
 			End If
 
 			'If in a function, check for value after return
-			If CompSub->IsFunction Then
-				Dim Value As String
-				Value = Trim(Mid(CurrLine->Value, 7))
-				If Value <> "" Then
+			Dim Value As String
+			Value = Trim(Mid(CurrLine->Value, 7))
+			If Value <> "" Then
+				If CompSub->IsFunction Then
 					LinkedListInsert(CurrLine->Prev, CompSub->Name + "=" + Value + Origin)
+				Else
+					LogWarning(Message("WarningReturnValueInSub"), Origin)
 				End If
 			End If
 			
@@ -16391,6 +16393,7 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
 
 
 
