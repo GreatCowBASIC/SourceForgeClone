@@ -489,7 +489,7 @@ SUB PreProcessor
 
 	Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
-	Dim As String TempFile, LastTableOrigin, NewFNType, CurrChar, CodeTemp, OtherChar, BinHexTemp
+	Dim As String TempFile, LastTableOrigin, NewFNType, CodeTemp, OtherChar, BinHexTemp
 	Dim As String DataSourceOld, TranslatedFile, HFI
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 
@@ -498,7 +498,7 @@ SUB PreProcessor
 	Dim As OriginType Pointer LineOrigin
 
 	Dim As Integer T, T2, ICCO, CE, PD, RF, S, LC, LCS, SID, CD, SL, NR
-	Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro
+	Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro, CurrChar
 	Dim As Integer CurrCharPos, ReadType, ConvertAgain, UnconvertedFiles
 	Dim As Single CurrPerc, PercAdd, PercOld
 	Dim As Double LastCompTime
@@ -559,7 +559,7 @@ SUB PreProcessor
 					DO WHILE NOT EOF(1)
 						LINE INPUT #1, Temp
 						LC += 1
-						Temp = Trim(Temp, Any Chr(9) + " ")
+						Temp = LTrim(Temp, Any Chr(9) + " ")
 						IF Left(UCase(Temp), 8) = "#INCLUDE" THEN
 							IF INSTR(Temp, Chr(34)) <> 0 THEN
 								Temp = Mid(Temp, INSTR(Temp, Chr(34)) + 1)
@@ -724,13 +724,13 @@ SUB PreProcessor
 			BinHexTemp = ""
 			CurrCharPos = 1
 			Do While CurrCharPos <= Len(DataSource)
-				CurrChar = Mid(DataSource, CurrCharPos, 1)
+				CurrChar = Asc(Mid(DataSource, CurrCharPos, 1))
 
-				If CurrChar = """" Then
+				If CurrChar = Asc("""") Then
 					'Start or end of string
 					If ReadType = 0 Then
 						ReadType = 1
-						CurrChar = "" 'Don't append
+						CurrChar = -1 'Don't append
 						StringTemp = ""
 
 					ElseIf ReadType = 1 Then
@@ -741,7 +741,7 @@ SUB PreProcessor
 						Else
 							'End of string found
 							ReadType = 0
-							CurrChar = "" 'Don't append to code!
+							CurrChar = -1 'Don't append to code!
 
 							'Store string
 							'Check for duplicates
@@ -762,14 +762,14 @@ SUB PreProcessor
 						End If
 					End If
 
-				ElseIf CurrChar = "'" Then
+				ElseIf CurrChar = Asc("'") Then
 					'Comment, or possibly part of binary/hex constant
 					If ReadType = 0 Then
 						OtherChar = LCase(Mid(DataSource, CurrCharPos - 1, 1))
 						If OtherChar = "b" Or OtherChar = "h" Then
 							ReadType = 2
-							BinHexTemp = OtherChar + CurrChar
-							CurrChar = ""
+							BinHexTemp = OtherChar + Chr(CurrChar)
+							CurrChar = -1
 							'b or h will have been appended to CodeTemp, remove
 							CodeTemp = Left(CodeTemp, Len(CodeTemp) - 1)
 						Else
@@ -778,40 +778,40 @@ SUB PreProcessor
 
 					ElseIf ReadType = 2 Then
 						'Last part of binary/hex literal, b' or h' format
-						BinHexTemp += CurrChar
+						BinHexTemp += Chr(CurrChar)
 						If LCase(Left(BinHexTemp, 1)) = "h" Then
 							BinHexTemp = "0x" + Mid(BinHexTemp, 3, Len(BinHexTemp) - 3)
 						End If
 						CodeTemp += Str(MakeDec(BinHexTemp))
 
 						BinHexTemp = ""
-						CurrChar = ""
+						CurrChar = -1
 						ReadType = 0
 					End If
 
-				ElseIf ReadType = 0 And CurrChar = "0" Then
+				ElseIf ReadType = 0 And CurrChar = Asc("0") Then
 					OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
 					If (OtherChar = "b" Or OtherChar = "x") And IsDivider(Mid(DataSource, CurrCharPos - 1, 1)) Then
 						ReadType = 4
-						BinHexTemp = CurrChar
-						CurrChar = ""
+						BinHexTemp = Chr(CurrChar)
+						CurrChar = -1
 					End If
 
 				ElseIf ReadType = 4 Then
 					OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
 					If IsDivider(OtherChar) Or OtherChar = "'" Or OtherChar = Chr(34) Or CurrCharPos = Len(DataSource) Then
 						'Last part of binary/hex literal, 0x or 0b format
-						BinHexTemp += CurrChar
+						BinHexTemp += Chr(CurrChar)
 						If UCase(Left(BinHexTemp, 2)) = "0B" Then
 							BinHexTemp = "b'" + Mid(BinHexTemp, 3) + "'"
 						End If
 						CodeTemp += Str(MakeDec(BinHexTemp))
 						BinHexTemp = ""
-						CurrChar = ""
+						CurrChar = -1
 						ReadType = 0
 					End If
 
-				ElseIf CurrChar = ";" Then
+				ElseIf CurrChar = Asc(";") Then
 					'If this occurs outside of a string, it means comment start
 					If ReadType <> 1 Then ReadType = 3
 				End If
@@ -820,20 +820,20 @@ SUB PreProcessor
 					Case 0:
 						'Append char to code line
 						'Replace tabs with spaces
-						If Asc(CurrChar) = 9 Then CurrChar = " "
-						If Asc(CurrChar) = 160 Then CurrChar = " " 'non-breaking space, seems to end up in code sometimes and breaks compiler
+						If CurrChar = 9 Then CurrChar = Asc(" ")
+						If CurrChar = 160 Then CurrChar = Asc(" ") 'non-breaking space, seems to end up in code sometimes and breaks compiler
 						'Prevent multiple spaces
-						If CurrChar <> " " Or Right(CodeTemp, 1) <> " " Then
-							CodeTemp += CurrChar
+						If CurrChar <> Asc(" ") Or Right(CodeTemp, 1) <> " " Then
+							If CurrChar <> -1 Then CodeTemp += Chr(CurrChar)
 						End If
 
 					Case 1:
 						'Append char to string
-						StringTemp += CurrChar
+						If CurrChar <> -1 Then StringTemp += Chr(CurrChar)
 
 					Case 2, 4:
 						'Store bin/hex character in temporary var
-						BinHexTemp += CurrChar
+						If CurrChar <> -1 Then BinHexTemp += Chr(CurrChar)
 
 					Case 3:
 						'If in a comment, there's nothing else to read here
@@ -1054,7 +1054,7 @@ SUB PreProcessor
 								Exit For
 							End If
 						Next
-
+						
 						'Get parameters
 						SubInType = ""
 						Temp = Trim(Mid(DataSource, 4))

@@ -603,9 +603,9 @@ Function CountOccur (Source As String, Search As String, SearchWhole As Integer 
 		
 		FOR SC = 1 To LEN(Temp)
 			FOR CO = 1 TO LEN(Source)
-				IF Mid(Source, CO, 1) = Mid(Temp, SC, 1) THEN T = T + 1
+				IF Asc(Source, CO) = Asc(Temp, SC) THEN T = T + 1
 			NEXT
-		NEXT
+		Next
 	END IF
 	
 	CountOccur = T
@@ -986,11 +986,11 @@ FUNCTION IsConst (DataSource As String) As Integer
 END FUNCTION
 
 FUNCTION IsDivider (Temp As String) As Integer
-	
-	Select Case Temp
-		Case " ", "(", ")", ",", ".", ":", ";", "+", "-", "*", "/", "%": Return -1
-		Case "=", "!", "<", ">", "{", "}", "~", "&", "|", "#": Return -1
-		Case "[", "]", Chr(9), Chr(160): Return -1
+	Select Case Asc(Temp)
+		Case Asc("A") To Asc("Z"), Asc("a") To Asc("z"), Asc("0") To Asc("9"): Return 0
+		Case Asc(" "), Asc("("), Asc(")"), Asc(","), Asc("."), Asc(":"), Asc(";"), Asc("+"), Asc("-"), Asc("*"), Asc("/"), Asc("%"): Return -1
+		Case Asc("="), Asc("!"), Asc("<"), Asc(">"), Asc("{"), Asc("}"), Asc("~"), Asc("&"), Asc("|"), Asc("#"): Return -1
+		Case Asc("["), Asc("]"), 9, 160: Return -1
 		Case Else: Return 0
 	End Select
 	

@@ -672,7 +672,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-05-28"
+Version = "0.98.<<>> 2018-05-30"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5718,7 +5718,7 @@ End Sub
 
 SUB CompileIF (CompSub As SubType Pointer)
 	FoundCount = 0
-	Dim As String Origin, Temp, L1, L2, Condition, EndBlock
+	Dim As String Origin, Temp, L1, L2, Condition, EndBlock, LastIfOrigin
 	Dim As Integer FoundIF, IL, ELC, IT, TL, FE, DelSection, DelEndIf, EndIfUsed, PrevSectionSkipped
 	Dim As Integer WD, CurrIfNo
 
@@ -5752,6 +5752,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 				IF INSTR(CurrLine->Value, ";?F") <> 0 THEN
 					Origin = Mid(CurrLine->Value, INSTR(CurrLine->Value, ";?F"))
 					CurrLine->Value = RTrim(Left(CurrLine->Value, INSTR(CurrLine->Value, ";?F") - 1))
+					LastIfOrigin = Origin
 				END IF
 
 				'Decide whether to jump to else or end if
@@ -5768,7 +5769,6 @@ SUB CompileIF (CompSub As SubType Pointer)
 				Loop
 				'If no end found, error and quit
 				If FindEnd = 0 Then
-					'Print "No End If"
 					LogError(Message("NoEndIf"), Origin)
 					'Remove faulty If and continue compilation (to find further errors)
 					CurrLine = LinkedListDelete(CurrLine)
@@ -5826,6 +5826,14 @@ SUB CompileIF (CompSub As SubType Pointer)
 				If TL = 0 Then Exit Do
 				FindEnd = FindEnd->Next
 			Loop
+			'If no end found, error and quit
+			If FindEnd = 0 Then
+				'Print "No End If"
+				LogError(Message("NoEndIf"), Origin)
+				'Remove faulty If and continue compilation (to find further errors)
+				CurrLine = LinkedListDelete(CurrLine)
+				GoTo CompileIfs
+			End If
 
 			'Add Code
 			PrevSectionSkipped = DelSection
@@ -5942,20 +5950,26 @@ SUB CompileIF (CompSub As SubType Pointer)
 				Else
 					CurrLine = LinkedListDelete(CurrLine)
 				End If
-			End If
+			
 
 			'If there are too many END IFs, display error
-			IF IL < 0 THEN
+			ElseIf IL < 0 THEN
 				IF Origin <> "" THEN
 					LogError Message("ExtraENDIF"), Origin
 				END IF
 				IL = 0
+				
 			END IF
 
 		END IF
 
 		CurrLine = CurrLine->Next
 	Loop
+	
+	'Not enough end ifs?
+	If IL > 0 Then
+		LogError(Message("NoEndIf"), LastIfOrigin)
+	End If
 
 	'Need to scan through program over and over until no more new IFs are found
 	IF FoundIF THEN GOTO COMPILEIFS
@@ -6097,19 +6111,8 @@ SUB CompileOn (CompSub As SubType Pointer)
 					CurrLine = LinkedListDelete(CurrLine)
 					Continue Do
 				End If
-
+				
 				With Interrupts(IntIndex)
-
-					'Show error if conflicting handler found
-					If .Handler <> "" And .Handler <> OnJumpTo And OnJumpTo <> "IGNORE" Then
-						TempData = Message("HandlerConflict")
-						Replace TempData, "%event%", OnCondition
-						LogError TempData, Origin
-
-						CurrLine = LinkedListDelete(CurrLine)
-						Continue Do
-					End If
-
 					'Check handler sub, request
 					If OnJumpTo <> "IGNORE" Then
 						HandlerSubLoc = RequestSub(0, OnJumpTo)
@@ -6121,7 +6124,22 @@ SUB CompileOn (CompSub As SubType Pointer)
 
 							CurrLine = LinkedListDelete(CurrLine)
 							Continue Do
+						Else
+							'If trying to jump to a function, fix call
+							If Subroutine(HandlerSubLoc)->IsFunction Then
+								OnJumpTo = GetSubFullName(HandlerSubLoc)
+							End If
 						End If
+					End If
+					
+					'Show error if conflicting handler found
+					If .Handler <> "" And .Handler <> OnJumpTo And OnJumpTo <> "IGNORE" Then
+						TempData = Message("HandlerConflict")
+						Replace TempData, "%event%", OnCondition
+						LogError TempData, Origin
+
+						CurrLine = LinkedListDelete(CurrLine)
+						Continue Do
 					End If
 
 					'On PIC, generate handler routine in IntCode()
