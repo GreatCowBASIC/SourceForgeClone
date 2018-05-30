@@ -355,6 +355,7 @@ Declare SUB CompileOn (CompSub As SubType Pointer)
 DECLARE SUB CompilePot (CompSub As SubType Pointer)
 DECLARE SUB CompileReadTable (CompSub As SubType Pointer)
 DECLARE SUB CompileRepeat (CompSub As SubType Pointer)
+Declare Sub CompileReturn (CompSub As SubType Pointer)
 DECLARE SUB CompileRotate (CompSub As SubType Pointer)
 DECLARE SUB CompileSelect (CompSub As SubType Pointer)
 DECLARE SUB CompileSet (CompSub As SubType Pointer)
@@ -3085,6 +3086,8 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 	CompileRepeat (CompSub)
 	If EVBS Then Print Spc(15); "Compiling Select"
 	CompileSelect (CompSub)
+	If EVBS Then Print Spc(15); "Compiling Select"
+	CompileReturn (CompSub)
 	'Compile If statements and variable assignments last
 	'This allows other commands to generate IFs and assignments rather than having to produce assembly
 	If EVBS Then Print Spc(15); "Compiling If"
@@ -5629,7 +5632,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 End SUB
 
 Sub CompileGoto (CompSub As SubType Pointer)
-	'Compile GOSUBs, RETURNs, GOTOs and labels
+	'Compile GOSUBs, GOTOs and labels
 	Dim As String InLine, DestLabel, Origin
 	'Dim As Integer PD
 	Dim As LinkedListElement Pointer CurrLine
@@ -5684,31 +5687,6 @@ Sub CompileGoto (CompSub As SubType Pointer)
 			DestLabel = Trim(MID(CurrLine->Value, 7))
 
 			CurrLine->Value = " call " + DestLabel
-			FoundCount += 1
-
-		ElseIf Left(InLine, 6) = "RETURN" THEN
-			'Remove origin
-			IF INSTR(CurrLine->Value, ";?F") <> 0 THEN
-				Origin = Mid(InLine, INSTR(InLine, ";?F"))
-				CurrLine->Value = RTrim(Left(CurrLine->Value, INSTR(CurrLine->Value, ";?F") - 1))
-			Else
-				Origin = ""
-			End If
-
-			''If in a function, check for value after return
-			'If CompSub->IsFunction Then
-			' Dim Value As String
-			' Value = Trim(Mid(CurrLine->Value, 7))
-			' If Value <> "" Then
-			'
-			' End If
-			'End If
-
-			If ModePIC Then
-				CurrLine->Value = " return"
-			ElseIf ModeAVR Or ModeZ8 Then
-				CurrLine->Value = " ret"
-			End If
 			FoundCount += 1
 		END IF
 		CurrLine = CurrLine->Next
@@ -6632,6 +6610,49 @@ SUB CompileRepeat (CompSub As SubType Pointer)
 	Loop
 	FoundCount = RPLC
 END SUB
+
+Sub CompileReturn (CompSub As SubType Pointer)
+	Dim As String InLine, Origin
+	Dim As LinkedListElement Pointer CurrLine
+	
+	CurrLine = CompSub->CodeStart->Next
+	Do While CurrLine <> 0
+		InLine = UCASE(CurrLine->Value)
+
+		If Left(InLine, 6) = "RETURN" THEN
+			'Remove origin
+			IF INSTR(CurrLine->Value, ";?F") <> 0 THEN
+				Origin = Mid(InLine, INSTR(InLine, ";?F"))
+				CurrLine->Value = RTrim(Left(CurrLine->Value, INSTR(CurrLine->Value, ";?F") - 1))
+			Else
+				Origin = ""
+			End If
+
+			'If in a function, check for value after return
+			If CompSub->IsFunction Then
+				Dim Value As String
+				Value = Trim(Mid(CurrLine->Value, 7))
+				If Value <> "" Then
+					LinkedListInsert(CurrLine->Prev, CompSub->Name + "=" + Value + Origin)
+				End If
+			End If
+			
+			If ModePIC Then
+				CurrLine->Value = " return"
+			ElseIf ModeAVR Then
+				CurrLine->Value = " ret"
+			End If
+			
+			'If this is the last line, no need to add return later
+			If CurrLine->Next = 0 Then
+				CompSub->NoReturn = -1
+			End If
+			
+		END IF
+		CurrLine = CurrLine->Next
+	Loop
+
+End Sub
 
 SUB CompileRotate (CompSub As SubType Pointer)
 
