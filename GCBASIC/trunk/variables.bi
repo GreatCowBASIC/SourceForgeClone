@@ -45,6 +45,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Dim As VariableType Pointer VarFound, MainVarFound
 	Dim As SubType Pointer VarSub, MainSub
 	Dim As LinkedListElement Pointer SearchConstPos
+	Dim As Single StartTime
 	
 	VarName = UCase(VarNameIn)
 	VarType = VarTypeIn
