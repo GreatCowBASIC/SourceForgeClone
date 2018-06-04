@@ -26,6 +26,7 @@
 '25/03/2018 Removed typo.
 '08/04/2018 Change type from Integer to Word in CIR and CIRS methods
 '24/04/2018 Changed to support generic Nextion displays
+'04/06/2018 Added GLCDGetTouch_Nextion method
 
 #define GLCD_NextionSerialPrint HSerPrint
 #define GLCD_NextionSerialSend  HSerSend
@@ -453,3 +454,63 @@ sub GLCDSendOpInstruction_Nextion ( in nextionobject as string , in nextionstrin
   GLCD_NextionSerialSend 255
 
 end sub
+
+
+Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
+
+
+          'variables used in the X and Y read operation
+          dim myLongNextionInCount as byte alias myValueLong_u  'to save memory
+          dim mySerialErrorCountNextion as byte alias myValueLong_e  'to save memory
+
+          dim newByteInNextion as byte
+          dim myNextionLong as long
+
+          'Commence X or Y Axis Read
+          'Iniitialise the variable to something that should not be returned
+          myNextionLong = 0xDEADBEEF
+          GLCDGetTouch_Nextion = "XXX"
+          GLCDSendOpInstruction_Nextion( "get",  nextionstringData  )
+          'header data
+
+          myLongNextionInCount = 0
+          mySerialErrorCountNextion = 0
+            do
+                HSerReceive (newByteInNextion)
+
+                'if we have recieved three 0xff then we are out of sequence
+                if ( newByteInNextion = 0xff ) then
+                    mySerialErrorCountNextion = mySerialErrorCountNextion + 1
+                 else
+                     mySerialErrorCountNextion = 0
+                 end if
+
+                'we located the correct data to sync with
+                if ( newByteInNextion = 0x71 ) then
+                    exit do
+                end if
+
+                myLongNextionInCount = myLongNextionInCount + 1
+
+                'we are totally ouf of sequence if either of these test are valid
+          loop until (myLongNextionInCount = 7  ) or ( mySerialErrorCountNextion = 3 )
+
+          if ( newByteInNextion = 0x71 ) then
+
+              'Receive the real data
+              HSerReceive ( [byte]myNextionLong )
+              HSerReceive ( myNextionLong_H)
+              HSerReceive ( myNextionLong_U)
+              HSerReceive ( myNextionLong_E)
+              'footer data - consume the bytes to ensure the buffer is emptied
+              repeat 3
+                HSerReceive ( newByteInNextion)
+              end Repeat
+
+              'We have the axis data!!
+              'Set function to the value
+              GLCDGetTouch_Nextion = str(myNextionLong)
+
+          end if
+
+end function
