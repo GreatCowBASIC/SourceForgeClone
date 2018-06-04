@@ -27,9 +27,13 @@
 '08/04/2018 Change type from Integer to Word in CIR and CIRS methods
 '24/04/2018 Changed to support generic Nextion displays
 '04/06/2018 Added GLCDGetTouch_Nextion method
+'04/06/2018 Added software serial suppor to GLCDGetTouch_Nextion method
 
-#define GLCD_NextionSerialPrint HSerPrint
-#define GLCD_NextionSerialSend  HSerSend
+
+#define GLCD_NextionSerialPrint    HSerPrint
+#define GLCD_NextionSerialSend     HSerSend
+#define GLCD_NextionSerialReceive  HSerReceive
+
 'Recommended standard fonts to installed in the Nextion
 #define NextionFont0      0, 8, 16    'Arial 8x16
 #define NextionFont1      1, 12, 24   '24point 12x24 charset
@@ -456,6 +460,7 @@ sub GLCDSendOpInstruction_Nextion ( in nextionobject as string , in nextionstrin
 end sub
 
 
+'method returns a string. Support USART1 and Softare serial
 Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
 
 
@@ -476,7 +481,13 @@ Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
           myLongNextionInCount = 0
           mySerialErrorCountNextion = 0
             do
-                HSerReceive (newByteInNextion)
+                #ifdef USART_BAUD_RATE
+                  GLCD_NextionSerialReceive ( newByteInNextion)
+                #endif
+
+                #ifndef USART_BAUD_RATE
+                  newByteInNextion = GLCD_NextionSerialReceive
+                #endif
 
                 'if we have recieved three 0xff then we are out of sequence
                 if ( newByteInNextion = 0xff ) then
@@ -498,13 +509,29 @@ Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
           if ( newByteInNextion = 0x71 ) then
 
               'Receive the real data
-              HSerReceive ( [byte]myNextionLong )
-              HSerReceive ( myNextionLong_H)
-              HSerReceive ( myNextionLong_U)
-              HSerReceive ( myNextionLong_E)
+              #ifdef USART_BAUD_RATE
+                  GLCD_NextionSerialReceive ( [byte]myNextionLong )
+                  GLCD_NextionSerialReceive ( myNextionLong_H)
+                  GLCD_NextionSerialReceive ( myNextionLong_U)
+                  GLCD_NextionSerialReceive ( myNextionLong_E)
+              #endif
+              #ifndef USART_BAUD_RATE
+                  [byte]myNextionLong = GLCD_NextionSerialReceive
+                  myNextionLong_H = GLCD_NextionSerialReceive
+                  myNextionLong_U = GLCD_NextionSerialReceive
+                  myNextionLong_E = GLCD_NextionSerialReceive
+              #endif
+
+
               'footer data - consume the bytes to ensure the buffer is emptied
               repeat 3
-                HSerReceive ( newByteInNextion)
+                #ifdef USART_BAUD_RATE
+                  GLCD_NextionSerialReceive ( newByteInNextion)
+                #endif
+
+                #ifndef USART_BAUD_RATE
+                  newByteInNextion = GLCD_NextionSerialReceive
+                #endif
               end Repeat
 
               'We have the axis data!!
