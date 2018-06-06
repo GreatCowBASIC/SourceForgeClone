@@ -673,7 +673,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-05-30"
+Version = "0.98.<<>> 2018-06-06"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -7379,7 +7379,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 	Dim As String CallCmd, MacroLineOrigin, SourceFunction
 	Dim As LinkedListElement Pointer BeforeCode, AfterCode, BeforePos, AfterPos
 	Dim As VariableType Pointer SourcePtr, SourceArrayPtr
-
+	
 	Dim As LinkedListElement Pointer OutList, CurrPos, MacroLine
 	OutList = LinkedListCreate
 
@@ -7390,10 +7390,9 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 	AfterPos = AfterCode
 
 	StringConstCount = 0
-
+	
 	'Load code to call sub into OutList
 	With (*InCall)
-
 		If .Called->IsMacro Then
 			'Dealing with a macro
 			'Copy lines over, replacing params where needed
@@ -7462,7 +7461,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 				End If
 				'Print "Compiling call to " + .Name + " (from " + InCall->Caller->Name + ")"
 			End With
-
+			
 			'Optional params
 			If (*.Called).ParamCount > .Params Then
 				For CD = .Params + 1 To (*.Called).ParamCount
@@ -7470,7 +7469,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 				Next
 				.Params = (*.Called).ParamCount
 			End If
-
+			
 			'Make code to copy parameters
 			FOR CD = 1 TO .Params
 
@@ -7516,7 +7515,6 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					LogError Temp, .Origin
 					C = -1
 				End If
-
 				'Print , "Copying "; .Param(CD, 1); " to "; *.Called.Params(CD).Name; " using mode "; C
 
 				'Pass by copying
@@ -7611,17 +7609,25 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					'Source
 					SourceArray = .Param(CD, 1)
 					'IF INSTR(SourceArray, "(") <> 0 THEN SourceArray = Left(SourceArray, INSTR(SourceArray, "(") - 1)
-					IF INSTR(SourceArray, "()") <> 0 THEN SourceArray = Left(SourceArray, INSTR(SourceArray, "()") - 1)
-					IF INSTR(SourceArray, "$") <> 0 THEN SourceArray = Left(SourceArray, INSTR(SourceArray, "$") - 1)
-
+					IF INSTR(SourceArray, "()") <> 0 THEN SourceArray = RTrim(Left(SourceArray, INSTR(SourceArray, "()") - 1))
+					IF INSTR(SourceArray, "$") <> 0 THEN SourceArray = RTrim(Left(SourceArray, INSTR(SourceArray, "$") - 1))
+					
 					'Is SourceArray a function?
 					LocOfFn = LocationOfSub(.Param(CD, 1), "", .Origin, -1)
-
+					
 					'SourceArray is function
 					If LocOfFn <> 0 Then
 						SourceFunction = SourceArray
-						IF INSTR(SourceArray, "(") <> 0 THEN SourceArray = Left(SourceArray, INSTR(SourceArray, "(") - 1)
+						IF INSTR(SourceArray, "(") <> 0 THEN SourceArray = RTrim(Left(SourceArray, INSTR(SourceArray, "(") - 1))
 						SourceArrayPtr = VarAddress(ReplaceFnNames(SourceArray), .Caller)
+						If SourceArrayPtr = 0 Then
+							'This should never run
+							Color 12
+							Print "Internal error in CompileSubCall: Function " + ReplaceFnNames(SourceArray) + " exists but its variable does not"
+							Print "(in " + .Caller->Name + ", calling " + SourceArray + ")"
+							Color 7
+							GoTo CompileNextParam
+						End If
 
 						'Remove function name from SourceArray
 						SourceArray = Chr(31) + Str(LocOfFn) + Chr(31)
@@ -7651,8 +7657,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 					'Create destination array if necessary
 					SourcePtr = VarAddress(DestArray, .Called)
 					AddVar DestArray, "BYTE", 2, .Called, "POINTER", .Origin
-					'Print .Param(CD, 1), SourcePtr, SourceArrayPtr
-
+					
 					'Set handler name
 					ArrayHandler = "Sys" + DestArray + "Handler"
 					AddVar ArrayHandler, "WORD", 1, 0, "REAL", .Origin, , -1 'Make handler global
@@ -7665,7 +7670,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						Replace (ArrayHandler, .Called->Name, Chr(31) + Str((*InCall).CalledID) + Chr(31))
 					Loop
 					SourceArrayHandler = "Sys" + SourceArray + "Handler"
-
+					
 					If ModePIC Then
 						If SourceArrayPtr->Pointer = "POINTER" Then
 							If ChipFamily = 16 Then
@@ -7697,8 +7702,8 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 						End If
 						AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
 					End If
-				END IF
-
+				END If
+				
 				CompileNextParam:
 			Next
 
@@ -7710,13 +7715,13 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 		End If
 
 	End With
-
+	
 	'Copy code to output array
 	CurrPos = OutList
 	CurrPos = LinkedListInsertList(CurrPos, BeforeCode)
 	CurrPos = LinkedListInsert(CurrPos, CallCmd)
 	CurrPos = LinkedListInsertList(CurrPos, AfterCode)
-
+	
 	Return OutList
 End Function
 
