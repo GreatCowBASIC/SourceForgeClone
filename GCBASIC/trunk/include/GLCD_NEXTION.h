@@ -29,6 +29,7 @@
 '04/06/2018 Added GLCDGetTouch_Nextion method
 '04/06/2018 Added software serial suppor to GLCDGetTouch_Nextion method
 '04/06/2018 Revised GLCDGetTouch_Nextion method to support only Functions to improve support
+'06/06/2018 Revised GLCDGetTouch_Nextion method to support consumption of last three bytes.
 
 
 
@@ -462,7 +463,15 @@ sub GLCDSendOpInstruction_Nextion ( in nextionobject as string , in nextionstrin
 end sub
 
 
-'method returns a string. Support USART1 and Softare serial
+
+'The data packet is handled as non-blocking.
+'1. Checks for three bytes of 0xFF. If Four 0xff are received then exit = non-block.
+'2. If at any time a 0x71 is recieved then we have data for the event.
+'3. If seven bytes arrive, but the method did not receive a 0x71  then exit = non-block.
+'4. The method supports software and hardware serial. As does all the other methods.  This may account for the extra few program words.
+'5. The method uses a function to receive the data not a sub-routine. Again,   this would account for the extra few program words but this is required to provide full support.
+'
+'Method returns a string. Support USART1 and Softare serial
 Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
 
 
@@ -482,7 +491,7 @@ Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
 
           myLongNextionInCount = 0
           mySerialErrorCountNextion = 0
-            do
+          do
                 newByteInNextion = GLCD_NextionSerialReceive
 
                 'if we have recieved three 0xff then we are out of sequence
@@ -519,6 +528,13 @@ Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
               'We have the axis data!!
               'Set function to the value
               GLCDGetTouch_Nextion = str(myNextionLong)
+
+              'Consume the last three sync bytes
+              Repeat 3
+
+                newByteInNextion = GLCD_NextionSerialReceive
+
+              End Repeat
 
           end if
 
