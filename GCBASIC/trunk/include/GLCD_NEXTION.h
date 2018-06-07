@@ -30,6 +30,8 @@
 '04/06/2018 Added software serial suppor to GLCDGetTouch_Nextion method
 '04/06/2018 Revised GLCDGetTouch_Nextion method to support only Functions to improve support
 '06/06/2018 Revised GLCDGetTouch_Nextion method to support consumption of last three bytes.
+'07/06/2018 Revised GLCDGetTouch_Nextion method to support long not string.
+
 
 
 
@@ -472,20 +474,17 @@ end sub
 '5. The method uses a function to receive the data not a sub-routine. Again,   this would account for the extra few program words but this is required to provide full support.
 '
 'Method returns a string. Support USART1 and Softare serial
-Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
-
+Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as long
 
           'variables used in the X and Y read operation
-          dim myLongNextionInCount as byte alias myValueLong_u  'to save memory
-          dim mySerialErrorCountNextion as byte alias myValueLong_e  'to save memory
+          dim myLongNextionInCount as byte alias GLCDGetTouch_Nextion_u       'aliased to save memory
+          dim mySerialErrorCountNextion as byte alias GLCDGetTouch_Nextion_e  'aliased to save memory
 
           dim newByteInNextion as byte
-          dim myNextionLong as long
 
           'Commence X or Y Axis Read
           'Iniitialise the variable to something that should not be returned
-          myNextionLong = 0xDEADBEEF
-          GLCDGetTouch_Nextion = "XXX"
+          GLCDGetTouch_Nextion = 0xDEADBEEF
           GLCDSendOpInstruction_Nextion( "get",  nextionstringData  )
           'header data
 
@@ -509,16 +508,15 @@ Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
                 myLongNextionInCount = myLongNextionInCount + 1
 
                 'we are totally ouf of sequence if either of these test are valid
-          loop until (myLongNextionInCount = 7  ) or ( mySerialErrorCountNextion = 3 )
+          loop until (myLongNextionInCount = 7  ) or ( mySerialErrorCountNextion = 4 )
 
           if ( newByteInNextion = 0x71 ) then
 
               'Receive the real data
-              [byte]myNextionLong = GLCD_NextionSerialReceive
-              myNextionLong_H = GLCD_NextionSerialReceive
-              myNextionLong_U = GLCD_NextionSerialReceive
-              myNextionLong_E = GLCD_NextionSerialReceive
-
+              [byte]GLCDGetTouch_Nextion = GLCD_NextionSerialReceive
+              GLCDGetTouch_Nextion_H = GLCD_NextionSerialReceive
+              GLCDGetTouch_Nextion_U = GLCD_NextionSerialReceive
+              GLCDGetTouch_Nextion_E = GLCD_NextionSerialReceive
 
               'footer data - consume the bytes to ensure the buffer is emptied
               repeat 3
@@ -526,15 +524,7 @@ Function GLCDGetTouch_Nextion ( in nextionstringData  as string ) as string * 3
               end Repeat
 
               'We have the axis data!!
-              'Set function to the value
-              GLCDGetTouch_Nextion = str(myNextionLong)
-
-              'Consume the last three sync bytes
-              Repeat 3
-
-                newByteInNextion = GLCD_NextionSerialReceive
-
-              End Repeat
+              'Function name is now set to the value
 
           end if
 
