@@ -53,6 +53,9 @@
 '               Added [canskip] where appropiate
 '    26042018 - Comments tidy up. No functional changes.
 '    27052018 - Added 48mhz clock treatment for 18f USB parts for type 104 oscillator
+'    07062018 - Added 24mhz  clock treatment for 16f USB parts for type 102 oscillator
+'    08062018 - Added 0.0625mhz  clock treatment for 16f USB parts for type 102 oscillator
+
 
 
 'Constants
@@ -231,7 +234,7 @@ Sub InitSys
 
          #IFNDEF CHIPFamily 16
 
-                asm showdebug OSCCON type is 102 '#IFNDEF CHIPFamily 16
+                asm showdebug OSCCON type is 102 'therefore not CHIPFamily 16
 
                 #IFDEF ChipMHz 32
                   #IFDEF Var(OSCSTAT)
@@ -245,9 +248,16 @@ Sub InitSys
                 #ENDIF
 
                 #IFDEF ChipMHz 24
+                  asm showdebug 24hz
                   #IFDEF Var(OSCSTAT1)
                     OSCFRQ = 0b00000101
                     NOSC0 = 0
+                    NOSC1 = 0
+                    NOSC2 = 0
+                  #ENDIF
+                  #IFDEF Var(OSCSTAT)
+                    OSCFRQ = 0b00000100
+                    NOSC0 = 1
                     NOSC1 = 0
                     NOSC2 = 0
                   #ENDIF
@@ -312,6 +322,11 @@ Sub InitSys
                 #IFDEF ChipMHz 0.125
                   OSCFRQ = 0b00000000
                   OSCCON1 = OSCCON1 OR 0b00000011
+                #ENDIF
+
+                #IFDEF ChipMHz 0.0625
+                  OSCFRQ = 0b00000000
+                  OSCCON1 = OSCCON1 OR 0b00000100
                 #ENDIF
 
           #Endif
