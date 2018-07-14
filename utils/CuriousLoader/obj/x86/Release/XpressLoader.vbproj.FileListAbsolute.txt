@@ -1,0 +1,3 @@
+D:\SFcode\utils\CuriousLoader\bin\Release\CuriosityLoader.exe
+D:\SFcode\utils\CuriousLoader\obj\x86\Release\ResolveAssemblyReference.cache
+D:\SFcode\utils\CuriousLoader\obj\x86\Release\CuriosityLoader.exe
