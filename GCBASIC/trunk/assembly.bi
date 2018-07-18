@@ -303,7 +303,7 @@ Function AsmTidy (DataSource As String) As String
 	'Replace PRESERVE with value
 	IF Left(Temp, 9) = "PRESERVE " THEN
 		T = VAL(Mid(Temp, 10))
-		Temp = ";" + PreserveCode(T)
+		Temp = PreserveCode(T)
 		If Mid(Temp, 2, 1) = Chr(8) Then Temp = Mid(Temp, 3)
 	END IF
 	

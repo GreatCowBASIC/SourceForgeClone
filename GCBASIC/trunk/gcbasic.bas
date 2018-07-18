@@ -581,7 +581,8 @@ Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfte
 Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
 Dim Shared As Integer PauseTimeout, OldSBC
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
-Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime, DebugTime
+Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
+Dim Shared As Double DebugTime
 
 'Assembler vars
 DIM SHARED As Integer ToAsmSymbols
@@ -673,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-06-06"
+Version = "0.98.<<>> 2018-07-18"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -865,6 +866,12 @@ If VBS = 1 Then
 	Temp = Trim(Str(ProgEndTime - StartTime))
 	IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
 	PRINT Message("TotalTime") + Temp + Message("CompSecs")
+End If
+
+If DebugTime > 0 Then
+	Color 14
+	Print "DebugTime:"; DebugTime; " s"
+	Color 7
 End If
 
 'End of program
@@ -5020,7 +5027,7 @@ Sub CompileDim (CurrSub As SubType Pointer)
 		process_next_line:
 		CurrLine = CurrLine->Next
 	Loop
-
+	
 End Sub
 
 SUB CompileDir (CompSub As SubType Pointer)
@@ -16398,6 +16405,7 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
 
 
 
