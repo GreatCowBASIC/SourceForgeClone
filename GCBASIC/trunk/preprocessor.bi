@@ -490,7 +490,7 @@ SUB PreProcessor
 	Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
 	Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
 	Dim As String TempFile, LastTableOrigin, NewFNType, CodeTemp, OtherChar, BinHexTemp
-	Dim As String DataSourceOld, TranslatedFile, HFI
+	Dim As String DataSourceOld, TranslatedFile, HFI, DataSourceRaw
 	Dim As LinkedListElement Pointer CurrPos, MainCurrPos, SearchPos
 
 	Dim As String LineToken(100)
@@ -505,7 +505,7 @@ SUB PreProcessor
 
 	CurrentSub = ""
 	UnconvertedFiles = 0
-
+	
 	'Find required files
 	IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("FindSource")
 	SourceFiles = 1: SourceFile(1).FileName = ShortName(FI)
@@ -604,7 +604,7 @@ SUB PreProcessor
 	'IF ICCO < ICC THEN GOTO FindIncludeFiles
 	Loop While ICCO < SourceFiles
 	ICCO = SourceFiles
-
+	
 	'Add standard include files to list
 	#IFDEF __FB_LINUX__
 		OPEN ID + "/include/lowlevel.dat" FOR INPUT AS #1
@@ -692,6 +692,7 @@ SUB PreProcessor
 			'Only save stuff in main file or inside a subroutine
 			'0 = nothing, 1 = comments (K:C), 2 = code (K:A), 3 = line numbers (K:L)
 			PreserveIn = ""
+			DataSourceRaw = DataSource
 			If (PreserveMode = 1 Or PreserveMode = 2) And (RF = 1 OR S = 1) Then
 				PreserveIn = DataSource
 				Do While Left(PreserveIn, 1) = Chr(9): PreserveIn = Mid(PreserveIn, 2): Loop
@@ -702,7 +703,7 @@ SUB PreProcessor
 					IF Left(PreserveIn, 4) = "REM " Then PreserveIn = "'" + Trim(Mid(PreserveIn, 4))
 					PreserveIn = Trim(Mid(PreserveIn, 2))
 					PCC += 1
-					PreserveCode(PCC) = PreserveIn
+					PreserveCode(PCC) = ";" + PreserveIn
 					IF S = 0 THEN MainCurrPos = LinkedListInsert(MainCurrPos, "PRESERVE " + Str(PCC))
 					IF S = 1 THEN CurrPos = LinkedListInsert(CurrPos, "PRESERVE " + Str(PCC))
 					PreserveIn = ""
@@ -887,6 +888,15 @@ SUB PreProcessor
 			IF DataSource = "REM" THEN T = 1
 			IF DataSource = "" THEN T = 1
 			IF Left(DataSource, 8) = "#INCLUDE" THEN T = 1
+			
+			'Process #asmraw directive, anything after this goes straight to asm with no processing
+			If Left(DataSource, 8) = "#ASMRAW " Then
+				PCC += 1: PreserveCode(PCC) = " " + Trim(Mid(DataSourceRaw, InStr(UCase(DataSourceRaw), "#ASMRAW ") + 8))
+				IF S = 0 THEN MainCurrPos = LinkedListInsert(MainCurrPos, "PRESERVE " + Str(PCC))
+				IF S = 1 THEN CurrPos = LinkedListInsert(CurrPos, "PRESERVE " + Str(PCC))
+				
+				T = 1
+			End If
 
 			'Load line
 			IF T = 0 THEN
@@ -1285,7 +1295,7 @@ SUB PreProcessor
 					'Preserve
 					If PreserveIn <> "" Then
 						PCC += 1
-						PreserveCode(PCC) = PreserveIn
+						PreserveCode(PCC) = ";" + PreserveIn
 						IF S = 0 OR ForceMain = 1 THEN MainCurrPos = LinkedListInsert(MainCurrPos, "PRESERVE " + Str(PCC))
 						IF S = 1 AND ForceMain = 0 THEN CurrPos = LinkedListInsert(CurrPos, "PRESERVE " + Str(PCC))
 						PreserveIn = ""
@@ -1414,7 +1424,8 @@ LoadNextFile:
 
 		CurrPos = CurrPos->Next
 	Loop
-
+	IF VBS = 1 THEN Print
+	
 	'Check that a chip is specified, and exit if it is not
 	IF ChipName = "" THEN
 		LogError Message("NoChip")
@@ -1423,7 +1434,7 @@ LoadNextFile:
 	End IF
 
 	'Get chip data
-	IF VBS = 1 THEN PRINT: PRINT SPC(5); Message("ReadChipData")
+	IF VBS = 1 THEN PRINT SPC(5); Message("ReadChipData")
 	ReadChipData
 	
 	'Correct clock speed
@@ -1484,7 +1495,7 @@ LoadNextFile:
 	'Find and run compiler scripts
 	IF VBS = 1 THEN PRINT SPC(5); Message("RunScripts")
 	RunScripts
-
+	
 	IF VBS = 1 THEN PRINT: PRINT SPC(5); Message("BuildMemoryMap")
 	BuildMemoryMap
 	
@@ -1503,15 +1514,15 @@ LoadNextFile:
 	'Remove any #IFDEFs that do not apply to the program
 	IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("RemIfDefs")
 	RemIfDefs
-
+	
 	'Replace constants with their values
 	If VBS = 1 THEN PRINT SPC(5); Message("RepDefs");
 	ReplaceConstants
 	IF VBS = 1 THEN PRINT
-
+	
 	'Replace constants and calculations in tables with actual values
 	ReadTableValues
-
+	
 End SUB
 
 Sub ProcessSame (DirectiveIn As String)
@@ -1605,7 +1616,9 @@ Sub ReadTableValues
 					end if
 
 					'Are constants or calculations present?
-					Value = ReplaceConstantsLine(Value, 0)
+					If Not IsConst(Value) Then
+						Value = ReplaceConstantsLine(Value, 0)
+					End If
 					If IsCalc(Value) Then
 						Calculate(Value)
 					End If

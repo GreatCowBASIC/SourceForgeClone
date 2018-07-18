@@ -956,7 +956,40 @@ FUNCTION IsCalcDivider (Temp As String) As Integer
 END FUNCTION
 
 FUNCTION IsConst (DataSource As String) As Integer
+	'Checks for a constant (literal) value
+	'Accepted as literals:
+	' - Decimal numbers
+	' - Binary or hex, denoted with b' or 0x
+	' - Addresses, denoted with @
+	' - Strings, denoted with ;STRING
+	' - Any of the above with type cast in square brackets
+	'Not accepted as literals:
+	' - Anything not listed above
+	' - Anything above but with a calculation operator
 	
+	Dim As Double StartTime
+	StartTime = Timer
+	
+	Dim As Integer CurrChar, CurrLoc, CurrState
+	CurrState = 0
+	'States:
+	'0 - could be literal
+	'1 - not literal, quit
+	'2 - inside type cast, stay in 2 until closing bracket
+	'3 - definite literal
+	'For CurrLoc = 1 To Len(DataSource)
+	'	CurrChar = Asc(DataSource, CurrLoc)
+	'	If CurrChar = Asc("[") Then
+	'		CurrState = 2
+	'	ElseIf CurrChar = Asc("]") And CurrState = 2 Then
+	'		CurrState = 0
+	'	ElseIf CurrState = 0 Then
+	'		If CurrChar = Asc("B") And Asc(DataSource, CurrLoc + 1) = Asc("'") Then
+	'			
+	'		EndIf
+	'	End If
+	'Next
+	'
 	Dim As String Temp
 
 	Temp = UCase(Trim(DelType(DataSource)))
@@ -982,7 +1015,9 @@ FUNCTION IsConst (DataSource As String) As Integer
 	IF INSTR(Temp, "=") <> 0 THEN IsConst = 0
 	IF INSTR(Temp, "<") <> 0 THEN IsConst = 0
 	IF INSTR(Temp, ">") <> 0 THEN IsConst = 0
-
+	
+	'DebugTime += (Timer - StartTime)
+	
 END FUNCTION
 
 FUNCTION IsDivider (Temp As String) As Integer
