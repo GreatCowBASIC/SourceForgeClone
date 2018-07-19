@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-07-18"
+Version = "0.98.<<>> 2018-07-19"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -15715,6 +15715,7 @@ Sub MergeSubroutines
 			
 			'On 12 bit, insert list of GOTOs to allow calls to second half of pages
 			If ChipFamily = 12 Then
+				Dim GotoMainInserted As Integer = 0
 				CurrLine = LinkedListInsert(CurrLine, ";Indirect jumps to allow calls to second half of page")
 				For CurrSub = 1 To SubQueueCount
 					CurrSubPtr = Subroutine(SubQueue(CurrSub))
@@ -15725,6 +15726,11 @@ Sub MergeSubroutines
 							SubNameOut = GetSubFullName(SubQueue(CurrSub))
 							CurrPagePos += 1
 							StatsUsedProgram += 1
+							
+							If Not GotoMainInserted Then
+								CurrLine = LinkedListInsert(CurrLine, " goto BASPROGRAMSTART")
+								GotoMainInserted = -1
+							End If
 			
 							CurrLine = LinkedListInsert(CurrLine, SubNameOut)
 							CurrLine = LinkedListInsert(CurrLine, " goto SysInd_" + SubNameOut)
