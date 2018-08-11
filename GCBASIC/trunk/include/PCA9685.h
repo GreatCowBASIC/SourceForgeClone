@@ -14,13 +14,39 @@
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
+'
+'
+'
+'
+'    # Great Cow BASIC PCA9685 PWM Driver Library
+'
+'    PCA9685_Library` is a library  for talking to the PCA9685 I<sup>2</sup>C PWM driver by NXP
+'
+'    PCA9685 Highlights from [datasheet](http://www.nxp.com/documents/data_sheet/PCA9685.pdf)
+'    --------
+'
+'    * **16 individually controlled channels**
+'    * **12bit (4096 steps) registers both for on and off time**
+'    * **1MHz fast I<sup>2</sup>C bus interface with 30mA high drive capability on SDA output for driving high capacitive buses**
+'    * **24MHz to 1256MHz PWM frequency for all LEDs with internal 25MHz oscillator**
+'    * **Operating power supply voltage range of 2.3 V to 5.5 V**
+'    * **Six hardware address pins allow up to 62 devices on the same bus**
+'
+'    This is a library for the 16-channel PWM & Servo driver for Great Cow BASIC
+'
+'    Looks something like this
+'
+'    <img src="https://cdn-shop.adafruit.com/970x728/815-04.jpg" height="300"/>
+'
+'    We invest time and resources providing this open source code, please support Great Cow BASIC!!!!
+'
+'
 'Notes:
 '     v0.9a - initial release needs to have the Servo methods sorted.
 '     v0.9b - revised to fix the Duty at 100%
 '     v0.9c - revised PCA9685_SetFreqency to remove typo
 '     v1.0  - first library release
-
+'     v2.0  - added support four devices
 
 ; ----- Define Hardware settings for I2C
     ' Define I2C settings - CHANGE PORTS if required for your specific device.
@@ -40,7 +66,10 @@
 
 ; Solution Specific constants can be replaced by user constants
 
-    #define PCA9685_ADDRESS 0x80
+    #define PCA9685_ADDRESS_1 0x80
+'    #define PCA9685_ADDRESS_2 0x82
+'    #define PCA9685_ADDRESS_3 0x84
+'    #define PCA9685_ADDRESS_4 0x86
 
     ' Set the frequency using the Great Cow BASIC PWM constant
     #define PWM_Freq 38
@@ -66,8 +95,8 @@
 '      PCA9685_SetChannelAngle
 
 ' Key Constants
-'        PCA9685_ADDRESS    device address
-'        PWM_DUTY           default pwm
+'        PCA9685_ADDRESS_1    device address
+'        PWM_DUTY             default pwm
 
 '        PCA9685_ALL_CHANNELS   address all channels
 '        PCA9685_LED0, PCA9685_LED1 etc to PCA9685_LED15   address a specific channel
@@ -260,7 +289,7 @@
     '  numbers below each represent ~4.5us per count.
 
 
-Sub PCA9685_SetFreqency ( _localFrequency as Word )
+Sub PCA9685_SetFreqency ( _localFrequency as Word, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
 
     'Protect the range - see the datasheet
     if _localFrequency < 24 then _localFrequency = 24
@@ -272,7 +301,7 @@ Sub PCA9685_SetFreqency ( _localFrequency as Word )
     _localtempFrequency  = [long]_localtempFrequency   - 1
     _localtempFrequency  = [long]PCA9685_INTERNAL_CLOCK_FREQUENCY / [long]_localtempFrequency
 
-    PCA9685_SetPrescaler ( _localtempFrequency )
+    PCA9685_SetPrescaler ( _localtempFrequency, _localDevice )
 
 End Sub
 
@@ -280,7 +309,7 @@ End Sub
 
 
 
-Sub PCA9685_SetChannelDuty( _localchannel as byte , _localduty as word )
+Sub PCA9685_SetChannelDuty( _localchannel as byte , _localduty as word, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
   ' Generic duty cycle setting. Automatically makes the start time 0, then
   '  calculates the number of counts needed to realize the appropriate duty
   '  cycle as nearly as possible.
@@ -293,17 +322,29 @@ Sub PCA9685_SetChannelDuty( _localchannel as byte , _localduty as word )
         _offTime = _localduty*4096
         _offTime = (_offTime/100)
       end if
-      PCA9685_WriteChannel( _localchannel, [word]PCA9685_LED_OFF , [word]_offTime )
+      PCA9685_WriteChannel( _localchannel, [word]PCA9685_LED_OFF , [word]_offTime, _localDevice )
   else
       'force DUTY TO ON = 100%
-      PCA9685_WriteChannel ( _localchannel, PCA9685_LED_ON )
+      PCA9685_WriteChannel ( _localchannel, PCA9685_LED_ON, _localDevice )
 
   end if
 
 
 End Sub
 
-sub PCA9685_SetChannelOnOnly ( _localchannel as byte , _localValue as word )
+sub PCA9685_SetChannelOnOnly ( _localchannel as byte , _localValue as word, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
+  'Just want to change the start time? This allows you to do that
+  ' without worrying about what the stop time is, and without affecting it.
+
+  dim _onTime , _offTime as word
+
+  _onTime = PCA9685_ReadChannel( _localchannel, _localDevice )          'read a Word
+  _offTime = PCA9685_ReadChannel( _localchannel + 2, _localDevice )     'read the next Word
+  PCA9685_WriteChannel( _localchannel, _localValue, _offTime, _localDevice)
+
+end Sub
+
+sub PCA9685_SetChannelOffOnly ( _localchannel as byte , _localValue as word, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
   'Just want to change the start time? This allows you to do that
   ' without worrying about what the stop time is, and without affecting it.
 
@@ -311,25 +352,13 @@ sub PCA9685_SetChannelOnOnly ( _localchannel as byte , _localValue as word )
 
   _onTime = PCA9685_ReadChannel( _localchannel )          'read a Word
   _offTime = PCA9685_ReadChannel( _localchannel + 2 )     'read the next Word
-  channelWrite( _localchannel, _localValue, _offTime)
-
-end Sub
-
-sub PCA9685_SetChannelOffOnly ( _localchannel as byte , _localValue as word )
-  'Just want to change the start time? This allows you to do that
-  ' without worrying about what the stop time is, and without affecting it.
-
-  dim _onTime , _offTime as word
-
-  _onTime = PCA9685_ReadChannel( _localchannel )          'read a Word
-  _offTime = PCA9685_ReadChannel( _localchannel + 2 )     'read the next Word
-  channelWrite( _localchannel, _onTime, _localValue)
+  PCA9685_WriteChannel( _localchannel, _onTime, _localValue, _localDevice )
 
 end Sub
 
 
 
-Sub PCA9685_WriteChannel( _localregister as byte, _localValueOn as word, _localValueOff  as word )
+Sub PCA9685_WriteChannel( _localregister as byte, _localValueOn as word, _localValueOff  as word, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
 
   'Requires Mode1.AI=1 and Mode1.OCH = 0 - these ARE MANDATED
 
@@ -337,7 +366,7 @@ Sub PCA9685_WriteChannel( _localregister as byte, _localValueOn as word, _localV
   #ifdef HI2C_DATA
       do
         HI2CRESTART
-        HI2CSend(PCA9685_ADDRESS)
+        HI2CSend( _localDevice)
       loop While HI2CAckPollState
       HI2CSend( _localregister )
       HI2CSend( _localValueOn )
@@ -349,7 +378,7 @@ Sub PCA9685_WriteChannel( _localregister as byte, _localValueOn as word, _localV
 
   #ifdef I2C_DATA
       I2CSTART
-      I2CSend(PCA9685_ADDRESS)
+      I2CSend( _localDevice)
       I2CSend( _localregister )
       I2CSend( _localValueOn )
       I2CSend( _localValueOn_h )
@@ -357,6 +386,8 @@ Sub PCA9685_WriteChannel( _localregister as byte, _localValueOn as word, _localV
       I2CSend( _localValueOff_h )
       I2CStop
   #endif
+
+
 
 End Sub
 
@@ -408,7 +439,7 @@ end Sub
 
 'Utility methods - these should not be changed
 
-Sub PCA9685_SetPrescaler( _localPrescale as byte )
+Sub PCA9685_SetPrescaler( _localPrescale as byte, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
 
   if _localPrescale < 3 then _localPrescale = 3 'this is the minimum value
 
@@ -416,22 +447,22 @@ Sub PCA9685_SetPrescaler( _localPrescale as byte )
   '  PCA9685_RESTART bits in the MODE1 register; this function handles all of that.
   Dim modeReg as byte
 
-  pca9685_writeReg ( PCA9685_ALL_LED_OFF_H, 0x10 )
+  pca9685_writeReg ( PCA9685_ALL_LED_OFF_H, 0x10, _localDevice )
 
   ' Set the SLEEP bit, which stops the oscillator on the part.
-  modeReg = PCA9685_readReg(PCA9685_MODE1)
+  modeReg = PCA9685_readReg(PCA9685_MODE1, _localDevice)
   modeReg = modeReg OR PCA9685_SLEEP
-  PCA9685_writeReg(PCA9685_MODE1, modeReg)
+  PCA9685_writeReg(PCA9685_MODE1, modeReg, _localDevice)
 
 
   ' This register can only be written when the oscillator is stopped.
-  PCA9685_writeReg( PCA9685_PRE_SCALE, _localPrescale )
+  PCA9685_writeReg( PCA9685_PRE_SCALE, _localPrescale, _localDevice)
 
 
   ' Clear the sleep bit.
-  modeReg = PCA9685_readReg(PCA9685_MODE1)
+  modeReg = PCA9685_readReg(PCA9685_MODE1, _localDevice)
   modeReg.4 = 0
-  PCA9685_writeReg(PCA9685_MODE1, modeReg)
+  PCA9685_writeReg(PCA9685_MODE1, modeReg, _localDevice)
 
 
   wait 500 us ' According to the datasheet, we must wait 500us before
@@ -441,32 +472,32 @@ Sub PCA9685_SetPrescaler( _localPrescale as byte )
 
   ' Set the PCA9685_RESTART bit which, counterintuitively, clears the actual PCA9685_RESTART
   '  bit in the register.
-  modeReg = PCA9685_readReg(PCA9685_MODE1)
+  modeReg = PCA9685_readReg(PCA9685_MODE1, _localDevice)
   modeReg = modeReg OR PCA9685_RESTART
-  PCA9685_writeReg(PCA9685_MODE1, modeReg)
+  PCA9685_writeReg(PCA9685_MODE1, modeReg, _localDevice)
 
 end sub
 
-Function PCA9685_ReadReg (  _localregister )
+Function PCA9685_ReadReg (  _localregister, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
 
   #ifdef HI2C_DATA
       do
         HI2CRESTART
-        HI2CSend(PCA9685_ADDRESS)
+        HI2CSend( _localDevice )
       loop While HI2CAckPollState
       HI2CSend( _localregister )
       HI2CRESTART
-      HI2CSend(PCA9685_ADDRESS+1)
+      HI2CSend(  _localDevice+1)
       HI2CReceive PCA9685_readReg, nack
       HI2CStop
   #endif
 
   #ifdef I2C_DATA
       I2CSTART
-      I2CSend(PCA9685_ADDRESS)
+      I2CSend(  _localDevice )
       I2CSend( _localregister )
       I2CRESTART
-      I2CSend(PCA9685_ADDRESS+1)
+      I2CSend(  _localDevice+1)
       I2CReceive PCA9685_readReg, nack
       I2CStop
   #endif
@@ -474,12 +505,12 @@ Function PCA9685_ReadReg (  _localregister )
 
 End Function
 
-Sub PCA9685_WriteReg ( _localregister, _localValue )
+Sub PCA9685_WriteReg ( _localregister, _localValue, Optional In _localDevice as byte = PCA9685_ADDRESS_1 )
 
   #ifdef HI2C_DATA
       do
         HI2CRESTART
-        HI2CSend(PCA9685_ADDRESS)
+        HI2CSend( _localDevice )
       loop While HI2CAckPollState
       HI2CSend( _localregister )
       HI2CSend( _localValue )
@@ -488,7 +519,7 @@ Sub PCA9685_WriteReg ( _localregister, _localValue )
 
   #ifdef I2C_DATA
       I2CSTART
-      I2CSend(PCA9685_ADDRESS)
+      I2CSend( _localDevice )
       I2CSend( _localregister )
       I2CSend( _localValue )
       I2CStop
@@ -500,13 +531,13 @@ End Sub
 
 
 
-Sub PCA9685_WriteChannel( _localregister, _localValueOn as word  )
+Sub PCA9685_WriteChannel( _localregister, _localValueOn as word, Optional In _localDevice as byte = PCA9685_ADDRESS_1  )
 
   'Requires Mode1.AI=1 and Mode1.OCH = 0 - these ARE MANDATED
   #ifdef HI2C_DATA
       do
         HI2CRESTART
-        HI2CSend(PCA9685_ADDRESS)
+        HI2CSend( _localDevice )
       loop While HI2CAckPollState
       HI2CSend( _localregister )
       HI2CSend( _localValueOn )
@@ -518,7 +549,7 @@ Sub PCA9685_WriteChannel( _localregister, _localValueOn as word  )
 
   #ifdef I2C_DATA
       I2CSTART
-      I2CSend(PCA9685_ADDRESS)
+      I2CSend( _localDevice )
       I2CSend( _localregister )
       I2CSend( _localValueOn )
       I2CSend( _localValueOn_h )
@@ -532,18 +563,18 @@ End Sub
 
 
 
-Function PCA9685_ReadChannel( _localregister ) as word
+Function PCA9685_ReadChannel( _localregister, Optional In _localDevice as byte = PCA9685_ADDRESS_1 ) as word
 
   'Requires Mode1.AI=1 and Mode1.OCH = 0 - these ARE MANDATED
 
   #ifdef HI2C_DATA
       do
         HI2CRESTART
-        HI2CSend(PCA9685_ADDRESS)
+        HI2CSend( _localDevice )
       loop While HI2CAckPollState
       HI2CSend( _localregister )
       HI2CRESTART
-      HI2CSend(PCA9685_ADDRESS+1)
+      HI2CSend( _localDevice +1)
       HI2CReceive PCA9685_ReadChannel, nack
       HI2CReceive PCA9685_ReadChannel_h, nack
       HI2CStop
@@ -551,10 +582,10 @@ Function PCA9685_ReadChannel( _localregister ) as word
 
   #ifdef I2C_DATA
       I2CSTART
-      I2CSend(PCA9685_ADDRESS)
+      I2CSend( _localDevice )
       I2CSend( _localregister )
       I2CRESTART
-      I2CSend(PCA9685_ADDRESS+1)
+      I2CSend( _localDevice +1)
       I2CReceive PCA9685_ReadChannel, nack
       I2CReceive PCA9685_ReadChannel_h, nack
       I2CStop
@@ -572,10 +603,10 @@ Sub PCA9685_Reset
   'bus.
   'The SWRST Call function is defined as the following:
   '1. A START command is sent by the I2C-bus master.
-  '2. The reserved SWRST I2C-bus address 0000 000 with the R/W bit set to 0 (write) is
+  '2. The reserved SWRST I2C-bus address ?0000 000? with the R/W bit set to ?0? (write) is
   'sent by the I2C-bus master.
   '3. The PCA9685 device(s) acknowledge(s) after seeing the General Call address
-  '0000 0000 (00h) only. If the R/W bit is set to 1 (read), no acknowledge is returned to
+  '?0000 0000? (00h) only. If the R/W bit is set to ?1? (read), no acknowledge is returned to
   'the I2C-bus master.
   '4. Once the General Call address has been sent and acknowledged, the master sends
   '1 byte with 1 specific value (SWRST data byte 1):
@@ -587,22 +618,19 @@ Sub PCA9685_Reset
   'PCA9685 then resets to the default value (power-up value) and is ready to be
   'addressed again within the specified bus free time (tBUF).
 
+      #ifdef HI2C_DATA
+        HI2CSTART
+        HI2CSend(0x00)     'all call
+        HI2CSend(0x06)     'reset the parts
+        HI2CStop
+      #endif
 
-    #ifdef HI2C_DATA
-      HI2CSTART
-      HI2CSend(0x00)     'all call
-      HI2CSend(0x06)     'reset the parts
-      HI2CStop
-    #endif
-
-  #ifdef I2C_DATA
-      I2CSTART
-      I2CSend(PCA9685_ADDRESS)
-      I2CSend(0x00)     'all call
-      I2CSend(0x06)     'reset the parts
-      I2CStop
-    #endif
-
+      #ifdef I2C_DATA
+        I2CSTART
+        I2CSend(0x00)     'all call
+        I2CSend(0x06)     'reset the parts
+        I2CStop
+        #endif
 
 End Sub
 
@@ -614,11 +642,46 @@ Sub PCA9685_Initialise
     PCA9685_Reset
   #endif
 
-  'Set the autoincrement regiser bit
-  pca9685_WriteReg ( PCA9685_MODE1, PCA9685_AI  )
+  #ifdef PCA9685_ADDRESS_1
 
-  'Set the initial prescaler
-  pca9685_SetPrescaler ( PCA9685_SERVO_PRESCALER )
+     'Set the autoincrement regiser bit
+      pca9685_WriteReg ( PCA9685_MODE1, PCA9685_AI, PCA9685_ADDRESS_1 )
+
+      'Set the initial prescaler
+      pca9685_SetPrescaler ( PCA9685_SERVO_PRESCALER, PCA9685_ADDRESS_1 )
+
+  #endif
+
+  #ifdef PCA9685_ADDRESS_2
+
+     'Set the autoincrement regiser bit
+      pca9685_WriteReg ( PCA9685_MODE1, PCA9685_AI, PCA9685_ADDRESS_2 )
+
+      'Set the initial prescaler
+      pca9685_SetPrescaler ( PCA9685_SERVO_PRESCALER, PCA9685_ADDRESS_2 )
+
+  #endif
+
+  #ifdef PCA9685_ADDRESS_3
+
+     'Set the autoincrement regiser bit
+      pca9685_WriteReg ( PCA9685_MODE1, PCA9685_AI, PCA9685_ADDRESS_3 )
+
+      'Set the initial prescaler
+      pca9685_SetPrescaler ( PCA9685_SERVO_PRESCALER, PCA9685_ADDRESS_3 )
+
+  #endif
+
+  #ifdef PCA9685_ADDRESS_4
+
+     'Set the autoincrement regiser bit
+      pca9685_WriteReg ( PCA9685_MODE1, PCA9685_AI, PCA9685_ADDRESS_4  )
+
+      'Set the initial prescaler
+      pca9685_SetPrescaler ( PCA9685_SERVO_PRESCALER, PCA9685_ADDRESS_4 )
+
+  #endif
+
 
 End Sub
 
@@ -642,5 +705,3 @@ End Sub
     end if
 
 #endscript
-
-
