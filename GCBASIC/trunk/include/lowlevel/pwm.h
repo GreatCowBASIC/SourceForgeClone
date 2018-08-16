@@ -1727,68 +1727,125 @@ SetPWMDutyCode:
       #ENDIF
 
       #IFDEF PWM_2_Duty
-        #IFDEF VAR(PWM2CON)
+        #IFDEF VAR(PWM2CON)   'Means this is a PWM Channel chip
           PWM2CON =  Script_PWM2CON
-          PWM2DCH =  Script_PWM2_DutyCycleH
-          PWM2DCL =  Script_PWM2_DutyCycleL
+          #IFDEF VAR(PWM2DCH)
+            PWM2DCH =  Script_PWM2_DutyCycleH
+            PWM2DCL =  Script_PWM2_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR2L)
+            CCPR2L =  Script_PWM2_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
 
       #IFDEF PWM_3_Duty
-        #IFDEF VAR(PWM3CON)
+        #IFDEF VAR(PWM3CON)   'Means this is a PWM Channel chip
           PWM3CON =  Script_PWM3CON
-          PWM3DCH =  Script_PWM3_DutyCycleH
-          PWM3DCL =  Script_PWM3_DutyCycleL
+          #IFDEF VAR(PWM3DCH)
+            PWM3DCH =  Script_PWM3_DutyCycleH
+            PWM3DCL =  Script_PWM3_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR3L)
+            CCPR3L =  Script_PWM3_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
 
       #IFDEF PWM_4_Duty
-        #IFDEF VAR(PWM4CON)
+        #IFDEF VAR(PWM4CON)   'Means this is a PWM Channel chip
           PWM4CON =  Script_PWM4CON
-          PWM4DCH =  Script_PWM4_DutyCycleH
-          PWM4DCL =  Script_PWM4_DutyCycleL
+          #IFDEF VAR(PWM4DCH)
+            PWM4DCH =  Script_PWM4_DutyCycleH
+            PWM4DCL =  Script_PWM4_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR4L)
+            CCPR4L =  Script_PWM4_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
 
       #IFDEF PWM_5_Duty
-        #IFDEF VAR(PWM5CON)
+        #IFDEF VAR(PWM5CON)   'Means this is a PWM Channel chip
           PWM5CON =  Script_PWM5CON
-          PWM5DCH =  Script_PWM5_DutyCycleH
-          PWM5DCL =  Script_PWM5_DutyCycleL
+          #IFDEF VAR(PWM5DCH)
+            PWM5DCH =  Script_PWM5_DutyCycleH
+            PWM5DCL =  Script_PWM5_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR5L)
+            CCPR5L =  Script_PWM5_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
 
       #IFDEF PWM_6_Duty
-        #IFDEF VAR(PWM6CON)
+        #IFDEF VAR(PWM6CON)   'Means this is a PWM Channel chip
           PWM6CON =  Script_PWM6CON
-          PWM6DCH =  Script_PWM6_DutyCycleH
-          PWM6DCL =  Script_PWM6_DutyCycleL
+          #IFDEF VAR(PWM6DCH)
+            PWM6DCH =  Script_PWM6_DutyCycleH
+            PWM6DCL =  Script_PWM6_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR6L)
+            CCPR6L =  Script_PWM6_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
 
       #IFDEF PWM_7_Duty
-        #IFDEF VAR(PWM7CON)
+        #IFDEF VAR(PWM7CON)   'Means this is a PWM Channel chip
           PWM7CON =  Script_PWM7CON
-          PWM7DCH =  Script_PWM7_DutyCycleH
-          PWM7DCL =  Script_PWM7_DutyCycleL
+          #IFDEF VAR(PWM7DCH)
+            PWM7DCH =  Script_PWM7_DutyCycleH
+            PWM7DCL =  Script_PWM7_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR7L)
+            CCPR7L =  Script_PWM7_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
 
-      #IFDEF PWM_8_Duty
-        #IFDEF VAR(PWM8CON)
-          PWM8CON =  Script_PWM8CON
-          PWM8DCH =  Script_PWM8_DutyCycleH
-          PWM8DCL =  Script_PWM8_DutyCycleL
+      #IFDEF PWM_7_Duty
+        #IFDEF VAR(PWM7CON)   'Means this is a PWM Channel chip
+          PWM7CON =  Script_PWM7CON
+          #IFDEF VAR(PWM7DCH)
+            PWM7DCH =  Script_PWM7_DutyCycleH
+            PWM7DCL =  Script_PWM7_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR7L)
+            CCPR7L =  Script_PWM7_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
 
       #IFDEF PWM_9_Duty
-        #IFDEF VAR(PWM9CON)
+        #IFDEF VAR(PWM9CON)   'Means this is a PWM Channel chip
           PWM9CON =  Script_PWM9CON
-          PWM9DCH =  Script_PWM9_DutyCycleH
-          PWM9DCL =  Script_PWM9_DutyCycleL
+          #IFDEF VAR(PWM9DCH)
+            PWM9DCH =  Script_PWM9_DutyCycleH
+            PWM9DCL =  Script_PWM9_DutyCycleL
+          #ENDIF
+
+          #IFDEF VAR(CCPR9L)
+            CCPR9L =  Script_PWM9_DutyCycleH
+          #ENDIF
+
         #ENDIF
       #ENDIF
+
 
 EndofFixedPWMModeCode:
   'This is the end of the fixed PWM Mode handler
