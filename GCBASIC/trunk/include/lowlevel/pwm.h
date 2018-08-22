@@ -22,6 +22,14 @@
 'UNLESS YOU KNOW WHAT YOU ARE DOING. CHANGING THIS FILE COULD RENDER SOME GCBASIC
 'COMMANDS UNUSABLE!
 '********************************************************************************
+'  test parts
+'  16f19156
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2 and 4
+'     PWMon, PWMModule for PWM 3 and 4 but only timer 2 and 4
+'     HPWM 3, 20, 127, 2  for 16bit PWM for timers 2 and 4 only
+
+
 
 '''Changed position of 'Dim PRx_Temp as word' to remove declaration of variables when not required
 ''' 14/3/16   Added support for Hardware PMW and revised CCP PWM to support 16f18855 series
@@ -74,6 +82,7 @@
 ''' 15/8/2018 Added HPWM_CCPTimerN to support timer selection for CCP timer selection
 ''' 15/8/2018 Added protection from earlier parts within HPWM for CCP/PWM and test
 ''' 16/8/2018 Revised PWMon to better support support timer selection for CCP timer selection
+''' 22/8/2018 Revised to include support for CCP with mutlple 10 bit CPP with timers 2 and 4
 
 
   'define the defaults
@@ -137,7 +146,7 @@
 
 Sub InitPWM
 
-  TimerSelected = 2
+  _PWMTimerSelected = 2
 
   #ifdef PIC
 
@@ -233,14 +242,18 @@ Sub InitPWM
 
 StartofFixedCCPPWMModeCode:
 
-      'You can disable all the CCPPWM fixed mode code to reduce program size
-
-      'This section is Library code, so it generates ASM
-      'This section uses the constants defined the script above.
-      'Essentially, sets CCPCONCache with the bits set correctly.
-      'And, timer 2.  Remember tiner 2 is the only timer for CCP/PWN
 
       #ifndef DisableCCPFixedModePWM
+
+          'You can disable all the legacy CCPPWM fixed mode code to reduce program size
+
+          'This section is Library code, so it generates ASM
+          'This section uses the constants defined the script above.
+          'Essentially, sets CCPCONCache with the bits set correctly.
+          'And, timer 2.  Remember timer 2 can be the timer for CCP/PWM but the other timers can be specified for certain parts.
+
+
+
           'If CCP1CON does not exist then there is NO CCP1 so no point in setting, as all this is to set up the CCP1 using constants method
           #ifdef Var(CCP1CON)
 
@@ -289,76 +302,79 @@ StartofFixedCCPPWMModeCode:
                   CCPR1L = DutyCycleH
                 #endif
 
-                #ifdef Bit(CCP1FMT)
-                  CCPCONCache.CCP1FMT = 1
-                  CCPR1H = DutyCycleH
-                  CCPR1L = DutyCycleL*64
-                  [canskip]T2CLKCON = 1
-                  [canskip]CCPCONCache.en = 1
+                #IFNDEF Oneof(PWM_Timer2_Freq,PWM_Timer2_Freq,PWM_Timer2_Freq)
 
-                #endif
-
-
-
-                #ifdef DutyCycleL 0
-                    #ifdef Bit(CCP1X)               '***  NOt Defined
-                      SET CCPCONCache.CCP1Y OFF
-                      SET CCPCONCache.CCP1X OFF
-                    #endif
-                    #ifdef Bit(DC1B1)              '*** DEFINED
-                      SET CCPCONCache.DC1B1 OFF
-                      SET CCPCONCache.DC1B0 OFF
+                    #ifdef Bit(CCP1FMT)
+                          CCPCONCache.CCP1FMT = 1
+                          CCPR1H = DutyCycleH
+                          CCPR1L = DutyCycleL*64
+                          [canskip]T2CLKCON = 1
+                          [canskip]CCPCONCache.en = 1
                     #endif
 
-                #endif
 
-                #ifdef DutyCycleL 1
-                    #ifdef Bit(CCP1X)
-                      SET CCPCONCache.CCP1Y ON
-                      SET CCPCONCache.CCP1X OFF
-                    #endif
-                    #ifdef Bit(DC1B1)
-                      SET CCPCONCache.DC1B1 OFF
-                      SET CCPCONCache.DC1B0 ON
-                    #endif
 
-                #endif
+                    #ifdef DutyCycleL 0
+                        #ifdef Bit(CCP1X)               '***  NOt Defined
+                          SET CCPCONCache.CCP1Y OFF
+                          SET CCPCONCache.CCP1X OFF
+                        #endif
+                        #ifdef Bit(DC1B1)              '*** DEFINED
+                          SET CCPCONCache.DC1B1 OFF
+                          SET CCPCONCache.DC1B0 OFF
+                        #endif
 
-                #ifdef DutyCycleL 2
-                    #ifdef Bit(CCP1X)
-                      SET CCPCONCache.CCP1Y OFF
-                      SET CCPCONCache.CCP1X ON
                     #endif
 
-                    #ifdef Bit(DC1B1)
-                      SET CCPCONCache.DC1B1 ON
-                      SET CCPCONCache.DC1B0 OFF
+                    #ifdef DutyCycleL 1
+                        #ifdef Bit(CCP1X)
+                          SET CCPCONCache.CCP1Y ON
+                          SET CCPCONCache.CCP1X OFF
+                        #endif
+                        #ifdef Bit(DC1B1)
+                          SET CCPCONCache.DC1B1 OFF
+                          SET CCPCONCache.DC1B0 ON
+                        #endif
+
                     #endif
 
-                #endif
+                    #ifdef DutyCycleL 2
+                        #ifdef Bit(CCP1X)
+                          SET CCPCONCache.CCP1Y OFF
+                          SET CCPCONCache.CCP1X ON
+                        #endif
 
-                #ifdef DutyCycleL 3
-                    #ifdef Bit(CCP1X)
-                      SET CCPCONCache.CCP1Y ON
-                      SET CCPCONCache.CCP1X ON
+                        #ifdef Bit(DC1B1)
+                          SET CCPCONCache.DC1B1 ON
+                          SET CCPCONCache.DC1B0 OFF
+                        #endif
+
                     #endif
-                    #ifdef Bit(DC1B1)
-                      SET CCPCONCache.DC1B1 ON
-                      SET CCPCONCache.DC1B0 ON
+
+                    #ifdef DutyCycleL 3
+                        #ifdef Bit(CCP1X)
+                          SET CCPCONCache.CCP1Y ON
+                          SET CCPCONCache.CCP1X ON
+                        #endif
+                        #ifdef Bit(DC1B1)
+                          SET CCPCONCache.DC1B1 ON
+                          SET CCPCONCache.DC1B0 ON
+                        #endif
+
                     #endif
 
-                #endif
+                    'legacy code, replaced by canskip
+                                    'Finish preparing CCP*CON
+                        '            SET CCPCONCache.CCP1M3 ON
+                        '            SET CCPCONCache.CCP1M2 ON
+                        '            SET CCPCONCache.CCP1M1 OFF
+                        '            SET CCPCONCache.CCP1M0 OFF'
+                     CCPCONCache.CCP1M3, CCPCONCache.CCP1M2, CCPCONCache.CCP1M1, CCPCONCache.CCP1M0 = b'1100'
 
-                'legacy code, replaced by canskip
-                                'Finish preparing CCP*CON
-                    '            SET CCPCONCache.CCP1M3 ON
-                    '            SET CCPCONCache.CCP1M2 ON
-                    '            SET CCPCONCache.CCP1M1 OFF
-                    '            SET CCPCONCache.CCP1M0 OFF'
-                 CCPCONCache.CCP1M3, CCPCONCache.CCP1M2, CCPCONCache.CCP1M1, CCPCONCache.CCP1M0 = b'1100'
+                    'Enable Timer 2
+                    SET T2CON.TMR2ON ON
 
-                'Enable Timer 2
-                SET T2CON.TMR2ON ON
+                #ENDIF
 
           #endif
 
@@ -373,7 +389,7 @@ StartofFixedCCPPWMModeCode:
     #script
 FixedPWMModeHandler:
 
-       'Fixed mode of Non CCP/PWM o calculate constants required for given Frequency and Duty Cycle
+       'Fixed mode of Non CCP/PWM calculate constants required for given Frequency and Duty Cycle
        'Process:
        '        Go thru each timer 2, 4 and 6 and calculate the Duty cycle registers.
        '        This has to be done 27 times for the the PWM channels 9 to 1, as this a constants we cannot use paramters.
@@ -1479,7 +1495,7 @@ StartofFixedPWMModeCode:
           #endif
 
           'Set Clock Sources
-          #ifdef ChipPWMTimerVariant
+          #if ChipPWMTimerVariant = 1
 
               #if PWM_9_Clock_Source = 2
                   [canskip]P9TSEL1,P9TSEL0=b'00'   'PWM9 Timer 2 source
@@ -1515,6 +1531,46 @@ StartofFixedPWMModeCode:
 
               #if PWM_1_Clock_Source = 2
                   [canskip]P1TSEL1,P1TSEL0=b'00'   'PWM1 Timer 2 source
+              #endif
+          #endif
+
+         'Set Clock Sources
+          #if ChipPWMTimerVariant = 2
+
+              #if PWM_9_Clock_Source = 2
+                  [canskip]C9TSEL1,C9TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_8_Clock_Source = 2
+                  [canskip]C8TSEL1,C8TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_7_Clock_Source = 2
+                  [canskip]C7TSEL1,C7TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_6_Clock_Source = 2
+                  [canskip]C6TSEL1,C6TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_5_Clock_Source = 2
+                  [canskip]C5TSEL1,C5TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_4_Clock_Source = 2
+                  [canskip]C4TSEL1,C4TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_3_Clock_Source = 2
+                  [canskip]C3TSEL1,C3TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_2_Clock_Source = 2
+                  [canskip]C2TSEL1,C2TSEL0=b'01'   'PWM1 Timer 2 source
+              #endif
+
+              #if PWM_1_Clock_Source = 2
+                  [canskip]C1TSEL1,C1TSEL0=b'01'   'PWM1 Timer 2 source
               #endif
           #endif
 
@@ -1573,7 +1629,7 @@ StartofFixedPWMModeCode:
               #endif
           #endif
 
-          #ifdef ChipPWMTimerVariant
+          #if ChipPWMTimerVariant = 1
 
               #if PWM_9_Clock_Source = 4
                   [canskip]P9TSEL1,P9TSEL0=b'01'   'PWM9 Timer 4 source
@@ -1609,6 +1665,46 @@ StartofFixedPWMModeCode:
 
               #if PWM_1_Clock_Source = 4
                   [canskip]P1TSEL1,P1TSEL0=b'01'   'PWM1 Timer 4 source
+              #endif
+          #endif
+
+         'Set Clock Sources
+          #if ChipPWMTimerVariant = 2
+
+              #if PWM_9_Clock_Source = 4
+                  [canskip]C9TSEL1,C9TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_8_Clock_Source = 4
+                  [canskip]C8TSEL1,C8TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_7_Clock_Source = 4
+                  [canskip]C7TSEL1,C7TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_6_Clock_Source = 4
+                  [canskip]C6TSEL1,C6TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_5_Clock_Source = 4
+                  [canskip]C5TSEL1,C5TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_4_Clock_Source = 4
+                  [canskip]C4TSEL1,C4TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_3_Clock_Source = 4
+                  [canskip]C3TSEL1,C3TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_2_Clock_Source = 4
+                  [canskip]C2TSEL1,C2TSEL0=b'10'   'PWM1 Timer 4 source
+              #endif
+
+              #if PWM_1_Clock_Source = 4
+                  [canskip]C1TSEL1,C1TSEL0=b'10'   'PWM1 Timer 4 source
               #endif
           #endif
 
@@ -1667,7 +1763,7 @@ StartofFixedPWMModeCode:
 
           #endif
 
-          #ifdef ChipPWMTimerVariant
+          #if ChipPWMTimerVariant = 1
 
               #if PWM_9_Clock_Source = 6
                   [canskip]P9TSEL1,P9TSEL0=b'10'   'PWM9 Timer 6 source
@@ -1706,6 +1802,46 @@ StartofFixedPWMModeCode:
               #endif
           #endif
 
+         'Set Clock Sources
+          #if ChipPWMTimerVariant = 2
+
+              #if PWM_9_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_8_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_7_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_6_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_5_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_4_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_3_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_2_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+
+              #if PWM_1_Clock_Source = 6
+                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+              #endif
+          #endif
+
       #ENDIF
 
 SetPWMDutyCode:
@@ -1719,26 +1855,42 @@ SetPWMDutyCode:
             PWM1DCL =  Script_PWM1_DutyCycleL
           #ENDIF
 
-          #IFDEF VAR(CCPR1L)
-            CCPR1L =  Script_PWM1_DutyCycleH
-          #ENDIF
-
         #ENDIF
+
+        #IFDEF VAR(CCPR1L)
+          #ifndef BIT(CCP1FMT)
+            'This is the legacy code to support only one CCPPWM channel
+            CCPR1L =  Script_PWM1_DutyCycleH
+          #endif
+          #ifdef BIT(CCP1FMT)
+            'This is the CCPPWM with 10 bit
+            CCPR1L = Script_PWM1_DutyCycleL
+            CCPR1H = Script_PWM1_DutyCycleH
+          #endif
+        #ENDIF
+
       #ENDIF
 
       #IFDEF PWM_2_Duty
+
         #IFDEF VAR(PWM2CON)   'Means this is a PWM Channel chip
           PWM2CON =  Script_PWM2CON
           #IFDEF VAR(PWM2DCH)
             PWM2DCH =  Script_PWM2_DutyCycleH
             PWM2DCL =  Script_PWM2_DutyCycleL
           #ENDIF
-
-          #IFDEF VAR(CCPR2L)
-            CCPR2L =  Script_PWM2_DutyCycleH
-          #ENDIF
-
         #ENDIF
+
+        #IFDEF VAR(CCPR2L)
+          #ifndef BIT(CCP2FMT)
+            CCPR2L =  Script_PWM2_DutyCycleH
+          #endif
+          #ifdef BIT(CCP2FMT)
+            CCPR2L = Script_PWM2_DutyCycleL
+            CCPR2H = Script_PWM2_DutyCycleH
+          #endif
+        #ENDIF
+
       #ENDIF
 
       #IFDEF PWM_3_Duty
@@ -1748,12 +1900,18 @@ SetPWMDutyCode:
             PWM3DCH =  Script_PWM3_DutyCycleH
             PWM3DCL =  Script_PWM3_DutyCycleL
           #ENDIF
-
-          #IFDEF VAR(CCPR3L)
-            CCPR3L =  Script_PWM3_DutyCycleH
-          #ENDIF
-
         #ENDIF
+
+        #IFDEF VAR(CCPR3L)
+          #ifndef BIT(CCP3FMT)
+            CCPR3L =  Script_PWM3_DutyCycleH
+          #endif
+          #ifdef BIT(CCP3FMT)
+            CCPR3L = Script_PWM3_DutyCycleL
+            CCPR3H = Script_PWM3_DutyCycleH
+          #endif
+        #ENDIF
+
       #ENDIF
 
       #IFDEF PWM_4_Duty
@@ -1763,12 +1921,18 @@ SetPWMDutyCode:
             PWM4DCH =  Script_PWM4_DutyCycleH
             PWM4DCL =  Script_PWM4_DutyCycleL
           #ENDIF
-
-          #IFDEF VAR(CCPR4L)
-            CCPR4L =  Script_PWM4_DutyCycleH
-          #ENDIF
-
         #ENDIF
+
+        #IFDEF VAR(CCPR4L)
+          #ifndef BIT(CCP4FMT)
+            CCPR4L =  Script_PWM4_DutyCycleH
+          #endif
+          #ifdef BIT(CCP4FMT)
+            CCPR4L = Script_PWM4_DutyCycleL
+            CCPR4H = Script_PWM4_DutyCycleH
+          #endif
+        #ENDIF
+
       #ENDIF
 
       #IFDEF PWM_5_Duty
@@ -1779,11 +1943,18 @@ SetPWMDutyCode:
             PWM5DCL =  Script_PWM5_DutyCycleL
           #ENDIF
 
-          #IFDEF VAR(CCPR5L)
-            CCPR5L =  Script_PWM5_DutyCycleH
-          #ENDIF
-
         #ENDIF
+
+        #IFDEF VAR(CCPR5L)
+          #ifndef BIT(CCP5FMT)
+            CCPR5L =  Script_PWM5_DutyCycleH
+          #endif
+          #ifdef BIT(CCP5FMT)
+            CCPR5L = Script_PWM5_DutyCycleL
+            CCPR5H = Script_PWM5_DutyCycleH
+          #endif
+        #ENDIF
+
       #ENDIF
 
       #IFDEF PWM_6_Duty
@@ -1793,12 +1964,18 @@ SetPWMDutyCode:
             PWM6DCH =  Script_PWM6_DutyCycleH
             PWM6DCL =  Script_PWM6_DutyCycleL
           #ENDIF
+        #ENDIF
 
-          #IFDEF VAR(CCPR6L)
+        #IFDEF VAR(CCPR6L)
+          #ifndef BIT(CCP6FMT)
             CCPR6L =  Script_PWM6_DutyCycleH
-          #ENDIF
-
+          #endif
+          #ifdef BIT(CCP6FMT)
+            CCPR6L = Script_PWM6_DutyCycleL
+            CCPR6H = Script_PWM6_DutyCycleH
+          #endif
         #ENDIF
+
       #ENDIF
 
       #IFDEF PWM_7_Duty
@@ -1809,26 +1986,40 @@ SetPWMDutyCode:
             PWM7DCL =  Script_PWM7_DutyCycleL
           #ENDIF
 
-          #IFDEF VAR(CCPR7L)
-            CCPR7L =  Script_PWM7_DutyCycleH
-          #ENDIF
-
         #ENDIF
+
+        #IFDEF VAR(CCPR7L)
+          #ifndef BIT(CCP7FMT)
+            CCPR7L =  Script_PWM7_DutyCycleH
+          #endif
+          #ifdef BIT(CCP7FMT)
+            CCPR7L = Script_PWM7_DutyCycleL
+            CCPR7H = Script_PWM7_DutyCycleH
+          #endif
+        #ENDIF
+
       #ENDIF
 
-      #IFDEF PWM_7_Duty
-        #IFDEF VAR(PWM7CON)   'Means this is a PWM Channel chip
-          PWM7CON =  Script_PWM7CON
-          #IFDEF VAR(PWM7DCH)
-            PWM7DCH =  Script_PWM7_DutyCycleH
-            PWM7DCL =  Script_PWM7_DutyCycleL
-          #ENDIF
-
-          #IFDEF VAR(CCPR7L)
-            CCPR7L =  Script_PWM7_DutyCycleH
+      #IFDEF PWM_8_Duty
+        #IFDEF VAR(PWM8CON)   'Means this is a PWM Channel chip
+          PWM8CON =  Script_PWM8CON
+          #IFDEF VAR(PWM8DCH)
+            PWM8DCH =  Script_PWM8_DutyCycleH
+            PWM8DCL =  Script_PWM8_DutyCycleL
           #ENDIF
 
         #ENDIF
+
+        #IFDEF VAR(CCPR8L)
+          #ifndef BIT(CCP8FMT)
+            CCPR8L =  Script_PWM8_DutyCycleH
+          #endif
+          #ifdef BIT(CCP8FMT)
+            CCPR8L = Script_PWM8_DutyCycleL
+            CCPR8H = Script_PWM8_DutyCycleH
+          #endif
+        #ENDIF
+
       #ENDIF
 
       #IFDEF PWM_9_Duty
@@ -1839,13 +2030,19 @@ SetPWMDutyCode:
             PWM9DCL =  Script_PWM9_DutyCycleL
           #ENDIF
 
-          #IFDEF VAR(CCPR9L)
-            CCPR9L =  Script_PWM9_DutyCycleH
-          #ENDIF
-
         #ENDIF
-      #ENDIF
 
+        #IFDEF VAR(CCPR9L)
+          #ifndef BIT(CCP9FMT)
+            CCPR9L =  Script_PWM9_DutyCycleH
+          #endif
+          #ifdef BIT(CCP9FMT)
+            CCPR9L = Script_PWM9_DutyCycleL
+            CCPR9H = Script_PWM9_DutyCycleH
+          #endif
+        #ENDIF
+
+      #ENDIF
 
 EndofFixedPWMModeCode:
   'This is the end of the fixed PWM Mode handler
@@ -1925,22 +2122,33 @@ sub PWMOn
 end sub
 
 'Enables the CCPn capability - the using the setup completed in the Init script
+'Updated to support 10bit CCP/PWM
 sub PWMOn ( In PWMChannel )
   'Simply set the channel to the CCPCONCache
 
-         #ifdef USE_HPWMCCP1 TRUE
-            #ifdef Var(CCP1CON)
-             if PWMChannel =1 then
+         #ifdef USE_HPWMCCP1 TRUE               'optimisation check
+            #ifdef Var(CCP1CON)                 'check the CCP1CON exits
+             if PWMChannel =1 then              'is it this channel?
 
-                #ifdef PWM_1_Clock_Source
-                  #IFDEF VAR(CCPR1L)
-                    CCPR1L =  Script_PWM1_DutyCycleH
-                    CCP1CON = CCP1CON OR 0x0C  'Set PWM mode
+                #ifdef PWM_1_Clock_Source      'if the clock source is specified... just a method to isolate the code
+                  #IFDEF VAR(CCPR1L)           'check the register exists
+
+                    #ifndef bit(CCP1FMT)
+                      CCP1CON = CCP1CON OR 0x0C  'Set PWM mode
+                      CCPR1L = Script_PWM1_DutyCycleH
+                    #endif
+                    #ifdef bit(CCP1FMT)
+                      CCP1CON = CCP1CON OR 0xBF  'Set PWM mode
+                      CCPR1H = Script_PWM1_DutyCycleH
+                      CCPR1L = Script_PWM1_DutyCycleL
+                    #endif
+
                   #ENDIF
+                  'get out quickly
                   Exit Sub
                 #endif
 
-                #ifndef PWM_1_Clock_Source
+                #ifndef PWM_1_Clock_Source    'not fixed PWM model, so, this is a legacy call
                     CCP1CON = CCPCONCache
                     #ifndef bit(CCP1FMT)
                       CCPR1L = DutyCycleH
@@ -1961,8 +2169,15 @@ sub PWMOn ( In PWMChannel )
 
                 #ifdef PWM_2_Clock_Source
                   #IFDEF VAR(CCPR2L)
-                    CCPR2L =  Script_PWM2_DutyCycleH
-                    CCP2CON = CCP2CON OR 0x0C  'Set PWM mode
+                    #ifndef bit(CCP2FMT)
+                      CCP2CON = CCP2CON OR 0x0C  'Set PWM mode
+                      CCPR2L = Script_PWM2_DutyCycleH
+                    #endif
+                    #ifdef bit(CCP2FMT)
+                      CCP2CON = CCP2CON OR 0xBF  'Set PWM mode
+                      CCPR2H = Script_PWM2_DutyCycleH
+                      CCPR2L = Script_PWM2_DutyCycleL
+                    #endif
                   #ENDIF
                   Exit Sub
                 #endif
@@ -1988,8 +2203,15 @@ sub PWMOn ( In PWMChannel )
 
                 #ifdef PWM_3_Clock_Source
                   #IFDEF VAR(CCPR3L)
-                    CCPR3L =  Script_PWM3_DutyCycleH
-                    CCP3CON = CCP3CON OR 0x0C  'Set PWM mode
+                    #ifndef bit(CCP3FMT)
+                      CCP3CON = CCP3CON OR 0x0C  'Set PWM mode
+                      CCPR3L = Script_PWM3_DutyCycleH
+                    #endif
+                    #ifdef bit(CCP3FMT)
+                      CCP3CON = CCP3CON OR 0xBF  'Set PWM mode
+                      CCPR3H = Script_PWM3_DutyCycleH
+                      CCPR3L = Script_PWM3_DutyCycleL
+                    #endif
                   #ENDIF
                   Exit Sub
                 #endif
@@ -2015,8 +2237,15 @@ sub PWMOn ( In PWMChannel )
 
                 #ifdef PWM_4_Clock_Source
                   #IFDEF VAR(CCPR4L)
-                    CCPR4L =  Script_PWM4_DutyCycleH
-                    CCP4CON = CCP4CON OR 0x0C  'Set PWM mode
+                    #ifndef bit(CCP4FMT)
+                      CCP4CON = CCP4CON OR 0x0C  'Set PWM mode
+                      CCPR4L = Script_PWM4_DutyCycleH
+                    #endif
+                    #ifdef bit(CCP4FMT)
+                      CCP4CON = CCP4CON OR 0xBF  'Set PWM mode
+                      CCPR4H = Script_PWM4_DutyCycleH
+                      CCPR4L = Script_PWM4_DutyCycleL
+                    #endif
                   #ENDIF
                   Exit Sub
                 #endif
@@ -2042,8 +2271,15 @@ sub PWMOn ( In PWMChannel )
 
                 #ifdef PWM_5_Clock_Source
                   #IFDEF VAR(CCPR5L)
-                    CCPR5L =  Script_PWM5_DutyCycleH
-                    CCP5CON = CCP5CON OR 0x0C  'Set PWM mode
+                    #ifndef bit(CCP5FMT)
+                      CCP5CON = CCP5CON OR 0x0C  'Set PWM mode
+                      CCPR5L = Script_PWM5_DutyCycleH
+                    #endif
+                    #ifdef bit(CCP5FMT)
+                      CCP5CON = CCP5CON OR 0xBF  'Set PWM mode
+                      CCPR5H = Script_PWM5_DutyCycleH
+                      CCPR5L = Script_PWM5_DutyCycleL
+                    #endif
                   #ENDIF
                   Exit Sub
                 #endif
@@ -2274,13 +2510,13 @@ END SUB
 
 
 
-sub HPWM_CCPTimerN (In PWMChannel, In PWMFreq, PWMDuty, Optional in TimerSelected as byte = 2 )
+sub HPWM_CCPTimerN (In PWMChannel, In PWMFreq, PWMDuty, Optional in _PWMTimerSelected as byte = 2 )
 
     dim ExistingPR2 as byte
     dim PWMDuty as word
 
-    'This will call the CCP/PWN method with the timerselected set.... clever
-    Select Case TimerSelected
+    'This will call the CCP/PWN method with the _PWMTimerSelected set.... clever
+    Select Case _PWMTimerSelected
 
       Case 2
         HPWM (PWMChannel, PWMFreq, PWMDuty )
@@ -2297,7 +2533,8 @@ sub HPWM_CCPTimerN (In PWMChannel, In PWMFreq, PWMDuty, Optional in TimerSelecte
         T6CON=T2CON
         PR2 = ExistingPR2
     End Select
-    TimerSelected = 2
+    'Set the default timer
+    _PWMTimerSelected = 2
 
 end Sub
 
@@ -2305,7 +2542,7 @@ end Sub
 'This is an 8bit resolution
 #define HPWM_CCPTimer2 HPWM
 sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )  '8 bit resolution on timer 2
-
+'erv
   Dim PRx_Temp as LONG
   Dim PRx_Temp_Cache as Long
   dim PWMDuty as word
@@ -2405,7 +2642,18 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )  '8 bit resolution on timer 2
   'and, you can define user setup and exit commands using AddHPWMCCPSetupN and  AddHPWMCCPExitN
   '   These can be used to FIX little errors!
 
-  TimerSelectionBits =  (TimerSelected / 2 )-1
+  'ChipPWMTimerVariant some chips have variants on CCPTMRS0
+  #if ChipPWMTimerVariant = 2
+        TimerSelectionBits =  (_PWMTimerSelected / 2 )
+  #endif
+
+  #if ChipPWMTimerVariant = 1
+        TimerSelectionBits =  (_PWMTimerSelected / 2 )-1
+  #endif
+
+  #ifndef ChipPWMTimerVariant
+      TimerSelectionBits =  (_PWMTimerSelected / 2 )-1
+  #endif
 
   #ifdef USE_HPWMCCP1 TRUE
 
@@ -2726,14 +2974,14 @@ end sub
 
 ' Byte support for DUTY... folks may not know that they need to pass a 10bit number
 ' Takes a byte in the range of 0-255 and passes the the 10bit method with the PWMResolution set to 255
-sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as byte, in TimerSelected as byte, Optional in PWMResolution as word = 255 )
+sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as byte, in _PWMTimerSelected as byte, Optional in PWMResolution as word = 255 )
     dim PWMDuty as word
-    HPWM ( PWMChannel, PWMFreq, [word]PWMDuty, TimerSelected, PWMResolution  )
+    HPWM ( PWMChannel, PWMFreq, [word]PWMDuty, _PWMTimerSelected, PWMResolution  )
 end Sub
 
 'Word for DUTY also defaults the PWMResolution to 1023 (10bit support)
 ;Overloaded signature: BYTE:WORD:WORD:BYTE:word:
-sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelected  as byte, Optional in PWMResolution as word = 1023)
+sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSelected  as byte, Optional in PWMResolution as word = 1023)
 
     Dim PRx_Temp as LONG
     #ifdef ChipPWMTimerVariant
@@ -2743,7 +2991,7 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
   'If HPWM_FAST operation selected, only recalculate duty timer prescaler when
   'needed.
   #ifdef HPWM_FAST
-      If ( PWMFreq <> PWMFreqOld )  or ( TimerSelected <> PWMTimerOld ) Then
+      If ( PWMFreq <> PWMFreqOld )  or ( _PWMTimerSelected <> PWMTimerOld ) Then
   #endif
 
 
@@ -2785,7 +3033,7 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 'This section setups the timer
 
     'Set up PRx dependent on timer selected
-    Select Case TimerSelected
+    Select Case _PWMTimerSelected
 
         #ifdef USE_HPWM_TIMER2 TRUE
           case 2 'Select timer2 as the driver for PWM
@@ -2938,7 +3186,7 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 
   #ifdef HPWM_FAST
           PWMFreqOld = PWMFreq
-          PWMTimerOld = TimerSelected
+          PWMTimerOld = _PWMTimerSelected
           'Cache the PRx_Temp to support HPWM_FAST.
           PRx_Temp_Cache = PRx_Temp
       Else
@@ -2977,7 +3225,7 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 
             ' Select timer by updating CCPTMRS register
             #if ChipPWMTimerVariant = 1
-              TimerSelectionBits =  (TimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+              TimerSelectionBits =  (_PWMTimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
               SetWith ( P1TSEL0, TimerSelectionBits.0 )
               SetWith ( P1TSEL1, TimerSelectionBits.1 )
@@ -2986,8 +3234,8 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
             #ifndef ChipPWMTimerVariant
 
               #IFDEF BIT(P1TSEL0)
-                SetWith ( P1TSEL0, TimerSelected.1 )
-                SetWith ( P1TSEL1, TimerSelected.2 )
+                SetWith ( P1TSEL0, _PWMTimerSelected.1 )
+                SetWith ( P1TSEL1, _PWMTimerSelected.2 )
               #ENDIF
 
               #IFDEF BIT(PWM1OE)
@@ -3027,7 +3275,7 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 
             ' Select timer by updating CCPTMRS register
             #if ChipPWMTimerVariant = 1
-              TimerSelectionBits =  (TimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+              TimerSelectionBits =  (_PWMTimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
               SetWith ( P2TSEL0, TimerSelectionBits.0 )
               SetWith ( P2TSEL1, TimerSelectionBits.1 )
@@ -3036,8 +3284,8 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
             #ifndef ChipPWMTimerVariant
 
               #IFDEF BIT(P2TSEL0)
-                SetWith ( P2TSEL0, TimerSelected.1 )
-                SetWith ( P2TSEL1, TimerSelected.2 )
+                SetWith ( P2TSEL0, _PWMTimerSelected.1 )
+                SetWith ( P2TSEL1, _PWMTimerSelected.2 )
               #ENDIF
 
               #IFDEF BIT(PWM2OE)
@@ -3077,15 +3325,15 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 
             ' Select timer by updating CCPTMRS register
             #if ChipPWMTimerVariant = 1
-              TimerSelectionBits =  (TimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+              TimerSelectionBits =  (_PWMTimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
               SetWith ( P3TSEL0, TimerSelectionBits.0 )
               SetWith ( P3TSEL1, TimerSelectionBits.1 )
             #endif
 
             #ifndef ChipPWMTimerVariant
-              SetWith ( P3TSEL0, TimerSelected.1 )
-              SetWith ( P3TSEL1, TimerSelected.2 )
+              SetWith ( P3TSEL0, _PWMTimerSelected.1 )
+              SetWith ( P3TSEL1, _PWMTimerSelected.2 )
             #endif
 
             #IFDEF BIT(PWM3EN) 'this simply stops error messages when the does not exit
@@ -3120,15 +3368,15 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 
             ' Select timer by updating CCPTMRS1 register
             #if ChipPWMTimerVariant = 1
-              TimerSelectionBits =  (TimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+              TimerSelectionBits =  (_PWMTimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
               SetWith ( P4TSEL0, TimerSelectionBits.0 )
               SetWith ( P4TSEL1, TimerSelectionBits.1 )
             #endif
 
             #ifndef ChipPWMTimerVariant
-              SetWith ( P4TSEL0, TimerSelected.1 )
-              SetWith ( P4TSEL1, TimerSelected.2 )
+              SetWith ( P4TSEL0, _PWMTimerSelected.1 )
+              SetWith ( P4TSEL1, _PWMTimerSelected.2 )
             #endif
 
             #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
@@ -3163,8 +3411,8 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 
             ' Select timer by updating CCPTMRS1 register
             #ifdef bit(P5TSEL0)
-              SetWith ( P5TSEL0, TimerSelected.1 )
-              SetWith ( P5TSEL1, TimerSelected.2 )
+              SetWith ( P5TSEL0, _PWMTimerSelected.1 )
+              SetWith ( P5TSEL1, _PWMTimerSelected.2 )
             #endif
 
             #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
@@ -3198,8 +3446,8 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
             PWM6DCL = PRx_Temp
             ' Select timer by updating CCPTMRS1 register
             #ifdef bit(P6TSEL0)
-              SetWith ( P6TSEL0, TimerSelected.1 )
-              SetWith ( P6TSEL1, TimerSelected.2 )
+              SetWith ( P6TSEL0, _PWMTimerSelected.1 )
+              SetWith ( P6TSEL1, _PWMTimerSelected.2 )
             #endif
 
             #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
@@ -3236,8 +3484,8 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in TimerSelect
 
             ' Select timer by updating CCPTMRS1 register
             #ifdef bit(P7TSEL0)
-              SetWith ( P7TSEL0, TimerSelected.1 )
-              SetWith ( P7TSEL1, TimerSelected.2 )
+              SetWith ( P7TSEL0, _PWMTimerSelected.1 )
+              SetWith ( P7TSEL1, _PWMTimerSelected.2 )
             #endif
             #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
               'Start PMW7
