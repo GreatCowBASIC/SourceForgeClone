@@ -28,8 +28,22 @@
 '     PWMOn for CCP1 and 2 but only timer 2 and 4
 '     PWMon, PWMModule for PWM 3 and 4 but only timer 2 and 4
 '     HPWM 3, 20, 127, 2  for 16bit PWM for timers 2 and 4 only
-
-
+' PIC16F1709
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM 3, 20, 127, 2  for 10bit PWM for timers 2 and 4 only
+' PIC18F27K40
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM 3, 20, 127, 2  for 10bit PWM for timers 2,4 and 6 only
+' PIC16F1825
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM 3, 20, 127, 2  for 10bit PWM for timers 2 and 4 only
+' 16F690
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM 1, 20, 127  for 8bit PWM for timers 2
 
 '''Changed position of 'Dim PRx_Temp as word' to remove declaration of variables when not required
 ''' 14/3/16   Added support for Hardware PMW and revised CCP PWM to support 16f18855 series
@@ -112,8 +126,8 @@
     #define USE_HPWMCCP4 TRUE
     #define USE_HPWMCCP5 TRUE
 
-    #define USE_HPWM1 FALSE
-    #define USE_HPWM2 FAlSE
+    #define USE_HPWM1 TRUE
+    #define USE_HPWM2 TRUE
     #define USE_HPWM3 TRUE
     #define USE_HPWM4 TRUE
     #define USE_HPWM5 TRUE
@@ -1805,41 +1819,42 @@ StartofFixedPWMModeCode:
          'Set Clock Sources
           #if ChipPWMTimerVariant = 2
 
-              #if PWM_9_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+             #if PWM_9_Clock_Source = 6
+                  [canskip]C9TSEL1,C9TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_8_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C8TSEL1,C8TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_7_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C7TSEL1,C7TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_6_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C6TSEL1,C6TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_5_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C5TSEL1,C5TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_4_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C4TSEL1,C4TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_3_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C3TSEL1,C3TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_2_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C2TSEL1,C2TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
               #if PWM_1_Clock_Source = 6
-                  asm showdebug  `unknown timer source for PWM.  Please  let us know. PWM.h'
+                  [canskip]C1TSEL1,C1TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
+
           #endif
 
       #ENDIF
@@ -2542,7 +2557,7 @@ end Sub
 'This is an 8bit resolution
 #define HPWM_CCPTimer2 HPWM
 sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )  '8 bit resolution on timer 2
-'erv
+
   Dim PRx_Temp as LONG
   Dim PRx_Temp_Cache as Long
   dim PWMDuty as word
@@ -3231,6 +3246,13 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
               SetWith ( P1TSEL1, TimerSelectionBits.1 )
             #endif
 
+            #if ChipPWMTimerVariant = 2
+              TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+
+              SetWith ( P1TSEL0, TimerSelectionBits.0 )
+              SetWith ( P1TSEL1, TimerSelectionBits.1 )
+            #endif
+
             #ifndef ChipPWMTimerVariant
 
               #IFDEF BIT(P1TSEL0)
@@ -3276,6 +3298,13 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
             ' Select timer by updating CCPTMRS register
             #if ChipPWMTimerVariant = 1
               TimerSelectionBits =  (_PWMTimerSelected / 2 )-1 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+
+              SetWith ( P2TSEL0, TimerSelectionBits.0 )
+              SetWith ( P2TSEL1, TimerSelectionBits.1 )
+            #endif
+
+            #if ChipPWMTimerVariant = 2
+              TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
               SetWith ( P2TSEL0, TimerSelectionBits.0 )
               SetWith ( P2TSEL1, TimerSelectionBits.1 )
@@ -3331,6 +3360,15 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
               SetWith ( P3TSEL1, TimerSelectionBits.1 )
             #endif
 
+
+            #if ChipPWMTimerVariant = 2
+              TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+
+              SetWith ( P3TSEL0, TimerSelectionBits.0 )
+              SetWith ( P3TSEL1, TimerSelectionBits.1 )
+            #endif
+
+
             #ifndef ChipPWMTimerVariant
               SetWith ( P3TSEL0, _PWMTimerSelected.1 )
               SetWith ( P3TSEL1, _PWMTimerSelected.2 )
@@ -3373,6 +3411,15 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
               SetWith ( P4TSEL0, TimerSelectionBits.0 )
               SetWith ( P4TSEL1, TimerSelectionBits.1 )
             #endif
+
+            #if ChipPWMTimerVariant = 2
+              TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
+
+              SetWith ( P4TSEL0, TimerSelectionBits.0 )
+              SetWith ( P4TSEL1, TimerSelectionBits.1 )
+
+            #endif
+
 
             #ifndef ChipPWMTimerVariant
               SetWith ( P4TSEL0, _PWMTimerSelected.1 )
