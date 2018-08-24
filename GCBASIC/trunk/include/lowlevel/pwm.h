@@ -22,7 +22,7 @@
 'UNLESS YOU KNOW WHAT YOU ARE DOING. CHANGING THIS FILE COULD RENDER SOME GCBASIC
 'COMMANDS UNUSABLE!
 '********************************************************************************
-'  test parts
+'  Test Devices
 '  16f19156
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2 and 4
@@ -35,15 +35,34 @@
 ' PIC18F27K40
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2
-'     HPWM 3, 20, 127, 2  for 10bit PWM for timers 2,4 and 6 only
-' PIC16F1825
+'     HPWM 3, 20, 127, 2  for 10bit PWM for timers 2 and 4 only
+' PIC16F1825 - family 14
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM_CCPTimerN 1, 20, 127, n  for 10bit PWM for timers 2,4 and 6
 '     HPWM 3, 20, 127, 2  for 10bit PWM for timers 2 and 4 only
-' 16F690
+' 16F1938 - Family 14
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2
 '     HPWM 1, 20, 127  for 8bit PWM for timers 2
+'     HPWM_CCPTimerN 1, 20, 127, n  for 10bit PWM for timers 2,4 and 6
+' 16F886 - Family 0
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM 1, 20, 127  for 8bit PWM for timers 2
+' 16F18855
+'     Legacy PWM
+'     PWMOn for CCP1 and 2,4 and 6
+'     PWMon for PWMModule for PWM 6 and 7 other should work, of course
+'     HPWM [6 or 7], 20, 127  for 10bit PWM for timers 2, 4 and 6
+' 16F690 - family 0
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM 1, 20, 127  for 8bit PWM for timers 2
+' 18F26K20
+'     Legacy PWM
+'     PWMOn for CCP1 and 2 but only timer 2
+'     HPWM 1, 20, 127 for 8 PWM for timers only
 
 '''Changed position of 'Dim PRx_Temp as word' to remove declaration of variables when not required
 ''' 14/3/16   Added support for Hardware PMW and revised CCP PWM to support 16f18855 series
@@ -1552,35 +1571,35 @@ StartofFixedPWMModeCode:
           #if ChipPWMTimerVariant = 2
 
               #if PWM_9_Clock_Source = 2
-                  [canskip]C9TSEL1,C9TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C9TSEL1,C9TSEL0=b'01'   'PWM9 Timer 2 source
               #endif
 
               #if PWM_8_Clock_Source = 2
-                  [canskip]C8TSEL1,C8TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C8TSEL1,C8TSEL0=b'01'   'PWM8 Timer 2 source
               #endif
 
               #if PWM_7_Clock_Source = 2
-                  [canskip]C7TSEL1,C7TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C7TSEL1,C7TSEL0=b'01'   'PWM7 Timer 2 source
               #endif
 
               #if PWM_6_Clock_Source = 2
-                  [canskip]C6TSEL1,C6TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C6TSEL1,C6TSEL0=b'01'   'PWM6 Timer 2 source
               #endif
 
               #if PWM_5_Clock_Source = 2
-                  [canskip]C5TSEL1,C5TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C5TSEL1,C5TSEL0=b'01'   'PWM5 Timer 2 source
               #endif
 
               #if PWM_4_Clock_Source = 2
-                  [canskip]C4TSEL1,C4TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C4TSEL1,C4TSEL0=b'01'   'PWM4 Timer 2 source
               #endif
 
               #if PWM_3_Clock_Source = 2
-                  [canskip]C3TSEL1,C3TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C3TSEL1,C3TSEL0=b'01'   'PWM3 Timer 2 source
               #endif
 
               #if PWM_2_Clock_Source = 2
-                  [canskip]C2TSEL1,C2TSEL0=b'01'   'PWM1 Timer 2 source
+                  [canskip]C2TSEL1,C2TSEL0=b'01'   'PWM2 Timer 2 source
               #endif
 
               #if PWM_1_Clock_Source = 2
@@ -1686,39 +1705,48 @@ StartofFixedPWMModeCode:
           #if ChipPWMTimerVariant = 2
 
               #if PWM_9_Clock_Source = 4
-                  [canskip]C9TSEL1,C9TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C9TSEL1,C9TSEL0=b'10'   'PWM9 Timer 4 source
+                  [canskip]P9TSEL1,P9TSEL0=b'10'   'PWM9 Timer 4 source
               #endif
 
               #if PWM_8_Clock_Source = 4
-                  [canskip]C8TSEL1,C8TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C8TSEL1,C8TSEL0=b'10'   'PWM8 Timer 4 source
+                  [canskip]P8TSEL1,P8TSEL0=b'10'   'PWM8 Timer 4 source
               #endif
 
               #if PWM_7_Clock_Source = 4
-                  [canskip]C7TSEL1,C7TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C7TSEL1,C7TSEL0=b'10'   'PWM7 Timer 4 source
+                  [canskip]P7TSEL1,P7TSEL0=b'10'   'PWM7 Timer 4 source
               #endif
 
               #if PWM_6_Clock_Source = 4
-                  [canskip]C6TSEL1,C6TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C6TSEL1,C6TSEL0=b'10'   'PWM6 Timer 4 source
+                  [canskip]P6TSEL1,P6TSEL0=b'10'   'PWM4 Timer 4 source
               #endif
 
               #if PWM_5_Clock_Source = 4
-                  [canskip]C5TSEL1,C5TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C5TSEL1,C5TSEL0=b'10'   'PWM5 Timer 4 source
+                  [canskip]P5TSEL1,P5TSEL0=b'10'   'PWM5 Timer 4 source
               #endif
 
               #if PWM_4_Clock_Source = 4
-                  [canskip]C4TSEL1,C4TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C4TSEL1,C4TSEL0=b'10'   'PWM4 Timer 4 source
+                  [canskip]P4TSEL1,P4TSEL0=b'10'   'PWM4 Timer 4 source
               #endif
 
               #if PWM_3_Clock_Source = 4
-                  [canskip]C3TSEL1,C3TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C3TSEL1,C3TSEL0=b'10'   'PWM3 Timer 4 source
+                  [canskip]P3TSEL1,P3TSEL0=b'10'   'PWM3 Timer 4 source
               #endif
 
               #if PWM_2_Clock_Source = 4
-                  [canskip]C2TSEL1,C2TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]C2TSEL1,C2TSEL0=b'10'   'PWM2 Timer 4 source
+                  [canskip]P2TSEL1,P2TSEL0=b'10'   'PWM2 Timer 4 source
               #endif
 
               #if PWM_1_Clock_Source = 4
                   [canskip]C1TSEL1,C1TSEL0=b'10'   'PWM1 Timer 4 source
+                  [canskip]P1TSEL1,P1TSEL0=b'10'   'PWM1 Timer 4 source
               #endif
           #endif
 
@@ -1820,39 +1848,48 @@ StartofFixedPWMModeCode:
           #if ChipPWMTimerVariant = 2
 
              #if PWM_9_Clock_Source = 6
-                  [canskip]C9TSEL1,C9TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C9TSEL1,C9TSEL0=b'11'   'PWM9 Timer 6 source
+                  [canskip]P9TSEL1,P9TSEL0=b'11'   'PWM9 Timer 6 source
               #endif
 
               #if PWM_8_Clock_Source = 6
-                  [canskip]C8TSEL1,C8TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C8TSEL1,C8TSEL0=b'11'   'PWM8 Timer 6 source
+                  [canskip]P8TSEL1,P8TSEL0=b'11'   'PWM8 Timer 6 source
               #endif
 
               #if PWM_7_Clock_Source = 6
-                  [canskip]C7TSEL1,C7TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C7TSEL1,C7TSEL0=b'11'   'PWM7 Timer 6 source
+                  [canskip]P7TSEL1,P7TSEL0=b'11'   'PWM7 Timer 6 source
               #endif
 
               #if PWM_6_Clock_Source = 6
-                  [canskip]C6TSEL1,C6TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C6TSEL1,C6TSEL0=b'11'   'PWM6 Timer 6 source
+                  [canskip]P6TSEL1,P6TSEL0=b'11'   'PWM6 Timer 6 source
               #endif
 
               #if PWM_5_Clock_Source = 6
-                  [canskip]C5TSEL1,C5TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C5TSEL1,C5TSEL0=b'11'   'PWM5 Timer 6 source
+                  [canskip]P5TSEL1,P5TSEL0=b'11'   'PWM5 Timer 6 source
               #endif
 
               #if PWM_4_Clock_Source = 6
-                  [canskip]C4TSEL1,C4TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C4TSEL1,C4TSEL0=b'11'   'PWM4 Timer 6 source
+                  [canskip]P4TSEL1,P4TSEL0=b'11'   'PWM4 Timer 6 source
               #endif
 
               #if PWM_3_Clock_Source = 6
-                  [canskip]C3TSEL1,C3TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C3TSEL1,C3TSEL0=b'11'   'PWM3 Timer 6 source
+                  [canskip]P3TSEL1,P3TSEL0=b'11'   'PWM3 Timer 6 source
               #endif
 
               #if PWM_2_Clock_Source = 6
-                  [canskip]C2TSEL1,C2TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]C2TSEL1,C2TSEL0=b'11'   'PWM2 Timer 6 source
+                  [canskip]P2TSEL1,P2TSEL0=b'11'   'PWM2 Timer 6 source
               #endif
 
               #if PWM_1_Clock_Source = 6
                   [canskip]C1TSEL1,C1TSEL0=b'11'   'PWM1 Timer 6 source
+                  [canskip]P1TSEL1,P1TSEL0=b'11'   'PWM1 Timer 6 source
               #endif
 
           #endif
