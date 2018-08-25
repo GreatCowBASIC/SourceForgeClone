@@ -27,6 +27,7 @@
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2 and 4
 '     PWMon, PWMModule for PWM 3 and 4 but only timer 2 and 4
+'     HPWM_CCPTimerN 1, 20, 127, n  for 8bit PWM for timers 2 and 4
 '     HPWM 3, 20, 127, 2  for 16bit PWM for timers 2 and 4 only
 ' PIC16F1709
 '     Legacy PWM
@@ -39,13 +40,13 @@
 ' PIC16F1825 - family 14
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2
-'     HPWM_CCPTimerN 1, 20, 127, n  for 10bit PWM for timers 2,4 and 6
+'     HPWM_CCPTimerN 1, 20, 127, n  for 8bit PWM for timers 2,4 and 6
 '     HPWM 3, 20, 127, 2  for 10bit PWM for timers 2 and 4 only
 ' 16F1938 - Family 14
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2
 '     HPWM 1, 20, 127  for 8bit PWM for timers 2
-'     HPWM_CCPTimerN 1, 20, 127, n  for 10bit PWM for timers 2,4 and 6
+'     HPWM_CCPTimerN 1, 20, 127, n  for 8bit PWM for timers 2,4 and 6
 ' 16F886 - Family 0
 '     Legacy PWM
 '     PWMOn for CCP1 and 2 but only timer 2
@@ -116,7 +117,7 @@
 ''' 15/8/2018 Added protection from earlier parts within HPWM for CCP/PWM and test
 ''' 16/8/2018 Revised PWMon to better support support timer selection for CCP timer selection
 ''' 22/8/2018 Revised to include support for CCP with mutlple 10 bit CPP with timers 2 and 4
-
+''' 25/8/2018 Revised to resolve clock source of CCPTimerN, this impacted the CCP/PWM method, so, added Select-Case
 
   'define the defaults
   #define AVRTC0
@@ -235,7 +236,7 @@ Sub InitPWM
     #endscript
 
       #script
-        FixedCCPPWMModeDutyHandler:
+        Legacy_FixedCCPPWMModeDutyHandler:
 
         'The now supports all 5 CCP channels all use timer2, so, this is more about not using the Method to reduce memory
 
@@ -273,7 +274,7 @@ Sub InitPWM
 
     #endscript
 
-StartofFixedCCPPWMModeCode:
+Legacy_StartofFixedCCPPWMModeCode:
 
 
       #ifndef DisableCCPFixedModePWM
@@ -420,7 +421,7 @@ StartofFixedCCPPWMModeCode:
 
 
     #script
-FixedPWMModeHandler:
+Rev2018FixedPWMModeHandler:
 
        'Fixed mode of Non CCP/PWM calculate constants required for given Frequency and Duty Cycle
        'Process:
@@ -2096,7 +2097,7 @@ SetPWMDutyCode:
 
       #ENDIF
 
-EndofFixedPWMModeCode:
+Rev2018_EndofFixedPWMModeCode:
   'This is the end of the fixed PWM Mode handler
   #endif
 
@@ -2564,28 +2565,30 @@ END SUB
 
 sub HPWM_CCPTimerN (In PWMChannel, In PWMFreq, PWMDuty, Optional in _PWMTimerSelected as byte = 2 )
 
-    dim ExistingPR2 as byte
     dim PWMDuty as word
 
-    'This will call the CCP/PWN method with the _PWMTimerSelected set.... clever
+    'This will call the CCP/PWM method with the _PWMTimerSelected set.... clever
     Select Case _PWMTimerSelected
-
+      #ifdef USE_HPWM_TIMER2 TRUE
       Case 2
-        HPWM (PWMChannel, PWMFreq, PWMDuty )
-      case 4
-        ExistingPR2 = PR2
-        HPWM (PWMChannel, PWMFreq, PWMDuty )
-        PR4=PR2
-        T4CON=T2CON
-        PR2 = ExistingPR2
-      case 6
-        ExistingPR2 = PR2
-        HPWM (PWMChannel, PWMFreq, PWMDuty )
-        PR6=PR2
-        T6CON=T2CON
-        PR2 = ExistingPR2
+            HPWM (PWMChannel, PWMFreq, PWMDuty )
+            [canskip]TMR2ON= 0b'1'
+      #endif
+
+      #ifdef USE_HPWM_TIMER4 TRUE
+          case 4
+            HPWM (PWMChannel, PWMFreq, PWMDuty )
+            [canskip]TMR4ON= 0b'1'
+      #endif
+
+        #ifdef USE_HPWM_TIMER6 TRUE
+          case 6
+            HPWM (PWMChannel, PWMFreq, PWMDuty )
+            [canskip]TMR6ON= 0b'1'
+      #endif
+
     End Select
-    'Set the default timer
+    'Set the default timer, else if HPWM is called for CCP/PWM the timersource will be incorrect
     _PWMTimerSelected = 2
 
 end Sub
@@ -2644,40 +2647,129 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )  '8 bit resolution on timer 2
             rotate PRx_Temp right
           end if
 
-          PR2 = PRx_Temp
+          'added to handle different timer sources
+          'added to support HPWM_CCPTimerN. Makes the code longer but more flexible
+          'user optimisation to reduce code.
+CCPPWMSetupClockSource:
+          select case _PWMTimerSelected
 
-          'Set the Bits for the Postscaler
-          'Setup Timerx by clearing the Prescaler bits - it is set next....
-          #ifdef bit(T2CKPS2)
-              SET T2CKPS0 OFF
-              SET T2CKPS1 OFF
-              SET T2CKPS2 OFF
-              'Set Prescaler bits
-              if Tx_PR = 4  then SET T2CKPS1 ON
-              if Tx_PR = 16 then SET T2CKPS2 ON
-              if Tx_PR = 64 then SET T2CKPS2 ON: SET T2CKPS1 ON
-          #endif
+             #ifdef USE_HPWM_TIMER2 TRUE
+             case 2:
+                PR2 = PRx_Temp
+                'Set the Bits for the Postscaler
+                'Setup Timerx by clearing the Prescaler bits - it is set next....
+                #ifdef bit(T2CKPS2)
+                    SET T2CKPS0 OFF
+                    SET T2CKPS1 OFF
+                    SET T2CKPS2 OFF
+                    'Set Prescaler bits
+                    if Tx_PR = 4  then SET T2CKPS1 ON
+                    if Tx_PR = 16 then SET T2CKPS2 ON
+                    if Tx_PR = 64 then SET T2CKPS2 ON: SET T2CKPS1 ON
+                #endif
 
-          'Revised to show overflow issue
-          #ifndef bit(T2CKPS2)
-              SET T2CKPS0 OFF
-              SET T2CKPS1 OFF
-              'Set Prescaler bits
-              if Tx_PR = 4  then SET T2CKPS0 ON
-              if Tx_PR = 16 then SET T2CKPS1 ON
-              'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
-              'if T2CON and 3 = 3 then an overflow has occured!
-              if Tx_PR = 64 then SET T2CKPS0 ON: SET T2CKPS1 ON
-          #endif
+                'Revised to show overflow issue
+                #ifndef bit(T2CKPS2)
+                    SET T2CKPS0 OFF
+                    SET T2CKPS1 OFF
+                    'Set Prescaler bits
+                    if Tx_PR = 4  then SET T2CKPS0 ON
+                    if Tx_PR = 16 then SET T2CKPS1 ON
+                    'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
+                    'if T2CON and 3 = 3 then an overflow has occured!
+                    if Tx_PR = 64 then SET T2CKPS0 ON: SET T2CKPS1 ON
+                #endif
 
-          'Set Clock Source, if required
-          #ifdef var(T2CLKCON)
-              'Set to FOSC/4 for backward compatibility
-              T2CLKCON.T2CS0 = 1
-              T2CLKCON.T2CS1 = 0
-              T2CLKCON.T2CS2 = 0
-              T2CLKCON.T2CS3 = 0
-          #endif
+                'Set Clock Source, if required
+                #ifdef var(T2CLKCON)
+                    'Set to FOSC/4 for backward compatibility
+                    T2CLKCON.T2CS0 = 1
+                    T2CLKCON.T2CS1 = 0
+                    T2CLKCON.T2CS2 = 0
+                    T2CLKCON.T2CS3 = 0
+                #endif
+              #endif
+
+             #ifdef USE_HPWM_TIMER4 TRUE
+             case 4:
+                 PR4 = PRx_Temp
+                'Set the Bits for the Postscaler
+                'Setup Timerx by clearing the Prescaler bits - it is set next....
+                #ifdef bit(T4CKPS4)
+                    SET T4CKPS0 OFF
+                    SET T4CKPS1 OFF
+                    SET T4CKPS4 OFF
+                    'Set Prescaler bits
+                    if Tx_PR = 4  then SET T4CKPS1 ON
+                    if Tx_PR = 16 then SET T4CKPS4 ON
+                    if Tx_PR = 64 then SET T4CKPS4 ON: SET T4CKPS1 ON
+                #endif
+
+                'Revised to show overflow issue
+                #ifndef bit(T4CKPS4)
+                  #ifdef bit(T4CKPS0)
+                    SET T4CKPS0 OFF
+                    SET T4CKPS1 OFF
+                    'Set Prescaler bits
+                    if Tx_PR = 4  then SET T4CKPS0 ON
+                    if Tx_PR = 16 then SET T4CKPS1 ON
+                    'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
+                    'if T4CON and 3 = 3 then an overflow has occured!
+                    if Tx_PR = 64 then SET T4CKPS0 ON: SET T4CKPS1 ON
+                  #endif
+                #endif
+
+                'Set Clock Source, if required
+                #ifdef var(T4CLKCON)
+                    'Set to FOSC/4 for backward compatibility
+                    T4CLKCON.T4CS0 = 1
+                    T4CLKCON.T4CS1 = 0
+                    T4CLKCON.T4CS2 = 0
+                    T4CLKCON.T4CS3 = 0
+                #endif
+             #endif
+
+             #ifdef USE_HPWM_TIMER6 TRUE
+             case 6:
+                PR6 = PRx_Temp
+                'Set the Bits for the Postscaler
+                'Setup Timerx by clearing the Prescaler bits - it is set next....
+                #ifdef bit(T6CKPS6)
+                    SET T6CKPS0 OFF
+                    SET T6CKPS1 OFF
+                    SET T6CKPS6 OFF
+                    'Set Prescaler bits
+                    if Tx_PR = 4  then SET T6CKPS1 ON
+                    if Tx_PR = 16 then SET T6CKPS6 ON
+                    if Tx_PR = 64 then SET T6CKPS6 ON: SET T6CKPS1 ON
+                #endif
+
+                'Revised to show overflow issue
+                #ifndef bit(T6CKPS6)
+                  #ifdef bit(T6CKPS0)
+                    SET T6CKPS0 OFF
+                    SET T6CKPS1 OFF
+                    'Set Prescaler bits
+                    if Tx_PR = 4  then SET T6CKPS0 ON
+                    if Tx_PR = 16 then SET T6CKPS1 ON
+                    'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
+                    'if T6CON and 3 = 3 then an overflow has occured!
+                    if Tx_PR = 64 then SET T6CKPS0 ON: SET T6CKPS1 ON
+                  #endif
+                #endif
+
+                'Set Clock Source, if required
+                #ifdef var(T6CLKCON)
+                    'Set to FOSC/4 for backward compatibility
+                    T6CLKCON.T6CS0 = 1
+                    T6CLKCON.T6CS1 = 0
+                    T6CLKCON.T6CS2 = 0
+                    T6CLKCON.T6CS3 = 0
+                #endif
+             #endif
+          end Select
+
+End_of_CCPPWMSetupClockSource:
 
   #ifdef HPWM_FAST
           PWMFreqOld = PWMFreq
@@ -2693,7 +2785,7 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )  '8 bit resolution on timer 2
   'this code can be optimised by using defines USE_HPWMCCP1|2|3|4|5
   'and, you can define user setup and exit commands using AddHPWMCCPSetupN and  AddHPWMCCPExitN
   '   These can be used to FIX little errors!
-
+SetupTheCorrectTimerBits:
   'ChipPWMTimerVariant some chips have variants on CCPTMRS0
   #if ChipPWMTimerVariant = 2
         TimerSelectionBits =  (_PWMTimerSelected / 2 )
@@ -2706,6 +2798,8 @@ sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )  '8 bit resolution on timer 2
   #ifndef ChipPWMTimerVariant
       TimerSelectionBits =  (_PWMTimerSelected / 2 )-1
   #endif
+
+SetupCCPPWMRegisters:
 
   #ifdef USE_HPWMCCP1 TRUE
 
