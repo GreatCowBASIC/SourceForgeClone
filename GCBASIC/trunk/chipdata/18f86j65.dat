@@ -1,6 +1,5 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F86J65
-'Generated 30/4/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -1567,12 +1566,12 @@ DEBUG=OFF
 ECCPMX=ON
 ETHLED=ON
 FCMEN=ON
-FOSC2=ON
 FOSC=ECPLL
+FOSC2=ON
 IESO=ON
 STVR=ON
-WDTPS=32768
 WDT=ON
+WDTPS=32768
 XINST=OFF
 
 [ConfigMask]

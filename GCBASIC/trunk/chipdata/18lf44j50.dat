@@ -1,6 +1,5 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF44J50
-'Generated 28/5/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -1746,8 +1745,8 @@ T1DIG=ON
 WDTEN=ON
 WDTPS=32768
 WPCFG=OFF
-WPDIS=ON
-WPEND=PAGE_0
+WPDIS=OFF
+WPEND=OFF
 WPFP=15
 XINST=OFF
 '18FDefaultASMConfig Setting

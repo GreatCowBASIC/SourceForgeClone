@@ -1,6 +1,5 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF2620
-'Generated 30/4/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -753,8 +752,8 @@ OSC=RCIO6
 PBADEN=ON
 PWRT=OFF
 STVREN=ON
-WDTPS=32768
 WDT=ON
+WDTPS=32768
 WRT0=OFF
 WRT1=OFF
 WRT2=OFF

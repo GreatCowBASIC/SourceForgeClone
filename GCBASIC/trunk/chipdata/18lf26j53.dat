@@ -1,6 +1,5 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF26J53
-'Generated 28/5/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -1831,7 +1830,7 @@ STVREN=ON
 WDTEN=ON
 WDTPS=32768
 WPCFG=OFF
-WPDIS=ON
+WPDIS=OFF
 WPEND=0
 WPFP=63
 XINST=OFF

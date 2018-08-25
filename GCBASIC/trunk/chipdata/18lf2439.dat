@@ -1,6 +1,5 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF2439
-'Generated 30/4/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -577,8 +576,8 @@ STKPTR4,STKPTR,4
 20,Vdd
 
 [ASMConfig]
-BORV=25
 BOR=ON
+BORV=25
 CP0=OFF
 CP1=OFF
 CPB=OFF
@@ -592,8 +591,8 @@ LVP=ON
 OSC=HS
 PWRT=OFF
 STVR=ON
-WDTPS=128
 WDT=ON
+WDTPS=128
 WRT0=OFF
 WRT1=OFF
 WRTB=OFF

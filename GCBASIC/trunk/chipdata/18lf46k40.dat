@@ -1,13 +1,12 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF46K40
-'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 25/09/2017
+'Header Format last revised: 30/04/2018
 
 [ChipData]
 Prog=32768
 EEPROM=1024
-RAM=3728
+RAM=3720
 I/O=36
 ADC=35
 MaxMHz=64
@@ -16,6 +15,7 @@ Pins=40
 Family=16
 PSP=0
 MaxAddress=4095
+PWMTimerVariant=2
 
 [Interrupts]
 ADCReady:ADIE,ADIF
@@ -3071,7 +3071,7 @@ SP4,STKPTR,4
 SP5,STKPTR,5
 
 [FreeRAM]
-0:E8F
+0:E87
 
 [NoBankRAM]
 
@@ -3119,10 +3119,11 @@ SP5,STKPTR,5
 
 [ASMConfig]
 BOREN=SBORDIS
-BORV=VBOR_190
+BORV=190
 CLKOUTEN=OFF
-CPD=OFF
 CP=OFF
+CPD=OFF
+'18FDefaultASMConfig Setting
 CSWEN=ON
 '18FDefaultASMConfig Setting
 DEBUG=OFF
@@ -3142,8 +3143,8 @@ RSTOSC=EXTOSC
 SCANE=ON
 STVREN=ON
 WDTCCS=SC
-WDTCPS=WDTCPS_31
-WDTCWS=WDTCWS_7
+WDTCPS=31
+WDTCWS=7
 WDTE=ON
 WRT0=OFF
 WRT1=OFF
