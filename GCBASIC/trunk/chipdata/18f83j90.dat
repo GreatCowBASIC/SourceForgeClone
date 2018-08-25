@@ -1,6 +1,5 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F83J90
-'Generated 28/5/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -1874,7 +1873,7 @@ CP0=OFF
 DEBUG=OFF
 FCMEN=ON
 FOSC=ECPLL
-FOSC2=OFF
+FOSC2=SBORDIS
 IESO=ON
 STVREN=ON
 WDTEN=ON

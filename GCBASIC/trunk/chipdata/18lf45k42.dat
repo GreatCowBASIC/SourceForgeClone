@@ -1,8 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF45K42
-'Generated 22/12/2017
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 25/09/2017
+'Header Format last revised: 30/04/2018
 
 [ChipData]
 Prog=16384
@@ -17,6 +16,9 @@ Family=16
 FamilyVariant=1
 PSP=0
 MaxAddress=16383
+PWMTimerVariant=2
+SMTClockSourceVariant=3
+ReadAD10BitForceVariant=4
 
 [Interrupts]
 ADCReady:ADIE,ADIF
@@ -6040,11 +6042,12 @@ CHS4,ADCON0,6
 
 [ASMConfig]
 BBEN=OFF
-BBSIZE=BBSIZE_512
+BBSIZE=512
 BOREN=SBORDIS
-BORV=VBOR_190
+BORV=190
 CLKOUTEN=OFF
 CP=OFF
+'18FDefaultASMConfig Setting
 CSWEN=ON
 '18FDefaultASMConfig Setting
 DEBUG=OFF
@@ -6057,13 +6060,13 @@ MCLRE=EXTMCLR
 MVECEN=ON
 PPS1WAY=ON
 PR1WAY=ON
-PWRTS=PWRT_OFF
+PWRTS=OFF
 RSTOSC=EXTOSC
 SAFEN=OFF
 STVREN=ON
 WDTCCS=SC
-WDTCPS=WDTCPS_31
-WDTCWS=WDTCWS_7
+WDTCPS=31
+WDTCWS=7
 WDTE=ON
 WRTAPP=OFF
 WRTB=OFF

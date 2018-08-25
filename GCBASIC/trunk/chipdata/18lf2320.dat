@@ -1,6 +1,5 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF2320
-'Generated 30/4/2018
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 30/04/2018
 
@@ -683,8 +682,8 @@ SP4,STKPTR,4
 20,Vdd
 
 [ASMConfig]
-BORV=20
 BOR=ON
+BORV=20
 CCP2MX=ON
 CP0=OFF
 CP1=OFF
@@ -707,8 +706,8 @@ OSC=LP
 PBAD=ANA
 PWRT=OFF
 STVR=ON
-WDTPS=32K
 WDT=ON
+WDTPS=32K
 WRT0=OFF
 WRT1=OFF
 WRT2=OFF

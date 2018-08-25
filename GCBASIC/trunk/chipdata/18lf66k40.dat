@@ -1,8 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF66K40
-'Generated 8/12/2017
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 25/09/2017
+'Header Format last revised: 30/04/2018
 
 [ChipData]
 Prog=32768
@@ -16,6 +15,7 @@ Pins=64
 Family=16
 PSP=0
 MaxAddress=4095
+PWMTimerVariant=2
 SMTClockSourceVariant=3
 
 [Interrupts]
@@ -4825,10 +4825,11 @@ SP5,STKPTR,5
 
 [ASMConfig]
 BOREN=SBORDIS
-BORV=VBOR_190
+BORV=190
 CLKOUTEN=OFF
-CPD=OFF
 CP=OFF
+CPD=OFF
+'18FDefaultASMConfig Setting
 CSWEN=ON
 '18FDefaultASMConfig Setting
 DEBUG=OFF
@@ -4848,8 +4849,8 @@ RSTOSC=EXTOSC
 SCANE=ON
 STVREN=ON
 WDTCCS=SC
-WDTCPS=WDTCPS_31
-WDTCWS=WDTCWS_7
+WDTCPS=31
+WDTCWS=7
 WDTE=ON
 WRT0=OFF
 WRT1=OFF

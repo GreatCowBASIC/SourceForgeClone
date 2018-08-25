@@ -1,8 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16LF18446
-'Generated 23/4/2018
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 25/09/2017
+'Header Format last revised: 30/04/2018
 
 [ChipData]
 Prog=28672
@@ -11,7 +10,7 @@ RAM=2048
 I/O=18
 ADC=17
 MaxMHz=32
-IntOsc=32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0.0625
+IntOsc=32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0.0625
 Pins=20
 Family=15
 FamilyVariant=1
@@ -19,6 +18,7 @@ ConfigWords=5
 PSP=0
 MaxAddress=8191
 SMTClockSourceVariant=3
+ReadAD10BitForceVariant=4
 
 [Interrupts]
 ADCReady:ADIE,ADIF
