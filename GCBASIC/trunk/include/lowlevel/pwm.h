@@ -118,6 +118,8 @@
 ''' 16/8/2018 Revised PWMon to better support support timer selection for CCP timer selection
 ''' 22/8/2018 Revised to include support for CCP with mutlple 10 bit CPP with timers 2 and 4
 ''' 25/8/2018 Revised to resolve clock source of CCPTimerN, this impacted the CCP/PWM method, so, added Select-Case
+''' 25/8/2018 Revised to add clock source for PWM method. Datasheet was incorrect!!! In PWM Harware module.
+
 
   'define the defaults
   #define AVRTC0
@@ -3380,8 +3382,16 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
             #if ChipPWMTimerVariant = 2
               TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
-              SetWith ( P1TSEL0, TimerSelectionBits.0 )
-              SetWith ( P1TSEL1, TimerSelectionBits.1 )
+              #IFDEF BIT(P1TSEL0)
+                SetWith ( P1TSEL0, TimerSelectionBits.0 )
+                SetWith ( P1TSEL1, TimerSelectionBits.1 )
+              #endif
+
+              #IFDEF BIT(C1TSEL1)
+                SetWith ( C1TSEL0, TimerSelectionBits.0 )
+                SetWith ( C1TSEL1, TimerSelectionBits.1 )
+              #endif
+
             #endif
 
             #ifndef ChipPWMTimerVariant
@@ -3437,8 +3447,16 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
             #if ChipPWMTimerVariant = 2
               TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
-              SetWith ( P2TSEL0, TimerSelectionBits.0 )
-              SetWith ( P2TSEL1, TimerSelectionBits.1 )
+              #IFDEF BIT(P2TSEL0)
+                SetWith ( P2TSEL0, TimerSelectionBits.0 )
+                SetWith ( P2TSEL1, TimerSelectionBits.1 )
+              #endif
+
+              #IFDEF BIT(C2TSEL1)
+                SetWith ( C2TSEL0, TimerSelectionBits.0 )
+                SetWith ( C2TSEL1, TimerSelectionBits.1 )
+              #endif
+
             #endif
 
             #ifndef ChipPWMTimerVariant
@@ -3495,8 +3513,16 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
             #if ChipPWMTimerVariant = 2
               TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
-              SetWith ( P3TSEL0, TimerSelectionBits.0 )
-              SetWith ( P3TSEL1, TimerSelectionBits.1 )
+              #IFDEF BIT(P3TSEL0)
+                SetWith ( P3TSEL0, TimerSelectionBits.0 )
+                SetWith ( P3TSEL1, TimerSelectionBits.1 )
+              #endif
+
+              #IFDEF BIT(C3TSEL1)
+                SetWith ( C3TSEL0, TimerSelectionBits.0 )
+                SetWith ( C3TSEL1, TimerSelectionBits.1 )
+              #endif
+
             #endif
 
 
@@ -3546,8 +3572,15 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
             #if ChipPWMTimerVariant = 2
               TimerSelectionBits =  (_PWMTimerSelected / 2 ) 'This is a ChipPWMTimerVariant chip.  Move the timer bits to the left by one bit to cater for different addressing
 
-              SetWith ( P4TSEL0, TimerSelectionBits.0 )
-              SetWith ( P4TSEL1, TimerSelectionBits.1 )
+              #IFDEF BIT(P4TSEL0)
+                SetWith ( P4TSEL0, TimerSelectionBits.0 )
+                SetWith ( P4TSEL1, TimerSelectionBits.1 )
+              #endif
+
+              #IFDEF BIT(C4TSEL1)
+                SetWith ( C4TSEL0, TimerSelectionBits.0 )
+                SetWith ( C4TSEL1, TimerSelectionBits.1 )
+              #endif
 
             #endif
 
