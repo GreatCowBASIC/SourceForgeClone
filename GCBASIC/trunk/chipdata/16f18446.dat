@@ -4,7 +4,7 @@
 'Header Format last revised: 30/04/2018
 
 [ChipData]
-Prog=28672
+Prog=16384
 EEPROM=256
 RAM=2048
 I/O=18
