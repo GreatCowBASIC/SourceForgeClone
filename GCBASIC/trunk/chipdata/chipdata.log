@@ -1,14 +1,3 @@
-GCBASIC/GCGB Chip Data File Generator
-
-Reading chipdata.csv ...
-
-Reading 18f Default ASM Configuration File....
-
-Reading Critical Changes  File....
-
-Finding .inc files ...
-
-Processing ...
 16F18424 (15) 1/1008
 Adding CHS bits to ADCON0
 16F18425 (15) 2/1008
@@ -35,6 +24,8 @@ Adding CHS bits to ADCON0
 Adding CHS bits to ADCON0
 18F26Q10 (16) 13/1008
 Missing data in chipdata.csv
+Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
+No pinout found, and could not guess
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE
@@ -42,6 +33,8 @@ Unrecognised interrupt source:            CLC8IE
 Chip data file is suspect
 18F45Q10 (16) 14/1008
 Missing data in chipdata.csv
+Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
+No pinout found, and could not guess
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE
@@ -49,6 +42,8 @@ Unrecognised interrupt source:            CLC8IE
 Chip data file is suspect
 18F46Q10 (16) 15/1008
 Missing data in chipdata.csv
+Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
+No pinout found, and could not guess
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE
@@ -56,10 +51,9 @@ Unrecognised interrupt source:            CLC8IE
 Chip data file is suspect
 MCP19132 (14) 16/1008
 Missing data in chipdata.csv
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
+Could not build memory map
+Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
+No pinout found, and could not guess
 Unrecognised interrupt source:            DMAIE
 Unrecognised interrupt source:            FVRIE
 Unrecognised interrupt source:            OCMUCIE
@@ -78,10 +72,9 @@ Unrecognised interrupt source:            SWFRQIE
 Chip data file is suspect
 MCP19133 (14) 17/1008
 Missing data in chipdata.csv
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
+Could not build memory map
+Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
+No pinout found, and could not guess
 Unrecognised interrupt source:            DMAIE
 Unrecognised interrupt source:            FVRIE
 Unrecognised interrupt source:            OCMUCIE
@@ -119,11 +112,6 @@ Adding CHS bits to ADCON0
 18F27K42 (16) 29/1008
 Adding CHS bits to ADCON0
 16LF15324 (15) 30/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16F1769 (15) 31/1008
 (R)COG1IE            EQU  H'0005' 
 (R)COG1IE            EQU  H'0005' 
@@ -132,7 +120,6 @@ Config word for IDLOC3 is unclear
 Adding ADCS bits to ADCON1
 18F13K22 (16) 32/1008
 Unrecognised interrupt source:            PIE
-RF675F (14) 33/1008
 18F8723 (16) 34/1008
 16C55A (12) 35/1008
 18LF44J10 (16) 36/1008
@@ -145,6 +132,8 @@ RF675F (14) 33/1008
 18F8410 (16) 39/1008
 MCP19123 (14) 40/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -157,6 +146,8 @@ Unrecognised interrupt source:            UVIE
 Chip data file is suspect
 MCV18E (14) 41/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 16LF1614 (15) 42/1008
 18LF2450 (16) 43/1008
@@ -177,6 +168,7 @@ Adding ADCS bits to ADCON1
 (R)COG1IE            EQU  H'0005' 
 Adding ADCS bits to ADCON1
 16F723 (14) 54/1008
+16F723A (14) 983/1008
 16LF18855 (15) 55/1008
 Adding CHS bits to ADCON0
 16LF18876 (15) 56/1008
@@ -208,8 +200,6 @@ Adding ADCS bits to ADCON1
 (R)COG1IE            EQU  H'0005' 
 (R)COG1IE            EQU  H'0005' 
 (R)COG1IE            EQU  H'0005' 
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 Adding ADCS bits to ADCON1
 16F1618 (15) 69/1008
 16LF1713 (15) 70/1008
@@ -220,9 +210,9 @@ Adding ADCS bits to ADCON1
 18F86J72 (16) 74/1008
 No DEBUG config bit!
 16F15356 (15) 75/1008
-Config word for DEVID1 is unclear
 18F4321 (16) 76/1008
 12C509 (12) 77/1008
+12C509A (12) 796/1008
 16CR73 (14) 78/1008
 18F2620 (16) 79/1008
 18LF6627 (16) 80/1008
@@ -258,12 +248,14 @@ Adding CHS bits to ADCON0
 18F67J90 (16) 94/1008
 18LF2331 (16) 95/1008
 16LF1824 (15) 96/1008
+16LF1824T39A (15) 416/1008
 18LF23K22 (16) 97/1008
 18F1320 (16) 98/1008
 18F44J11 (16) 99/1008
 MCP19117 (14) 100/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -275,21 +267,23 @@ Unrecognised interrupt source:            OTIE
 Unrecognised interrupt source:            CDSIE
 Chip data file is suspect
 18F252 (16) 101/1008
+18F2525 (16) 510/1008
+18F2523 (16) 661/1008
+18F2520 (16) 804/1008
 16F628 (14) 102/1008
+16F628A (14) 910/1008
 18LF2610 (16) 103/1008
 18LF8622 (16) 104/1008
-Added missing XINST default (set OFF)
 18LF4550 (16) 105/1008
-Added missing XINST default (set OFF)
 16F1709 (15) 106/1008
 Adding ADCS bits to ADCON1
 16LF88 (14) 107/1008
 16LF1578 (15) 108/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 18LF8410 (16) 109/1008
 18F26J11 (16) 110/1008
 16C73 (14) 111/1008
+16C73A (14) 541/1008
+16C73B (14) 904/1008
 16HV785 (14) 112/1008
 18F6525 (16) 113/1008
 18LF4510 (16) 114/1008
@@ -334,8 +328,6 @@ Bad polarity: shared
 (R)
 (R)
 (R)
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 Adding CHS bits to ADCON0
 Adding ADCS bits to ADCON1
 16LF15344 (15) 119/1008
@@ -360,6 +352,8 @@ Adding ADCS bits to ADCON1
 18LF4431 (16) 126/1008
 MCV18A (14) 127/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 16F631 (14) 128/1008
 12CE674 (14) 129/1008
@@ -388,32 +382,11 @@ No DEBUG config bit!
 16LF1519 (15) 144/1008
 18F2331 (16) 145/1008
 18LF4320 (16) 146/1008
-Config word for LP_OSC is unclear
-Config word for XT_OSC is unclear
-Config word for HS_OSC is unclear
-Config word for EC_OSC is unclear
-Config word for ECIO_OSC is unclear
-Config word for ECIOP_OSC is unclear
-Config word for HSPLL_OSC is unclear
-Config word for RCIO_OSC is unclear
-Config word for INTIO2_OSC is unclear
-Config word for INTIO1_OSC is unclear
-Config word for RC_OSC is unclear
-Config word for IESO_OFF is unclear
-Config word for IESO_ON is unclear
-Config word for MCLRE_OFF is unclear
-Config word for MCLRE_ON is unclear
-Config word for LVP_OFF is unclear
-Config word for LVP_ON is unclear
-Config word for DEBUG_ON is unclear
-Config word for DEBUG_OFF is unclear
-Config word for CP0_ON is unclear
-Config word for CP0_OFF is unclear
-Config word for CP1_ON is unclear
-Config word for CP1_OFF is unclear
 18F27J53 (16) 147/1008
 No DEBUG config bit!
 16C64 (14) 148/1008
+16C64A (14) 394/1008
+16C642 (14) 549/1008
 16F1933 (15) 149/1008
 18F2420 (16) 150/1008
 16F785 (14) 151/1008
@@ -421,6 +394,7 @@ No DEBUG config bit!
 18F8585 (16) 153/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 16F873 (14) 154/1008
+16F873A (14) 300/1008
 18LF6621 (16) 155/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 12LF1840T39A (15) 156/1008
@@ -436,11 +410,20 @@ Chip data file is suspect
 18LF46J50 (16) 163/1008
 No DEBUG config bit!
 16C62 (14) 164/1008
+16C621A (14) 360/1008
+16C622A (14) 403/1008
+16C622 (14) 456/1008
+16C620 (14) 459/1008
+16C620A (14) 494/1008
+16C62A (14) 577/1008
+16C621 (14) 937/1008
+16C62B (14) 953/1008
 18F448 (16) 165/1008
 Unrecognised interrupt source:            RX0IE
 Unrecognised interrupt source:            RX1IE
 Unrecognised interrupt source:            TX0IE
 Unrecognised interrupt source:            IVRE
+18F4480 (16) 741/1008
 18F26J50 (16) 166/1008
 18F86J11 (16) 167/1008
 16F15376 (15) 168/1008
@@ -451,12 +434,8 @@ Unrecognised interrupt source:            IVRE
 Added missing SOSCSEL default (set DIG)
 16F1454 (15) 173/1008
 18F67K22 (16) 174/1008
-Added missing XINST default (set OFF)
 Added missing SOSCSEL default (set DIG)
 16LF1507 (15) 175/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 18LF45J11 (16) 176/1008
 16LF1508 (15) 177/1008
 Adding ADCS bits to ADCON1
@@ -464,29 +443,16 @@ Adding ADCS bits to ADCON1
 18F4685 (16) 179/1008
 18F8493 (16) 180/1008
 16LF1933 (15) 181/1008
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 18LF2221 (16) 182/1008
 16F1826 (15) 183/1008
 18F87J72 (16) 184/1008
 No DEBUG config bit!
 16F884 (14) 185/1008
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 18F44J10 (16) 186/1008
-Added missing XINST default (set OFF)
 18F44K20 (16) 187/1008
 12F629 (14) 188/1008
 16LF18323 (15) 189/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16F886 (14) 190/1008
-Config word for IDLOC0 is unclear
-Config word for DEVID1 is unclear
-Config word for IDLOC3 is unclear
 18F87J50 (16) 191/1008
 18LF6723 (16) 192/1008
 18LF26K22 (16) 193/1008
@@ -498,14 +464,26 @@ Bad polarity: shared
 Added missing XINST default (set OFF)
 16CE623 (14) 197/1008
 16F1516 (15) 198/1008
-Config word for IDLOC3 is unclear
 16F1513 (15) 199/1008
-Config word for IDLOC3 is unclear
+16F723 (14) 54/1008
+16F726 (14) 85/1008
 16F72 (14) 200/1008
+16F722A (14) 631/1008
+16F721 (14) 701/1008
+Config word for IDLOC0 is unclear
+Config word for IDLOC2 is unclear
+16F727 (14) 707/1008
+16F722 (14) 727/1008
+16F724 (14) 868/1008
+16F720 (14) 919/1008
+Config word for IDLOC0 is unclear
+Config word for IDLOC2 is unclear
+16F723A (14) 983/1008
 16CR72 (14) 201/1008
 14000 (14) 202/1008
 Missing data in chipdata.csv
-Adding CHS bits to ADCON0
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            WUIE
 Unrecognised interrupt source:            PBIE
 Unrecognised interrupt source:            I2CIE
@@ -513,7 +491,10 @@ Unrecognised interrupt source:            ADCIE
 Unrecognised interrupt source:            OVFIE
 Chip data file is suspect
 16F1579 (15) 203/1008
+16C54A (12) 91/1008
+16C54C (12) 152/1008
 16C54 (12) 204/1008
+16C54B (12) 600/1008
 18F24J50 (16) 205/1008
 18LF4539 (16) 206/1008
 18F26K40 (16) 207/1008
@@ -527,6 +508,8 @@ Chip data file is suspect
 12HV752 (14) 215/1008
 MCP19119 (14) 216/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            IOCE
 Unrecognised interrupt source:            DCERIE
 Unrecognised interrupt source:            VINIE
@@ -540,15 +523,18 @@ Chip data file is suspect
 (A)Old_and_Legacy             EQU  H'0000'
 (A)Old_and_Legacy             EQU  H'0000'
 Ghost chip, never manufactured
+Could not build memory map
 Chip data file is suspect
 16CR63 (14) 218/1008
 16F526 (12) 219/1008
 16LF722 (14) 220/1008
+16LF722A (14) 960/1008
 16CR54C (12) 221/1008
 18LF4585 (16) 222/1008
 MCP25050 (14) 223/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18F2320 (16) 224/1008
 16F19195 (15) 225/1008
@@ -566,11 +552,11 @@ Unrecognised interrupt source:            ECCP3IE
 16F15385 (15) 233/1008
 18F66J11 (16) 234/1008
 18LF45K22 (16) 235/1008
-Added missing XINST default (set OFF)
 18LF4620 (16) 236/1008
 MCP19214 (14) 237/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            OTIE
@@ -590,13 +576,13 @@ Bad polarity: shared
 16F1578 (15) 241/1008
 18LF26K42 (16) 242/1008
 Adding CHS bits to ADCON0
+18F2480 (16) 159/1008
 18F248 (16) 243/1008
 Unrecognised interrupt source:            RX0IE
 Unrecognised interrupt source:            RX1IE
 Unrecognised interrupt source:            TX0IE
 Unrecognised interrupt source:            IVRE
 16F887 (14) 244/1008
-Config word for DEVID1 is unclear
 18F66J16 (16) 245/1008
 18F86K22 (16) 246/1008
 Added missing SOSCSEL default (set DIG)
@@ -605,13 +591,13 @@ Added missing SOSCSEL default (set DIG)
 18LF14K50 (16) 249/1008
 18LF26J11 (16) 250/1008
 16C65 (14) 251/1008
+16C65B (14) 660/1008
+16C65A (14) 990/1008
 18LF2539 (16) 252/1008
 18F6680 (16) 253/1008
 16LF1938 (15) 254/1008
 18F47K40 (16) 255/1008
 16LF19155 (15) 256/1008
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 Adding CHS bits to ADCON0
 16LF1788 (15) 257/1008
 18F14K22LIN (16) 258/1008
@@ -626,6 +612,8 @@ Bad polarity: shared
 18F2439 (16) 264/1008
 18MACRO (14) 265/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18F4510 (16) 266/1008
 18F86J60 (16) 267/1008
@@ -634,12 +622,12 @@ Chip data file is suspect
 16CR57B (12) 270/1008
 18F4515 (16) 271/1008
 16F1939 (15) 272/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 18LF67K40 (16) 273/1008
 16F1519 (15) 274/1008
 MCP19118 (14) 275/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            IOCE
 Unrecognised interrupt source:            DCERIE
 Unrecognised interrupt source:            VINIE
@@ -648,14 +636,17 @@ Unrecognised interrupt source:            OCIE
 Unrecognised interrupt source:            UVIE
 Chip data file is suspect
 16F15344 (15) 276/1008
-Config word for DEVID1 is unclear
 18F87J60 (16) 277/1008
 16CE624 (14) 278/1008
 MCV283B (14) 279/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 MCP19121 (14) 280/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -667,7 +658,6 @@ Unrecognised interrupt source:            OTIE
 Unrecognised interrupt source:            UVIE
 Chip data file is suspect
 16F18446 (15) 281/1008
-Config word for DEVID1 is unclear
 Adding CHS bits to ADCON0
 16C711 (14) 282/1008
 16LF767 (14) 283/1008
@@ -682,8 +672,13 @@ Unrecognised interrupt source:            RX0IE
 Unrecognised interrupt source:            RX1IE
 Unrecognised interrupt source:            TX0IE
 Unrecognised interrupt source:            IVRE
+18F4580 (16) 358/1008
+18F4585 (16) 781/1008
+Added missing XINST default (set OFF)
 MCP19215 (14) 289/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            OTIE
@@ -704,7 +699,6 @@ Chip data file is suspect
 16CR84 (14) 296/1008
 16LF1517 (15) 297/1008
 16LF1789 (15) 298/1008
-Config word for IDLOC3 is unclear
 16F636 (14) 299/1008
 16F873A (14) 300/1008
 16F1779 (15) 301/1008
@@ -712,8 +706,6 @@ Config word for IDLOC3 is unclear
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 Adding CHS bits to ADCON0
 Adding ADCS bits to ADCON1
 18F65J10 (16) 302/1008
@@ -729,24 +721,14 @@ No DEBUG config bit!
 18F85J10 (16) 308/1008
 Bad polarity: shared
 18LF24K22 (16) 309/1008
+16C55A (12) 35/1008
+16C554 (12) 171/1008
 16C55 (12) 310/1008
+16C557 (12) 449/1008
+16C558 (12) 977/1008
 18LF6525 (16) 311/1008
 18LF6620 (16) 312/1008
-Config word for LP_OSC is unclear
-Config word for XT_OSC is unclear
-Config word for HS_OSC is unclear
-Config word for RC_OSC is unclear
-Config word for EC_OSC is unclear
-Config word for ECIO_OSC is unclear
-Config word for HSPLL_OSC is unclear
-Config word for RCIO_OSC is unclear
-Config word for OSCS_ON is unclear
-Config word for OSCS_OFF is unclear
-Config word for PWRT_ON is unclear
-Config word for PWRT_OFF is unclear
 Config word for BORV is unclear
-Config word for CCP2MX is unclear
-Config word for CCP2MX is unclear
 16F15323 (15) 313/1008
 18F45K80 (16) 314/1008
 No DEBUG config bit!
@@ -754,27 +736,27 @@ Added missing SOSCSEL default (set DIG)
 18F86J55 (16) 315/1008
 16F15375 (15) 316/1008
 18LF4553 (16) 317/1008
-Added missing XINST default (set OFF)
 18F6520 (16) 318/1008
 Bad polarity: shared
 16F77 (14) 319/1008
+16F777 (14) 697/1008
 MCV08A (14) 320/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18F8720 (16) 321/1008
 Bad polarity: shared
 MCP25020 (14) 322/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18F85J94 (16) 323/1008
 Odd config word number: -7
 Unrecognised interrupt source:            ECCP3IE
 Chip data file is suspect
 16F18323 (15) 324/1008
-Config word for IDLOC3 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 18LF2423 (16) 325/1008
 16LF1828 (15) 326/1008
 18LF47J53 (16) 327/1008
@@ -786,21 +768,24 @@ No DEBUG config bit!
 16F648A (14) 332/1008
 18LF2680 (16) 333/1008
 16LF1782 (15) 334/1008
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 12F1822 (15) 335/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16LF1526 (15) 336/1008
 18F1230 (16) 337/1008
+16F876A (14) 45/1008
+16F873 (14) 154/1008
+16F877A (14) 232/1008
+16F873A (14) 300/1008
 16F87 (14) 338/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
+16F874A (14) 451/1008
+16F870 (14) 601/1008
+16F874 (14) 761/1008
+16F876 (14) 818/1008
+16F877 (14) 830/1008
+16F871 (14) 908/1008
+16F872 (14) 915/1008
 18F45J10 (16) 339/1008
 18LF8490 (16) 340/1008
 16LF1939 (15) 341/1008
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 10F320 (14) 342/1008
 18F65K40 (16) 343/1008
 16LF1709 (15) 344/1008
@@ -814,20 +799,10 @@ Added missing XINST default (set OFF)
 Adding CHS bits to ADCON0
 Unrecognised interrupt source:            FIFOFIE
 16F19156 (15) 348/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 18F65J50 (16) 349/1008
 16F1824 (15) 350/1008
 16LF19195 (15) 351/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 18F95J94 (16) 352/1008
 Odd config word number: -7
@@ -836,6 +811,7 @@ Chip data file is suspect
 MCP19128 (14) 353/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Bad bit name: TMR4IF
 Bad bit name: TMR1GIF
 Unrecognised interrupt source:            OTIE
@@ -862,8 +838,8 @@ Unrecognised interrupt source:            CWIE
 18F4580 (16) 358/1008
 MCP19126 (14) 359/1008
 Missing data in chipdata.csv
-Adding CHS bits to ADCON0
-Adding ADCS bits to ADCON1
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -880,9 +856,11 @@ No DEBUG config bit!
 18F57K42 (16) 362/1008
 Adding CHS bits to ADCON0
 18F45K22 (16) 363/1008
-Added missing XINST default (set OFF)
 18LF2321 (16) 364/1008
+18F4523 (16) 248/1008
 18F452 (16) 365/1008
+18F4520 (16) 397/1008
+18F4525 (16) 798/1008
 16LF1516 (15) 366/1008
 16F1937 (15) 367/1008
 18LF47J13 (16) 368/1008
@@ -900,6 +878,7 @@ Bad polarity: shared
 MCV14A (14) 373/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18LF1230 (16) 374/1008
 Config word for T1OSCMX_LOW is unclear
@@ -911,6 +890,8 @@ Unrecognised interrupt source:            CWIE
 16CR57A (12) 378/1008
 16F1703 (15) 379/1008
 Adding ADCS bits to ADCON1
+18LF2520 (16) 259/1008
+18LF2525 (16) 328/1008
 18LF252 (16) 380/1008
 Config word for LP_OSC is unclear
 Config word for XT_OSC is unclear
@@ -920,19 +901,22 @@ Config word for EC_OSC is unclear
 Config word for ECIO_OSC is unclear
 Config word for HSPLL_OSC is unclear
 Config word for RCIO_OSC is unclear
+Config word for PWRT_ON is unclear
+Config word for PWRT_OFF is unclear
 Config word for BORV is unclear
 Config word for CCP2MX is unclear
-Config word for LVP_OFF is unclear
-Config word for LVP_ON is unclear
+Config word for CCP2MX is unclear
+18LF2523 (16) 889/1008
 PS500 (14) 381/1008
 Missing data in chipdata.csv
-Adding CHS bits to ADCON0
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 16LF18854 (15) 382/1008
 Adding CHS bits to ADCON0
 18F2580 (16) 383/1008
+16LF747 (14) 268/1008
 16LF74 (14) 384/1008
-RF675K (14) 385/1008
 18F25K40 (16) 386/1008
 18LF2682 (16) 387/1008
 18LF1220 (16) 388/1008
@@ -946,28 +930,22 @@ RF675K (14) 385/1008
 Ghost chip, never manufactured
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 Odd config word number: -7
+No pinout found, and could not guess
 Unrecognised interrupt source:            ECCP3IE
 Chip data file is suspect
 18LF4420 (16) 396/1008
 18F4520 (16) 397/1008
 12C508 (12) 398/1008
+12C508A (12) 920/1008
 18F86K90 (16) 399/1008
 Added missing SOSCSEL default (set DIG)
 18LF2220 (16) 400/1008
-Config word for XT is unclear
-Config word for HSPLL is unclear
-Config word for RCIO is unclear
-Config word for INTIO2 is unclear
-Config word for INTIO1 is unclear
-Config word for RC is unclear
-Config word for CCP2MX is unclear
-Config word for CCP2MX is unclear
-Config word for CCP2MX is unclear
-Config word for CCP2MX is unclear
 18LF2510 (16) 401/1008
 16F76 (14) 402/1008
+16F767 (14) 984/1008
 16C622A (14) 403/1008
 18F87J90 (16) 404/1008
+16F1829LIN (15) 239/1008
 16F1829 (15) 405/1008
 18F6493 (16) 406/1008
 16F18855 (15) 407/1008
@@ -978,8 +956,6 @@ Adding CHS bits to ADCON0
 12F1571 (15) 411/1008
 16F1614 (15) 412/1008
 16LF18344 (15) 413/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16LF15385 (15) 414/1008
 18F24J11 (16) 415/1008
 16LF1824T39A (15) 416/1008
@@ -998,15 +974,17 @@ Adding ADCS bits to ADCON1
 18F45K20 (16) 426/1008
 18F97J72 (16) 427/1008
 Ghost chip, never manufactured
+Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 Chip data file is suspect
 16LF1459 (15) 428/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
+16CR54C (12) 221/1008
 16CR54 (12) 429/1008
+16CR54B (12) 768/1008
+16CR54A (12) 811/1008
 16F74 (14) 430/1008
+16F747 (14) 578/1008
 18LF66K80 (16) 431/1008
 No DEBUG config bit!
-Added missing XINST default (set OFF)
 Added missing SOSCSEL default (set DIG)
 18LF27K42 (16) 432/1008
 Adding CHS bits to ADCON0
@@ -1014,6 +992,8 @@ Adding CHS bits to ADCON0
 Adding ADCS bits to ADCON1
 MCP19114 (14) 434/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -1034,46 +1014,56 @@ Chip data file is suspect
 (A)Product_Not_Released_Legacy             EQU  H'0000'
 (A)Product_Not_Released_Legacy             EQU  H'0000'
 Ghost chip, never manufactured
+Could not build memory map
 Chip data file is suspect
 16CR57C (12) 440/1008
 18F84J90 (16) 441/1008
 16LF84A (14) 442/1008
 18LF248 (16) 443/1008
-Config word for LP_OSC is unclear
-Config word for XT_OSC is unclear
-Config word for HS_OSC is unclear
-Config word for RC_OSC is unclear
-Config word for EC_OSC is unclear
-Config word for ECIO_OSC is unclear
-Config word for HSPLL_OSC is unclear
-Config word for RCIO_OSC is unclear
 Config word for BORV is unclear
 Unrecognised interrupt source:            RX0IE
 Unrecognised interrupt source:            RX1IE
 Unrecognised interrupt source:            TX0IE
 Unrecognised interrupt source:            IVRE
+18LF2480 (16) 580/1008
 16CR62 (14) 444/1008
+16CR620A (14) 656/1008
 18F6393 (16) 445/1008
 16LF727 (14) 446/1008
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 18LF25K50 (16) 447/1008
 Adding CHS bits to ADCON0
+16LF874A (14) 19/1008
+16LF876A (14) 73/1008
+16LF877A (14) 262/1008
 16LF87 (14) 448/1008
+16LF870 (14) 483/1008
+16LF877 (14) 502/1008
+16LF874 (14) 514/1008
+16LF873 (14) 699/1008
+16LF873A (14) 767/1008
+16LF876 (14) 802/1008
+16LF872 (14) 857/1008
+16LF871 (14) 931/1008
 16C557 (12) 449/1008
 12F609 (14) 450/1008
 16F874A (14) 451/1008
+18F2420 (16) 150/1008
+18F2423 (16) 158/1008
 18F242 (16) 452/1008
 18F24K42 (16) 453/1008
 Adding CHS bits to ADCON0
 18F43K20 (16) 454/1008
 18LF45K50 (16) 455/1008
 Adding CHS bits to ADCON0
+16C622A (14) 403/1008
 16C622 (14) 456/1008
+18F14K22LIN (16) 258/1008
+Unrecognised interrupt source:            PIE
 18F14K22 (16) 457/1008
 Unrecognised interrupt source:            PIE
 18LF8680 (16) 458/1008
 16C620 (14) 459/1008
+16C620A (14) 494/1008
 16F1508 (15) 460/1008
 Adding ADCS bits to ADCON1
 16LF1778 (15) 461/1008
@@ -1081,8 +1071,6 @@ Adding ADCS bits to ADCON1
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 Adding ADCS bits to ADCON1
 18F25K83 (16) 462/1008
@@ -1110,32 +1098,14 @@ Adding CHS bits to ADCON0
 18LF6585 (16) 470/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 16C56 (12) 471/1008
+16C56A (12) 512/1008
 18F65J94 (16) 472/1008
 Odd config word number: -7
 Unrecognised interrupt source:            ECCP3IE
 Chip data file is suspect
 16LF1829 (15) 473/1008
 18LF8520 (16) 474/1008
-Config word for OSC_LP is unclear
-Config word for OSC_XT is unclear
-Config word for OSC_HS is unclear
-Config word for OSC_RC is unclear
-Config word for OSC_EC is unclear
-Config word for OSC_ECIO is unclear
-Config word for OSC_HSPLL is unclear
-Config word for OSC_RCIO is unclear
 Config word for BORV is unclear
-Config word for MPB is unclear
-Config word for STVR_OFF is unclear
-Config word for STVR_ON is unclear
-Config word for LVP_OFF is unclear
-Config word for LVP_ON is unclear
-Config word for DEBUG_ON is unclear
-Config word for DEBUG_OFF is unclear
-Config word for CP1_ON is unclear
-Config word for CP1_OFF is unclear
-Config word for CP2_ON is unclear
-Config word for CP2_OFF is unclear
 16F19197 (15) 475/1008
 (A)Old_and_Legacy             EQU  H'0000'
 (A)Old_and_Legacy             EQU  H'0000'
@@ -1147,39 +1117,59 @@ Chip data file is suspect
 18F65K22 (16) 476/1008
 Added missing SOSCSEL default (set DIG)
 18LF47K40 (16) 477/1008
+16LF84A (14) 442/1008
 16LF84 (14) 478/1008
 18F87J10 (16) 479/1008
 Bad polarity: shared
 16F19155 (15) 480/1008
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 Adding CHS bits to ADCON0
+18LF4585 (16) 222/1008
 18LF458 (16) 481/1008
+Config word for LP_OSC is unclear
+Config word for XT_OSC is unclear
+Config word for HS_OSC is unclear
+Config word for RC_OSC is unclear
+Config word for EC_OSC is unclear
+Config word for ECIO_OSC is unclear
+Config word for HSPLL_OSC is unclear
+Config word for RCIO_OSC is unclear
+Config word for PWRT_ON is unclear
+Config word for PWRT_OFF is unclear
 Config word for BORV is unclear
 Unrecognised interrupt source:            RX0IE
 Unrecognised interrupt source:            RX1IE
 Unrecognised interrupt source:            TX0IE
 Unrecognised interrupt source:            IVRE
+18LF4580 (16) 846/1008
+16F884 (14) 185/1008
+16F886 (14) 190/1008
+16F887 (14) 244/1008
 16F88 (14) 482/1008
+Config word for DEVID1 is unclear
+Config word for IDLOC0 is unclear
+Config word for IDLOC1 is unclear
+16F883 (14) 596/1008
+16F882 (14) 608/1008
 16LF870 (14) 483/1008
 18F2431 (16) 484/1008
 18LF4439 (16) 485/1008
 MCP25025 (14) 486/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18LF4321 (16) 487/1008
 16F1716 (15) 488/1008
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 Adding ADCS bits to ADCON1
 16HV616 (14) 489/1008
 18LF4423 (16) 490/1008
-Added missing XINST default (set OFF)
 18F13K50 (16) 491/1008
 18C452 (16) 492/1008
 No DEBUG config bit!
 MCV442B (14) 493/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 16C620A (14) 494/1008
 18F25J10 (16) 495/1008
@@ -1191,11 +1181,14 @@ Adding CHS bits to ADCON0
 18F4331 (16) 500/1008
 18LF24K50 (16) 501/1008
 Adding CHS bits to ADCON0
+16LF877A (14) 262/1008
 16LF877 (14) 502/1008
+16C770 (14) 62/1008
+16C773 (14) 305/1008
 16C77 (14) 503/1008
+16C771 (14) 511/1008
+16C774 (14) 636/1008
 16F19176 (15) 504/1008
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 Adding CHS bits to ADCON0
 18LF6393 (16) 505/1008
 18LF24K42 (16) 506/1008
@@ -1209,21 +1202,23 @@ Adding CHS bits to ADCON0
 18F8627 (16) 513/1008
 Bad polarity: shared
 Added missing XINST default (set OFF)
+16LF874A (14) 19/1008
 16LF874 (14) 514/1008
 18LF4458 (16) 515/1008
 16C662 (14) 516/1008
 18F1220 (16) 517/1008
 16LF1512 (15) 518/1008
-Config word for DEVID1 is unclear
 18LF8390 (16) 519/1008
 16C924 (14) 520/1008
 MCV443B (14) 521/1008
 Missing data in chipdata.csv
-Config word for IDLOC3 is unclear
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 12F508 (12) 522/1008
 16LF15323 (15) 523/1008
 16LF723 (14) 524/1008
+16LF723A (14) 769/1008
 10LF322 (14) 525/1008
 16F1934 (15) 526/1008
 16F18326 (15) 527/1008
@@ -1238,8 +1233,10 @@ Added missing SOSCSEL default (set DIG)
 No DEBUG config bit!
 16LF1784 (15) 533/1008
 18LF6490 (16) 534/1008
+16F84A (14) 116/1008
 16F84 (14) 535/1008
 16F73 (14) 536/1008
+16F737 (14) 930/1008
 18F14K50 (16) 537/1008
 16F19186 (15) 538/1008
 Adding CHS bits to ADCON0
@@ -1292,7 +1289,6 @@ Added missing SOSCSEL default (set DIG)
 (R)
 (R)
 (R)
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 Adding ADCS bits to ADCON1
 16C642 (14) 549/1008
@@ -1304,11 +1300,12 @@ Added missing XINST default (set OFF)
 18LF46J13 (16) 553/1008
 No DEBUG config bit!
 16LF720 (14) 554/1008
-Config word for DEVID1 is unclear
 16LF1455 (15) 555/1008
 18LF8493 (16) 556/1008
 MCP19124 (14) 557/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -1328,6 +1325,8 @@ Added missing SOSCSEL default (set DIG)
 Added missing SOSCSEL default (set DIG)
 MCP19110 (14) 562/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            IOCE
 Unrecognised interrupt source:            DCERIE
 Unrecognised interrupt source:            VINIE
@@ -1339,10 +1338,6 @@ Chip data file is suspect
 Adding ADCS bits to ADCON1
 16C433 (14) 564/1008
 16LF19156 (15) 565/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 Adding CHS bits to ADCON0
 16C782 (14) 566/1008
 18F65K90 (16) 567/1008
@@ -1354,22 +1349,16 @@ Unrecognised interrupt source:            PIE
 18F6585 (16) 571/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 16F15354 (15) 572/1008
-RF509AF (12) 573/1008
 16LF721 (14) 574/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 18F8722 (16) 575/1008
 Bad polarity: shared
 16F15324 (15) 576/1008
-Config word for DEVID1 is unclear
 16C62A (14) 577/1008
 16F747 (14) 578/1008
 18LF65K40 (16) 579/1008
 18LF2480 (16) 580/1008
 16HV753 (14) 581/1008
 18F67J11 (16) 582/1008
-RF675H (14) 583/1008
 18LF46K42 (16) 584/1008
 Adding CHS bits to ADCON0
 16LF1769 (15) 585/1008
@@ -1383,8 +1372,6 @@ No DEBUG config bit!
 16F1787 (15) 587/1008
 18LF4682 (16) 588/1008
 16F1719 (15) 589/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 Adding ADCS bits to ADCON1
 18LF44J50 (16) 590/1008
 No DEBUG config bit!
@@ -1394,6 +1381,7 @@ Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 Adding CHS bits to ADCON0
 18LF13K50 (16) 593/1008
 16C63 (14) 594/1008
+16C63A (14) 607/1008
 16F1788 (15) 595/1008
 16F883 (14) 596/1008
 18F2455 (16) 597/1008
@@ -1414,11 +1402,6 @@ Adding ADCS bits to ADCON1
 16F882 (14) 608/1008
 18F24J10 (16) 609/1008
 16LF15313 (15) 610/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 18F23K22 (16) 611/1008
 18C601 (16) 612/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
@@ -1434,17 +1417,7 @@ Chip data file is suspect
 12LF1571 (15) 618/1008
 18LF4520 (16) 619/1008
 16LF15386 (15) 620/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16LF19185 (15) 621/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 18F8490 (16) 622/1008
 16F1778 (15) 623/1008
@@ -1452,14 +1425,9 @@ Adding CHS bits to ADCON0
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 Adding CHS bits to ADCON0
 Adding ADCS bits to ADCON1
 16LF15355 (15) 624/1008
-Config word for IDLOC3 is unclear
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 16C745 (14) 625/1008
 16F1527 (15) 626/1008
 18F67K90 (16) 627/1008
@@ -1476,9 +1444,6 @@ Unrecognised interrupt source:            FIFOFIE
 16LF1947 (15) 632/1008
 16CR77 (14) 633/1008
 16F707 (14) 634/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
-Config word for DEVID1 is unclear
 18F8680 (16) 635/1008
 Bad polarity: shared
 16C774 (14) 636/1008
@@ -1493,12 +1458,8 @@ No DEBUG config bit!
 Added missing SOSCSEL default (set DIG)
 18F6723 (16) 640/1008
 16LF19175 (15) 641/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 16LF1559 (15) 642/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 18LF6722 (16) 643/1008
 12CE519 (14) 644/1008
 18LF2458 (16) 645/1008
@@ -1516,18 +1477,11 @@ Adding ADCS bits to ADCON1
 Adding CHS bits to ADCON0
 16F677 (14) 653/1008
 16F15313 (15) 654/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 18F46K42 (16) 655/1008
 Adding CHS bits to ADCON0
 16CR620A (14) 656/1008
 18LF6493 (16) 657/1008
 16LF1826 (15) 658/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 18F47K42 (16) 659/1008
 Adding CHS bits to ADCON0
 16C65B (14) 660/1008
@@ -1535,6 +1489,8 @@ Adding CHS bits to ADCON0
 16LF819 (14) 662/1008
 MCP19125 (14) 663/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -1548,16 +1504,12 @@ Chip data file is suspect
 18LF24K40 (16) 664/1008
 18LF4331 (16) 665/1008
 16LF18446 (15) 666/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 18F96J65 (16) 667/1008
 MCP19122 (14) 668/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -1568,7 +1520,10 @@ Unrecognised interrupt source:            OCIE
 Unrecognised interrupt source:            OTIE
 Unrecognised interrupt source:            UVIE
 Chip data file is suspect
+16C745 (14) 625/1008
 16C74 (14) 669/1008
+16C74B (14) 731/1008
+16C74A (14) 939/1008
 16C710 (14) 670/1008
 16F59 (12) 671/1008
 18C658 (16) 672/1008
@@ -1576,6 +1531,7 @@ No DEBUG config bit!
 16C52 (12) 673/1008
 16F689 (14) 674/1008
 16F627A (14) 675/1008
+18LF4520 (16) 619/1008
 18LF452 (16) 676/1008
 Config word for LP_OSC is unclear
 Config word for XT_OSC is unclear
@@ -1585,55 +1541,57 @@ Config word for EC_OSC is unclear
 Config word for ECIO_OSC is unclear
 Config word for HSPLL_OSC is unclear
 Config word for RCIO_OSC is unclear
+Config word for PWRT_ON is unclear
+Config word for PWRT_OFF is unclear
 Config word for BORV is unclear
+Config word for CCP2MX is unclear
+Config word for CCP2MX is unclear
+18LF4525 (16) 686/1008
+18LF4523 (16) 988/1008
 16LF19197 (15) 677/1008
 Could not build memory map
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 Chip data file is suspect
 18F43K22 (16) 678/1008
-Added missing XINST default (set OFF)
 12C671 (14) 679/1008
 18LF1330 (16) 680/1008
 Config word for T1OSCMX_LOW is unclear
 Config word for T1OSCMX_HIGH is unclear
 16LF1717 (15) 681/1008
-Config word for IDLOC3 is unclear
 Adding ADCS bits to ADCON1
 12F529T39A (12) 682/1008
 16LF1906 (15) 683/1008
 18C252 (16) 684/1008
 No DEBUG config bit!
 16C72 (14) 685/1008
+16C72A (14) 702/1008
 18LF4525 (16) 686/1008
 16LF1946 (15) 687/1008
-Config word for IDLOC3 is unclear
 18LF46J11 (16) 688/1008
 18F56K42 (16) 689/1008
 Adding CHS bits to ADCON0
 18F86J90 (16) 690/1008
 16C765 (14) 691/1008
 16LF777 (14) 692/1008
-Config word for DEVID1 is unclear
 12F519 (12) 693/1008
 18LF56K42 (16) 694/1008
 Adding CHS bits to ADCON0
 18LF46K40 (16) 695/1008
+18F4420 (16) 71/1008
 18F442 (16) 696/1008
+18F4423 (16) 746/1008
 16F777 (14) 697/1008
 18F66J99 (16) 698/1008
 Ghost chip, never manufactured
+Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 Odd config word number: -7
+No pinout found, and could not guess
 Unrecognised interrupt source:            ECCP3IE
 Chip data file is suspect
 16LF873 (14) 699/1008
+16LF873A (14) 767/1008
 16F15386 (15) 700/1008
 16F721 (14) 701/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16C72A (14) 702/1008
 16F1705 (15) 703/1008
 Adding ADCS bits to ADCON1
@@ -1641,7 +1599,9 @@ Adding ADCS bits to ADCON1
 Adding CHS bits to ADCON0
 18F96J99 (16) 705/1008
 Ghost chip, never manufactured
+Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 Odd config word number: -7
+No pinout found, and could not guess
 Unrecognised interrupt source:            ECCP3IE
 Chip data file is suspect
 16LF19176 (15) 706/1008
@@ -1653,8 +1613,8 @@ Adding CHS bits to ADCON0
 16F18325 (15) 710/1008
 18F6390 (16) 711/1008
 16F1459 (15) 712/1008
-Config word for IDLOC3 is unclear
 18F2220 (16) 713/1008
+16C662 (14) 516/1008
 16C66 (14) 714/1008
 18LF4610 (16) 715/1008
 18F66J60 (16) 716/1008
@@ -1662,12 +1622,21 @@ Config word for IDLOC3 is unclear
 18LF45K40 (16) 718/1008
 18LF44K22 (16) 719/1008
 16F1823 (15) 720/1008
+18F2580 (16) 383/1008
 18F258 (16) 721/1008
 Unrecognised interrupt source:            RX0IE
 Unrecognised interrupt source:            RX1IE
 Unrecognised interrupt source:            TX0IE
 Unrecognised interrupt source:            IVRE
+18F2585 (16) 744/1008
+Added missing XINST default (set OFF)
 18LF8620 (16) 722/1008
+Config word for BORV is unclear
+18F66J93 (16) 723/1008
+No DEBUG config bit!
+18LF4420 (16) 396/1008
+18LF4423 (16) 490/1008
+18LF442 (16) 724/1008
 Config word for LP_OSC is unclear
 Config word for XT_OSC is unclear
 Config word for HS_OSC is unclear
@@ -1676,38 +1645,20 @@ Config word for EC_OSC is unclear
 Config word for ECIO_OSC is unclear
 Config word for HSPLL_OSC is unclear
 Config word for RCIO_OSC is unclear
-Config word for BORV is unclear
-Config word for STVR_OFF is unclear
-Config word for STVR_ON is unclear
-Config word for LVP_OFF is unclear
-Config word for LVP_ON is unclear
-Config word for DEBUG_ON is unclear
-Config word for DEBUG_OFF is unclear
-Config word for CP0_ON is unclear
-Config word for CP0_OFF is unclear
-Config word for CP2_ON is unclear
-Config word for CP2_OFF is unclear
-Config word for CP3_ON is unclear
-Config word for CP3_OFF is unclear
-18F66J93 (16) 723/1008
-No DEBUG config bit!
-18LF442 (16) 724/1008
-Config word for EC is unclear
-Config word for ECIO is unclear
-Config word for HSPLL is unclear
-Config word for RCIO is unclear
+Config word for PWRT_ON is unclear
+Config word for PWRT_OFF is unclear
 Config word for BORV is unclear
 Config word for CCP2MX is unclear
 Config word for CCP2MX is unclear
-Config word for CP0_ON is unclear
-Config word for CP0_OFF is unclear
 16LF1579 (15) 725/1008
 18F4680 (16) 726/1008
+16F722A (14) 631/1008
 16F722 (14) 727/1008
-Config word for IDLOC3 is unclear
 18F2410 (16) 728/1008
 MCV201B (14) 729/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CWIE
 Chip data file is suspect
 16C715 (14) 730/1008
@@ -1720,17 +1671,7 @@ Chip data file is suspect
 12F509 (12) 737/1008
 12CE518 (14) 738/1008
 18LF6720 (16) 739/1008
-Config word for LP_OSC is unclear
-Config word for XT_OSC is unclear
-Config word for HS_OSC is unclear
-Config word for RC_OSC is unclear
-Config word for EC_OSC is unclear
-Config word for ECIO_OSC is unclear
-Config word for HSPLL_OSC is unclear
-Config word for RCIO_OSC is unclear
 Config word for BORV is unclear
-Config word for WDT_OFF is unclear
-Config word for WDT_ON is unclear
 18F97J94 (16) 740/1008
 No DEBUG config bit!
 Unrecognised interrupt source:            ECCP3IE
@@ -1740,7 +1681,6 @@ Unrecognised interrupt source:            ECCP3IE
 18F2585 (16) 744/1008
 Added missing XINST default (set OFF)
 16LF18346 (15) 745/1008
-Config word for DEVID1 is unclear
 18F4423 (16) 746/1008
 16F1707 (15) 747/1008
 Adding ADCS bits to ADCON1
@@ -1748,11 +1688,6 @@ Adding ADCS bits to ADCON1
 Added missing SOSCSEL default (set DIG)
 18LF2455 (16) 749/1008
 12LF1612 (15) 750/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16CR58A (12) 751/1008
 12LF1572 (15) 752/1008
 16F1784 (15) 753/1008
@@ -1765,6 +1700,7 @@ Adding CHS bits to ADCON0
 16F18854 (15) 759/1008
 Adding CHS bits to ADCON0
 18F67J60 (16) 760/1008
+16F874A (14) 451/1008
 16F874 (14) 761/1008
 18LF25K42 (16) 762/1008
 Adding CHS bits to ADCON0
@@ -1803,24 +1739,21 @@ Added missing SOSCSEL default (set DIG)
 18F4585 (16) 781/1008
 Added missing XINST default (set OFF)
 16F1828 (15) 782/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16LF83 (14) 783/1008
 16F18324 (15) 784/1008
 Warning: W103: unusual int osc speed:16 (No OSCCON, Has OSCCON2)
-Config word for DEVID1 is unclear
 16F630 (14) 785/1008
 16LF1707 (15) 786/1008
 Adding ADCS bits to ADCON1
 MCV202B (14) 787/1008
 Missing data in chipdata.csv
-Warning: W102: unusual int osc speed:32 (Has OSCCON, No SPLLEN)
-Adding ADCS bits to ADCON1
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 16F18346 (15) 788/1008
-Config word for DEVID1 is unclear
-RF509AG (12) 789/1008
 18LF8527 (16) 790/1008
+18LF2580 (16) 136/1008
+18LF2585 (16) 649/1008
 18LF258 (16) 791/1008
 Config word for LP_OSC is unclear
 Config word for XT_OSC is unclear
@@ -1850,7 +1783,9 @@ Adding ADCS bits to ADCON1
 18F6490 (16) 799/1008
 16C432 (14) 800/1008
 16F83 (14) 801/1008
+16LF876A (14) 73/1008
 16LF876 (14) 802/1008
+16LF627A (14) 775/1008
 16LF627 (14) 803/1008
 18F2520 (16) 804/1008
 18LF47K42 (16) 805/1008
@@ -1861,56 +1796,27 @@ Added missing XINST default (set OFF)
 16LF1902 (15) 807/1008
 18LF4685 (16) 808/1008
 12LF1840T48A (15) 809/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16F1613 (15) 810/1008
 16CR54A (12) 811/1008
 16LF18326 (15) 812/1008
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 12F617 (14) 813/1008
 18F4610 (16) 814/1008
 18F46K22 (16) 815/1008
 18LF8310 (16) 816/1008
 16LF1719 (15) 817/1008
 Adding ADCS bits to ADCON1
+16F876A (14) 45/1008
 16F876 (14) 818/1008
 MCV28A (14) 819/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18LF2320 (16) 820/1008
-Config word for LP_OSC is unclear
-Config word for XT_OSC is unclear
-Config word for HS_OSC is unclear
-Config word for EC_OSC is unclear
-Config word for ECIOP_OSC is unclear
-Config word for ECIO_OSC is unclear
-Config word for HSPLL_OSC is unclear
-Config word for RCIO_OSC is unclear
-Config word for INTIO2_OSC is unclear
-Config word for INTIO1_OSC is unclear
-Config word for RC_OSC is unclear
-Config word for WDT_OFF is unclear
-Config word for WDT_ON is unclear
-Config word for CCP2MX_OFF is unclear
-Config word for CCP2MX_B3 is unclear
-Config word for CCP2MX_ON is unclear
-Config word for CCP2MX_C1 is unclear
-Config word for MCLRE_OFF is unclear
-Config word for MCLRE_ON is unclear
-Config word for 1K is unclear
-Config word for LVP_OFF is unclear
-Config word for LVP_ON is unclear
-Config word for DEBUG_ON is unclear
-Config word for DEBUG_OFF is unclear
 16F818 (14) 821/1008
 16LF1934 (15) 822/1008
 16LF724 (14) 823/1008
 12LF1552 (15) 824/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 18LF45K42 (16) 825/1008
 Adding CHS bits to ADCON0
 16LF1513 (15) 826/1008
@@ -1918,23 +1824,20 @@ Adding CHS bits to ADCON0
 16F1503 (15) 828/1008
 Adding ADCS bits to ADCON1
 18F44K22 (16) 829/1008
+16F877A (14) 232/1008
 16F877 (14) 830/1008
 16CR76 (14) 831/1008
 18LF6390 (16) 832/1008
 16C57 (12) 833/1008
+16C57C (12) 914/1008
 16F1946 (15) 834/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 18F46J50 (16) 835/1008
 18LF6520 (16) 836/1008
 Config word for BORV is unclear
-Config word for CCP2MX is unclear
-Config word for CCP2MX is unclear
-Config word for CCP2MX is unclear
-Config word for DEBUG_ON is unclear
-Config word for DEBUG_OFF is unclear
 MCP19625 (14) 837/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            IOCE
 Unrecognised interrupt source:            DCERIE
 Unrecognised interrupt source:            VINIE
@@ -1958,17 +1861,23 @@ Bad polarity: shared
 16LF1613 (15) 845/1008
 18LF4580 (16) 846/1008
 16LF1705 (15) 847/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
 Adding ADCS bits to ADCON1
 18LF8627 (16) 848/1008
 16C781 (14) 849/1008
 12LF1822 (15) 850/1008
 18F23K20 (16) 851/1008
+16C716 (14) 117/1008
+16C712 (14) 169/1008
+16C711 (14) 282/1008
+16C717 (14) 329/1008
+16C710 (14) 670/1008
+16C715 (14) 730/1008
 16C71 (14) 852/1008
 16LF15375 (15) 853/1008
 16F687 (14) 854/1008
 16F685 (14) 855/1008
+12LF1840T39A (15) 156/1008
+12LF1840T48A (15) 809/1008
 12LF1840 (15) 856/1008
 16LF872 (14) 857/1008
 16F1517 (15) 858/1008
@@ -1985,13 +1894,28 @@ Adding ADCS bits to ADCON1
 18F2553 (16) 863/1008
 16F18426 (15) 864/1008
 Adding CHS bits to ADCON0
+18LF2423 (16) 325/1008
 18LF242 (16) 865/1008
+Config word for LP_OSC is unclear
+Config word for XT_OSC is unclear
+Config word for HS_OSC is unclear
+Config word for RC_OSC is unclear
+Config word for EC_OSC is unclear
+Config word for ECIO_OSC is unclear
+Config word for HSPLL_OSC is unclear
+Config word for RCIO_OSC is unclear
+Config word for PWRT_ON is unclear
+Config word for PWRT_OFF is unclear
 Config word for BORV is unclear
+Config word for CCP2MX is unclear
+Config word for CCP2MX is unclear
+18LF2420 (16) 950/1008
 16LF1518 (15) 866/1008
 16LF1574 (15) 867/1008
 16F724 (14) 868/1008
 16CR56A (12) 869/1008
 18F46K20 (16) 870/1008
+16C765 (14) 691/1008
 16C76 (14) 871/1008
 18LF46J53 (16) 872/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
@@ -2000,18 +1924,23 @@ No DEBUG config bit!
 No DEBUG config bit!
 Added missing SOSCSEL default (set DIG)
 18LF2550 (16) 874/1008
+16F570 (12) 355/1008
+Unrecognised interrupt source:            CWIE
 16F57 (12) 875/1008
 16F18345 (15) 876/1008
 16CR83 (14) 877/1008
 16F505 (12) 878/1008
 18F46J13 (16) 879/1008
 No DEBUG config bit!
+16F627A (14) 675/1008
 16F627 (14) 880/1008
 16F18344 (15) 881/1008
 16LF18877 (15) 882/1008
 Adding CHS bits to ADCON0
 MCP25055 (14) 883/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Chip data file is suspect
 18LF6680 (16) 884/1008
 18F26K22 (16) 885/1008
@@ -2022,9 +1951,6 @@ Adding CHS bits to ADCON0
 18LF2523 (16) 889/1008
 18LF4221 (16) 890/1008
 16F18313 (15) 891/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 18C801 (16) 892/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 No DEBUG config bit!
@@ -2047,6 +1973,9 @@ No DEBUG config bit!
 Adding CHS bits to ADCON0
 MCV20USB (14) 907/1008
 Missing data in chipdata.csv
+Could not build memory map
+Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
+No pinout found, and could not guess
 Chip data file is suspect
 16F871 (14) 908/1008
 10F204 (12) 909/1008
@@ -2057,6 +1986,7 @@ Chip data file is suspect
 16C57C (12) 914/1008
 16F872 (14) 915/1008
 18F24K20 (16) 916/1008
+18LF4480 (16) 435/1008
 18LF448 (16) 917/1008
 Config word for LP_OSC is unclear
 Config word for XT_OSC is unclear
@@ -2079,6 +2009,8 @@ Unrecognised interrupt source:            IVRE
 16LF1907 (15) 921/1008
 MCP19111 (14) 922/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            IOCE
 Unrecognised interrupt source:            DCERIE
 Unrecognised interrupt source:            VINIE
@@ -2096,20 +2028,16 @@ Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 MCV282B (14) 929/1008
 Missing data in chipdata.csv
 Could not build memory map
-Warning: W102: unusual int osc speed:32 (Has OSCCON, No SPLLEN)
+No pinout found, and could not guess
 Chip data file is suspect
 16F737 (14) 930/1008
 16LF871 (14) 931/1008
 16LF1527 (15) 932/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC3 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
 18F85J11 (16) 933/1008
 18F8390 (16) 934/1008
 18LF2410 (16) 935/1008
 16CR58B (12) 936/1008
+16C621A (14) 360/1008
 16C621 (14) 937/1008
 18LF26J13 (16) 938/1008
 No DEBUG config bit!
@@ -2118,22 +2046,7 @@ No DEBUG config bit!
 18F4620 (16) 941/1008
 18F6410 (16) 942/1008
 18LF8720 (16) 943/1008
-Config word for LP_OSC is unclear
-Config word for XT_OSC is unclear
-Config word for HS_OSC is unclear
-Config word for RC_OSC is unclear
-Config word for EC_OSC is unclear
-Config word for ECIO_OSC is unclear
-Config word for HSPLL_OSC is unclear
-Config word for RCIO_OSC is unclear
-Config word for PWRT_ON is unclear
-Config word for PWRT_OFF is unclear
 Config word for BORV is unclear
-Config word for XMC is unclear
-Config word for MPB is unclear
-Config word for MP is unclear
-Config word for CCP2MX_OFF is unclear
-Config word for CCP2MX_ON is unclear
 18LF27J13 (16) 944/1008
 No DEBUG config bit!
 16LF1454 (15) 945/1008
@@ -2159,64 +2072,44 @@ Added missing SOSCSEL default (set DIG)
 18LF8621 (16) 959/1008
 Warning: W101: unusual int osc speed:0 (Has OSCCON, Has SPLLEN/PLLEN)
 16LF722A (14) 960/1008
-Config word for IDLOC3 is unclear
 16LF1704 (15) 961/1008
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 16LF1776 (15) 962/1008
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
 (R)COG1IE            EQU  H'0004'
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 Adding CHS bits to ADCON0
 Adding ADCS bits to ADCON1
 16LF1703 (15) 963/1008
 Adding ADCS bits to ADCON1
 16F15355 (15) 964/1008
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 10LF320 (14) 965/1008
 18LF25K83 (16) 966/1008
 Added missing XINST default (set OFF)
 Adding CHS bits to ADCON0
 Unrecognised interrupt source:            FIFOFIE
 16LF15376 (15) 967/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 18F63J90 (16) 968/1008
+16LF777 (14) 692/1008
 16LF77 (14) 969/1008
 PS810 (14) 970/1008
 Missing data in chipdata.csv
-Adding CHS bits to ADCON0
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            ASIIE
 Unrecognised interrupt source:            AOFIE
 Chip data file is suspect
 16LF628A (14) 971/1008
 16C923 (14) 972/1008
 18LF4220 (16) 973/1008
-Config word for LP_OSC is unclear
-Config word for XT_OSC is unclear
-Config word for HS_OSC is unclear
-Config word for EC_OSC is unclear
-Config word for ECIO_OSC is unclear
-Config word for ECIOP_OSC is unclear
-Config word for HSPLL_OSC is unclear
-Config word for RCIO_OSC is unclear
-Config word for INTIO2_OSC is unclear
-Config word for INTIO1_OSC is unclear
-Config word for RC_OSC is unclear
 18F86J65 (16) 974/1008
 18F44J50 (16) 975/1008
 18F2515 (16) 976/1008
 16C558 (12) 977/1008
 MCP19120 (14) 978/1008
 Missing data in chipdata.csv
+Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -2230,11 +2123,6 @@ Chip data file is suspect
 12F675 (14) 979/1008
 18F24K40 (16) 980/1008
 16LF707 (14) 981/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-Config word for IDLOC2 is unclear
-Config word for IDLOC3 is unclear
 18LF26J50 (16) 982/1008
 No DEBUG config bit!
 16F723A (14) 983/1008
@@ -2246,6 +2134,7 @@ No DEBUG config bit!
 12LF1501 (15) 989/1008
 Adding ADCS bits to ADCON1
 16C65A (14) 990/1008
+16LF628A (14) 971/1008
 16LF628 (14) 991/1008
 16LF15325 (15) 992/1008
 18LF25J50 (16) 993/1008
@@ -2253,8 +2142,6 @@ No DEBUG config bit!
 16F15345 (15) 994/1008
 18LF27K40 (16) 995/1008
 16F19175 (15) 996/1008
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
 Adding CHS bits to ADCON0
 18F86J16 (16) 997/1008
 18LF25J10 (16) 998/1008
@@ -2268,6 +2155,7 @@ No DEBUG config bit!
 MCP19116 (14) 1003/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -2279,6 +2167,7 @@ Unrecognised interrupt source:            OTIE
 Unrecognised interrupt source:            CDSIE
 Chip data file is suspect
 18LF2620 (16) 1004/1008
+16LF767 (14) 283/1008
 16LF76 (14) 1005/1008
 18LF65K80 (16) 1006/1008
 No DEBUG config bit!
@@ -2286,6 +2175,7 @@ Added missing SOSCSEL default (set DIG)
 MCP19115 (14) 1007/1008
 Missing data in chipdata.csv
 Could not build memory map
+No pinout found, and could not guess
 Unrecognised interrupt source:            CC1IE
 Unrecognised interrupt source:            CC2IE
 Unrecognised interrupt source:            IOCE
@@ -2297,8 +2187,3 @@ Unrecognised interrupt source:            OTIE
 Unrecognised interrupt source:            CDSIE
 Chip data file is suspect
 16LF1567 (15) 1008/1008
-Config word for DEVID1 is unclear
-Config word for IDLOC0 is unclear
-Config word for IDLOC1 is unclear
-
-Conversion finished
