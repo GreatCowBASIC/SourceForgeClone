@@ -6,7 +6,7 @@
 [ChipData]
 Prog=8192
 EEPROM=0
-RAM=3800
+RAM=3776
 I/O=21
 ADC=10
 MaxMHz=48
@@ -1238,7 +1238,7 @@ SP4,STKPTR,4
 STKOVF,STKPTR,7
 
 [FreeRAM]
-0:ED7
+0:EBF
 
 [NoBankRAM]
 
