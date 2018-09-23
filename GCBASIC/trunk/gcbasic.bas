@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-07-19"
+Version = "0.98.<<>> 2018-09-23"
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5886,7 +5886,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 			'Add Code
 			PrevSectionSkipped = DelSection
 			If DelSection Then
-				CurrLine = LinkedListDeleteList(StartDel, CurrLine)
+				CurrLine = LinkedListDeleteList(StartDel, CurrLine->Prev)->Next
 				DelSection = 0
 			End If
 			If DelEndIf Then
@@ -9214,6 +9214,7 @@ SUB CompileVars (CompSub As SubType Pointer)
 			'Don't try to do anything if = follows "dw" or "retlw"
 			IF INSTR(LCase(InLine), " dw ") <> 0 THEN GOTO CompNextVar
 			IF INSTR(LCase(InLine), " retlw ") <> 0 THEN GOTO CompNextVar
+			IF Left(InLine, 4) = "ASM " Then GOTO CompNextVar
 
 			'Allow overflow?
 			AllowOverflow = 0
