@@ -47,7 +47,7 @@
 ''' rtcc_BcdToDec  Convert binary coded decimal to pure decimal
 '''
 '''************************************************************************
-
+'' 26/9/2018   Revised to support VBAT
 
 
     '*****************************************************************************************************
@@ -69,6 +69,8 @@
 
 
 
+ #define rtcc_Calibration_Offset 0
+
 '************************* RTCC Library Functions ****************************************************
 ' You should not change below here.
 
@@ -85,7 +87,7 @@
  #define rtcc_AlarmAssertion_OnceAYear                           0x0D
 
 
-#startup rtcc_Initialize, 100
+#startup rtcc_Initialize, 1000
 
 sub rtcc_Initialize
     dim  rtccTimeInitialized  as Bit
@@ -101,6 +103,9 @@ sub rtcc_Initialize
       dir rttc_AlarmPort  out
     #endif
 
+    'CSWHOLD may proceed; SOSCPWR High power;
+    CSWHOLD = 0
+    SOSCPWR = 1
 
 '    ---------     IMPORTANT ! -----------------
     '//  If RTCEN bit is set at same time or before
@@ -116,6 +121,7 @@ sub rtcc_Initialize
      RTCCON.RTCWREN = 1     'MUST Write this bit before RTCEN
      Wait 100 ms            'Wait for SOSC to stabilise
 
+      'If you set this here the you will always reset the clock to the same value... generally not a good idea.
       if ( rtccTimeInitialized = false ) then
           'set rtcc time 2017-10-28 12-13-22
 '          YEAR     = 0x17      ' year
@@ -124,7 +130,7 @@ sub rtcc_Initialize
 '          DAY      = 0x14      ' day
 '          HOURS    = 0x23      ' hours
 '          MINUTES  = 0x59      ' minutes
-'          SECONDS  = 0x58      ' seconds
+'          SECONDS  = 0x00      ' seconds
           rtccTimeInitialized = true
       end if
       'calibration register
@@ -134,6 +140,7 @@ sub rtcc_Initialize
       wait while RTCCON.RTCSYNC = 0
       RTCCON.RTCWREN = 0
       INTON
+
 end sub
 
 
@@ -142,6 +149,7 @@ end sub
 ' registers of  rtcc and writes to them the values provided
 ' in a time structure.
 
+    'public varirables
     dim tm_year as word
     dim tm_mon, tm_wday, tm_mday, tm_hour, tm_min, tm_sec as byte
 function rtcc_TimeGet
@@ -226,9 +234,9 @@ sub rtcc_SetTime(in tm_Hour, in tm_Min, in tm_Sec)
       RTCCON.RTCEN = 0
       RTCCON.RTCWREN = 1     'MUST Write this bit before RTCEN
 
-      HOURS    = rtcc_DecToBcd tm_Hour      ' hours
-      MINUTES  = rtcc_DecToBcd tm_Min       ' minutes
-      SECONDS  = rtcc_DecToBcd tm_Sec       ' seconds
+      HOURS    = rtcc_DecToBcd (tm_Hour)      ' hours
+      MINUTES  = rtcc_DecToBcd (tm_Min)       ' minutes
+      SECONDS  = rtcc_DecToBcd (tm_Sec)       ' seconds
       rtccTimeInitialized = true
 
       'Enable rtcc, clear RTCWREN
@@ -251,10 +259,10 @@ sub rtcc_setDate(in tm_wday, tm_mday, in tm_Mon, in tm_Year)
       RTCCON.RTCEN = 0
       RTCCON.RTCWREN = 1     'MUST Write this bit before RTCEN
 
-      YEAR     = rtcc_DecToBcd tm_Year      ' year
-      MONTH    = rtcc_DecToBcd tm_Mon     ' month
-      WEEKDAY  = rtcc_DecToBcd tm_wday       ' weekday
-      DAY      = rtcc_DecToBcd tm_mday      ' day
+      YEAR     = rtcc_DecToBcd( tm_Year)      ' year
+      MONTH    = rtcc_DecToBcd( tm_Mon )    ' month
+      WEEKDAY  = rtcc_DecToBcd( tm_wday )      ' weekday
+      DAY      = rtcc_DecToBcd( tm_mday )      ' day
       rtccTimeInitialized = true
 
       'Enable rtcc, clear RTCWREN
@@ -272,9 +280,6 @@ sub rtcc_ReadClock(out tm_hour, out tm_min, out tm_sec, out tm_wday, out tm_mday
         rtcc_TimeGet =  false
     end if
 
-    'Set the RTCWREN bit
-    RTCCON.RTCWREN = 1
-
     'get year
     tm_year    = ConcatInt( 20, rtcc_BcdToDec(YEAR) )
     'get month
@@ -290,7 +295,7 @@ sub rtcc_ReadClock(out tm_hour, out tm_min, out tm_sec, out tm_wday, out tm_mday
     'get seconds
     tm_sec     = rtcc_BcdToDec(SECONDS)
 
-    RTCCON.RTCWREN = 0
+
     rtcc_TimeGet = true
 
 End Sub
@@ -460,13 +465,13 @@ function ConcatInt( uint1 as word, uint2) as word
 end function
 
 'Convert pure decimal number to binary coded decimal
-function rtcc_DecToBcd(in va ) as byte
-  rtcc_DecToBcd=( va /10)*16+ va %10
+function rtcc_DecToBcd(in rtcc_va) as byte
+  rtcc_DecToBcd=( rtcc_va/10)*16+ rtcc_va%10
 end function
 
 'Convert binary coded decimal to pure decimal
-function rtcc_BcdToDec(in va ) as byte
-  rtcc_BcdToDec=( va /16)*10+ va %16
+function rtcc_BcdToDec(in rtcc_va) as byte
+  rtcc_BcdToDec=( rtcc_va/16)*10+ rtcc_va%16
 end function
 
 'Example handler for the interrupt
