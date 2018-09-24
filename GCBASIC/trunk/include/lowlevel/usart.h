@@ -50,9 +50,12 @@
 ' 08/03/2016: Correct for 16f18855 SYNC_TX1STA to SYNC mapping
 ' 04/01/2017: Correct for 18FxxK40 SP1RGH/L to SPBRGH/L mapping - WMR
 ' 21/01/2017: Revised to support standardised .dat files - ERV
-' 04/02/2017: Revised HSerGetNum to suppor long and prevent buffer overrun - Motte
+' 04/02/2017: Revised HSerGetNum to support long and prevent buffer overrun - Motte
 ' 07/10/2017: Added U1CON1 and U2 UART support.
 ' 01/12/2017: Added HSerPrintStringCRLF
+' 23/09/2018: Improved accuracy of USART_Delay PICs). 1ms is now 1ms - WMR
+' 23/09/2018: Moved all "wait USART_DELAYs"  to a single method in hsersend sub -WMR
+' 23/09/2018: Edited as part of the QA check
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -93,10 +96,19 @@
 'Some wrappers for compatibility with Contributors USART routines
 #define HserPrintByte HSerPrint
 
-#samevar TXIF U1TXB
+; ----------------------------------------------------
+; #samevar/#samebit used to determined registers/bits
+; in Hsersend sub routine where different chips have
+; different register or bit names with the same function
+; -----------------------------------------------------
+#samevar TXREG, TXREG1, U1TXB
+#samebit TXIF, TX1IF, U1TXIF
 
-
-
+#sameVar TXREG2, TX2REG, U2TXB
+#samevar TXSTA2, TX2STA
+#samebit TX2IF, U2TXIF
+#samebit TXSTA2.TRMT, TX2STA.TRMT, U2ERRIR.TXMTIF
+#samebit TXSTA2_TRMT, TX2STA_TRMT, U2ERRIR_TXMTIF '// PIC16F1946/47
 
 Sub HserPrintByteCRLF(In PrintValue,optional In comport =1)
   HSerPrint(PrintValue)
@@ -107,9 +119,7 @@ End Sub
 Sub HserPrintCRLF  ( Optional in HSerPrintCRLFCount = 1,Optional In comport =1 )
     repeat HSerPrintCRLFCount
       HSerSend(13,comport)
-      Wait USART_DELAY
       HSerSend(10,comport)
-      wait USART_DELAY
     end Repeat
 End Sub
 
@@ -335,8 +345,6 @@ End Sub
         SPBRGH_TEMP2 = Int((SPBRG_TEMP2+1) / 256)
       END IF
 
-
-
     End If
   End If
 
@@ -441,6 +449,7 @@ End Sub
 
 Sub InitUSART
 
+
   'Set the default value for comport
   comport = 1
 
@@ -448,35 +457,40 @@ Sub InitUSART
       #If USART_BAUD_RATE Then
           #ifndef Bit(TXEN1)
             'Set baud rate for legacy chips
-            #ifndef var(U1BRGH)
-                SPBRG = SPBRGL_TEMP
-                #ifdef Bit(BRG16)
-                  SPBRGH = SPBRGH_TEMP
-                  BRG16 = BRG16_TEMP
-                #endif
-                BRGH = BRGH_TEMP
-            #endif
-            #ifdef var(U1BRGH)
-                'for 18fxxK42 series UART
-                U1BRGH=SPBRGH_TEMP
-                U1BRGL=SPBRGL_TEMP
-                U1BRGS = BRGS1_SCRIPT
-                U1TXEN=1
-                U1RXEN=1
-                ON_U1CON1=1
-            #endif
+              #ifndef var(U1BRGH)
+                  SPBRG = SPBRGL_TEMP
+                  #ifdef Bit(BRG16)
+                    SPBRGH = SPBRGH_TEMP
+                    BRG16 = BRG16_TEMP
+                  #endif
+                  BRGH = BRGH_TEMP
+              #endif
 
-            'Enable async mode
-            Set SYNC Off
-            #ifdef bit(SPEN)
-                SPEN=1
-            #endif
+              #ifdef var(U1BRGH)
+                  'for 18fxxK42 series UART
+                  U1BRGH=SPBRGH_TEMP
+                  U1BRGL=SPBRGL_TEMP
+                  U1BRGS = BRGS1_SCRIPT
+                  U1TXEN=1
+                  U1RXEN=1
+                  ON_U1CON1=1
+              #endif
 
-            'Enable TX and RX
-            #ifdef bit(CREN)
-                CREN=1
-            #endif
-            Set TXEN On
+              'Enable async mode
+             Set SYNC Off
+
+
+             #ifdef bit(SPEN)
+                  SPEN=1
+              #endif
+
+              'Enable TX and RX
+              #ifdef bit(CREN)
+                  CREN=1
+              #endif
+
+              Set TXEN On
+
           #endif
 
           #ifdef Bit(TXEN1)
@@ -555,8 +569,6 @@ Sub InitUSART
             U2TXEN=1
             U2RXEN=1
           #endif
-
-
       #endif
   #endif
 
@@ -636,132 +648,130 @@ End Sub
 sub HSerSend(In SerData, optional In comport = 1)
   'Block before sending (if needed)
   'Send byte
-  #ifdef PIC
+
+ #ifdef PIC
     #If USART_BAUD_RATE Then
-      if comport = 1 Then
-        'HSerSendBlocker
-        #ifdef USART_BLOCKING
-          #ifdef Bit(TXIF)
-            Wait While TXIF = Off
-          #endif
-          #ifdef Bit(TX1IF)
-            Wait While TX1IF = Off
-          #endif
-          #ifdef Bit(U1TXIF)
-            Wait While U1TXIF = Off
-          #endif
-        #endif
+      'Registers/Bits determined by #samevar at top of file
 
-        #ifdef USART_TX_BLOCKING
-          #ifdef Bit(TXIF)
-            Wait While TXIF = Off
+       if comport = 1 Then
+          'HSerSendBlocker
+          #ifdef USART_TX_BLOCKING
+            #ifdef Bit(TXIF)
+              Wait While TXIF = Off
+            #endif
           #endif
-          #ifdef Bit(TX1IF)
-            Wait While TX1IF = Off
+
+          #ifdef USART_BLOCKING
+            #ifdef Bit(TXIF)
+              Wait While TXIF = Off
+            #endif
           #endif
-          #ifdef Bit(U1TXIF)
-            Wait While U1TXIF = Off
+
+           asm showdebug TXREG equals SerData below will assign SerData to TXREG or TXREG1 or U1TXB  via the #samevar
+          #ifdef Var(TXREG)
+           '
+              TXREG = SerData
+
+             'Add USART_DELAY After all bits are shifted out
+              Wait until TRMT = 1
+              Wait USART_DELAY
+              exit sub
           #endif
-        #endif
 
-        #ifdef Var(TXREG)
-          TXREG = SerData
-          exit sub
-        #endif
-
-        #ifdef Var(TXREG1)
-          TXREG1 = SerData
-          exit sub
-        #endif
-
-        #ifdef Var(U1TXB)
-          U1TXB = SerData
-        #endif
-
-      end if
+       end if
     #endif
-    #If USART2_BAUD_RATE Then
-      if comport = 2 Then
-        #ifdef USART2_BLOCKING     'Blocking TX and RX
-          #ifdef Bit(TX2IF)
-            Wait While TX2IF = Off
-          #endif
-          #ifdef Bit(U2TXIF)
-            Wait While U2TXIF = Off
-          #endif
-        #endif
-        #ifdef USART2_TX_BLOCKING     'TX blocking only
-          #ifdef Bit(TX2IF)
-            Wait While TX2IF = Off
-          #endif
-          #ifdef Bit(U2TXIF)
-            Wait While U2TXIF = Off
-          #endif
-        #endif
-        #ifdef Var(TXREG2)    ' TX2REG
-          TXREG2 = SerData    '
-        #endif
-        #ifndef Var(TXREG2)
-          TX2REG = SerData
-        #endif
-        #ifdef Var(U2TXB)
-          U2TXB = SerData
-        #endif
 
-      end if
+    #If USART2_BAUD_RATE Then
+       'Registers/Bits determined by #samevar at top of file
+       if comport = 2 Then
+
+          #ifdef USART2_BLOCKING     'Blocking TX and RX
+             #ifdef Bit(TX2IF)
+                Wait While TX2IF = Off
+             #endif
+          #endif
+
+          #ifdef USART2_TX_BLOCKING
+             #ifdef Bit(TX2IF)
+                Wait While TX2IF = Off
+             #endif
+          #endif
+
+          asm showdebug TXREG2 equals SerData below will assign SerData to TX2REG, TXREG2  or U2TXB  via the #samevar
+          #ifdef Var(TXREG2)
+
+             TXREG2 = SerData
+
+            'Add USART_DELAY After all bits are shifted out
+             Wait until TXSTA2_TRMT = 1  'All bits shifted out on TX Pin
+             Wait USART_DELAY
+          #endif
+
+       end if
     #endif
   #endif
 
   #ifdef AVR
 'AVR USART1 Send
     #If USART_BAUD_RATE Then
-     if comport = 1 Then
+      if comport = 1 Then
       'HSerSendBlocker    'comport 1 blocker
-      #ifdef USART_BLOCKING
-        #ifdef Bit(UDRE0)
-          Wait While UDRE0 = Off    'Blocking Both Transmit buffer empty ,ready for data
+
+        #ifdef USART_BLOCKING
+          #ifdef Bit(UDRE0)
+            Wait While UDRE0 = Off    'Blocking Both Transmit buffer empty ,ready for data
+          #endif
+
+          #ifndef Bit(UDRE0)
+            Wait While UDRE = Off
+          #endif
         #endif
-        #ifndef Bit(UDRE0)
-          Wait While UDRE = Off
+
+        #ifdef  USART_TX_BLOCKING
+          #ifdef Bit(UDRE0)
+            Wait While UDRE0 = Off    'Blocking Transmit buffer empty ,ready for data
+          #endif
+
+          #ifndef Bit(UDRE0)
+            Wait While UDRE = Off
+          #endif
         #endif
-      #endif
-      #ifdef  USART_TX_BLOCKING
-        #ifdef Bit(UDRE0)
-          Wait While UDRE0 = Off    'Blocking Transmit buffer empty ,ready for data
-        #endif
-        #ifndef Bit(UDRE0)
-          Wait While UDRE = Off
-        #endif
-      #endif
-      #ifdef Var(UDR)
+
+        #ifdef Var(UDR) ' ***************
           UDR = SerData
-      #endif
-      '#ifndef Var(UDR0)
-      ' #ifdef Var(UDR1)
-      '   UDR1 = SerData    '? second comport
-      ' #endif
-      '#endif
-      #ifdef Var(UDR0)
-        UDR0 = SerData
-      #endif
+        #endif
+
+        '#ifndef Var(UDR0)
+        ' #ifdef Var(UDR1)
+        '   UDR1 = SerData    '? second comport
+        ' #endif
+        '#endif
+        #ifdef Var(UDR0)
+          UDR0 = SerData ' *******************
+        #endif
       End If
     #endif
+
+;----------------------------------------------------
 'AVR USART 2 send
     #If USART2_BAUD_RATE Then
       if comport = 2 Then
         #ifdef USART2_BLOCKING
           #ifdef Bit(UDRE1)       'comport 2 TX and Rxblocker
-            Wait While UDRE1 = Off    'Transmit buffer empty ,ready for data
+              Wait While UDRE1 = Off    'Transmit buffer empty ,ready for data
           #endif
         #endif
+
         #ifdef USART2_TX_BLOCKING
           #ifdef Bit(UDRE1)       'comport 2 TX blocker
-            Wait While UDRE1 = Off    'Transmit buffer empty ,ready for data
+              Wait While UDRE1 = Off    'Transmit buffer empty ,ready for data
           #endif
         #endif
+
         #ifdef Var(UDR1)
-            UDR1 = SerData
+          UDR1 = SerData ' *****************
         #endif
+
       End If
     #endif
 'AVR USART 3 send
@@ -772,11 +782,13 @@ sub HSerSend(In SerData, optional In comport = 1)
             Wait While UDRE2 = Off    'Transmit buffer empty ,ready for data
           #endif
         #endif
+
         #ifdef USART3_TX_BLOCKING
           #ifdef Bit(UDRE2)       'comport 3 TX blocker
             Wait While UDRE2 = Off    'Transmit buffer empty ,ready for data
           #endif
         #endif
+
         #ifdef Var(UDR2)
             UDR2 = SerData
         #endif
@@ -790,14 +802,17 @@ sub HSerSend(In SerData, optional In comport = 1)
             Wait While UDRE3 = Off    'Transmit buffer empty ,ready for data
           #endif
         #endif
+
         #ifdef USART4_TX_BLOCKING
           #ifdef Bit(UDRE3)       'comport 4 TX blocker
             Wait While UDRE3 = Off    'Transmit buffer empty ,ready for data
           #endif
         #endif
+
         #ifdef Var(UDR3)
             UDR3 = SerData
         #endif
+
       End If
     #endif
   #endif
@@ -1112,14 +1127,14 @@ sub HSerPrintStringCRLF (In PrintData As String, optional In comport = 1)
     'Write Data
     for SysPrintTemp = 1 to PrintLen
       HSerSend(PrintData(SysPrintTemp),comport )
-      Wait USART_DELAY
+
     next
   End If
 
   HSerSend(13,comport)
-  Wait USART_DELAY
+
   HSerSend(10,comport)
-  Wait USART_DELAY
+
 
 End Sub
 
@@ -1131,20 +1146,22 @@ sub HSerPrint (In PrintData As String, optional In comport = 1)
     'Write Data
     for SysPrintTemp = 1 to PrintLen
       HSerSend(PrintData(SysPrintTemp),comport )
-      Wait USART_DELAY
+
     next
   End If
 
   'CR
   #IFDEF SerPrintCR
     HSerSend(13,comport)
-    Wait USART_DELAY
+
   #ENDIF
   #IFDEF SerPrintLF
     HSerSend(10,comport)
-    Wait USART_DELAY
+
   #ENDIF
 end sub
+
+
 
 sub HSerPrint (In SerPrintVal, optional In comport = 1)
 
@@ -1154,25 +1171,25 @@ sub HSerPrint (In SerPrintVal, optional In comport = 1)
     OutValueTemp = SerPrintVal / 100
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-    Wait USART_DELAY
+
   End If
   If OutValueTemp > 0 Or SerPrintVal >= 10 Then
     OutValueTemp = SerPrintVal / 10
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-    Wait USART_DELAY
+
   End If
   HSerSend(SerPrintVal + 48 ,comport)
-  Wait USART_DELAY
+
 
   'CR
   #IFDEF SerPrintCR
     HSerSend(13,comport)
-    Wait USART_DELAY
+
   #ENDIF
   #IFDEF SerPrintLF
     HSerSend(10,comport)
-    Wait USART_DELAY
+
   #ENDIF
 
 end sub
@@ -1186,7 +1203,7 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 10000 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-    Wait USART_DELAY
+
     Goto HSerPrintWord1000
   End If
 
@@ -1195,7 +1212,7 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 1000 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport  )
-    Wait USART_DELAY
+
     Goto HSerPrintWord100
   End If
 
@@ -1204,7 +1221,7 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 100 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-    Wait USART_DELAY
+
     Goto HSerPrintWord10
   End If
 
@@ -1213,20 +1230,20 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 10 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-    Wait USART_DELAY
+
   End If
 
   HSerSend(SerPrintVal + 48 ,comport  )
-  Wait USART_DELAY
+
 
   'CR
   #IFDEF SerPrintCR
     HSerSend(13,comport)
-    Wait USART_DELAY
+
   #ENDIF
   #IFDEF SerPrintLF
     HSerSend(10,comport)
-    Wait USART_DELAY
+
   #ENDIF
 
 End Sub
@@ -1237,7 +1254,7 @@ Sub HSerPrint (In SerPrintValInt As Integer, optional In comport = 1)
   'If sign bit is on, print - sign and then negate
   If SerPrintValInt.15 = On Then
     HSerSend("-",comport )
-    Wait USART_DELAY
+
     SerPrintVal = -SerPrintValInt
 
   'Sign bit off, so just copy value
@@ -1267,17 +1284,17 @@ Sub HSerPrint (In SerPrintVal As Long, optional In comport = 1)
   'Display
   For SysPrintTemp = SysPrintBuffLen To 1 Step -1
     HSerSend(SysPrintBuffer(SysPrintTemp) + 48, comport  )
-    Wait USART_DELAY
+
   Next
 
   'CR
   #IFDEF SerPrintCR
     HSerSend(13 )
-    Wait USART_DELAY
+
   #ENDIF
   #IFDEF SerPrintLF
     HSerSend(10 )
-    Wait USART_DELAY
+
   #ENDIF
 
 End Sub
