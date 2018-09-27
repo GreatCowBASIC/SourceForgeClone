@@ -675,6 +675,30 @@ Randomize Timer
 
 'Set version
 Version = "0.98.<<>> 2018-09-23"
+#ifdef __FB_DARWIN__	'OS X/macOS
+        #ifndef __FB_64BIT__
+                Version = Version + " (Darwin 32 bit)"
+        #else
+                Version = Version + " (Darwin 64 bit)"
+        #endif
+#elseif defined (__FB_FREEBSD__)
+        #ifndef __FB_64BIT__
+                Version = Version + " (FreeBSD 32 bit)"
+        #else
+                Version = Version + " (FreeBSD 64 bit)"
+        #endif
+#elseif defined (__FB_LINUX__)
+        #ifndef __FB_64BIT__
+                Version = Version + " (Linux 32 bit)"
+        #else
+                Version = Version + " (Linux 64 bit)"
+        #endif
+#elseif defined (__FB_WIN64__)	'Need to test first as WIN32 matches both 32 and 64 bit
+        Version = Version + " (Windows 64 bit)"
+#elseif defined (__FB_WIN32__)
+        Version = Version + " (Windows 32 bit)"
+#endif
+
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -11927,7 +11951,7 @@ SUB InitCompiler
 	ID = ExePath
 	If ID = "" Or ID = "." THEN
 		ID = CURDIR
-		#IFDEF __FB_LINUX__
+		#IFDEF __FB_UNIX__
 			If Right(ID, 1) = "/" Then ID = Left(ID, Len(ID) - 1)
 		#ELSE
 			If Right(ID, 1) = "\" Then ID = Left(ID, Len(ID) - 1)
@@ -12105,7 +12129,7 @@ SUB InitCompiler
 	Do
 		CurrSettingsFile += 1
 
-		#IFDEF __FB_LINUX__
+		#IFDEF __FB_UNIX__
 			If Instr(SettingsFile(CurrSettingsFile), "/") = 0 Then SettingsFile(CurrSettingsFile) = ID + "/" + SettingsFile(CurrSettingsFile)
 		#ELSE
 			If Instr(SettingsFile(CurrSettingsFile), "\") = 0 Then SettingsFile(CurrSettingsFile) = ID + "\" + SettingsFile(CurrSettingsFile)
@@ -12293,7 +12317,7 @@ SUB InitCompiler
 	Loop While CurrSettingsFile < SettingsFiles
 
 	'Read message list
-	#IFDEF __FB_LINUX__
+	#IFDEF __FB_UNIX__
 		MessagesFile = ID + "/messages.dat"
 		LangMessagesFile = ID + "/messages-" + LCase(LangName) + ".dat"
 	#ELSE
@@ -12771,7 +12795,7 @@ Sub LoadConverters
 
 	'Change to directory
 	SaveDir = CurDir
-	#Ifdef __FB_LINUX__
+	#Ifdef __FB_UNIX__
 		ConvDir = ID + "/converters"
 	#ELSE
 		ConvDir = ID + "\converters"
@@ -13515,7 +13539,7 @@ Sub PrepareProgrammer
 	End If
 
 	'Add full path to assembler and programmer names
-	#IFDEF __FB_LINUX__
+	#IFDEF __FB_UNIX__
 		If AsmExe <> "" And Left(AsmExe, 1) = "." Then AsmExe = ID + Mid(AsmExe, 2)
 		If PrgExe <> "" And Left(PrgExe, 1) = "." Then PrgExe = ID + Mid(PrgExe, 2)
 	#ELSE
@@ -13971,7 +13995,7 @@ SUB ReadChipData
 	Dim As AsmCommand Pointer NewAsmCommand, FindAsmCommand
 
 	'Get filename
-#IFDEF __FB_LINUX__
+#IFDEF __FB_UNIX__
 	ChipDataFile = ID + "/chipdata/" + LCase(ChipName) + ".dat"
 #ELSE
 	ChipDataFile = ID + "\chipdata\" + ChipName + ".dat"
@@ -13984,7 +14008,7 @@ SUB ReadChipData
 			TempData = ChipName
 			Replace TempData, "lf", "f"
 
-			#IFDEF __FB_LINUX__
+			#IFDEF __FB_UNIX__
 				ChipDataFile = ID + "/chipdata/" + LCase(TempData) + ".dat"
 			#ELSE
 				ChipDataFile = ID + "\chipdata\" + TempData + ".dat"
@@ -14310,7 +14334,7 @@ SUB ReadChipData
 
 	'Load assembly commands
 
-	#IFDEF __FB_LINUX__
+	#IFDEF __FB_UNIX__
 		ChipDataFile = ID + "/chipdata/core" + Str(ChipFamily) + ".dat"
 	#Else
 		ChipDataFile = ID + "\chipdata\core" + Str(ChipFamily) + ".dat"
@@ -14734,7 +14758,7 @@ SUB ShowBlock (BlockIn As String)
 	Dim As Integer InBlock
 	Block = UCase(Trim(BlockIn))
 
-	#IFDEF __FB_LINUX__
+	#IFDEF __FB_UNIX__
 		OPEN ID + "/messages.dat" FOR INPUT AS #9
 	#ELSE
 		OPEN ID + "\messages.dat" FOR INPUT AS #9
@@ -14838,7 +14862,7 @@ Function TranslateFile(InFile As String) As String
 	OutFile = InFile
 
 	'Get converter directory
-	#Ifdef __FB_LINUX__
+	#Ifdef __FB_UNIX__
 		ConvDir = ID + "/converters"
 		PathDiv = "/"
 	#ELSE
