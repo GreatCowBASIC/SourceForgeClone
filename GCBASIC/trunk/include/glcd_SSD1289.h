@@ -450,58 +450,6 @@ Sub SetScrollPosition_SSD1289 (In scrollPosition as Integer)
 End Sub
 
 
-'''Draws a Line on the GLCD with pset - legacy. No longer used.
-'''@param PX1 X1 coordinate of one end of the line
-'''@param PY1 Y1 coordinate of one end of the line
-'''@param PX2 X2 coordinate of the other end of the line
-'''@param PY2 Y2 coordinate of the other end of the line
-'''@param LineColour color
-Sub SuperCededLine(In PX1 as word, In PY1 as word, In PX2 as word, In PY2 as word, Optional In  Color as word = GLCDForeground)
- Dim P1,zx1,y1,addx,addy  as integer
- Dim CI , dx , dy as Word
- dx = abs(PX2-PX1)
- dy = abs(PY2-PY1)
- x1 = PX1
- y1 = PY1
- If (PX1 > PX2) then
-   addx = -1
- else
-   addx = 1
- end if
- if (PY1 > PY2) then
-   addy = -1
- else
-   addy = 1
- end if
- if (dx >= dy) then
-   P1 = (2*dy) - dx
-   for CI = 1 to (dx+1)
-     Pset_SSD1289 (x1,y1,Color)
-     if (P1 < 0) then
-         P1 = P1 + (2*dy)
-         x1 = x1 + addx
-     else
-        P1 = P1 + (2*dy) - (2*dx)
-        x1 = x1 + addx
-        y1 = y1 + addy
-     end if
-   next CI
- else
-   P1 = (2*dx) - dy
-   for CI = 1 to (dy+1)
-     Pset_SSD1289 (x1,y1,Color)
-     if (P1<0) then
-       P1 = P1 + (2*dx)
-       y1 = y1 + addy
-     else
-       P1 = P1 + (2*dx) - (2*dy)
-       x1 = x1 + addx
-       y1 = y1 + addy
-     end if
-   next CI
- end if
-End Sub
-
 '''Draws circle
 '''@param xoffset X  position at the centre of circle
 '''@param yoffset Y  position at the centre of circle
