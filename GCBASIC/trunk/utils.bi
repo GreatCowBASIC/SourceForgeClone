@@ -52,7 +52,7 @@ Function AddFullPath(CurrPath As String, FullPathIn As String = "") As String
 		FullPath = FullPathIn
 	End If
 	
-	#Ifdef __FB_LINUX__
+	#Ifdef __FB_UNIX__
 		'Remove trailing slash from full path
 		If Right(FullPath, 1) = "/" Then FullPath = Left(FullPath, Len(FullPath) - 1)
 		'If CurrPath not FQ, add full path
@@ -1489,8 +1489,8 @@ FUNCTION ShortName (NameIn As String) As String
 		TempData = Left(TempData, INSTR(TempData, Chr(34)) - 1)
 	END IF
 	
-	'Linux filename conversion
-	#IFDEF __FB_LINUX__
+	'UNIX filename conversion
+	#IFDEF __FB_UNIX__
 		DO WHILE INSTR(TempData, "\") <> 0: Replace TempData, "\", "/": LOOP
 	#ENDIF
 	

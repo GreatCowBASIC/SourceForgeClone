@@ -606,7 +606,7 @@ SUB PreProcessor
 	ICCO = SourceFiles
 	
 	'Add standard include files to list
-	#IFDEF __FB_LINUX__
+	#IFDEF __FB_UNIX__
 		OPEN ID + "/include/lowlevel.dat" FOR INPUT AS #1
 	#ELSE
 		OPEN ID + "\include\lowlevel.dat" FOR INPUT AS #1
@@ -616,7 +616,7 @@ SUB PreProcessor
 		LINE INPUT #1, DataSource
 		DataSource = Trim(DataSource)
 		IF Left(DataSource, 1) <> "'" THEN
-			#IFDEF __FB_LINUX__
+			#IFDEF __FB_UNIX__
 				DataSource = ID + "/include/lowlevel/" + DataSource
 			#ELSE
 				DataSource = ID + "\INCLUDE\LOWLEVEL\" + DataSource
