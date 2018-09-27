@@ -786,7 +786,7 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
                 If CurrCharVal.0 = 0 Then
                           PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
                 Else
-                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, LineColour
                 End If
 
                 Rotate CurrCharVal Right
