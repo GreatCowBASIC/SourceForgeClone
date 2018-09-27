@@ -37,6 +37,8 @@
 '    22/02/18 Added Nextion driver
 '    13/03/18 Correct Ypixel position of putting out a white intercharacter pixel/space
 '    24/04/18 Added Nextion support
+'    26/09/18 dim GLCDTemp as word added
+'    27/09/18 ILI9326 driver
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
@@ -57,6 +59,8 @@
 #define GLCD_TYPE_SSD1331 14
 #define GLCD_TYPE_HX8347  15
 #define GLCD_TYPE_Nextion 16
+#define GLCD_TYPE_ILI9326 17
+
 
 
 ' Circle edge overdraw protection
@@ -123,7 +127,7 @@ Dim GLCDDeviceWidth as Word
   ' add new type here!
   If GLCD_TYPE = GLCD_TYPE_KS0108 Then
 
-     #include <glcd_KS0108.h>
+     #include <glcd_ks0108.h>
      InitGLCD = InitGLCD_KS0108
      GLCDCLS = GLCDCLS_KS0108
      FilledBox = FilledBox_KS0108
@@ -137,7 +141,7 @@ Dim GLCDDeviceWidth as Word
   End If
 
   If GLCD_TYPE = GLCD_TYPE_SSD1306 Then
-     #include <glcd_SSD1306.h>
+     #include <glcd_ssd1306.h>
      InitGLCD = InitGLCD_SSD1306
      GLCDCLS = GLCDCLS_SSD1306
      GLCDDrawChar = GLCDDrawChar_SSD1306
@@ -156,7 +160,7 @@ Dim GLCDDeviceWidth as Word
 
 
   If GLCD_TYPE = GLCD_TYPE_SSD1306_32 Then
-     #include <glcd_SSD1306.h>
+     #include <glcd_ssd1306.h>
      InitGLCD = InitGLCD_SSD1306
      GLCDCLS = GLCDCLS_SSD1306
      GLCDDrawChar = GLCDDrawChar_SSD1306
@@ -175,7 +179,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_ILI9341 Then
 
-     #include <glcd_ILI9341.h>
+     #include <glcd_ili9341.h>
      InitGLCD = InitGLCD_ILI9341
      GLCDCLS = GLCDCLS_ILI9341
      GLCDDrawChar = GLCDDrawChar_ILI9341
@@ -193,7 +197,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_ILI9340 Then
 
-     #include <glcd_ILI9340.h>
+     #include <glcd_ili9340.h>
      InitGLCD = InitGLCD_ILI9340
      GLCDCLS = GLCDCLS_ILI9340
      GLCDDrawChar = GLCDDrawChar_ILI9340
@@ -211,7 +215,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_SSD1289 Then
 
-     #include <glcd_SSD1289.h>
+     #include <glcd_ssd1289.h>
      InitGLCD = InitGLCD_SSD1289
      GLCDCLS = GLCDCLS_SSD1289
      GLCDDrawChar = DrawChar_SSD1289
@@ -234,7 +238,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_ST7735 Then
 
-     #include <glcd_ST7735.h>
+     #include <glcd_st7735.h>
      InitGLCD = InitGLCD_ST7735
      GLCDCLS = GLCDCLS_ST7735
      GLCDDrawChar = GLCDDrawChar_ST7735
@@ -252,7 +256,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_ST7920 Then
 
-     #include <glcd_ST7920.h>
+     #include <glcd_st7920.h>
      InitGLCD = InitGLCD_ST7920
      GLCDCLS = GLCDCLS_ST7920
      FilledBox = FilledBox_ST7920
@@ -267,7 +271,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_PCD8544 Then
 
-     #include <glcd_PCD8544.h>
+     #include <glcd_pcd8544.h>
      InitGLCD = InitGLCD_PCD8544
      GLCDCLS = GLCDCLS_PCD8544
      GLCDDrawChar = GLCDDrawChar_PCD8544
@@ -284,7 +288,7 @@ Dim GLCDDeviceWidth as Word
   End If
 
   If GLCD_TYPE = GLCD_TYPE_SH1106 Then
-     #include <glcd_SH1106.h>
+     #include <glcd_sh1106.h>
      InitGLCD = InitGLCD_SH1106
      GLCDCLS = GLCDCLS_SH1106
      GLCDDrawChar = GLCDDrawChar_SH1106
@@ -303,6 +307,24 @@ Dim GLCDDeviceWidth as Word
 
   End If
 
+
+  If GLCD_TYPE = GLCD_TYPE_ILI9326 Then
+
+     #include <glcd_ili9326.h>
+     InitGLCD = InitGLCD_ILI9326
+     GLCDCLS = GLCDCLS_ILI9326
+     GLCDDrawChar = GLCDDrawChar_ILI9326
+     GLCDDrawString = GLCDDrawString_ILI9326
+     FilledBox = FilledBox_ILI9326
+     Pset = Pset_ILI9326
+     GLCDRotate = GLCDRotate_ILI9326
+     glcd_type_string = "ILI9326"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 400
+     ILI9326_GLCD_HEIGHT = GLCDDeviceHeight
+     ILI9326_GLCD_WIDTH = GLCDDeviceWidth
+  End If
+
   'Loads extended fonts set ASCII characters 31-254
   'Requires 1358 bytes of program memory
   If GLCD_EXTENDEDFONTSET1 then
@@ -318,7 +340,7 @@ Dim GLCDDeviceWidth as Word
 
 If GLCD_TYPE = GLCD_TYPE_ILI9486L Then
 
-     #include <glcd_ILI9486L.h>
+     #include <glcd_ili9486l.h>
      InitGLCD = InitGLCD_ili9486L
      GLCDCLS = GLCDCLS_ili9486L
      GLCDDrawChar = GLCDDrawChar_ili9486L
@@ -335,7 +357,7 @@ If GLCD_TYPE = GLCD_TYPE_ILI9486L Then
 
 If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
 
-     #include <glcd_ILI9481.h>
+     #include <glcd_ili9481.h>
      InitGLCD = InitGLCD_ili9481
      GLCDCLS = GLCDCLS_ili9481
      GLCDDrawChar = GLCDDrawChar_ili9481
@@ -353,7 +375,7 @@ If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
 
   If GLCD_TYPE = GLCD_TYPE_HX8347 Then
 
-     #include <glcd_HX8347.h>
+     #include <glcd_hx8347.h>
      InitGLCD = InitGLCD_HX8347
      GLCDCLS = GLCDCLS_HX8347
      GLCDDrawChar = GLCDDrawChar_HX8347
@@ -372,7 +394,7 @@ If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
 
   If GLCD_TYPE = GLCD_TYPE_SSD1331 Then
 
-     #include <glcd_SSD1331.h>
+     #include <glcd_ssd1331.h>
      InitGLCD = InitGLCD_SSD1331
      GLCDCLS = GLCDCLS_SSD1331
      GLCDDrawChar = GLCDDrawChar_SSD1331
@@ -392,7 +414,7 @@ If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
 
 If GLCD_TYPE = GLCD_TYPE_Nextion Then
 
-     #include <GLCD_Nextion.h>
+     #include <glcd_nextion.h>
      InitGLCD = InitGLCD_Nextion
      GLCDCLS = GLCDCLS_Nextion
      Circle = Circle_Nextion
@@ -812,7 +834,7 @@ End Sub
 '''@param LineColour Colour of box border (0 = erase, 1 = draw, default is 1)
 #define GLCDBox Box
 Sub Box(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
-
+  dim GLCDTemp as word
   'Make sure that starting point (1) is always less than end point (2)
   If LineX1 > LineX2 Then
     GLCDTemp = LineX1
