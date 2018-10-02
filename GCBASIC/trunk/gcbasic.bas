@@ -579,7 +579,7 @@ DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
 Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
-Dim Shared As Integer PauseTimeout, OldSBC
+Dim Shared As Integer PauseTimeout, OldSBC, ReserveHighProg
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 Dim Shared As Double DebugTime
@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-09-23"
+Version = "0.98.<<>> 2018-10-02"
 #ifdef __FB_DARWIN__	'OS X/macOS
         #ifndef __FB_64BIT__
                 Version = Version + " (Darwin 32 bit)"
@@ -712,6 +712,7 @@ StatsUsedRam = 0
 StatsUsedProgram = 0
 UseChipOutLatches = -1
 AutoContextSave = -1
+ReserveHighProg = 0
 ConfigDisabled = 0
 ExitValue = 0
 ToolVariables = LinkedListCreate
@@ -805,9 +806,9 @@ IF Not ErrorsFound THEN
 		PRINT SPC(10); Message("Subs") + Str(SBC)
 		PRINT SPC(5); Message("ChipUsage")
 		Temp = Message("UsedProgram")
-		Replace Temp, "%used%", Str(StatsUsedProgram)
+		Replace Temp, "%used%", Str(StatsUsedProgram + ReserveHighProg)
 		Replace Temp, "%total%", Str(ChipProg)
-		If ChipProg <> 0 Then Temp += Format(StatsUsedProgram / ChipProg, " (###.##%)")
+		If ChipProg <> 0 Then Temp += Format((StatsUsedProgram + ReserveHighProg) / ChipProg, " (###.##%)")
 		PRINT SPC(10); Temp
 		Temp = Message("UsedRAM")
 		Replace Temp, "%used%", Str(StatsUsedRam)
@@ -13352,8 +13353,10 @@ End Sub
 Sub PreparePageData
 	'Generate prog mem page data
 	Dim As Integer PageSize, FirstPageStart, FindLastVector, LastVector, LastLoc, IsFirstPage
+	Dim As Integer AvailableChipProg
 
 	PageSize = 0
+	AvailableChipProg = ChipProg - ReserveHighProg
 
 	If ModePIC Then
 		'On low end, have 512 word pages
@@ -13406,7 +13409,7 @@ Sub PreparePageData
 	End If
 	'Generate page info
 	LastLoc = 0
-	Do While LastLoc < ChipProg
+	Do While LastLoc < AvailableChipProg
 		ProgMemPages += 1
 		With ProgMemPage(ProgMemPages)
 			'Set first location in page
@@ -13418,10 +13421,10 @@ Sub PreparePageData
 
 			'Calc and set last location
 			If PageSize = 0 Then
-				LastLoc = ChipProg
+				LastLoc = AvailableChipProg
 			Else
 				LastLoc += PageSize
-				If LastLoc > ChipProg Then LastLoc = ChipProg
+				If LastLoc > AvailableChipProg Then LastLoc = AvailableChipProg
 			End If
 			.EndLoc = LastLoc - 1
 			.CodeSize = 0
@@ -14449,7 +14452,7 @@ Sub ReadOptions(OptionsIn As String)
 	Dim As LinkedListElement Pointer OptionElements, CurrElement
 	Dim As String VarName, VarBit
 	Dim As SysVarType Pointer SysVarBit
-	Dim As Integer VarBitNo
+	Dim As Integer VarBitNo, TempVal
 
 	'Set defaults
 	Bootloader = 0
@@ -14468,6 +14471,18 @@ Sub ReadOptions(OptionsIn As String)
 			If CurrElement->Next <> 0 Then
 				If IsConst(CurrElement->Next->Value) Then
 					Bootloader = MakeDec(CurrElement->Next->Value)
+					CurrElement = CurrElement->Next
+				End If
+			End If
+			
+		'Reserve memory at the end of flash for HEF/bootloader?
+		ElseIf CurrElement->Value = "RESERVEHIGHPROG" Then
+			If CurrElement->Next <> 0 Then
+				If IsConst(CurrElement->Next->Value) Then
+					TempVal = MakeDec(CurrElement->Next->Value)
+					If TempVal > ReserveHighProg Then
+						ReserveHighProg = TempVal
+					End If
 					CurrElement = CurrElement->Next
 				End If
 			End If
@@ -15175,9 +15190,9 @@ Sub WriteCompilationReport
 	'Write chip resource usage information
 	Dim As String UsedProgram, UsedRAM
 	UsedProgram = Message("UsedProgram")
-	Replace UsedProgram, "%used%", Str(StatsUsedProgram)
+	Replace UsedProgram, "%used%", Str(StatsUsedProgram + ReserveHighProg)
 	Replace UsedProgram, "%total%", Str(ChipProg)
-	If ChipProg <> 0 Then UsedProgram += Format(StatsUsedProgram / ChipProg, " (###.##%)")
+	If ChipProg <> 0 Then UsedProgram += Format((StatsUsedProgram + ReserveHighProg) / ChipProg, " (###.##%)")
 	UsedRAM = Message("UsedRAM")
 	Replace UsedRAM, "%used%", Str(StatsUsedRam)
 	Replace UsedRAM, "%total%", Str(ChipRAM)
