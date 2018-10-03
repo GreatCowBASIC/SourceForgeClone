@@ -180,6 +180,7 @@ Sub PrepareBuiltIn
 	AddConstant("CHIP_" + ChipName, "")
 	AddConstant("CHIPMHZ", Str(ChipMhz))
 	AddConstant("CHIPOSC", OSCType)
+	AddConstant("CHIPRESERVEHIGHPROG", Str(ReserveHighProg))
 
 	If ModePIC Then AddConstant("PIC", "")
 	If ModeAVR Then
