@@ -4,7 +4,8 @@
 # FreeBSD installation script for Great Cow BASIC #
 ###################################################
 #
-# version 1.00, 29 Sep 2018 - initial version
+# v1.00, 29 Sep 2018 - initial version
+# v1.01, 1  Oct 2018 - revised file layout for Linux distribution  
 #
 ###################################################
 
@@ -89,8 +90,8 @@ return
 #
 ver_rel()
 {
-release=`cat version.txt | cut -f1 -d":" | tr -d "[\r]"`
-version=`cat version.txt | cut -f2 -d":" | tr -d "[\r]"`
+release=`cat ../version.txt | cut -f1 -d":" | tr -d "[\r]"`
+version=`cat ../version.txt | cut -f2 -d":" | tr -d "[\r]"`
 
 return
 }
@@ -128,8 +129,8 @@ exit 1
 ## DEFINES
 
 CC="fbc -exx -v -arch native gcbasic.bas"
-REQUIRED="gcbasic.bas assembly.bi preprocessor.bi utils.bi variables.bi version.txt"
-INSTALL_FILES="gcbasic messages.* include chipdata Demos Documentation converters"
+REQUIRED="gcbasic.bas assembly.bi preprocessor.bi utils.bi variables.bi ../version.txt"
+INSTALL_FILES="Sources/gcbasic messages.dat messages-br.dat messages-de.dat messages-es.dat messages-fr.dat messages-it.dat messages-tk.dat  include chipdata Demos Documentation converters"
 
 ## END DEFINES
 
@@ -175,7 +176,7 @@ if [ "${1}" = "all" -o "${1}" = "build" ]
     if [ ${?} -eq 0 ]
       then
 	echo
-	echo "Great Cow BASIC compiled successfully!"
+	echo ">>>> Great Cow BASIC compiled successfully! <<<<"
 	echo
     fi
 fi
@@ -205,11 +206,12 @@ if [ "${1}" = "all" -o "${1}" = "install" ]
     echo "Installing in ${install_dir} ..."
     echo
 
-    # executable and support files and dirs
+    # copy executable and support files and dirs
+    cd ..
     cp -R ${INSTALL_FILES} ${install_dir}/
     if [ ${?} -eq 0 ]
       then
-        echo "Great Cow BASIC installation successful :-)"
+        echo ">>>> Great Cow BASIC installation successful :-) <<<<"
 	echo
 	echo "Do not forget to add ${install_dir} to your path"
     else
