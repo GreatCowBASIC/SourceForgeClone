@@ -27,7 +27,7 @@ GCBASIC [/O:output.asm] [/A:assembler] [/P:programmer] [/K:{C|A}] [/V] [/L]
         /A:assembler    Batch file used to call assembler. If /A:GCASM is
                           given, GCBASIC will use its internal assembler.
         /P:programmer   Batch file used to call programmer, or programmer
-		                  name if defined in settings file.
+                      name if defined in settings file.
         /K:{C|A}        Keep original code in assembly output. /K:C will
                           save comments, /K:A will preserve all input code.
         /R:format       Write a compilation report. Format can be html, text
@@ -37,10 +37,11 @@ GCBASIC [/O:output.asm] [/A:assembler] [/P:programmer] [/K:{C|A}] [/V] [/L]
         /L              Show license
         /NP             Do not pause on errors. Use with IDEs.
         /WX             Treat warnings as errors
-        /F             	Skip compilation if up to date hex file found, call
+        /F              Skip compilation if up to date hex file found, call
                           programmer immediately and then exit.
+        /V              Display the version of the software.
         filename        The file to compile.
-		
+
 You may use - in place of /, such as -V instead of /V.
 End Block
 
