@@ -91,6 +91,7 @@ SUB Calculate (SUM As String)
 	WholeReplace SUM, "XOR", "#"
 	
 	REM Replace High and Low
+	DO WHILE INSTR(SUM, "UPPER") <> 0: Replace SUM, "UPPER", "U": Loop
 	DO WHILE INSTR(SUM, "HIGH") <> 0: Replace SUM, "HIGH", "H": LOOP
 	DO WHILE INSTR(SUM, "LOW") <> 0: Replace SUM, "LOW", "L": LOOP
 	
@@ -195,25 +196,26 @@ SUB Calculate (SUM As String)
 	
 	REM Find high/low
 	HIGHLOW:
-	IF INSTR(LCase(SUM), "l") = 0 AND INSTR(LCase(SUM), "h") = 0 THEN GOTO ENDHIGHLOW
+	IF INSTR(LCase(SUM), "l") = 0 AND INSTR(LCase(SUM), "h") = 0 AND INSTR(LCase(SUM), "u") = 0 THEN GOTO ENDHIGHLOW
 	FD = 0
 	Do
 		FD = FD + 1
 		Temp = LCase(Mid(SUM, FD, 1))
-	Loop While Temp <> "h" AND Temp <> "l"
+	Loop While Temp <> "u" And Temp <> "h" AND Temp <> "l"
 	Act = Temp: AP = FD
 	
 	FOR FS = AP - 1 TO 1 STEP -1
 		Temp = Mid(SUM, FS, 1)
 		IF (Temp <> Str(VAL(Temp)) AND Temp <> ".") OR Temp = " " THEN FS = FS + 1: EXIT For
 		M = Mid(SUM, FS - 1, 1)
-		IF Temp = "-" AND (M <> LTrim(Str(VAL(M))) AND M <> "l" AND M <> "h" AND M <> "^" AND M <> "/" AND M <> "*" AND M <> "-" AND M <> "+" AND M <> "&" AND M <> "#" AND M <> "|" AND M <> "!") THEN FS = FS - 1: EXIT FOR
+		IF Temp = "-" AND (M <> LTrim(Str(VAL(M))) AND M <> "l" AND M <> "h" And M <> "u" And M <> "^" AND M <> "/" AND M <> "*" AND M <> "-" AND M <> "+" AND M <> "&" AND M <> "#" AND M <> "|" AND M <> "!") THEN FS = FS - 1: EXIT FOR
 	NEXT
 	
 	N2S = Mid(SUM, AP + 1)
 	
 	'PRINT N2, Act
 	
+	IF INSTR(N2S, "u") <> 0 THEN N2S = Left(N2S, INSTR(N2S, "u") - 1)
 	IF INSTR(N2S, "h") <> 0 THEN N2S = Left(N2S, INSTR(N2S, "h") - 1)
 	IF INSTR(N2S, "l") <> 0 THEN N2S = Left(N2S, INSTR(N2S, "l") - 1)
 	IF INSTR(2, N2S, "-") <> 0 THEN N2S = Left(N2S, INSTR(2, N2S, "-") - 1)
@@ -231,6 +233,7 @@ SUB Calculate (SUM As String)
 	RES = 0
 	IF Act = "l" THEN RES = N2 AND 255
 	IF Act = "h" THEN RES = (N2 AND 65280) / 256
+	IF Act = "u" THEN RES = (N2 AND &HFF0000) / 65536
 	
 	ANS = Str(RES)
 	SCICONV ANS
@@ -672,6 +675,8 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 			Return "low(" + DataSource + ")"
 		ElseIf BS = 1 Then
 			Return "high(" + DataSource + ")"
+		ElseIf BS = 2 Then
+			Return "upper(" + DataSource + ")"
 		Else
 			Return "0"
 		End If
@@ -937,6 +942,7 @@ FUNCTION IsCalc (Temp As String) As Integer
 	
 	IF WholeINSTR(DataSource, "low") = 2 THEN IsCalc = -1
 	IF WholeINSTR(DataSource, "high") = 2 THEN IsCalc = -1
+	IF WholeINSTR(DataSource, "upper") = 2 THEN IsCalc = -1
 	IF WholeINSTR(DataSource, "and") = 2 THEN IsCalc = -1
 	IF WholeINSTR(DataSource, "or") = 2 THEN IsCalc = -1
 	IF WholeINSTR(DataSource, "xor") = 2 THEN IsCalc = -1
