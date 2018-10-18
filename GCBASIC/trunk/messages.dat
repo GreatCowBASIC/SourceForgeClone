@@ -39,7 +39,7 @@ GCBASIC [/O:output.asm] [/A:assembler] [/P:programmer] [/K:{C|A}] [/V] [/L]
         /WX             Treat warnings as errors
         /F              Skip compilation if up to date hex file found, call
                           programmer immediately and then exit.
-        /V              Display the version of the software.
+        /Version        Display the version of the software.
         filename        The file to compile.
 
 You may use - in place of /, such as -V instead of /V.
@@ -47,7 +47,7 @@ End Block
 
 Block License
 Great Cow BASIC - A BASIC Compiler for microcontrollers
-Copyright (C) 2006 - 2017 Hugh Considine and the Great Cow BASIC team
+Copyright (C) 2006 - 2018 Hugh Considine and the Great Cow BASIC team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

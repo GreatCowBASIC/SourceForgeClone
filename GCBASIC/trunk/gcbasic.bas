@@ -579,7 +579,7 @@ DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
 Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
-Dim Shared As Integer PauseTimeout, OldSBC, ReserveHighProg
+Dim Shared As Integer PauseTimeout, OldSBC, ReserveHighProg, HighTBLPTRBytes
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 Dim Shared As Double DebugTime
@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-10-03"
+Version = "0.98.<<>> 2018-10-18"
 #ifdef __FB_DARWIN__	'OS X/macOS
         #ifndef __FB_64BIT__
                 Version = Version + " (Darwin 32 bit)"
@@ -6928,6 +6928,10 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
 					CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRL")
 					CurrLine = LinkedListInsert(CurrLine, " movlw high " + SourceTable)
 					CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRH")
+					If HighTBLPTRBytes > 2 Then
+						CurrLine = LinkedListInsert(CurrLine, " movlw upper " + SourceTable)
+						CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRU")
+					End If
 				End If
 			ElseIf ModeAVR Then
 				AddVar "SysReadA", "WORD", 1, 0, "REAL", Origin, , -1
@@ -8317,12 +8321,19 @@ Sub CompileTables
 								CurrLine = LinkedListInsert(CurrLine, " addlw low " + Table)
 								CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRL")
 								CurrLine = LinkedListInsert(CurrLine, " movlw high " + Table)
-								CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
-								CurrLine = LinkedListInsert(CurrLine, " addlw 1")
 								If LargeTable Then
-									CurrLine = LinkedListInsert(CurrLine, " addwf SysStringA_H, W")
+									CurrLine = LinkedListInsert(CurrLine, " addwfc SysStringA_H, W")
+								Else
+									CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
+									CurrLine = LinkedListInsert(CurrLine, " addlw 1")
 								End If
 								CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRH")
+								If HighTBLPTRBytes > 2 Then
+									CurrLine = LinkedListInsert(CurrLine, " movlw upper " + Table)
+									CurrLine = LinkedListInsert(CurrLine, " btfsc STATUS, C")
+									CurrLine = LinkedListInsert(CurrLine, " addlw 1")
+									CurrLine = LinkedListInsert(CurrLine, " movwf TBLPTRU")
+								End If
 								CurrLine = LinkedListInsert(CurrLine, " tblrd*")
 								CurrLine = LinkedListInsert(CurrLine, " movf TABLAT, W")
 								CurrLine = LinkedListInsert(CurrLine, " return")
@@ -14440,6 +14451,16 @@ SUB ReadChipData
 		NewSysVar = HashMapGet(SysVarBits, "GIE")
 		If NewSysVar <> 0 Then
 			HashMapSet(GlitchFreeOutputs, NewSysVar->Parent + "." + Str(NewSysVar->Location), "y")
+		End If
+	End If
+	
+	'Check for high table pointer bytes
+	HighTBLPTRBytes = 0
+	If ChipFamily = 16 Then
+		If ChipProg > 32767 And HasSFR("TBLPTRU") Then
+			HighTBLPTRBytes = 3
+		Else
+			HighTBLPTRBytes = 2
 		End If
 	End If
 
