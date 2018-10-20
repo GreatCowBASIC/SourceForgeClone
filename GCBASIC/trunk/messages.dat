@@ -280,6 +280,7 @@ WarningVolatileBit = "Invalid volatile option bit %bit%"
 WarningProgrammerFail = "The chip may not have programmed properly. Programmer returned status (%status%)"
 WarningNoValidProgrammer = "None of the chosen programmers were suitable for the current program"
 WarningReturnValueInSub = "Return value ignored, not permitted in subroutines"
+WarningBitByteCompare = "Comparison will fail if %nonbit% is any value other than 0 or 1"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."

@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-10-18"
+Version = "0.98.<<>> 2018-10-20"
 #ifdef __FB_DARWIN__	'OS X/macOS
         #ifndef __FB_64BIT__
                 Version = Version + " (Darwin 32 bit)"
@@ -3620,7 +3620,7 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 	Dim As String V1O, V2O, V1Type, V2Type, CalcType, DestType, AV, R1, R2, AVH, CT1, CT2, SNT
 	Dim As Integer SourceSub, DestSub
 	Dim As String Cmd, CalcVarType
-	Dim As Integer OutVal, PD
+	Dim As Integer OutVal, PD, IsBitTest
 	Dim As LinkedListElement Pointer CurrLine
 	CurrLine = OutList->CodeEnd
 
@@ -3657,6 +3657,11 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 	DestType = "BYTE" 'Remove any doubt that may exist! (unlikely)
 	V1 = DelType(V1): V2 = DelType(V2)
 	V1O = V1: V2O = V2
+	
+	IsBitTest = 0
+	If (TypeOfValue(V1, Subroutine(SourceSub)) = "BIT" Or IsConst(V1)) And (TypeOfValue(V2, Subroutine(SourceSub)) = "BIT" Or IsConst(V2)) Then
+		IsBitTest = -1
+	End If
 
 	'Remove cast from output var
 	Answer = DelType(Answer)
@@ -3664,14 +3669,14 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 	'Generate asm code for sum
 
 	'Special shortcut code for bit test
-	If CalcType = "BIT" And IsConst(V2) Then
+	If IsBitTest And IsConst(V2) Then
 
 		'Translate less/more into equal/not equal
 		If Act = "<" Or Act = ">" Then Act = "~"
 		If Act = "{" Or Act = "}" Then Act = "="
 		'Decide test status
 		Dim As Integer TestFor = 0
-		If Act = "=" And MakeDec(V2) = 1 Then TestFor = 1
+		If Act = "=" And MakeDec(V2) <> 0 Then TestFor = 1
 		If Act = "~" And MakeDec(V2) = 0 Then TestFor = 1
 
 		'Get Bit name and number
@@ -3690,10 +3695,10 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
 			CurrLine = LinkedListInsert(CurrLine, " comf SysByteTempX,F")
 			GoTo CompileConditionDone
 		ElseIf ModeAVR Then
-
-
-		ElseIf ModeZ8 Then
-
+			CurrLine = LinkedListInsert(CurrLine, " clr SysByteTempX")
+			CurrLine = LinkedListInsertList(CurrLine, CompileConditions(V1 + "=" + Str(TestFor), "FALSE", Origin, Subroutine(SourceSub)))
+			CurrLine = LinkedListInsert(CurrLine, " com SysByteTempX,F")
+			GoTo CompileConditionDone
 		End If
 	End If
 
@@ -4383,8 +4388,8 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 	IF CountOccur(Condition, "';=~<>{}+-*/%&|#!") >= 2 THEN Complex = 1
 	IF CountOccur(Condition, "';+-*/%&|#!") >= 1 THEN Complex = 1
 	If CondType <> "BIT" And CondType <> "BYTE" THEN Complex = 1
-	'PRINT Condition, GetSub(Origin), IsWord(Condition, GetSub(Origin))
-
+	'PRINT Condition, GetSub(Origin), CondType, Complex
+	
 	'No conditions - check if variable is 0 or non-0
 	'NOT is not taken into account above, need to detect it here
 	IF Complex = -1 THEN
@@ -4441,14 +4446,13 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 	'One condition and byte, so compile inline
 	IF Complex = 0 THEN
 		OP = ""
-		IsBitTest = CondType = "BIT"
-		IF INSTR(Condition, "=") <> 0 THEN OP = "="
+		If INSTR(Condition, "=") <> 0 THEN OP = "="
 		IF INSTR(Condition, "~") <> 0 THEN OP = "~"
 		IF INSTR(Condition, "<") <> 0 THEN OP = "<"
 		IF INSTR(Condition, ">") <> 0 THEN OP = ">"
 		IF INSTR(Condition, "{") <> 0 THEN OP = "{"
 		IF INSTR(Condition, "}") <> 0 THEN OP = "}"
-
+		
 		'Read input variables
 		If OP = "" Then
 			V1 = UCase(Left(Condition, INSTR(Condition, " ") - 1))
@@ -4460,7 +4464,12 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 			V2 = UCase(Mid(Condition, INSTR(Condition, OP) + 1))
 			DO WHILE INSTR(V2, " ") <> 0: Replace V2, " ", "": Loop
 		End If
-		'Print Condition, ":", V1, OP, V2
+		
+		IsBitTest = 0
+		If (TypeOfValue(V1, CurrSub) = "BIT" Or IsConst(V1)) And (TypeOfValue(V2, CurrSub) = "BIT" Or IsConst(V2)) Then
+			IsBitTest = -1
+		End If
+		'Print Condition, ":"; V1, OP, V2, IsBitTest
 
 		'If both V1 and V2 are constants, evaluate condition now
 		If IsConst(V1) And IsConst(V2) Then
@@ -4646,12 +4655,15 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 
 		'If the condition is not a bit test, then run this code:
 		Else
-
 			'Add needed variables
+			'Generate warning if comparing bit variable to other type of variable
 			'If using PIC and a bit variable is found, put bit variable into temporary variable
-			IF Not IsConst(V1) Then
-				If ModePIC Then
-					If TypeOfValue(V1, CurrSub) = "BIT" Then
+			If Not IsConst(V1) Then
+				If TypeOfValue(V1, CurrSub) = "BIT" Then
+					Temp = Message("WarningBitByteCompare")
+					Replace Temp, "%nonbit%", V2
+					LogWarning(Temp, Origin)
+					If ModePIC Then
 						AddVar "SYSCALCTEMPA", "BYTE", 1, CurrSub, "REAL", Origin, , -1
 						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V1, "SysCalcTempA", Origin))
 						V1 = "SysCalcTempA"
@@ -4659,13 +4671,18 @@ Function CompileConditions (Condition As String, IfTrue As String, Origin As Str
 				End If
 				AddVar V1, "BYTE", 1, CurrSub, "REAL", Origin
 			End If
-			IF NOT IsConst(V2) Then
-				If ModePIC Then
-					If TypeOfValue(V2, CurrSub) = "BIT" Then
+			If Not IsConst(V2) Then
+				If TypeOfValue(V2, CurrSub) = "BIT" Then
+					Temp = Message("WarningBitByteCompare")
+					Replace Temp, "%nonbit%", V1
+					LogWarning(Temp, Origin)
+				
+					If ModePIC Then
 						AddVar "SYSCALCTEMPB", "BYTE", 1, CurrSub, "REAL", Origin, , -1
 						CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(V2, "SysCalcTempB", Origin))
 						V2 = "SysCalcTempB"
 					End If
+						
 				End If
 				AddVar V2, "BYTE", 1, CurrSub, "REAL", Origin
 			End If
