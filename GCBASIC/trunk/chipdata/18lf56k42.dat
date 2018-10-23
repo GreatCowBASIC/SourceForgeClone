@@ -19,6 +19,8 @@ MaxAddress=16383
 PWMTimerVariant=2
 SMTClockSourceVariant=3
 ReadAD10BitForceVariant=4
+SAFMemWords=128
+EraseRowSizeWords=64
 
 [Interrupts]
 ADCReady:ADIE,ADIF

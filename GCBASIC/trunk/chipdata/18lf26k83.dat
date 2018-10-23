@@ -4,7 +4,7 @@
 'Header Format last revised: 30/04/2018
 
 [ChipData]
-Prog=65536
+Prog=32768
 EEPROM=1024
 RAM=4096
 I/O=25
@@ -17,6 +17,8 @@ FamilyVariant=1
 PSP=0
 MaxAddress=16383
 SMTClockSourceVariant=3
+SAFMemWords=128
+EraseRowSizeWords=64
 
 [Interrupts]
 ADCReady:ADIE,ADIF

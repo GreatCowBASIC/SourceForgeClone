@@ -16,6 +16,8 @@ Family=15
 ConfigWords=2
 PSP=0
 MaxAddress=4095
+HEFMemWords=128
+EraseRowSizeWords=16
 
 [Interrupts]
 ADCReady:ADIE,ADIF
