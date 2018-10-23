@@ -10,12 +10,14 @@ RAM=256
 I/O=12
 ADC=11
 MaxMHz=32
-IntOsc=16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+IntOsc=32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
 Pins=14
 Family=15
 ConfigWords=2
 PSP=0
 MaxAddress=4095
+HEFMemWords=128
+EraseRowSizeWords=32
 
 [Interrupts]
 ADC2Ready:AD2IE,AD2IF

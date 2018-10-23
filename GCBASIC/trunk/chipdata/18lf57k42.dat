@@ -4,7 +4,7 @@
 'Header Format last revised: 30/04/2018
 
 [ChipData]
-Prog=131072
+Prog=65536
 EEPROM=1024
 RAM=8192
 I/O=44
@@ -19,6 +19,8 @@ MaxAddress=16383
 PWMTimerVariant=2
 SMTClockSourceVariant=3
 ReadAD10BitForceVariant=4
+SAFMemWords=128
+EraseRowSizeWords=64
 
 [Interrupts]
 ADCReady:ADIE,ADIF

@@ -19,6 +19,8 @@ PSP=0
 MaxAddress=8191
 PWMTimerVariant=2
 ReadAD10BitForceVariant=4
+SAFMemWords=128
+EraseRowSizeWords=32
 
 [Interrupts]
 ADCReady:ADIE,ADIF

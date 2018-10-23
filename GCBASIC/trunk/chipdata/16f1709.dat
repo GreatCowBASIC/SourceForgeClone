@@ -17,6 +17,8 @@ ConfigWords=2
 PSP=0
 MaxAddress=4095
 PWMTimerVariant=1
+HEFMemWords=128
+EraseRowSizeWords=32
 
 [Interrupts]
 ADCReady:ADIE,ADIF
