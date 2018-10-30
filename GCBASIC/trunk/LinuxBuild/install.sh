@@ -3,8 +3,17 @@
 #2016-07-20: Make grep for version number from $VersionFile case-insensitive
 #2017-01-16: Move system-wide path config from /etc/profile to /etc/profile.d/gcbasic.sh
 #2017-12-09: Corrected Check for Freebasic, added check for rsync
-# Great Cow Basic generic Linux installer, Version 0.3
-# NOT to be used on any other operating system (eg. Windows).
+#2018-10-30: Updated to run from the Sources directory now there is a LinuxBuild directory
+	   : Fixed comment typo in check for FreeBASIC
+	   : Added script name & version output
+	   : Incremented version number
+
+# NOT to be used on any other operating system (eg. Windows/macOS/FreeBSD).
+
+echo "\nGreat Cow Basic generic Linux installer, Version 0.4\n"
+
+# Change to the Sources directory immediately above this directory
+cd ..
 
 set -e # Halt on errors
 
@@ -134,7 +143,7 @@ RSYNC=rsync
 
 checkfbc()
 {
-# Check for rsync
+# Check for FreeBASIC
 FBC=fbc
        if [ -z "$(which $FBC)"  ]; then
                 echo "### Freebasic Compiler not found in path. ###"
