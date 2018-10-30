@@ -6,6 +6,7 @@
 #
 # v1.00, 29 Sep 2018 - initial version
 # v1.01, 1  Oct 2018 - revised file layout for Linux distribution  
+# v1.02, 30 Oct 2018 - fixed cosmetic typo  
 #
 ###################################################
 
@@ -77,7 +78,7 @@ fi
 touch ${1}/deleteme > /dev/null 2>&1
 if [ ${?} -gt 0 ]
   then
-    do_exit "You do not have permission to write to ${1} - try runnign as root"
+    do_exit "You do not have permission to write to ${1} - try running as root"
 else 
     rm -f ${1}/deleteme
 fi
