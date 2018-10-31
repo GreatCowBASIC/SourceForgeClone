@@ -111,7 +111,7 @@ your Terminal window:
  15. Compile the Great Cow BASIC binary (gcbasic) by typing the following 
 command into your Terminal window:
 ----
-  DarwinBuild/build.sh
+  sh DarwinBuild/build.sh
 ----
 Note 1: If you did not install the various files with the same names as in the 
 instructions above into your Home directory, you will need to edit the build.sh
