@@ -7,8 +7,13 @@
 # v1.00, 29 Sep 2018 - initial version
 # v1.01, 1  Oct 2018 - revised file layout for Linux distribution  
 # v1.02, 30 Oct 2018 - fixed cosmetic typo  
+# v1.03, 31 Oct 2018 - fixed version string parsing  
 #
 ###################################################
+
+echo 
+echo "FreeBSD Great Cow BASIC installation v1.03"
+echo
 
 ## FUNCTIONS
 
@@ -92,7 +97,7 @@ return
 ver_rel()
 {
 release=`cat ../version.txt | cut -f1 -d":" | tr -d "[\r]"`
-version=`cat ../version.txt | cut -f2 -d":" | tr -d "[\r]"`
+version=`cat ../version.txt | cut -f2 -d":" | tr -d "[\r]" | tr -d "[ ]"`
 
 return
 }
