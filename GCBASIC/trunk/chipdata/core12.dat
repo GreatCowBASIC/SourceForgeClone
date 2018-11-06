@@ -34,12 +34,9 @@ CALL k;		1;	1001 kkkk kkkk
 CLRWDT;		1;	0000 0000 0100
 GOTO k;		1;	101k kkkk kkkk
 IORLW k;	1;	1101 kkkk kkkk
-MOVLB k;	1;	0000 0001 0kkk;	1
 MOVLW k;	1;	1100 kkkk kkkk
 OPTION;		1;	0000 0000 0010
-RETFIE; 	1;	0000 0001 1111; 1
 RETLW k;	1;	1000 kkkk kkkk
-RETURN; 	1;	0000 0001 1110;	1
 SLEEP;		1;	0000 0000 0011
 TRIS f;		1;	0000 0000 ffff
 XORLW k;	1;	1111 kkkk kkkk
