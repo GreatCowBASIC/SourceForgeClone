@@ -38,6 +38,7 @@
 ' 23/2/2016: Use EEDATL instead of EEDATA (16F1825, possibly others)
 ' 16/3/16: Added supported for NVMADRH:NVMADRL
 ' 10/9/17: Removed depencies on Register.Bits - just use Bits. This prevents variables being created. And, change Script from NVMADRH to NVMADRL test.
+' 21/10/18: Added EEPROM support for 18fxxq10 the   'Select DATA EE section (0x310000 - 0x3100FF) section
 
 'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 #script
@@ -348,8 +349,9 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     IntState = GIE
     Dim SysEEPromAddress As Word
 
-  'ALL 16F NVMREGS Devices Except 18FxxK40/K42
+
    #IFDEF BIT(NVMREGS)
+  'ALL 16F NVMREGS Devices Except 18FxxK40/K42
        SysEEPromAddress = SysEEAddress + 0x7000
        NVMADRH =SysEEPromAddress_h
        NVMADRL =SysEEPromAddress
@@ -357,8 +359,8 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
        NVMREGS = 1
     #ENDIF
 
-   '' 18FXXk40/K42 and others with NVMREG0/NVMREG1
    #IFDEF BIT(NVMREG0)
+   '' 18FXXk40/K42 and others with NVMREG0/NVMREG1
        SysEEPromAddress = SysEEAddress
        NVMADRH =SysEEPromAddress_h
        NVMADRL =SysEEPromAddress
@@ -368,8 +370,20 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
         NVMDAT = EEData
    #ENDIF
 
-    FREE = 0
-    WREN = 1
+    #IFDEF VAR(NVMADRU)
+      'Select DATA EE section (0x310000 - 0x3100FF)
+       NVMADRU = 0x31
+       NVMADRH =SysEEAddress_h
+       NVMADRL =SysEEAddress
+       NVMDATL = EEData
+
+    #ENDIF
+
+
+
+    [canskip]FREE =0b'0'
+    [canskip]WREN= 0b'1'
+    [canskip]NVMEN=0b'1'
     GIE = 0
     NVMCON2 = 0x55
     NVMCON2 = 0xAA
@@ -380,7 +394,8 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     NOP
     NOP
     wait while WR = 1
-    WREN = 0
+    [canskip]WREN= 0b'0'
+    [canskip]NVMEN= 0b'0'
 
     'Restore interrupt to initial  State
     GIE = IntState
@@ -419,5 +434,18 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
       EEDataValue = NVMDAT
   #ENDIF
 
+
+    #IFDEF VAR(NVMADRU)
+        'Select DATA EE section (0x310000 - 0x3100FF)
+        NVMADRU = 0x31
+        NVMADRH =SysEEAddress_h
+        NVMADRL =SysEEAddress
+        RD = 1
+        NOP     ' NOPs may be required for latency at high frequencies
+        NOP
+        NOP
+        NOP
+        EEDataValue = NVMDATL
+    #ENDIF
 
 End Sub
