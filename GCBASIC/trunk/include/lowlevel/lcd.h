@@ -121,6 +121,19 @@
 '''   use #define LCD_WIDTH 16 to change the standard of 20 character width to 16.
 '''   Revised 8-bit init from 200us to 20ms and revised LCDReady for 8bit schmitt trigger ports added 1 us delay
 
+'''   28/10/2015  added LCD_3  support Evan R. Venn for the Picsimlab board K16F for the  LS74574 connectivity see the Help in the application for connectivity
+'''              ;Setup LCD Parameters
+'''              #define LCD_IO 3
+'''
+'''              'Change as necessary
+'''              #define LCD_DB     PORTb.3            ; databit
+'''              #define LCD_CB     PORTb.4            ; clockbit
+'''              #define LCD_EB     PORTa.0            ; enable bit
+'''
+'*************************************************************************
+
+
+
 #startup InitLCD
 
 #script
@@ -141,6 +154,10 @@
       LCDDisplaysOff = LCDDisplaysOff404
       LCDDisplaysOn = LCDDisplaysOn404
 
+  end if
+
+  if LCD_IO = 3 then
+      LCD_RS = LCD_DB
   end if
 
 #endscript
@@ -300,6 +317,23 @@ Sub LCDcmd ( In LCDValue )
           Wait 4 10us
 end sub
 
+
+
+Sub LCD3_CMD(In LCDValue as Byte)
+
+  LCD_DB = 0  'really maps to the LCD_RS
+  LCDWriteByte(LCDValue)
+
+
+end sub
+
+sub LCD3_DATA(In LCDValue as byte)
+
+  LCD3_DB = 1  'really maps to the LCD_RS
+  LCDWriteByte(LCDValue)
+
+end sub
+
 Sub Zerobit   ' Used in 1-wire mode; a "zero" bit is 10us low and minimal 20 us High
   SET LCD_CD OFF
   wait 10 us ' bit time
@@ -394,6 +428,38 @@ sub InitLCD
      #ENDIF
 
 
+     #IFDEF LCD_IO 3
+          ; LCD_I0 3 code
+          LCDBacklight Off  'this is to prevent an error during compiling if LCDbacklight is not used in the script
+
+          Dir LCD_EB out
+          Dir LCD_RS out
+          Dir LCD_CB out
+
+          SET LCD_EB OFF
+          SET LCD_RS OFF
+          SET LCD_CB OFF
+
+          wait 20 ms
+
+          SET LCD_EB ON
+
+
+          LCD3_CMD(0x30)
+          wait 5 ms
+
+          LCD3_CMD(0x30)
+          wait 1 ms
+
+          LCD3_CMD(0x38)
+          LCD3_CMD(0x08)
+          LCD3_CMD(0x0F)
+          LCD3_CMD(0x01)
+          LCD3_CMD(0x38)
+          LCD3_CMD(0x80)
+
+     #ENDIF
+
      'Initialization routines based upon code examples
      'in HD44780 datasheet
 
@@ -454,10 +520,11 @@ sub InitLCD
         #ENDIF
 
 
+
+          #IFDEF LCD_IO 8
           '**********************************
           '8-bit "Initialization
          '**********************************
-          #IFDEF LCD_IO 8
                'wakeup
                LCDWriteByte 0x30
                wait 20 ms
@@ -477,10 +544,11 @@ sub InitLCD
 
           #ENDIF
 
+
+          #IFDEF LCD_IO 4
           '***********************************
           '4-bit initialization routine
           '***********************************
-          #IFDEF LCD_IO 4
           ' revised LCDINIT Evan Venn March 2014
           ' modified by William Roth  July 2104
 
@@ -537,11 +605,11 @@ sub InitLCD
           #ENDIF
 
 
+
+          #IFDEF LCD_IO 404
           '***********************************
           '404 4-bit initialization routine
           '***********************************
-          #IFDEF LCD_IO 404
-
                 'Set pins to output
                 #IFNDEF LCD_LAT
                      DIR LCD_DB4 OUT
@@ -894,15 +962,34 @@ end function
 
 sub LCDNormalWriteByte(In LCDByte )
 
-' *****    This subroutine  modified by William Roth *****
-'Reduced enable pulse to 2 us
-'Added define for LCD_SPEED Slow , Medium , fast
-
      #IFNDEF LCD_NO_RW
           #IFDEF LCD_IO 4,8
                wait until LCDReady
                set LCD_RW OFF 'Write mode
           #ENDIF
+     #ENDIF
+
+
+     #IFDEF LCD_IO 3
+     ; LCD_I0 3 code
+        LCD3_RSState = LCD_RS
+        LCD_EB = 1
+
+        LCD_CB = 0
+        REPEAT 8
+          LCD_RS = LCDByte.7
+          ROTATE LCDByte LEFT
+          'Clock it Out
+          LCD_CB = 1
+          LCD_CB = 0
+        END REPEAT
+        wait 3 ms
+        LCD_RS = LCD3_RSState  'passed from call.
+        wait 3 ms
+        LCD_EB = 0
+        wait 3 ms
+        LCD_EB = 1
+
      #ENDIF
 
      #IFDEF LCD_IO 1, 2, 2_74XX174, 2_74XX164 ' All 1 and 2-wire modes
@@ -1196,6 +1283,7 @@ sub LCDNormalWriteByte(In LCDByte )
          end if
       END IF
 end sub
+
 
 SUB LCD2_NIBBLEOUT (In LCD2BYTE)
 
