@@ -2093,20 +2093,24 @@ sub FVRInitialize ( Optional in FVR_Bits = FVR_OFF )
         FVRCON = FVRCON or FVREN_enabled or FVR_Bits
        'VREF+ is connected to FVR_buffer 1
         #IFDEF VAR(ADREF)
+        asm showdebug Found VAR ADREF
           ADREF.0 = 1     'ADREF<1:0>
           ADREF.1 = 1     'ADREF<1:0>
         #ENDIF
         #IFDEF VAR(ADPREF)
+        asm showdebug Found VAR ADPREF
           ADPREF.0 = 1     'ADPREF<1:0>
           ADPREF.1 = 1     'ADPREF<1:0>
         #ENDIF
 
         #IFDEF VAR(ADPREF1)
+        asm showdebug Found VAR ADPREF1
           ADPREF1 = 1
           ADPREF0 = 1
         #ENDIF
         'VREF+ is connected to FVR_buffer 2
         #IFDEF BIT(PVCFG1)
+          asm showdebug Found BIT PVCFG1
           PVCFG1 = 1
           PVCFG0 = 0
         #ENDIF
