@@ -130,7 +130,8 @@
 ' 18/2/18  'Adapted AVR Reference settings, see #180218.  Left old code as is but testing for MUX4.
 ' 19/2/18  'Revised AD_REF_SOURCE = AD_REF_AVCC section to handle TINYx chips.  The VCC reference is different from MEGA devices o the Tiny devices!
            'Reverted adaption AVR Reference settings, see #180218.  Left old code as is but now test suitable bit for MUX4.
-' 31/4/19  Added ChipReadAD10BitForceVariant to ensure 12 bit ADC force a 10 bit ADC result.
+' 31/4/18  Added ChipReadAD10BitForceVariant to ensure 12 bit ADC force a 10 bit ADC result.
+' 10/11/18 Adapted FVRInitialize to suppport 18f FVR with FVRST
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -142,6 +143,8 @@
 
 
 #samebit GONDONE,GO_NOT_DONE   'to support 16f15313 constants
+#samebit FVRRDY, FVRST         'to support FVR on 18f
+
 
 #define Format_Left 0
 #define Format_Right 255
@@ -338,6 +341,20 @@
 #define USE_ADE1 TRUE
 #define USE_ADE2 TRUE
 
+
+#script
+    FVR_OFF = 0x00
+    FVR_1x  = 0x01
+    FVR_2x  = 0x02
+    FVR_4x  = 0x03
+
+    if bit(PVCFG1) Then
+        FVR_1x  = 0x10
+        FVR_2x  = 0x20
+        FVR_4x  = 0x30
+    end if
+
+#endscript
 
 macro LLReadAD (ADLeftAdjust)
 
@@ -2060,10 +2077,7 @@ end macro
 
 
 
-#define FVR_OFF 0x00
-#define FVR_1x 0x01
-#define FVR_2x 0x02
-#define FVR_4x 0x03
+
 
 #define FVREN_enabled = 0x80
 #define FVREN_disabled = 0x80
@@ -2072,12 +2086,12 @@ end macro
 '''@param FVR_OFF, FVR_1x, FVR_2x or FVR_4x = (1.024v, 2.048v or 4.096v)
 sub FVRInitialize ( Optional in FVR_Bits = FVR_OFF )
    'strip the bits we need to retain
-   FVRCON = FVRCON and 0x7C
+   FVRCON = FVRCON and 0xc0 '0x7C
     'FVREN enabled; FVR
     if FVR_Bits <> FVR_OFF then
 
         FVRCON = FVRCON or FVREN_enabled or FVR_Bits
-        'VREF+ is connected to FVR_buffer 1
+       'VREF+ is connected to FVR_buffer 1
         #IFDEF VAR(ADREF)
           ADREF.0 = 1     'ADREF<1:0>
           ADREF.1 = 1     'ADREF<1:0>
@@ -2086,8 +2100,17 @@ sub FVRInitialize ( Optional in FVR_Bits = FVR_OFF )
           ADPREF.0 = 1     'ADPREF<1:0>
           ADPREF.1 = 1     'ADPREF<1:0>
         #ENDIF
-                ADPREF1 = 1
-        ADPREF0 = 1
+
+        #IFDEF VAR(ADPREF1)
+          ADPREF1 = 1
+          ADPREF0 = 1
+        #ENDIF
+        'VREF+ is connected to FVR_buffer 2
+        #IFDEF BIT(PVCFG1)
+          PVCFG1 = 1
+          PVCFG0 = 0
+        #ENDIF
+
     Else
         ' VREF+ is connected to VDD
         #IFDEF VAR(ADREF)
@@ -2098,8 +2121,15 @@ sub FVRInitialize ( Optional in FVR_Bits = FVR_OFF )
           ADPREF.0 = 0     'ADPREF<1:0>
           ADPREF.1 = 0     'ADPREF<1:0>
         #ENDIF
-                ADPREF1 = 0
-        ADPREF0 = 0
+        #IFDEF VAR(ADPREF1)
+          ADPREF1 = 0
+          ADPREF0 = 0
+        #ENDIF
+        #IFDEF BIT(PVCFG1)
+          PVCFG1 = 1
+          PVCFG0 = 0
+        #ENDIF
+
     end if
 
 end sub
