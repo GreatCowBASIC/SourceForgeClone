@@ -24,7 +24,7 @@
 ' 28/8/2014: More handlers added for control transfers
 ' 11/6/2018: Major revision for first formal release.
 ' 13/6/2018: Updated to include USBBufferWrite()
-
+' 30/10/201: Added USB_INTERFACE_PROTOCOL
 
 ' Example User code for SetupHandler_CallBack showing usage of USBBufferWrite
 '
@@ -118,6 +118,8 @@
 'Interface class (set to 3 for HID, 0xFF for user defined class)
 #define USB_INTERFACE_CLASS 0xFF
 #define USB_INTERFACE_SUBCLASS 0
+#define USB_INTERFACE_PROTOCOL 0xFF
+
 
 #define USB_EP_0_IN 0
 #define USB_EP_0_OUT 80
@@ -721,7 +723,7 @@ Table USBConfigDescriptor
 
   USB_INTERFACE_CLASS
   USB_INTERFACE_SUBCLASS
-  255
+  USB_INTERFACE_PROTOCOL
   0
 End Table
 
