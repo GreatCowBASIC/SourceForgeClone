@@ -18,8 +18,8 @@ PSP=0
 MaxAddress=4095
 PWMTimerVariant=1
 SMTClockSourceVariant=2
-HEFMem=128
-ProgMemRowSize=32
+HEFMemWords=128
+EraseRowSizeWords=32
 
 [Interrupts]
 ADCReady:ADIE,ADIF

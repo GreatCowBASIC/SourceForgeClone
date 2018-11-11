@@ -17,8 +17,8 @@ ConfigWords=3
 PSP=0
 MaxAddress=4095
 SMTClockSourceVariant=1
-HEFMem=128
-ProgMemRowSize=16
+HEFMemWords=128
+EraseRowSizeWords=16
 
 [Interrupts]
 ADCReady:ADIE,ADIF
