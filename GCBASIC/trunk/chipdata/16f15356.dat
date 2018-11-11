@@ -17,8 +17,8 @@ FamilyVariant=1
 ConfigWords=5
 PSP=0
 MaxAddress=8191
-SAFMem=128
-ProgMemRowSize=32
+SAFMemWords=128
+EraseRowSizeWords=32
 
 [Interrupts]
 ADCReady:ADIE,ADIF
