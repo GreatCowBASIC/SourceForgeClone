@@ -1,5 +1,5 @@
 '    Analog to Digital conversion routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2013, 2017 Hugh Considine, Kent Schafer, William Roth, Evan Venn
+'    Copyright (C) 2006 - 2013, 2018 Hugh Considine, Kent Schafer, William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -132,6 +132,7 @@
            'Reverted adaption AVR Reference settings, see #180218.  Left old code as is but now test suitable bit for MUX4.
 ' 31/4/18  Added ChipReadAD10BitForceVariant to ensure 12 bit ADC force a 10 bit ADC result.
 ' 10/11/18 Adapted FVRInitialize to suppport 18f FVR with FVRST
+' 19/11/18 Revised to add  #ifdef bit(ADFM) protection on ReadAD for 10f devices
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -1375,7 +1376,9 @@ function ReadAD( in ADReadPort) as byte
 
   #IFDEF PIC
       #samebit ADFM, ADFRM0, ADFM0
-      SET ADFM OFF
+      #IFDEF BIT(ADFM)
+         SET ADFM OFF
+      #ENDIF
 
       'for 16F1885x and possibly future others
       #IFDEF VAR(ADPCH)
