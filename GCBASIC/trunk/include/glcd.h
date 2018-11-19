@@ -39,6 +39,7 @@
 '    24/04/18 Added Nextion support
 '    26/09/18 dim GLCDTemp as word added
 '    27/09/18 ILI9326 driver
+'    19/11/18 NT7108C driver
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
@@ -60,6 +61,7 @@
 #define GLCD_TYPE_HX8347  15
 #define GLCD_TYPE_Nextion 16
 #define GLCD_TYPE_ILI9326 17
+#define GLCD_TYPE_NT7108C 18
 
 
 
@@ -139,6 +141,22 @@ Dim GLCDDeviceWidth as Word
      KS0108_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
+
+    If GLCD_TYPE = GLCD_TYPE_NT7108C Then
+
+     #include <glcd_nt7108c.h>
+     InitGLCD = InitGLCD_NT7108C
+     GLCDCLS = GLCDCLS_NT7108C
+     FilledBox = FilledBox_NT7108C
+     Pset = Pset_NT7108C
+     glcd_type_string = "NT7108C"
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 64
+     NT7108C_GLCD_HEIGHT = GLCDDeviceHeight
+     NT7108C_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
+
 
   If GLCD_TYPE = GLCD_TYPE_SSD1306 Then
      #include <glcd_ssd1306.h>
