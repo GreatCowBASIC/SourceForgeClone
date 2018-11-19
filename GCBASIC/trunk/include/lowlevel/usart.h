@@ -56,6 +56,7 @@
 ' 23/09/2018: Improved accuracy of USART_Delay PICs). 1ms is now 1ms - WMR
 ' 23/09/2018: Moved all "wait USART_DELAYs"  to a single method in hsersend sub -WMR
 ' 23/09/2018: Edited as part of the QA check
+' 17/11/2018: Correct errant setting of SYNC on K42/83
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -456,9 +457,10 @@ Sub InitUSART
   #ifdef PIC
       #If USART_BAUD_RATE Then
           #ifndef Bit(TXEN1)
-            'Set baud rate for legacy chips
+
               #ifndef var(U1BRGH)
-                  SPBRG = SPBRGL_TEMP
+               'Set baud rate for legacy chips
+                 SPBRG = SPBRGL_TEMP
                   #ifdef Bit(BRG16)
                     SPBRGH = SPBRGH_TEMP
                     BRG16 = BRG16_TEMP
@@ -467,29 +469,29 @@ Sub InitUSART
               #endif
 
               #ifdef var(U1BRGH)
-                  'for 18fxxK42 series UART
+                  'Set baud rate for for 18fxxK42/K83 series UART
                   U1BRGH=SPBRGH_TEMP
                   U1BRGL=SPBRGL_TEMP
                   U1BRGS = BRGS1_SCRIPT
-                  U1TXEN=1
-                  U1RXEN=1
-                  ON_U1CON1=1
+                  U1TXEN=1   'Enable TX1
+                  U1RXEN=1   'Enable RX1
+                  ON_U1CON1=1 'Enable USART1
               #endif
 
-              'Enable async mode
-             Set SYNC Off
-
+             #IFNDEF var(U1CON0)
+              'Enable async and TX mode for most non K42
+                 Set SYNC Off
+                 Set TXEN On
+             #ENDIF
 
              #ifdef bit(SPEN)
                   SPEN=1
               #endif
 
-              'Enable TX and RX
               #ifdef bit(CREN)
+                 'Enable TX and RX
                   CREN=1
               #endif
-
-              Set TXEN On
 
           #endif
 
@@ -501,8 +503,8 @@ Sub InitUSART
               BAUDCON1.BRG16 = BRG16_TEMP
             #endif
 
-        ;  Section added to support chips with TXSTA1 instead of TX1STA
             #ifdef Var(TX1STA)
+            'chips with TXSTA1 instead of TX1STA
             TX1STA.BRGH = BRGH_TEMP
             #endif
 
@@ -520,8 +522,8 @@ Sub InitUSART
           #endif
       #endif
 
-      'PIC USART 2 Init
       #if USART2_BAUD_RATE Then
+       'PIC USART 2 Init
 
           #ifdef Bit(TXSTA2_TXEN)
           'Set baud rate
@@ -530,12 +532,12 @@ Sub InitUSART
               SPBRGH2 = SPBRGH_TEMP2
               BAUDCON2_BRG16 = BRG16_TEMP2
             #endif
+
             TXSTA2_BRGH = BRGH_TEMP2
 
-          'Enable async modez
+          'Enable async mode
             Set TXSTA2_SYNC Off
             Set SPEN2 On  ' SPEN2
-
 
             'Enable TX and RX
             Set CREN2 On
@@ -560,8 +562,8 @@ Sub InitUSART
             Set TX2STA_TXEN On
           #endif
 
-          #ifdef Bit(U2BRGS)
-            'for 18fxxK42 series UART
+          #ifdef Var(U2BRGH)
+            'for 18fxxK42/K83 series UART
             U2BRGH=SPBRGH_TEMP2
             U2BRGL=SPBRGL_TEMP2
             U2BRGS = BRGS2_SCRIPT
@@ -914,16 +916,15 @@ Sub HSerReceive(Out SerData)
       end if
     #endif
 
-   'PIC USART 2 receive
-    #If USART2_BAUD_RATE Then
 
+    #If USART2_BAUD_RATE Then
+      'PIC USART 2 receive
       if comport = 2 Then
         SerData = DefaultUsartReturnValue
 
         #ifdef USART2_BLOCKING
            Wait Until USART2HasData
         #endif
-
 
         #ifdef Var(RC2REG)
 
@@ -963,8 +964,9 @@ Sub HSerReceive(Out SerData)
     #endif
   #endif
 
-'AVR USART 1 receive
+
   #ifdef AVR
+    'AVR USART 1 receive
     #If USART_BAUD_RATE Then
       if comport = 1 Then
         SerData = DefaultUsartReturnValue
@@ -988,8 +990,9 @@ Sub HSerReceive(Out SerData)
       End If
     #endif
 
-'AVR USART 2 receive
+
     #If USART2_BAUD_RATE Then
+       'AVR USART 2 receive
         if comport = 2 Then
           SerData = DefaultUsartReturnValue
           'If set up to block, wait for data
@@ -1004,8 +1007,9 @@ Sub HSerReceive(Out SerData)
         End If
     #endif
 
-'AVR USART 3 receive
+
     #If USART3_BAUD_RATE Then
+        'AVR USART 3 receive
         if comport = 3 Then
           SerData = DefaultUsartReturnValue
           'If set up to block, wait for data
@@ -1020,8 +1024,9 @@ Sub HSerReceive(Out SerData)
         End If
       #endif
 
-'AVR USART 4 receive
+
     #If USART4_BAUD_RATE Then
+        'AVR USART 4 receive
         if comport = 4 Then
           SerData = DefaultUsartReturnValue
           'If set up to block, wait for data
@@ -1037,8 +1042,6 @@ Sub HSerReceive(Out SerData)
       #endif
   #endif
 End Sub
-
-
 
 
 'Added  11/4/2015 by mlo
@@ -1082,18 +1085,17 @@ sub HSerGetNum (Out HSerNum As Long, optional In comport = 1)
       For HSerTemp = 1 to HSerIndex
         HSerNum = HSerNum * 10 + HSerDataIn(HSerTemp) - 48
       Next
+
       Exit Sub
     End If
-    'Number?
+
+   'Number?
     If HSerInByte >= 48 and HSerInByte <= 57 Then
         HSerIndex++
         HSerDataIn(HSerIndex) = HSerInByte
     End If
   Loop
 End Sub
-
-
-
 
 
 'Added  11/4/2015 by mlo
@@ -1127,14 +1129,11 @@ sub HSerPrintStringCRLF (In PrintData As String, optional In comport = 1)
     'Write Data
     for SysPrintTemp = 1 to PrintLen
       HSerSend(PrintData(SysPrintTemp),comport )
-
     next
   End If
 
   HSerSend(13,comport)
-
   HSerSend(10,comport)
-
 
 End Sub
 
@@ -1146,18 +1145,16 @@ sub HSerPrint (In PrintData As String, optional In comport = 1)
     'Write Data
     for SysPrintTemp = 1 to PrintLen
       HSerSend(PrintData(SysPrintTemp),comport )
-
     next
   End If
 
   'CR
   #IFDEF SerPrintCR
     HSerSend(13,comport)
-
   #ENDIF
+
   #IFDEF SerPrintLF
     HSerSend(10,comport)
-
   #ENDIF
 end sub
 
@@ -1177,19 +1174,16 @@ sub HSerPrint (In SerPrintVal, optional In comport = 1)
     OutValueTemp = SerPrintVal / 10
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-
   End If
   HSerSend(SerPrintVal + 48 ,comport)
-
 
   'CR
   #IFDEF SerPrintCR
     HSerSend(13,comport)
-
   #ENDIF
+
   #IFDEF SerPrintLF
     HSerSend(10,comport)
-
   #ENDIF
 
 end sub
@@ -1203,7 +1197,6 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 10000 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-
     Goto HSerPrintWord1000
   End If
 
@@ -1212,7 +1205,6 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 1000 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport  )
-
     Goto HSerPrintWord100
   End If
 
@@ -1221,7 +1213,6 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 100 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-
     Goto HSerPrintWord10
   End If
 
@@ -1230,20 +1221,17 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
     OutValueTemp = SerPrintVal / 10 [word]
     SerPrintVal = SysCalcTempX
     HSerSend(OutValueTemp + 48 ,comport )
-
   End If
 
   HSerSend(SerPrintVal + 48 ,comport  )
 
-
   'CR
   #IFDEF SerPrintCR
     HSerSend(13,comport)
-
   #ENDIF
+
   #IFDEF SerPrintLF
     HSerSend(10,comport)
-
   #ENDIF
 
 End Sub
@@ -1284,17 +1272,15 @@ Sub HSerPrint (In SerPrintVal As Long, optional In comport = 1)
   'Display
   For SysPrintTemp = SysPrintBuffLen To 1 Step -1
     HSerSend(SysPrintBuffer(SysPrintTemp) + 48, comport  )
-
   Next
 
   'CR
   #IFDEF SerPrintCR
     HSerSend(13 )
-
   #ENDIF
+
   #IFDEF SerPrintLF
     HSerSend(10 )
-
   #ENDIF
 
 End Sub
