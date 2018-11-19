@@ -4,13 +4,14 @@
 #2017-01-16: Move system-wide path config from /etc/profile to /etc/profile.d/gcbasic.sh
 #2017-12-09: Corrected Check for Freebasic, added check for rsync
 #2018-10-30: Updated to run from the Sources directory now there is a LinuxBuild directory
-	   : Fixed comment typo in check for FreeBASIC
-	   : Added script name & version output
-	   : Incremented version number
-
+#	   : Fixed comment typo in check for FreeBASIC
+#	   : Added script name & version output
+#	   : Incremented version number
+#2018-11-14: Fixed update comments, echo in Greetings,chmod +x was in wrong dir, useless
+#
 # NOT to be used on any other operating system (eg. Windows/macOS/FreeBSD).
 
-echo "\nGreat Cow Basic generic Linux installer, Version 0.4\n"
+echo -e "\nGreat Cow Basic generic Linux installer, Version 0.4\n"
 
 # Change to the Sources directory immediately above this directory
 cd ..
@@ -116,7 +117,8 @@ install()
 
 	cp -p $exefile .. #Copy compiled executable to parent (GreatCowBasic) directory
 	cd ..
-	chmod +x *.sh # Set scripts as executable
+	echo "DEBUG:$(pwd)"
+	#chmod +x *.sh # Set scripts as executable
 	rsync -rv $rsyncexclude * $installdir #install
 	if [ $? -eq 0 ]; then
 		echo -e "\n*** Installed successfully to $installdir !\n"
