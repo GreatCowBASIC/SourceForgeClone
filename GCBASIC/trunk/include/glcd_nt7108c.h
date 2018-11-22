@@ -20,6 +20,7 @@
 
 'Changes
 '  19/11/18  Initial release
+'  22/11/18  Revised to improve timings and read byte
 
 
 
@@ -43,9 +44,10 @@ Sub InitGLCD_NT7108C
 
   'Setup code for NT7108C controllers
   #if GLCD_TYPE = GLCD_TYPE_NT7108C
-     #define NT7108CReadDelay   5     ; 5 normal usage, 5 for 32 mhz!
-     #define NT7108CWriteDelay  1     ; 1 normal usage, 0 works
-     #define NT7108CClockDelay  1     ; 1 normal usage, 0 works
+     ' Timing for 32 mhz device - typically you can use the defaults and not state these constants
+     #define NT7108CReadDelay    7      ; = 7 normal usage, 5 or above is OK at 32 mhz!
+     #define NT7108CWriteDelay   7      ; = 7 normal usage you may get away with other lower values
+     #define NT7108CClockDelay   7      ; = 7 normal usage you may get away with other lower values
      #define GLCDDirection     0     ; 0 normal mode
 
     'Set pin directions
@@ -176,6 +178,11 @@ End Sub
 Sub PSet_NT7108C(In GLCDX, In GLCDY, In GLCDColour As Word)
 
   #if GLCD_TYPE = GLCD_TYPE_NT7108C
+
+    GLCDY = GLCDY and GLCD_HEIGHT - 1
+
+    GLCDX = GLCDX and GLCD_WIDTH - 1
+
     'Set pixel at X, Y on LCD to State
     'X is 0 to 127
     'Y is 0 to 63
@@ -203,6 +210,10 @@ Sub PSet_NT7108C(In GLCDX, In GLCDY, In GLCDColour As Word)
     'Dummy read first
     Set GLCD_RS On
     GLCDDataTemp = GLCDReadByte
+
+    'Select column
+    Set GLCD_RS Off
+    GLCDWriteByte 64 Or GLCDX
     'Read current data
     Set GLCD_RS On
     GLCDDataTemp = GLCDReadByte
@@ -244,12 +255,11 @@ End Sub
 '''@hide
 Sub GLCDWriteByte_NT7108C (In LCDByte)
 
+
   'Set LCD data direction
   Set GLCD_RW Off
-
   'Set data port direction
   dir GLCD_DATA_PORT out
-
   'Set output data
   GLCD_DATA_PORT = LCDByte
   'Latch data
@@ -257,7 +267,7 @@ Sub GLCDWriteByte_NT7108C (In LCDByte)
   Set GLCD_ENABLE On
   Wait NT7108CClockDelay us
   Set GLCD_ENABLE Off
-
+'  Wait NT7108CWriteDelay us
 End Sub
 
 #define GLCDReadByte GLCDReadByte_NT7108C
@@ -270,12 +280,12 @@ Function GLCDReadByte_NT7108C
 
   'Set LCD data direction
   Set GLCD_RW On
-
   'Read
   Set GLCD_ENABLE On
-  Wait NT7108CReadDelay us
+  Wait NT7108CClockDelay  US
   'Get input data
   Set GLCD_ENABLE Off
+  Wait NT7108CReadDelay  US
   GLCDReadByte = GLCD_DATA_PORT
 
 End Function
