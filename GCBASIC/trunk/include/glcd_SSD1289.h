@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Dimitris  Katsaounis based on works of Hugh Considine and  Evan Venn
+'    Copyright (C) 2018 Dimitris  Katsaounis based on works of Hugh Considine and  Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 '    25h Oct 2015 Corrected INIT
 '    02.05.2017   Reverted to standard line routine. Local version overan Byte values
 '                 Add PSET limits to prevent memory overwriting
+'    23.11.2018   Removed SuperCededLine method
 '
 'Notes:
 ' Supports SSD1289 controller only.
