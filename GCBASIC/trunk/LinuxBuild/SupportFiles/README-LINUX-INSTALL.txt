@@ -1,12 +1,12 @@
 *Introduction*
 
-Great Cow BASICcan be used when using the Linux operating system.
+Great Cow BASIC can be used when using the Linux operating system.
 
 This instructions are not distribution specific, but are for Linux only (not Windows).
 
 *Instructions*
 
-Complete the following steps to compile and install Great Cow BASICfor Linux:
+Complete the following steps to compile and install Great Cow BASIC for Linux:
 
 1. Install FreeBasic from your distributions repository or http://www.freebasic.net/wiki/CompilerInstalling
    If your Distribution eg. Debian are not provide Freebasic download it first from https://sourceforge.net/projects/fbc/
