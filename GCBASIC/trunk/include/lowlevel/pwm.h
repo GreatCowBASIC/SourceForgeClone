@@ -119,6 +119,7 @@
 ''' 22/8/2018 Revised to include support for CCP with mutlple 10 bit CPP with timers 2 and 4
 ''' 25/8/2018 Revised to resolve clock source of CCPTimerN, this impacted the CCP/PWM method, so, added Select-Case
 ''' 25/8/2018 Revised to add clock source for PWM method. Datasheet was incorrect!!! In PWM Harware module.
+''' 24/11/2018 Added PWM8 for K42
 
 
   'define the defaults
@@ -140,7 +141,7 @@
     #define HPWM5 5
     #define HPWM6 6
     #define HPWM7 7
-
+    #define HPWM8 8
 
     #define USE_HPWMCCP1 TRUE
     #define USE_HPWMCCP2 TRUE
@@ -155,6 +156,7 @@
     #define USE_HPWM5 TRUE
     #define USE_HPWM6 TRUE
     #define USE_HPWM7 TRUE
+    #define USE_HPWM8 TRUE
 
     #define USE_HPWM_TIMER2 TRUE
     #define USE_HPWM_TIMER4 TRUE
@@ -2403,6 +2405,10 @@ SUB PWMOn (IN PWMChannel, IN PWMHardware )
             Case 7
               Set PWM7EN On
           #ENDIF
+          #IFDEF BIT(PWM8EN) 'this simply stops error messages when the does not exit
+            Case 8
+              Set PWM8EN On
+          #ENDIF
 
       End Select
 
@@ -2549,6 +2555,10 @@ SUB PWMOff (IN Channel, IN PWMHardware)
           #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
             Case 7
               Set PWM7EN Off
+          #ENDIF
+          #IFDEF BIT(PWM8EN) 'this simply stops error messages when the does not exit
+            Case 8
+              Set PWM8EN Off
           #ENDIF
 
       End Select
@@ -3713,6 +3723,40 @@ sub HPWM (In PWMChannel, In PWMFreq as WORD, in PWMDuty as WORD , in _PWMTimerSe
 
     #endif
 
+    #ifdef USE_HPWM8 TRUE
+
+      #ifdef AddHPWMSetup8
+        AddHPWMSetup8
+      #endif
+
+      #if var(PWM8DCH)   'If no channel.... no-point in compiling the code
+
+        if PWMChannel = 8 then   'in section USE_HPWM8
+
+            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+            PWM8DCH = PRx_Temp_H
+            PWM8DCL = PRx_Temp
+
+            ' Select timer by updating CCPTMRS1 register
+            #ifdef bit(P8TSEL0)
+              SetWith ( P8TSEL0, _PWMTimerSelected.1 )
+              SetWith ( P8TSEL1, _PWMTimerSelected.2 )
+            #endif
+            #IFDEF BIT(PWM8EN) 'this simply stops error messages when the does not exit
+              'Start PMW8
+              Set PWM8EN On
+            #ENDIF
+
+        end if
+
+      #endif
+
+      #ifdef AddHPWMExit8
+        AddHPWMExit8
+      #endif
+
+    #endif
 
 end sub
 
@@ -3856,6 +3900,30 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
     #endif
 
+    #ifdef USE_HPWM8 TRUE
+
+      #ifdef AddHPWMUpdate8
+        AddHPWMUpdate8
+      #endif
+
+      #if var(PWM8DCH)   'If no channel.... no-point in compiling the code
+
+        if PWMChannel = 8 then   'in section USE_HPWM8
+
+            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+            PWM8DCH = PRx_Temp_H
+            PWM8DCL = PRx_Temp
+
+        end if
+
+      #endif
+
+      #ifdef AddHPWMExit8
+        AddHPWMExit8
+      #endif
+
+    #endif
 
 end sub
 
