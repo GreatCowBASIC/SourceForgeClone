@@ -8,10 +8,11 @@
 #	   : Added script name & version output
 #	   : Incremented version number
 #2018-11-14: Fixed update comments, echo in Greetings,chmod +x was in wrong dir, useless
+#2018-11-20: install exits if $installdir already exists
 #
 # NOT to be used on any other operating system (eg. Windows/macOS/FreeBSD).
 
-echo -e "\nGreat Cow Basic generic Linux installer, Version 0.4\n"
+echo -e "\nGreat Cow Basic generic Linux installer, Version 0.5\n"
 
 # Change to the Sources directory immediately above this directory
 cd ..
@@ -113,6 +114,11 @@ install()
 			echo "Could not create installation directory. Exiting."
 			exit 1
 		fi
+	else
+		echo "The Target Directory \"$installdir\" already exists."
+		echo "Please read \"../README-LINUX-INSTALL.txt\" Step 7 carefully."
+		echo "Exiting."
+		exit 1
 	fi
 
 	cp -p $exefile .. #Copy compiled executable to parent (GreatCowBasic) directory
