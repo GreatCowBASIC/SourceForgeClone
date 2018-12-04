@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2018 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,7 @@
 ' 27/10/2014: Changed ST7735Rotation to GLCDRotate
 '
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
+' 04/12/18    Changed to support OLED fonts and updated to 2018 controls
 '
 'Hardware settings
 'Type
@@ -296,15 +297,26 @@ Sub InitGLCD_ST7735
     GLCDBackground = ST7735_WHITE
     GLCDForeground = ST7735_BLACK
 
-                    'Variables required for device
-                    ST7735_GLCD_WIDTH = GLCD_WIDTH
-                    ST7735_GLCD_HEIGHT = GLCD_HEIGHT
-                    GLCDFontWidth = 6
-                    GLCDfntDefault = 0
-        GLCDfntDefaultsize = 1
+    'Variables required for device
+    ST7735_GLCD_WIDTH = GLCD_WIDTH
+    ST7735_GLCD_HEIGHT = GLCD_HEIGHT
+
+    #ifndef GLCD_OLED_FONT
+      GLCDFontWidth = 6
+    #endif
+
+    #ifdef GLCD_OLED_FONT
+      GLCDFontWidth = 5
+    #endif
+
+  GLCDfntDefault = 0
+  GLCDfntDefaultsize = 1
+
+
+
   #endif
 
-          GLCDRotate ( PORTRAIT_REV )
+  GLCDRotate ( PORTRAIT_REV )
   'Clear screen
   GLCDCLS
 
@@ -333,38 +345,178 @@ Sub GLCDCLS_ST7735
 
 End Sub
 
+'''Draws a string at the specified location on the GLCD
+'''@param StringLocX X coordinate for message
+'''@param CharLocY Y coordinate for message
+'''@param Chars String to display
+'''@param LineColour Line Color, either 1 or 0
+Sub GLCDDrawString_ST7735( In StringLocX as word, In CharLocY as word, In Chars as string, Optional In LineColour as word = GLCDForeground )
+
+  dim GLCDPrintLoc as word
+
+  GLCDPrintLoc = StringLocX
+
+  #ifdef GLCD_OLED_FONT
+      dim OldGLCDFontWidth as Byte
+      OldGLCDFontWidth = GLCDFontWidth
+  #endif
+
+  for xchar = 1 to Chars(0)
+
+      GLCDDrawChar GLCDPrintLoc , CharLocY , Chars(xchar), LineColour
+      GLCDPrintIncrementPixelPositionMacro
+
+  next
+
+  #ifdef GLCD_OLED_FONT
+      GLCDFontWidth = OldGLCDFontWidth
+  #endif
+
+
+end sub
+
 '''Draws a character at the specified location on the ST7920 GLCD
 '''@param StringLocX X coordinate for message
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
-Sub GLCDDrawChar_ST7735(In CharLocX, In CharLocY, In CharCode, Optional In LineColour as word = GLCDForeground )
+Sub GLCDDrawChar_ST7735(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
 
-  'CharCode needs to have 16 subtracted, table starts at char 16 not char 0
-  CharCode -= 15
+  'This has got a tad complex
+  'We have three major pieces
+  '1 The preamble - this just adjusted color and the input character
+  '2 The code that deals with GCB fontset
+  '3 The code that deals with OLED fontset
+  '
+  'You can make independent change to section 2 and 3 but they are mutual exclusive with many common pieces
 
-          'Need to read characters from CharColn (n = 0:7) tables
-  '(First 3, ie 0:2 are blank, so can ignore)
-  For CurrCharCol = 1 to 5
-    Select Case CurrCharCol
-      Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
-      Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
-      Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
-      Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
-      Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
-    End Select
-                    For CurrCharRow = 1 to 8
-                              If CurrCharVal.0 = 0 Then
-                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
-                              Else
-                                        PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDForeground
-                              End If
-                              Rotate CurrCharVal Right
-                    Next
+   dim CharCol, CharRow, GLCDTemp as word
+   CharCode -= 15
 
-  Next
+   CharCol=0
+
+   #ifndef GLCD_OLED_FONT
+
+        if CharCode>=178 and CharCode<=202 then
+           CharLocY=CharLocY-1
+        end if
+
+        For CurrCharCol = 1 to 5
+          Select Case CurrCharCol
+            Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+            Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+            Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+            Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+            Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+          End Select
+          CharRow=0
+          For CurrCharRow = 1 to 8
+              CharColS=0
+              For Col=1 to GLCDfntDefaultsize
+                    CharColS +=1
+                    CharRowS=0
+                    For Row=1 to GLCDfntDefaultsize
+                        CharRowS +=1
+                        if CurrCharVal.0=1 then
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
+                        Else
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                        End if
+                    Next Row
+              Next Col
+            Rotate CurrCharVal Right
+            CharRow +=GLCDfntDefaultsize
+          Next
+          CharCol +=GLCDfntDefaultsize
+        Next
+
+    #endif
+
+    #ifdef GLCD_OLED_FONT
+
+        'Calculate the pointer to the OLED fonts.
+        'These fonts are not multiple tables one is a straight list the other is a lookup table with data.
+        Dim LocalCharCode as word
+
+        'Get key information and set up the fonts parameters
+        Select case GLCDfntDefaultSize
+            case 1 'This font is two font tables of an index and data
+              CharCode = CharCode - 16
+              ReadTable OLEDFont1Index, CharCode, LocalCharCode
+              ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
+              GLCDFontWidth = COLSperfont + 1
+              ROWSperfont = 7  'which is really 8 as we start at 0
+
+            case 2 'This is one font table
+              CharCode = CharCode - 17
+              'Pointer to table of font elements
+              LocalCharCode = (CharCode * 20)
+              COLSperfont = 9  'which is really 10 as we start at 0
+
+              ROWSperfont=15  'which is really 16 as we start at 0
+
+        End Select
 
 
+        'The main loop - loop throught the number of columns
+        For CurrCharCol = 0 to COLSperfont  'number of columns in the font , with two row of data
+
+          'Index the pointer to the code that we are looking for as we need to do this lookup many times getting more font data
+          LocalCharCode++
+          Select case GLCDfntDefaultSize
+              case 1
+                ReadTable OLEDFont1Data, LocalCharCode, CurrCharVal
+
+              case 2
+                #ifndef GLCD_Disable_OLED_FONT2
+                  'Read this 20 times... (0..COLSperfont) [ * 2 ]
+                  ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                #endif
+                #ifdef GLCD_Disable_OLED_FONT2
+                  CurrCharVal = GLCDBackground
+                #endif
+          End Select
+
+            'we handle 8 or 16 pixels of height
+            For CurrCharRow = 0 to ROWSperfont
+                'Set the pixel
+                If CurrCharVal.0 = 0 Then
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                Else
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, LineColour
+                End If
+
+                Rotate CurrCharVal Right
+
+                'Set to next row of date, a second row
+                if GLCDfntDefaultSize = 2 and CurrCharRow = 7 then
+                  LocalCharCode++
+                  #ifndef GLCD_Disable_OLED_FONT2
+                    ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                  #endif
+                  #ifdef GLCD_Disable_OLED_FONT2
+                    CurrCharVal = GLCDBackground
+                  #endif
+                end if
+
+                'It is the intercharacter space, put out one pixel row
+                if CurrCharCol = COLSperfont then
+                    'Put out a white intercharacter pixel/space
+                     GLCDTemp = CharLocX + CurrCharCol
+                     if GLCDfntDefaultSize = 2 then
+                        GLCDTemp++
+                     end if
+                     PSet GLCDTemp , CharLocY + CurrCharRow, GLCDBackground
+                end if
+
+            Next
+
+
+
+        Next
+
+
+    #endif
 
 End Sub
 
@@ -642,4 +794,3 @@ Table ST7735GammaCorrection
   0x2b
   0x3c
 End Table
-
