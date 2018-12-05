@@ -29,6 +29,7 @@
 '
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 04/12/18    Changed to support OLED fonts and updated to 2018 controls
+' 05/12/18    Revised adding GLCDCLS parameter
 '
 'Hardware settings
 'Type
@@ -325,20 +326,20 @@ End Sub
 
 'Subs
 '''Clears the GLCD screen
-Sub GLCDCLS_ST7735
+Sub GLCDCLS_ST7735 ( Optional In  GLCDBackground as word = GLCDBackground)
           ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
           GLCD_yordinate = 0
 
   #if GLCD_TYPE = GLCD_TYPE_ST7735
     SetAddress_ST7735 ST7735_COLUMN, 0, ST7735_GLCD_WIDTH
-                    wait 2 ms
-                    SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
-                    wait 2 ms
-                    SendCommand_ST7735 0x2C
-                    wait 2 ms
-                    Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
+    wait 2 ms
+    SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
+    wait 2 ms
+    SendCommand_ST7735 0x2C
+    wait 2 ms
+    Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
       SendData_ST7735 GLCDBackground_h
-                              SendData_ST7735 GLCDBackground
+      SendData_ST7735 GLCDBackground
     End Repeat
 '                    FilledBox( 0, 0, ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT, GLCDBackground )
   #endif
