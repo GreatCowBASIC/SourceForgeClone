@@ -41,6 +41,7 @@
 '    27/09/18 ILI9326 driver
 '    19/11/18 NT7108C driver
 '    22/11/18 Increased scope of NT7108C methods.
+'    07/12/18 Remove silly script warning
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
@@ -129,7 +130,7 @@ Dim GLCDDeviceWidth as Word
 
   ' add new type here!
   If GLCD_TYPE = GLCD_TYPE_KS0108 Then
-warning GLCD_TYPE
+
      #include <glcd_ks0108.h>
      InitGLCD = InitGLCD_KS0108
      GLCDCLS = GLCDCLS_KS0108
