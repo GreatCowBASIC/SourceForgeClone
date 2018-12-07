@@ -10,14 +10,14 @@ These instructions are for FreeBSD only (not Windows).
 
 Complete the following steps to compile and install Great Cow BASIC:
 
- 1. Download one of the nightly builds of FreeBASIC 1.06 for the FreeBSD 32 bit
+ 1. Download one of the nightly builds of FreeBASIC 1.XX for the FreeBSD 32 bit
 or 64 bit binary compilation from: 
 http://users.freebasic-portal.de/stw/builds/freebsd32/ (32 bit) or 
 http://users.freebasic-portal.de/stw/builds/freebsd64/ (64 bit) 
 The filenames are in the format fbc_freebsd[32|64]\_[BuildNumber]_[Date].zip.
 
  2. Download the Great Cow BASIC UNIX Source Distribution from SourceForge at 
-https://sourceforge.net/projects/gcbasic/files/GreatCowBASIC-UNIX-v0_98_04.rar/download
+https://sourceforge.net/projects/gcbasic/files/gcb_unix_distribution.rar/download
 
  3. Move the FreeBASIC ZIP file from your download directory to your home 
 directory.
@@ -32,7 +32,7 @@ to your home directory.
 
  6. Unpack the Great Cow BASIC compressed tar file by typing these commands:
 ----
-   unrar x GreatCowBASIC-UNIX-v0_98_04.rar
+   unrar x gcbasic_unix_distribution.rar
 ----
 This will produce a new directory called GreatCowBASIC. *Note:* If you do not already have the unrar program installed you can either compile it from the ports collection or use the pkg command to install the binary and any required dependancies.
 
