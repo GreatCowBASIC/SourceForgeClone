@@ -10,7 +10,7 @@
 #2018-11-14: Fixed update comments, echo in Greetings,chmod +x was in wrong dir, useless
 #2018-11-20: install exits if $installdir already exists
 #2018-11-25: install copies SupportFiles, too, chmod enabled again
-#
+#2018-12-06: some MixedCase filenames changed
 # NOT to be used on any other operating system (eg. Windows/macOS/FreeBSD).
 
 echo -e "\nGreat Cow Basic generic Linux installer, Version 0.6\n"
@@ -124,7 +124,7 @@ install()
 
   cp -p $exefile .. #Copy compiled executable to parent (GreatCowBasic) directory
   # in SupportFiles are the Scripts which essential for compile, make hex, and flash
-  cp -p LinuxBuild/SupportFiles/* ..
+  cp -p linuxbuild/supportfiles/* ..
   cd ..
   chmod +x *.sh # Set scripts as executable
   rsync -rv $rsyncexclude * $installdir #install
