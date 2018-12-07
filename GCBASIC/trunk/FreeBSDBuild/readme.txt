@@ -17,7 +17,7 @@ http://users.freebasic-portal.de/stw/builds/freebsd64/ (64 bit)
 The filenames are in the format fbc_freebsd[32|64]\_[BuildNumber]_[Date].zip.
 
  2. Download the Great Cow BASIC UNIX Source Distribution from SourceForge at 
-https://sourceforge.net/projects/gcbasic/files/GreatCowBASIC-UNIX-v0_98_03.rar/download
+https://sourceforge.net/projects/gcbasic/files/GreatCowBASIC-UNIX-v0_98_04.rar/download
 
  3. Move the FreeBASIC ZIP file from your download directory to your home 
 directory.
@@ -32,16 +32,16 @@ to your home directory.
 
  6. Unpack the Great Cow BASIC compressed tar file by typing these commands:
 ----
-   unrar x GreatCowBASIC-UNIX-v0_98_03.rar
+   unrar x GreatCowBASIC-UNIX-v0_98_04.rar
 ----
-This will produce a new directory called GreatCowBasic. *Note:* If you do not already have the unrar program installed you can either compile it from the ports collection or use the pkg command to install the binary and any required dependancies.
+This will produce a new directory called GreatCowBASIC. *Note:* If you do not already have the unrar program installed you can either compile it from the ports collection or use the pkg command to install the binary and any required dependancies.
 
- 7. Change to the `GreatCowBasic/Sources` directory.
+ 7. Change to the `GreatCowBASIC/sources` directory.
 
- 8. Execute the FreeBSDBuild/install.sh shell script from the Sources directory.
+ 8. Execute the freebsdbuild/install.sh shell script from the sources directory.
 
 ----
-  sh FreeBSDBuild/install.sh [all | build | install]
+  sh freebsdbuild/install.sh [all | build | install]
 ----
 
 The build script arguments are:
@@ -93,8 +93,8 @@ latest Microchip 8 bit microcontrollers.
 
 *Help*
 
-Great Cow BASIC Help documentation is installed in the Documentation 
-subdirectory in your GreatCowBasic directory.
+Great Cow BASIC Help documentation is installed in the documentation 
+subdirectory in your GreatCowBASIC directory.
 
 If at any time you encounter an issue and need help, you will find it over at
 the friendly Great Cow BASIC discussion forums at:
