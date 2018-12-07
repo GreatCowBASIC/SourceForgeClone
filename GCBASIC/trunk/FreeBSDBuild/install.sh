@@ -9,11 +9,12 @@
 # v1.02, 30 Oct 2018 - fixed cosmetic typo  
 # v1.03, 31 Oct 2018 - fixed version string parsing  
 # v2.00, 04 Dec 2018 - enforce case on dirs and files
+# v2.01, 07 Dec 2018 - account for case changes in RAR archive
 #
 ###################################################
 
 echo 
-echo "FreeBSD Great Cow BASIC installation v2.00"
+echo "FreeBSD Great Cow BASIC installation v2.01"
 echo
 
 ## FUNCTIONS
@@ -105,40 +106,32 @@ return
 
 #
 # Enforce case of files and directories
-# - note excludes the elements of the path GreatCowBasic/Sources/FreeBSDBuild
-# - note excludes the converters directory contents (spaced directory names, mixed case filenames)
 #
 enforce_case()
 {
-cd ..   # change from Source to above (ie GreatCowBasic)
+cd ..   # change from sources to above (ie GreatCowBASIC)
 
-echo "Checking directories with initial capital letter ..."
-for dir in ${UCDIRS}    # check for dirs with initial cap
+echo "Checking directory names - should be all lowercase"
+for dir in ${LCDIRS}    # check for dirs with all lowercase
         do
-            if [ ! -d ${dir} ]
+	    echo -n "Checking ${dir} ... "
+
+	    if [ ! -d ${dir} ]
                 then
-                        found_dir=`ls | grep -i ${dir}`
-                        mv ${found_dir} ${dir}
-                        echo "Case of ${found_dir} corrected to ${dir}"
+                    found_dir=`ls | grep -i ${dir}`
+                    echo "Case of ${found_dir} corrected to ${dir}"
+                    mv ${found_dir} ${dir}
+	    else
+		    echo "OK"
             fi
         done
 
-echo "Checking directories that should be all lowercase ..."
-for dir in ${LCDIRS}    # check for dirs with all lowercase
-        do
-                if [ ! -d ${dir} ]
-                  then
-                        found_dir=`ls | grep -i ${dir}`
-                        mv ${found_dir} ${dir}
-                        echo "Case of ${found_dir} corrected to ${dir}"
-                fi
-        done
-
-echo "Checking files - should be all lowercase ..."
+echo
+echo "Checking file and subdirectory names - should be all lowercase"
 
 start_dir=`pwd`
 all_subdirs=`find . -type d -print`
-selected_dirs=`echo "${all_subdirs}" | grep -v "Documentation" | grep -v converters | grep -v "Build"`
+selected_dirs=`echo "${all_subdirs}"`
 
 for dir in ${selected_dirs}
         do
@@ -151,24 +144,15 @@ for dir in ${selected_dirs}
 	    echo "Checking ${dir} ..."
 	    cd ${dir}
 
-	    files=`ls | grep -v Build`
-	    #echo ${files}
+	    files=`ls`
 	    
 	    for file in ${files}
 	        do
-		    #echo "File: ${file}"
-		
-		    if [ -d ${file} ]
-		       then
-			   cd ${start_dir}
-			   continue
-		    fi
-
 		    found_file=`echo "${file}" | grep "[A-Z]"`
                     if [ "${found_file}" ]
                        then
 			   correct_file=`echo "${file}" | tr "[A-Z]" "[a-z]"`
-			   mv "${found_file}" "${correct-file}"
+			   mv "${found_file}" "${correct_file}"
                            echo "Case of ${found_file} corrected to ${correct_file}"
                     fi
 
@@ -177,7 +161,9 @@ for dir in ${selected_dirs}
 	    cd ${start_dir}   # return to starting directory
 	 done
 
-cd Sources   # change back to Sources directory
+cd sources   # change back to sources directory
+
+return
 }
 
 #
@@ -185,9 +171,7 @@ cd Sources   # change back to Sources directory
 #
 usage()
 {
-cmd=`basename ${0}`
-echo
-echo "Usage: ${cmd} [all | build | install]"
+echo "Usage: `basename ${0}` [all | build | install]"
 echo "       all      - compile and install gcbasic"
 echo "       build    - compile gcbasic"
 echo "       install  - install gcbasic"
@@ -201,7 +185,6 @@ exit 1
 #
 do_exit()
 {
-echo
 echo "${1}"
 echo
 echo "Exiting until fixed"
@@ -213,10 +196,9 @@ exit 1
 ## DEFINES
 
 CC="fbc -exx -v -arch native gcbasic.bas"
-UCDIRS="Documentation Sources"
-LCDIRS="demos include chipdata converters" 
+LCDIRS="documentation demos sources include chipdata converters" 
 REQUIRED="gcbasic.bas assembly.bi preprocessor.bi utils.bi variables.bi ../version.txt"
-INSTALL_FILES="Sources/gcbasic messages.dat messages-br.dat messages-de.dat messages-es.dat messages-fr.dat messages-it.dat messages-tk.dat include chipdata demos Documentation converters"
+INSTALL_FILES="sources/gcbasic messages.dat messages-br.dat messages-de.dat messages-es.dat messages-fr.dat messages-it.dat messages-tk.dat include chipdata demos documentation converters"
 
 ## END DEFINES
 
@@ -238,16 +220,10 @@ fi
 #
 pwd=`pwd`
 pwd=`basename ${pwd}`
-if [ "${pwd}" != "Sources" ]
+if [ "${pwd}" != "sources" ]
   then
-    echo ${pwd}
-    do_exit "${0} must be executed in the GreatCowBasic/Sources directory"
+    do_exit "${0} must be executed from the GreatCowBASIC/sources directory"
 fi
-
-#
-# enforce case
-#
-enforce_case
 
 #
 # target all or build
@@ -258,6 +234,7 @@ if [ "${1}" = "all" -o "${1}" = "build" ]
     echo
     echo "Building Great Cow BASIC ${version}, released ${release}"
     echo
+    enforce_case
     req_check
     exec_check fbc
     exec_check gcc

@@ -1,5 +1,9 @@
 #!/bin/sh
 
+#
+# v1.01 - Updated filepaths for new archive layout
+#
+
 echo
 echo "Compiling Great Cow BASIC for macOS with FreeBASIC"
 echo
@@ -27,7 +31,7 @@ export C_INCLUDE_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOS
 export MACOSX_DEPLOYMENT_TARGET=10.1
 
 # Change to the Great Cow BASIC source directory
-cd ~/GreatCowBasic/Sources
+cd ~/GreatCowBASIC/Sources
 
 # Now compile!
 #
