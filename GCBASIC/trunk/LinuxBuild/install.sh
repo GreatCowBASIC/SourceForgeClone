@@ -11,6 +11,7 @@
 #2018-11-20: install exits if $installdir already exists
 #2018-11-25: install copies SupportFiles, too, chmod enabled again
 #2018-12-06: some MixedCase filenames changed
+#2018-12-12: MixedCase found again sources were not ommitted while install
 # NOT to be used on any other operating system (eg. Windows/macOS/FreeBSD).
 
 echo -e "\nGreat Cow Basic generic Linux installer, Version 0.6\n"
@@ -34,7 +35,7 @@ REQUIRES="gcbasic.bas assembly.bi preprocessor.bi utils.bi variables.bi"
 # Install vars
 exefile="gcbasic"
 installdir=/opt/GCBASIC
-rsyncexclude="--exclude=Sources"
+rsyncexclude="--exclude=sources"
 
 #--- Subs ---
 usage()
@@ -145,7 +146,7 @@ RSYNC=rsync
                 echo "### rsync not found in path.         ###"
                 echo "###         Cannot continue.         ###"
                 echo "###   Please install rsync for your  ###"
-    echo "###   Distribution and try again.    ###"
+                echo "###   Distribution and try again.    ###"
                 exit 1
         fi
 
