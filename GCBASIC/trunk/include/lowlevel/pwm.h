@@ -120,6 +120,7 @@
 ''' 25/8/2018 Revised to resolve clock source of CCPTimerN, this impacted the CCP/PWM method, so, added Select-Case
 ''' 25/8/2018 Revised to add clock source for PWM method. Datasheet was incorrect!!! In PWM Harware module.
 ''' 24/11/2018 Added PWM8 for K42
+''' 13/11/2018 Added channels 1,2 and 3 to HPWUpdate
 ''' 14/12/2019 Added PWMxOE enable bits to support parts that need it. 16f1503 etc.
 
 
@@ -3880,6 +3881,75 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
     'Restore the cache value
     PRx_Temp = PRx_Temp_Cache
 
+    #ifdef USE_HPWM1 TRUE
+
+      #ifdef AddHPWMUpdate1
+        AddHPWMUpdate1
+      #endif
+
+      #if var(PWM1DCH)   'If no channel.... no-point in compiling the code
+
+        if PWMChannel = 1 then  'in section USE_HPWM1
+
+            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+            'assumes PRx_Temp and PWMDuty are valid
+            PWM1DCH = PRx_Temp_H
+            PWM1DCL = PRx_Temp
+
+            #IFDEF BIT(PWM1OE)
+              PWM1OE = 1
+            #ENDIF
+
+            #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
+              'Start PMW1
+              Set PWM1EN On
+            #ENDIF
+
+        End if
+
+      #endif
+
+      #ifdef AddHPWMExit1
+        AddHPWMExit1
+      #endif
+
+    #endif
+
+    #ifdef USE_HPWM2 TRUE
+
+      #ifdef AddHPWMUpdate2
+        AddHPWMUpdate2
+      #endif
+
+      #if var(PWM2DCH)   'If no channel.... no-point in compiling the code
+
+        if PWMChannel = 2 then  'in section USE_HPWM2
+
+            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+            'assumes PRx_Temp and PWMDuty are valid
+            PWM2DCH = PRx_Temp_H
+            PWM2DCL = PRx_Temp
+
+            #IFDEF BIT(PWM2OE)
+              PWM2OE = 1
+            #ENDIF
+
+            #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
+              Set PWM2EN On
+            #ENDIF
+
+        End if
+
+      #endif
+
+      #ifdef AddHPWMExit2
+        AddHPWMExit2
+      #endif
+
+    #endif
+
     #ifdef USE_HPWM3 TRUE
 
       #ifdef AddHPWMUpdate3
@@ -3898,6 +3968,10 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
             #IFDEF BIT(PWM3OE)
               PWM3OE = 1
+            #ENDIF
+
+            #IFDEF BIT(PWM3EN) 'this simply stops error messages when the does not exit
+              Set PWM3EN On
             #ENDIF
 
         End if
@@ -3929,6 +4003,10 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
               PWM4OE = 1
             #ENDIF
 
+            #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
+              Set PWM4EN On
+            #ENDIF
+
         End if
 
       #endif
@@ -3958,6 +4036,10 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
               PWM5OE = 1
             #ENDIF
 
+            #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
+              Set PWM5EN On
+            #ENDIF
+
         End if
 
       #endif
@@ -3985,6 +4067,10 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
             #IFDEF BIT(PWM6OE)
               PWM6OE = 1
+            #ENDIF
+
+            #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
+              Set PWM6EN On
             #ENDIF
 
         End if
@@ -4017,6 +4103,10 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
               PWM7OE = 1
             #ENDIF
 
+            #IFDEF BIT(PWM7EN) 'this simply stops error messages when the does not exit
+              Set PWM7EN On
+            #ENDIF
+
         end if
 
       #endif
@@ -4044,6 +4134,10 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
             #IFDEF BIT(PWM8OE)
               PWM8OE = 1
+            #ENDIF
+
+            #IFDEF BIT(PWM8EN) 'this simply stops error messages when the does not exit
+              Set PWM8EN On
             #ENDIF
 
         end if
