@@ -16,7 +16,6 @@ Family=15
 ConfigWords=2
 PSP=0
 MaxAddress=4095
-ReadAD10BitForceVariant=4
 
 [Interrupts]
 ADCReady:ADIE,ADIF
