@@ -30,6 +30,7 @@
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 04/12/18    Changed to support OLED fonts and updated to 2018 controls
 ' 05/12/18    Revised adding GLCDCLS parameter
+' 16/12/18    Revised to use TFT colors. Updated GLCDCLS to be a lot faster and updated GLCDRotate to support bits.
 '
 'Hardware settings
 'Type
@@ -127,16 +128,35 @@
 #define ST7735_LANDSCAPE_REV 3
 #define ST7735_PORTRAIT 4
 
+#define ST7735_MADCTL_MY  0x80
+#define ST7735_MADCTL_MX  0x40
+#define ST7735_MADCTL_MV  0x20
+#define ST7735_MADCTL_ML  0x10
+#define ST7735_MADCTL_RGB 0x00
+#define ST7735_MADCTL_BGR 0x08
+#define ST7735_MADCTL_MH  0x04
 
 ' Color definitions
-#define ST7735_BLACK   0x0000
-#define ST7735_BLUE    0xF800
-#define ST7735_RED     0x001F
-#define ST7735_GREEN   0x07E0
-#define ST7735_CYAN    0xFFE0
-#define ST7735_MAGENTA 0xF81F
-#define ST7735_YELLOW  0x07FF
-#define ST7735_WHITE   0xFFFF
+'standard colors same as the TFT colors
+#define ST7735_WHITE   TFT_WHITE
+#define ST7735_BLACK   TFT_BLACK
+#define ST7735_RED     TFT_RED
+#define ST7735_GREEN   TFT_GREEN
+#define ST7735_BLUE    TFT_BLUE
+#define ST7735_YELLOW  TFT_YELLOW
+#define ST7735_CYAN    TFT_CYAN
+#define ST7735_MAGENTA TFT_MAGENTA
+#define ST7735_NAVY          TFT_NAVY
+#define ST7735_DARKGREEN     TFT_DARKGREEN
+#define ST7735_DARKCYAN      TFT_DARKCYAN
+#define ST7735_MAROON        TFT_MAROON
+#define ST7735_PURPLE        TFT_PURPLE
+#define ST7735_OLIVE         TFT_OLIVE
+#define ST7735_LIGHTGREY     TFT_LIGHTGREY
+#define ST7735_DARKGREY      TFT_DARKGREY
+#define ST7735_ORANGE        TFT_ORANGE
+#define ST7735_GREENYELLOW   TFT_GREENYELLOW
+#define ST7735_PINK          TFT_PINK
 
 #startup InitGLCD_ST7735
 
@@ -153,30 +173,30 @@ Sub InitGLCD_ST7735
   'Setup code for ST7735 controllers
   #if GLCD_TYPE = GLCD_TYPE_ST7735
     'Pin directions
-                    #IFNDEF GLCD_LAT
-                        Dir ST7735_CS Out
-                        Dir ST7735_DC Out
-                        Dir ST7735_RST Out
+    #IFNDEF GLCD_LAT
+        Dir ST7735_CS Out
+        Dir ST7735_DC Out
+        Dir ST7735_RST Out
 
-                        Dir ST7735_DI In
-                        Dir ST7735_DO Out
-                        Dir ST7735_SCK Out
-                    #endif
+        Dir ST7735_DI In
+        Dir ST7735_DO Out
+        Dir ST7735_SCK Out
+    #endif
 
 
-                    #IFDEF GLCD_LAT
-                        Dir _ST7735_CS Out
-                        Dir _ST7735_DC Out
-                        Dir _ST7735_RST Out
+    #IFDEF GLCD_LAT
+        Dir _ST7735_CS Out
+        Dir _ST7735_DC Out
+        Dir _ST7735_RST Out
 
-                        Dir _ST7735_DI In
-                        Dir _ST7735_DO Out
-                        Dir _ST7735_SCK Out
-                    #endif
+        Dir _ST7735_DI In
+        Dir _ST7735_DO Out
+        Dir _ST7735_SCK Out
+    #endif
 
-                    #ifdef ST7735_HardwareSPI
-                      ' harware SPI mode
-                      SPIMode MasterFast, 0
+    #ifdef ST7735_HardwareSPI
+      ' harware SPI mode
+      SPIMode MasterFast, 0
     #endif
 
     'Reset display
@@ -195,108 +215,96 @@ Sub InitGLCD_ST7735
     SendCommand_ST7735 ST7735_SWRESET
     Wait 200 ms
 
-                    'Out of sleep mode
+    'Out of sleep mode
     SendCommand_ST7735 ST7735_SLPOUT
     Wait 200 ms
 
-                    SendCommand_ST7735(ST7735_COLMOD)   ; set color mode
-                    SendData_ST7735(0x05)               ; 16-bit color
+    SendCommand_ST7735(ST7735_COLMOD)   ; set color mode
+    SendData_ST7735(0x05)               ; 16-bit color
     Wait 10 ms
 
-                    SendCommand_ST7735(ST7735_FRMCTR1); // frame rate control
-                    SendData_ST7735(0x00);          // fastest refresh
-                    SendData_ST7735(0x06);          // 6 lines front porch
-                    SendData_ST7735(0x03);          // 3 lines backporch
-                    Wait 10 ms
+    SendCommand_ST7735(ST7735_FRMCTR1); // frame rate control
+    SendData_ST7735(0x00);          // fastest refresh
+    SendData_ST7735(0x06);          // 6 lines front porch
+    SendData_ST7735(0x03);          // 3 lines backporch
+    Wait 10 ms
 
-                    SendCommand_ST7735(ST7735_MADCTL);  // memory access control (directions)
-                    SendData_ST7735(0xC8);          // row address/col address, bottom to top refresh
-                    wait 10 ms
+    SendCommand_ST7735(ST7735_MADCTL);  // memory access control (directions)
+    SendData_ST7735(0xC0);          // row address/col address, bottom to top refresh/RGB not GBR
+    wait 10 ms
 
-                    SendCommand_ST7735(ST7735_DISSET5); // display settings #5
-                    SendData_ST7735(0x15);          // 1 clock cycle nonoverlap, 2 cycle gate rise, 3 cycle oscil. equalize
-                    SendData_ST7735(0x02);          // fix on VTL
-                    wait 10 ms;
-                    SendCommand_ST7735(ST7735_INVCTR);  // display inversion control
-                    SendData_ST7735(0x0);           // line inversion
-                    wait 10 ms;
-                    SendCommand_ST7735(ST7735_PWCTR1);  // power control
-                    SendData_ST7735(0x02);          // GVDD = 4.7V
-                    SendData_ST7735(0x70);          // 1.0uA
-                    wait 10 ms;
-
-'                    SendCommand_ST7735(ST7735_PWCTR2);  // power control
-'                    SendData_ST7735(0x05);          // VGH = 14.7V, VGL = -7.35V
-'                    SendCommand_ST7735(ST7735_PWCTR3);  // power control
-'                    SendData_ST7735(0x01);          // Opamp current small
-'                    SendData_ST7735(0x02);          // Boost frequency
-'                    wait 10 ms;
-'                    SendCommand_ST7735(ST7735_VMCTR1);  // power control
-'                    SendData_ST7735(0x3C);          // VCOMH = 4V
-'                    SendData_ST7735(0x38);          // VCOML = -1.1V
-'                    wait 10 ms;
-
-                    SendCommand_ST7735(ST7735_GMCTRP1);
-                    SendData_ST7735(0x09);
-                    SendData_ST7735(0x16);
-                    SendData_ST7735(0x09);
-                    SendData_ST7735(0x20);
-                    SendData_ST7735(0x21);
-                    SendData_ST7735(0x1B);
-                    SendData_ST7735(0x13);
-                    SendData_ST7735(0x19);
-                    SendData_ST7735(0x17);
-                    SendData_ST7735(0x15);
-                    SendData_ST7735(0x1E);
-                    SendData_ST7735(0x2B);
-                    SendData_ST7735(0x04);
-                    SendData_ST7735(0x05);
-                    SendData_ST7735(0x02);
-                    SendData_ST7735(0x0E);
-                    wait 10 ms;
-                    SendCommand_ST7735(ST7735_GMCTRN1);
-                    SendData_ST7735(0x0B);
-                    SendData_ST7735(0x14);
-                    SendData_ST7735(0x08);
-                    SendData_ST7735(0x1E);
-                    SendData_ST7735(0x22);
-                    SendData_ST7735(0x1D);
-                    SendData_ST7735(0x18);
-                    SendData_ST7735(0x1E);
-                    SendData_ST7735(0x1B);
-                    SendData_ST7735(0x1A);
-                    SendData_ST7735(0x24);
-                    SendData_ST7735(0x2B);
-                    SendData_ST7735(0x06);
-                    SendData_ST7735(0x06);
-                    SendData_ST7735(0x02);
-                    SendData_ST7735(0x0F);
-                    wait 10 ms;
-
-                    SendCommand_ST7735(ST7735_PWCTR6);  // power control
-                    SendData_ST7735(0x11);
-                    SendData_ST7735(0x15);
-                    wait 10 ms;
-
-
-    'Gamma correction
-    'SetGammaCorrection_ST7735
-
-    'Scanning direction
-    SendCommand_ST7735 0x36
-    SendData_ST7735 0xC8
+    SendCommand_ST7735(ST7735_DISSET5); // display settings #5
+    SendData_ST7735(0x15);          // 1 clock cycle nonoverlap, 2 cycle gate rise, 3 cycle oscil. equalize
+    SendData_ST7735(0x02);          // fix on VTL
     wait 10 ms;
-    'Set pixel mode to 16 bpp
-    SendCommand_ST7735 0x3A
-    SendData_ST7735 5
+    SendCommand_ST7735(ST7735_INVCTR);  // display inversion control
+    SendData_ST7735(0x0);           // line inversion
     wait 10 ms;
+    SendCommand_ST7735(ST7735_PWCTR1);  // power control
+    SendData_ST7735(0x02);          // GVDD = 4.7V
+    SendData_ST7735(0x70);          // 1.0uA
+    wait 10 ms;
+
+    '                    SendCommand_ST7735(ST7735_PWCTR2);  // power control
+    '                    SendData_ST7735(0x05);          // VGH = 14.7V, VGL = -7.35V
+    '                    SendCommand_ST7735(ST7735_PWCTR3);  // power control
+    '                    SendData_ST7735(0x01);          // Opamp current small
+    '                    SendData_ST7735(0x02);          // Boost frequency
+    '                    wait 10 ms;
+    '                    SendCommand_ST7735(ST7735_VMCTR1);  // power control
+    '                    SendData_ST7735(0x3C);          // VCOMH = 4V
+    '                    SendData_ST7735(0x38);          // VCOML = -1.1V
+    '                    wait 10 ms;
+
+    SendCommand_ST7735(ST7735_GMCTRP1);
+    SendData_ST7735(0x09);
+    SendData_ST7735(0x16);
+    SendData_ST7735(0x09);
+    SendData_ST7735(0x20);
+    SendData_ST7735(0x21);
+    SendData_ST7735(0x1B);
+    SendData_ST7735(0x13);
+    SendData_ST7735(0x19);
+    SendData_ST7735(0x17);
+    SendData_ST7735(0x15);
+    SendData_ST7735(0x1E);
+    SendData_ST7735(0x2B);
+    SendData_ST7735(0x04);
+    SendData_ST7735(0x05);
+    SendData_ST7735(0x02);
+    SendData_ST7735(0x0E);
+    wait 10 ms;
+    SendCommand_ST7735(ST7735_GMCTRN1);
+    SendData_ST7735(0x0B);
+    SendData_ST7735(0x14);
+    SendData_ST7735(0x08);
+    SendData_ST7735(0x1E);
+    SendData_ST7735(0x22);
+    SendData_ST7735(0x1D);
+    SendData_ST7735(0x18);
+    SendData_ST7735(0x1E);
+    SendData_ST7735(0x1B);
+    SendData_ST7735(0x1A);
+    SendData_ST7735(0x24);
+    SendData_ST7735(0x2B);
+    SendData_ST7735(0x06);
+    SendData_ST7735(0x06);
+    SendData_ST7735(0x02);
+    SendData_ST7735(0x0F);
+    wait 10 ms;
+
+    SendCommand_ST7735(ST7735_PWCTR6);  // power control
+    SendData_ST7735(0x11);
+    SendData_ST7735(0x15);
+    wait 10 ms;
+
     'Display on
     SendCommand_ST7735 0x29
     Wait 100 ms
 
     'Colours
-    GLCDBackground = ST7735_WHITE
-    GLCDForeground = ST7735_BLACK
+    GLCDBackground = TFT_WHITE
+    GLCDForeground = TFT_BLACK
 
     'Variables required for device
     ST7735_GLCD_WIDTH = GLCD_WIDTH
@@ -310,14 +318,12 @@ Sub InitGLCD_ST7735
       GLCDFontWidth = 5
     #endif
 
-  GLCDfntDefault = 0
-  GLCDfntDefaultsize = 1
-
-
+    GLCDfntDefault = 0
+    GLCDfntDefaultsize = 1
 
   #endif
 
-  GLCDRotate ( PORTRAIT_REV )
+'  GLCDRotate ( PORTRAIT_REV )
   'Clear screen
   GLCDCLS
 
@@ -335,11 +341,10 @@ Sub GLCDCLS_ST7735 ( Optional In  GLCDBackground as word = GLCDBackground)
     wait 2 ms
     SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
     wait 2 ms
-    SendCommand_ST7735 0x2C
+    SendCommand_ST7735 ST7735_RAMWR
     wait 2 ms
     Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
-      SendData_ST7735 GLCDBackground_h
-      SendData_ST7735 GLCDBackground
+      SendWord_ST7735 GLCDBackground
     End Repeat
 '                    FilledBox( 0, 0, ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT, GLCDBackground )
   #endif
@@ -709,25 +714,27 @@ sub   GLCDRotate_ST7735 ( in ST7735AddressType )
   SendCommand_ST7735 ( ST7735_MADCTL )
   select case ST7735AddressType
         case LANDSCAPE
-             SendData_ST7735( 0xB8 )
+             SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MV |  ST7735_MADCTL_RGB )
              ST7735_GLCD_WIDTH = GLCD_HEIGHT
              ST7735_GLCD_HEIGHT = GLCD_WIDTH
+
         case PORTRAIT_REV
              ST7735_GLCD_WIDTH = GLCD_WIDTH
              ST7735_GLCD_HEIGHT = GLCD_HEIGHT
-             SendData_ST7735( 0xDC )
+             SendData_ST7735( ST7735_MADCTL_RGB )
+
         case LANDSCAPE_REV
-             SendData_ST7735( 0x6C )
+             SendData_ST7735( ST7735_MADCTL_MV | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
              ST7735_GLCD_WIDTH = GLCD_HEIGHT
              ST7735_GLCD_HEIGHT = GLCD_WIDTH
         case PORTRAIT
              ST7735_GLCD_WIDTH = GLCD_WIDTH
              ST7735_GLCD_HEIGHT = GLCD_HEIGHT
-             SendData_ST7735( 0x08 )
+             SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
         case else
              ST7735_GLCD_WIDTH = GLCD_WIDTH
              ST7735_GLCD_HEIGHT = GLCD_HEIGHT
-             SendData_ST7735( 0x08 )
+             SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
   end select
 
 end sub
