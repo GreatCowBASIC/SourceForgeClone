@@ -78,6 +78,7 @@
       <DependentUpon>InternalErrorDialog.vb</DependentUpon>
     </Compile>
     <Compile Include="InternalErrorDialog.vb" />
+    <Compile Include="GCBLibrary.vb" />
     <Compile Include="MainForm.vb" />
     <Compile Include="AssemblyInfo.vb" />
     <Compile Include="About.vb" />
@@ -137,7 +138,6 @@
     <Compile Include="CustomHardwareSettings.vb" />
     <Compile Include="HardwareSettingEditor.vb" />
     <Compile Include="WelcomePanel.vb" />
-    <Compile Include="HardwareSettings.vb" />
     <EmbeddedResource Include="CaptionedComboBox.resx">
       <DependentUpon>CaptionedComboBox.vb</DependentUpon>
     </EmbeddedResource>
@@ -319,10 +319,6 @@
     <EmbeddedResource Include="WelcomePanel.resources">
       <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.WelcomePanel.resources</LogicalName>
       <DependentUpon>WelcomePanel.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="HardwareSettings.resources">
-      <LogicalName>Great_Cow_Graphical_BASIC.Great_Cow_Graphical_BASIC.HardwareSettings.resources</LogicalName>
-      <DependentUpon>HardwareSettings.vb</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Great Cow Graphical BASIC.build" />

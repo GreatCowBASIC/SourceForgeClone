@@ -11,6 +11,7 @@ Imports System
 Imports System.Drawing
 Imports System.ComponentModel
 Imports System.Windows.Forms
+Imports System.Collections.Generic
 
 'Namespace Great_Cow_Graphical_BASIC
 	
@@ -268,19 +269,18 @@ Imports System.Windows.Forms
 		Private Sub SetFromConstName(ConstName As String)
 			'Set variable and bit from a constant name
 			'Search program
-			Dim Constant As Setting
-			For Each Constant In Frame.Program.Constants
-				If Constant.Name.Trim.ToLower = ConstName.Trim.ToLower Then
+			For Each Constant As KeyValuePair(Of String, String) In Frame.Program.Constants
+				If Constant.Key.ToLower = ConstName.Trim.ToLower Then
 					SetFromString(Constant.Value)
 					Exit Sub
 				End If
 			Next
 			
 			'Search libraries
-			Dim CheckLib As LibraryType
+			Dim CheckLib As GCBLibrary
 			For Each CheckLib In Frame.Program.Libraries
-				For Each Constant In CheckLib.Constants
-					If Constant.Name.Trim.ToLower = ConstName.Trim.ToLower Then
+				For Each Constant As KeyValuePair(Of String, String) In CheckLib.Constants
+					If Constant.Key.ToLower = ConstName.Trim.ToLower Then
 						SetFromString(Constant.Value)
 						Exit Sub
 					End If

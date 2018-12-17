@@ -235,28 +235,27 @@ Imports System.Collections.Generic
 						
 						'Add constants that refer to IO pins
 						'This program
-						Dim Constant As Setting
-						For Each Constant In Program.Constants
+						For Each Constant As KeyValuePair(Of String, String) In Program.Constants
 							'Check if constant refers to a pin
 							If LowLevel.IsBitConst(Constant.Value) Then
 								PinName = .PortName + "." + .PortBit.ToString
 								If Constant.Value.ToLower = PinName.ToLower Then
 									'Add pin name to list
-									PinNames.Add(Constant.Name.Trim)
-									If Constant.Name.Trim.ToUpper = OutValue.ToUpper Then IsSelectedPin = True
+									PinNames.Add(Constant.Key)
+									If Constant.Key.ToUpper = OutValue.ToUpper Then IsSelectedPin = True
 								End If
 							End If
 						Next
 						'Libraries
-						Dim CheckLib As LibraryType
+						Dim CheckLib As GCBLibrary
 						For Each CheckLib In Program.Libraries
-							For Each Constant In CheckLib.Constants
+							For Each Constant As KeyValuePair(Of String, String) In CheckLib.Constants
 								If LowLevel.IsBitConst(Constant.Value) Then
 									PinName = .PortName + "." + .PortBit.ToString
 									If Constant.Value.ToLower = PinName.ToLower Then
 										'Add pin name to list
-										PinNames.Add(Constant.Name.Trim)
-										If Constant.Name.Trim.ToUpper = OutValue.ToUpper Then IsSelectedPin = True
+										PinNames.Add(Constant.Key)
+										If Constant.Key.ToUpper = OutValue.ToUpper Then IsSelectedPin = True
 									End If
 								End If
 							Next

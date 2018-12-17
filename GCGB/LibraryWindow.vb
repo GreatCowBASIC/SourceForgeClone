@@ -46,7 +46,7 @@ Imports System.Windows.Forms
 			With CurrentFile
 				
 				'Draw current include list
-				Dim LibTemp As LibraryType
+				Dim LibTemp As GCBLibrary
 				For Each LibTemp In CurrentFile.Libraries
 					Me.LibraryList.Items.Add(LibTemp.FileName)
 				Next
@@ -330,7 +330,7 @@ Imports System.Windows.Forms
 					Me.LibraryList.SelectedIndex = Temp
 					TempData = Me.LibraryList.SelectedItem
 					If TempData <> "" Then
-						.Libraries.Add(New LibraryType(TempData))
+						.Libraries.Add(New GCBLibrary(TempData))
 					End If
 				Next
 				

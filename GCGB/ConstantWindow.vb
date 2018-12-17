@@ -7,6 +7,7 @@
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 Imports System.Windows.Forms
+Imports System.Collections.Generic
 
 Public Partial Class ConstantWindow
 	Private Dim Program As GCBProgram
@@ -19,9 +20,8 @@ Public Partial Class ConstantWindow
 		Me.Program = Program
 		
 		'Load table with constants
-		Dim currConst As Setting
-		For Each currConst In Program.Constants
-			constantsView.Rows.Add(New String(){currConst.Name, currConst.Value})
+		For Each currConst As KeyValuePair(Of String, String) In Program.Constants
+			constantsView.Rows.Add(New String(){currConst.Key, currConst.Value})
 		Next
 	End Sub
 	
@@ -43,7 +43,7 @@ Public Partial Class ConstantWindow
 					newValue = ""
 				End If
 				If newName <> "" Then
-					.Constants.Add(New Setting(newName, newValue))
+					.Constants(newName) = newValue
 				End If
 			Next
 			
