@@ -113,7 +113,7 @@ Imports System.Windows.Forms
 				End If
 				
 				'Get variables from library
-				Dim CheckLib As LibraryType
+				Dim CheckLib As GCBLibrary
 				For Each CheckLib In Frame.Program.Libraries
 					Dim currVar As VariableListItem
 					For Each currVar In CheckLib.Variables

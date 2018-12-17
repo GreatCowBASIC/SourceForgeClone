@@ -1438,7 +1438,7 @@ Imports System.Threading
 	     	Me.IconCategories.Items.Add("Subroutines")
 			'Included files
 			With GetCurrentProgram
-				Dim LibTemp As LibraryType
+				Dim LibTemp As GCBLibrary
 				For Each LibTemp in .Libraries
 					Me.IconCategories.Items.Add("Library: " + LibTemp.DisplayName)
 				Next
@@ -1966,7 +1966,7 @@ Imports System.Threading
 			
 			'Library
 			ElseIf GetCurrentProgram.CurrentCat > IconCategory.Count Then
-				Dim LibTemp As LibraryType
+				Dim LibTemp As GCBLibrary
 				Dim CaptionWithSource As String
 				LibTemp = GetCurrentProgram.Libraries.Item(GetCurrentProgram.CurrentCat - IconCategory.Count - 1)
 				For Each NewSub In LibTemp.Subroutines

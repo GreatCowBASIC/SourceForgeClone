@@ -230,27 +230,26 @@ Public Partial Class ExampleChooser
 		
 		'Add constants that refer to IO pins
 		'This program
-		Dim Constant As Setting
-		For Each Constant In Program.Constants
+		For Each Constant As KeyValuePair(Of String, String) In Program.Constants
 			'Check if constant refers to a pin
 			If LowLevel.IsBitConst(Constant.Value) Then
 				ChipPin = Constant.Value
 				ChipPinPort = ChipPin.Substring(0, ChipPin.IndexOf(".")).ToUpper
 				If ChipPinPort = "GPIO" Or (ChipPinPort.Length = 5 And ChipPinPort.StartsWith("PORT")) Then
-					DevPin = Constant.Name
+					DevPin = Constant.Key
 					OutBuffer.AppendLine(ChipPin + " to " + DevPin)
 				End If
 			End If
 		Next
 		'Libraries
-		Dim CheckLib As LibraryType
+		Dim CheckLib As GCBLibrary
 		For Each CheckLib In Program.Libraries
-			For Each Constant In CheckLib.Constants
+			For Each Constant As KeyValuePair(Of String, String) In CheckLib.Constants
 				If LowLevel.IsBitConst(Constant.Value) Then
 					ChipPin = Constant.Value
 					ChipPinPort = ChipPin.Substring(0, ChipPin.IndexOf(".")).ToUpper
 					If ChipPinPort = "GPIO" Or (ChipPinPort.Length = 5 And ChipPinPort.StartsWith("PORT")) Then
-						DevPin = Constant.Name
+						DevPin = Constant.Key
 						OutBuffer.AppendLine(ChipPin + " to " + DevPin)
 					End If
 				End If

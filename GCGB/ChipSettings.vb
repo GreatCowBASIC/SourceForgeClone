@@ -3,7 +3,7 @@
 ' User: Administrator
 ' Date: 12/09/2006
 ' Time: 8:52 PM
-' 
+'
 ' To change this template use Tools | Options | Coding | Edit Standard Headers.
 '
 
@@ -11,7 +11,6 @@ Imports System
 Imports System.Drawing
 Imports System.Windows.Forms
 Imports System.IO
-'Imports System.Collections
 Imports System.Collections.Generic
 
 ''Namespace Great_Cow_Graphical_BASIC
@@ -42,7 +41,7 @@ Imports System.Collections.Generic
 		
 		'Store list of all original constants
 		'Change constants as settings are changed, but revert if cancel clicked
-		Private Dim OldConstants As List(Of Setting)
+		Private Dim OldConstants As Dictionary(Of String, String)
 		
 		Private Dim CurrentConfig(MaxConfig, 3) As String
 		Private Dim ConfigCount As Integer = 0
@@ -73,7 +72,7 @@ Imports System.Collections.Generic
 			'Get list of supported chips
 			Dim ChipDataDir As New IO.DirectoryInfo(MainForm.InstallDir + Mainform.FilenameChipDir)
 			Dim ChipNameList As IO.FileInfo() = ChipDataDir.GetFiles()
-			Dim ChipFileName As IO.FileInfo			
+			Dim ChipFileName As IO.FileInfo
 			
 			'Copy into list, then sort
 			For Each ChipFileName In ChipNameList
@@ -153,7 +152,7 @@ Imports System.Collections.Generic
             			CurrentConfig(Temp, 2).Replace("V", "")
         			END IF
 					
-				End If								
+				End If
 			Next
 			
 			'Add existing data
@@ -163,18 +162,14 @@ Imports System.Collections.Generic
 			RedrawChipConfig
 			
 			'Copy old constants into backup list
-			Dim currConst As Setting
-			oldConstants = New List(Of Setting)
-			For Each currConst In CurrentProgram.Constants
-				oldConstants.Add(New Setting(currConst.Name, currConst.Value))
-			Next
+			oldConstants = New Dictionary(Of String, String)(CurrentProgram.Constants, StringComparer.CurrentCultureIgnoreCase)
 			
 		    'Add hardware config
 		    Me.DeviceSelect.Items.Add("Select a device to edit ...")
 		    For Each CurrentDevice In MainForm.HardwareConf
 		    	Me.DeviceSelect.Items.Add(CurrentDevice.Name)
 		    Next
-		    Dim CurrLib As LibraryType
+		    Dim CurrLib As GCBLibrary
 		    For Each CurrLib In CurrentProgram.Libraries
 		    	If Not CurrLib.Device Is Nothing Then
 		    		Me.DeviceSelect.Items.Add(CurrLib.Device.Name)
@@ -218,7 +213,7 @@ Imports System.Collections.Generic
 			Me.HardwarePanel.AutoScroll = true
 			Me.HardwarePanel.BackColor = System.Drawing.SystemColors.Window
 			Me.HardwarePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-			Me.HardwareHelp.SetHelpString(Me.HardwarePanel, "Edit these settings so that they correspond to the actual circuit. If a device is"& _ 
+			Me.HardwareHelp.SetHelpString(Me.HardwarePanel, "Edit these settings so that they correspond to the actual circuit. If a device is"& _
 " not used, it does not have to be set up.")
 			Me.HardwarePanel.Location = New System.Drawing.Point(8, 55)
 			Me.HardwarePanel.Name = "HardwarePanel"
@@ -306,7 +301,7 @@ Imports System.Collections.Generic
 			'
 			'EditChipModel
 			'
-			Me.HardwareHelp.SetHelpString(Me.EditChipModel, "The model of microcontroller that is to be programmed. This must be set before a "& _ 
+			Me.HardwareHelp.SetHelpString(Me.EditChipModel, "The model of microcontroller that is to be programmed. This must be set before a "& _
 "program is compiled.")
 			Me.EditChipModel.Location = New System.Drawing.Point(96, 16)
 			Me.EditChipModel.MaxDropDownItems = 18
@@ -417,7 +412,7 @@ Imports System.Collections.Generic
 					Me.ChipSettingsPanel.Controls.Remove(Me.ConfParamValue(ClearData))
 				Catch
 				
-				End Try				
+				End Try
 			Next
 			
 			'If no config for this chip, show an error
@@ -551,7 +546,7 @@ Imports System.Collections.Generic
 			    CurrentDevice = Nothing
 			    If Me.DeviceSelect.SelectedIndex > MainForm.HardwareConf.Count Then
 			    	
-			    	Dim CurrLib As LibraryType
+			    	Dim CurrLib As GCBLibrary
 			    	For Each CurrLib In CurrentProgram.Libraries
 			    		If Not CurrLib.Device Is Nothing Then
 			    			If CurrLib.Device.Name = Me.DeviceSelect.SelectedItem Then
@@ -588,13 +583,9 @@ Imports System.Collections.Generic
 							FoundConst = False
 							
 							'Get const value
-							Dim currConst As Setting
-							For Each currConst In CurrentProgram.Constants
-								If CompareConst = currConst.Name.Trim.ToLower Then
-									CompareConst = currConst.Value.Trim.ToLower
-									Exit For
-								End If
-							Next
+							If CurrentProgram.Constants.ContainsKey(CompareConst)
+								CompareConst = CurrentProgram.Constants(CompareConst)
+							End If
 							
 							'Compare constant
 							For SearchConst = 1 To ValueCount
@@ -607,14 +598,10 @@ Imports System.Collections.Generic
 							
 							'Get value
 							ItemValue = ""
-							CompareConst = CurrentDeviceSetting.Constant.Trim.ToLower
-							Dim currConst As Setting
-							For Each currConst In CurrentProgram.Constants
-								If CompareConst = currConst.Name.Trim.ToLower Then
-									ItemValue = currConst.Value.Trim
-									Exit For
-								End If
-							Next
+							CompareConst = CurrentDeviceSetting.Constant.Trim
+							If CurrentProgram.Constants.ContainsKey(CompareConst)
+								ItemValue = CurrentProgram.Constants(CompareConst)
+							End If
 							
 							'Parameter
 							Me.HardwareSetting(ConfCount) = New ParamEditBox
@@ -655,39 +642,20 @@ Imports System.Collections.Generic
 		
 		Private Sub StoreHardwareShadow
 			'Copy settings out of window and into settings shadow area
-			'Dim Temp, SearchList, FoundLoc As Integer
 			Dim Temp As Integer
 			Dim NameTemp, ValueTemp As String
-			Dim searchConst, thisConst As Setting
 			
 			For Temp = 1 To MaxConfig
-				Try
+				If Not Me.HardwareSetting(Temp) Is Nothing Then
 					NameTemp = Me.HardwareSetting(Temp).Name
 					ValueTemp = Me.HardwareSetting(Temp).GetValue
 					
-					thisConst = Nothing
-					For Each searchConst In CurrentProgram.Constants
-						If NameTemp.ToLower = searchConst.Name.Trim.ToLower Then
-							thisConst = searchConst
-							Exit For
-						End If
-					Next
-					If thisConst Is Nothing Then
-						If valueTemp <> "" Then
-							thisConst = New Setting(NameTemp, ValueTemp)
-							CurrentProgram.Constants.Add(thisConst)
-						End If
-					Else
-						If valueTemp <> "" Then
-							thisConst.Name = NameTemp
-							thisConst.Value = ValueTemp
-						Else
-							CurrentProgram.Constants.Remove(thisConst)
-						End If
+					If valueTemp <> "" Then
+						CurrentProgram.Constants(NameTemp) = valueTemp
+					Else If CurrentProgram.Constants.ContainsKey(NameTemp) Then
+						CurrentProgram.Constants.Remove(NameTemp)
 					End If
-					
-				Catch
-				End Try
+				End If
 			Next
 		End Sub
 		

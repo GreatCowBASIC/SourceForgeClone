@@ -94,7 +94,7 @@ Imports System.Windows.Forms
 			With Me.fnSourceList.Items
 				.Add("All files")
 				.Add("Main program")
-				Dim CurrLib As LibraryType
+				Dim CurrLib As GCBLibrary
 				For Each CurrLib In Frame.Program.Libraries
 					.Add("Library: " + CurrLib.FileName)
 				Next
@@ -317,7 +317,7 @@ Imports System.Windows.Forms
 			
 			'Functions from libraries
 			If fnSourceList.SelectedIndex = 0 Then
-				Dim CheckLib As LibraryType
+				Dim CheckLib As GCBLibrary
 				Dim searchSub As GCBSubroutine
 				For Each CheckLib In Frame.Program.Libraries
 					For Each searchSub In CheckLib.Subroutines
@@ -328,7 +328,7 @@ Imports System.Windows.Forms
 				Next
 			
 			Else If fnSourceList.SelectedIndex > 1 Then
-				Dim CheckLib As LibraryType = Frame.Program.Libraries(fnSourceList.SelectedIndex - 2)
+				Dim CheckLib As GCBLibrary = Frame.Program.Libraries(fnSourceList.SelectedIndex - 2)
 				Dim searchSub As GCBSubroutine
 				For Each searchSub In CheckLib.Subroutines
 					If searchSub.IsFunction And Not searchSub.HideSub Then

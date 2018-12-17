@@ -22,7 +22,8 @@ Public Class GCBProgram
 	'Program storage arrays
 	Public Dim Subroutines As List(Of GCBSubroutine)
 	
-	Public Dim Constants As List(Of Setting)
+	'Public Dim Constants As List(Of Setting)
+	Public Dim Constants As Dictionary(Of String, String)
 	Public Dim ChipName, ChipConfig As String
 	Public Dim ChipSpeed As Double
 	'Public Dim ProgVariables(MainForm.MaxVars, 2) As String
@@ -70,7 +71,7 @@ Public Class GCBProgram
 	Public Dim UndoRedoLocation As Integer
 	
 	'Library data storage arrays
-	Public Dim Libraries As List(Of LibraryType)
+	Public Dim Libraries As List(Of GCBLibrary)
 	Private Dim RequestLibraryReload As Boolean
 	
 	Public Dim CurrentCat As Integer
@@ -95,10 +96,10 @@ Public Class GCBProgram
 	Public Sub New(Editor As EditorPanel)
 		'Create ArrayLists
 		Subroutines = New List(Of GCBSubroutine)
-		Libraries = New List(Of LibraryType)
+		Libraries = New List(Of GCBLibrary)
 		Variables = New VariableList
 		ProgInterrupts = New List(Of InterruptHandler)
-		Constants = New List(Of Setting)
+		Constants = New Dictionary(Of String, String)(StringComparer.CurrentCultureIgnoreCase)
 		LocalConstGroups = New List(Of ConstGroup)
 		
 		'Create main sub
@@ -211,7 +212,7 @@ Public Class GCBProgram
 		'Includes
 		If Libraries.Count > 0 Then
 			OutCode.Append(";Include files (Libraries)" + Environment.NewLine): CurrLineNo += 1
-			Dim SaveLib As LibraryType
+			Dim SaveLib As GCBLibrary
 			For Each SaveLib In Libraries
 				If SaveLib.FileName <> "" Then
 					OutCode.Append("#include " + SaveLib.FileName + Environment.NewLine): CurrLineNo += 1
@@ -234,9 +235,8 @@ Public Class GCBProgram
 		'Defines
 		If Constants.Count > 0 Then
 			OutCode.Append(";Defines (Constants)" + Environment.NewLine): CurrLineNo += 1
-			Dim currConst As Setting
-			For Each currConst In Constants
-				TempData = currConst.Name.Trim
+			For Each currConst As KeyValuePair(Of String, String) In Constants
+				TempData = currConst.Key
 				If TempData <> "" Then
 					OutCode.Append("#define " + TempData + " " + currConst.Value + Environment.NewLine): CurrLineNo += 1
 				End If
@@ -423,9 +423,9 @@ Public Class GCBProgram
 		UseBootloader = False
 		
 		TableCount = 0
-		Constants = New List(Of Setting)
+		Constants = New Dictionary(Of String, String)(StringComparer.CurrentCultureIgnoreCase)
 		Variables = New VariableList
-		Libraries = New List(Of LibraryType)
+		Libraries = New List(Of GCBLibrary)
 		
 		Device = Nothing
 		About = Nothing
@@ -819,7 +819,7 @@ Public Class GCBProgram
 		If ChipName.Trim <> "" Then Return ChipName.Trim
 		
 		'Check libraries
-		Dim CheckLib As LibraryType
+		Dim CheckLib As GCBLibrary
 		For Each CheckLib In Libraries
 			Try
 				If CheckLib.ChipName <> "" Then Return CheckLib.ChipName.Trim
@@ -836,7 +836,7 @@ Public Class GCBProgram
 		If ChipSpeed > 0 Then Return ChipSpeed
 		
 		'Check libraries
-		Dim CheckLib As LibraryType
+		Dim CheckLib As GCBLibrary
 		For Each CheckLib In Libraries
 			Try
 				If CheckLib.ChipSpeed > 0 Then Return CheckLib.ChipSpeed
@@ -901,6 +901,47 @@ Public Class GCBProgram
 		
 	End Sub
 	
+	Public Function IsIOPin(PinName As String) As Boolean
+		'Ensure chip data is loaded and valid
+		CheckChipData
+		If ChipData Is Nothing Then
+			Return False
+		End If
+		
+		'Is pin name a constant?
+		'need to allow for constants that refer to other constants
+		Dim ReplacementCount As Integer = 0
+		Dim MoreToReplace As Boolean = True
+		Do While ReplacementCount < 100 And MoreToReplace
+			MoreToReplace = False
+			
+			If Constants.ContainsKey(PinName) Then
+				PinName = Constants(PinName)
+				MoreToReplace = True
+				ReplacementCount += 1
+			End If
+			
+			For Each CurrLib As GCBLibrary In Libraries
+				If CurrLib.Constants.ContainsKey(PinName) Then
+					PinName = CurrLib.Constants(PinName)
+					MoreToReplace = True
+					ReplacementCount += 1
+				End If
+			Next
+			
+		Loop
+		
+		'Is pin name an IO pin>
+		If ChipData.IsIOPin(PinName) Then
+			Return True
+		End If
+		
+	End Function
+	
+	Public Function GetConstValue(ConstName As String) As String
+		Return Constants(ConstName)
+	End Function
+	
 	Public Function IsSub(ByVal SubName As String) As Boolean
 		
 		If GetCalledSub(SubName) Is Nothing Then
@@ -914,13 +955,13 @@ Public Class GCBProgram
 	Public Sub LoadIncludes
 		
 		'Clear old data
-		Dim ClearLib As LibraryType
+		Dim ClearLib As GCBLibrary
 		For Each ClearLib In Libraries
 			ClearLib.ClearData
 		Next
 		
 		'Read include files, and extract data
-		Dim LoadLib As LibraryType
+		Dim LoadLib As GCBLibrary
 		For Each LoadLib In Libraries
 			LoadLibraryFromFile(LoadLib, LoadLib.FileName)
 			
@@ -931,7 +972,7 @@ Public Class GCBProgram
 		
 	End Sub
 	
-	Private Sub LoadLibraryFromFile(LoadLib As LibraryType, FileNameTemp As String, Optional FirstFile As String = "")
+	Private Sub LoadLibraryFromFile(LoadLib As GCBLibrary, FileNameTemp As String, Optional FirstFile As String = "")
 		'Read contents of library file, and append to library
 		'Can be used to handle recursive includes if FirstFile is set to
 		'the name of the library that the user originally added
@@ -1037,7 +1078,7 @@ Public Class GCBProgram
 							DefineValue = DefineName.Substring(DefineName.IndexOf(" ") + 1).Trim
 							DefineName = DefineName.Substring(0, DefineName.IndexOf(" ")).Trim
 						End If
-						LoadLib.Constants.Add(New Setting(DefineName, DefineValue))
+						LoadLib.Constants(DefineName) = DefineValue
 						CurrDoc = Nothing
 						
 						'Check for chip model
@@ -1140,12 +1181,12 @@ Public Class GCBProgram
 			If TempData.ToLower.IndexOf("#include") = 0 Then
 				IncludeTemp = TempData.Substring(8).Trim
 				FoundIndex = 0
-				Dim CheckLib As LibraryType
+				Dim CheckLib As GCBLibrary
 				For Each CheckLib In Libraries
 					If IncludeTemp = CheckLib.FileName Then FoundIndex = 1: Exit For
 				Next
 				If FoundIndex = 0 Then
-					Libraries.Add(New LibraryType(IncludeTemp))
+					Libraries.Add(New GCBLibrary(IncludeTemp))
 					RequestLibraryReload = True
 				End If
 				Return True
@@ -1162,12 +1203,10 @@ Public Class GCBProgram
 					DefineValue = DefineTemp.Substring(DefineTemp.IndexOf(" ") + 1).Trim
 				End If
 				
-				Dim currConst As Setting
-				For Each currConst In Constants
-					If DefineName.ToLower = currConst.Name.ToLower Then Return True
-				Next
+				If Not Constants.ContainsKey(DefineName) Then
+					Constants(DefineName) = DefineValue
+				End If
 				
-				Constants.Add(New Setting(DefineName, DefineValue))
 				Return True
 			End If
 			
@@ -1382,7 +1421,7 @@ Public Class GCBProgram
 		Next
 		
 		'Search libraries
-		Dim CheckLib As LibraryType
+		Dim CheckLib As GCBLibrary
 		currSubNo = 0
 		For Each CheckLib In Libraries
 			For Each searchSub In CheckLib.Subroutines
@@ -1412,7 +1451,7 @@ Public Class GCBProgram
 		Next
 		
 		'Search libraries
-		Dim CheckLib As LibraryType
+		Dim CheckLib As GCBLibrary
 		For Each CheckLib In Libraries
 			For Each searchSub In CheckLib.Subroutines
 				If searchSub.Name.ToLower = LineTrim Then Return searchSub
@@ -1436,7 +1475,7 @@ Public Class GCBProgram
 		If LineTrim.IndexOf(" ") <> -1 Then LineTrim = LineTrim.Substring(0, LineTrim.IndexOf(" "))
 		
 		'Search libraries
-		Dim CheckLib As LibraryType
+		Dim CheckLib As GCBLibrary
 		Dim searchSub As GCBSubroutine
 		LibNo = 0
 		For Each CheckLib In Libraries
@@ -1517,19 +1556,19 @@ Public Class GCBProgram
 			If TempData = "in" Or TempData = "out" Or TempData = "input" Or TempData = "output" Then IsNotVar = True
 			
 			'Program constants
-			Dim ConstTemp As Setting
 			If Not IsNotVar Then
-				For Each ConstTemp In Constants
-					If ConstTemp.Name.Trim.ToLower = TempData Then IsNotVar = True: Exit For
-				Next
+				If Constants.ContainsKey(TempData) Then
+					IsNotVar = True
+				End If
 			End If
 			
 			'Library constants
-			Dim LibTemp As LibraryType
-			For Each LibTemp in Libraries
-				For Each ConstTemp In LibTemp.Constants
-					If ConstTemp.Name.Trim.ToLower = TempData Then IsNotVar = True: Goto FoundInLib
-				Next
+			Dim LibTemp As GCBLibrary
+			For Each LibTemp In Libraries
+				If LibTemp.Constants.ContainsKey(TempData) Then
+					IsNotVar = True
+					Goto FoundInLib
+				End If
 			Next
 			FoundInLib:
 			
@@ -1590,22 +1629,21 @@ Public Class GCBProgram
 					
 					'Add constants that refer to members of the constant group
 					'This program
-					Dim Constant As Setting
 					Dim groupItem As String
-					For Each Constant In Constants
+					For Each Constant As KeyValuePair(Of String, String) In Constants
 						For Each groupItem in thisConstGroup.Items
-							If Constant.Value.Trim.ToUpper = groupItem.ToUpper And ParamName <> Constant.Name Then
-								ParamListBox.Items.Add(Constant.Name.Trim)
+							If Constant.Value.Trim.ToUpper = groupItem.ToUpper And ParamName <> Constant.Key Then
+								ParamListBox.Items.Add(Constant.Key)
 							End If
 						Next
 					Next
 					'Libraries
-					Dim CheckLib As LibraryType
+					Dim CheckLib As GCBLibrary
 					For Each CheckLib In Libraries
-						For Each Constant In CheckLib.Constants
+						For Each Constant As KeyValuePair(Of String, String) In CheckLib.Constants
 							For Each groupItem In thisConstGroup.Items
-								If Constant.Value.Trim.ToUpper = groupItem.ToUpper And ParamName <> Constant.Name Then
-									ParamListBox.Items.Add(Constant.Name.Trim)
+								If Constant.Value.Trim.ToUpper = groupItem.ToUpper And ParamName <> Constant.Key Then
+									ParamListBox.Items.Add(Constant.Key)
 								End If
 							Next
 						Next
@@ -1628,20 +1666,19 @@ Public Class GCBProgram
 					
 					'Add constants that refer to IO pins
 					'This program
-					Dim Constant As Setting
-					For Each Constant In Constants
-						If ChipData.IsIOPin(Constant.Value) And ParamName <> Constant.Name Then
+					For Each Constant As KeyValuePair(Of String, String) In Constants
+						If IsIOPin(Constant.Value) And ParamName <> Constant.Key Then
 							'Add pin and select it
-							ParamListBox.Items.Add(Constant.Name.Trim)
+							ParamListBox.Items.Add(Constant.Key)
 						End If
 					Next
 					'Libraries
-					Dim CheckLib As LibraryType
+					Dim CheckLib As GCBLibrary
 					For Each CheckLib In Libraries
-						For Each Constant In CheckLib.Constants
-							If ChipData.IsIOPin(Constant.Value) And ParamName <> Constant.Name Then
+						For Each Constant As KeyValuePair(Of String, String) In CheckLib.Constants
+							If IsIOPin(Constant.Value) And ParamName <> Constant.Key Then
 								'Add pin and select it
-								ParamListBox.Items.Add(Constant.Name.Trim)
+								ParamListBox.Items.Add(Constant.Key)
 							End If
 						Next
 					Next
@@ -1680,7 +1717,7 @@ Public Class GCBProgram
 						ParamListBox.Items.Add(ProgTables(Temp, 0).Trim)
 					End If
 				Next
-				Dim CheckLib As LibraryType
+				Dim CheckLib As GCBLibrary
 				Dim TableName As String
 				For Each CheckLib In Libraries
 					For Each TableName In CheckLib.DataTables
@@ -1716,7 +1753,7 @@ Public Class GCBProgram
 					End If
 					
 					'Get variables from library
-					Dim CheckLib As LibraryType
+					Dim CheckLib As GCBLibrary
 					For Each CheckLib In Libraries
 						Dim currVar As VariableListItem
 						For Each currVar In CheckLib.Variables
@@ -1752,17 +1789,16 @@ Public Class GCBProgram
 			
 			'Bit vars
 			If OptionList(AddListItem) = "bit" Then
-				Dim Constant As Setting
-				For Each Constant In Constants
+				For Each Constant As KeyValuePair(Of String, String) In Constants
 					If LowLevel.IsBitConst(Constant.Value) Then
-						ParamListBox.Items.Add(Constant.Name.Trim)
+						ParamListBox.Items.Add(Constant.Key)
 					End If
 				Next
-				Dim CheckLib As LibraryType
+				Dim CheckLib As GCBLibrary
 				For Each CheckLib In Libraries
-					For Each Constant In CheckLib.Constants
+					For Each Constant As KeyValuePair(Of String, String) In CheckLib.Constants
 						If LowLevel.IsBitConst(Constant.Value) Then
-							ParamListBox.Items.Add(Constant.Name.Trim)
+							ParamListBox.Items.Add(Constant.Key)
 						End If
 					Next
 				Next
@@ -1834,26 +1870,25 @@ Public Class GCBProgram
 		If ConstRangeSet Then
 			'MessageBox.Show("Min:" + minVal.ToString + ", Max:" + maxVal.ToString, "Values")
 			'This program
-			Dim Constant As Setting
 			Dim ThisValue As Long
-			For Each Constant In Constants
+			For Each Constant As KeyValuePair(Of String, String) In Constants
 				If LowLevel.IsValue(Constant.Value) Then
 					ThisValue = LowLevel.MakeDec(Constant.Value)
 					If ThisValue >= MinVal And ThisValue <= MaxVal Then
 						'Add constant
-						ParamListBox.Items.Add(Constant.Name.Trim)
+						ParamListBox.Items.Add(Constant.Key)
 					End If
 				End If
 			Next
 			'Libraries
-			Dim CheckLib As LibraryType
+			Dim CheckLib As GCBLibrary
 			For Each CheckLib In Libraries
-				For Each Constant In CheckLib.Constants
+				For Each Constant As KeyValuePair(Of String, String) In CheckLib.Constants
 					If LowLevel.IsValue(Constant.Value) Then
 						ThisValue = LowLevel.MakeDec(Constant.Value)
 						If ThisValue >= MinVal And ThisValue <= MaxVal Then
 							'Add constant
-							ParamListBox.Items.Add(Constant.Name.Trim)
+							ParamListBox.Items.Add(Constant.Key)
 						End If
 					End If
 				Next
