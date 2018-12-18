@@ -15,9 +15,10 @@ Complete the following steps to compile and install Great Cow BASIC for Linux:
 2. Download the "GCBasic - Sources" from SourceForge at http://sourceforge.net/projects/gcbasic/files/ 
 
 3. Unrar/unpack GCB@Syn.rar to a location of your choice within your home directory (eg. within Downloads) with either a file manager or from a console.
+   (for example in console) unrar x CB@Syn.rar
 
 4. From a console, change to the GCBASIC Sources in the unpacked directory:
-   eg. cd ~/Downloads/GreatCowBasic/Sources
+   eg. cd ~/Downloads/GreatCowBASIC/sources
 
 5. Make sure that 'install.sh' is set as executable (ie. 'chmod +x install.sh'), and then execute: ./install.sh build
 
@@ -35,6 +36,8 @@ Complete the following steps to compile and install Great Cow BASIC for Linux:
 8. If you su'd to root, use 'exit' to drop back to your normal user. Then, be sure to follow the instructions given by the script for updating your path.
 
 9. Confirm proper execution, and the version, of GCBASIC by executing: gcbasic /version
+   This will look like this: 0.98.04 2018-12-18 (Linux 64 bit)
+   When gcbasic was not found, exit Login again, so the $PATH Variable is set correct.
 
 Now you can create and compile GCB source files.
 
@@ -42,9 +45,12 @@ Now you can create and compile GCB source files.
 To program your microprocessor with your GCBASIC-created hex file, you'll need additional software.
 
 For PIC programming, you might find what you need at:
-http://www.microchip.com/DevelopmentTools/ProductDetails.aspx?PartNO=pg164120
+http://www.microchip.com/DevelopmentTools/ProductDetails.aspx?PartNO=pg164120 
+or
+https://www.microchip.com/Developmenttools/ProductDetails/PG164130
 
 For AVR programming, you'll need 'avrdude'. It should be available in your distributions repository. If not, check here: http://www.nongnu.org/avrdude/
 
-Do not forget to look into the folder Documentation/
+Do not forget to look into the folder /opt/GCBASIC/documentation/
+
 
