@@ -1126,6 +1126,9 @@ Function IsValidName(InName As String) As Integer
 		If CurrCharNo > 1 And (CurrChar >= "0" And CurrChar <= "9") Then GoTo ThisCharValid
 		If CurrChar = "_" Then GoTo ThisCharValid
 		
+		'Accept $ as last character (old string variables
+		If CurrCharNo = Len(InName) And CurrChar = "$" Then GoTo ThisCharValid
+		
 		'Character wasn't valid
 		Return 0
 		

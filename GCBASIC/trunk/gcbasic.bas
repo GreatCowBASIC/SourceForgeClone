@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-10-20"
+Version = "0.98.<<>> 2018-12-22"
 #ifdef __FB_DARWIN__	'OS X/macOS
         #ifndef __FB_64BIT__
                 Version = Version + " (Darwin 32 bit)"
@@ -5048,21 +5048,32 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				End If
 
 				'Check variable name
-				If IsConst(VarName) THEN
+				Dim ValidVarName As Integer = -1
+				If VarType = "BIT" AndAlso Left(InLine, 9) = "SYSBITVAR" AndAlso InStr(InLine, ".") <> 0 Then
+					'Redefining bit var, ignore
+					ValidVarName = 0
+				
+				ElseIf IsConst(InLine) Or Not IsValidName(InLine) Then
 					Temp = Message("BadVarName")
-					If Left(VarName, 7) = ";STRING" Then
-						Replace Temp, "%var%", Chr(34) + GetString(VarName, 0) + Chr(34)
+					If Left(InLine, 7) = ";STRING" Then
+						Replace Temp, "%var%", Chr(34) + GetString(InLine, 0) + Chr(34)
 					Else
-						Replace Temp, "%var%", VarName
+						Replace Temp, "%var%", InLine
 					End If
+					If InStr(Origin, ";STARTUP") <> 0 Then
+						Origin = RTrim(Left(Origin, InStr(Origin, ";STARTUP") - 1))
+					EndIf
 					LogError Temp, Origin
+					ValidVarName = 0
 				END If
 
 				'Add var
-				If IsAlias Then
-					AddVar(InLine, VarType, Si, CurrSub, "ALIAS:" + VarAlias, Origin, , -1, 0)
-				Else
-					AddVar(InLine, VarType, Si, CurrSub, "REAL", Origin, VarFixedLoc, -1, 0)
+				If ValidVarName Then
+					If IsAlias Then
+						AddVar(InLine, VarType, Si, CurrSub, "ALIAS:" + VarAlias, Origin, , -1, 0)
+					Else
+						AddVar(InLine, VarType, Si, CurrSub, "REAL", Origin, VarFixedLoc, -1, 0)
+					End If
 				End If
 			Next
 		End If
