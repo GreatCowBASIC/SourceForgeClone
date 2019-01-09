@@ -53,7 +53,8 @@
 #define ILI9341_DO GLCD_DO
 #define ILI9341_SCK GLCD_SCK
 
-
+#define Current_GLCD_WIDTH ILI9341_GLCD_WIDTH
+#define Current_GLCD_HEIGHT ILI9341_GLCD_HEIGHT
 
 #define ILI9341_NOP     0x00
 #define ILI9341_SWRESET 0x01
@@ -146,7 +147,7 @@
 
 
 
-#startup InitGLCD_ILI9341
+#startup InitGLCD_ILI9341, 98
 
 
 
@@ -302,9 +303,9 @@ Sub InitGLCD_ILI9341
   GLCDBackground = ILI9341_BLACK
   GLCDForeground = ILI9341_WHITE
 
-  'Variables required for device
-  ILI9341_GLCD_WIDTH = GLCD_WIDTH
-  ILI9341_GLCD_HEIGHT = GLCD_HEIGHT
+    'Variables required for device
+    ILI9341_GLCD_WIDTH = GLCD_WIDTH
+    ILI9341_GLCD_HEIGHT = GLCD_HEIGHT
     #ifndef GLCD_OLED_FONT
       GLCDFontWidth = 6
     #endif
@@ -318,6 +319,7 @@ Sub InitGLCD_ILI9341
 
   #endif
 
+  GLCDRotateState = Portrait
   'Clear screen
   GLCDCLS
 
@@ -972,10 +974,10 @@ End Sub
 
 
 '''@hide
-sub   GLCDRotate_ILI9341 ( in ILI9341AddressType )
+sub   GLCDRotate_ILI9341 ( in GLCDRotateState )
 
   SendCommand_ILI9341 ( ILI9341_MADCTL )
-  select case ILI9341AddressType
+  select case GLCDRotateState
         case PORTRAIT
              ILI9341_GLCD_WIDTH = GLCD_WIDTH
              ILI9341_GLCD_HEIGHT = GLCD_HEIGHT
