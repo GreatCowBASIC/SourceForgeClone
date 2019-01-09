@@ -117,6 +117,7 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 ' Do not remove - global variable required for Circles.
 dim GLCD_yordinate as integer
 dim glcd_type_string as string * 7
+dim GLCDRotateState as byte
 
 'Foreground and background colours
 Dim GLCDBackground As Word
@@ -240,8 +241,8 @@ Dim GLCDDeviceWidth as Word
      #include <glcd_ssd1289.h>
      InitGLCD = InitGLCD_SSD1289
      GLCDCLS = GLCDCLS_SSD1289
-     GLCDDrawChar = DrawChar_SSD1289
-     GLCDPrint = Print_SSD1289
+     GLCDDrawChar = GLCDDrawChar_SSD1289
+'     GLCDPrint = Print_SSD1289
      FilledBox = FilledBox_SSD1289
      Box = Box_SSD1289
      GLCDDrawString = Print_SSD1289
@@ -487,6 +488,7 @@ End Sub
 '''@param PrintLocY Y coordinate for message
 '''@param PrintData Message to display
 Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string )
+  'GLCD.h Sub GLCDPrint
   Dim GLCDPrintLoc  as word
   Dim GLCDPrint_String_Counter, GLCDPrintLen as byte
   GLCDPrintLen = LCDPrintData(0)
@@ -1075,6 +1077,13 @@ End Sub
 sub GLCDRotate ( in AddressType )
     ' Empty routine  - do not delete
 end sub
+
+sub SetGLCDTouchSize( Current_GLCD_WIDTH as word, Current_GLCD_HEIGHT as word  )
+    dim Current_GLCD_WIDTH, Current_GLCD_HEIGHT as word
+
+     'this simply set the variables
+End Sub
+
 
 '''Draws a Horizontal Line on the GLCD with a
 '''@param GLCDX1 X coordinate of one end of the line
