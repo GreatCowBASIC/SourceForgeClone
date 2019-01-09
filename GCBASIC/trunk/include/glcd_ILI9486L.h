@@ -20,6 +20,8 @@
 
 'Changes
 ' 21/04/2017:      Initial release
+' 29/12/2018       Added 8Wire_Data_Bus support - beta
+' 30/12/2018       Added Touch support, OLED, fixed rotate and FilledBox
 
 '
 'Hardware settings
@@ -33,18 +35,16 @@
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9486L; Data Out (LCD In) GLCD_DO; IO_Pin
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9486L; Clock; GLCD_SCK; IO_Pin
 
-'''@hardware GLCD_TYPE GLCD_TYPE_ILI9486L; Reset; GLCD_RESET; IO_Pin
+'''@hardware GLCD_TYPE GLCD_TYPE_ILI9486L; Reset; GLCD_RST; IO_Pin
 
 'Pin mappings for ILI9486L
 #define ILI9486L_DC GLCD_DC
 #define ILI9486L_CS GLCD_CS
-#define ILI9486L_RST GLCD_RESET
+#define ILI9486L_RST GLCD_RST
 
 #define ILI9486L_DI GLCD_DI
 #define ILI9486L_DO GLCD_DO
 #define ILI9486L_SCK GLCD_SCK
-
-
 
 #define ILI9486L_NOP     0x00
 #define ILI9486L_SWRESET 0x01
@@ -111,33 +111,27 @@
 
 #define ILI9486L_PWCTR6  0xFC
 
-#define ILI9486L_WHITE   0xFFFF - TFT_WHITE
-#define ILI9486L_BLACK   0xFFFF - TFT_BLACK
-#define ILI9486L_RED     0xFFFF - TFT_RED
-#define ILI9486L_GREEN   0xFFFF - TFT_GREEN
-#define ILI9486L_BLUE    0xFFFF - TFT_BLUE
-#define ILI9486L_YELLOW  0xFFFF - TFT_YELLOW
-#define ILI9486L_CYAN    0xFFFF - TFT_CYAN
-#define ILI9486L_MAGENTA 0xFFFF - TFT_MAGENTA
-#define ILI9486L_NAVY          0xFFFF - TFT_NAVY
-#define ILI9486L_DARKGREEN     0xFFFF - TFT_DARKGREEN
-#define ILI9486L_DARKCYAN      0xFFFF - TFT_DARKCYAN
-#define ILI9486L_MAROON        0xFFFF - TFT_MAROON
-#define ILI9486L_PURPLE        0xFFFF - TFT_PURPLE
-#define ILI9486L_OLIVE         0xFFFF - TFT_OLIVE
-#define ILI9486L_LIGHTGREY     0xFFFF - TFT_LIGHTGREY
-#define ILI9486L_DARKGREY      0xFFFF - TFT_DARKGREY
-#define ILI9486L_ORANGE        0xFFFF - TFT_ORANGE
-#define ILI9486L_GREENYELLOW   0xFFFF - TFT_GREENYELLOW
-#define ILI9486L_PINK          0xFFFF - TFT_PINK
-
-
-
+#define ILI9486L_WHITE          TFT_WHITE
+#define ILI9486L_BLACK          TFT_BLACK
+#define ILI9486L_RED            TFT_RED
+#define ILI9486L_GREEN          TFT_GREEN
+#define ILI9486L_BLUE           TFT_BLUE
+#define ILI9486L_YELLOW         TFT_YELLOW
+#define ILI9486L_CYAN           TFT_CYAN
+#define ILI9486L_MAGENTA        TFT_MAGENTA
+#define ILI9486L_NAVY           TFT_NAVY
+#define ILI9486L_DARKGREEN      TFT_DARKGREEN
+#define ILI9486L_DARKCYAN       TFT_DARKCYAN
+#define ILI9486L_MAROON         TFT_MAROON
+#define ILI9486L_PURPLE         TFT_PURPLE
+#define ILI9486L_OLIVE          TFT_OLIVE
+#define ILI9486L_LIGHTGREY      TFT_LIGHTGREY
+#define ILI9486L_DARKGREY       TFT_DARKGREY
+#define ILI9486L_ORANGE         TFT_ORANGE
+#define ILI9486L_GREENYELLOW    TFT_GREENYELLOW
+#define ILI9486L_PINK           TFT_PINK
 
 #startup InitGLCD_ILI9486L
-
-
-
 
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9486L
@@ -147,16 +141,61 @@ Sub InitGLCD_ILI9486L
 
 
   'Setup code for ILI9486L controllers
-  #if GLCD_TYPE = GLCD_TYPE_ILI9486L
+    #if GLCD_TYPE = GLCD_TYPE_ILI9486L
 
-    'Pin directions
-    Dir ILI9486L_CS Out
-    Dir ILI9486L_DC Out
-    Dir ILI9486L_RST Out
+    #ifndef 8Bit_Data_Bus
+      'SPI Pin directions
+      Dir ILI9486L_CS Out
+      Dir ILI9486L_DC Out
+      Dir ILI9486L_RST Out
 
-    Dir ILI9486L_DI In
-    Dir ILI9486L_DO Out
-    Dir ILI9486L_SCK Out
+      Dir ILI9486L_DI In
+      Dir ILI9486L_DO Out
+      Dir ILI9486L_SCK Out
+
+    #endif
+
+    #ifdef 8Bit_Data_Bus
+      '8 bit data bus directions
+      #define ILI9486L_RST GLCD_RST
+      #define ILI9486L_CS GLCD_CS
+      #define ILI9486L_DC GLCD_DC
+      #define ILI9486L_WR GLCD_WR
+      #define ILI9486L_RD GLCD_RD
+
+
+      #define ILI9486L_DB0 GLCD_DB0
+      #define ILI9486L_DB1 GLCD_DB1
+      #define ILI9486L_DB2 GLCD_DB2
+      #define ILI9486L_DB3 GLCD_DB3
+      #define ILI9486L_DB4 GLCD_DB4
+      #define ILI9486L_DB5 GLCD_DB5
+      #define ILI9486L_DB6 GLCD_DB6
+      #define ILI9486L_DB7 GLCD_DB7
+
+
+      dir  ILI9486L_DB7 OUT
+      dir  ILI9486L_DB6 OUT
+      dir  ILI9486L_DB5 OUT
+      dir  ILI9486L_DB4 OUT
+      dir  ILI9486L_DB3 OUT
+      dir  ILI9486L_DB2 OUT
+      dir  ILI9486L_DB1 OUT
+      dir  ILI9486L_DB0 OUT
+
+      'Set pin directions
+      Dir ILI9486L_RD  Out
+      Dir ILI9486L_WR  Out
+      Dir ILI9486L_DC  Out
+      Dir ILI9486L_CS  Out
+      Dir ILI9486L_RST Out
+
+      Set ILI9486L_RD On
+      Set ILI9486L_WR On
+      Set ILI9486L_DC On
+      set ILI9486L_CS ON
+      Set ILI9486L_RST On
+    #endif
 
     #ifdef ILI9486L_HardwareSPI
       ' harware SPI mode
@@ -177,120 +216,73 @@ Sub InitGLCD_ILI9486L
     Set ILI9486L_RST On
     Wait 150 ms
 
-    SendCommand_ILI9486L(0xC0)
-    SendData_ILI9486L(0x08)
-    SendData_ILI9486L(0x06)
-
-    SendCommand_ILI9486L(0xC1)
-    SendData_ILI9486L(0x43)
-
-    SendCommand_ILI9486L(0XC5)
-    SendData_ILI9486L(0x00)
-    SendData_ILI9486L(0x40)
-
-    SendCommand_ILI9486L(0xC2)
-    SendData_ILI9486L(0x33)
-
-    SendCommand_ILI9486L(0xB1)
-    SendData_ILI9486L(0xB0)
-    SendData_ILI9486L(0x11)
-
-    SendCommand_ILI9486L(0xB4)
-    SendData_ILI9486L(0x02)
-
-    SendCommand_ILI9486L(0xB7)
-    SendData_ILI9486L(0x86)
-
-    SendCommand_ILI9486L(0xE0)
-    SendData_ILI9486L(0x0F)
-    SendData_ILI9486L(0x29)
-    SendData_ILI9486L(0x25)
-    SendData_ILI9486L(0x0B)
-    SendData_ILI9486L(0x0E)
-    SendData_ILI9486L(0x07)
-    SendData_ILI9486L(0x42)
-    SendData_ILI9486L(0x87)
-    SendData_ILI9486L(0x2C)
-    SendData_ILI9486L(0x06)
-    SendData_ILI9486L(0x0F)
-    SendData_ILI9486L(0x02)
-    SendData_ILI9486L(0x0B)
-    SendData_ILI9486L(0x07)
-    SendData_ILI9486L(0x00)
-
-    SendCommand_ILI9486L(0XE1)
-    SendData_ILI9486L(0x0F)
-    SendData_ILI9486L(0x38)
-    SendData_ILI9486L(0x34)
-    SendData_ILI9486L(0x0D)
-    SendData_ILI9486L(0x10)
-    SendData_ILI9486L(0x09)
-    SendData_ILI9486L(0x53)
-    SendData_ILI9486L(0x87)
-    SendData_ILI9486L(0x3D)
-    SendData_ILI9486L(0x08)
-    SendData_ILI9486L(0x11)
-    SendData_ILI9486L(0x04)
-    SendData_ILI9486L(0x1A)
-    SendData_ILI9486L(0x16)
-    SendData_ILI9486L(0x00)
-
     SendCommand_ILI9486L(0XF2)
-    SendData_ILI9486L(0x1E)
+    SendData_ILI9486L(0x18)
     SendData_ILI9486L(0xA3)
-    SendData_ILI9486L(0x32)
+    SendData_ILI9486L(0x12)
     SendData_ILI9486L(0x02)
-    SendData_ILI9486L(0xB2)
-    SendData_ILI9486L(0x52)
+    SendData_ILI9486L(0XB2)
+    SendData_ILI9486L(0x12)
     SendData_ILI9486L(0xFF)
     SendData_ILI9486L(0x10)
     SendData_ILI9486L(0x00)
-
     SendCommand_ILI9486L(0XF8)
     SendData_ILI9486L(0x21)
     SendData_ILI9486L(0x04)
-
-    SendCommand_ILI9486L(0x36)
-    SendData_ILI9486L(0x08) 'was 08 optionally 48
-
-    SendCommand_ILI9486L(0x3A)
-    SendData_ILI9486L(0x55)
-
-    SendCommand_ILI9486L(0xF9)
+    SendCommand_ILI9486L(0XF9)
     SendData_ILI9486L(0x00)
     SendData_ILI9486L(0x08)
-
-    SendCommand_ILI9486L(0XF1)
-    SendData_ILI9486L(0x36)
-    SendData_ILI9486L(0x04)
-    SendData_ILI9486L(0x00)
-    SendData_ILI9486L(0x3C)
-    SendData_ILI9486L(0X0F)
-    SendData_ILI9486L(0x8F)
-    '/**********set rgb interface mode******************/
+    SendCommand_ILI9486L(0x36)
+    SendData_ILI9486L(0x08)
+    SendCommand_ILI9486L(0x3A)
+    SendData_ILI9486L(0x05)
+    SendCommand_ILI9486L(0xB4)
+    SendData_ILI9486L(0x01)
     SendCommand_ILI9486L(0xB6)
-    SendData_ILI9486L(0x00) '30 set rgb, was 00
-    SendData_ILI9486L(0x22) 'GS,SS 02,42,62 was 22
-    SendData_ILI9486L(0x3B)
-    ' /**************************************************/
-    SendCommand_ILI9486L(0x2A) 'Frame rate control
+    SendData_ILI9486L(0x02)
+    SendData_ILI9486L(0x22)
+    SendCommand_ILI9486L(0xC1)
+    SendData_ILI9486L(0x41)
+    SendCommand_ILI9486L(0xC5)
     SendData_ILI9486L(0x00)
+    SendData_ILI9486L(0x07)
+    SendCommand_ILI9486L(0xE0)
+    SendData_ILI9486L(0x0F)
+    SendData_ILI9486L(0x1F)
+    SendData_ILI9486L(0x1C)
+    SendData_ILI9486L(0x0C)
+    SendData_ILI9486L(0x0F)
+    SendData_ILI9486L(0x08)
+    SendData_ILI9486L(0x48)
+    SendData_ILI9486L(0x98)
+    SendData_ILI9486L(0x37)
+    SendData_ILI9486L(0x0A)
+    SendData_ILI9486L(0x13)
+    SendData_ILI9486L(0x04)
+    SendData_ILI9486L(0x11)
+    SendData_ILI9486L(0x0D)
     SendData_ILI9486L(0x00)
-    SendData_ILI9486L(0x01)
-    SendData_ILI9486L(0x3F)
-
-    SendCommand_ILI9486L(0x2B) 'Display function control
+    SendCommand_ILI9486L(0xE1)
+    SendData_ILI9486L(0x0F)
+    SendData_ILI9486L(0x32)
+    SendData_ILI9486L(0x2E)
+    SendData_ILI9486L(0x0B)
+    SendData_ILI9486L(0x0D)
+    SendData_ILI9486L(0x05)
+    SendData_ILI9486L(0x47)
+    SendData_ILI9486L(0x75)
+    SendData_ILI9486L(0x37)
+    SendData_ILI9486L(0x06)
+    SendData_ILI9486L(0x10)
+    SendData_ILI9486L(0x03)
+    SendData_ILI9486L(0x24)
+    SendData_ILI9486L(0x20)
     SendData_ILI9486L(0x00)
-    SendData_ILI9486L(0x00)
-    SendData_ILI9486L(0x01)
-    SendData_ILI9486L(0xDF)
-
-    SendCommand_ILI9486L(0x21)
-
     SendCommand_ILI9486L(0x11)
     wait 120 ms
-    SendCommand_ILI9486L(0x29) ' display on
-    SendCommand_ILI9486L(0x2c)
+    SendCommand_ILI9486L(0x29)
+
+
     'Default Colours
     GLCDBackground = ILI9486L_BLACK
     GLCDForeground = ILI9486L_WHITE
@@ -301,6 +293,10 @@ Sub InitGLCD_ILI9486L
     GLCDFontWidth = 6
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 2
+
+    GLCDRotate Portrait
+
+    GLCDCLS_ILI9486L
 
   #endif
 
@@ -333,62 +329,103 @@ Sub GLCDCLS_ILI9486L ( Optional In  GLCDBackground as word = GLCDBackground )
     ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
     GLCD_yordinate = 0
 
-    SetAddressWindow_ILI9486L ( 0, 0, ILI9486L_GLCD_WIDTH -1 , ILI9486L_GLCD_HEIGHT-1 )
+    SetAddressWindow_ILI9486L ( 0, 0, GLCD_WIDTH  , GLCD_HEIGHT )
     ILI9486LSendWord = GLCDBackground
+
+    GLCDCLS_HiBytePortion1 = (PORTD & 0B00000011) | ((ILI9481SendWord_H) & 0B11111100);
+    GLCDCLS_HiBytePortion2 = (PORTB & 0B11111100) | ((ILI9481SendWord_H) & 0B00000011);
+    GLCDCLS_LoBytePortion1 =  (PORTD & 0B00000011) | ((ILI9481SendWord) & 0B11111100);
+    GLCDCLS_LoBytePortion2 =  (PORTB & 0B11111100) | ((ILI9481SendWord) & 0B00000011);
 
     set ILI9486L_CS OFF
     set ILI9486L_DC ON
-    repeat ILI9486L_GLCD_WIDTH
+    Repeat 100
+      Repeat 48
+           Repeat 32
+        #ifndef 8Bit_Data_Bus
+            #ifdef ILI9486L_HardwareSPI
+    '         Could use these as an alternative
+    '         FastHWSPITransfer  ILI9486LSendWord_h
+    '         FastHWSPITransfer  ILI9486LSendWord
 
-      repeat ILI9486L_GLCD_HEIGHT
+              #ifdef PIC
+                #ifndef Var(SSPCON1)
+                  #ifdef Var(SSPCON)
+                    Dim SSPCON1 Alias SSPCON
+                  #endif
+                #endif
+                'Clear WCOL
+                Set SSPCON1.WCOL Off
+                'Put byte to send into buffer
+                'Will start transfer
+                SSPBUF = ILI9486LSendWord_h
+                Wait While SSPSTAT.BF = Off
+                Set SSPSTAT.BF Off
+                #if ChipFamily 16
+                  ILI9486LTempOut = SSPBUF
+                #endif
 
-        #ifdef ILI9486L_HardwareSPI
-'         Could use these as an alternative
-'         FastHWSPITransfer  ILI9486LSendWord_h
-'         FastHWSPITransfer  ILI9486LSendWord
 
-          #ifdef PIC
-            #ifndef Var(SSPCON1)
-              #ifdef Var(SSPCON)
-                Dim SSPCON1 Alias SSPCON
+                'Clear WCOL
+                Set SSPCON1.WCOL Off
+                'Put byte to send into buffer
+                'Will start transfer
+                SSPBUF = ILI9486LSendWord
+                Wait While SSPSTAT.BF = Off
+                Set SSPSTAT.BF Off
+                #if ChipFamily 16
+                  ILI9486LTempOut = SSPBUF
+                #endif
+
               #endif
-            #endif
-            'Clear WCOL
-            Set SSPCON1.WCOL Off
-            'Put byte to send into buffer
-            'Will start transfer
-            SSPBUF = ILI9486LSendWord_h
-            Wait While SSPSTAT.BF = Off
-            Set SSPSTAT.BF Off
-            #if ChipFamily 16
-              ILI9486LTempOut = SSPBUF
+              #ifdef AVR
+'                 was thjs slower code
+'                FastHWSPITransfer  ILI9486LSendWord_h
+'                FastHWSPITransfer  ILI9486LSendWord
+
+                  'Master mode only
+                  SPDR = ILI9486LSendWord_h
+                  Do
+
+                  Loop While SPSR.WCOL
+                  'Read buffer
+                  'Same for master and slave
+                  Wait While SPSR.SPIF = Off
+
+                  'Master mode only
+                  SPDR = ILI9486LSendWord
+                  Do
+
+                  Loop While SPSR.WCOL
+                  'Read buffer
+                  'Same for master and slave
+                  Wait While SPSR.SPIF = Off
+
+              #endif
+
             #endif
 
-
-            'Clear WCOL
-            Set SSPCON1.WCOL Off
-            'Put byte to send into buffer
-            'Will start transfer
-            SSPBUF = ILI9486LSendWord
-            Wait While SSPSTAT.BF = Off
-            Set SSPSTAT.BF Off
-            #if ChipFamily 16
-              ILI9486LTempOut = SSPBUF
+            #ifndef ILI9486L_HardwareSPI
+              SendWord_ILI9486L ( GLCDBackground )
             #endif
-
-          #endif
-          #ifdef AVR
-            FastHWSPITransfer  ILI9486LSendWord_h
-            FastHWSPITransfer  ILI9486LSendWord
-          #endif
 
         #endif
 
-        #ifndef ILI9486L_HardwareSPI
-          SendWord_ILI9486L ( GLCDBackground )
+        #ifdef 8Bit_Data_Bus
+              #ifdef AVR
+                'Write 8 bit bus for AVR
+                PORTD = GLCDCLS_HiBytePortion1
+                PORTB = GLCDCLS_HiBytePortion2
+                set ILI9486L_WR OFF
+                set ILI9486L_WR ON
+                PORTD = GLCDCLS_LoBytePortion1
+                PORTB = GLCDCLS_LoBytePortion2
+                set ILI9486L_WR OFF
+                set ILI9486L_WR ON
+              #endif
         #endif
       end repeat
-
+     end repeat
     end repeat
     set ILI9486L_CS ON;
 
@@ -401,21 +438,190 @@ End Sub
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString_ILI9486L( In StringLocX as word, In CharLocY as word, In Chars as string, Optional In LineColour as word = GLCDForeground )
-    dim TargetCharCol as word
-    for xchar = 1 to Chars(0)
-      ' June 2014
-      ' Corrected error X calcaluation. It was adding an Extra 1!
-      TargetCharCol = StringLocX + ((xchar*( GLCDFontWidth * GLCDfntDefaultsize ))-( GLCDFontWidth * GLCDfntDefaultsize ))
-      GLCDDrawChar TargetCharCol , CharLocY , Chars(xchar), LineColour
-    next
+'    dim TargetCharCol as word
+'    for xchar = 1 to Chars(0)
+'      ' June 2014
+'      ' Corrected error X calcaluation. It was adding an Extra 1!
+'      TargetCharCol = StringLocX + ((xchar*( GLCDFontWidth * GLCDfntDefaultsize ))-( GLCDFontWidth * GLCDfntDefaultsize ))
+'      GLCDDrawChar TargetCharCol , CharLocY , Chars(xchar), LineColour
+'    next
+'
+  dim GLCDPrintLoc as word
+
+  GLCDPrintLoc = StringLocX
+
+  #ifdef GLCD_OLED_FONT
+      dim OldGLCDFontWidth as Byte
+      OldGLCDFontWidth = GLCDFontWidth
+  #endif
+
+  for xchar = 1 to Chars(0)
+
+      GLCDDrawChar GLCDPrintLoc , CharLocY , Chars(xchar), LineColour
+      GLCDPrintIncrementPixelPositionMacro
+
+  next
+
+  #ifdef GLCD_OLED_FONT
+      GLCDFontWidth = OldGLCDFontWidth
+  #endif
+
 end sub
+
+
+
 
 '''Draws a character at the specified location on the ST7920 GLCD
 '''@param StringLocX X coordinate for message
 '''@param CharLocY Y coordinate for message
 '''@param Chars String to display
 '''@param LineColour Line Color, either 1 or 0
+
 Sub GLCDDrawChar_ILI9486L(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
+
+  'This has got a tad complex
+  'We have three major pieces
+  '1 The preamble - this just adjusted color and the input character
+  '2 The code that deals with GCB fontset
+  '3 The code that deals with OLED fontset
+  '
+  'You can make independent change to section 2 and 3 but they are mutual exclusive with many common pieces
+
+   dim CharCol, CharRow, GLCDTemp as word
+   CharCode -= 15
+
+   CharCol=0
+
+   #ifndef GLCD_OLED_FONT
+
+        if CharCode>=178 and CharCode<=202 then
+           CharLocY=CharLocY-1
+        end if
+
+        For CurrCharCol = 1 to 5
+          Select Case CurrCharCol
+            Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+            Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+            Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+            Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+            Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+          End Select
+          CharRow=0
+          For CurrCharRow = 1 to 8
+              CharColS=0
+              For Col=1 to GLCDfntDefaultsize
+                    CharColS +=1
+                    CharRowS=0
+                    For Row=1 to GLCDfntDefaultsize
+                        CharRowS +=1
+                        if CurrCharVal.0=1 then
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
+                        Else
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                        End if
+                    Next Row
+              Next Col
+            Rotate CurrCharVal Right
+            CharRow +=GLCDfntDefaultsize
+          Next
+          CharCol +=GLCDfntDefaultsize
+        Next
+
+    #endif
+
+    #ifdef GLCD_OLED_FONT
+
+        'Calculate the pointer to the OLED fonts.
+        'These fonts are not multiple tables one is a straight list the other is a lookup table with data.
+        Dim LocalCharCode as word
+
+        'Get key information and set up the fonts parameters
+        Select case GLCDfntDefaultSize
+            case 1 'This font is two font tables of an index and data
+              CharCode = CharCode - 16
+              ReadTable OLEDFont1Index, CharCode, LocalCharCode
+              ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
+              GLCDFontWidth = COLSperfont + 1
+              ROWSperfont = 7  'which is really 8 as we start at 0
+
+            case 2 'This is one font table
+              CharCode = CharCode - 17
+              'Pointer to table of font elements
+              LocalCharCode = (CharCode * 20)
+              COLSperfont = 9  'which is really 10 as we start at 0
+
+              ROWSperfont=15  'which is really 16 as we start at 0
+
+        End Select
+
+
+        'The main loop - loop throught the number of columns
+        For CurrCharCol = 0 to COLSperfont  'number of columns in the font , with two row of data
+
+          'Index the pointer to the code that we are looking for as we need to do this lookup many times getting more font data
+          LocalCharCode++
+          Select case GLCDfntDefaultSize
+              case 1
+                ReadTable OLEDFont1Data, LocalCharCode, CurrCharVal
+
+              case 2
+                #ifndef GLCD_Disable_OLED_FONT2
+                  'Read this 20 times... (0..COLSperfont) [ * 2 ]
+                  ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                #endif
+                #ifdef GLCD_Disable_OLED_FONT2
+                  CurrCharVal = GLCDBackground
+                #endif
+          End Select
+
+            'we handle 8 or 16 pixels of height
+            For CurrCharRow = 0 to ROWSperfont
+                'Set the pixel
+                If CurrCharVal.0 = 0 Then
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                Else
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, LineColour
+                End If
+
+                Rotate CurrCharVal Right
+
+                'Set to next row of date, a second row
+                if GLCDfntDefaultSize = 2 and CurrCharRow = 7 then
+                  LocalCharCode++
+                  #ifndef GLCD_Disable_OLED_FONT2
+                    ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                  #endif
+                  #ifdef GLCD_Disable_OLED_FONT2
+                    CurrCharVal = GLCDBackground
+                  #endif
+                end if
+
+                'It is the intercharacter space, put out one pixel row
+                if CurrCharCol = COLSperfont then
+                    'Put out a white intercharacter pixel/space
+                     GLCDTemp = CharLocX + CurrCharCol
+                     if GLCDfntDefaultSize = 2 then
+                        GLCDTemp++
+                     end if
+                     PSet GLCDTemp , CharLocY + CurrCharRow, GLCDBackground
+                end if
+
+            Next
+
+
+
+        Next
+
+
+    #endif
+
+End Sub
+'''Draws a character at the specified location on the ST7920 GLCD
+'''@param StringLocX X coordinate for message
+'''@param CharLocY Y coordinate for message
+'''@param Chars String to display
+'''@param LineColour Line Color, either 1 or 0
+Sub OldGLCDDrawChar_ILI9486L(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
 
 
   dim CharCol, CharRow as word
@@ -466,7 +672,7 @@ End Sub
 '''@param LineY2 Bottom right corner Y location
 '''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
 Sub FilledBox_ILI9486L(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
-  dim GLCDTemp as word
+  dim GLCDTemp, DrawLine as word
   'Make sure that starting point (1) is always less than end point (2)
   If LineX1 > LineX2 Then
     GLCDTemp = LineX1
@@ -480,16 +686,13 @@ Sub FilledBox_ILI9486L(In LineX1 as word, In LineY1 as word, In LineX2 as word, 
   End If
 
 
-    'Set address window
-'   SetAddress_ILI9486L ILI9486L_COLUMN, LineX1, LineX2
-'   SetAddress_ILI9486L ILI9486L_ROW, LineY1, LineY2
-    SetAddressWindow_ILI9486L (  LineX1, LineY1, LineX2, LineY2 )
-    'Fill with colour
-    Dim GLCDPixelCount As Word
-    GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
-    Repeat GLCDPixelCount
-      SendWord_ILI9486L LineColour
-    End Repeat
+  'Fill with colour
+  'Draw lines going across
+  For DrawLine = LineX1 To LineX2
+    For GLCDTemp = LineY1 To LineY2
+      PSet DrawLine, GLCDTemp, LineColour
+    Next
+  Next
 
 End Sub
 
@@ -499,8 +702,28 @@ End Sub
 '''@param GLCDColour State of pixel
 Sub PSet_ILI9486L(In GLCDX as word, In GLCDY as word, In GLCDColour As Word)
 
-    SetAddressWindow_ILI9486L ( GLCDX, GLCDY, GLCDX, GLCDY )
-    SendWord_ILI9486L GLCDColour
+  select case GLCDRotateState
+        case PORTRAIT  '0 degree
+              SetAddressWindow_ILI9486L ( GLCDX, GLCDY, GLCDX, GLCDY )
+              SendWord_ILI9486L GLCDColour
+
+        case LANDSCAPE
+             SetAddressWindow_ILI9486L ( GLCDy, ILI9486L_GLCD_WIDTH -GLCDx -0, GLCDy, ILI9486L_GLCD_WIDTH -GLCDx -0 )
+             SendWord_ILI9486L GLCDColour
+
+        case PORTRAIT_REV
+            SetAddressWindow_ILI9486L ( ILI9486L_GLCD_WIDTH - GLCDX-0, ILI9486L_GLCD_HEIGHT - GLCDY-0, ILI9486L_GLCD_WIDTH - GLCDX-0, ILI9486L_GLCD_HEIGHT - GLCDY-0 )
+            SendWord_ILI9486L GLCDColour
+
+        case LANDSCAPE_REV
+             SetAddressWindow_ILI9486L ( ILI9486L_GLCD_HEIGHT - GLCDy-0, GLCDx, ILI9486L_GLCD_HEIGHT - GLCDy-0, GLCDx )
+             SendWord_ILI9486L GLCDColour
+
+        case else
+            SetAddressWindow_ILI9486L ( GLCDX, GLCDY, GLCDX, GLCDY )
+            SendWord_ILI9486L GLCDColour
+
+  end select
 
 End Sub
 
@@ -512,30 +735,51 @@ End Sub
 '''@hide
 sub  SendCommand_ILI9486L( IN ILI9486LSendByte as byte )
 
-  set ILI9486L_CS OFF;
-  set ILI9486L_DC OFF;
+    #ifndef 8Bit_Data_Bus
+      set ILI9486L_CS OFF;
+      set ILI9486L_DC OFF;
 
-  #ifdef ILI9486L_HardwareSPI
-     SPITransfer  ILI9486LSendByte,  ILI9486LTempOut
-     set ILI9486L_CS ON;
-     exit sub
-  #endif
+      #ifdef ILI9486L_HardwareSPI
+         SPITransfer  ILI9486LSendByte,  ILI9486LTempOut
+         set ILI9486L_CS ON;
+         exit sub
+      #endif
 
-  #ifndef ILI9486L_HardwareSPI
-  repeat 8
+      #ifndef ILI9486L_HardwareSPI
+      repeat 8
 
-    if ILI9486LSendByte.7 = ON  then
-      set ILI9486L_DO ON;
-    else
-      set ILI9486L_DO OFF;
-    end if
-    SET GLCD_SCK On;
-    rotate ILI9486LSendByte left
-    set GLCD_SCK Off;
+        if ILI9486LSendByte.7 = ON  then
+          set ILI9486L_DO ON;
+        else
+          set ILI9486L_DO OFF;
+        end if
+        SET GLCD_SCK On;
+        rotate ILI9486LSendByte left
+        set GLCD_SCK Off;
 
-  end repeat
-  set ILI9486L_CS ON;
-  #endif
+      end repeat
+      set ILI9486L_CS ON;
+      #endif
+    #endif
+
+
+    #ifdef 8Bit_Data_Bus
+      '8Bit_Data_Bus
+      set ILI9486L_CS OFF;
+      set ILI9486L_DC OFF;
+
+      #ifdef AVR
+      PORTD = (PORTD & 0B00000011) | ((ILI9486LSendByte) & 0B11111100);
+      PORTB = (PORTB & 0B11111100) | ((ILI9486LSendByte) & 0B00000011);
+      #endif
+
+      set ILI9486L_DC OFF
+      set ILI9486L_WR OFF
+      set ILI9486L_WR ON
+      set ILI9486L_DC ON
+
+      set ILI9486L_CS ON;
+    #endif
 
 end Sub
 
@@ -544,61 +788,113 @@ end Sub
 '''@hide
 sub  SendData_ILI9486L( IN ILI9486LSendByte as byte )
 
-  set ILI9486L_CS OFF;
-  set ILI9486L_DC ON;
+    #ifndef 8Bit_Data_Bus
+      set ILI9486L_CS OFF;
+      set ILI9486L_DC ON;
 
-  #ifdef ILI9486L_HardwareSPI
-     SPITransfer  ILI9486LSendByte,  ILI9486LTempOut
-     set ILI9486L_CS ON;
-     exit sub
-  #endif
+      #ifdef ILI9486L_HardwareSPI
+         SPITransfer  ILI9486LSendByte,  ILI9486LTempOut
+         set ILI9486L_CS ON;
+         exit sub
+      #endif
 
-  #ifndef ILI9486L_HardwareSPI
-  repeat 8
+      #ifndef ILI9486L_HardwareSPI
+      repeat 8
 
-    if ILI9486LSendByte.7 = ON then
-      set ILI9486L_DO ON;
-    else
-      set ILI9486L_DO OFF;
-    end if
-    SET GLCD_SCK On;
-    rotate ILI9486LSendByte left
-    set GLCD_SCK Off;
+        if ILI9486LSendByte.7 = ON then
+          set ILI9486L_DO ON;
+        else
+          set ILI9486L_DO OFF;
+        end if
+        SET GLCD_SCK On;
+        rotate ILI9486LSendByte left
+        set GLCD_SCK Off;
 
-  end Repeat
-  set ILI9486L_CS ON;
-  #endif
+      end Repeat
+      set ILI9486L_CS ON;
+      #endif
+    #endif
+
+    #ifdef 8Bit_Data_Bus
+      '8Bit_Data_Bus
+      set ILI9486L_CS OFF;
+      set ILI9486L_DC ON;
+
+      #ifdef AVR
+      PORTD = (PORTD & 0B00000011) | ((ILI9486LSendByte) & 0B11111100);
+      PORTB = (PORTB & 0B11111100) | ((ILI9486LSendByte) & 0B00000011);
+      #endif
+
+      set ILI9486L_DC OFF
+      set ILI9486L_WR OFF
+      set ILI9486L_WR ON
+      set ILI9486L_DC ON
+
+      set ILI9486L_CS ON;
+    #endif
 
 end Sub
 
 '''Send a data word (16 bits) to the ILI9486L GLCD
-'''@param ILI9486LSendByte Word to send
+'''@param ILI9486LSendWord  Word to send
 '''@hide
 Sub SendWord_ILI9486L(In ILI9486LSendWord As Word)
-  set ILI9486L_CS OFF;
-  set ILI9486L_DC ON;
 
-  #ifdef ILI9486L_HardwareSPI
-     SPITransfer  ILI9486LSendWord_H,  ILI9486LTempOut
-     SPITransfer  ILI9486LSendWord,  ILI9486LTempOut
-     set ILI9486L_CS ON;
-     exit sub
+  #ifndef 8Bit_Data_Bus
+      set ILI9486L_CS OFF;
+      set ILI9486L_DC ON;
+
+      #ifdef ILI9486L_HardwareSPI
+         SPITransfer  ILI9486LSendWord_H,  ILI9486LTempOut
+         SPITransfer  ILI9486LSendWord,  ILI9486LTempOut
+         set ILI9486L_CS ON;
+         exit sub
+      #endif
+
+      #ifndef ILI9486L_HardwareSPI
+      repeat 16
+
+        if ILI9486LSendWord.15 = ON then
+          set ILI9486L_DO ON;
+        else
+          set ILI9486L_DO OFF;
+        end if
+        SET GLCD_SCK On;
+        rotate ILI9486LSendWord left
+        set GLCD_SCK Off;
+
+      end repeat
+      set ILI9486L_CS ON;
+      #endif
   #endif
 
-  #ifndef ILI9486L_HardwareSPI
-  repeat 16
+  #ifdef 8Bit_Data_Bus
+    '8Bit_Data_Bus
+    set ILI9486L_CS OFF;
+    set ILI9486L_DC ON;
 
-    if ILI9486LSendWord.15 = ON then
-      set ILI9486L_DO ON;
-    else
-      set ILI9486L_DO OFF;
-    end if
-    SET GLCD_SCK On;
-    rotate ILI9486LSendWord left
-    set GLCD_SCK Off;
+    #ifdef AVR
+    PORTD = (PORTD & 0B00000011) | ((ILI9486LSendWord_H) & 0B11111100);
+    PORTB = (PORTB & 0B11111100) | ((ILI9486LSendWord_H) & 0B00000011);
+    #endif
 
-  end repeat
-  set ILI9486L_CS ON;
+    set ILI9486L_DC OFF
+    set ILI9486L_WR OFF
+    set ILI9486L_WR ON
+    set ILI9486L_DC ON
+
+    #ifdef AVR
+    PORTD = (PORTD & 0B00000011) | ((ILI9486LSendWord) & 0B11111100);
+    PORTB = (PORTB & 0B11111100) | ((ILI9486LSendWord) & 0B00000011);
+    #endif
+
+    set ILI9486L_DC OFF
+    set ILI9486L_WR OFF
+    set ILI9486L_WR ON
+    set ILI9486L_DC ON
+
+
+    set ILI9486L_CS ON;
   #endif
 End Sub
 
@@ -645,41 +941,34 @@ End Sub
 
 
 ''@hide
-sub   GLCDRotate_ILI9486L ( in ILI9341AddressType as byte )
+sub   GLCDRotate_ILI9486L ( in GLCDRotateState as byte )
+'
+'#define ILI9486L_MADCTL_MY  0x80
+'#define ILI9486L_MADCTL_MX  0x40
+'#define ILI9486L_MADCTL_MV  0x20
+'#define ILI9486L_MADCTL_ML  0x10
+'#define ILI9486L_MADCTL_RGB 0x00
+'#define ILI9486L_MADCTL_BGR 0x08
+'#define ILI9486L_MADCTL_MH  0x04
 
 
-  select case ILI9341AddressType
-        case PORTRAIT
 
-              SendCommand_ILI9486L(0xB6)
-              SendData_ILI9486L(0x00)
-              SendData_ILI9486L(0x22)
-              SendData_ILI9486L(0x3B)
-
-        'unsupported
-'        case LANDSCAPE
-
-              'unsupported
-
+  select case GLCDRotateState
+        case PORTRAIT  '0 degree
+             ILI9486L_GLCD_WIDTH = GLCD_WIDTH
+             ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+        case LANDSCAPE
+             ILI9486L_GLCD_WIDTH = GLCD_HEIGHT
+             ILI9486L_GLCD_HEIGHT = GLCD_WIDTH
         case PORTRAIT_REV
-
-              SendCommand_ILI9486L(0xB6)
-              SendData_ILI9486L(0x00)
-              SendData_ILI9486L(0x42)
-              SendData_ILI9486L(0x3B)
-
-
-        'unsupported
-'        case LANDSCAPE_REV
-
-              'unsupported
-
+             ILI9486L_GLCD_WIDTH = GLCD_WIDTH
+             ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+        case LANDSCAPE_REV
+             ILI9486L_GLCD_WIDTH = GLCD_HEIGHT
+             ILI9486L_GLCD_HEIGHT = GLCD_WIDTH
         case else
-              SendCommand_ILI9486L(0xB6)
-              SendData_ILI9486L(0x00)
-              SendData_ILI9486L(0x22)
-              SendData_ILI9486L(0x3B)
-
+             ILI9486L_GLCD_WIDTH = GLCD_WIDTH
+             ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
   end select
 
 end sub
