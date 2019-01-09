@@ -19,7 +19,7 @@
 #chip mega328p, 16
 
 'Startup routine
-#startup InitUno
+#startup InitUno, 90
 
 'A/D speed
 'Need to slow down due to high clock speed
@@ -63,6 +63,5 @@ Sub InitUno
   Dir PORTD.0 In
   Dir PORTD.1 Out
 End Sub
-
 
 
