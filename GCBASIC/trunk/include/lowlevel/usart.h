@@ -1,5 +1,5 @@
 '    USART routines for Great Cow BASIC
-'    Copyright (C) 2009 - 2017 Hugh Considine, Evan Venn, William Roth and Mike Otte
+'    Copyright (C) 2009 - 2019 Hugh Considine, William Roth and Mike Otte and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -57,6 +57,7 @@
 ' 23/09/2018: Moved all "wait USART_DELAYs"  to a single method in hsersend sub -WMR
 ' 23/09/2018: Edited as part of the QA check
 ' 17/11/2018: Correct errant setting of SYNC on K42/83
+' 02/01/2019: Added IF-DEF to protect WAIT in HSerSend
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -676,7 +677,10 @@ sub HSerSend(In SerData, optional In comport = 1)
 
              'Add USART_DELAY After all bits are shifted out
               Wait until TRMT = 1
-              Wait USART_DELAY
+                  #IF USART_DELAY <> OFF
+                  'Add USART_DELAY After all bits are shifted out
+                  Wait USART_DELAY
+                  #ENDIF
               exit sub
           #endif
 
