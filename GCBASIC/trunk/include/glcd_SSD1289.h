@@ -21,6 +21,7 @@
 '    02.05.2017   Reverted to standard line routine. Local version overan Byte values
 '                 Add PSET limits to prevent memory overwriting
 '    23.11.2018   Removed SuperCededLine method.
+'    30.12.2018   Updated FilledBox to standard method and OLED fonts
 '
 'Notes:
 ' Supports SSD1289 controller only.
@@ -405,18 +406,27 @@ End Sub
 '''@param PX2 X2 Position
 '''@param PY2 Y2 Position
 '''@param color Optional
-Sub FilledBox_SSD1289(In PX1 as word, In PY1 as word, In  PX2 as word, In  PY2 as word, Optional In  Color as word = GLCDForeground)
-  Dim CountI,CountJ as Word
-  SSD1289_CS  = 0
-  Set_Address_SSD1289 (PX1,PY1,PX2,PY2)
-  Write_Data_SSD1289 (Color)
-  for CountI = PY1 to PY2
-    for CountJ = PX1 to PX2
-        SSD1289_WR = 0
-        SSD1289_WR = 1
-    next CountJ
-  next CountI
-  SSD1289_CS  = 1
+Sub FilledBox_SSD1289(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
+  dim GLCDTemp, DrawLine as word
+  If LineX1 > LineX2 Then
+    GLCDTemp = LineX1
+    LineX1 = LineX2
+    LineX2 = GLCDTemp
+  End If
+  If LineY1 > LineY2 Then
+    GLCDTemp = LineY1
+    LineY1 = LineY2
+    LineY2 = GLCDTemp
+  End If
+
+
+  'Fill with colour
+  'Draw lines going across
+  For DrawLine = LineX1 To LineX2
+    For GLCDTemp = LineY1 To LineY2
+      PSet DrawLine, GLCDTemp, LineColour
+    Next
+  Next
 End Sub
 
 '''@hide
@@ -520,7 +530,7 @@ End Sub
 '''@param PrintLocY Y position
 '''@param PrintData String to be printed
 '''@param Color Optional color
-Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In PrintData As String, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize )
+Sub xPrint_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In PrintData As String, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize )
           Dim GLCDPrintLoc as Word
           PrintLen = PrintData(0)
   If PrintLen = 0 Then Exit Sub
@@ -537,7 +547,7 @@ End Sub
 '''@param PrintLocY Y coordinate for message
 '''@param GLCDValue Number to display
 '''@param Color Optional color
-Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Long, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize)
+Sub xPrint_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Long, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize)
   Dim GLCDPrintLoc as Word
   Dim SysCalcTempA As Long
   Dim SysPrintBuffer(10)
@@ -559,13 +569,152 @@ Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Lo
 End Sub
 
 
+Sub GLCDDrawChar_SSD1289(In CharLocX as word, In CharLocY as word, In CharCode, Optional In LineColour as word = GLCDForeground )
+
+  'This has got a tad complex
+  'We have three major pieces
+  '1 The preamble - this just adjusted color and the input character
+  '2 The code that deals with GCB fontset
+  '3 The code that deals with OLED fontset
+  '
+  'You can make independent change to section 2 and 3 but they are mutual exclusive with many common pieces
+
+   dim CharCol, CharRow, GLCDTemp as word
+   CharCode -= 15
+
+   CharCol=0
+
+   #ifndef GLCD_OLED_FONT
+
+        if CharCode>=178 and CharCode<=202 then
+           CharLocY=CharLocY-1
+        end if
+
+        For CurrCharCol = 1 to 5
+          Select Case CurrCharCol
+            Case 1: ReadTable GLCDCharCol3, CharCode, CurrCharVal
+            Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
+            Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
+            Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
+            Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
+          End Select
+          CharRow=0
+          For CurrCharRow = 1 to 8
+              CharColS=0
+              For Col=1 to GLCDfntDefaultsize
+                    CharColS +=1
+                    CharRowS=0
+                    For Row=1 to GLCDfntDefaultsize
+                        CharRowS +=1
+                        if CurrCharVal.0=1 then
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
+                        Else
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                        End if
+                    Next Row
+              Next Col
+            Rotate CurrCharVal Right
+            CharRow +=GLCDfntDefaultsize
+          Next
+          CharCol +=GLCDfntDefaultsize
+        Next
+
+    #endif
+
+    #ifdef GLCD_OLED_FONT
+
+        'Calculate the pointer to the OLED fonts.
+        'These fonts are not multiple tables one is a straight list the other is a lookup table with data.
+        Dim LocalCharCode as word
+
+        'Get key information and set up the fonts parameters
+        Select case GLCDfntDefaultSize
+            case 1 'This font is two font tables of an index and data
+              CharCode = CharCode - 16
+              ReadTable OLEDFont1Index, CharCode, LocalCharCode
+              ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
+              GLCDFontWidth = COLSperfont + 1
+              ROWSperfont = 7  'which is really 8 as we start at 0
+
+            case 2 'This is one font table
+              CharCode = CharCode - 17
+              'Pointer to table of font elements
+              LocalCharCode = (CharCode * 20)
+              COLSperfont = 9  'which is really 10 as we start at 0
+
+              ROWSperfont=15  'which is really 16 as we start at 0
+
+        End Select
+
+
+        'The main loop - loop throught the number of columns
+        For CurrCharCol = 0 to COLSperfont  'number of columns in the font , with two row of data
+
+          'Index the pointer to the code that we are looking for as we need to do this lookup many times getting more font data
+          LocalCharCode++
+          Select case GLCDfntDefaultSize
+              case 1
+                ReadTable OLEDFont1Data, LocalCharCode, CurrCharVal
+
+              case 2
+                #ifndef GLCD_Disable_OLED_FONT2
+                  'Read this 20 times... (0..COLSperfont) [ * 2 ]
+                  ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                #endif
+                #ifdef GLCD_Disable_OLED_FONT2
+                  CurrCharVal = GLCDBackground
+                #endif
+          End Select
+
+            'we handle 8 or 16 pixels of height
+            For CurrCharRow = 0 to ROWSperfont
+                'Set the pixel
+                If CurrCharVal.0 = 0 Then
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                Else
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, LineColour
+                End If
+
+                Rotate CurrCharVal Right
+
+                'Set to next row of date, a second row
+                if GLCDfntDefaultSize = 2 and CurrCharRow = 7 then
+                  LocalCharCode++
+                  #ifndef GLCD_Disable_OLED_FONT2
+                    ReadTable OLEDFont2, LocalCharCode, CurrCharVal
+                  #endif
+                  #ifdef GLCD_Disable_OLED_FONT2
+                    CurrCharVal = GLCDBackground
+                  #endif
+                end if
+
+                'It is the intercharacter space, put out one pixel row
+                if CurrCharCol = COLSperfont then
+                    'Put out a white intercharacter pixel/space
+                     GLCDTemp = CharLocX + CurrCharCol
+                     if GLCDfntDefaultSize = 2 then
+                        GLCDTemp++
+                     end if
+                     PSet GLCDTemp , CharLocY + CurrCharRow, GLCDBackground
+                end if
+
+            Next
+
+
+
+        Next
+
+
+    #endif
+
+End Sub
 
 '''Prints single character
 '''@param CharLocX X position
 '''@param CharLocY Y position
 '''@param CharLocY Character to be printed
 '''@param Color Optional color
-Sub DrawChar_SSD1289(In CharLocX as Word, In CharLocY as Word, In CharCode, Optional In  GLCDForeground as word = GLCDForeground , Optional In Size = GLCDfntDefaultsize)
+Sub OldDrawChar_SSD1289(In CharLocX as Word, In CharLocY as Word, In CharCode, Optional In  GLCDForeground as word = GLCDForeground , Optional In Size = GLCDfntDefaultsize)
   Dim CharCol , CharRow , CharColS ,  CharRowS as Word
   CharCode -= 15
   if CharCode>=178 and CharCode<=202 then
