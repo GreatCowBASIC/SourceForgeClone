@@ -1,5 +1,5 @@
 '    System routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2018 Hugh Considine,  William Roth and Evan Venn
+'    Copyright (C) 2006 - 2019 Hugh Considine,  William Roth and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -55,6 +55,8 @@
 '    27052018 - Added 48mhz clock treatment for 18f USB parts for type 104 oscillator
 '    07062018 - Added 24mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    08062018 - Added 0.0625mhz  clock treatment for 16f USB parts for type 102 oscillator
+'    09012019 - Updated type 103 to support 18f25j53 class oscillator
+
 
 
 
@@ -344,8 +346,8 @@ Sub InitSys
     #if NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
 
       #ifndef Bit(HFIOFS)
-        'Most part have Bit(HFIOFS)
-        asm showdebug OSCCON type is 103 ' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifNdef Bit(HFIOFS)
+
+        asm showdebug 'OSCCON type is 103 - This part does not have Bit HFIOFS @ ifndef Bit(HFIOFS)
 
         #IFDEF SYS_CLOCK_DIV_NEEDED 1
           'added for 18F(L)K20 -WMR
@@ -383,10 +385,53 @@ Sub InitSys
         #ENDIF
 
 
-       #if SYS_CLOCK_INT_PLL_USED
-        'PLL for higher speeds
-        [canskip] PLLMULT, SPLLEN = b'11'
-       #endif
+        #if SYS_CLOCK_INT_PLL_USED
+          'PLL for higher speeds
+          [canskip] PLLMULT, SPLLEN = b'11'
+        #endif
+
+
+
+        #IF SYS_CLOCK_DIV_NEEDED FALSE
+            #IFDEF ChipMHz 8
+              OSCCON = OSCCON AND b'10001111'
+              'Address the two true tables for IRCF
+             [canskip] IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 8 MHz (INTOSC drives clock directly)
+            #ENDIF
+
+            #IFDEF ChipMHz 4
+              OSCCON = OSCCON AND b'10001111'
+             [canskip] IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 4 MHz
+            #ENDIF
+
+            #IFDEF ChipMHz 2
+              OSCCON = OSCCON AND b'10001111'
+             [canskip] IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 2 MHz
+            #ENDIF
+
+            #IFDEF ChipMHz 1
+              OSCCON = OSCCON AND b'10001111'
+             [canskip] IRCF2, IRCF1, IRCF0 = b'100'         ;100 = 1 MHz(3)
+            #ENDIF
+
+            #IFDEF ChipMHz 0.5
+              OSCCON = OSCCON AND b'10001111'
+             [canskip] IRCF2, IRCF1, IRCF0 = b'011'         ;011 = 500 kHz
+            #ENDIF
+
+            #IFDEF ChipMHz 0.25
+              OSCCON = OSCCON AND b'10001111'
+             [canskip] IRCF2, IRCF1, IRCF0 = b'010'         ;010 = 250 kHz
+            #ENDIF
+
+            #IFDEF ChipMHz 0.125
+              OSCCON = OSCCON AND b'10001111'
+             [canskip] IRCF2, IRCF1, IRCF0 = b'001'         ;001 = 125 kHz
+            #ENDIF
+        #ENDIF
+
+
+        'End of type 103 init
 
       #endif
 
