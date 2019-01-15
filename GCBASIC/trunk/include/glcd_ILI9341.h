@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015, 2017 Paolo Iocco, Stan Cartwright and Evan Venn
+'    Copyright (C) 2015, 2019 Paolo Iocco, Stan Cartwright and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@
 ' 30/09/2017:      Added support for OLED Fonts
 ' 11/11/2017       Added support for ReadPixel_ILI9341
 ' 16/11/2017       Revised to support faster CLS for AVR
-
+' 15/01/2019       Revised to support SPI without WCOL in CLS
 
 
 ' Hardware settings
@@ -53,8 +53,7 @@
 #define ILI9341_DO GLCD_DO
 #define ILI9341_SCK GLCD_SCK
 
-#define Current_GLCD_WIDTH ILI9341_GLCD_WIDTH
-#define Current_GLCD_HEIGHT ILI9341_GLCD_HEIGHT
+
 
 #define ILI9341_NOP     0x00
 #define ILI9341_SWRESET 0x01
@@ -144,13 +143,7 @@
 #define ILI9341_NAVY    0x0010
 #define ILI9341_FUCHSIA 0xF81F
 
-
-
-
 #startup InitGLCD_ILI9341, 98
-
-
-
 
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9341
@@ -551,35 +544,47 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
 '         FastHWSPITransfer  ILI9341SendWord
 
           #ifdef PIC
-            #ifndef Var(SSPCON1)
-              #ifdef Var(SSPCON)
-                Dim SSPCON1 Alias SSPCON
-              #endif
-            #endif
-            'Clear WCOL
-            Set SSPCON1.WCOL Off
-            'Put byte to send into buffer
-            'Will start transfer
-            SSPBUF = ILI9341SendWord_h
-            Wait While SSPSTAT.BF = Off
-            Set SSPSTAT.BF Off
-            #if ChipFamily 16
-              ILI9341TempOut = SSPBUF
+
+            #ifndef bit(SSPCON1.WCOL)
+                FastHWSPITransfer  ILI9341SendWord_h
+                FastHWSPITransfer  ILI9341SendWord
             #endif
 
+            #ifdef bit(SSPCON1.WCOL)
 
-            'Clear WCOL
-            Set SSPCON1.WCOL Off
-            'Put byte to send into buffer
-            'Will start transfer
-            SSPBUF = ILI9341SendWord
-            Wait While SSPSTAT.BF = Off
-            Set SSPSTAT.BF Off
-            #if ChipFamily 16
-              ILI9341TempOut = SSPBUF
+                #ifndef Var(SSPCON1)
+                  #ifdef Var(SSPCON)
+                    Dim SSPCON1 Alias SSPCON
+                  #endif
+                #endif
+                'Clear WCOL
+                Set SSPCON1.WCOL Off
+                'Put byte to send into buffer
+                'Will start transfer
+                SSPBUF = ILI9341SendWord_h
+                Wait While SSPSTAT.BF = Off
+                Set SSPSTAT.BF Off
+                #if ChipFamily 16
+                  ILI9341TempOut = SSPBUF
+                #endif
+
+
+                'Clear WCOL
+                Set SSPCON1.WCOL Off
+                'Put byte to send into buffer
+                'Will start transfer
+                SSPBUF = ILI9341SendWord
+                Wait While SSPSTAT.BF = Off
+                Set SSPSTAT.BF Off
+                #if ChipFamily 16
+                  ILI9341TempOut = SSPBUF
+                #endif
+
             #endif
 
           #endif
+
+
           #ifdef AVR
 
             Do
@@ -975,6 +980,15 @@ End Sub
 
 '''@hide
 sub   GLCDRotate_ILI9341 ( in GLCDRotateState )
+
+
+'#define ILI9341_MADCTL_MY  0x80
+'#define ILI9341_MADCTL_MX  0x40
+'#define ILI9341_MADCTL_MV  0x20
+'#define ILI9341_MADCTL_ML  0x10
+'#define ILI9341_MADCTL_RGB 0x00
+'#define ILI9341_MADCTL_BGR 0x08
+'#define ILI9341_MADCTL_MH  0x04
 
   SendCommand_ILI9341 ( ILI9341_MADCTL )
   select case GLCDRotateState
