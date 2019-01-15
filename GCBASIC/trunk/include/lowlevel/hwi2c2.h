@@ -23,6 +23,7 @@
 'COMMANDS UNUSABLE!
 '********************************************************************************
 '    Updated Oct 2016  - for Option Explicit and to fix the script issue
+'    Updated jan 2019  - Correct support in HI2C2Start
 
 'SPI mode constants ALSO used by hardware I2C:
 ' Define HI2C2 settings - CHANGE PORTS
@@ -113,6 +114,7 @@ Sub HI2C2Mode (In HI2C2CurrentMode)
     set SSP2CON1_SSPEN on
   #ENDIF
 
+
 End Sub
 
 Sub HI2C2SetAddress(In HI2C2Address)
@@ -133,6 +135,12 @@ Sub HI2C2Start
         Set SSP2CON2_SEN On
         HI2C2WaitMSSP
       #endif
+
+      #ifdef BIT(SEN_SSP2CON2)
+        Set SEN_SSP2CON2 On
+        HI2C2WaitMSSP
+      #endif
+
     #endif
 
   'Slave mode
@@ -167,7 +175,6 @@ Sub HI2C2Stop
   'Master mode
   If HI2C2CurrentMode > 10 Then
     #ifdef PIC
-
 
         wait while SSP2STAT_R_NOT_W = 1   'wait for completion of activities
         Set SSP2CON2_PEN On
@@ -316,17 +323,16 @@ sub HI2C2WaitMSSP
     HI2C2WaitMSSPTimeout++
     if HI2C2WaitMSSPTimeout < 255 then
         #ifdef bit(SSP2IF)
-            ''Support for SSP1IF
+            ''Support for SSP2IF
             if SSP2IF = 0 then goto HI2C2WaitMSSPWait
             SSP2IF = 0
         #endif
 
         #ifndef  bit(SSP2IF)
-                    ' no int flag so wait a while and exit
+          ' no int flag so wait a while and exit
           wait 1 us
         #endif
     end if
-
 
 end sub
 
