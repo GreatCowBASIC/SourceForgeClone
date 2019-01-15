@@ -102,6 +102,7 @@
 '  1.22 Added OLED fonts
 '  1.23 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
 '  1.24 Added support for GLCDPrintStringLN etc. Setting variables to zero on print screen
+'  1.25 Added HWI2C2 support
 
 #define SSD1306_vccstate 0
 
@@ -227,6 +228,16 @@ Sub Write_Command_SSD1306 ( in SSD1306SendByte as byte )
 
     #endif
 
+    #ifdef HI2C2_DATA
+
+      HI2C2Start
+      HI2C2Send GLCD_I2C_Address
+      HI2C2Send 0x00
+      HI2C2Send SSD1306SendByte
+      HI2C2Stop
+
+    #endif
+
 End Sub
 
 '''@hide
@@ -263,6 +274,15 @@ Sub Write_Data_SSD1306 ( in SSD1306SendByte as byte )
 
     #endif
 
+    #ifdef HI2C2_DATA
+
+      HI2C2Start
+      HI2C2Send GLCD_I2C_Address
+      HI2C2Send 0x40
+      HI2C2Send SSD1306SendByte
+      HI2C2Stop
+
+    #endif
 
 End Sub
 
@@ -284,6 +304,10 @@ Sub InitGLCD_SSD1306
          Wait 15 ms  'wait for power-up and reset
  #ENDIF
 
+ #IFDEF HI2C2_DATA
+         HI2C2Mode Master
+         Wait 15 ms  'wait for power-up and reset
+ #ENDIF
 
  #ifdef S4Wire_DATA
       dir MOSI_SSD1306 Out
@@ -1181,6 +1205,14 @@ Macro Open_Transaction_SSD1306
 
      #endif
 
+     #ifdef HI2C2_DATA
+
+       HI2C2Start
+       HI2C2Send GLCD_I2C_Address
+       HI2C2Send 0x40
+
+     #endif
+
 End Macro
 
 'added 1.14 to improved performance
@@ -1208,6 +1240,12 @@ Macro Write_Transaction_Data_SSD1306 ( in SSD1306SendByte as byte )
 
         #endif
 
+        #ifdef HI2C2_DATA
+
+         HI2C2Send SSD1306SendByte
+
+        #endif
+
 End Macro
 
 'added 1.14 to improved performance
@@ -1226,5 +1264,12 @@ Macro Close_Transaction_SSD1306
        HI2CStop
 
      #endif
+
+     #ifdef HI2C2_DATA
+
+       HI2C2Stop
+
+     #endif
+
 
 End Macro
