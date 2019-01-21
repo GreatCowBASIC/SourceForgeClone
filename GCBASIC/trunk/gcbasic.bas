@@ -1,5 +1,5 @@
 ' GCBASIC - A BASIC Compiler for microcontrollers
-' Copyright (C) 2006 - 2018 Hugh Considine and the Great Cow BASIC team
+' Copyright (C) 2006 - 2019 Hugh Considine and the Great Cow BASIC team
 '
 ' This program is free software; you can redistribute it and/or modify
 ' it under the terms of the GNU General Public License as published by
@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2018-12-22"
+Version = "0.98.<<>> 2019-01-21"
 #ifdef __FB_DARWIN__	'OS X/macOS
         #ifndef __FB_64BIT__
                 Version = Version + " (Darwin 32 bit)"
@@ -3212,7 +3212,7 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 	Dim As Integer SourceSub, DestSub
 	Dim As String CurrV1, CurrV2
 	Dim As String Cmd, Ovr, TempVar
-	Dim As Integer CD, CurrVarByte, CheckCarry, AddEndIf
+	Dim As Integer CD, CurrVarByte, CheckCarry, AddEndIf, UseAVByte
 
 	Dim As LinkedListElement Pointer CurrLine, NewCode
 	CurrLine = OutList->CodeEnd
@@ -3499,6 +3499,15 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 				CurrV1 = GetCalcVar("BYTE")
 				CurrLine = LinkedListInsert(CurrLine, " movwf " + CurrV1)
 			END If
+			
+			'Need to put V1 into temporary variable if carry involved, or issue occurs adding 255 to 255 with carry
+			UseAVByte = 0
+			If Not IsConst(CurrV1) And V1 <> AV And CheckCarry And ChipFamily <> 15 And ChipFamily <> 16 Then
+				CurrLine = LinkedListInsert(CurrLine, " movf " + CurrV1 + ",W")
+				CurrV1 = GetByte(AV, CurrVarByte)
+				CurrLine = LinkedListInsert(CurrLine, " movwf " + CurrV1)
+				UseAVByte = -1
+			End If
 
 			'Put V2 into W
 			Temp = " movf " + CurrV2 + ",W"
@@ -3530,7 +3539,7 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 
 			'Add W to V1, store - C already added, or 18F and no C
 			If (ChipFamily <> 15 And ChipFamily <> 16) Or Not CheckCarry Then
-				If V1 <> AV Or IsConst(CurrV1) Then
+				If (V1 <> AV Or IsConst(CurrV1)) And Not UseAVByte Then
 					If IsConst(CurrV1) Then
 						If Act = "+" And CurrV1 <> "0" Then CurrLine = LinkedListInsert(CurrLine, " addlw " + CurrV1)
 						If Act = "-" Then CurrLine = LinkedListInsert(CurrLine, " sublw " + CurrV1)
