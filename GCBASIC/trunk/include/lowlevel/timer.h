@@ -89,6 +89,7 @@
 '             Reverted the missing Settimer for AVR
 ' 05/02/2017: Added specific Support for TMR2/4/6/8 for 93 chips with Enhanced Timer2 with TxCKPS2 Bit and TxCLKCON Register.
 ' 05/02/2017: Corrected Typos in Inittimer 5/7
+' 21/01/2019: Added timersource timer source variants #1,2and3 - handled in the script by testing bit(TMR1CLK_T1CS4) then changing the clock source constants
 '***********************************************************
 
 'Subroutines:
@@ -268,45 +269,60 @@
 
   #IFDEF PIC
 
-      #IFDEF OneOf(T1CLK,TMR1CLK)  ' has this register
+    #IFDEF OneOf(T1CLK,TMR1CLK)  ' has this register
 
-         'keep for compatibility
-         #Define OSC 1      'FOSC/4
-         #Define EXT 0      'T1CKIPPS
-         #Define EXTOSC 6   'SOSC
+       'keep for compatibility
+       #Define OSC 1      'FOSC/4
+       #Define EXT 0      'T1CKIPPS
+       #Define EXTOSC 6   'SOSC
 
-         'Some Aditional Clock Sources
-         'Some others not included  - can be set manually
-         #Define SOSC 6
-         #Define MFINTOSC 5
-         #Define LFINTOSC 4
-         #DEFINE HFINTOSC 3
-         #Define FOSC  2
-         #Define FOSC4 1
-         #Define TxCKIPPS  0
+       'Some Aditional Clock Sources
+       'Some others not included  - can be set manually
+       #Define SOSC 6
+       #Define MFINTOSC 5
+       #Define LFINTOSC 4
+       #DEFINE HFINTOSC 3
+       #Define FOSC  2
+       #Define FOSC4 1
+       #Define TxCKIPPS  0
 
-     #ENDIF
+    #ENDIF
 
-       #IFDEF OneOf(T2CLK,TMR2CLKCON)  'has at least one
-       'This will cover all timers 2/4/6/8 on relevant chips
+     #IFDEF OneOf(T2CLK,TMR2CLKCON)  'has at least one
+     'This will cover all timers 2/4/6/8 on relevant chips
 
-         'keep for compatibility
-         #Define OSC 1      'FOSC/4
-         #Define EXT 0      'T1CKIPPS
-         #Define EXTOSC 6   'SOSC
+       'keep for compatibility
+       #Define OSC 1      'FOSC/4
+       #Define EXT 0      'T1CKIPPS
+       #Define EXTOSC 6   'SOSC
 
-         'Some Aditional Clock Sources
-         'Some others not included  - can be set manually
-         #Define SOSC 6
-         #Define MFINTOSC 5
-         #Define LFINTOSC 4
-         #DEFINE HFINTOSC 3
-         #Define FOSC  2
-         #Define FOSC4 1
-         #Define TxCKIPPS  0
+       'Some Aditional Clock Sources
+       'Some others not included  - can be set manually
+       #Define SOSC 6
+       #Define MFINTOSC 5
+       #Define LFINTOSC 4
+       #DEFINE HFINTOSC 3
+       #Define FOSC  2
+       #Define FOSC4 1
+       #Define TxCKIPPS  0
 
-     #ENDIF
+    #ENDIF
 
+    if bit(TMR1CLK_T1CS4) then
+      'These parts have a four bit CS<4:0> to set the clock source. It is assumed these sources are common across all timers.
+      'Use TMR1CLK_T1CS4 as the common test.
+      'examples are 16f18424, 16f18446, 18f*k42 and 18f*k83 at Jan 2019
+      REF_CLK = 8
+      SOSC = 7
+      EXTOSC = 7
+      MFINTOSC_32 = 6
+      MFINTOSC_500 = 5
+      LFINTOSC = 4
+      HFINTOSC = 3
+      FOSC = 2 '16MHz regardless of FOSC
+      FOSC4 =  1
+      TxCKIPPS = 0
+    End IF
 
 
   #ENDIF
