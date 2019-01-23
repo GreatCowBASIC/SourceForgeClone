@@ -90,6 +90,7 @@
 ' 05/02/2017: Added specific Support for TMR2/4/6/8 for 93 chips with Enhanced Timer2 with TxCKPS2 Bit and TxCLKCON Register.
 ' 05/02/2017: Corrected Typos in Inittimer 5/7
 ' 21/01/2019: Added timersource timer source variants #1,2and3 - handled in the script by testing bit(TMR1CLK_T1CS4) then changing the clock source constants
+' 23/01/2019: Revised Clock sources 'Added set Clock Source on1/12/2016' the script was incorrect and was not operating as expected
 '***********************************************************
 
 'Subroutines:
@@ -263,58 +264,52 @@
   #define Osc 1
   #define Ext 2
   #define ExtOsc 3
-
+  #define sosc ExtOsc
  #SCRIPT  'Added to support Chips with T1CLK register
          ' Includes 16F188xx, 16F153xx and others
 
   #IFDEF PIC
 
-    #IFDEF OneOf(T1CLK,TMR1CLK)  ' has this register
+    clocksourcetypetype  = 0
+    if  var(T1CLK) Then
+          clocksourcetypetype  = 1
+    end if
+    if  var(TMR1CLK) Then
+          clocksourcetypetype  = 1
+    end if
+    if  var(T2CLK) Then
+          clocksourcetypetype  = 1
+    end if
+    if  var(TMR2CLKCON) Then
+          clocksourcetypetype  = 1
+    end if
 
+
+    if clocksourcetypetype = 1 Then
        'keep for compatibility
-       #Define OSC 1      'FOSC/4
-       #Define EXT 0      'T1CKIPPS
-       #Define EXTOSC 6   'SOSC
+       OSC =1      'FOSC/4
+       EXT =0      'T1CKIPPS
+       EXTOSC =6   'SOSC
 
        'Some Aditional Clock Sources
        'Some others not included  - can be set manually
-       #Define SOSC 6
-       #Define MFINTOSC 5
-       #Define LFINTOSC 4
-       #DEFINE HFINTOSC 3
-       #Define FOSC  2
-       #Define FOSC4 1
-       #Define TxCKIPPS  0
+       SOSC =ExtOsc
+       MFINTOSC =5
+       LFINTOSC =4
+       HFINTOSC =3
+       FOSC  =2
+       FOSC4 =1
+       TxCKIPPS  =0
 
-    #ENDIF
-
-     #IFDEF OneOf(T2CLK,TMR2CLKCON)  'has at least one
-     'This will cover all timers 2/4/6/8 on relevant chips
-
-       'keep for compatibility
-       #Define OSC 1      'FOSC/4
-       #Define EXT 0      'T1CKIPPS
-       #Define EXTOSC 6   'SOSC
-
-       'Some Aditional Clock Sources
-       'Some others not included  - can be set manually
-       #Define SOSC 6
-       #Define MFINTOSC 5
-       #Define LFINTOSC 4
-       #DEFINE HFINTOSC 3
-       #Define FOSC  2
-       #Define FOSC4 1
-       #Define TxCKIPPS  0
-
-    #ENDIF
+    end if
 
     if bit(TMR1CLK_T1CS4) then
       'These parts have a four bit CS<4:0> to set the clock source. It is assumed these sources are common across all timers.
       'Use TMR1CLK_T1CS4 as the common test.
       'examples are 16f18424, 16f18446, 18f*k42 and 18f*k83 at Jan 2019
       REF_CLK = 8
-      SOSC = 7
       EXTOSC = 7
+      sosc = ExtOsc
       MFINTOSC_32 = 6
       MFINTOSC_500 = 5
       LFINTOSC = 4
@@ -709,9 +704,6 @@ Sub StartTimer(In TMRNumber)
 
          #ifdef bit(T0EN)
             IF TMRNumber = 0 then Set T0EN on
-         #endif
-      #endif
-
       #ifdef USE_Timer1 TRUE
          #ifdef bit(TMR1ON)
             IF TMRNumber = 1 then Set TMR1ON on
@@ -735,6 +727,9 @@ Sub StartTimer(In TMRNumber)
             IF TMRNumber = 4 then Set TMR4ON on
          #endif
       #endif
+         #endif
+      #endif
+
 
       #ifdef USE_Timer5 TRUE
          #ifdef bit(TMR5ON)
@@ -1806,7 +1801,7 @@ Sub InitTimer4 (In TMRSource, In TMRPres, In TMRPost)
    'Supported CLK Sources
 
        '  SOSC      (Same as EXT_OSC)
-       '  EXT_OSC   (same as SOSC)
+       '  EXTOSC   (same as SOSC)
        '  MFINTOSC
        '  LFINTOSC
        '  HFINTOSC
