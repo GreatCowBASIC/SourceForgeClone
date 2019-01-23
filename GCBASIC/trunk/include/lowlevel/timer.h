@@ -265,10 +265,9 @@
   #define Ext 2
   #define ExtOsc 3
   #define sosc ExtOsc
- #SCRIPT  'Added to support Chips with T1CLK register
-         ' Includes 16F188xx, 16F153xx and others
+ #SCRIPT
 
-  #IFDEF PIC
+  if PIC then
 
     clocksourcetypetype  = 0
     if  var(T1CLK) Then
@@ -286,6 +285,9 @@
 
 
     if clocksourcetypetype = 1 Then
+       'Added to support Chips with T1CLK register
+       ' Includes 16F188xx, 16F153xx and others
+
        'keep for compatibility
        OSC =1      'FOSC/4
        EXT =0      'T1CKIPPS
@@ -317,10 +319,9 @@
       FOSC = 2 '16MHz regardless of FOSC
       FOSC4 =  1
       TxCKIPPS = 0
-    End IF
+    end IF
 
-
-  #ENDIF
+  end if
 
 #ENDSCRIPT
 
@@ -704,6 +705,9 @@ Sub StartTimer(In TMRNumber)
 
          #ifdef bit(T0EN)
             IF TMRNumber = 0 then Set T0EN on
+         #endif
+      #endif
+
       #ifdef USE_Timer1 TRUE
          #ifdef bit(TMR1ON)
             IF TMRNumber = 1 then Set TMR1ON on
@@ -727,9 +731,6 @@ Sub StartTimer(In TMRNumber)
             IF TMRNumber = 4 then Set TMR4ON on
          #endif
       #endif
-         #endif
-      #endif
-
 
       #ifdef USE_Timer5 TRUE
          #ifdef bit(TMR5ON)
@@ -768,6 +769,7 @@ Sub StartTimer(In TMRNumber)
       #endif
 
   #endif
+
 
   #ifdef AVR
 
