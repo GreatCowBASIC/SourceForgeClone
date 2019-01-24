@@ -22,6 +22,7 @@
 ' 21/04/2017:      Initial release
 ' 29/12/2018       Added 8Wire_Data_Bus support - beta
 ' 30/12/2018       Added Touch support, OLED, fixed rotate and FilledBox
+' 24/1/2019        Revised 8Bit_Data_Bus GLCDCLS (typos) and correct command and data send
 
 '
 'Hardware settings
@@ -131,6 +132,42 @@
 #define ILI9486L_GREENYELLOW    TFT_GREENYELLOW
 #define ILI9486L_PINK           TFT_PINK
 
+
+#script
+  ' For the 8Bit_Data_Bus you can use GLCD_RS or GLCD_DC.  They are mapped automatically
+  GLCD_DC_Defined = 0
+  if GLCD_TYPE = GLCD_TYPE_ILI9486L then
+    if 8Bit_Data_Bus then
+      'is there a GLCD_DC defined?
+      if GLCD_DC then
+          GLCD_DC_Defined = 1
+      end if
+
+      'if no GLCD_DC then is there is an GLCD_RS
+      if GLCD_DC_Defined = 0 Then
+          if GLCD_RS then
+             'map
+             GLCD_DC = GLCD_RS
+             GLCD_DC_Defined = 1
+          end if
+          'so, if there one defined?
+          if GLCD_DC_Defined = 0 Then
+              warning "No GLCD_DC defined"
+          end if
+      end if
+    end if
+  end if
+
+  if PIC Then
+    if 8Bit_Data_Bus then
+        error "A PIC with 8Bit_Data_Bus not supported in PIC devices - yet"
+        error "Post to the forum if this is required"
+
+    end if
+  end if
+
+#endscript
+
 #startup InitGLCD_ILI9486L
 
 '''Initialise the GLCD device
@@ -138,7 +175,6 @@ Sub InitGLCD_ILI9486L
 
   '  Mapped to global variables to same RAM
   dim ILI9486L_GLCD_HEIGHT, ILI9486L_GLCD_WIDTH as word
-
 
   'Setup code for ILI9486L controllers
     #if GLCD_TYPE = GLCD_TYPE_ILI9486L
@@ -332,10 +368,10 @@ Sub GLCDCLS_ILI9486L ( Optional In  GLCDBackground as word = GLCDBackground )
     SetAddressWindow_ILI9486L ( 0, 0, GLCD_WIDTH  , GLCD_HEIGHT )
     ILI9486LSendWord = GLCDBackground
 
-    GLCDCLS_HiBytePortion1 = (PORTD & 0B00000011) | ((ILI9481SendWord_H) & 0B11111100);
-    GLCDCLS_HiBytePortion2 = (PORTB & 0B11111100) | ((ILI9481SendWord_H) & 0B00000011);
-    GLCDCLS_LoBytePortion1 =  (PORTD & 0B00000011) | ((ILI9481SendWord) & 0B11111100);
-    GLCDCLS_LoBytePortion2 =  (PORTB & 0B11111100) | ((ILI9481SendWord) & 0B00000011);
+    GLCDCLS_HiBytePortion1 = (PORTD & 0B00000011) | ((ILI9486LSendWord_H) & 0B11111100);
+    GLCDCLS_HiBytePortion2 = (PORTB & 0B11111100) | ((ILI9486LSendWord_H) & 0B00000011);
+    GLCDCLS_LoBytePortion1 =  (PORTD & 0B00000011) | ((ILI9486LSendWord) & 0B11111100);
+    GLCDCLS_LoBytePortion2 =  (PORTB & 0B11111100) | ((ILI9486LSendWord) & 0B00000011);
 
     set ILI9486L_CS OFF
     set ILI9486L_DC ON
@@ -412,6 +448,10 @@ Sub GLCDCLS_ILI9486L ( Optional In  GLCDBackground as word = GLCDBackground )
         #endif
 
         #ifdef 8Bit_Data_Bus
+              #ifdef PIC
+
+              #endif
+
               #ifdef AVR
                 'Write 8 bit bus for AVR
                 PORTD = GLCDCLS_HiBytePortion1
@@ -768,15 +808,19 @@ sub  SendCommand_ILI9486L( IN ILI9486LSendByte as byte )
       set ILI9486L_CS OFF;
       set ILI9486L_DC OFF;
 
+      #ifdef PIC
+        'tbd
+      #endif
+
       #ifdef AVR
       PORTD = (PORTD & 0B00000011) | ((ILI9486LSendByte) & 0B11111100);
       PORTB = (PORTB & 0B11111100) | ((ILI9486LSendByte) & 0B00000011);
       #endif
 
-      set ILI9486L_DC OFF
+
       set ILI9486L_WR OFF
       set ILI9486L_WR ON
-      set ILI9486L_DC ON
+
 
       set ILI9486L_CS ON;
     #endif
@@ -820,15 +864,19 @@ sub  SendData_ILI9486L( IN ILI9486LSendByte as byte )
       set ILI9486L_CS OFF;
       set ILI9486L_DC ON;
 
+      #ifdef PIC
+        'tbd
+      #endif
+
       #ifdef AVR
       PORTD = (PORTD & 0B00000011) | ((ILI9486LSendByte) & 0B11111100);
       PORTB = (PORTB & 0B11111100) | ((ILI9486LSendByte) & 0B00000011);
       #endif
 
-      set ILI9486L_DC OFF
+
       set ILI9486L_WR OFF
       set ILI9486L_WR ON
-      set ILI9486L_DC ON
+
 
       set ILI9486L_CS ON;
     #endif
@@ -873,25 +921,33 @@ Sub SendWord_ILI9486L(In ILI9486LSendWord As Word)
     set ILI9486L_CS OFF;
     set ILI9486L_DC ON;
 
+    #ifdef PIC
+        'tbd
+    #endif
+
     #ifdef AVR
     PORTD = (PORTD & 0B00000011) | ((ILI9486LSendWord_H) & 0B11111100);
     PORTB = (PORTB & 0B11111100) | ((ILI9486LSendWord_H) & 0B00000011);
     #endif
 
-    set ILI9486L_DC OFF
+
     set ILI9486L_WR OFF
     set ILI9486L_WR ON
-    set ILI9486L_DC ON
+
+    #ifdef PIC
+        'tbd
+    #endif
+
 
     #ifdef AVR
     PORTD = (PORTD & 0B00000011) | ((ILI9486LSendWord) & 0B11111100);
     PORTB = (PORTB & 0B11111100) | ((ILI9486LSendWord) & 0B00000011);
     #endif
 
-    set ILI9486L_DC OFF
+
     set ILI9486L_WR OFF
     set ILI9486L_WR ON
-    set ILI9486L_DC ON
+
 
 
     set ILI9486L_CS ON;

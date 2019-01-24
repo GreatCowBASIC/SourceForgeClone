@@ -42,6 +42,7 @@
 '    19/11/18 NT7108C driver
 '    22/11/18 Increased scope of NT7108C methods.
 '    07/12/18 Remove silly script warning
+'    24/1/19  Added GLCD_TYPE_ILI9486  to map to GLCD_TYPE_ILI9486L
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
@@ -58,6 +59,7 @@
 #define GLCD_TYPE_SH1106  9
 #define GLCD_TYPE_SSD1306_32 10
 #define GLCD_TYPE_ILI9486L 11
+#define GLCD_TYPE_ILI9486 11
 #define GLCD_TYPE_ILI9481 12
 #define GLCD_TYPE_SSD1331 14
 #define GLCD_TYPE_HX8347  15
