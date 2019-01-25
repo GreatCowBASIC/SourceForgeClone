@@ -22,7 +22,7 @@
 ' 21/04/2017:      Initial release
 ' 29/12/2018       Added 8Wire_Data_Bus support - beta
 ' 30/12/2018       Added Touch support, OLED, fixed rotate and FilledBox
-' 24/1/2019        Revised 8Bit_Data_Bus GLCDCLS (typos) and correct command and data send
+' 24/1/2019        Revised UNO_8bit_Shield GLCDCLS (typos) and correct command and data send
 
 '
 'Hardware settings
@@ -134,10 +134,10 @@
 
 
 #script
-  ' For the 8Bit_Data_Bus you can use GLCD_RS or GLCD_DC.  They are mapped automatically
+  ' For the UNO_8bit_Shield you can use GLCD_RS or GLCD_DC.  They are mapped automatically
   GLCD_DC_Defined = 0
   if GLCD_TYPE = GLCD_TYPE_ILI9486L then
-    if 8Bit_Data_Bus then
+    if UNO_8bit_Shield then
       'is there a GLCD_DC defined?
       if GLCD_DC then
           GLCD_DC_Defined = 1
@@ -159,10 +159,8 @@
   end if
 
   if PIC Then
-    if 8Bit_Data_Bus then
-        error "A PIC with 8Bit_Data_Bus not supported in PIC devices - yet"
-        error "Post to the forum if this is required"
-
+    if UNO_8bit_Shield then
+        error "A PIC with UNO_8bit_Shield not supported"
     end if
   end if
 
@@ -176,48 +174,193 @@ Sub InitGLCD_ILI9486L
   '  Mapped to global variables to same RAM
   dim ILI9486L_GLCD_HEIGHT, ILI9486L_GLCD_WIDTH as word
 
-  'Setup code for ILI9486L controllers
-    #if GLCD_TYPE = GLCD_TYPE_ILI9486L
 
-    #ifndef 8Bit_Data_Bus
-      'SPI Pin directions
-      Dir ILI9486L_CS Out
-      Dir ILI9486L_DC Out
-      Dir ILI9486L_RST Out
+  #if GLCD_TYPE = GLCD_TYPE_ILI9486L
 
-      Dir ILI9486L_DI In
-      Dir ILI9486L_DO Out
-      Dir ILI9486L_SCK Out
+    #ifdef GLCD_DataPort
+        InitGLCD_fullport_ILI9486L
+    #endif
+
+    #ifndef GLCD_DataPort
+        'Setup code for ILI9486L controllers
+        #ifndef UNO_8bit_Shield
+
+            'SPI Pin directions
+            Dir ILI9486L_CS Out
+            Dir ILI9486L_DC Out
+            Dir ILI9486L_RST Out
+
+            Dir ILI9486L_DI In
+            Dir ILI9486L_DO Out
+            Dir ILI9486L_SCK Out
+
+        #endif
+
+        #ifdef UNO_8bit_Shield
+          '8 bit data bus directions
+          #define ILI9486L_RST GLCD_RST
+          #define ILI9486L_CS GLCD_CS
+          #define ILI9486L_DC GLCD_DC
+          #define ILI9486L_WR GLCD_WR
+          #define ILI9486L_RD GLCD_RD
+
+
+          #define ILI9486L_DB0 GLCD_DB0
+          #define ILI9486L_DB1 GLCD_DB1
+          #define ILI9486L_DB2 GLCD_DB2
+          #define ILI9486L_DB3 GLCD_DB3
+          #define ILI9486L_DB4 GLCD_DB4
+          #define ILI9486L_DB5 GLCD_DB5
+          #define ILI9486L_DB6 GLCD_DB6
+          #define ILI9486L_DB7 GLCD_DB7
+
+
+          dir  ILI9486L_DB7 OUT
+          dir  ILI9486L_DB6 OUT
+          dir  ILI9486L_DB5 OUT
+          dir  ILI9486L_DB4 OUT
+          dir  ILI9486L_DB3 OUT
+          dir  ILI9486L_DB2 OUT
+          dir  ILI9486L_DB1 OUT
+          dir  ILI9486L_DB0 OUT
+
+          'Set pin directions
+          Dir ILI9486L_RD  Out
+          Dir ILI9486L_WR  Out
+          Dir ILI9486L_DC  Out
+          Dir ILI9486L_CS  Out
+          Dir ILI9486L_RST Out
+
+          Set ILI9486L_RD On
+          Set ILI9486L_WR On
+          Set ILI9486L_DC On
+          set ILI9486L_CS ON
+          Set ILI9486L_RST On
+        #endif
+
+        #ifdef ILI9486L_HardwareSPI
+          ' harware SPI mode
+          SPIMode MasterFast, 0
+        #endif
+
+       Set ILI9486L_CS On
+       Set ILI9486L_DC On
+
+
+        'Reset display
+        Wait 50 ms
+        Set ILI9486L_RST On
+        Wait 5 ms
+        'Reset sequence (lower line for at least 10 us)
+        Set ILI9486L_RST Off
+        Wait 20 us
+        Set ILI9486L_RST On
+        Wait 150 ms
+
+        SendCommand_ILI9486L(0XF2)
+        SendData_ILI9486L(0x18)
+        SendData_ILI9486L(0xA3)
+        SendData_ILI9486L(0x12)
+        SendData_ILI9486L(0x02)
+        SendData_ILI9486L(0XB2)
+        SendData_ILI9486L(0x12)
+        SendData_ILI9486L(0xFF)
+        SendData_ILI9486L(0x10)
+        SendData_ILI9486L(0x00)
+        SendCommand_ILI9486L(0XF8)
+        SendData_ILI9486L(0x21)
+        SendData_ILI9486L(0x04)
+        SendCommand_ILI9486L(0XF9)
+        SendData_ILI9486L(0x00)
+        SendData_ILI9486L(0x08)
+        SendCommand_ILI9486L(0x36)
+        SendData_ILI9486L(0x08)
+        SendCommand_ILI9486L(0x3A)
+        SendData_ILI9486L(0x05)
+        SendCommand_ILI9486L(0xB4)
+        SendData_ILI9486L(0x01)
+        SendCommand_ILI9486L(0xB6)
+        SendData_ILI9486L(0x02)
+        SendData_ILI9486L(0x22)
+        SendCommand_ILI9486L(0xC1)
+        SendData_ILI9486L(0x41)
+        SendCommand_ILI9486L(0xC5)
+        SendData_ILI9486L(0x00)
+        SendData_ILI9486L(0x07)
+        SendCommand_ILI9486L(0xE0)
+        SendData_ILI9486L(0x0F)
+        SendData_ILI9486L(0x1F)
+        SendData_ILI9486L(0x1C)
+        SendData_ILI9486L(0x0C)
+        SendData_ILI9486L(0x0F)
+        SendData_ILI9486L(0x08)
+        SendData_ILI9486L(0x48)
+        SendData_ILI9486L(0x98)
+        SendData_ILI9486L(0x37)
+        SendData_ILI9486L(0x0A)
+        SendData_ILI9486L(0x13)
+        SendData_ILI9486L(0x04)
+        SendData_ILI9486L(0x11)
+        SendData_ILI9486L(0x0D)
+        SendData_ILI9486L(0x00)
+        SendCommand_ILI9486L(0xE1)
+        SendData_ILI9486L(0x0F)
+        SendData_ILI9486L(0x32)
+        SendData_ILI9486L(0x2E)
+        SendData_ILI9486L(0x0B)
+        SendData_ILI9486L(0x0D)
+        SendData_ILI9486L(0x05)
+        SendData_ILI9486L(0x47)
+        SendData_ILI9486L(0x75)
+        SendData_ILI9486L(0x37)
+        SendData_ILI9486L(0x06)
+        SendData_ILI9486L(0x10)
+        SendData_ILI9486L(0x03)
+        SendData_ILI9486L(0x24)
+        SendData_ILI9486L(0x20)
+        SendData_ILI9486L(0x00)
+        SendCommand_ILI9486L(0x11)
+        wait 120 ms
+        SendCommand_ILI9486L(0x29)
+
+
+        'Default Colours
+        GLCDBackground = ILI9486L_BLACK
+        GLCDForeground = ILI9486L_WHITE
+
+        'Variables required for device
+        ILI9486L_GLCD_WIDTH = GLCD_WIDTH
+        ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+        GLCDFontWidth = 6
+        GLCDfntDefault = 0
+        GLCDfntDefaultsize = 2
+
+        GLCDRotate Portrait
+
+        GLCDCLS
 
     #endif
 
-    #ifdef 8Bit_Data_Bus
+  #endif
+
+End Sub
+
+
+'''Initialise the GLCD device
+Sub InitGLCD_fullport_ILI9486L
+
+  '  Mapped to global variables to same RAM
+  dim ILI9486L_GLCD_HEIGHT, ILI9486L_GLCD_WIDTH as word
+
+  'Setup code for ILI9486L controllers
+    #if GLCD_TYPE = GLCD_TYPE_ILI9486L
+
       '8 bit data bus directions
       #define ILI9486L_RST GLCD_RST
       #define ILI9486L_CS GLCD_CS
       #define ILI9486L_DC GLCD_DC
       #define ILI9486L_WR GLCD_WR
       #define ILI9486L_RD GLCD_RD
-
-
-      #define ILI9486L_DB0 GLCD_DB0
-      #define ILI9486L_DB1 GLCD_DB1
-      #define ILI9486L_DB2 GLCD_DB2
-      #define ILI9486L_DB3 GLCD_DB3
-      #define ILI9486L_DB4 GLCD_DB4
-      #define ILI9486L_DB5 GLCD_DB5
-      #define ILI9486L_DB6 GLCD_DB6
-      #define ILI9486L_DB7 GLCD_DB7
-
-
-      dir  ILI9486L_DB7 OUT
-      dir  ILI9486L_DB6 OUT
-      dir  ILI9486L_DB5 OUT
-      dir  ILI9486L_DB4 OUT
-      dir  ILI9486L_DB3 OUT
-      dir  ILI9486L_DB2 OUT
-      dir  ILI9486L_DB1 OUT
-      dir  ILI9486L_DB0 OUT
 
       'Set pin directions
       Dir ILI9486L_RD  Out
@@ -231,108 +374,100 @@ Sub InitGLCD_ILI9486L
       Set ILI9486L_DC On
       set ILI9486L_CS ON
       Set ILI9486L_RST On
-    #endif
 
-    #ifdef ILI9486L_HardwareSPI
-      ' harware SPI mode
-      SPIMode MasterFast, 0
-    #endif
+      Dir GLCD_DataPort out
 
-   Set ILI9486L_CS On
-   Set ILI9486L_DC On
+      'Reset display
+      Wait 50 ms
+      Set ILI9486L_RST On
+      Wait 5 ms
+      'Reset sequence (lower line for at least 10 us)
+      Set ILI9486L_RST Off
+      Wait 20 us
+      Set ILI9486L_RST On
+      Wait 150 ms
 
-
-    'Reset display
-    Wait 50 ms
-    Set ILI9486L_RST On
-    Wait 5 ms
-    'Reset sequence (lower line for at least 10 us)
-    Set ILI9486L_RST Off
-    Wait 20 us
-    Set ILI9486L_RST On
-    Wait 150 ms
-
-    SendCommand_ILI9486L(0XF2)
-    SendData_ILI9486L(0x18)
-    SendData_ILI9486L(0xA3)
-    SendData_ILI9486L(0x12)
-    SendData_ILI9486L(0x02)
-    SendData_ILI9486L(0XB2)
-    SendData_ILI9486L(0x12)
-    SendData_ILI9486L(0xFF)
-    SendData_ILI9486L(0x10)
-    SendData_ILI9486L(0x00)
-    SendCommand_ILI9486L(0XF8)
-    SendData_ILI9486L(0x21)
-    SendData_ILI9486L(0x04)
-    SendCommand_ILI9486L(0XF9)
-    SendData_ILI9486L(0x00)
-    SendData_ILI9486L(0x08)
-    SendCommand_ILI9486L(0x36)
-    SendData_ILI9486L(0x08)
-    SendCommand_ILI9486L(0x3A)
-    SendData_ILI9486L(0x05)
-    SendCommand_ILI9486L(0xB4)
-    SendData_ILI9486L(0x01)
-    SendCommand_ILI9486L(0xB6)
-    SendData_ILI9486L(0x02)
-    SendData_ILI9486L(0x22)
-    SendCommand_ILI9486L(0xC1)
-    SendData_ILI9486L(0x41)
-    SendCommand_ILI9486L(0xC5)
-    SendData_ILI9486L(0x00)
-    SendData_ILI9486L(0x07)
-    SendCommand_ILI9486L(0xE0)
-    SendData_ILI9486L(0x0F)
-    SendData_ILI9486L(0x1F)
-    SendData_ILI9486L(0x1C)
-    SendData_ILI9486L(0x0C)
-    SendData_ILI9486L(0x0F)
-    SendData_ILI9486L(0x08)
-    SendData_ILI9486L(0x48)
-    SendData_ILI9486L(0x98)
-    SendData_ILI9486L(0x37)
-    SendData_ILI9486L(0x0A)
-    SendData_ILI9486L(0x13)
-    SendData_ILI9486L(0x04)
-    SendData_ILI9486L(0x11)
-    SendData_ILI9486L(0x0D)
-    SendData_ILI9486L(0x00)
-    SendCommand_ILI9486L(0xE1)
-    SendData_ILI9486L(0x0F)
-    SendData_ILI9486L(0x32)
-    SendData_ILI9486L(0x2E)
-    SendData_ILI9486L(0x0B)
-    SendData_ILI9486L(0x0D)
-    SendData_ILI9486L(0x05)
-    SendData_ILI9486L(0x47)
-    SendData_ILI9486L(0x75)
-    SendData_ILI9486L(0x37)
-    SendData_ILI9486L(0x06)
-    SendData_ILI9486L(0x10)
-    SendData_ILI9486L(0x03)
-    SendData_ILI9486L(0x24)
-    SendData_ILI9486L(0x20)
-    SendData_ILI9486L(0x00)
-    SendCommand_ILI9486L(0x11)
-    wait 120 ms
-    SendCommand_ILI9486L(0x29)
+      SendCommand_ILI9486L(0XF2)
+      SendData_ILI9486L(0x18)
+      SendData_ILI9486L(0xA3)
+      SendData_ILI9486L(0x12)
+      SendData_ILI9486L(0x02)
+      SendData_ILI9486L(0XB2)
+      SendData_ILI9486L(0x12)
+      SendData_ILI9486L(0xFF)
+      SendData_ILI9486L(0x10)
+      SendData_ILI9486L(0x00)
+      SendCommand_ILI9486L(0XF8)
+      SendData_ILI9486L(0x21)
+      SendData_ILI9486L(0x04)
+      SendCommand_ILI9486L(0XF9)
+      SendData_ILI9486L(0x00)
+      SendData_ILI9486L(0x08)
+      SendCommand_ILI9486L(0x36)
+      SendData_ILI9486L(0x08)
+      SendCommand_ILI9486L(0x3A)
+      SendData_ILI9486L(0x05)
+      SendCommand_ILI9486L(0xB4)
+      SendData_ILI9486L(0x01)
+      SendCommand_ILI9486L(0xB6)
+      SendData_ILI9486L(0x02)
+      SendData_ILI9486L(0x22)
+      SendCommand_ILI9486L(0xC1)
+      SendData_ILI9486L(0x41)
+      SendCommand_ILI9486L(0xC5)
+      SendData_ILI9486L(0x00)
+      SendData_ILI9486L(0x07)
+      SendCommand_ILI9486L(0xE0)
+      SendData_ILI9486L(0x0F)
+      SendData_ILI9486L(0x1F)
+      SendData_ILI9486L(0x1C)
+      SendData_ILI9486L(0x0C)
+      SendData_ILI9486L(0x0F)
+      SendData_ILI9486L(0x08)
+      SendData_ILI9486L(0x48)
+      SendData_ILI9486L(0x98)
+      SendData_ILI9486L(0x37)
+      SendData_ILI9486L(0x0A)
+      SendData_ILI9486L(0x13)
+      SendData_ILI9486L(0x04)
+      SendData_ILI9486L(0x11)
+      SendData_ILI9486L(0x0D)
+      SendData_ILI9486L(0x00)
+      SendCommand_ILI9486L(0xE1)
+      SendData_ILI9486L(0x0F)
+      SendData_ILI9486L(0x32)
+      SendData_ILI9486L(0x2E)
+      SendData_ILI9486L(0x0B)
+      SendData_ILI9486L(0x0D)
+      SendData_ILI9486L(0x05)
+      SendData_ILI9486L(0x47)
+      SendData_ILI9486L(0x75)
+      SendData_ILI9486L(0x37)
+      SendData_ILI9486L(0x06)
+      SendData_ILI9486L(0x10)
+      SendData_ILI9486L(0x03)
+      SendData_ILI9486L(0x24)
+      SendData_ILI9486L(0x20)
+      SendData_ILI9486L(0x00)
+      SendCommand_ILI9486L(0x11)
+      wait 120 ms
+      SendCommand_ILI9486L(0x29)
 
 
-    'Default Colours
-    GLCDBackground = ILI9486L_BLACK
-    GLCDForeground = ILI9486L_WHITE
+      'Default Colours
+      GLCDBackground = ILI9486L_BLACK
+      GLCDForeground = ILI9486L_WHITE
 
-    'Variables required for device
-    ILI9486L_GLCD_WIDTH = GLCD_WIDTH
-    ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
-    GLCDFontWidth = 6
-    GLCDfntDefault = 0
-    GLCDfntDefaultsize = 2
+      'Variables required for device
+      ILI9486L_GLCD_WIDTH = GLCD_WIDTH
+      ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+      GLCDFontWidth = 6
+      GLCDfntDefault = 0
+      GLCDfntDefaultsize = 2
 
-    GLCDRotate Portrait
+      GLCDRotate Portrait
 
-    GLCDCLS_ILI9486L
+      GLCDCLS
 
   #endif
 
@@ -378,7 +513,7 @@ Sub GLCDCLS_ILI9486L ( Optional In  GLCDBackground as word = GLCDBackground )
     Repeat 100
       Repeat 48
            Repeat 32
-        #ifndef 8Bit_Data_Bus
+        #ifndef UNO_8bit_Shield
             #ifdef ILI9486L_HardwareSPI
     '         Could use these as an alternative
     '         FastHWSPITransfer  ILI9486LSendWord_h
@@ -447,10 +582,7 @@ Sub GLCDCLS_ILI9486L ( Optional In  GLCDBackground as word = GLCDBackground )
 
         #endif
 
-        #ifdef 8Bit_Data_Bus
-              #ifdef PIC
-
-              #endif
+        #ifdef UNO_8bit_Shield
 
               #ifdef AVR
                 'Write 8 bit bus for AVR
@@ -469,6 +601,35 @@ Sub GLCDCLS_ILI9486L ( Optional In  GLCDBackground as word = GLCDBackground )
     end repeat
     set ILI9486L_CS ON;
 
+
+End Sub
+
+
+Sub GLCDCLS_fullport_ILI9486L ( Optional In  GLCDBackground as word = GLCDBackground )
+
+    dim ILI9486LSendWord as word
+    ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
+    GLCD_yordinate = 0
+
+    SetAddressWindow_ILI9486L ( 0, 0, GLCD_WIDTH  , GLCD_HEIGHT )
+    ILI9486LSendWord = GLCDBackground
+
+    set ILI9486L_CS OFF
+    set ILI9486L_DC ON
+    Repeat 100
+        Repeat 48
+          Repeat 32
+              'Write 8 bit bus
+              GLCD_DataPort = ILI9486LSendWord_h
+              set ILI9486L_WR OFF
+              set ILI9486L_WR ON
+              GLCD_DataPort = ILI9486LSendWord
+              set ILI9486L_WR OFF
+              set ILI9486L_WR ON
+          end repeat
+       end repeat
+    end repeat
+    set ILI9486L_CS ON;
 
 End Sub
 
@@ -775,17 +936,19 @@ End Sub
 '''@hide
 sub  SendCommand_ILI9486L( IN ILI9486LSendByte as byte )
 
-    #ifndef 8Bit_Data_Bus
+    #ifndef UNO_8bit_Shield
       set ILI9486L_CS OFF;
       set ILI9486L_DC OFF;
 
       #ifdef ILI9486L_HardwareSPI
+        'Hardware SPI ****************************************
          SPITransfer  ILI9486LSendByte,  ILI9486LTempOut
          set ILI9486L_CS ON;
          exit sub
       #endif
 
       #ifndef ILI9486L_HardwareSPI
+      'Software SPI ****************************************
       repeat 8
 
         if ILI9486LSendByte.7 = ON  then
@@ -803,14 +966,10 @@ sub  SendCommand_ILI9486L( IN ILI9486LSendByte as byte )
     #endif
 
 
-    #ifdef 8Bit_Data_Bus
-      '8Bit_Data_Bus
+    #ifdef UNO_8bit_Shield
+      'UNO_8bit_Shield for UNO Shield ****************************************
       set ILI9486L_CS OFF;
       set ILI9486L_DC OFF;
-
-      #ifdef PIC
-        'tbd
-      #endif
 
       #ifdef AVR
       PORTD = (PORTD & 0B00000011) | ((ILI9486LSendByte) & 0B11111100);
@@ -832,17 +991,19 @@ end Sub
 '''@hide
 sub  SendData_ILI9486L( IN ILI9486LSendByte as byte )
 
-    #ifndef 8Bit_Data_Bus
+    #ifndef UNO_8bit_Shield
       set ILI9486L_CS OFF;
       set ILI9486L_DC ON;
 
       #ifdef ILI9486L_HardwareSPI
+        'Hardware SPI ****************************************
          SPITransfer  ILI9486LSendByte,  ILI9486LTempOut
          set ILI9486L_CS ON;
          exit sub
       #endif
 
       #ifndef ILI9486L_HardwareSPI
+      'Software SPI ****************************************
       repeat 8
 
         if ILI9486LSendByte.7 = ON then
@@ -859,24 +1020,18 @@ sub  SendData_ILI9486L( IN ILI9486LSendByte as byte )
       #endif
     #endif
 
-    #ifdef 8Bit_Data_Bus
-      '8Bit_Data_Bus
+    #ifdef UNO_8bit_Shield
+      'UNO_8bit_Shield for UNO Shield ****************************************
       set ILI9486L_CS OFF;
       set ILI9486L_DC ON;
-
-      #ifdef PIC
-        'tbd
-      #endif
 
       #ifdef AVR
       PORTD = (PORTD & 0B00000011) | ((ILI9486LSendByte) & 0B11111100);
       PORTB = (PORTB & 0B11111100) | ((ILI9486LSendByte) & 0B00000011);
       #endif
 
-
       set ILI9486L_WR OFF
       set ILI9486L_WR ON
-
 
       set ILI9486L_CS ON;
     #endif
@@ -888,11 +1043,12 @@ end Sub
 '''@hide
 Sub SendWord_ILI9486L(In ILI9486LSendWord As Word)
 
-  #ifndef 8Bit_Data_Bus
+  #ifndef UNO_8bit_Shield
       set ILI9486L_CS OFF;
       set ILI9486L_DC ON;
 
       #ifdef ILI9486L_HardwareSPI
+        'Hardware SPI ****************************************
          SPITransfer  ILI9486LSendWord_H,  ILI9486LTempOut
          SPITransfer  ILI9486LSendWord,  ILI9486LTempOut
          set ILI9486L_CS ON;
@@ -900,6 +1056,7 @@ Sub SendWord_ILI9486L(In ILI9486LSendWord As Word)
       #endif
 
       #ifndef ILI9486L_HardwareSPI
+      'Software SPI ****************************************
       repeat 16
 
         if ILI9486LSendWord.15 = ON then
@@ -916,39 +1073,87 @@ Sub SendWord_ILI9486L(In ILI9486LSendWord As Word)
       #endif
   #endif
 
-  #ifdef 8Bit_Data_Bus
-    '8Bit_Data_Bus
+  #ifdef UNO_8bit_Shield
+    'UNO_8bit_Shield for UNO Shield ****************************************
     set ILI9486L_CS OFF;
     set ILI9486L_DC ON;
-
-    #ifdef PIC
-        'tbd
-    #endif
 
     #ifdef AVR
     PORTD = (PORTD & 0B00000011) | ((ILI9486LSendWord_H) & 0B11111100);
     PORTB = (PORTB & 0B11111100) | ((ILI9486LSendWord_H) & 0B00000011);
     #endif
 
-
     set ILI9486L_WR OFF
     set ILI9486L_WR ON
-
-    #ifdef PIC
-        'tbd
-    #endif
-
 
     #ifdef AVR
     PORTD = (PORTD & 0B00000011) | ((ILI9486LSendWord) & 0B11111100);
     PORTB = (PORTB & 0B11111100) | ((ILI9486LSendWord) & 0B00000011);
     #endif
 
+    set ILI9486L_WR OFF
+    set ILI9486L_WR ON
+
+    set ILI9486L_CS ON;
+  #endif
+End Sub
+
+
+
+'''Send a command to the ILI9486L GLCD
+'''@param ILI9486LSendByte Command to send
+'''@hide
+sub  SendCommand_fullport_ILI9486L( IN ILI9486LSendByte as byte )
+
+      '8Bit_Data_Port ****************************************
+      set ILI9486L_CS OFF;
+      set ILI9486L_DC OFF;
+
+      GLCD_DataPort = ILI9486LSendByte
+
+      set ILI9486L_WR OFF
+      set ILI9486L_WR ON
+
+      set ILI9486L_CS ON;
+
+end Sub
+
+'''Send a data byte to the ILI9486L GLCD
+'''@param ILI9486LSendByte Byte to send
+'''@hide
+sub  SendData_fullport_ILI9486L( IN ILI9486LSendByte as byte )
+
+      '8Bit_Data_Port ****************************************
+      set ILI9486L_CS OFF;
+      set ILI9486L_DC ON;
+
+      GLCD_DataPort = ILI9486LSendByte
+
+      set ILI9486L_WR OFF
+      set ILI9486L_WR ON
+
+      set ILI9486L_CS ON;
+
+end Sub
+
+'''Send a data word (16 bits) to the ILI9486L GLCD
+'''@param ILI9486LSendWord  Word to send
+'''@hide
+Sub SendWord_fullport_ILI9486L(In ILI9486LSendWord As Word)
+
+    '8Bit_Data_Port ****************************************
+    set ILI9486L_CS OFF;
+    set ILI9486L_DC ON;
+
+    GLCD_DataPort = ILI9486LSendWord_h
 
     set ILI9486L_WR OFF
     set ILI9486L_WR ON
 
+    GLCD_DataPort = ILI9486LSendWord
 
+    set ILI9486L_WR OFF
+    set ILI9486L_WR ON
 
     set ILI9486L_CS ON;
   #endif
