@@ -362,7 +362,7 @@ Dim GLCDDeviceWidth as Word
 
   End If
 
-
+' same as GLCD_TYPE_ILI9486 below
 If GLCD_TYPE = GLCD_TYPE_ILI9486L Then
 
      #include <glcd_ili9486l.h>
@@ -378,7 +378,46 @@ If GLCD_TYPE = GLCD_TYPE_ILI9486L Then
      GLCD_HEIGHT = 480
      ili9486L_GLCD_HEIGHT = GLCDDeviceHeight
      ili9486L_GLCD_WIDTH = GLCDDeviceWidth
+     if GLCD_DataPort Then
+
+         InitGLCD = InitGLCD_fullport_ili9486L
+         GLCDCLS = GLCDCLS_fullport_ili9486L
+         SendCommand_ILI9486L = SendCommand_fullport_ILI9486L
+         SendData_ILI9486L = SendData_fullport_ILI9486L
+         SendWord_ILI9486L = SendWord_fullport_ILI9486L
+
+     end if
+
   End If
+
+' same as GLCD_TYPE_ILI9486L above
+If GLCD_TYPE = GLCD_TYPE_ILI9486 Then
+
+     #include <glcd_ili9486l.h>
+     InitGLCD = InitGLCD_ili9486L
+     GLCDCLS = GLCDCLS_ili9486L
+     GLCDDrawChar = GLCDDrawChar_ili9486L
+     GLCDDrawString = GLCDDrawString_ili9486L
+     FilledBox = FilledBox_ili9486L
+     Pset = Pset_ili9486L
+     GLCDRotate = GLCDRotate_ili9486L
+     glcd_type_string = "ili9486L"
+     GLCD_WIDTH = 320
+     GLCD_HEIGHT = 480
+     ili9486L_GLCD_HEIGHT = GLCDDeviceHeight
+     ili9486L_GLCD_WIDTH = GLCDDeviceWidth
+     if GLCD_DataPort Then
+
+         InitGLCD = InitGLCD_fullport_ili9486L
+         GLCDCLS = GLCDCLS_fullport_ili9486L
+         SendCommand_ILI9486L = SendCommand_fullport_ILI9486L
+         SendData_ILI9486L = SendData_fullport_ILI9486L
+         SendWord_ILI9486L = SendWord_fullport_ILI9486L
+
+     end if
+
+  End If
+
 
 If GLCD_TYPE = GLCD_TYPE_ILI9481 Then
 
