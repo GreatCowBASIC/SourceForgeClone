@@ -35,6 +35,8 @@
 ' 29/01/2017: Added overloaded FnLSL and FnLSR to reduce memory overhead
 ' 19/05/2017: Revised and corrected DecToBcd_GCB.. overwriting system vars
 ' 04/03/2018: Added Scale() and a mapping to Map
+' 30/01/2019: Added word Scale()
+
 'Misc settings
 
 'Bit rate delays
@@ -248,6 +250,19 @@ end function
 function scale ( in l_map as word, in l_fromLow as integer, in l_fromHigh as integer, in l_toLow as integer, in l_toHigh  as integer, Optional in l_calibrate as integer = 0) as integer
 
   dim l_syscalc as integer
+  dim l_syscalcF as long
+
+  l_syscalcf =  [long]( l_map - l_fromLow ) * [long](l_toHigh   - l_toLow)
+  l_syscalc = (  l_fromHigh - l_fromLow )
+  scale = (l_syscalcf / l_syscalc) + l_toLow + l_calibrate
+
+end function
+
+
+'word implementation
+function scale ( in l_map as word, in l_fromLow as word, in l_fromHigh as word, in l_toLow as word, in l_toHigh  as word, Optional in l_calibrate as integer = 0) as word
+
+  dim l_syscalc as word
   dim l_syscalcF as long
 
   l_syscalcf =  [long]( l_map - l_fromLow ) * [long](l_toHigh   - l_toLow)
