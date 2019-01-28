@@ -244,13 +244,12 @@ Dim GLCDDeviceWidth as Word
      InitGLCD = InitGLCD_SSD1289
      GLCDCLS = GLCDCLS_SSD1289
      GLCDDrawChar = GLCDDrawChar_SSD1289
-'     GLCDPrint = Print_SSD1289
+     GLCDPrint = Print_SSD1289
      FilledBox = FilledBox_SSD1289
      Box = Box_SSD1289
      GLCDDrawString = Print_SSD1289
      Circle = Circle_SSD1289
      FilledCircle  = FilledCircle_SSD1289
-'     Line =  Line_SSD1289
      Pset = PSet_SSD1289
       GLCDRotate = GLCDRotate_SSD1289
      glcd_type_string = "SSD1289"

@@ -22,6 +22,7 @@
 '                 Add PSET limits to prevent memory overwriting
 '    23.11.2018   Removed SuperCededLine method.
 '    30.12.2018   Updated FilledBox to standard method and OLED fonts
+'    28.01.2019   Reverted GLCDPrint as this version has SIZE.
 '
 'Notes:
 ' Supports SSD1289 controller only.
@@ -530,14 +531,14 @@ End Sub
 '''@param PrintLocY Y position
 '''@param PrintData String to be printed
 '''@param Color Optional color
-Sub xPrint_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In PrintData As String, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize )
+Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In PrintData As String, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize )
           Dim GLCDPrintLoc as Word
           PrintLen = PrintData(0)
   If PrintLen = 0 Then Exit Sub
   GLCDPrintLoc = PrintLocX
   'Write Data
   For SysPrintTemp = 1 To PrintLen
-    DrawChar_SSD1289 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), GLCDForeground , Size
+    GLCDDrawChar_SSD1289 GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), GLCDForeground , Size
     GLCDPrintLoc += GLCDFontWidth*Size
   Next
 End Sub
@@ -547,7 +548,7 @@ End Sub
 '''@param PrintLocY Y coordinate for message
 '''@param GLCDValue Number to display
 '''@param Color Optional color
-Sub xPrint_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Long, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize)
+Sub Print_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As Long, Optional In  GLCDForeground as word = GLCDForeground, Optional In Size=GLCDfntDefaultsize)
   Dim GLCDPrintLoc as Word
   Dim SysCalcTempA As Long
   Dim SysPrintBuffer(10)
@@ -562,7 +563,7 @@ Sub xPrint_SSD1289(In PrintLocX as Word, In PrintLocY as Word, In GLCDValue As L
   'Display
   GLCDPrintLoc = PrintLocX
   For SysPrintTemp = SysPrintBuffLen To 1 Step -1
-       DrawChar_SSD1289 GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48, GLCDForeground , Size
+       GLCDDrawChar_SSD1289 GLCDPrintLoc, PrintLocY, SysPrintBuffer(SysPrintTemp) + 48, GLCDForeground , Size
        GLCDPrintLoc += GLCDFontWidth*Size
   Next
 
