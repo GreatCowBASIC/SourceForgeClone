@@ -23,6 +23,7 @@
 ' 29/12/2018       Added 8Wire_Data_Bus support - beta
 ' 30/12/2018       Added Touch support, OLED, fixed rotate and FilledBox
 ' 24/1/2019        Revised UNO_8bit_Shield GLCDCLS (typos) and correct command and data send
+' 28/1/2019        Revised to support GLCD_RESET and GLCD_RST
 
 '
 'Hardware settings
@@ -156,6 +157,30 @@
           end if
       end if
     end if
+
+      GLCD_RST_Defined = 0
+      'is there a GLCD_DC defined?
+      if GLCD_RST then
+          GLCD_RST_Defined = 1
+      end if
+
+
+      'if no GLCD_RST then is there is an GLCD_RESET
+      if GLCD_RST_Defined = 0 Then
+          if GLCD_RESET then
+             'map
+             GLCD_RST = GLCD_RESET
+             GLCD_RST_Defined = 1
+          end if
+          'so, if there one defined?
+          if GLCD_RST_Defined = 0 Then
+              warning "No GLCD_RST defined"
+          end if
+      end if
+    end if
+
+
+
   end if
 
   if PIC Then
