@@ -1,6 +1,6 @@
 '    GCB Library for reading/writing to High Endurance Flash Memory (HEF)
 '    and Storage Area Memory (SAF) on PIC Microcontrollers
-'    Copyright (C) 2018 William Roth
+'    Copyright (C) 2019 William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,8 @@
 'UNLESS YOU KNOW WHAT YOU ARE DOING. CHANGING THIS FILE COULD RENDER SOME GCBASIC
 'COMMANDS UNUSABLE!
 '********************************************************************************
+
+'    29.01.2019.   Updated to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
 
 
  #Script
@@ -158,8 +160,10 @@
       #ENDIF
 
       #IFDEF Chipfamily 15
-          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
-          Dim _HEF_Buffer(HEF_ROWSIZE_BYTES)
+          #IFDEF HAS_HEFSAF TRUE
+            Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
+            Dim _HEF_Buffer(HEF_ROWSIZE_BYTES)
+          #endif
       #Endif
 
 
