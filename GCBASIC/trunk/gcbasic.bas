@@ -9270,7 +9270,7 @@ End Function
 
 SUB CompileVars (CompSub As SubType Pointer)
 	Dim As String InLine, Origin, Temp, DestVar, SourceData
-	Dim As String VarType, SourceOld, ErrorTemp
+	Dim As String VarType, SourceOld, ErrorTemp, OriginalDest
 	Dim As Integer CD, PD, T, DisableInt, CTR, AIC, CanSkip
 	Dim As PinDirType Pointer CurrPinDir
 	Dim As SubType Pointer SourceSub, DestSub
@@ -9361,6 +9361,13 @@ SUB CompileVars (CompSub As SubType Pointer)
 
 			'Call another sub to generate code
 			If IsCalc(SourceData) Then
+				
+				'Use temporary variable? (Needed for bit destinations)
+				OriginalDest = ""
+				If InStr(DestVar, ".") <> 0 Then
+					OriginalDest = DestVar
+					DestVar = GetCalcVar("BYTE")
+				End If
 
 				'Add var
 				If InStr(DestVar, "[") = 0 Then
@@ -9403,6 +9410,19 @@ SUB CompileVars (CompSub As SubType Pointer)
 							FindLine = LinkedListDelete(FindLine)
 							Replace FindLine->Value, ",W", ",F"
 						END If
+					End If
+				End If
+				
+				'Copy temp var to output (if needed)
+				If OriginalDest <> "" Then
+					'Get last line
+					FindLine = NewCode->Next
+					If FindLine <> 0 Then
+						Do While FindLine->Next <> 0
+							FindLine = FindLine->Next
+						Loop
+						
+						LinkedListInsertList(FindLine, CompileVarSet(DestVar, OriginalDest, Origin))
 					End If
 				End If
 
