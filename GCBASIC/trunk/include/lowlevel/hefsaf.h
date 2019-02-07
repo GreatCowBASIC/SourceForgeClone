@@ -24,7 +24,7 @@
 '********************************************************************************
 
 '    29.01.2019.   Updated to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
-
+'    05.02.2019.   Further revised  to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
 
  #Script
 
@@ -161,7 +161,9 @@
 
       #IFDEF Chipfamily 15
           #IFDEF HAS_HEFSAF TRUE
-            Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
+             '@05.02.2019.   Further revised  to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
+             '               Move dimension of the array to the methods
+            'Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
             Dim _HEF_Buffer(HEF_ROWSIZE_BYTES)
           #endif
       #Endif
@@ -190,6 +192,8 @@ Function HEFRead(in _HEF_REL_ADDR) as Byte
       #Endif
 
       #IFDEF ChipFamily 15
+
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
 
          _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
@@ -226,6 +230,8 @@ Function HEFReadWord(IN _HEF_REL_ADDR2) as Word
       #ENDIF
 
       #IFDEF ChipFamily 15
+
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
 
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR2
 
@@ -272,6 +278,8 @@ Sub HEFRead(in _HEF_REL_ADDR, out _HEF_DataByte as Byte)
           ; _HEF_Address is generally be comprised between 0 and 127
           ; The syntax is similar to the EPRead subroutine
 
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
+
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
           NVMCON1.NVMREGS = 0    'Select the Flash address space
@@ -313,6 +321,8 @@ Sub HEFRead(in _HEF_REL_ADDR, out _HEF_DataWord as Word)
           ; _HEF_Address is generally be comprised between 0 and 127
           ; The syntax is similar to the EPRead subroutine
 
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
+
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
           NVMCON1.NVMREGS = 0    'Select the Flash address space
@@ -352,6 +362,9 @@ Sub HEFReadWord(IN _HEF_REL_ADDR, OUT _HEF_DataWord as Word)
       #ENDIF
 
       #IFDEF ChipFamily 15
+
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
+
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
            NVMCON1.NVMREGS = 0
@@ -401,6 +414,8 @@ Sub HEFReadBlock(in _HEF_BlockNum, Out _HEF_Buffer(),Optional in _HEF_Count = HE
     #ENDIF
 
     #IFDEF ChipFamily 15
+
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
 
         ; Obtain absolute address of HEFlash row
         _HEF_ABS_ADDR =  HEF_START_ADDR + (_HEF_BlockNum * HEF_ROWSIZE_BYTES)
@@ -458,6 +473,8 @@ Sub HEFEraseBlock(In _HEF_BlockNum)
       #ENDIF
 
       #IFDEF ChipFamily 15
+
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
 
          _HEF_ABS_ADDR = HEF_START_ADDR + (HEF_ROWSIZE_BYTES * _HEF_BlockNum)
 
@@ -530,6 +547,8 @@ Sub HEFWriteBlock(in _HEF_BlockNum, in _HEF_Buffer(), Optional in _HEF_Count = H
 
 
       #IFDEF ChipFamily 15
+
+          Dim _HEF_ABS_ADDR Alias _HEF_DUMMY,_HEF_DUMMY, NVMADRH, NVMADRL as Long
 
           ;Calculate Base Address of NVM Erase Block
            _HEF_ABS_ADDR =  HEF_Block0_Addr + (_HEF_BlockNum * HEF_ROWSIZE_BYTES)
