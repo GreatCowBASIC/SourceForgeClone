@@ -66,7 +66,9 @@
 #define GLCD_TYPE_Nextion 16
 #define GLCD_TYPE_ILI9326 17
 #define GLCD_TYPE_NT7108C 18
-
+#define GLCD_TYPE_T6963   19     'ASSIGNED TO THE _64 AND _128
+#define GLCD_TYPE_T6963_64    20
+#define GLCD_TYPE_T6963_128   21
 
 
 ' Circle edge overdraw protection
@@ -504,6 +506,75 @@ If GLCD_TYPE = GLCD_TYPE_Nextion Then
      Nextion_GLCD_WIDTH = GLCDDeviceWidth
   End If
 
+
+
+  If GLCD_TYPE = GLCD_TYPE_T6963_64 Then
+      #include <glcd_t6963.h>
+      GLCD_TYPE = GLCD_TYPE_T6963
+      LCD_IO = T36363
+      LCDCursor = LCDCursor_T6963
+      PUT = PUT_T6963
+      GET = GET_T6963
+      LOCATE = LOCATE_T6963
+      CLS = CLS_T6963
+      LCDHOME = LCDHOME_T6963
+      LCDcmd = LCDcmd_T6963
+      LCDdata = LCDdata_T6963
+      LCDHex = LCDHex_T6963
+      LCDSpace = LCDSpace_T6963
+      LCDCursor = LCDCursor_T6963
+      LCDNormalWriteByte = LCDNormalWriteByte_T6963
+
+      pset = PSet_T6963
+      GLCDRotate = GLCDRotate_T6963
+      FilledBox = FilledBox_T6963
+      GLCDCLS = GLCDCLS_T6963
+      CLS = CLS_T6963
+      BigPrint = BigPrint_ILI9486L
+      SelectGLCDPage = SelectGLCDPage_T6963
+      SelectLCDPage = SelectLCDPage_T6963
+
+     glcd_type_string = "T6963"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 64
+     T6963_GLCD_HEIGHT = GLCDDeviceHeight
+     T6963_GLCD_WIDTH = GLCDDeviceWidth
+
+  End if
+
+  If GLCD_TYPE = GLCD_TYPE_T6963_128 Then
+      #include <glcd_t6963.h>
+      GLCD_TYPE = GLCD_TYPE_T6963
+      LCD_IO = T36363
+      LCDCursor = LCDCursor_T6963
+      PUT = PUT_T6963
+      GET = GET_T6963
+      LOCATE = LOCATE_T6963
+      CLS = CLS_T6963
+      LCDHOME = LCDHOME_T6963
+      LCDcmd = LCDcmd_T6963
+      LCDdata = LCDdata_T6963
+      LCDHex = LCDHex_T6963
+      LCDSpace = LCDSpace_T6963
+      LCDCursor = LCDCursor_T6963
+      LCDNormalWriteByte = LCDNormalWriteByte_T6963
+
+      pset = PSet_T6963
+      GLCDRotate = GLCDRotate_T6963
+      FilledBox = FilledBox_T6963
+      GLCDCLS = GLCDCLS_T6963
+      CLS = CLS_T6963
+      BigPrint = BigPrint_ILI9486L
+      SelectGLCDPage = SelectGLCDPage_T6963
+      SelectLCDPage = SelectLCDPage_T6963
+
+     glcd_type_string = "T6963"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 128
+     T6963_GLCD_HEIGHT = GLCDDeviceHeight
+     T6963_GLCD_WIDTH = GLCDDeviceWidth
+
+  End if
 
 #endscript
 
@@ -3290,7 +3361,7 @@ Sub FilledTriangle (  in xoffset as word, in yoffset as word, in xoffset2 as wor
 End Sub
 
 
-TableforOLEDFont2:
+
 Table OLEDFont2 as byte
 0x00
 0x00
@@ -5234,7 +5305,7 @@ Table OLEDFont2 as byte
 End Table
 
 
-IndexforOLEDExtendedFont1:
+
 Table OLEDFont1Index AS WORD
 1  'space
 3  '!
@@ -5334,7 +5405,7 @@ Table OLEDFont1Index AS WORD
 420
 End Table
 
-DataforOLEDFont1:
+
 Table OLEDFont1Data
 
     1, 0x00                   ' Space
@@ -5437,7 +5508,6 @@ End Table
 
 
 
-TableforOLEDExtendedFont2:
 Table OLEDExtendedFont2 as byte
 0x00
 0x00

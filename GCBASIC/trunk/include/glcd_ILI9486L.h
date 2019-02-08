@@ -1323,7 +1323,7 @@ Sub DrawBigChar_ILI9486L (In CharLocX as Word, In CharLocY as Word, In CharCode,
              LocY= LocY + 8
           end if
           if CurrCharVal.0=1 then
-             PSet_ILI9486L LocX , LocY , Color
+             PSet LocX , LocY , Color
           end if
           Rotate CurrCharVal Right
         Next
