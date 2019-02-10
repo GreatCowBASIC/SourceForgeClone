@@ -38,6 +38,7 @@
 '''@date    25.02.2017
 '''******************************************************************************
 '  20.02.2018     Updated license only
+'  05.02.2019     Bugfix for AVR-receive
 
   '*** Set default value of SER3_INVERT if no user value:
   #ifndef SER3_INVERT
@@ -90,7 +91,7 @@
        If SER3_TXPIN < 0 Or SER3_TXPIN > 7 Then ERROR "Valid value for SER3_TXPIN: 0 - 7"
      End If
     '*** Calculate number of delayloops for sending:
-     If SER3_TXPORT <> SER3_TXPORT_not_set Then  '... for channel 1 if a port ist selected
+     If SER3_TXPORT <> SER3_TXPORT_not_set Then  '... for channel if a port ist selected
        If PIC Then STX3_DELAY = INT(((ChipMHz*1000000/4/SER3_BAUD)-12.5)/3)  '12.5 = -14 cycles +1.5 account for integer truncation
        If AVR Then STX3_DELAY = INT(((ChipMHz*1000000/SER3_BAUD)-8.5)/3)     ' 8.5 = -10 cycles +1.5 account for integer truncation
        'warning  send-Delay         STX3_DELAY
@@ -119,7 +120,7 @@
        If (SER3_RXNOWAIT <> 0) And (SER3_RXNOWAIT <> 1) Then ERROR "Valid value for SER3_RXNOWAIT: On or Off"
      End If
      '*** Calculate number of delayloops for receiving:
-     If SER3_RXPORT <> SER3_RXPORT_not_set Then  '... for channel 1 if a port ist selected
+     If SER3_RXPORT <> SER3_RXPORT_not_set Then  '... for channel if a port ist selected
        If PIC Then SRX3_DELAY = INT(((ChipMHz*1000000/4/SER3_BAUD)-6.5)/3)  '6.5 = -8 cycles +1.5 account for integer truncation
        If AVR Then SRX3_DELAY = INT(((ChipMHz*1000000/SER3_BAUD)-4.5)/3)    '4.5 = -6 cycles +1.5 account for integer truncation
        If SRX3_DELAY < 6 Then ERROR "'SER3_BAUD" SER3_BAUD"' too high - Speed up chip or reduce baudrate!"
@@ -151,7 +152,7 @@
 
 Sub STx3PinSetup
 '*** Process pin-direction and -polarity for sending on programmstart:
-   #ifdef AllOf(SER3_TXPORT, SER3_TXPIN)  'if a Port for channel 1 is selected
+   #ifdef AllOf(SER3_TXPORT, SER3_TXPIN)  'if a Port for channel is selected
      Dir SER3_TXPORT.SER3_TXPIN Out       '... make it output
      #if SER3_INVERT = Off                'if normal polarity
        Set SER3_TXPORT.SER3_TXPIN On      '... set HIGH to make the first startbit recognizable
@@ -172,7 +173,7 @@ Sub Ser3Send (In STxDataByte)
  '*** Code for PIC:
   #ifdef PIC
 
-  '**PIC; send to channel 1:
+  '**PIC; send to channel:
     Dim SerDlyCnt, SerBitCnt As Byte
 
       SerBitCnt = SER3_DATABITS+2       ;number of bits to transmit (1 start + n data + 1 stop) [GCB]
@@ -238,7 +239,7 @@ Sub Ser3Send (In STxDataByte)
  '*** Code for AVR:
   #ifdef AVR
 
-      '** AVR; send to channel 1:
+      '** AVR; send to channel:
       lds R23,STxDataByte               ;load DataByte to register
       #if SER3_DATABITS < 8
        sbr R23,1<<SER3_DATABITS         ;set MSB+1 for proper stopbit
@@ -457,7 +458,7 @@ Function Ser3Receive
 
     Dim SerDlyCnt As Byte
 
-    '** PIC; receive from channel 1:
+    '** PIC; receive from channel:
     '#ifdef Allof(SER3_RXPORT, SER3_BAUD, SRX3_HALFDELAY, SRX3_DELAY)
 
       bcf STATUS,C
@@ -546,16 +547,18 @@ Function Ser3Receive
   '*** Code for AVR:
   #ifdef AVR
 
-    ;** AVR; send to channel 1:
+    ;** AVR; send to channel:
     ;* Save register content to stack:
     ;push R23                          ;DataByte
     ;push R24                          ;DelayLoop LowByte
     #ifdef SRX3_HALFDELAYH
      ;push R25                         ;DelayLoop HighByte
-      ldi R25,SRX3_HALFDELAYH           ;load delaycounter with a half-bit delay HighByte
+      ldi R25,SRX3_HALFDELAYH          ;load delaycounter with a half-bit delay HighByte
     #endif
-    ldi R24,SRX3_HALFDELAY           ;load delaycounter with a half-bit delay LowByte
+    ldi R24,SRX3_HALFDELAY             ;load delaycounter with a half-bit delay LowByte
     ldi R23,1<<(SER3_DATABITS-1)       ;set index-bit (indicates end of transmission)
+    clc                                ;bugfix 05.02.2019: clear carry flag, otherwise
+                                       ;                   LSB is ok only at first call
 
     ;* wait for start-bit edge:
     #if SER3_RXNOWAIT = Off

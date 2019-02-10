@@ -51,6 +51,7 @@
 '''@date    25.02.2017
 '''******************************************************************************
 '  20.02.2018     Updated license only
+'  05.02.2019     Bugfix for AVR-receive
 
 '*** 3 independent channels in 3 different files:
 #include <SoftSerialCh1.h>
