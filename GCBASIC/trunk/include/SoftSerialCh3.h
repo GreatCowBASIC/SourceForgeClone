@@ -547,7 +547,7 @@ Function Ser3Receive
   '*** Code for AVR:
   #ifdef AVR
 
-    ;** AVR; send to channel:
+    ;** AVR; receive from channel:
     ;* Save register content to stack:
     ;push R23                          ;DataByte
     ;push R24                          ;DelayLoop LowByte
