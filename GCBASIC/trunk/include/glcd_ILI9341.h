@@ -29,6 +29,8 @@
 ' 11/11/2017       Added support for ReadPixel_ILI9341
 ' 16/11/2017       Revised to support faster CLS for AVR
 ' 15/01/2019       Revised to support SPI without WCOL in CLS
+' 10/02/2019:      Revised to add constant and script to resolve 64mhz at MasterFast.  #define HWSPIMode masterfast where #define HWSPIMode is masterslow|master|masterfast
+
 
 
 ' Hardware settings
@@ -145,6 +147,24 @@
 
 #startup InitGLCD_ILI9341, 98
 
+
+#script
+    userspecifiedHWSPIMode = 0
+    if HWSPIMode then
+        HWSPIMODESCRIPT = HWSPIMode
+        userspecifiedHWSPIMode = 1
+    end if
+
+    if userspecifiedHWSPIMode = 0 then
+        HWSPIMODESCRIPT = MasterFast
+        'If the ChipMHz > 32 then user Master NOT MasterFast
+        if ChipMHz > 32 then
+            HWSPIMODESCRIPT = Master
+        end if
+        userspecifiedHWSPIMode = 1
+    end if
+#endscript
+
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9341
 
@@ -168,7 +188,7 @@ Sub InitGLCD_ILI9341
 
     #ifdef ILI9341_HardwareSPI
       ' harware SPI mode
-      SPIMode MasterFast, 0
+      SPIMode HWSPIMODESCRIPT, 0
     #endif
 
    Set ILI9341_CS On
