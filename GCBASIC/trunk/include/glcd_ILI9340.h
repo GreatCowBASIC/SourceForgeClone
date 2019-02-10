@@ -31,6 +31,8 @@
 ' 14/07/2016:      Revised to resolve Linux build.  Paolo Iocco edited by Evan R Venn
 ' 08/11/2016:      Revised to resolve 18f init issues by Evan R Venn
 ' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
+' 10/02/2019:      Revised to add constant and script to resolve 64mhz at MasterFast.  #define HWSPIMode masterfast where #define HWSPIMode is masterslow|master|masterfast
+'                  Revised to support SPI without WCOL in CLS
 '
 'Hardware settings
 'Type
@@ -149,7 +151,22 @@
 #startup InitGLCD_ILI9340
 
 
+#script
+    userspecifiedHWSPIMode = 0
+    if HWSPIMode then
+        HWSPIMODESCRIPT = HWSPIMode
+        userspecifiedHWSPIMode = 1
+    end if
 
+    if userspecifiedHWSPIMode = 0 then
+        HWSPIMODESCRIPT = MasterFast
+        'If the ChipMHz > 32 then user Master NOT MasterFast
+        if ChipMHz > 32 then
+            HWSPIMODESCRIPT = Master
+        end if
+        userspecifiedHWSPIMode = 1
+    end if
+#endscript
 
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9340
@@ -172,7 +189,7 @@ Sub InitGLCD_ILI9340
 
     #ifdef ILI9340_HardwareSPI
       ' harware SPI mode
-      SPIMode MasterFast, 0
+      SPIMode HWSPIMODESCRIPT, 0
     #endif
 
    Set ILI9340_CS On
@@ -345,34 +362,48 @@ Sub GLCDCLS_ILI9340 ( Optional In  GLCDBackground as word = GLCDBackground )
 '         SPITransfer  ILI9340SendWord
 
           #ifdef PIC
-            #ifndef Var(SSPCON1)
-              #ifdef Var(SSPCON)
-                Dim SSPCON1 Alias SSPCON
-              #endif
-            #endif
-            'Clear WCOL
-            Set SSPCON1.WCOL Off
-            'Put byte to send into buffer
-            'Will start transfer
-            SSPBUF = ILI9340SendWord_h
-            Wait While SSPSTAT.BF = Off
-            Set SSPSTAT.BF Off
-            #if ChipFamily 16
-              ILI9341TempOut = SSPBUF
+
+            #ifndef bit(SSPCON1.WCOL)
+                FastHWSPITransfer  ILI9341SendWord_h
+                FastHWSPITransfer  ILI9341SendWord
             #endif
 
-            'Clear WCOL
-            Set SSPCON1.WCOL Off
-            'Put byte to send into buffer
-            'Will start transfer
-            SSPBUF = ILI9340SendWord
-            Wait While SSPSTAT.BF = Off
-            Set SSPSTAT.BF Off
-            #if ChipFamily 16
-              ILI9341TempOut = SSPBUF
+            #ifdef bit(SSPCON1.WCOL)
+
+                #ifndef Var(SSPCON1)
+                  #ifdef Var(SSPCON)
+                    Dim SSPCON1 Alias SSPCON
+                  #endif
+                #endif
+                'Clear WCOL
+                Set SSPCON1.WCOL Off
+                'Put byte to send into buffer
+                'Will start transfer
+                SSPBUF = ILI9341SendWord_h
+                Wait While SSPSTAT.BF = Off
+                Set SSPSTAT.BF Off
+                #if ChipFamily 16
+                  ILI9341TempOut = SSPBUF
+                #endif
+
+
+                'Clear WCOL
+                Set SSPCON1.WCOL Off
+                'Put byte to send into buffer
+                'Will start transfer
+                SSPBUF = ILI9341SendWord
+                Wait While SSPSTAT.BF = Off
+                Set SSPSTAT.BF Off
+                #if ChipFamily 16
+                  ILI9341TempOut = SSPBUF
+                #endif
+
             #endif
 
           #endif
+
+
+
           #ifdef AVR
             FastHWSPITransfer  ILI9341SendWord_h
             FastHWSPITransfer  ILI9341SendWord
