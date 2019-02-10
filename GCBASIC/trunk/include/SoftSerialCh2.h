@@ -38,6 +38,7 @@
 '''@date    25.02.2017
 '''******************************************************************************
 '  20.02.2018     Updated license only
+'  05.02.2019     Bugfix for AVR-receive
 
   '*** Set default value of SER2_INVERT if no user value:
   #ifndef SER2_INVERT
@@ -90,7 +91,7 @@
        If SER2_TXPIN < 0 Or SER2_TXPIN > 7 Then ERROR "Valid value for SER2_TXPIN: 0 - 7"
      End If
     '*** Calculate number of delayloops for sending:
-     If SER2_TXPORT <> SER2_TXPORT_not_set Then  '... for channel 1 if a port ist selected
+     If SER2_TXPORT <> SER2_TXPORT_not_set Then  '... for channel if a port ist selected
        If PIC Then STX2_DELAY = INT(((ChipMHz*1000000/4/SER2_BAUD)-12.5)/3)  '12.5 = -14 cycles +1.5 account for integer truncation
        If AVR Then STX2_DELAY = INT(((ChipMHz*1000000/SER2_BAUD)-8.5)/3)     ' 8.5 = -10 cycles +1.5 account for integer truncation
        'warning  send-Delay         STX2_DELAY
@@ -119,7 +120,7 @@
        If (SER2_RXNOWAIT <> 0) And (SER2_RXNOWAIT <> 1) Then ERROR "Valid value for SER2_RXNOWAIT: On or Off"
      End If
      '*** Calculate number of delayloops for receiving:
-     If SER2_RXPORT <> SER2_RXPORT_not_set Then  '... for channel 1 if a port ist selected
+     If SER2_RXPORT <> SER2_RXPORT_not_set Then  '... for channel if a port ist selected
        If PIC Then SRX2_DELAY = INT(((ChipMHz*1000000/4/SER2_BAUD)-6.5)/3)  '6.5 = -8 cycles +1.5 account for integer truncation
        If AVR Then SRX2_DELAY = INT(((ChipMHz*1000000/SER2_BAUD)-4.5)/3)    '4.5 = -6 cycles +1.5 account for integer truncation
        If SRX2_DELAY < 6 Then ERROR "'SER2_BAUD" SER2_BAUD"' too high - Speed up chip or reduce baudrate!"
@@ -151,7 +152,7 @@
 
 Sub STx2PinSetup
 '*** Process pin-direction and -polarity for sending on programmstart:
-   #ifdef AllOf(SER2_TXPORT, SER2_TXPIN)  'if a Port for channel 1 is selected
+   #ifdef AllOf(SER2_TXPORT, SER2_TXPIN)  'if a Port for channel is selected
      Dir SER2_TXPORT.SER2_TXPIN Out       '... make it output
      #if SER2_INVERT = Off                'if normal polarity
        Set SER2_TXPORT.SER2_TXPIN On      '... set HIGH to make the first startbit recognizable
@@ -172,7 +173,7 @@ Sub Ser2Send (In STxDataByte)
  '*** Code for PIC:
   #ifdef PIC
 
-  '**PIC; send to channel 1:
+  '**PIC; send to channel:
     Dim SerDlyCnt, SerBitCnt As Byte
 
       SerBitCnt = SER2_DATABITS+2       ;number of bits to transmit (1 start + n data + 1 stop) [GCB]
@@ -238,7 +239,7 @@ Sub Ser2Send (In STxDataByte)
  '*** Code for AVR:
   #ifdef AVR
 
-      '** AVR; send to channel 1:
+      '** AVR; send to channel:
       lds R23,STxDataByte               ;load DataByte to register
       #if SER2_DATABITS < 8
        sbr R23,1<<SER2_DATABITS         ;set MSB+1 for proper stopbit
@@ -457,7 +458,7 @@ Function Ser2Receive
 
     Dim SerDlyCnt As Byte
 
-    '** PIC; receive from channel 1:
+    '** PIC; receive from channel:
     '#ifdef Allof(SER2_RXPORT, SER2_BAUD, SRX2_HALFDELAY, SRX2_DELAY)
 
       bcf STATUS,C
@@ -546,16 +547,18 @@ Function Ser2Receive
   '*** Code for AVR:
   #ifdef AVR
 
-    ;** AVR; send to channel 1:
+    ;** AVR; receive from channel:
     ;* Save register content to stack:
     ;push R23                          ;DataByte
     ;push R24                          ;DelayLoop LowByte
     #ifdef SRX2_HALFDELAYH
      ;push R25                         ;DelayLoop HighByte
-      ldi R25,SRX2_HALFDELAYH           ;load delaycounter with a half-bit delay HighByte
+      ldi R25,SRX2_HALFDELAYH          ;load delaycounter with a half-bit delay HighByte
     #endif
-    ldi R24,SRX2_HALFDELAY           ;load delaycounter with a half-bit delay LowByte
+    ldi R24,SRX2_HALFDELAY             ;load delaycounter with a half-bit delay LowByte
     ldi R23,1<<(SER2_DATABITS-1)       ;set index-bit (indicates end of transmission)
+    clc                                ;bugfix 05.02.2019: clear carry flag, otherwise
+                                       ;                   LSB is ok only at first call
 
     ;* wait for start-bit edge:
     #if SER2_RXNOWAIT = Off
