@@ -21,6 +21,7 @@
 'Changes
 '  19/11/18  Initial release
 '  22/11/18  Revised to improve timings and read byte
+'  11/02/19  Removed GLCDDirection constant from script as this was impacted KS0108 library
 
 
 
@@ -38,17 +39,22 @@
 
 '''@hardware GLCD_TYPE GLCD_TYPE_NT7108C; Reset; GLCD_RESET; IO_Pin
 
+#script
+
+     ' Timing for 32 mhz device - typically you can use the defaults and not state these constants
+     NT7108CReadDelay  =  7      ; = 7 normal usage, 5 or above is OK at 32 mhz!
+     NT7108CWriteDelay =  7      ; = 7 normal usage you may get away with other lower values
+     NT7108CClockDelay =  7      ; = 7 normal usage you may get away with other lower values
+
+#endscript
+
 #startup InitGLCD_NT7108C
 
 Sub InitGLCD_NT7108C
 
   'Setup code for NT7108C controllers
   #if GLCD_TYPE = GLCD_TYPE_NT7108C
-     ' Timing for 32 mhz device - typically you can use the defaults and not state these constants
-     #define NT7108CReadDelay    7      ; = 7 normal usage, 5 or above is OK at 32 mhz!
-     #define NT7108CWriteDelay   7      ; = 7 normal usage you may get away with other lower values
-     #define NT7108CClockDelay   7      ; = 7 normal usage you may get away with other lower values
-     #define GLCDDirection     0     ; 0 normal mode
+
 
     'Set pin directions
     Dir GLCD_RS Out
