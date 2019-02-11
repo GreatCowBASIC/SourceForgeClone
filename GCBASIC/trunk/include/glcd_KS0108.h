@@ -34,6 +34,9 @@
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 31/7/15 Added GLCDDirection test to invert display
 ' 17/10/15 Corrected KS0108ClockDelay was KS0108_Clock_Delay and the other waits were not implemented - most odd. Erv
+' 11/02/19  Removed GLCDDirection constant from script as this was impacted KS0108 library
+
+
 'Hardware settings
 'Type
 '''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_KS0108"
@@ -55,16 +58,35 @@
 
 '''@hardware GLCD_TYPE GLCD_TYPE_KS0108; Reset; GLCD_RESET; IO_Pin
 
+#script
+    KS0108WriteDelayExists = 0
+    if KS0108WriteDelay then
+        KS0108WriteDelay  = KS0108WriteDelay
+        KS0108WriteDelayExists = 1
+    end if
+    if KS0108WriteDelayExists = 0 then
+        KS0108WriteDelay  = 2     ; 2 normal usage, 3 for 32 mhz!
+    end if
+
+    KS0108WriteDelayExists = 0
+    if KS0108WriteDelay then
+        KS0108WriteDelay  = KS0108WriteDelay
+        KS0108WriteDelayExists = 1
+    end if
+    if KS0108WriteDelayExists = 0 then
+        KS0108WriteDelay  = 2     ; 2 normal usage, 3 for 32 mhz!
+    end if
+
+    KS0108ClockDelay = 1     ; 1 normal usage, 0 works
+
+#endscript
+
 #startup InitGLCD_KS0108
 
 Sub InitGLCD_KS0108
 
   'Setup code for KS0108 controllers
   #if GLCD_TYPE = GLCD_TYPE_KS0108
-                   #define KS0108ReadDelay   9     ; 2 normal usage, 3 for 32 mhz!
-                   #define KS0108WriteDelay  1     ; 1 normal usage, 0 works
-                   #define KS0108ClockDelay  1     ; 1 normal usage, 0 works
-                   #define GLCDDirection     0     ; 0 normal mode
 
     'Set pin directions
     Dir GLCD_RS Out
@@ -196,6 +218,7 @@ Sub PSet_KS0108(In GLCDX, In GLCDY, In GLCDColour As Word)
     'Origin in top left
 
     #ifdef  GLCDDirection
+
       if GLCDDirection=1 then
         GLCDX=127-GLCDX
         GLCDY=63-GLCDY
@@ -335,7 +358,7 @@ Function GLCDReadByte_KS0108
 
   'Read
   Set GLCD_ENABLE On
-  Wait KS0108ReadDelay us
+  Wait KS0108WriteDelay us
   'Get input data
           ' corrected 7/05/2014
   GLCDReadByte.7 = GLCD_DB7
@@ -347,6 +370,6 @@ Function GLCDReadByte_KS0108
   GLCDReadByte.1 = GLCD_DB1
   GLCDReadByte.0 = GLCD_DB0
   Set GLCD_ENABLE Off
-  Wait KS0108ReadDelay us
+  Wait KS0108WriteDelay us
 
 End Function
