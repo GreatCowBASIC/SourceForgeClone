@@ -106,7 +106,7 @@
 '''
 '''   02/01/2015  added 404 support
 '*************************************************************************
-
+'''   14/02/2019  revised LCDNormalWriteByte to correct LCDstate error
 
 
 '''
@@ -1275,13 +1275,15 @@ sub LCDNormalWriteByte(In LCDByte )
       #ENDIF
 
 
+     'If Register Select is low.  14.02.19
+     IF LCD_RS = 0 then
+        IF LCDByte < 16 then
+           if LCDByte > 7 then
+              LCD_State = LCDByte
+           end if
+        END IF
+     END IF
 
-
-      IF LCDByte < 16 then
-         if LCDByte > 7 then
-            LCD_State = LCDByte
-         end if
-      END IF
 end sub
 
 
