@@ -19,6 +19,7 @@
 '********************************************************************************
 '********************************************************************************
 '      08.02.2019         Initial release.  Tested on 16f1939, see the demos for the test suite.
+'      16.02.2019         Added 8bit in addressing for 8-bit data bus
 
 
 
@@ -28,6 +29,17 @@
 '***********************************************************************************************
 
 '''  #define GLCD_DATA_PORT PORTD
+'''  or
+'''  #define GLCD_DB0      PORTD.0            'chip specific configuration
+'''  #define GLCD_DB1      PORTD.1            'chip specific configuration
+'''  #define GLCD_DB2      PORTD.2            'chip specific configuration
+'''  #define GLCD_DB3      PORTD.3            'chip specific configuration
+'''  #define GLCD_DB4      PORTD.4            'chip specific configuration
+'''  #define GLCD_DB5      PORTD.5            'chip specific configuration
+'''  #define GLCD_DB6      PORTD.6            'chip specific configuration
+'''  #define GLCD_DB7      PORTD.7            'chip specific configuration
+'''
+'''  and, the following port constants
 '''
 '''  #define GLCD_CS        PORTa.7          'Chip Enable (Active Low)
 '''  #define GLCD_CD        PORTa.0
@@ -89,19 +101,6 @@
     #define T6963ClockDelay  0     ; 0 normal usage
 
     '
-    '***********************************************************************************************
-    '*                   GLOBAL CONSTANTS - DO NOT CHANGE
-    '***********************************************************************************************
-
-    ' Pin defines - do not change
-    #define STA0         GLCD_DATA_PORT.0   'Check command execution capability
-    #define STA1         GLCD_DATA_PORT.1   'Check data read/write capability
-    #define STA2         GLCD_DATA_PORT.2   'Check Auto mode data read capability
-    #define STA3         GLCD_DATA_PORT.3   'Check Auto mode data write capability
-    #define STA5         GLCD_DATA_PORT.5   'Check controller operation capability
-    #define STA6         GLCD_DATA_PORT.6   'Error flag. Used for screen peek and screen copy
-    #define STA7         GLCD_DATA_PORT.7   'Check the blink condition
-
     '
     '***********************************************************************************************
     '*                   GLOBAL CONSTANTS - DO NOT CHANGE
@@ -211,11 +210,11 @@
         'Adjust the columns to suit the pixel size select
         if GLCD_FS_SELECT = 1 then
             MAX_COLUMNS = MAX_COL_PIXEL / 6
-            FontSize_T6963 = 6
+            FONTSIZE_T6963 = 6
         end if
         if GLCD_FS_SELECT = 0 then
             MAX_COLUMNS = MAX_COL_PIXEL / 8
-            FontSize_T6963 = 8
+            FONTSIZE_T6963 = 8
         end if
         'set the max rows constant
         MAX_ROWS = MAX_ROW_PIXEL/8
@@ -224,11 +223,11 @@
         'Set default screen parameters to TEXT_GRH_ON ( 0x9c ) if not user constant defined
         DefaultDisplayModeFound_T6963 = 0
         if DefaultDisplayMode_T6963 Then
-            DefaultDisplayModeInitialState_T6963_script = DefaultDisplayMode_T6963   'equates to user setting
+            DEFAULTDISPLAYMODEINITIALSTATE_T6963_SCRIPT = DefaultDisplayMode_T6963   'equates to user setting
             DefaultDisplayModeFound_T6963 = 1
         end if
         if DefaultDisplayModeFound_T6963 = 0  Then
-            DefaultDisplayModeInitialState_T6963_script = 0x9C   'equates to TEXT_GRH_ON
+            DEFAULTDISPLAYMODEINITIALSTATE_T6963_SCRIPT = 0x9C   'equates to TEXT_GRH_ON
         end if
 
 
@@ -259,6 +258,35 @@
         GLCDPage8_T6963 = GLCDPage7_T6963 + GLCDPAGESIZE
         GLCDPage9_T6963 = GLCDPage8_T6963 + GLCDPAGESIZE
         GLCDPage10_T6963 = GLCDPage9_T6963 + GLCDPAGESIZE
+
+
+        'set these status ports to data_port
+        GLCD_DATA_PORT_OPERATIONAL = 0
+        if GLCD_DATA_PORT then
+            STA0 =  GLCD_DATA_PORT.0   'Check command execution capability
+            STA1 =  GLCD_DATA_PORT.1   'Check data read/write capability
+            STA2 =  GLCD_DATA_PORT.2   'Check Auto mode data read capability
+            STA3 =  GLCD_DATA_PORT.3   'Check Auto mode data write capability
+            STA5 =  GLCD_DATA_PORT.5   'Check controller operation capability
+            STA6 =  GLCD_DATA_PORT.6   'Error flag. Used for screen peek and screen copy
+            STA7 =  GLCD_DATA_PORT.7   'Check the blink condition
+            GLCD_DATA_PORT_OPERATIONAL = 1
+            if GLCD_TYPE = GLCD_TYPE_T6963 then
+              if GLCD_DB0 then
+                  warning "Use either full port GLCD_DATA_PORT or GLCD_DB..GLCD_DB7"
+                  warning "You cannot have both defined.  They are mutually exclusive"
+              end if
+            end if
+        end if
+        if GLCD_DATA_PORT_OPERATIONAL = 0 then
+            STA0 =  GLCD_DB0   'Check command execution capability
+            STA1 =  GLCD_DB1   'Check data read/write capability
+            STA2 =  GLCD_DB2   'Check Auto mode data read capability
+            STA3 =  GLCD_DB3   'Check Auto mode data write capability
+            STA5 =  GLCD_DB5   'Check controller operation capability
+            STA6 =  GLCD_DB6   'Error flag. Used for screen peek and screen copy
+            STA7 =  GLCD_DB7   'Check the blink condition
+        end if
 
     #endscript
 
@@ -378,7 +406,21 @@ Sub LCDdata_T6963 ( In LCDDataByte )
 
     GLCDBusyCheck_T6963
 
-    GLCD_DATA_PORT = LCDDataByte
+    #ifdef GLCD_DATA_PORT
+        GLCD_DATA_PORT = LCDDataByte
+    #endif
+
+    #ifdef GLCD_DB0
+        GLCD_DB0 = LCDDataByte.0
+        GLCD_DB1 = LCDDataByte.1
+        GLCD_DB2 = LCDDataByte.2
+        GLCD_DB3 = LCDDataByte.3
+        GLCD_DB4 = LCDDataByte.4
+        GLCD_DB5 = LCDDataByte.5
+        GLCD_DB6 = LCDDataByte.6
+        GLCD_DB7 = LCDDataByte.7
+    #endif
+
     wait T6963ClockDelay us
     GLCD_CD = 0
     wait T6963ClockDelay us
@@ -525,7 +567,20 @@ Sub InitGLCD_T6963
     dim T6963_GLCD_HEIGHT, T6963_GLCD_WIDTH as word
 
     'Set pin directions
-    dir GLCD_DATA_PORT out
+    #ifdef GLCD_DATA_PORT
+        dir GLCD_DATA_PORT out
+    #endif
+    #ifdef GLCD_DB0
+        dir GLCD_DB0 out
+        dir GLCD_DB1 out
+        dir GLCD_DB2 out
+        dir GLCD_DB3 out
+        dir GLCD_DB4 out
+        dir GLCD_DB5 out
+        dir GLCD_DB6 out
+        dir GLCD_DB7 out
+    #endif
+
     dir GLCD_CS        out
     dir GLCD_CD        out
     dir GLCD_RD        out
@@ -540,7 +595,22 @@ Sub InitGLCD_T6963
     GLCD_WR = 1
     'Set the font control port
     GLCD_FS  = GLCD_FS_SELECT
-    GLCD_DATA_PORT = 0
+
+    #ifdef GLCD_DATA_PORT
+        GLCD_DATA_PORT = 0
+    #endif
+
+    #ifdef GLCD_DB0
+        GLCD_DB0 = 0
+        GLCD_DB1 = 0
+        GLCD_DB2 = 0
+        GLCD_DB3 = 0
+        GLCD_DB4 = 0
+        GLCD_DB5 = 0
+        GLCD_DB6 = 0
+        GLCD_DB7 = 0
+    #endif
+
     wait 5 ms
     GLCD_RESET = 1
 
@@ -559,7 +629,7 @@ Sub InitGLCD_T6963
     'Set the operating mode
     GLCDSendCommand_T6963 ( OR_MODE )
     dim DefaultDisplayModeState_T6963 as byte
-    DefaultDisplayModeState_T6963 = DefaultDisplayModeInitialState_T6963_script
+    DefaultDisplayModeState_T6963 = DEFAULTDISPLAYMODEINITIALSTATE_T6963_SCRIPT
     GLCDSendCommand_T6963 ( DefaultDisplayModeState_T6963 )
     GLCDSendCommand_T6963(LINE_1_CURSOR)
 
@@ -650,13 +720,13 @@ Sub PSet_T6963(In GLCDX as word, In GLCDY as word, In GLCDColour As Word)
     dim cmd as byte
 
 
-    addr = ( GLCDY  * COLUMN ) + (GLCDX /FontSize_T6963) + current_grh_home_addr
+    addr = ( GLCDY  * COLUMN ) + (GLCDX /FONTSIZE_T6963) + current_grh_home_addr
     GLCDCmdAddrSend_T6963(addr, ADDR_PTR_SET)
 
     if ( GLCDColour = 1 ) then
-      cmd = (0b11111000)|(FontSize_T6963- 1 -((GLCDX)%FontSize_T6963))
+      cmd = (0b11111000)|(FONTSIZE_T6963- 1 -((GLCDX)%FONTSIZE_T6963))
     else
-      cmd = (0b11110000)|(FontSize_T6963- 1 -((GLCDX)%FontSize_T6963))
+      cmd = (0b11110000)|(FONTSIZE_T6963- 1 -((GLCDX)%FONTSIZE_T6963))
     end if
     GLCDSendCommand_T6963(cmd)
 
@@ -742,7 +812,21 @@ Sub GLCDSendCommand_T6963 ( In LCDCmdByte )
 
     GLCDBusyCheck_T6963
 
-    GLCD_DATA_PORT = LCDCmdByte
+    #ifdef GLCD_DATA_PORT
+        GLCD_DATA_PORT = LCDCmdByte
+    #endif
+    #ifdef GLCD_DB0
+        GLCD_DB0 = LCDCmdByte.0
+        GLCD_DB1 = LCDCmdByte.1
+        GLCD_DB2 = LCDCmdByte.2
+        GLCD_DB3 = LCDCmdByte.3
+        GLCD_DB4 = LCDCmdByte.4
+        GLCD_DB5 = LCDCmdByte.5
+        GLCD_DB6 = LCDCmdByte.6
+        GLCD_DB7 = LCDCmdByte.7
+    #endif
+
+
     wait T6963ClockDelay us
     GLCD_CD = 1
     wait T6963ClockDelay us
@@ -764,7 +848,20 @@ Sub GLCDispAutoDataWr_T6963   ( In LCDDataByte )
 
     GLCDispAutoWrChk_T6963
 
-    GLCD_DATA_PORT = LCDDataByte
+    #ifdef GLCD_DATA_PORT
+        GLCD_DATA_PORT = LCDDataByte
+    #endif
+    #ifdef GLCD_DB0
+        GLCD_DB0 = LCDDataByte.0
+        GLCD_DB1 = LCDDataByte.1
+        GLCD_DB2 = LCDDataByte.2
+        GLCD_DB3 = LCDDataByte.3
+        GLCD_DB4 = LCDDataByte.4
+        GLCD_DB5 = LCDDataByte.5
+        GLCD_DB6 = LCDDataByte.6
+        GLCD_DB7 = LCDDataByte.7
+    #endif
+
     wait T6963ClockDelay us
     GLCD_CD = 0
     wait T6963ClockDelay us
@@ -785,7 +882,21 @@ Sub GLCDSendData_T6963 ( In LCDDataByte )
 
     GLCDBusyCheck_T6963
 
-    GLCD_DATA_PORT = LCDDataByte
+    #ifdef GLCD_DATA_PORT
+        GLCD_DATA_PORT = LCDDataByte
+    #endif
+    #ifdef GLCD_DB0
+        GLCD_DB0 = LCDDataByte.0
+        GLCD_DB1 = LCDDataByte.1
+        GLCD_DB2 = LCDDataByte.2
+        GLCD_DB3 = LCDDataByte.3
+        GLCD_DB4 = LCDDataByte.4
+        GLCD_DB5 = LCDDataByte.5
+        GLCD_DB6 = LCDDataByte.6
+        GLCD_DB7 = LCDDataByte.7
+    #endif
+
+
     wait T6963ClockDelay us
     GLCD_CD = 0
     wait T6963ClockDelay us
@@ -802,7 +913,14 @@ End Sub
 '''Inspect the status of the autowrite. Has the last byte been written?
 Sub GLCDBusyCheck_T6963
 
-    dir GLCD_DATA_PORT in
+    #ifdef GLCD_DATA_PORT
+      dir GLCD_DATA_PORT in
+    #endif
+
+    #ifdef GLCD_DB0
+      dir STA0 in
+      dir STA1 in
+    #endif
 
     GLCD_CD = 1
     wait T6963ClockDelay us
@@ -817,7 +935,15 @@ Sub GLCDBusyCheck_T6963
     wait T6963ClockDelay us
     wait while (!STA1)
     GLCD_CS = 1
-    dir GLCD_DATA_PORT out
+
+    #ifdef GLCD_DATA_PORT
+      dir GLCD_DATA_PORT out
+    #endif
+
+    #ifdef GLCD_DB0
+      dir STA0 out
+      dir STA1 out
+    #endif
 
 End Sub
 
@@ -825,7 +951,13 @@ End Sub
 '''Inspect the status of the autowrite. Has the last byte been written?
 Sub GLCDispAutoWrChk_T6963
 
-    dir GLCD_DATA_PORT in
+    #ifdef GLCD_DATA_PORT
+      dir GLCD_DATA_PORT in
+    #endif
+
+    #ifdef GLCD_DB0
+      dir STA3 in
+    #endif
 
     GLCD_CD = 1
     wait T6963ClockDelay us
@@ -837,6 +969,13 @@ Sub GLCDispAutoWrChk_T6963
     wait T6963ClockDelay us
     wait while (!STA3)  'Busy Check here
     GLCD_CS = 1
-    dir GLCD_DATA_PORT out
+
+    #ifdef GLCD_DATA_PORT
+      dir GLCD_DATA_PORT out
+    #endif
+
+    #ifdef GLCD_DB0
+      dir STA3 out
+    #endif
 
 End Sub
