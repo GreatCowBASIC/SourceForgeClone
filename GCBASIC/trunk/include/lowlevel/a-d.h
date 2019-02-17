@@ -135,6 +135,7 @@
 ' 19/11/18 Revised to add  #ifdef bit(ADFM) protection on ReadAD for 10f devices
 ' 11/12/18 Added references to support 16f1834x ADC channels
 ' 14/12/18 Added references to support 16f1834x ADC channels
+' 17/02/19 Corrected AN29 address. Removed a typo. Prevented PORTD.5 ADC from operating as expected.
 
 
 'Commands:
