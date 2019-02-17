@@ -212,7 +212,7 @@
 #define AN26 26
 #define AN27 27
 #define AN28 28
-#define AN29 39
+#define AN29 29
 #define AN30 30
 #define AN31 31
 #define AN32 32
