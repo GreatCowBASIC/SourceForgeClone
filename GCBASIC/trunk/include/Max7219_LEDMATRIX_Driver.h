@@ -1,5 +1,5 @@
 '    Graphical Max7219 GLCD routines for the GCBASIC compiler
-'    Copyright (C) 2018 Hugh Considine and Evan Venn
+'    Copyright (C) 2018-2019 Hugh Considine, Evan Venn and Theo Loermans
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -18,6 +18,7 @@
 'Notes:
 ' Supports Max7219 as a GLCD controller only.
 ' 02/02/2018  Updated Max7219_LEDMatrix_Brightness to correct number of devices set.
+' 18/02/2019  Updated to invert CLK when using Software SPI
 
   ' Include the GLCD.H to reuse the font tables
   #include <glcd.h>
@@ -79,7 +80,7 @@
     wait 100 ms
 
     Set Max7219_DO  off
-    Set Max7219_SCK on
+''    Set Max7219_SCK on
     wait 100 ms
 
     'initialise
@@ -194,9 +195,10 @@ End Sub
       FastHWSPITransfer  _MAX7219_reg
       FastHWSPITransfer  _MAX7219_ddata
       Max7219_CS = 1
-      exit sub
+
   #endif
 
+  #ifndef MAX7219_LEDMatrix_HardwareSPI
   'must be software SPI
   Max7219_CS = 0
 
@@ -207,9 +209,9 @@ End Sub
     else
       set Max7219_DO OFF
     end if
-    SET Max7219_SCK OFF
+    SET Max7219_SCK ON
     rotate _MAX7219_reg left
-    set Max7219_SCK ON
+    set Max7219_SCK OFF
 
   end Repeat
 
@@ -220,13 +222,14 @@ End Sub
     else
       set Max7219_DO OFF
     end if
-    SET Max7219_SCK OFF
+    SET Max7219_SCK ON
     rotate _MAX7219_ddata left
-    set Max7219_SCK ON
+    set Max7219_SCK OFF
 
   end Repeat
 
   Max7219_CS = 1
+  #endif
 
   end sub
 
@@ -235,10 +238,9 @@ End Sub
   #ifdef MAX7219_LEDMatrix_HardwareSPI
       FastHWSPITransfer  _MAX7219_reg
       FastHWSPITransfer  _MAX7219_ddata
-      exit sub
   #endif
 
-
+  #ifndef MAX7219_LEDMatrix_HardwareSPI
   'must be software SPI
   repeat 8
 
@@ -247,10 +249,9 @@ End Sub
     else
       set Max7219_DO OFF
     end if
-    SET Max7219_SCK OFF
+    SET Max7219_SCK ON
     rotate _MAX7219_reg left
-    set Max7219_SCK ON
-
+    set Max7219_SCK OFF
   end Repeat
 
   repeat 8
@@ -260,12 +261,12 @@ End Sub
     else
       set Max7219_DO OFF
     end if
-    SET Max7219_SCK OFF
+    SET Max7219_SCK ON
     rotate _MAX7219_ddata left
-    set Max7219_SCK ON
+    set Max7219_SCK OFF
 
   end Repeat
-
+  #endif
 
   end sub
 
@@ -300,7 +301,6 @@ End Sub
           Max7219_CS = 1
 
         Next
-        HSerPrintCRLF
 
     Next
 
