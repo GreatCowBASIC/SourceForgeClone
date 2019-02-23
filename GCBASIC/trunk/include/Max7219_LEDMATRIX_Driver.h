@@ -19,6 +19,7 @@
 ' Supports Max7219 as a GLCD controller only.
 ' 02/02/2018  Updated Max7219_LEDMatrix_Brightness to correct number of devices set.
 ' 18/02/2019  Updated to invert CLK when using Software SPI
+' 23/02/2019  Resolved AVR Init issue. Port direction  MUST go before the SPIMODE command
 
   ' Include the GLCD.H to reuse the font tables
   #include <glcd.h>
@@ -69,18 +70,19 @@
     GLCDBackground = 0
     GLCDForeground = 1
 
-    #ifdef MAX7219_LEDMatrix_HardwareSPI
-        SPIMode masterfast, SPI_CPOL_0 + SPI_CPHA_0
+    #if bit(Max7219_DI)
+      Dir Max7219_DI In
     #endif
-
-    Dir Max7219_DI  In
     Dir Max7219_DO  Out
     Dir Max7219_SCK Out
     Dir Max7219_CS  out
     wait 100 ms
 
+    #ifdef MAX7219_LEDMatrix_HardwareSPI
+        SPIMode masterfast, SPI_CPOL_0 + SPI_CPHA_0
+    #endif
+
     Set Max7219_DO  off
-''    Set Max7219_SCK on
     wait 100 ms
 
     'initialise
