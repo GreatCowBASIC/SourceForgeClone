@@ -20,6 +20,7 @@
 ' 02/02/2018  Updated Max7219_LEDMatrix_Brightness to correct number of devices set.
 ' 18/02/2019  Updated to invert CLK when using Software SPI
 ' 23/02/2019  Resolved AVR Init issue. Port direction  MUST go before the SPIMODE command
+' 24/02/2019  Added user constant called HWSPIMode to control the default SPIMode... else, the code not support Master or MasterSlow
 
   ' Include the GLCD.H to reuse the font tables
   #include <glcd.h>
@@ -62,6 +63,24 @@
   #define Max7219_Devices ( MAX7219_X_Devices  * MAX7219_Y_Devices )
   #define Max7219_PixelBytes ( Max7219_Devices * 8 )
 
+
+
+
+
+#script
+    userspecifiedHWSPIMode = 0
+    if HWSPIMode then
+        HWSPIMODESCRIPT = HWSPIMode
+        userspecifiedHWSPIMode = 1
+    end if
+
+    if userspecifiedHWSPIMode = 0 then
+        HWSPIMODESCRIPT = MasterFast
+        userspecifiedHWSPIMode = 1
+    end if
+#endscript
+
+
   ' Create the image buffer
   Dim Max7219_Image_Buffer( Max7219_PixelBytes )
 
@@ -79,7 +98,7 @@
     wait 100 ms
 
     #ifdef MAX7219_LEDMatrix_HardwareSPI
-        SPIMode masterfast, SPI_CPOL_0 + SPI_CPHA_0
+        SPIMode HWSPIMODESCRIPT, SPI_CPOL_0 + SPI_CPHA_0
     #endif
 
     Set Max7219_DO  off
