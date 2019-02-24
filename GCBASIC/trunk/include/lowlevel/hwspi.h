@@ -1,5 +1,5 @@
 '    Hardware SPI routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2017 Hugh Considine and Evan R. Venn
+'    Copyright (C) 2006 - 2019 Hugh Considine and Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,8 @@
 ' 25/3/2016: Adapted to add 16f18855 support
 ' 29/3/2016: Adapted to add 18f support in FastHWSPITransfer
 ' 19/10/2017: Added support SPI Specific Module, aka K42 chips
+' 29/02/2019: Added MasterUltraFast option for AVR Meag328p
+
 
 'To make the PIC pause until it receives an SPI message while in slave mode, set the
 'constant "WaitForSPI" at the start of the program. The value does not matter.
@@ -39,6 +41,8 @@
 
 'SPI mode constants
 'Also used for hardware I2C
+
+#define MasterUltraFast 14
 #define MasterFast 13
 #define Master 12
 #define MasterSlow 11
@@ -133,6 +137,8 @@ Sub SPIMode (In SPICurrentMode)
         Set SSPCON1.SSPM0 Off
 
         Select Case SPICurrentMode
+        Case MasterUltraFast
+          'Nothing to do on PIC
         Case MasterFast
           'Nothing to do
         Case Master
@@ -198,7 +204,7 @@ Sub SPIMode (In SPICurrentMode)
         SPI1CLK = SSP1_FOSC
 
         Select Case SPICurrentMode
-          Case MasterFast
+          Case MasterFast or MasterUltraFast
             SPI1CLK = SSP1_FOSC
             SPI1CON0.MST = 1
           Case Master
@@ -249,6 +255,10 @@ Sub SPIMode (In SPICurrentMode)
     Set SPCR.SPR1 Off
 
     Select Case SPICurrentMode
+    Case MasterUltraFast
+      Set SPCR.MSTR On
+      Set SPSR.SPI2X On
+
     Case MasterFast
       Set SPCR.MSTR On
 
@@ -329,6 +339,8 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
         Set SSPCON1.SSPM0 Off
 
         Select Case SPICurrentMode
+        Case MasterUltraFast
+          'Nothing to do on PIC
         Case MasterFast
           'Nothing to do
         Case Master
@@ -401,7 +413,7 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
         SPI1CLK = SSP1_FOSC
 
         Select Case SPICurrentMode
-        Case MasterFast
+        Case MasterFast or MasterUltraFast
           SPI1CLK = SSP1_FOSC
           SPI1CON0.MST = 1
         Case Master
@@ -457,6 +469,10 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
     Set SPCR.SPR1 Off
 
     Select Case SPICurrentMode
+    Case MasterUltraFast
+      Set SPCR.MSTR On
+      Set SPSR.SPI2X On
+
     Case MasterFast
       Set SPCR.MSTR On
 
