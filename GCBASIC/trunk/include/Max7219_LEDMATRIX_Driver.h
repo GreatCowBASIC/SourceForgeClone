@@ -21,6 +21,7 @@
 ' 18/02/2019  Updated to invert CLK when using Software SPI
 ' 23/02/2019  Resolved AVR Init issue. Port direction  MUST go before the SPIMODE command
 ' 24/02/2019  Added user constant called HWSPIMode to control the default SPIMode... else, the code not support Master or MasterSlow
+' 26/02/2019  Added support for matrix orientation
 
   ' Include the GLCD.H to reuse the font tables
   #include <glcd.h>
@@ -39,7 +40,14 @@
 
   'Constants - Do not change
   #define Max7219_LEDMatrix_Update  Max7219_LEDMatrix_SendBuffer
+
+  'Default is 0, can be 90, 180 or 270
   #define Pset max7219_LEDMatrix_PSet_0
+  '#define Pset max7219_LEDMatrix_PSet_90
+  '#define Pset max7219_LEDMatrix_PSet_180
+  '#define Pset max7219_LEDMatrix_PSet_270
+
+
 
   ' Do NOT CHANGE!
   #define GLCDCLS Max7219_LEDMatrix_GLCDCLS
@@ -420,6 +428,22 @@ Sub Max7219_LEDMatrix_PSet_90( max7219_LocX as word, max7219_LocY as word, Pixel
 
   End Sub
 
+
+Sub Max7219_LEDMatrix_PSet_270( max7219_LocX as word, max7219_LocY as word, PixelCol)
+
+      'Protect the buffer - by extreme X Y locations
+      if max7219_LocX > ( MAX7219_X_Devices * 8 ) -1  then exit sub
+      elementbit =  max7219_LocY / 8
+      if elementbit >  MAX7219_Y_Devices - 1 then exit sub
+
+
+      element = ( max7219_LocX + ( max7219_LocY / 8 ) + 1 )
+      elementbit =  max7219_LocY mod 8
+      elementbit = 7 - elementbit
+      Max7219_Image_Buffer( element ) = Max7219_Image_Buffer( element ) OR FnLSL( PixelCol, elementbit )
+
+  End Sub
+
 Sub Max7219_LEDMatrix_PSet_0( max7219_LocX as word, max7219_LocY as word, PixelCol)
 
 
@@ -437,7 +461,22 @@ Sub Max7219_LEDMatrix_PSet_0( max7219_LocX as word, max7219_LocY as word, PixelC
 
   End Sub
 
+Sub Max7219_LEDMatrix_PSet_180( max7219_LocX as word, max7219_LocY as word, PixelCol)
 
+
+      'Protect the buffer - by extreme X Y locations
+      if max7219_LocX > ( MAX7219_X_Devices * 8 ) - 1  then Exit sub
+      elementbit =  max7219_LocY / 8
+      if elementbit >  MAX7219_Y_Devices - 1 then Exit Sub
+
+      elementbit = max7219_LocX mod 8
+      element =   ( ( max7219_LocX / 8 ) * 8 ) + ( max7219_LocY+1)
+      elementbit = 7 - elementbit
+      Max7219_Image_Buffer( element ) = Max7219_Image_Buffer( element ) OR FnLSL( PixelCol, elementbit )
+
+
+
+  End Sub
 
 
 
