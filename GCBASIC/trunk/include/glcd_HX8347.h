@@ -21,6 +21,7 @@
 'Changes
   '16/11/2017 Initial release including OLED fonts
   '19/11/2017 Added PrintLocX and PrintLocY initialisation for character mode printing.
+  'Correct missing #ENDIF and script update
 
 'Hardware settings
 'Type
@@ -64,6 +65,23 @@
 #define HX8347_GREENYELLOW   TFT_GREENYELLOW
 #define HX8347_PINK          TFT_PINK
 
+#script
+      HX8347_GLCD_RST = GLCD_RST
+      HX8347_GLCD_CS  = GLCD_CS
+      HX8347_GLCD_RS  = GLCD_RS
+      HX8347_GLCD_WR  = GLCD_WR
+      HX8347_GLCD_RD  = GLCD_RD
+
+
+      HX8347_GLCD_DB0 = GLCD_DB0
+      HX8347_GLCD_DB1 = GLCD_DB1
+      HX8347_GLCD_DB2 = GLCD_DB2
+      HX8347_GLCD_DB3 = GLCD_DB3
+      HX8347_GLCD_DB4 = GLCD_DB4
+      HX8347_GLCD_DB5 = GLCD_DB5
+      HX8347_GLCD_DB6 = GLCD_DB6
+      HX8347_GLCD_DB7 = GLCD_DB7
+#endscript
 
 #startup InitGLCD_HX8347
 
@@ -73,23 +91,6 @@ Sub InitGLCD_HX8347
 
   'Setup code for HX8347 controllers
   #if GLCD_TYPE = GLCD_TYPE_HX8347
-
-      #define HX8347_GLCD_RST GLCD_RST
-      #define HX8347_GLCD_CS GLCD_CS
-      #define HX8347_GLCD_RS GLCD_RS
-      #define HX8347_GLCD_WR GLCD_WR
-      #define HX8347_GLCD_RD GLCD_RD
-
-
-      #define HX8347_GLCD_DB0 GLCD_DB0
-      #define HX8347_GLCD_DB1 GLCD_DB1
-      #define HX8347_GLCD_DB2 GLCD_DB2
-      #define HX8347_GLCD_DB3 GLCD_DB3
-      #define HX8347_GLCD_DB4 GLCD_DB4
-      #define HX8347_GLCD_DB5 GLCD_DB5
-      #define HX8347_GLCD_DB6 GLCD_DB6
-      #define HX8347_GLCD_DB7 GLCD_DB7
-
 
       dir  HX8347_GLCD_DB7 OUT
       dir  HX8347_GLCD_DB6 OUT
@@ -361,29 +362,29 @@ sub  SendCommand_HX8347( IN HX8347SendByte as word )
 
   #if GLCD_TYPE = GLCD_TYPE_HX8347
 
-    #ifndef GLCD_HX8347_16bit
-    GLCDSetWriteDir_HX8347
-    HX8347_GLCD_CS = 0
-    HX8347_GLCD_RS = 0
-    HX8347_GLCD_RD = 1
+      #ifndef GLCD_HX8347_16bit
+      GLCDSetWriteDir_HX8347
+      HX8347_GLCD_CS = 0
+      HX8347_GLCD_RS = 0
+      HX8347_GLCD_RD = 1
 
-    #ifndef  8bitMode
+      #ifndef  8bitMode
+        HX8347_GLCD_WR = 1
+        PORTD = (PORTD & 0B00000011) | ((HX8347SendByte_h) & 0B11111100);
+        PORTB = (PORTB & 0B11111100) | ((HX8347SendByte_h) & 0B00000011);
+        HX8347_GLCD_WR = 0
+      #endif
+
       HX8347_GLCD_WR = 1
-      PORTD = (PORTD & 0B00000011) | ((HX8347SendByte_h) & 0B11111100);
-      PORTB = (PORTB & 0B11111100) | ((HX8347SendByte_h) & 0B00000011);
-      HX8347_GLCD_WR = 0
+      PORTD = (PORTD & 0B00000011) | ((HX8347SendByte) & 0B11111100);
+      PORTB = (PORTB & 0B11111100) | ((HX8347SendByte) & 0B00000011);
+      HX8347_GLCD_WR  = 0
+      HX8347_GLCD_WR = 1
+      HX8347_GLCD_CS = 1
+
     #endif
 
-    HX8347_GLCD_WR = 1
-    PORTD = (PORTD & 0B00000011) | ((HX8347SendByte) & 0B11111100);
-    PORTB = (PORTB & 0B11111100) | ((HX8347SendByte) & 0B00000011);
-    HX8347_GLCD_WR  = 0
-    HX8347_GLCD_WR = 1
-    HX8347_GLCD_CS = 1
-
   #endif
-
-
 
 end Sub
 
