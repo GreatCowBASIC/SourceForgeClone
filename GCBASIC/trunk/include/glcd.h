@@ -43,6 +43,9 @@
 '    22/11/18 Increased scope of NT7108C methods.
 '    07/12/18 Remove silly script warning
 '    24/1/19  Added GLCD_TYPE_ILI9486  to map to GLCD_TYPE_ILI9486L
+'    6/3/19   Added GLCD_TYPE_UC8320/ILI9320  to map to GLCD_TYPE_UC8320/ILI9320
+
+
 
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
@@ -69,6 +72,8 @@
 #define GLCD_TYPE_T6963   19     'ASSIGNED TO THE _64 AND _128
 #define GLCD_TYPE_T6963_64    20
 #define GLCD_TYPE_T6963_128   21
+#define GLCD_TYPE_UC8230  22
+#define GLCD_TYPE_ILI9320 23
 
 
 ' Circle edge overdraw protection
@@ -575,6 +580,26 @@ If GLCD_TYPE = GLCD_TYPE_Nextion Then
      T6963_GLCD_WIDTH = GLCDDeviceWidth
 
   End if
+
+  If GLCD_TYPE = GLCD_TYPE_UC8230 Then
+
+     #include <glcd_uc8230.h>
+     InitGLCD = InitGLCD_uc8230
+     GLCDCLS = GLCDCLS_uc8230
+     GLCDDrawChar = GLCDDrawChar_uc8230
+     GLCDDrawString = GLCDDrawString_uc8230
+     FilledBox = FilledBox_uc8230
+     Pset = Pset_uc8230
+     GLCDRotate = GLCDRotate_uc8230
+     glcd_type_string = "uc8230"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 320
+     uc8230_GLCD_HEIGHT = GLCDDeviceHeight
+     uc8230_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
+
+
 
 #endscript
 
