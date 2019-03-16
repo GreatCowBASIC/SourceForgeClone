@@ -1,5 +1,5 @@
 '    Library for reading/writing to Microchip DS3231 RTC for the GCBASIC compiler
-'    Copyright (C) 2012 - 2017 Thomas Henry and Evan Venn
+'    Copyright (C) 2012 - 2019 Thomas Henry and Evan Venn
 '
 '    Version 1.1a  10/1/2015
 '    Version 1.2a  11/1/2015
@@ -28,6 +28,8 @@
 '    Evan R Venn/Anobium  ---  11/1/2015 - Added Hardware I2C support
 '    Evan R Venn/Anobium  ---  17/3/2015 - Revised to support AVR it handling
 '    Evan R Venn/Anobium  ---  24/4/2017 - Revised to remove NOT error
+'    Evan R Venn/Anobium  ---  15/3/2019 - Revised to remove errant CLS
+
 
 
 
@@ -2281,7 +2283,6 @@ sub DS3231_SetAlarmMask2 ( in DS_Status )
       HI2CSend(DS_AddrRead)
       HI2CReceive(DS_NewValue, NACK)                   ;get the current value
       HI2CStop
-cls
 
       DS_NewValue = DS_NewValue and 0b01111111        ;get all valid bits
       DS_Temp = DS_Status.0
