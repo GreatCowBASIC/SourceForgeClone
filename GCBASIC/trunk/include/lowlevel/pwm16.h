@@ -36,6 +36,7 @@
 ' 05/11/17   Revised to handle fixed mode operations, changed constants to map to PWM.h
 '            revised script hanlder, new init and code validation
 ' 11/11/17   Fixed problem with calculation of duty cycle
+' 26/01/19   Overflow/calculation errors fixed when working out duty cycle registers
 
 'By default, compile code for all PWM modeules
 'Set to false in user code to save on program space if module is not required
@@ -779,11 +780,8 @@ Sub HPWM16_setDC
 '
 'PWMDuty / 2^16 * (PWMxPR+1) = PWMxDC
 
-dim HPWM16_HPWM16_DCyA as Word
-dim HPWM16_HPWM16_DCyB as Word
-dim HPWM16_HPWM16_DCyB1 as Word
-dim HPWM16_HPWM16_DCyB2 as Word
 dim HPWM16_DCy as Word
+
 Dim PWMDuty as Word
 Dim HPWM16_PRPS_Req as Word
 
@@ -792,20 +790,9 @@ If PWMDuty = 65535 Then
   HPWM16_DCy = HPWM16_PRPS_Req + 1
   Goto SetDC
 End If
-'Calculate the product of PR and duty, but all divided by 2^16
-'but only using 16 bit Word variables to use
 
-'Multiply the two upper bytes together
-HPWM16_HPWM16_DCyA = (HPWM16_PRPS_Req_H * PWMDuty_h)
-'Multiply and add the upper/lower bytes
-'Add 1 to PRL, because duty cycle is based on PR+1 (+1 only affects lower Byte)
-'Use intermediate variables for the two multiplications, because doing it in 1 line seems to break it
-HPWM16_HPWM16_DCyB1 = ((HPWM16_PRPS_Req + 1) * PWMDuty_h)
-HPWM16_HPWM16_DCyB2 = (HPWM16_PRPS_Req_h * PWMDuty)
-HPWM16_HPWM16_DCyB = HPWM16_HPWM16_DCyB1 + HPWM16_HPWM16_DCyB2
-'Sum A*2^16 and B*2^8, but all divided by 2^16
-'i.e. A + B/2^8
-HPWM16_DCy = HPWM16_HPWM16_DCyA + HPWM16_HPWM16_DCyB / 256
+'Calculate the DC register, but use Long math to prevent overflow
+HPWM16_DCy = [long]PWMDuty * (HPWM16_PRPS_Req + 1) / 0xFFFF
 
 SetDC:
 
