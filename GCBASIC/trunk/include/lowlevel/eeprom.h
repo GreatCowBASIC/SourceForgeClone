@@ -39,6 +39,7 @@
 ' 16/3/16: Added supported for NVMADRH:NVMADRL
 ' 10/9/17: Removed depencies on Register.Bits - just use Bits. This prevents variables being created. And, change Script from NVMADRH to NVMADRL test.
 ' 21/10/18: Added EEPROM support for 18fxxq10 the   'Select DATA EE section (0x310000 - 0x3100FF) section
+' 20/02/19: Revised bit check to ensure bit exists in ProgWrite - Bit(EEPGD)
 
 'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 #script
@@ -262,7 +263,9 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
   IntOff
 
   'Select program memory
-  SET EEPGD ON
+  #IFDEF Bit(EEPGD)
+    SET EEPGD OFF
+  #ENDIF  SET EEPGD ON
   #IFDEF Bit(CFGS)
     Set CFGS OFF
   #ENDIF
