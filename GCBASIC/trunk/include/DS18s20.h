@@ -80,13 +80,6 @@ function ReadTemp
 
  ReadTemp = RxData / 2
 
- 'cls
- 'LCDInt (RxData/2)
- 'If RxData.0 1 Then Print ".5"
- 'If RxData.0 0 Then Print ".0"
- 'Print " Deg C"
- 'Wait 5 sec
- 'Goto Main
 end function
 
 '-----SUBS-----------------------------------------
@@ -101,10 +94,7 @@ end sub
 
 Sub PPulse  'Master receive DS18s20 presence pulse
   wait 70 us
-  'If DQ 0 Then
-  'cls
-  'Print "OW Device ACK"
-  'End if
+
   wait 43 10us
   Dir DQ In
 end sub
