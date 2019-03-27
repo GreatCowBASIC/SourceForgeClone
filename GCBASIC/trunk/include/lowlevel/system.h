@@ -55,7 +55,8 @@
 '    27052018 - Added 48mhz clock treatment for 18f USB parts for type 104 oscillator
 '    07062018 - Added 24mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    08062018 - Added 0.0625mhz  clock treatment for 16f USB parts for type 102 oscillator
-'    09012019 - Updated type 103 to support 18f25j53 class oscillator
+'    09012018 - Updated type 103 to support 18f25j53 class oscillator
+'    19002019 - Updated to remove script message and comment tidyup only
 
 
 
@@ -108,14 +109,6 @@ Sub InitSys
        #ENDIF
 
     #ENDIF
-
-   #if ChipIntOSCCONFormat > 0
-
-        asm ShowDebug ChipIntOSCCONFormat is ChipIntOSCCONFormat
-   #endif
-
-
-
 
     #ifdef PIC
         #ifdef Var(OSCCAL)
@@ -437,10 +430,10 @@ Sub InitSys
 
 
       #ifdef Bit(HFIOFS)
-        'The section now handles two true table for frequency
-        'Supports 18f2425 (type1 max frq of 8mhz) classes and 18f26k22 (type2 max frq of 16mhz) classes
+        'The section now handles two true tables for frequency
+        'Supports 16f and 18f (type1 max frq of 8mhz) classes and 18f (type2 max frq of 16mhz) classes
         'Assumes that testing the ChipMaxMHz >= 48 is a valid test for type2 microcontrollers
-        'Supports IntOsc MaxMhz of 64 and not 64 ... there may be others true tables that GCB needs to support
+        'Supports IntOsc MaxMhz of 64 and not 64 ... there may be others true tables that GCB needs to support in the future
 
         asm showdebug OSCCON type is 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
 
@@ -956,7 +949,7 @@ Sub InitSys
   #ENDIF
 
   #IFDEF Var(CM1CON0)
-    'Comparator register bits for 12F510,16F506, PIC16F1535 classes
+    'Comparator register bits for 12F510,16F506, PIC16F1535, 18f etc classes
     #IFDEF Var(CM2CON0)
       #IFDEF bit(C2ON)
         C2ON = 0
