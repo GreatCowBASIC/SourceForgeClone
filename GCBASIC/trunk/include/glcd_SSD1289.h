@@ -191,6 +191,9 @@ End Sub
 Sub InitGLCD_SSD1289
 
   Dim Orientation_SSD1289 as Byte
+
+
+    #if GLCD_TYPE = GLCD_TYPE_SSD1289
         Dim GLCDBackground as Byte
         Orientation_SSD1289 = 4 'PORTRAIT
 
@@ -300,6 +303,7 @@ Sub InitGLCD_SSD1289
             GLCDfntDefaultSize = 2
 
             GLCDCLS_SSD1289 GLCDBackground
+    #endif
 
 End Sub
 
@@ -903,7 +907,7 @@ Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as 
                     if wByte <> 0 then             ; if the incoming byte is the same as the background, dont draw
                           For CurrCharRow = 0 to 7
                                     If wByte.0 = 1 Then
-                                              PSet_SSD1289 TFTXPos+widthCount, CurrCharRow + TFTYPos, Color
+                                              PSet TFTXPos+widthCount, CurrCharRow + TFTYPos, Color
                                     End If
                                     Rotate wByte Right
                           Next
@@ -933,7 +937,7 @@ Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as 
             TableReadPosition++
             For CurrCharRow = 0 to maxHeight-1
                 If wByte.0 = 1 Then
-                   PSet_SSD1289 TFTXPos+widthCount, ( CurrCharRow + TFTYPos ), Color
+                   PSet TFTXPos+widthCount, ( CurrCharRow + TFTYPos ), Color
                 End If
                 Rotate wByte Right
             Next
@@ -979,7 +983,7 @@ Sub DrawBMP_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable a
                     TableReadPosition++
                     TFTX=[Word]TFTXPos+XCount
                     TFTY=[Word]TFTYPos+YCount
-                    PSet_SSD1289 TFTX, TFTY, PixelRGB
+                    PSet TFTX, TFTY, PixelRGB
                 Next
     Next
 End Sub
