@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-01-21"
+Version = "0.98.<<>> 2019-03-26 "
 #ifdef __FB_DARWIN__  'OS X/macOS
         #ifndef __FB_64BIT__
                 Version = Version + " (Darwin 32 bit)"
@@ -1898,16 +1898,23 @@ Sub AddInterruptCode
         End If
       ElseIf ChipFamily = 16 Then
         AddVar "SysBSR", "BYTE", 1, 0, "REAL", "", , -1
-        CurrLine = LinkedListInsert(CurrLine, ";Save Context")
-        CurrLine = LinkedListInsert(CurrLine, " movff WREG,SysW")
-        CurrLine = LinkedListInsert(CurrLine, " movff STATUS,SysSTATUS")
-        CurrLine = LinkedListInsert(CurrLine, " movff BSR,SysBSR")
-        CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
-        SaveVarPos = SaveVars->Next
-        Do While SaveVarPos <> 0
-          CurrLine = LinkedListInsert(CurrLine, " movff " + SaveVarPos->Value + ",Save" + SaveVarPos->Value)
-          SaveVarPos = SaveVarPos->Next
-        Loop
+
+        If ChipFamilyVariant = 1 then
+            CurrLine = LinkedListInsert(CurrLine, ";Use Automatic Context Save for K42 and K83 with MVECEN = OFF.  Interrupt priority not supported")
+        Else
+            CurrLine = LinkedListInsert(CurrLine, ";Save Context")
+            CurrLine = LinkedListInsert(CurrLine, " movff WREG,SysW")
+            CurrLine = LinkedListInsert(CurrLine, " movff STATUS,SysSTATUS")
+            CurrLine = LinkedListInsert(CurrLine, " movff BSR,SysBSR")
+            CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
+            SaveVarPos = SaveVars->Next
+            Do While SaveVarPos <> 0
+              CurrLine = LinkedListInsert(CurrLine, " movff " + SaveVarPos->Value + ",Save" + SaveVarPos->Value)
+              SaveVarPos = SaveVarPos->Next
+            Loop
+
+        End if
+
       End If
     End If
 
@@ -1946,16 +1953,20 @@ Sub AddInterruptCode
         CurrLine = LinkedListInsert(CurrLine, " swapf SysW,W")
         CurrLine = LinkedListInsert(CurrLine, " retfie")
       ElseIf ChipFamily = 16 Then
-        CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
-        SaveVarPos = SaveVars->Next
-        Do While SaveVarPos <> 0
-          CurrLine = LinkedListInsert(CurrLine, " movff Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
-          SaveVarPos = SaveVarPos->Next
-        Loop
-        CurrLine = LinkedListInsert(CurrLine, " movff SysW,WREG")
-        CurrLine = LinkedListInsert(CurrLine, " movff SysSTATUS,STATUS")
-        CurrLine = LinkedListInsert(CurrLine, " movff SysBSR,BSR")
-        CurrLine = LinkedListInsert(CurrLine, " retfie 0")
+        If ChipFamilyVariant = 1 then
+            CurrLine = LinkedListInsert(CurrLine, " retfie 1")
+        else
+            CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
+            SaveVarPos = SaveVars->Next
+            Do While SaveVarPos <> 0
+              CurrLine = LinkedListInsert(CurrLine, " movff Save" + SaveVarPos->Value + "," + SaveVarPos->Value)
+              SaveVarPos = SaveVarPos->Next
+            Loop
+            CurrLine = LinkedListInsert(CurrLine, " movff SysW,WREG")
+            CurrLine = LinkedListInsert(CurrLine, " movff SysSTATUS,STATUS")
+            CurrLine = LinkedListInsert(CurrLine, " movff SysBSR,BSR")
+            CurrLine = LinkedListInsert(CurrLine, " retfie 0")
+        end if
       End If
 
     Else
@@ -16531,6 +16542,4 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
   'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
   Return 0
 END FUNCTION
-
-
 
