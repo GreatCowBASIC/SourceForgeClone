@@ -2185,8 +2185,7 @@ SUB BuildMemoryMap
     FreeMem(PD) = 1
   Next
 
-    print NoBankLoc(1).StartLoc
-    print NoBankLoc(1).EndLoc
+
   'Mark locations as free if specified by a range
   'Do not mark non-banked locations as free yet
   For Range = 1 to MRC
