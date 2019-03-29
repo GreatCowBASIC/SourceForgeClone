@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-03-26 "
+Version = "0.98.<<>> 2019-03-28 "
 #ifdef __FB_DARWIN__  'OS X/macOS
         #ifndef __FB_64BIT__
                 Version = Version + " (Darwin 32 bit)"
@@ -2185,15 +2185,20 @@ SUB BuildMemoryMap
     FreeMem(PD) = 1
   Next
 
+    print NoBankLoc(1).StartLoc
+    print NoBankLoc(1).EndLoc
   'Mark locations as free if specified by a range
   'Do not mark non-banked locations as free yet
   For Range = 1 to MRC
     TempData = MemRanges(Range)
     Min = VAL("&h" + Left(TempData, INSTR(TempData, ":") - 1))
     Max = VAL("&h" + Mid(TempData, INSTR(TempData, ":") + 1))
+
+
     For L = Min To Max
       'On 16F1 chips, keep non-banked locations at end of list to make allocation of linear memory simpler
       If ChipFamily = 15 Then
+
         For CheckNonBanked = 1 To NoBankLocs
           If L >= NoBankLoc(CheckNonBanked).StartLoc And L <= NoBankLoc(CheckNonBanked).EndLoc Then
             FreeMem(L) = 2
@@ -2209,6 +2214,7 @@ SUB BuildMemoryMap
   'Produce list of free memory locations
   T = 0
   'Banked locations first
+
   For PD = 1 To MemSize
     If FreeMem(PD) = 0 Then
       T += 1
@@ -16542,4 +16548,3 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
   'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
   Return 0
 END FUNCTION
-

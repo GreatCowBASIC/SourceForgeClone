@@ -146,11 +146,6 @@
 #define ILI9340_NAVY    0x0010
 #define ILI9340_FUCHSIA 0xF81F
 
-
-
-#startup InitGLCD_ILI9340
-
-
 #script
     userspecifiedHWSPIMode = 0
     if HWSPIMode then
@@ -167,6 +162,9 @@
         userspecifiedHWSPIMode = 1
     end if
 #endscript
+
+#startup InitGLCD_ILI9340
+
 
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9340
@@ -188,8 +186,9 @@ Sub InitGLCD_ILI9340
     Dir ILI9340_SCK Out
 
     #ifdef ILI9340_HardwareSPI
-      ' harware SPI mode
-      SPIMode HWSPIMODESCRIPT, 0
+          ' harware SPI mode
+          asm showdebug SPI constant used equates to HWSPIMODESCRIPT
+          SPIMode HWSPIMODESCRIPT, 0
     #endif
 
    Set ILI9340_CS On
@@ -357,9 +356,6 @@ Sub GLCDCLS_ILI9340 ( Optional In  GLCDBackground as word = GLCDBackground )
       repeat ILI9340_GLCD_HEIGHT
 
         #ifdef ILI9340_HardwareSPI
-'         Could use these as an alternative
-'         SPITransfer  ILI9340SendWord_h
-'         SPITransfer  ILI9340SendWord
 
           #ifdef PIC
 

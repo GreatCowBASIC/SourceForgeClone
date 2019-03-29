@@ -108,7 +108,22 @@
 #define SSD1331_FUCHSIA 0xF81F
 
 
+#script
+    userspecifiedHWSPIMode = 0
+    if HWSPIMode then
+        HWSPIMODESCRIPT = HWSPIMode
+        userspecifiedHWSPIMode = 1
+    end if
 
+    if userspecifiedHWSPIMode = 0 then
+        HWSPIMODESCRIPT = MasterFast
+        'If the ChipMHz > 32 then user Master NOT MasterFast
+        if ChipMHz > 32 then
+            HWSPIMODESCRIPT = Master
+        end if
+        userspecifiedHWSPIMode = 1
+    end if
+#endscript
 
 
 #startup InitGLCD_SSD1331
@@ -141,8 +156,9 @@ Sub InitGLCD_SSD1331
     Dir SSD1331_SCK Out
 
     #ifdef SSD1331_HardwareSPI
-      ' harware SPI mode
-      SPIMode MasterFast, 0
+          ' harware SPI mode
+          asm showdebug SPI constant used equates to HWSPIMODESCRIPT
+          SPIMode HWSPIMODESCRIPT, 0
     #endif
 
    Set SSD1331_CS On

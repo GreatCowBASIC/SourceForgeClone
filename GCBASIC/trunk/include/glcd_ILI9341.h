@@ -188,6 +188,7 @@ Sub InitGLCD_ILI9341
 
     #ifdef ILI9341_HardwareSPI
       ' harware SPI mode
+      asm showdebug SPI constant used equates to HWSPIMODESCRIPT
       SPIMode HWSPIMODESCRIPT, 0
     #endif
 
@@ -559,9 +560,6 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
       repeat 38400  'ILI9341_GLCD_HEIGHT
 
         #ifdef ILI9341_HardwareSPI
-'         Could use these as an alternative
-'         FastHWSPITransfer  ILI9341SendWord_h
-'         FastHWSPITransfer  ILI9341SendWord
 
           #ifdef PIC
 
