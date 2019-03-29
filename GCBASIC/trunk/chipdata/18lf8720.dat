@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF8720
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 30/04/2018
+'Header Format last revised: 28/03/2019
 
 [ChipData]
 Prog=65536
@@ -15,6 +15,9 @@ Pins=80
 Family=16
 PSP=1
 MaxAddress=4095
+Stacks=31
+UserIDAddress=2097152
+UserIDLength=8
 
 [Interrupts]
 ADCReady:ADIE,ADIF

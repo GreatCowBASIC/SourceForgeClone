@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16LF1579
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 30/04/2018
+'Header Format last revised: 28/03/2019
 
 [ChipData]
 Prog=8192
@@ -18,6 +18,9 @@ PSP=0
 MaxAddress=4095
 HEFMemWords=128
 EraseRowSizeWords=32
+Stacks=16
+UserIDAddress=32768
+UserIDLength=4
 
 [Interrupts]
 ADCReady:ADIE,ADIF
