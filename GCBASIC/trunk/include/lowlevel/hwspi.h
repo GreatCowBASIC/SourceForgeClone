@@ -30,6 +30,15 @@
 ' 29/3/2016: Adapted to add 18f support in FastHWSPITransfer
 ' 19/10/2017: Added support SPI Specific Module, aka K42 chips
 ' 29/02/2019: Added MasterUltraFast option for AVR Meag328p
+' 29/03/2019: Major update for the K42 SPI support
+'              For the K42 type SPI MODULE ONLY - for hardware SPI only
+'              Specify a SPI baud rate - the baud rate is dependent on the chip frequency!  If you get nothing, you have exceeded the SPI, so, slow the BAUD RATE or use the SPI_BAUD_RATE_REGISTER constant
+'              #define SPI_BAUD_RATE 8000
+'              or, use an Explicit setting show below
+'              #define SPI_BAUD_RATE_REGISTER 3
+'
+'              Scripts added to calculate the baudrate
+'              Update the SPIMode to using 1/4, 1/16 and 1/64 of clock speed when using SPIMode if Baud rate not set
 
 
 'To make the PIC pause until it receives an SPI message while in slave mode, set the
@@ -67,39 +76,61 @@
 #define SSP1_HFINTOSC            1
 #define SSP1_FOSC                0
 
+'K42 or the SPI module specific constants
 #define SPI_RX_IN_PROGRESS       0x00
 
 #script
+    'create a constant, as this IS needed, if the user have not defined
+    USERHASDEFINETHESPI_BAUD_RATE = 0
+    IF SPI_BAUD_RATE THEN
+        USERHASDEFINETHESPI_BAUD_RATE = 1
+        IF INT( INT( ChipMhz * 1000) / SPI_BAUD_RATE ) < 8 THEN
+            Warning "SPI_BAUD_RATE specified may exceed SPI module capabilities"
+        END IF
+    END IF
+    IF USERHASDEFINETHESPI_BAUD_RATE = 0 THEN
+        SPI_BAUD_RATE = INT(ChipMhz/4)*1000
+    END IF
 
-    SPI1Delay_Script = 1
 
-    if ChipMhz > 48 then
-        SPI1Delay_Script = 1
-    end if
-
-    if ChipMhz > 32 then
-        SPI1Delay_Script = 2
-    end if
-
-    if ChipMhz > 16 then
-        SPI1Delay_Script = 4
-    end if
-
-    if ChipMhz > 8 then
-        SPI1Delay_Script = 8
-    end if
-
-    if ChipMhz > 4 then
-        SPI1Delay_Script = 10
+    'calculate a delay if needed
+    SPI1DELAY_SCRIPT = 1
+    if ChipMhz > 0 then
+        SPI1DELAY_SCRIPT = 30
     end if
 
     if ChipMhz > 2 then
-        SPI1Delay_Script = 20
+        SPI1DELAY_SCRIPT = 20
     end if
 
-    if ChipMhz > 0 then
-        SPI1Delay_Script = 30
+    if ChipMhz > 4 then
+        SPI1DELAY_SCRIPT = 10
     end if
+
+    if ChipMhz > 8 then
+        SPI1DELAY_SCRIPT = 8
+    end if
+
+    if ChipMhz > 16 then
+        SPI1DELAY_SCRIPT = 4
+    end if
+
+    if ChipMhz > 32 then
+        SPI1DELAY_SCRIPT = 2
+    end if
+
+    if ChipMhz > 48 then
+        SPI1DELAY_SCRIPT = 1
+    end if
+
+    'Calculate SPI Baud Rate for SPImode modules on K42 per datasheet
+    SPIBAUDRATE_SCRIPT = INT( ChipMHz / INT( SPI_BAUD_RATE  ) / 2 * 1000) - 1
+
+    'Calculate SPI Baud Rate for SPImode modules on K42 per datasheet
+    SPIBAUDRATE_SCRIPT_MASTER = INT( ChipMHz / INT( SPI_BAUD_RATE /4  ) / 2 * 1000) -1
+
+    'Calculate SPI Baud Rate for SPImode modules on K42 per datasheet
+    SPIBAUDRATE_SCRIPT_MASTERSLOW = INT(ChipMHz / INT( SPI_BAUD_RATE / 16  ) / 2 * 1000) -1
 
 #endscript
 
@@ -116,8 +147,10 @@ Sub SPIMode (In SPICurrentMode)
       #endif
     #endif
 
-    'Supports Legacy SPI via MSSP module
+
     #ifdef Var(SSPCON1)
+        'Supports Legacy SPI via MSSP module
+
         'Turn off SPI
         '(Prevents any weird glitches during setup)
         Set SSPCON1.SSPEN Off
@@ -158,8 +191,11 @@ Sub SPIMode (In SPICurrentMode)
     #endif
 
 
-    'Supports K mode SPI using the specific SPI module
+
     #ifdef Var(SPI1CON0)
+
+         'Supports K mode SPI using the specific SPI module
+
         'Turn off SPI
         '(Prevents any weird glitches during setup)
         SPI1CON0_EN = 0
@@ -205,34 +241,39 @@ Sub SPIMode (In SPICurrentMode)
 
         Select Case SPICurrentMode
           Case MasterFast or MasterUltraFast
-            SPI1CLK = SSP1_FOSC
+            asm showdebug Script value is calculated as SPIBAUDRATE_SCRIPT
+            SPI1BAUD = SPIBAUDRATE_SCRIPT
             SPI1CON0.MST = 1
           Case Master
-            SPI1CLK = SSP1_HFINTOSC
+            asm showdebug Script value is calculated as SPIBAUDRATE_SCRIPT_MASTER
+            SPI1BAUD = SPIBAUDRATE_SCRIPT_MASTER
             SPI1CON0.MST = 1
           Case MasterSlow
-            SPI1CLK = SSP1_MFINTOSC
+            asm showdebug Script value is calculated as SPIBAUDRATE_SCRIPT_MASTERSLOW
+            SPI1BAUD = SPIBAUDRATE_SCRIPT_MASTERSLOW
             SPI1CON0.MST = 1
           Case Slave
-            'need to add clock here?
+
             SPI1CON0.MST = 0
             #ifdef SPI1_SCK
               dir SPI1_SCK      in
             #endif
           Case SlaveSS
-            'need to add clock here?
+
             SPI1CON0.MST = 0
             #ifdef SPI1_SCK
               dir SPI1_SCK      in
             #endif
         End Select
 
-        'Baud Rate
-        SPI1BAUD = 0x7f
+
+        #ifdef SPI_BAUD_RATE_REGISTER
+         'override the script calculation
+          SPI1BAUD = SPI_BAUD_RATE_REGISTER
+        #endif
 
         'Enable SPI
         SPI1CON0.EN = 1
-
     #endif
 
   #endif
@@ -294,8 +335,10 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
       #endif
     #endif
 
-    'Supports Legacy SPI via MSSP module
+
     #ifdef Var(SSPCON1)
+        'Supports Legacy SPI via MSSP module
+
         'added for 16f18855
         #ifndef Var(SSPCON1)
           #ifdef Var(SSP1CON1)
@@ -358,8 +401,10 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
         Set SSPCON1.SSPEN On
     #endif
 
-    'Supports K mode SPI using the specific SPI module
+
     #ifdef Var(SPI1CON0)
+        'Supports K mode SPI using the specific SPI module
+
         'Turn off SPI
         '(Prevents any weird glitches during setup)
         SPI1CON0_EN = 0
@@ -413,32 +458,38 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
         SPI1CLK = SSP1_FOSC
 
         Select Case SPICurrentMode
-        Case MasterFast or MasterUltraFast
-          SPI1CLK = SSP1_FOSC
-          SPI1CON0.MST = 1
-        Case Master
-          SPI1CLK = SSP1_HFINTOSC
-          SPI1CON0.MST = 1
-        Case MasterSlow
-          SPI1CLK = SSP1_MFINTOSC
-          SPI1CON0.MST = 1
-        Case Slave
-          'need to add clock here?
-          SPI1CON0.MST = 0
-        #ifdef SPI1_SCK
-          dir SPI1_SCK      in
-        #endif
+            Case MasterFast or MasterUltraFast
+              asm showdebug Script value is calculated as SPIBAUDRATE_SCRIPT
+              SPI1BAUD = SPIBAUDRATE_SCRIPT
+              SPI1CON0.MST = 1
+            Case Master
+              asm showdebug Script value is calculated as SPIBAUDRATE_SCRIPT_MASTER
+              SPI1BAUD = SPIBAUDRATE_SCRIPT_MASTER
+              SPI1CON0.MST = 1
+            Case MasterSlow
+              asm showdebug Script value is calculated as SPIBAUDRATE_SCRIPT_MASTERSLOW
+              SPI1BAUD = SPIBAUDRATE_SCRIPT_MASTERSLOW
+              SPI1CON0.MST = 1
+            Case Slave
+              SPI1CON0.MST = 0
+            #ifdef SPI1_SCK
+              dir SPI1_SCK      in
+            #endif
 
-        Case SlaveSS
-          'need to add clock here?
-          SPI1CON0.MST = 0
-        #ifdef SPI1_SCK
-          dir SPI1_SCK      in
-        #endif
+            Case SlaveSS
+              SPI1CON0.MST = 0
+            #ifdef SPI1_SCK
+              dir SPI1_SCK      in
+            #endif
+
         End Select
 
-        'Baud Rate
-        SPI1BAUD = 0x7f
+
+        #ifdef SPI_BAUD_RATE_REGISTER
+        'override the script calculation
+          SPI1BAUD = SPI_BAUD_RATE_REGISTER
+        #endif
+
 
         'Enable SPI
         SPI1CON0.EN = 1
@@ -544,12 +595,11 @@ Sub HWSPITransfer(In SPITxData, Out SPIRxData)
 
       'One byte transfer count
       SPI1TCNTL = 1
-'      SPI1CON2.RXR=1
       SPI1TXB = SPITxData
 
-      wait while PIR2.SPI1RXIF = SPI_RX_IN_PROGRESS
+      wait while SPI1RXIF = SPI_RX_IN_PROGRESS
       SPIRxData = SPI1RXB
-      wait SPI1Delay_Script us
+
     #endif
 
   #endif
@@ -607,12 +657,10 @@ Sub FastHWSPITransfer( In SPITxData )
 
       'One byte transfer count
       SPI1TCNTL = 1
-'      SPI1CON2.RXR=1
       SPI1TXB = SPITxData
 
-      wait while PIR2.SPI1RXIF = SPI_RX_IN_PROGRESS
+      wait while SPI1RXIF = SPI_RX_IN_PROGRESS
       SPIRxData = SPI1RXB
-      wait SPI1Delay_Script us
 
     #endif
 
