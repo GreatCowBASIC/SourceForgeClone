@@ -189,6 +189,21 @@
     end if
   end if
 
+  userspecifiedHWSPIMode = 0
+  if HWSPIMode then
+      HWSPIMODESCRIPT = HWSPIMode
+      userspecifiedHWSPIMode = 1
+  end if
+
+  if userspecifiedHWSPIMode = 0 then
+      HWSPIMODESCRIPT = MasterFast
+      'If the ChipMHz > 32 then user Master NOT MasterFast
+      if ChipMHz > 32 then
+          HWSPIMODESCRIPT = Master
+      end if
+      userspecifiedHWSPIMode = 1
+  end if
+
 #endscript
 
 #startup InitGLCD_ILI9486L
@@ -265,7 +280,8 @@ Sub InitGLCD_ILI9486L
 
         #ifdef ILI9486L_HardwareSPI
           ' harware SPI mode
-          SPIMode MasterFast, 0
+          asm showdebug SPI constant used equates to HWSPIMODESCRIPT
+          SPIMode HWSPIMODESCRIPT, 0
         #endif
 
        Set ILI9486L_CS On
