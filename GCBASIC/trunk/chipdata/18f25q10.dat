@@ -1,12 +1,12 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F25Q10
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 30/04/2018
+'Header Format last revised: 28/03/2019
 
 [ChipData]
 Prog=16384
 EEPROM=256
-RAM=1024
+RAM=2048
 I/O=25
 ADC=24
 MaxMHz=64
@@ -16,6 +16,9 @@ Family=16
 PSP=0
 MaxAddress=4095
 PWMTimerVariant=2
+Stacks=31
+UserIDAddress=2097152
+UserIDLength=8
 
 [Interrupts]
 ADCReady:ADIE,ADIF
@@ -2929,7 +2932,7 @@ SP4,STKPTR,4
 SP5,STKPTR,5
 
 [FreeRAM]
-0:3FF
+0:7FF
 
 [NoBankRAM]
 

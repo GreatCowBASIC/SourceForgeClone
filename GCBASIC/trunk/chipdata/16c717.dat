@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C717
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 30/04/2018
+'Header Format last revised: 28/03/2019
 
 [ChipData]
 Prog=2048
@@ -16,6 +16,7 @@ Family=14
 ConfigWords=1
 PSP=0
 MaxAddress=511
+Stacks=8
 
 [Interrupts]
 ADCReady:ADIE,ADIF

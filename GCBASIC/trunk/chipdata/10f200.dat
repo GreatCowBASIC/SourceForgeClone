@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 10F200
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 30/04/2018
+'Header Format last revised: 28/03/2019
 
 [ChipData]
 Prog=256
@@ -16,6 +16,9 @@ Family=12
 ConfigWords=1
 PSP=0
 MaxAddress=31
+Stacks=2
+UserIDAddress=256
+UserIDLength=4
 
 [Interrupts]
 
