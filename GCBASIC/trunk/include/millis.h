@@ -23,6 +23,7 @@
 ' 02/01/2019: 8 Bit TIMER0, 1Mhz - 32Mhz Clock support - ChrisR
 ' 04/01/2019: Add PIC support for 16Bit Timer0 - EvanV / ChrisR
 ' 06/01/2019: Add  support for 16Bit Timer0 no postscaler - EvanV
+' 04/04/2019: Add AVR support
 '***********************************************************
 
 'Subroutines:
@@ -43,6 +44,8 @@
 '
 ' On most 18F or Enhanced Core 16F PICS, Timer 0 can be either an 8-Bit ' or 16-Bit timer.  On these chips this is determined by TC0CON.6
 ' (T08BIT). The timer defaults to 8-bit.
+'
+' On AVR.  8bit timer.
 '*********************************************************
 '
 
@@ -306,26 +309,31 @@ End Function
 'Code taken from timer.h
 macro SetTimer_Millis ( In TMRValueMillis As Word)
 
+    #ifdef PIC
+        #ifndef Var(TMR0H)
+         ' Handle chips withOUT TMR0H
+           TMR0 = TMRValueMillis
+        #endif
 
-    #ifndef Var(TMR0H)
-     ' Handle chips withOUT TMR0H
-       TMR0 = TMRValueMillis
+        #ifdef Var(TMR0H)
+         ' Handle chips with TMR0H
+
+           #ifdef TMR0_16BIT
+              TMR0H = TMRValueMillis_H
+              TMR0L = TMRValueMillis
+           #endif
+
+
+           #ifndef TMR0_16BIT
+              ' USe default 8-bit mode
+               TMR0L = TMRValueMillis
+           #endif
+
+        #endif
     #endif
 
-    #ifdef Var(TMR0H)
-     ' Handle chips with TMR0H
-
-       #ifdef TMR0_16BIT
-          TMR0H = TMRValueMillis_H
-          TMR0L = TMRValueMillis
-       #endif
-
-
-       #ifndef TMR0_16BIT
-          ' USe default 8-bit mode
-           TMR0L = TMRValueMillis
-       #endif
-
+    #ifdef AVR
+        TCNT0 = TMRValueMillis
     #endif
 
 End macro
