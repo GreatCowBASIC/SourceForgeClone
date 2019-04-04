@@ -2348,8 +2348,10 @@ SUB CalcConfig
           DesiredSetting = "OFF"
         ElseIf ConfigNameMatch(.Name, "CP") Then
           DesiredSetting = "OFF"
-
-
+        ElseIf ConfigNameMatch(.Name, "CLKOUTEN") Then
+          DesiredSetting = "OFF"
+        ElseIf ConfigNameMatch(.Name, "VCAPEN") Then
+          DesiredSetting = "OFF"
         ElseIf ConfigNameMatch(.Name, "OSC") Then
           'Get setting from #osc directive
           IF OSCType <> "" Then
