@@ -19,6 +19,8 @@
 ' Supports ILI9326 controller only.
 
 'Changes
+' 03/04/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
+' 11/04/2019 Revised to clean up position and therefore the bleeding of constants into ASM
 
 'Hardware settings
 'Type
@@ -33,18 +35,15 @@
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9326; Reset; GLCD_RST; IO_Pin
 
 
-      #define ILI9326_DataPort GLCD_DataPort
-
-      #define ILI9326_GLCD_RST GLCD_RST
-      #define ILI9326_GLCD_CS  GLCD_CS
-      #define ILI9326_GLCD_RS  GLCD_RS
-      #define ILI9326_GLCD_WR  GLCD_WR
-      #define ILI9326_GLCD_RD  GLCD_RD
-
-
-
 #startup InitGLCD_ILI9326
 
+#define ILI9326_DataPort GLCD_DataPort
+
+#define ILI9326_GLCD_RST GLCD_RST
+#define ILI9326_GLCD_CS  GLCD_CS
+#define ILI9326_GLCD_RS  GLCD_RS
+#define ILI9326_GLCD_WR  GLCD_WR
+#define ILI9326_GLCD_RD  GLCD_RD
 
 'standard colors same as the TFT colors
 #define ILI9326_WHITE   TFT_WHITE
@@ -152,14 +151,9 @@ Dim ILI9326_GLCD_WIDTH, ILI9326_GLCD_HEIGHT as word
 'initialise the GLCD - see datasheet
 sub InitGLCD_ILI9326
 
+  #if GLCD_TYPE = GLCD_TYPE_ILI9326
 
-      #define ILI9326_DataPort GLCD_DataPort
 
-      #define ILI9326_GLCD_RST GLCD_RST
-      #define ILI9326_GLCD_CS  GLCD_CS
-      #define ILI9326_GLCD_RS  GLCD_RS
-      #define ILI9326_GLCD_WR  GLCD_WR
-      #define ILI9326_GLCD_RD  GLCD_RD
 
       dir ILI9326_dataPort out
       dir ILI9326_GLCD_RST out
@@ -263,8 +257,15 @@ sub InitGLCD_ILI9326
       ILI9326_GLCD_HEIGHT_ADJ = GLCD_HEIGHT - 1
 
       'Default Colours
-      GLCDBackground = ILI9326_BLACK
       GLCDForeground = ILI9326_WHITE
+      'Default Colours
+      #ifdef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+      #endif
+
+      #ifndef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = ILI9326_BLACK
+      #endif
 
       'Variables required for device
       ILI9326_GLCD_WIDTH = GLCD_WIDTH
@@ -279,17 +280,18 @@ sub InitGLCD_ILI9326
 
       GLCDfntDefaultsize = 1
 
-
-'      GLCDRotate( Portrait  )
-
       'Clear screen
       GLCDCLS ( GLCDBackground )
+  #ENDIF
+
 end sub
 
 
 'Subs
 '''Clears the GLCD screen
 sub GLCDCLS_ILI9326 ( Optional In  GLCDBackground as word = GLCDBackground )
+
+  #if GLCD_TYPE = GLCD_TYPE_ILI9326
 
     ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
     GLCD_yordinate = 0
@@ -325,6 +327,7 @@ sub GLCDCLS_ILI9326 ( Optional In  GLCDBackground as word = GLCDBackground )
     sendCommand_ili9326(ILI9326_GRAM_ADDR_H_SET)
     sendData_ili9326( 0 )
 
+  #endif
 
 end sub
 
@@ -379,6 +382,7 @@ end sub
 '''@hide
 sub SendCommand_ili9326(ILI9326_SENDWORD as word)
 
+  #if GLCD_TYPE = GLCD_TYPE_ILI9326
     set ILI9326_GLCD_CS OFF
     set ILI9326_GLCD_RS OFF
     set ILI9326_GLCD_RD ON
@@ -393,7 +397,7 @@ sub SendCommand_ili9326(ILI9326_SENDWORD as word)
 
     set ILI9326_GLCD_WR OFF
     set ILI9326_GLCD_WR ON
-
+  #endif
 end sub
 
 '''Send a datat to the ILI9326 GLCD
@@ -401,6 +405,7 @@ end sub
 '''@hide
 sub SendData_ILI9326(ILI9326_SENDWORD as word)
 
+  #if GLCD_TYPE = GLCD_TYPE_ILI9326
     set ILI9326_GLCD_RS ON
 
     ILI9326_DataPort=ILI9326_SENDWORD_h
@@ -412,7 +417,7 @@ sub SendData_ILI9326(ILI9326_SENDWORD as word)
 
     set ILI9326_GLCD_WR OFF
     set ILI9326_GLCD_WR ON
-
+  #endif
 end sub
 
 

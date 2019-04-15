@@ -44,6 +44,8 @@
 '    07/12/18 Remove silly script warning
 '    24/1/19  Added GLCD_TYPE_ILI9486  to map to GLCD_TYPE_ILI9486L
 '    6/3/19   Added GLCD_TYPE_UC8320/ILI9320  to map to GLCD_TYPE_UC8320/ILI9320
+'    3/4/19   Moved DrawBMP from SSD1289 libary to GLCD.H
+'    14/4/19  Added GLCDPrintWithSize and update DrawEllipse routine
 
 
 
@@ -676,6 +678,54 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as str
 End Sub
 
 
+'''Displays a message
+'''@param PrintLocX X coordinate for message
+'''@param PrintLocY Y coordinate for message
+'''@param PrintData Message to display
+'''@param Fontsize to use
+
+Sub GLCDPrintWithSize(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as string, In _GLCDPrintSize as byte, Optional In _LineColour as word = GLCDForeground )
+  'GLCD.h Sub GLCDPrintWithSize for strings
+
+  Dim GLCDPrintLoc  as word
+  Dim GLCDPrint_String_Counter, GLCDPrintLen as byte
+
+  'Support for optional parameter Store font size
+  Dim Old_GLCDPrintSize as byte
+  Old_GLCDPrintSize = GLCDFntDefaultSize
+  GLCDFntDefaultSize = _GLCDPrintSize
+
+  Dim Old_LineColour as word
+  Old_LineColour = GLCDForeground
+  GLCDForeground = _LineColour
+
+  GLCDPrintLen = LCDPrintData(0)
+  If GLCDPrintLen = 0 Then Exit Sub
+
+  #ifdef GLCD_OLED_FONT
+      dim OldGLCDFontWidth as Byte
+      OldGLCDFontWidth = GLCDFontWidth
+  #endif
+
+  GLCDPrintLoc = PrintLocX
+
+  'Write Data
+  For GLCDPrint_String_Counter = 1 To GLCDPrintLen
+    GLCDDrawChar  GLCDPrintLoc, PrintLocY, LCDPrintData(GLCDPrint_String_Counter)
+    GLCDPrintIncrementPixelPositionMacro
+  Next
+
+  #ifdef GLCD_OLED_FONT
+      GLCDFontWidth = OldGLCDFontWidth
+  #endif
+
+  'Restore font size
+  GLCDFntDefaultSize = Old_GLCDPrintSize
+  GLCDForeground = Old_LineColour
+
+End Sub
+
+
 
 
 '''Displays a number
@@ -747,6 +797,57 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, In LCDValue As Long, I
 
 End Sub
 
+
+'''Displays a number
+'''@param PrintLocX X coordinate for message
+'''@param PrintLocY Y coordinate for message
+'''@param LCDValue Number to display
+'''@param Fontsize to use
+Sub GLCDPrintWithSize(In PrintLocX as word, In PrintLocY as word, In LCDValue As Long, In _GLCDPrintSize as byte, Optional In _LineColour as word = GLCDForeground )
+  'GLCD.h Sub GLCDPrintWithSize for numbers
+
+  Dim SysCalcTempA As Long
+  Dim GLCDPrintLoc as word
+  Dim SysPrintBuffer(10)
+  SysPrintBuffLen = 0
+
+  'Support for optional parameter Store font size
+  Dim Old_GLCDPrintSize as byte
+  Old_GLCDPrintSize = GLCDFntDefaultSize
+  GLCDFntDefaultSize = _GLCDPrintSize
+
+  Dim Old_LineColour as word
+  Old_LineColour = GLCDForeground
+  GLCDForeground = _LineColour
+
+  #ifdef GLCD_OLED_FONT
+      dim OldGLCDFontWidth as Byte
+      OldGLCDFontWidth = GLCDFontWidth
+  #endif
+
+  Do
+    'Divide number by 10, remainder into buffer
+    SysPrintBuffLen += 1
+    SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
+    LCDValue = SysCalcTempA
+  Loop While LCDValue <> 0
+
+  'Display
+  GLCDPrintLoc = PrintLocX
+  For GLCDPrint_String_Counter = SysPrintBuffLen To 1 Step -1
+    GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(GLCDPrint_String_Counter) + 48
+    GLCDPrintIncrementPixelPositionMacro
+  Next
+
+  #ifdef GLCD_OLED_FONT
+      GLCDFontWidth = OldGLCDFontWidth
+  #endif
+
+  'Restore font size
+  GLCDFntDefaultSize = Old_GLCDPrintSize
+  GLCDForeground = Old_LineColour
+
+End Sub
 
 
 Macro GLCDPrintIncrementPixelPositionMacro
@@ -3129,6 +3230,8 @@ End Sub
 Sub DrawEllipseRoutine( in xoffset as word, in yoffset as word, in Inxradius as word,in Inyradius as word,Optional In LineColour as word = GLCDForeground )
 
 'Version 1.00 (08/20/2017) by Joseph Realmuto
+'Version 1.01 (14/04/2019) by Giuseppe D'Elia
+
 'draws an ellipse outline at location (xoffset, yoffset) if filled_ellipse = 0
 'draws a filled ellipse at location (xoffset, yoffset) if filled_ellipse = 1
 'Inxradius is x radius of ellipse
@@ -3146,7 +3249,8 @@ Sub DrawEllipseRoutine( in xoffset as word, in yoffset as word, in Inxradius as 
   IF Inxradius<2 THEN exit sub
   IF Inyradius<2 THEN exit sub
 
-  dim GLCD_xx, GLCD_yy, GLCD_rx2, GLCD_ry2, GLCD_fx2, GLCD_fy2, GLCD_ex2, GLCD_ey2 as Word
+  dim GLCD_xx, GLCD_yy, GLCD_rx2, GLCD_ry2 as Word
+  dim  GLCD_fx2, GLCD_fy2, GLCD_ex2, GLCD_ey2 as Long
   dim GLCD_px, GLCD_py, GLCD_pp, GLCD_pp_temp as Long
 
   GLCD_rx2 = Inxradius * Inxradius
@@ -3255,6 +3359,9 @@ Sub DrawEllipseRoutine( in xoffset as word, in yoffset as word, in Inxradius as 
   LOOP
 
 End Sub
+
+
+
 
 Sub Draw_Ellipse_Points
   dim LineColour as word
@@ -3386,6 +3493,48 @@ Sub FilledTriangle (  in xoffset as word, in yoffset as word, in xoffset2 as wor
 End Sub
 
 
+'''Display BMP on the screen
+Sub DrawBMP ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as word)
+    Dim TableReadPosition, TableLen, SelectedTable as word
+    ' Start of code
+    Dim  PixelRGB , XCount, YCount, TFTYEnd, objwidth, objHeight, TableReadPosition, TFTX , TFTY as Word
+    TableReadPosition = 1
+    'Read selected table
+    Select Case SelectedTable
+        Case @TableImage1: ReadTable TableImage1, TableReadPosition, objwidth
+             TableReadPosition++
+             ReadTable TableImage1, TableReadPosition, objHeight
+        Case @TableImage2: ReadTable TableImage2, TableReadPosition, objwidth
+             TableReadPosition++
+             ReadTable TableImage2, TableReadPosition, objHeight
+        Case @TableImage3: ReadTable TableImage3, TableReadPosition, objwidth
+             TableReadPosition++
+             ReadTable TableImage3, TableReadPosition, objHeight
+        Case @TableImage4: ReadTable TableImage4, TableReadPosition, objwidth
+             TableReadPosition++
+             ReadTable TableImage4, TableReadPosition, objHeight
+        Case @TableImage5: ReadTable TableImage5, TableReadPosition, objwidth
+             TableReadPosition++
+             ReadTable TableImage5, TableReadPosition, objHeight
+    End Select
+    TableReadPosition = 3
+    For YCount = 0 to (objHeight - 1)
+                For XCount = 0 to (objwidth - 1)
+                    'Read selected table
+                    Select Case SelectedTable
+                    Case @TableImage1: ReadTable TableImage1, TableReadPosition, PixelRGB
+                    Case @TableImage2: ReadTable TableImage2, TableReadPosition, PixelRGB
+                    Case @TableImage3: ReadTable TableImage3, TableReadPosition, PixelRGB
+                    Case @TableImage4: ReadTable TableImage4, TableReadPosition, PixelRGB
+                    Case @TableImage5: ReadTable TableImage5, TableReadPosition, PixelRGB
+                    End Select
+                    TableReadPosition++
+                    TFTX=[Word]TFTXPos+XCount
+                    TFTY=[Word]TFTYPos+YCount
+                    PSet TFTX, TFTY, PixelRGB
+                Next
+    Next
+End Sub
 
 Table OLEDFont2 as byte
 0x00
