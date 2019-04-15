@@ -20,6 +20,7 @@
 '********************************************************************************
 '      08.02.2019         Initial release.  Tested on 16f1939, see the demos for the test suite.
 '      16.02.2019         Added 8bit in addressing for 8-bit data bus
+'      11.04.2019         Revised to clean up position and therefore the bleeding of constants into ASM
 
 
 
@@ -288,6 +289,16 @@
             STA7 =  GLCD_DB7   'Check the blink condition
         end if
 
+
+      'for LCDCURSOR Sub to prevent bleed across other code
+      LCDON     = 4
+      FLASHON   = 3
+      FLASH     = 3
+      CursorON  = 2
+      FLASHOFF  = 0xFC   'an AND MASK
+      CursorOFF = 0xFD  'an AND MASK
+      LCDOFF    = 0xFB     'an AND MASK
+
     #endscript
 
 #startup InitGLCD_T6963
@@ -497,16 +508,7 @@ end sub
 '''@param LCDValue optional number lines that make up the cursor.
 sub LCDCursor_T6963(In LCDCRSR, optional in line_x_cursor = 1 )
 
-      'for LCDCURSOR Sub
-      #define LCDON 4
-
-      #define FLASHON 3
-      #define FLASH 3
-      #define CursorON 2
-
-      #define FLASHOFF 0xFC   'an AND MASK
-      #define CursorOFF 0xFD  'an AND MASK
-      #define LCDOFF 0xFB     'an AND MASK
+      'DEFINES ARE DEFINED IN THE SCRIPT
 
       dim DefaultDisplayModeState_T6963 as byte
       'adjust for line count

@@ -20,6 +20,7 @@
 
 'Changes
   '7/6/2018 Initial release including OLED fonts
+  '3/4/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
 
 
 'Hardware settings
@@ -181,8 +182,16 @@ Sub InitGLCD_uc8230
 
       wait 120 ms
       'Colours
-      GLCDBackground = uc8230_BLACK
       GLCDForeground = uc8230_WHITE
+      'Default Colours
+      #ifdef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+      #endif
+
+      #ifndef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = uc8230_BLACK
+      #endif
+
 
       #ifndef GLCD_OLED_FONT
         GLCDFontWidth = 6

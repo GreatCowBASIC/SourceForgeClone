@@ -31,6 +31,12 @@
 ' 04/12/18    Changed to support OLED fonts and updated to 2018 controls
 ' 05/12/18    Revised adding GLCDCLS parameter
 ' 16/12/18    Revised to use TFT colors. Updated GLCDCLS to be a lot faster and updated GLCDRotate to support bits.
+' 03/04/19    Revised to support DEFAULT_GLCDBACKGROUND constant
+' 14/04/19    Revised Rotate to support GLCDDeviceWidth and GLCDDeviceHeight
+'             Added PrintLocX and PrintLocY initialisation for character mode printing.
+'             Added GLCDPrintString support
+
+
 '
 'Hardware settings
 'Type
@@ -63,6 +69,9 @@
 #define _ST7735_DI _GLCD_DI
 #define _ST7735_DO _GLCD_DO
 #define _ST7735_SCK _GLCD_SCK
+
+
+#define BigPrint BigPrint_SSD1289
 
 'Column/row select commands for ST7735
 #define ST7735_COLUMN 0x2A
@@ -159,24 +168,6 @@
 #define ST7735_PINK          TFT_PINK
 
 
-
-#script
-    userspecifiedHWSPIMode = 0
-    if HWSPIMode then
-        HWSPIMODESCRIPT = HWSPIMode
-        userspecifiedHWSPIMode = 1
-    end if
-
-    if userspecifiedHWSPIMode = 0 then
-        HWSPIMODESCRIPT = MasterFast
-        'If the ChipMHz > 32 then user Master NOT MasterFast
-        if ChipMHz > 32 then
-            HWSPIMODESCRIPT = Master
-        end if
-        userspecifiedHWSPIMode = 1
-    end if
-#endscript
-
 #startup InitGLCD_ST7735
 
 
@@ -187,7 +178,8 @@
 Sub InitGLCD_ST7735
 
   'mapped to global variable
-  'dim ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT as byte
+  'dim GLCDDeviceWidth, GLCDDeviceHeight as byte
+  dim GLCDForeground, GLCDBackground as word
 
   'Setup code for ST7735 controllers
   #if GLCD_TYPE = GLCD_TYPE_ST7735
@@ -323,12 +315,19 @@ Sub InitGLCD_ST7735
     Wait 100 ms
 
     'Colours
-    GLCDBackground = TFT_WHITE
-    GLCDForeground = TFT_BLACK
+    GLCDForeground = TFT_WHITE
+    'Default Colours
+    #ifdef DEFAULT_GLCDBACKGROUND
+      GLCDBackground = DEFAULT_GLCDBACKGROUND
+    #endif
+
+    #ifndef DEFAULT_GLCDBACKGROUND
+      GLCDBackground = TFT_BLACK
+    #endif
 
     'Variables required for device
-    ST7735_GLCD_WIDTH = GLCD_WIDTH
-    ST7735_GLCD_HEIGHT = GLCD_HEIGHT
+    GLCDDeviceWidth = GLCD_WIDTH
+    GLCDDeviceHeight = GLCD_HEIGHT
 
     #ifndef GLCD_OLED_FONT
       GLCDFontWidth = 6
@@ -353,20 +352,24 @@ End Sub
 'Subs
 '''Clears the GLCD screen
 Sub GLCDCLS_ST7735 ( Optional In  GLCDBackground as word = GLCDBackground)
-          ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
-          GLCD_yordinate = 0
+
+  ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
+  GLCD_yordinate = 0
+  Dim PrintLocX, PrintLocY as word
+  PrintLocX = 0
+  PrintLocY = 0
+
 
   #if GLCD_TYPE = GLCD_TYPE_ST7735
-    SetAddress_ST7735 ST7735_COLUMN, 0, ST7735_GLCD_WIDTH
+    SetAddress_ST7735 ST7735_COLUMN, 0, GLCDDeviceWidth
     wait 2 ms
-    SetAddress_ST7735 ST7735_ROW, 0, ST7735_GLCD_HEIGHT
+    SetAddress_ST7735 ST7735_ROW, 0, GLCDDeviceHeight
     wait 2 ms
     SendCommand_ST7735 ST7735_RAMWR
     wait 2 ms
-    Repeat [word]ST7735_GLCD_WIDTH * ST7735_GLCD_HEIGHT
+    Repeat [word] GLCD_WIDTH * GLCD_HEIGHT
       SendWord_ST7735 GLCDBackground
     End Repeat
-'                    FilledBox( 0, 0, ST7735_GLCD_WIDTH, ST7735_GLCD_HEIGHT, GLCDBackground )
   #endif
 
 End Sub
@@ -735,25 +738,25 @@ sub   GLCDRotate_ST7735 ( in ST7735AddressType )
   select case ST7735AddressType
         case LANDSCAPE
              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MV |  ST7735_MADCTL_RGB )
-             ST7735_GLCD_WIDTH = GLCD_HEIGHT
-             ST7735_GLCD_HEIGHT = GLCD_WIDTH
+             GLCDDeviceWidth = GLCD_HEIGHT - 1
+             GLCDDeviceHeight = GLCD_WIDTH - 1
 
         case PORTRAIT_REV
-             ST7735_GLCD_WIDTH = GLCD_WIDTH
-             ST7735_GLCD_HEIGHT = GLCD_HEIGHT
+             GLCDDeviceWidth = GLCD_WIDTH - 1
+             GLCDDeviceHeight = GLCD_HEIGHT - 1
              SendData_ST7735( ST7735_MADCTL_RGB )
 
         case LANDSCAPE_REV
              SendData_ST7735( ST7735_MADCTL_MV | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
-             ST7735_GLCD_WIDTH = GLCD_HEIGHT
-             ST7735_GLCD_HEIGHT = GLCD_WIDTH
+             GLCDDeviceWidth = GLCD_HEIGHT - 1
+             GLCDDeviceHeight = GLCD_WIDTH - 1
         case PORTRAIT
-             ST7735_GLCD_WIDTH = GLCD_WIDTH
-             ST7735_GLCD_HEIGHT = GLCD_HEIGHT
+             GLCDDeviceWidth = GLCD_WIDTH - 1
+             GLCDDeviceHeight = GLCD_HEIGHT - 1
              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
         case else
-             ST7735_GLCD_WIDTH = GLCD_WIDTH
-             ST7735_GLCD_HEIGHT = GLCD_HEIGHT
+             GLCDDeviceWidth = GLCD_WIDTH - 1
+             GLCDDeviceHeight = GLCD_HEIGHT - 1
              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
   end select
 

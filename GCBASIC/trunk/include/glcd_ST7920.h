@@ -32,6 +32,7 @@
 ' 9/11/14 New revised version.  Requires GLCD.H.  Do not call directly.  Always load via GLCD.H
 ' 19/2/16 Revised to ensure compatibility with old code and the help file!
 ' 22/4/17 Revised to support () and binary
+' 11/4/19 Revised to clean up position and therefore the bleeding of constants into ASM
 '
 'Hardware settings
 'Type
@@ -50,6 +51,16 @@
 #define GLCD_COLS   (GLCD_WIDTH/16)
 
 
+' A few constants that might need to be set to support the ST7920
+' 4.4v = 25, 5.0v 20 - You may need to adjust
+#define ST7920ReadDelay = 20
+' if ChipMHz = 4 then 10
+' if ChipMHz = 8 then 2
+' if ChipMHz = 16 then 2
+' if ChipMHz = 32 then 2
+#define ST7920WriteDelay = 2
+
+
 ' Do not remove.
 #define GLCDEnableCharacterMode_ST7920 GLCDDisableGraphics_ST7920
 
@@ -60,15 +71,6 @@
 Sub InitGLCD_ST7920
 
           #if GLCD_TYPE = GLCD_TYPE_ST7920
-
-              ' A few constants that might need to be set to support the ST7920
-              ' 4.4v = 25, 5.0v 20 - You may need to adjust
-              #define ST7920ReadDelay = 20
-              ' if ChipMHz = 4 then 10
-              ' if ChipMHz = 8 then 2
-              ' if ChipMHz = 16 then 2
-              ' if ChipMHz = 32 then 2
-              #define ST7920WriteDelay = 2
 
               #IFDEF GLCD_IO 4,8
 

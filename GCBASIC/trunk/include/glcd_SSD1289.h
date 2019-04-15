@@ -23,7 +23,9 @@
 '    23.11.2018   Removed SuperCededLine method.
 '    30.12.2018   Updated FilledBox to standard method and OLED fonts
 '    28.01.2019   Reverted GLCDPrint as this version has SIZE.
-'
+'    03.04.2019   Mapped DrawBMP_SSD1289 to DrawBMP in GLCD.H
+'                 Revised to support DEFAULT_GLCDBACKGROUND constant
+
 'Notes:
 ' Supports SSD1289 controller only.
 
@@ -106,6 +108,8 @@
 #define SSD1289_DB13 GLCD_DB13
 #define SSD1289_DB14 GLCD_DB14
 #define SSD1289_DB15 GLCD_DB15
+
+#define DrawBMP_SSD1289 DrawBMP
 
 
 #startup InitGLCD_SSD1289
@@ -196,9 +200,6 @@ Sub InitGLCD_SSD1289
     #if GLCD_TYPE = GLCD_TYPE_SSD1289
         Dim GLCDBackground as Byte
         Orientation_SSD1289 = 4 'PORTRAIT
-
-        GLCDBackground = 0x0000 'SSD1289_BLACK
-        GLCDForeground = 0xffff
 
         Dim SSD1289_GLCD_WIDTH, SSD1289_GLCD_HEIGHT as Word
 
@@ -302,7 +303,20 @@ Sub InitGLCD_SSD1289
             'Default size
             GLCDfntDefaultSize = 2
 
+
+            GLCDForeground = 0xffff
+
+            'Default Colours
+            #ifdef DEFAULT_GLCDBACKGROUND
+              GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+            #endif
+
+            #ifndef DEFAULT_GLCDBACKGROUND
+              GLCDBACKGROUND = SSD1289_BLACK
+            #endif
+
             GLCDCLS_SSD1289 GLCDBackground
+
     #endif
 
 End Sub
@@ -944,50 +958,6 @@ Sub Image_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as 
         Next
     end if
 End Sub
-
-'''Display BMP on the screen
-Sub DrawBMP_SSD1289 ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as word)
-    Dim TableReadPosition, TableLen, SelectedTable as word
-    ' Start of code
-    Dim  PixelRGB , XCount, YCount, TFTYEnd, objwidth, objHeight, TableReadPosition, TFTX , TFTY as Word
-    TableReadPosition = 1
-    'Read selected table
-    Select Case SelectedTable
-        Case @TableImage1: ReadTable TableImage1, TableReadPosition, objwidth
-             TableReadPosition++
-             ReadTable TableImage1, TableReadPosition, objHeight
-        Case @TableImage2: ReadTable TableImage2, TableReadPosition, objwidth
-             TableReadPosition++
-             ReadTable TableImage2, TableReadPosition, objHeight
-        Case @TableImage3: ReadTable TableImage3, TableReadPosition, objwidth
-             TableReadPosition++
-             ReadTable TableImage3, TableReadPosition, objHeight
-        Case @TableImage4: ReadTable TableImage4, TableReadPosition, objwidth
-             TableReadPosition++
-             ReadTable TableImage4, TableReadPosition, objHeight
-        Case @TableImage5: ReadTable TableImage5, TableReadPosition, objwidth
-             TableReadPosition++
-             ReadTable TableImage5, TableReadPosition, objHeight
-    End Select
-    TableReadPosition = 3
-    For YCount = 0 to (objHeight - 1)
-                For XCount = 0 to (objwidth - 1)
-                    'Read selected table
-                    Select Case SelectedTable
-                    Case @TableImage1: ReadTable TableImage1, TableReadPosition, PixelRGB
-                    Case @TableImage2: ReadTable TableImage2, TableReadPosition, PixelRGB
-                    Case @TableImage3: ReadTable TableImage3, TableReadPosition, PixelRGB
-                    Case @TableImage4: ReadTable TableImage4, TableReadPosition, PixelRGB
-                    Case @TableImage5: ReadTable TableImage5, TableReadPosition, PixelRGB
-                    End Select
-                    TableReadPosition++
-                    TFTX=[Word]TFTXPos+XCount
-                    TFTY=[Word]TFTYPos+YCount
-                    PSet TFTX, TFTY, PixelRGB
-                Next
-    Next
-End Sub
-
 
 
 
