@@ -72,23 +72,6 @@
   #define Max7219_PixelBytes ( Max7219_Devices * 8 )
 
 
-
-
-
-#script
-    userspecifiedHWSPIMode = 0
-    if HWSPIMode then
-        HWSPIMODESCRIPT = HWSPIMode
-        userspecifiedHWSPIMode = 1
-    end if
-
-    if userspecifiedHWSPIMode = 0 then
-        HWSPIMODESCRIPT = MasterFast
-        userspecifiedHWSPIMode = 1
-    end if
-#endscript
-
-
   ' Create the image buffer
   Dim Max7219_Image_Buffer( Max7219_PixelBytes )
 
