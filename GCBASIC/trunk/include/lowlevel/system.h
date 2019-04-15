@@ -56,7 +56,7 @@
 '    07062018 - Added 24mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    08062018 - Added 0.0625mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    09012018 - Updated type 103 to support 18f25j53 class oscillator
-'    19002019 - Updated to remove script message and comment tidyup only
+'    10042019 - Updated to remove script message and comment tidyup only
 
 
 
@@ -142,12 +142,12 @@ Sub InitSys
 
 
 
-         #IFDEF ChipFamily 16    'is 18Fxxxx
-           'Section added by WMR  for 18FxxK40 chips with PPS and
-           'Oscillator block similar to 16F188xx Chips
-            #IFDEF Bit(NDIV3)    'and has NDIV3 bit
+         #IFDEF ChipFamily 16
+            'is ChipFamily16
+           'Section support many MCUs, 18FxxK40, 18FxxK42 etc etc all have NDIV3 bit
+            #IFDEF Bit(NDIV3)
 
-                asm showdebug OSCCON type is 101 '18F and has NDIV3 bit
+                asm showdebug OSCCON type is 101 ' ChipFamily16 and NDIV3 bit
 
                 'Clear NDIV3:0
                 NDIV3 = 0
@@ -783,11 +783,12 @@ Sub InitSys
   #ENDIF
 
   #IFDEF ChipFamily 16
-   'Clear BSR on 18F chips
+    'Clear BSR on ChipFamily16 MCUs
     BSR = 0
   #ENDIF
 
   #IFDEF Var(TBLPTRU)
+    'Clear TBLPTRU on MCUs with this bit as this must be zero
     TBLPTRU = 0
   #ENDIF
 
@@ -949,7 +950,7 @@ Sub InitSys
   #ENDIF
 
   #IFDEF Var(CM1CON0)
-    'Comparator register bits for 12F510,16F506, PIC16F1535, 18f etc classes
+    'Set comparator register bits for many MCUs with register CM2CON0
     #IFDEF Var(CM2CON0)
       #IFDEF bit(C2ON)
         C2ON = 0
