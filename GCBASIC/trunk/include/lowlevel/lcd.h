@@ -1,5 +1,5 @@
 ;    Liquid Crystal Display routines for Great Cow BASIC
-;    Copyright (C) 2006 - 2018 Hugh Considine, Stefano Bonomi William Roth and Ruud de Vreugd and Evan Venn
+;    Copyright (C) 2006 - 2019 Hugh Considine, Stefano Bonomi William Roth and Ruud de Vreugd and Evan Venn
 
 ;    This library is free software; you can redistribute it and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -130,6 +130,9 @@
 '''              #define LCD_CB     PORTb.4            ; clockbit
 '''              #define LCD_EB     PORTa.0            ; enable bit
 '''
+'''
+'''  12/04/2019    Commentry tidy-up only
+
 '*************************************************************************
 
 
@@ -460,8 +463,7 @@ sub InitLCD
 
      #ENDIF
 
-     'Initialization routines based upon code examples
-     'in HD44780 datasheet
+     'Initialization routines based upon code examples in HD44780 datasheet
 
          'Configure RS,Enable & RW pin directions
          #IFDEF LCD_IO 4,8
@@ -546,11 +548,7 @@ sub InitLCD
 
 
           #IFDEF LCD_IO 4
-          '***********************************
           '4-bit initialization routine
-          '***********************************
-          ' revised LCDINIT Evan Venn March 2014
-          ' modified by William Roth  July 2104
 
                 'Set pins to output
                 #IFNDEF LCD_LAT
@@ -595,7 +593,7 @@ sub InitLCD
                 wait 2 us
                 PULSEOUT LCD_Enable, 2 us
                 Wait 50 us
-                '===== now in 4 bit mode =====
+                'init 4 bit mode
 
                 LCDWriteByte 0x28    '(b'011000000') 0x28  set 2 line mode
                 LCDWriteByte 0x06    '(b'00000110')  'Set Cursor movement
@@ -697,14 +695,15 @@ sub InitLCD
 
           #ENDIF
 
+
+          #IFDEF LCD_IO 10, 12
+
           '***********************************
           'I2C pcf8574 initialization routine
           '***********************************
-          #IFDEF LCD_IO 10, 12
-
-                #ifndef LCD_I2C_Address_1
+'                #ifndef LCD_I2C_Address_1
 '                        #define LCD_I2C_Address_1 0x4E
-                #endif
+'                #endif
 
                 #ifdef I2C_DATA
                   InitI2C       ;call to init i2c is required here!
@@ -1451,9 +1450,7 @@ end function
 
 sub LCDCursor(In LCDCRSR)
 
-     ' Revised Evan Venn March 2014
-     ' Revised William Roth Jan 2105
-     ' Can be LCDON, LCDOFF, CURSORON, CURSOROFF, FLASHON, Or FLASHOFF
+     ' Method uses LCDON, LCDOFF, CURSORON, CURSOROFF, FLASHON, Or FLASHOFF
 
 '   1) FLASH is the same as FLASHON and has been retained
 '      for compatibility but should be considererd depricated.
