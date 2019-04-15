@@ -24,6 +24,9 @@
 ' 30/12/2018       Added Touch support, OLED, fixed rotate and FilledBox
 ' 24/1/2019        Revised UNO_8bit_Shield GLCDCLS (typos) and correct command and data send
 ' 28/1/2019        Revised to support GLCD_RESET and GLCD_RST
+' 03/04/2019       Revised to support DEFAULT_GLCDBACKGROUND constant
+' 11/04/2019       Revised to clean up position and therefore the bleeding of constants into ASM
+
 
 '
 'Hardware settings
@@ -47,6 +50,35 @@
 #define ILI9486L_DI GLCD_DI
 #define ILI9486L_DO GLCD_DO
 #define ILI9486L_SCK GLCD_SCK
+
+
+
+
+  '8 bit data bus constants
+  #define ILI9486L_RST GLCD_RST
+  #define ILI9486L_CS GLCD_CS
+  #define ILI9486L_DC GLCD_DC
+  #define ILI9486L_WR GLCD_WR
+  #define ILI9486L_RD GLCD_RD
+
+
+  #define ILI9486L_DB0 GLCD_DB0
+  #define ILI9486L_DB1 GLCD_DB1
+  #define ILI9486L_DB2 GLCD_DB2
+  #define ILI9486L_DB3 GLCD_DB3
+  #define ILI9486L_DB4 GLCD_DB4
+  #define ILI9486L_DB5 GLCD_DB5
+  #define ILI9486L_DB6 GLCD_DB6
+  #define ILI9486L_DB7 GLCD_DB7
+
+  '8 bit whole port data bus directions
+  'assumes GLCD_DataPort is defined also
+  #define ILI9486L_RST GLCD_RST
+  #define ILI9486L_CS GLCD_CS
+  #define ILI9486L_DC GLCD_DC
+  #define ILI9486L_WR GLCD_WR
+  #define ILI9486L_RD GLCD_RD
+
 
 #define ILI9486L_NOP     0x00
 #define ILI9486L_SWRESET 0x01
@@ -189,21 +221,6 @@
     end if
   end if
 
-  userspecifiedHWSPIMode = 0
-  if HWSPIMode then
-      HWSPIMODESCRIPT = HWSPIMode
-      userspecifiedHWSPIMode = 1
-  end if
-
-  if userspecifiedHWSPIMode = 0 then
-      HWSPIMODESCRIPT = MasterFast
-      'If the ChipMHz > 32 then user Master NOT MasterFast
-      if ChipMHz > 32 then
-          HWSPIMODESCRIPT = Master
-      end if
-      userspecifiedHWSPIMode = 1
-  end if
-
 #endscript
 
 #startup InitGLCD_ILI9486L
@@ -237,23 +254,8 @@ Sub InitGLCD_ILI9486L
         #endif
 
         #ifdef UNO_8bit_Shield
-          '8 bit data bus directions
-          #define ILI9486L_RST GLCD_RST
-          #define ILI9486L_CS GLCD_CS
-          #define ILI9486L_DC GLCD_DC
-          #define ILI9486L_WR GLCD_WR
-          #define ILI9486L_RD GLCD_RD
 
-
-          #define ILI9486L_DB0 GLCD_DB0
-          #define ILI9486L_DB1 GLCD_DB1
-          #define ILI9486L_DB2 GLCD_DB2
-          #define ILI9486L_DB3 GLCD_DB3
-          #define ILI9486L_DB4 GLCD_DB4
-          #define ILI9486L_DB5 GLCD_DB5
-          #define ILI9486L_DB6 GLCD_DB6
-          #define ILI9486L_DB7 GLCD_DB7
-
+          'constants moved to top
 
           dir  ILI9486L_DB7 OUT
           dir  ILI9486L_DB6 OUT
@@ -396,12 +398,7 @@ Sub InitGLCD_fullport_ILI9486L
   'Setup code for ILI9486L controllers
     #if GLCD_TYPE = GLCD_TYPE_ILI9486L
 
-      '8 bit data bus directions
-      #define ILI9486L_RST GLCD_RST
-      #define ILI9486L_CS GLCD_CS
-      #define ILI9486L_DC GLCD_DC
-      #define ILI9486L_WR GLCD_WR
-      #define ILI9486L_RD GLCD_RD
+      'constants moved to top
 
       'Set pin directions
       Dir ILI9486L_RD  Out
@@ -496,8 +493,16 @@ Sub InitGLCD_fullport_ILI9486L
 
 
       'Default Colours
-      GLCDBackground = ILI9486L_BLACK
       GLCDForeground = ILI9486L_WHITE
+      'Default Colours
+      #ifdef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+      #endif
+
+      #ifndef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = ILI9486L_BLACK
+      #endif
+
 
       'Variables required for device
       ILI9486L_GLCD_WIDTH = GLCD_WIDTH

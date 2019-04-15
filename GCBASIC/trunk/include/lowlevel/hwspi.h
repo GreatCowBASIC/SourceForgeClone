@@ -80,13 +80,28 @@
 #define SPI_RX_IN_PROGRESS       0x00
 
 #script
+
+    'Set the SPI Mode if the user had not set it... used in the SPI libraries
+    userspecifiedHWSPIMode = 0
+    if HWSPIMode then
+        HWSPIMODESCRIPT = HWSPIMode
+        userspecifiedHWSPIMode = 1
+    end if
+
+    if userspecifiedHWSPIMode = 0 then
+        HWSPIMODESCRIPT = MasterFast
+        'If the ChipMHz > 32 then user Master NOT MasterFast
+        if ChipMHz > 32 then
+            HWSPIMODESCRIPT = Master
+        end if
+        userspecifiedHWSPIMode = 1
+    end if
+
+
     'create a constant, as this IS needed, if the user have not defined
     USERHASDEFINETHESPI_BAUD_RATE = 0
     IF SPI_BAUD_RATE THEN
         USERHASDEFINETHESPI_BAUD_RATE = 1
-        IF INT( INT( ChipMhz * 1000) / SPI_BAUD_RATE ) < 8 THEN
-            Warning "SPI_BAUD_RATE specified may exceed SPI module capabilities"
-        END IF
     END IF
     IF USERHASDEFINETHESPI_BAUD_RATE = 0 THEN
         SPI_BAUD_RATE = INT(ChipMhz/4)*1000
@@ -124,13 +139,13 @@
     end if
 
     'Calculate SPI Baud Rate for SPImode modules on K42 per datasheet
-    SPIBAUDRATE_SCRIPT = INT( ChipMHz / INT( SPI_BAUD_RATE  ) / 2 * 1000) - 1
+    SPIBAUDRATE_SCRIPT = INT( ChipMHz / INT( SPI_BAUD_RATE  ) / 2 * 1000) + 1
 
     'Calculate SPI Baud Rate for SPImode modules on K42 per datasheet
-    SPIBAUDRATE_SCRIPT_MASTER = INT( ChipMHz / INT( SPI_BAUD_RATE /4  ) / 2 * 1000) -1
+    SPIBAUDRATE_SCRIPT_MASTER = INT( ChipMHz / INT( SPI_BAUD_RATE /4  ) / 2 * 1000) + 1
 
     'Calculate SPI Baud Rate for SPImode modules on K42 per datasheet
-    SPIBAUDRATE_SCRIPT_MASTERSLOW = INT(ChipMHz / INT( SPI_BAUD_RATE / 16  ) / 2 * 1000) -1
+    SPIBAUDRATE_SCRIPT_MASTERSLOW = INT(ChipMHz / INT( SPI_BAUD_RATE / 16  ) / 2 * 1000) + 1
 
 #endscript
 

@@ -19,7 +19,8 @@
 ' Supports SSD1331 controller only.
 
 'Changes
-'
+' 03/04/2019  Revised to support DEFAULT_GLCDBACKGROUND constant
+
 #define SSD1331_GLCDCLS_Delay 500
 
 
@@ -106,24 +107,6 @@
 #define SSD1331_TEAL    0x0410
 #define SSD1331_NAVY    0x0010
 #define SSD1331_FUCHSIA 0xF81F
-
-
-#script
-    userspecifiedHWSPIMode = 0
-    if HWSPIMode then
-        HWSPIMODESCRIPT = HWSPIMode
-        userspecifiedHWSPIMode = 1
-    end if
-
-    if userspecifiedHWSPIMode = 0 then
-        HWSPIMODESCRIPT = MasterFast
-        'If the ChipMHz > 32 then user Master NOT MasterFast
-        if ChipMHz > 32 then
-            HWSPIMODESCRIPT = Master
-        end if
-        userspecifiedHWSPIMode = 1
-    end if
-#endscript
 
 
 #startup InitGLCD_SSD1331
@@ -219,8 +202,14 @@ Sub InitGLCD_SSD1331
     SendCommand_SSD1331(0xAF)    'display ON
 
     'Default Colours
-    GLCDBackground = SSD1331_BLACK
     GLCDForeground = SSD1331_WHITE
+    #ifdef DEFAULT_GLCDBACKGROUND
+      GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+    #endif
+
+    #ifndef DEFAULT_GLCDBACKGROUND
+      GLCDBACKGROUND = SSD1331_BLACK
+    #endif
 
     'Variables required for device
     SSD1331_GLCD_WIDTH = GLCD_WIDTH

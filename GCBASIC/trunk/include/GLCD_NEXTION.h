@@ -31,6 +31,7 @@
 '04/06/2018 Revised GLCDGetTouch_Nextion method to support only Functions to improve support
 '06/06/2018 Revised GLCDGetTouch_Nextion method to support consumption of last three bytes.
 '07/06/2018 Revised GLCDGetTouch_Nextion method to support long not string.
+'03/04/2018 Revised to support DEFAULT_GLCDBACKGROUND constant
 
 
 
@@ -78,8 +79,16 @@ Sub InitGLCD_Nextion
   GLCD_NextionSerialSend 255
   GLCD_NextionSerialSend 255
   SendParam_Nextion ( "rest", true )  '  reset the device
-  GLCDBackground = TFT_BLACK
-  GLCDForeground = TFT_WHITE
+
+  'Default Colours
+  #ifdef DEFAULT_GLCDBACKGROUND
+    GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+  #endif
+
+  #ifndef DEFAULT_GLCDBACKGROUND
+    GLCDBACKGROUND = TFT_BLACK
+  #endif
+
 
   #ifndef GLCD_OLED_FONT
     GLCDFontWidth = 6

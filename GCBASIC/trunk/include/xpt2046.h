@@ -136,22 +136,6 @@
       Warning "Missing Port Assignment XPT2046_IRQ"
   end if
 
-
-  userspecifiedHWSPIMode = 0
-  if HWSPIMode then
-      HWSPIMODESCRIPT = HWSPIMode
-      userspecifiedHWSPIMode = 1
-  end if
-
-  if userspecifiedHWSPIMode = 0 then
-      HWSPIMODESCRIPT = MasterFast
-      'If the ChipMHz > 32 then user Master NOT MasterFast
-      if ChipMHz > 32 then
-          HWSPIMODESCRIPT = Master
-      end if
-      userspecifiedHWSPIMode = 1
-  end if
-
 #endscript
 
 #startup Init_XPT2046, 99

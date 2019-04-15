@@ -22,6 +22,8 @@
   '6/10/2017 added 16bit data bus interface for Mega2560 board KentS
   '17/9/2017 revised send command and data to resolve 8bit addressing EvanRVenn.
   '17/9/2017 revised to handle port output EvanRVenn.
+  '03/04/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
+  '11/04/2019 Revised to clean up position and therefore the bleeding of constants into ASM
 
 'Hardware settings
 'Type
@@ -45,6 +47,29 @@
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9481; Register Select; GLCD_RS; IO_Pin
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9481; Read/Write; GLCD_RW; IO_Pin
 '''@hardware GLCD_TYPE GLCD_TYPE_ILI9481; Enable; GLCD_RD; IO_Pin
+
+      '8bit
+      #define ILI9481_GLCD_RST GLCD_RST
+      #define ILI9481_GLCD_CS GLCD_CS
+      #define ILI9481_GLCD_RS GLCD_RS
+      #define ILI9481_GLCD_WR GLCD_WR
+      #define ILI9481_GLCD_RD GLCD_RD
+      #define ILI9481_GLCD_DB0 GLCD_DB0
+      #define ILI9481_GLCD_DB1 GLCD_DB1
+      #define ILI9481_GLCD_DB2 GLCD_DB2
+      #define ILI9481_GLCD_DB3 GLCD_DB3
+      #define ILI9481_GLCD_DB4 GLCD_DB4
+      #define ILI9481_GLCD_DB5 GLCD_DB5
+      #define ILI9481_GLCD_DB6 GLCD_DB6
+      #define ILI9481_GLCD_DB7 GLCD_DB7
+      #define tinyDelay nop:nop
+
+      '16bit
+      #define ILI9481_GLCD_RST GLCD_RST
+      #define ILI9481_GLCD_CS GLCD_CS
+      #define ILI9481_GLCD_RS GLCD_RS
+      #define ILI9481_GLCD_WR GLCD_WR
+      '#define ILI9481_GLCD_RD GLCD_RD  'not used
 
 #define ILI9481_WHITE   TFT_WHITE
 #define ILI9481_BLACK   TFT_BLACK
@@ -77,24 +102,6 @@ Sub InitGLCD_ILI9481
   #if GLCD_TYPE = GLCD_TYPE_ILI9481
 
     #ifndef GLCD_ILI9481_16bit
-      #define tinyDelay nop:nop
-
-      #define ILI9481_GLCD_RST GLCD_RST
-      #define ILI9481_GLCD_CS GLCD_CS
-      #define ILI9481_GLCD_RS GLCD_RS
-      #define ILI9481_GLCD_WR GLCD_WR
-      #define ILI9481_GLCD_RD GLCD_RD
-
-
-      #define ILI9481_GLCD_DB0 GLCD_DB0
-      #define ILI9481_GLCD_DB1 GLCD_DB1
-      #define ILI9481_GLCD_DB2 GLCD_DB2
-      #define ILI9481_GLCD_DB3 GLCD_DB3
-      #define ILI9481_GLCD_DB4 GLCD_DB4
-      #define ILI9481_GLCD_DB5 GLCD_DB5
-      #define ILI9481_GLCD_DB6 GLCD_DB6
-      #define ILI9481_GLCD_DB7 GLCD_DB7
-
 
       dir  ILI9481_GLCD_DB7 OUT
       dir  ILI9481_GLCD_DB6 OUT
@@ -211,12 +218,6 @@ Sub InitGLCD_ILI9481
 
     #ifDef GLCD_ILI9481_16bit
 
-      #define ILI9481_GLCD_RST GLCD_RST
-      #define ILI9481_GLCD_CS GLCD_CS
-      #define ILI9481_GLCD_RS GLCD_RS
-      #define ILI9481_GLCD_WR GLCD_WR
-      '#define ILI9481_GLCD_RD GLCD_RD
-
       'Pin directions
       Dir ILI9481_GLCD_CS Out
       Dir ILI9481_GLCD_RS Out
@@ -311,8 +312,15 @@ Sub InitGLCD_ILI9481
       Set ILI9481_GLCD_CS On
 
       'Default Colours
-      GLCDBackground = ILI9481_BLACK
       GLCDForeground = ILI9481_WHITE
+      #ifdef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+      #endif
+
+      #ifndef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = ILI9481_BLACK
+      #endif
+
 
       'Variables required for device
       ILI9481_GLCD_WIDTH = GLCD_WIDTH
