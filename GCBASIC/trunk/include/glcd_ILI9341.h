@@ -30,8 +30,29 @@
 ' 16/11/2017       Revised to support faster CLS for AVR
 ' 15/01/2019       Revised to support SPI without WCOL in CLS
 ' 10/02/2019:      Revised to add constant and script to resolve 64mhz at MasterFast.  #define HWSPIMode masterfast where #define HWSPIMode is masterslow|master|masterfast
+' 03/04/2019:      Revised to support DEFAULT_GLCDBACKGROUND constant
 
+#script
 
+    'examine what is operational SPI or 8Bit
+    'we could ask the user to define a constant  but we can do it automatically
+
+    ILI9341_SPI_MODE_SCRIPT = 0
+    ILI9341_8BIT_MODE_SCRIPT = 0
+    'DC is used to prove SPI
+    ILI9341_GLCD_DC_DEFINED = 0
+    'RD is used to prove 8bit
+    ILI9341_GLCD_RD_DEFINED = 0
+
+    if GLCD_DC then
+        ILI9341_SPI_MODE_SCRIPT = 1
+    end if
+
+    if GLCD_RD then
+        ILI9341_8BIT_MODE_SCRIPT = 1
+    end if
+
+#endscript
 
 ' Hardware settings
 ' Type
@@ -56,6 +77,44 @@
 #define ILI9341_SCK GLCD_SCK
 
 
+'User Hardware settings
+'Type
+'''@hardware All; Controller Type; GLCD_TYPE; "GLCD_TYPE_ILI9341"
+'    #define GLCD_TYPE GLCD_TYPE_ILI9341
+'
+'    'Pin mappings for device
+'    #define GLCD_RD       ANALOG_0          ' read command line
+'    #define GLCD_WR       ANALOG_1          ' write command line
+'    #define GLCD_RS       ANALOG_2          ' Command/Data line
+'    #define GLCD_CS       ANALOG_3          ' Chip select line
+'    #define GLCD_RESET      ANALOG_4          ' Reset line
+'
+'
+'    8bit bus lines
+'    #define GLCD_DB0       DIGITAL_8
+'    #define GLCD_DB1       DIGITAL_9
+'    #define GLCD_DB2       DIGITAL_2
+'    #define GLCD_DB3       DIGITAL_3
+'    #define GLCD_DB4       DIGITAL_4
+'    #define GLCD_DB5       DIGITAL_5
+'    #define GLCD_DB6       DIGITAL_6
+
+' Map the 8-bit ports of the ILI9341 specific ports
+      #define ILI9341_RST GLCD_RESET
+      #define ILI9341_CS GLCD_CS
+      #define ILI9341_RS GLCD_RS
+      #define ILI9341_WR GLCD_WR
+      #define ILI9341_RD GLCD_RD
+
+
+      #define ILI9341_DB0 GLCD_DB0
+      #define ILI9341_DB1 GLCD_DB1
+      #define ILI9341_DB2 GLCD_DB2
+      #define ILI9341_DB3 GLCD_DB3
+      #define ILI9341_DB4 GLCD_DB4
+      #define ILI9341_DB5 GLCD_DB5
+      #define ILI9341_DB6 GLCD_DB6
+      #define ILI9341_DB7 GLCD_DB7
 
 #define ILI9341_NOP     0x00
 #define ILI9341_SWRESET 0x01
@@ -148,23 +207,6 @@
 #startup InitGLCD_ILI9341, 98
 
 
-#script
-    userspecifiedHWSPIMode = 0
-    if HWSPIMode then
-        HWSPIMODESCRIPT = HWSPIMode
-        userspecifiedHWSPIMode = 1
-    end if
-
-    if userspecifiedHWSPIMode = 0 then
-        HWSPIMODESCRIPT = MasterFast
-        'If the ChipMHz > 32 then user Master NOT MasterFast
-        if ChipMHz > 32 then
-            HWSPIMODESCRIPT = Master
-        end if
-        userspecifiedHWSPIMode = 1
-    end if
-#endscript
-
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9341
 
@@ -175,6 +217,14 @@ Sub InitGLCD_ILI9341
   'Setup code for ILI9341 controllers
   #if GLCD_TYPE = GLCD_TYPE_ILI9341
 
+    asm showdebug  SPI
+    asm showdebug  ILI9341_SPI_MODE_SCRIPT
+    asm showdebug  8BIT mode
+    asm showdebug  ILI9341_8BIT_MODE_SCRIPT
+
+
+    #ifdef ILI9341_SPI_MODE_SCRIPT 1
+        'SPI mode!!!
     'Pin directions
     Dir ILI9341_CS Out
     Dir ILI9341_DC Out
@@ -194,17 +244,43 @@ Sub InitGLCD_ILI9341
 
    Set ILI9341_CS On
    Set ILI9341_DC On
+    #endif
 
+
+    #ifdef ILI9341_8BIT_MODE_SCRIPT 1
+    '8bit bus mode !!
+      dir  ILI9341_DB7 OUT
+      dir  ILI9341_DB6 OUT
+      dir  ILI9341_DB5 OUT
+      dir  ILI9341_DB4 OUT
+      dir  ILI9341_DB3 OUT
+      dir  ILI9341_DB2 OUT
+      dir  ILI9341_DB1 OUT
+      dir  ILI9341_DB0 OUT
+
+      'Set pin directions
+      Dir ILI9341_RD  Out
+      Dir ILI9341_WR  Out
+      Dir ILI9341_RS  Out
+      Dir ILI9341_CS  Out
+      Dir ILI9341_RST Out
+
+      Set ILI9341_RD On
+      Set ILI9341_WR On
+      Set ILI9341_RS On
+      set ILI9341_CS ON
+      Set ILI9341_RST On
+    #endif
 
     'Reset display
     Wait 50 ms
     Set ILI9341_RST On
-    Wait 5 ms
+    Wait 15 ms
     'Reset sequence (lower line for at least 10 us)
     Set ILI9341_RST Off
-    Wait 20 us
+    Wait 15 us
     Set ILI9341_RST On
-    Wait 150 ms
+    Wait 15 ms
 
   SendCommand_ILI9341(0xEF)
   SendData_ILI9341(0x03)
@@ -314,7 +390,15 @@ Sub InitGLCD_ILI9341
   SendCommand_ILI9341(ILI9341_DISPON)    'Display on
 
   'Default Colours
-  GLCDBackground = ILI9341_BLACK
+  #ifdef DEFAULT_GLCDBACKGROUND
+    GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+  #endif
+
+  #ifndef DEFAULT_GLCDBACKGROUND
+    GLCDBACKGROUND = ILI9341_BLACK
+  #endif
+
+
   GLCDForeground = ILI9341_WHITE
 
     'Variables required for device
@@ -543,21 +627,35 @@ End Sub
 
 'Subs
 '''Clears the GLCD screen
-Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
+Sub GLCDCLS_ILI9341 ( Optional In  GLCDBACKGROUND as word = GLCDBACKGROUND )
 
     dim ILI9341SendWord as word
     ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
     GLCD_yordinate = 0
 
     SetAddressWindow_ILI9341 ( 0, 0, ILI9341_GLCD_WIDTH -1 , ILI9341_GLCD_HEIGHT-1 )
-    ILI9341SendWord = GLCDBackground
+    ILI9341SendWord = GLCDBACKGROUND
 
-    set ILI9341_CS OFF
+    ILI9341_CS = 0
+
+    #ifdef ILI9341_SPI_MODE_SCRIPT 1
+      'SPI mode
     set ILI9341_DC ON
+    #endif
+
+    #ifdef ILI9341_8BIT_MODE_SCRIPT 1
+      '8bit mode
+      ILI9341_RS = 1
+      ILI9341_RD = 1
+    #endif
+
     'repeat 320*240 times... this is faster!
     repeat 2 ' ILI9341_GLCD_WIDTH
 
       repeat 38400  'ILI9341_GLCD_HEIGHT
+
+        #ifdef ILI9341_SPI_MODE_SCRIPT 1
+            'SPI handler
 
         #ifdef ILI9341_HardwareSPI
 
@@ -624,12 +722,48 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBackground as word = GLCDBackground )
         #endif
 
         #ifndef ILI9341_HardwareSPI
-          SendWord_ILI9341 ( GLCDBackground )
+              SendWord_ILI9341 ( GLCDBACKGROUND )
         #endif
+
+        'end of SPI
+        #endif
+
+        #ifdef ILI9341_8BIT_MODE_SCRIPT 1
+
+          ILI9341_WR = 1
+          PORTD = (PORTD & 0B00000011) | ((ILI9341SendWord_h) & 0B11111100)
+          PORTB = (PORTB & 0B11111100) | ((ILI9341SendWord_h) & 0B00000011)
+          ILI9341_WR = 0
+
+          ILI9341_WR = 1
+          PORTD = (PORTD & 0B00000011) | ((ILI9341SendWord) & 0B11111100)
+          PORTB = (PORTB & 0B11111100) | ((ILI9341SendWord) & 0B00000011)
+          ILI9341_WR = 0
+
+        'endif 8bit
+        #endif
+
       end repeat
 
     end repeat
-    set ILI9341_CS ON;
+
+    ILI9341_CS = 1
+
+    #ifdef ILI9341_8BIT_MODE_SCRIPT 1
+      '8bit mode
+
+          ILI9341_WR = 1
+          PORTD = (PORTD & 0B00000011) | ((ILI9341SendWord_h) & 0B11111100)
+          PORTB = (PORTB & 0B11111100) | ((ILI9341SendWord_h) & 0B00000011)
+          ILI9341_WR = 0
+
+          ILI9341_WR = 1
+          PORTD = (PORTD & 0B00000011) | ((ILI9341SendWord) & 0B11111100)
+          PORTB = (PORTB & 0B11111100) | ((ILI9341SendWord) & 0B00000011)
+          ILI9341_WR = 0
+
+      ILI9341_WR = 1
+    #endif
 
 
 End Sub
@@ -709,7 +843,7 @@ Sub GLCDDrawChar_ILI9341(In CharLocX as word, In CharLocY as word, In CharCode, 
                         if CurrCharVal.0=1 then
                            PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, LineColour
                         Else
-                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBackground
+                           PSet [word]CharLocX + CharCol+ CharColS, [word]CharLocY + CharRow+CharRowS, GLCDBACKGROUND
                         End if
                     Next Row
               Next Col
@@ -762,7 +896,7 @@ Sub GLCDDrawChar_ILI9341(In CharLocX as word, In CharLocY as word, In CharCode, 
                   ReadTable OLEDFont2, LocalCharCode, CurrCharVal
                 #endif
                 #ifdef GLCD_Disable_OLED_FONT2
-                  CurrCharVal = GLCDBackground
+                  CurrCharVal = GLCDBACKGROUND
                 #endif
           End Select
 
@@ -770,7 +904,7 @@ Sub GLCDDrawChar_ILI9341(In CharLocX as word, In CharLocY as word, In CharCode, 
             For CurrCharRow = 0 to ROWSperfont
                 'Set the pixel
                 If CurrCharVal.0 = 0 Then
-                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBackground
+                          PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, GLCDBACKGROUND
                 Else
                           PSet CharLocX + CurrCharCol, CharLocY + CurrCharRow, LineColour
                 End If
@@ -784,7 +918,7 @@ Sub GLCDDrawChar_ILI9341(In CharLocX as word, In CharLocY as word, In CharCode, 
                     ReadTable OLEDFont2, LocalCharCode, CurrCharVal
                   #endif
                   #ifdef GLCD_Disable_OLED_FONT2
-                    CurrCharVal = GLCDBackground
+                    CurrCharVal = GLCDBACKGROUND
                   #endif
                 end if
 
@@ -795,7 +929,7 @@ Sub GLCDDrawChar_ILI9341(In CharLocX as word, In CharLocY as word, In CharCode, 
                      if GLCDfntDefaultSize = 2 then
                         GLCDTemp++
                      end if
-                     PSet GLCDTemp , CharLocY + CurrCharRow, GLCDBackground
+                     PSet GLCDTemp , CharLocY + CurrCharRow, GLCDBACKGROUND
                 end if
 
             Next
@@ -856,36 +990,56 @@ End Sub
 
 
 
-
 '''Send a command to the ILI9341 GLCD
 '''@param ILI9341SendByte Command to send
 '''@hide
 sub  SendCommand_ILI9341( IN ILI9341SendByte as byte )
 
-  set ILI9341_CS OFF;
-  set ILI9341_DC OFF;
+    #ifdef ILI9341_SPI_MODE_SCRIPT 1
+      'SPI mode
+      set ILI9341_CS OFF;
+      set ILI9341_DC OFF;
 
-  #ifdef ILI9341_HardwareSPI
-     SPITransfer  ILI9341SendByte,  ILI9341TempOut
-     set ILI9341_CS ON;
-     exit sub
-  #endif
+      #ifdef ILI9341_HardwareSPI
+         SPITransfer  ILI9341SendByte,  ILI9341TempOut
+         set ILI9341_CS ON;
+         exit sub
+      #endif
 
-  #ifndef ILI9341_HardwareSPI
-  repeat 8
+      #ifndef ILI9341_HardwareSPI
+      repeat 8
 
-    if ILI9341SendByte.7 = ON  then
-      set ILI9341_DO ON;
-    else
-      set ILI9341_DO OFF;
-    end if
-    SET GLCD_SCK On;
-    rotate ILI9341SendByte left
-    set GLCD_SCK Off;
+        if ILI9341SendByte.7 = ON  then
+          set ILI9341_DO ON;
+        else
+          set ILI9341_DO OFF;
+        end if
+        SET GLCD_SCK On;
+        rotate ILI9341SendByte left
+        set GLCD_SCK Off;
 
-  end repeat
-  set ILI9341_CS ON;
-  #endif
+      end repeat
+      set ILI9341_CS ON;
+      #endif
+
+    #endif
+
+    #ifdef ILI9341_8BIT_MODE_SCRIPT 1
+    '8bit mode
+
+        ILI9341_CS = 0
+        ILI9341_RS = 0
+        ILI9341_RD = 1
+
+        ILI9341_WR = 1
+        PORTD = (PORTD & 0B00000011) | ((ILI9341SendByte) & 0B11111100);
+        PORTB = (PORTB & 0B11111100) | ((ILI9341SendByte) & 0B00000011);
+        ILI9341_WR  = 0
+        ILI9341_WR = 1
+        ILI9341_CS = 1
+
+    'endif 8bit
+    #endif
 
 end Sub
 
@@ -894,30 +1048,51 @@ end Sub
 '''@hide
 sub  SendData_ILI9341( IN ILI9341SendByte as byte )
 
-  set ILI9341_CS OFF;
-  set ILI9341_DC ON;
+    #ifdef ILI9341_SPI_MODE_SCRIPT 1
+      'SPI mode
+      set ILI9341_CS OFF;
+      set ILI9341_DC ON;
 
-  #ifdef ILI9341_HardwareSPI
-     SPITransfer  ILI9341SendByte,  ILI9341TempOut
-     set ILI9341_CS ON;
-     exit sub
-  #endif
+      #ifdef ILI9341_HardwareSPI
+         SPITransfer  ILI9341SendByte,  ILI9341TempOut
+         set ILI9341_CS ON;
+         exit sub
+      #endif
 
-  #ifndef ILI9341_HardwareSPI
-  repeat 8
+      #ifndef ILI9341_HardwareSPI
+      repeat 8
 
-    if ILI9341SendByte.7 = ON then
-      set ILI9341_DO ON;
-    else
-      set ILI9341_DO OFF;
-    end if
-    SET GLCD_SCK On;
-    rotate ILI9341SendByte left
-    set GLCD_SCK Off;
+        if ILI9341SendByte.7 = ON then
+          set ILI9341_DO ON;
+        else
+          set ILI9341_DO OFF;
+        end if
+        SET GLCD_SCK On;
+        rotate ILI9341SendByte left
+        set GLCD_SCK Off;
 
-  end Repeat
-  set ILI9341_CS ON;
-  #endif
+      end Repeat
+      set ILI9341_CS ON;
+      #endif
+
+    #endif
+
+    #ifdef ILI9341_8BIT_MODE_SCRIPT 1
+    '8bit mode
+
+        ILI9341_CS = 0
+        ILI9341_RS = 1
+        ILI9341_RD = 1
+
+        ILI9341_WR = 1
+        PORTD = (PORTD & 0B00000011) | ((ILI9341SendByte) & 0B11111100);
+        PORTB = (PORTB & 0B11111100) | ((ILI9341SendByte) & 0B00000011);
+        ILI9341_WR = 0
+        ILI9341_WR = 1
+        ILI9341_CS = 1
+
+    'endif 8bit
+    #endif
 
 end Sub
 
@@ -926,33 +1101,64 @@ end Sub
 '''@hide
 Sub SendWord_ILI9341(In ILI9341SendWord As Word)
 
-  dim ILI9341SendWord as word
-  set ILI9341_CS OFF;
-  set ILI9341_DC ON;
+    dim ILI9341SendWord as word
 
-  #ifdef ILI9341_HardwareSPI
-     SPITransfer  ILI9341SendWord_H,  ILI9341TempOut
-     SPITransfer  ILI9341SendWord,  ILI9341TempOut
-     set ILI9341_CS ON;
-     exit sub
-  #endif
+    #ifdef ILI9341_SPI_MODE_SCRIPT 1
+    'SPI mode
+      set ILI9341_CS OFF;
+      set ILI9341_DC ON;
 
-  #ifndef ILI9341_HardwareSPI
-  repeat 16
+      #ifdef ILI9341_HardwareSPI
+         SPITransfer  ILI9341SendWord_H,  ILI9341TempOut
+         SPITransfer  ILI9341SendWord,  ILI9341TempOut
+         set ILI9341_CS ON;
+         exit sub
+      #endif
 
-    if ILI9341SendWord.15 = ON then
-      set ILI9341_DO ON;
-    else
-      set ILI9341_DO OFF;
-    end if
-    SET GLCD_SCK On;
-    rotate ILI9341SendWord left
-    set GLCD_SCK Off;
+      #ifndef ILI9341_HardwareSPI
+      repeat 16
 
-  end repeat
-  set ILI9341_CS ON;
-  #endif
+        if ILI9341SendWord.15 = ON then
+          set ILI9341_DO ON;
+        else
+          set ILI9341_DO OFF;
+        end if
+        SET GLCD_SCK On;
+        rotate ILI9341SendWord left
+        set GLCD_SCK Off;
+
+      end repeat
+      set ILI9341_CS ON;
+      #endif
+
+    #endif
+
+    #ifdef ILI9341_8BIT_MODE_SCRIPT 1
+    '8bit mode
+
+        ILI9341_CS = 0
+        ILI9341_RS = 1
+        ILI9341_RD = 1
+
+        ILI9341_WR = 1
+        PORTD = (PORTD & 0B00000011) | ((ILI9341SendWord_h) & 0B11111100);
+        PORTB = (PORTB & 0B11111100) | ((ILI9341SendWord_h) & 0B00000011);
+        ILI9341_WR = 0
+
+        ILI9341_WR = 1
+        PORTD = (PORTD & 0B00000011) | ((ILI9341SendWord) & 0B11111100);
+        PORTB = (PORTB & 0B11111100) | ((ILI9341SendWord) & 0B00000011);
+
+        ILI9341_WR = 0
+        ILI9341_WR = 1
+        ILI9341_CS = 1
+
+    'endif 8bit
+    #endif
+
+
 End Sub
+
 
 
 '''Set the row or column address range for the ILI9341 GLCD

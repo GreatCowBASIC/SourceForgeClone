@@ -33,6 +33,8 @@
 ' 27/03/2017:      Revised to fix initialisation issue from PIC when using Priority Startup
 ' 10/02/2019:      Revised to add constant and script to resolve 64mhz at MasterFast.  #define HWSPIMode masterfast where #define HWSPIMode is masterslow|master|masterfast
 '                  Revised to support SPI without WCOL in CLS
+' 03/04/2019: Revised to support DEFAULT_GLCDBACKGROUND constant
+' 11/04/2019: Revised to clean up position and therefore the bleeding of constants into ASM
 '
 'Hardware settings
 'Type
@@ -146,23 +148,6 @@
 #define ILI9340_NAVY    0x0010
 #define ILI9340_FUCHSIA 0xF81F
 
-#script
-    userspecifiedHWSPIMode = 0
-    if HWSPIMode then
-        HWSPIMODESCRIPT = HWSPIMode
-        userspecifiedHWSPIMode = 1
-    end if
-
-    if userspecifiedHWSPIMode = 0 then
-        HWSPIMODESCRIPT = MasterFast
-        'If the ChipMHz > 32 then user Master NOT MasterFast
-        if ChipMHz > 32 then
-            HWSPIMODESCRIPT = Master
-        end if
-        userspecifiedHWSPIMode = 1
-    end if
-#endscript
-
 #startup InitGLCD_ILI9340
 
 
@@ -171,7 +156,7 @@ Sub InitGLCD_ILI9340
 
   '  Mapped to global variables to same RAM
   ' dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
-      #define InitGLCD_ILI9341 nop
+  '    #define InitGLCD_ILI9341 nop
 
   'Setup code for ILI9340 controllers
   #if GLCD_TYPE = GLCD_TYPE_ILI9340
@@ -317,8 +302,15 @@ Sub InitGLCD_ILI9340
   SendCommand_ILI9340(ILI9340_DISPON)    'Display on
 
   'Default Colours
-  GLCDBackground = ILI9340_BLACK
   GLCDForeground = ILI9340_WHITE
+  #ifdef DEFAULT_GLCDBACKGROUND
+    GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+  #endif
+
+  #ifndef DEFAULT_GLCDBACKGROUND
+    GLCDBACKGROUND = ILI9340_BLACK
+  #endif
+
 
   'Variables required for device
   ILI9340_GLCD_WIDTH = GLCD_WIDTH

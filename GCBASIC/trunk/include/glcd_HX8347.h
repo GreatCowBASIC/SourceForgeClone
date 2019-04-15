@@ -22,6 +22,7 @@
   '16/11/2017 Initial release including OLED fonts
   '19/11/2017 Added PrintLocX and PrintLocY initialisation for character mode printing.
   'Correct missing #ENDIF and script update
+  '04/04/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
 
 'Hardware settings
 'Type
@@ -223,8 +224,17 @@ Sub InitGLCD_HX8347
 
       wait 120 ms
       'Colours
-      GLCDBackground = HX8347_BLACK
       GLCDForeground = HX8347_WHITE
+
+      'Default Colours
+      #ifdef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = DEFAULT_GLCDBACKGROUND
+      #endif
+
+      #ifndef DEFAULT_GLCDBACKGROUND
+        GLCDBACKGROUND = HX8347_BLACK
+      #endif
+
 
       #ifndef GLCD_OLED_FONT
         GLCDFontWidth = 6
