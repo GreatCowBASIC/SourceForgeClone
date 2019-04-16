@@ -886,7 +886,7 @@ SUB AllocateRAM
 							'PICs need to have arrays put at the end of RAM to reduce banking
 							'AVRs need arrays at start, so as to leave end of RAM free for stack 
 							If ModePIC Then
-								SRStart = FreeRAM - VarSize - 1
+								SRStart = FreeRAM - (VarSize - 1)
 								SREnd = 1
 								SRDir = -1
 								If ChipFamily = 15 Then
@@ -894,7 +894,7 @@ SUB AllocateRAM
 								End If
 							Else
 								SRStart = 1
-								SREnd = FreeRAM - VarSize - 1
+								SREnd = FreeRAM - (VarSize - 1)
 								SRDir = 1
 							End If
 						Else
@@ -903,7 +903,7 @@ SUB AllocateRAM
 							VarSize = GetTypeSize(.Type)
 							'Set location search direction and start point
 							SRStart = 1
-							SREnd = FreeRAM - VarSize - 1
+							SREnd = FreeRAM - (VarSize - 1)
 							SRDir = 1
 							UseLinear = 0
 						End If

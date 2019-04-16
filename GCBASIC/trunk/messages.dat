@@ -257,6 +257,7 @@ CannotConcat = "%type% %value% cannot be appended to a string variable"
 DoWithoutLoop = "Do without matching Loop"
 InvalidDoMode = "Invalid loop mode %mode%, mode (if specified) must be While or Until"
 DoWithoutCondition = "Missing condition after %mode%"
+VarAliasAndAt = "Alias and At cannot be used together, both set the variable location"
 
 'Warnings
 WarningShortName = "Single letter %type% name: %name%"

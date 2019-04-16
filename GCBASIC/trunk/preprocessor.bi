@@ -423,14 +423,14 @@ Sub PrepareBuiltIn
 	CurrPos = Subroutine(SBC)->CodeStart
 	If ModePIC Then
 		CurrPos = LinkedListInsert(CurrPos, "DMIN_START")
-		CurrPos = LinkedListInsert(CurrPos, "SysWaitTempS = 60")
-		CurrPos = LinkedListInsert(CurrPos, "Delay_S")
+		CurrPos = LinkedListInsert(CurrPos, "SysWaitTempMS = 60000")
+		CurrPos = LinkedListInsert(CurrPos, "Delay_MS")
 		CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempM, F")
 		CurrPos = LinkedListInsert(CurrPos, " goto DMIN_START")
 	ElseIf ModeAVR Then
 		CurrPos = LinkedListInsert(CurrPos, "DMIN_START:")
-		CurrPos = LinkedListInsert(CurrPos, "SysWaitTempS = 60")
-		CurrPos = LinkedListInsert(CurrPos, "Delay_S")
+		CurrPos = LinkedListInsert(CurrPos, "SysWaitTempMS = 60000")
+		CurrPos = LinkedListInsert(CurrPos, "Delay_MS")
 		CurrPos = LinkedListInsert(CurrPos, " dec SysWaitTempM")
 		CurrPos = LinkedListInsert(CurrPos, " brne DMIN_START")
 	End If
@@ -987,8 +987,10 @@ SUB PreProcessor
 				End If
 
 				'Remove any tabs and double spaces (again)
-				DO WHILE INSTR(DataSource, Chr(9)) <> 0: Replace DataSource, Chr(9), " ": LOOP
-				DO WHILE INSTR(DataSource, "  ") <> 0: Replace DataSource, "  ", " ": LOOP
+				DO WHILE INSTR(DataSource, Chr(9)) <> 0: Replace DataSource, Chr(9), " ": Loop
+				DO WHILE INSTR(DataSource, Chr(194)) <> 0: Replace DataSource, Chr(194), " ": Loop 'Odd character that sometimes shows up
+				DO WHILE INSTR(DataSource, "  ") <> 0: Replace DataSource, "  ", " ": Loop
+				DataSource = Trim(DataSource)
 
 				'Decide if the line read is part of a sub or not
 				IF Left(DataSource, 4) = "SUB " Or Left(DataSource, 9) = "FUNCTION " Or Left(DataSource, 6) = "MACRO " Then
