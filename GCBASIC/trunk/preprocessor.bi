@@ -900,7 +900,15 @@ SUB PreProcessor
 			End If
 
 			'Load line
-			IF T = 0 THEN
+			IF T = 0 Then
+				
+				'Convert single-line IFs to multiple line
+				IF INSTR(DataSource, "IF") <> 0 AND INSTR(DataSource, "THEN") <> 0 AND LEN(DataSource) > INSTR(DataSource, "THEN") + 3 THEN
+					Do While InStr(DataSource, "THEN ") <> 0: Replace DataSource, "THEN ", "THEN: ": Loop
+					Do While InStr(DataSource, " ELSE IF ") <> 0: Replace DataSource, " ELSE IF ", " :ELSE IF ": Loop
+					If INSTR(DataSource, " ELSE ") <> 0 Then Replace DataSource, " ELSE ", " :ELSE: "
+					DataSource = DataSource + ": END IF"
+				END If
 
 	MultiCommand:
 
@@ -910,13 +918,6 @@ SUB PreProcessor
 				If Left(DataSource, 3) = "IF(" Then
 					DataSource = "IF (" + Mid(DataSource, 4)
 				End If
-
-				'Convert single-line IFs to multiple line
-				IF INSTR(DataSource, "IF") <> 0 AND INSTR(DataSource, "THEN") <> 0 AND LEN(DataSource) > INSTR(DataSource, "THEN") + 3 THEN
-					Replace DataSource, "THEN", "THEN:"
-					If INSTR(DataSource, " ELSE ") <> 0 Then Replace DataSource, " ELSE ", " ELSE: "
-					DataSource = DataSource + ": END IF"
-				END IF
 
 				'Check that the IF has a THEN
 				IF Left(DataSource, 3) = "IF " AND INSTR(DataSource, "THEN") = 0 THEN
