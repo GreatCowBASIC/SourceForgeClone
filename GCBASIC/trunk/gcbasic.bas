@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-04-13 "
+Version = "0.98.<<>> 2019-04-16"
 #ifdef __FB_DARWIN__  'OS X/macOS
 	#ifndef __FB_64BIT__
 		Version = Version + " (Darwin 32 bit)"
@@ -4990,6 +4990,7 @@ Sub CompileDim (CurrSub As SubType Pointer)
 		InLine = CurrLine->Value
 
 		If Left(InLine, 4) = "DIM " THEN
+			
 			InLine = Mid(InLine, 5)
 			CurrLine = LinkedListDelete(CurrLine)
 
@@ -5059,6 +5060,11 @@ Sub CompileDim (CurrSub As SubType Pointer)
 					'Not supported, but can be added later if needed
 				End If
 				'Print "Var loc:"; VarFixedLoc
+				
+				'If also an alias, show an error. Can't be in two locations at once
+				If IsAlias Then
+					LogError(Message("VarAliasAndAt"), Origin)
+				End If
 			End If
 
 			For CV = 1 to NewVarCount
