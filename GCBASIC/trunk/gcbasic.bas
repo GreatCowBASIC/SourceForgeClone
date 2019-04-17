@@ -674,7 +674,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-04-16"
+Version = "0.98.<<>> 2019-04-17"
 #ifdef __FB_DARWIN__  'OS X/macOS
 	#ifndef __FB_64BIT__
 		Version = Version + " (Darwin 32 bit)"
@@ -4970,7 +4970,8 @@ End Function
 
 Sub CompileDim (CurrSub As SubType Pointer)
 	Dim As String VarName, VarType, VarAlias, VarFixedLocIn, Origin, InLine, SiStr, Temp
-	Dim As Integer PD, IsAlias, Si, CD, VarFixedLoc, NewVarCount
+	Dim As String AliasList(16)
+	Dim As Integer PD, IsAlias, Si, CD, VarFixedLoc, NewVarCount, ALC
 	Dim As LinkedListElement Pointer CurrLine
 
 	'Don't try to read dims from macro
@@ -5033,6 +5034,7 @@ Sub CompileDim (CurrSub As SubType Pointer)
 
 			'Check if alias
 			IsAlias = 0
+			VarAlias = ""
 			IF INSTR(InLine, " ALIAS ") <> 0 Then
 				IsAlias = -1
 				VarAlias = Trim(Mid(InLine, INSTR(InLine, " ALIAS ") + 7))
@@ -5065,6 +5067,28 @@ Sub CompileDim (CurrSub As SubType Pointer)
 				If IsAlias Then
 					LogError(Message("VarAliasAndAt"), Origin)
 				End If
+			End If
+			
+			'Ensure alias variable is also declared
+			If IsAlias Then
+				GetTokens (VarAlias, AliasList(), ALC, ",")
+				For PD = 1 To ALC
+					If Not IsConst(AliasList(PD)) And Not IsCalc(AliasList(PD)) Then
+						'Is variable an alias to itself?
+						Temp = Right(AliasList(PD), 2)
+						If Temp = "_H" Or Temp = "_U" Or Temp = "_E" Then
+							Temp = Left(AliasList(PD), Len(AliasList(PD)) - 2)
+						Else
+							Temp = AliasList(PD)
+						End If
+						If Temp = VarName Then
+							'Trying to add self as alias, prevent
+							LogError(Message("AliasToSelf"), Origin)
+							VarAlias = ""
+							IsAlias = 0
+						End If
+					End If
+				Next
 			End If
 
 			For CV = 1 to NewVarCount
@@ -5740,8 +5764,8 @@ Sub CompileGoto (CompSub As SubType Pointer)
 	'Compile GOSUBs, GOTOs and labels
 	Dim As String InLine, DestLabel, Origin
 	'Dim As Integer PD
-	Dim As LinkedListElement Pointer CurrLine
-
+	Dim As LinkedListElement Pointer CurrLine, Labels
+	
 	FoundCount = 0
 
 	'Find labels, alter on PICs
@@ -12797,6 +12821,7 @@ Function IsRegister (VarName As String) As Integer
 	Dim As String Temp, Source, SourceLowByte
 	Dim As Integer CurrSub, MinAliasSize
 	Dim As VariableType Pointer FoundVar
+	Dim As VariableListElement Pointer FoundFinalVar
 
 	'System vars that are always registers
 	'SysTemp vars are only registers on AVR, no room to be registers on PIC
@@ -12830,6 +12855,18 @@ Function IsRegister (VarName As String) As Integer
 	IF UCase(VarName) = "SYSDIVLOOP" Then Return -1
 	IF UCase(VarName) = "SYSSIGNBYTE" Then Return -1
 
+	'Is location known and in access bank?
+	If ModePIC And FinalVarList <> 0 Then
+		FoundFinalVar = HashMapGet(FinalVarList, UCase(VarName))
+		If FoundFinalVar <> 0 Then
+	 		If Val(FoundFinalVar->Value) = 0 And FoundFinalVar->Value <> "0" Then
+	 			Return 0
+	 		Else
+	 			Return IsNonBanked(Val(FoundFinalVar->Value))
+	 		End If
+		End If
+	End If
+
 	'User defined register vars
 	'If it's a register in one sub, it will be in all
 	Source = Trim(UCase(VarName))
@@ -12843,7 +12880,7 @@ Function IsRegister (VarName As String) As Integer
 			End If
 		END IF
 	Next
-
+	
 	'Check aliases
 	'May have an alias to a register
 	Source = Trim(UCase(VarName))
@@ -12865,7 +12902,12 @@ Function IsRegister (VarName As String) As Integer
 			'Have found an alias?
 			If Temp <> "" Then
 				If InStr(Temp, ",") <> 0 Then Temp = Trim(Left(Temp, InStr(Temp, ",") - 1))
-				Return IsRegister(Temp)
+				If Temp <> Source Then
+					Return IsRegister(Temp)
+				Else
+					'Alias to self
+					Return 0
+				End If
 			End If
 		End If
 
@@ -13335,9 +13377,9 @@ SUB OptimiseIF (CompSub As SubType Pointer = 0)
 
 	'Should leave labels, in case there is an else if
 
-	Dim As String Temp, InLine
-	Dim As Integer T
-	Dim As LinkedListElement Pointer CurrLine, PL(3)
+	Dim As String Temp, InLine, SearchLabel
+	Dim As Integer T, EndIfNotUsed
+	Dim As LinkedListElement Pointer CurrLine, PL(3), SearchBack
 
 	If CompSub = 0 Then
 		CurrLine = CompilerOutput->CodeList->Next
@@ -13391,6 +13433,20 @@ SUB OptimiseIF (CompSub As SubType Pointer = 0)
 					LinkedListDelete(PL(2))
 					If Left(PL(1)->Value, 4) <> "ELSE" Then
 						'CurrLine = LinkedListDelete(CurrLine)
+						'Check that ENDIF isn't used
+						EndIfNotUsed = -1
+						SearchLabel = " " + CurrLine->Value
+						SearchBack = CurrLine->Prev
+						Do While SearchBack <> 0
+							If Right(SearchBack->Value, Len(SearchLabel)) = SearchLabel Then
+								EndIfNotUsed = 0
+								Exit Do
+							End If
+							SearchBack = SearchBack->Prev
+						Loop
+						If EndIfNotUsed Then
+							CurrLine = LinkedListDelete(CurrLine)
+						End If
 					End If
 				END If
 
@@ -13415,6 +13471,21 @@ SUB OptimiseIF (CompSub As SubType Pointer = 0)
 						'CurrLine = LinkedListDelete(CurrLine)
 						If Left(PL(1)->Value, 4) <> "ELSE" Then
 							'CurrLine = LinkedListDelete(CurrLine)
+							'Check that ENDIF isn't used
+							EndIfNotUsed = -1
+							SearchLabel = " " + Left(CurrLine->Value, Len(CurrLine->Value) - 1)
+							SearchBack = CurrLine->Prev
+							Do While SearchBack <> 0
+								If Right(SearchBack->Value, Len(SearchLabel)) = SearchLabel Then
+									EndIfNotUsed = 0
+									Exit Do
+								End If
+								SearchBack = SearchBack->Prev
+							Loop
+							If EndIfNotUsed Then
+								CurrLine = LinkedListDelete(CurrLine)
+							End If
+							
 						End If
 					End If
 				END IF
