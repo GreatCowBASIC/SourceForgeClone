@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2018 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2019 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,7 @@
 ' 14/04/19    Revised Rotate to support GLCDDeviceWidth and GLCDDeviceHeight
 '             Added PrintLocX and PrintLocY initialisation for character mode printing.
 '             Added GLCDPrintString support
+' 18/04/18    Added support for ST7735_BLACKTAB | ST7735_GREENTAB | ST7735_REDTAB.  ST7735_MINI160x80 not seen in the wide therefore not supported...yet
 
 
 '
@@ -50,6 +51,8 @@
 '''@hardware GLCD_TYPE GLCD_TYPE_ST7735; Clock; GLCD_SCK; IO_Pin
 
 '''@hardware GLCD_TYPE GLCD_TYPE_ST7735; Reset; GLCD_RESET; IO_Pin
+'Select the correct TAB type - default to BLACKTAB
+#define ST7735TABCOLOR ST7735_BLACKTAB     'ST7735_BLACKTAB | ST7735_GREENTAB | ST7735_REDTAB
 
 'Pin mappings for ST7735
 #define ST7735_DC GLCD_DC
@@ -70,7 +73,6 @@
 #define _ST7735_DO _GLCD_DO
 #define _ST7735_SCK _GLCD_SCK
 
-
 #define BigPrint BigPrint_SSD1289
 
 'Column/row select commands for ST7735
@@ -78,9 +80,29 @@
 #define ST7735_ROW 0x2B
 
 ' Defines for ST7735
-#define INITR_GREENTAB 0x00
-#define INITR_REDTAB   0x01
-#define INITR_BLACKTAB   0x02
+#define ST7735_GREENTAB   0x00
+#define ST7735_REDTAB     0x01
+#define ST7735_BLACKTAB   0x02
+#define ST7735_MINI160x80 0x03
+
+
+'Determine the offset from the configuration of the TAB
+#script
+
+    ST7735_XSTART = 0
+    ST7735_YSTART = 0
+
+    IF ST7735TABCOLOR = ST7735_GREENTAB THEN
+      ST7735_XSTART = 2
+      ST7735_YSTART = 2
+    END IF
+
+    IF ST7735TABCOLOR = ST7735_REDTAB THEN
+      ST7735_XSTART = 2
+      ST7735_YSTART = 2
+    END IF
+
+#endscript
 
 #define ST7735_TFTWIDTH  128
 #define ST7735_TFTHEIGHT 160
@@ -170,10 +192,6 @@
 
 #startup InitGLCD_ST7735
 
-
-
-
-
 '''Initialise the GLCD device
 Sub InitGLCD_ST7735
 
@@ -213,106 +231,273 @@ Sub InitGLCD_ST7735
 
     'Reset display
     Set ST7735_RST On
-    Wait 10 ms
+    Wait 150 ms
     'Reset sequence (lower line for at least 10 us)
     Set ST7735_RST Off
-    Wait 25 us
+    Wait 150 us
     Set ST7735_RST On
-    Wait 10 ms
+    Wait 150 ms
     'Software reset
     SendCommand_ST7735 ST7735_SWRESET
-    Wait 200 ms
+    Wait 150 ms
 
     'Software reset
     SendCommand_ST7735 ST7735_SWRESET
-    Wait 200 ms
+    Wait 150 ms
 
     'Out of sleep mode
     SendCommand_ST7735 ST7735_SLPOUT
-    Wait 200 ms
+    Wait 255 ms
 
-    SendCommand_ST7735(ST7735_COLMOD)   ; set color mode
-    SendData_ST7735(0x05)               ; 16-bit color
-    Wait 10 ms
+    IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
 
-    SendCommand_ST7735(ST7735_FRMCTR1); // frame rate control
-    SendData_ST7735(0x00);          // fastest refresh
-    SendData_ST7735(0x06);          // 6 lines front porch
-    SendData_ST7735(0x03);          // 3 lines backporch
-    Wait 10 ms
+        SendCommand_ST7735(ST7735_COLMOD)
+        SendData_ST7735(0x05)               ; 16-bit color
+        Wait 10 ms
 
-    SendCommand_ST7735(ST7735_MADCTL);  // memory access control (directions)
-    SendData_ST7735(0xC0);          // row address/col address, bottom to top refresh/RGB not GBR
-    wait 10 ms
+        SendCommand_ST7735(ST7735_FRMCTR1)
+        SendData_ST7735(0x00)
+        SendData_ST7735(0x06)
+        SendData_ST7735(0x03)
+        Wait 10 ms
 
-    SendCommand_ST7735(ST7735_DISSET5); // display settings #5
-    SendData_ST7735(0x15);          // 1 clock cycle nonoverlap, 2 cycle gate rise, 3 cycle oscil. equalize
-    SendData_ST7735(0x02);          // fix on VTL
-    wait 10 ms;
-    SendCommand_ST7735(ST7735_INVCTR);  // display inversion control
-    SendData_ST7735(0x0);           // line inversion
-    wait 10 ms;
-    SendCommand_ST7735(ST7735_PWCTR1);  // power control
-    SendData_ST7735(0x02);          // GVDD = 4.7V
-    SendData_ST7735(0x70);          // 1.0uA
-    wait 10 ms;
+        SendCommand_ST7735(ST7735_MADCTL)
+        SendData_ST7735(0xC0)
 
-    '                    SendCommand_ST7735(ST7735_PWCTR2);  // power control
-    '                    SendData_ST7735(0x05);          // VGH = 14.7V, VGL = -7.35V
-    '                    SendCommand_ST7735(ST7735_PWCTR3);  // power control
-    '                    SendData_ST7735(0x01);          // Opamp current small
-    '                    SendData_ST7735(0x02);          // Boost frequency
-    '                    wait 10 ms;
-    '                    SendCommand_ST7735(ST7735_VMCTR1);  // power control
-    '                    SendData_ST7735(0x3C);          // VCOMH = 4V
-    '                    SendData_ST7735(0x38);          // VCOML = -1.1V
-    '                    wait 10 ms;
+        SendCommand_ST7735(ST7735_DISSET5)
+        SendData_ST7735(0x15)
+        SendData_ST7735(0x02)
+        wait 10 ms;
 
-    SendCommand_ST7735(ST7735_GMCTRP1);
-    SendData_ST7735(0x09);
-    SendData_ST7735(0x16);
-    SendData_ST7735(0x09);
-    SendData_ST7735(0x20);
-    SendData_ST7735(0x21);
-    SendData_ST7735(0x1B);
-    SendData_ST7735(0x13);
-    SendData_ST7735(0x19);
-    SendData_ST7735(0x17);
-    SendData_ST7735(0x15);
-    SendData_ST7735(0x1E);
-    SendData_ST7735(0x2B);
-    SendData_ST7735(0x04);
-    SendData_ST7735(0x05);
-    SendData_ST7735(0x02);
-    SendData_ST7735(0x0E);
-    wait 10 ms;
-    SendCommand_ST7735(ST7735_GMCTRN1);
-    SendData_ST7735(0x0B);
-    SendData_ST7735(0x14);
-    SendData_ST7735(0x08);
-    SendData_ST7735(0x1E);
-    SendData_ST7735(0x22);
-    SendData_ST7735(0x1D);
-    SendData_ST7735(0x18);
-    SendData_ST7735(0x1E);
-    SendData_ST7735(0x1B);
-    SendData_ST7735(0x1A);
-    SendData_ST7735(0x24);
-    SendData_ST7735(0x2B);
-    SendData_ST7735(0x06);
-    SendData_ST7735(0x06);
-    SendData_ST7735(0x02);
-    SendData_ST7735(0x0F);
-    wait 10 ms;
+        SendCommand_ST7735(ST7735_INVCTR )
+        SendData_ST7735(0x00);
+        wait 10 ms;
 
-    SendCommand_ST7735(ST7735_PWCTR6);  // power control
-    SendData_ST7735(0x11);
-    SendData_ST7735(0x15);
-    wait 10 ms;
+        SendCommand_ST7735(ST7735_PWCTR1)
+        SendData_ST7735(0x02)
+        SendData_ST7735(0x70)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR2)
+        SendData_ST7735(0x05)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR3)
+        SendData_ST7735(0x0A)
+        SendData_ST7735(0x02)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_VMCTR1)
+        SendData_ST7735(0x3c)
+        SendData_ST7735(0x38)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR6)
+        SendData_ST7735(0x11)
+        SendData_ST7735(0x15);
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_GMCTRP1);
+          SendData_ST7735(0x09);
+          SendData_ST7735(0x16);
+          SendData_ST7735(0x09);
+          SendData_ST7735(0x20);
+          SendData_ST7735(0x21);
+          SendData_ST7735(0x1B);
+          SendData_ST7735(0x13);
+          SendData_ST7735(0x19);
+          SendData_ST7735(0x17);
+          SendData_ST7735(0x15);
+          SendData_ST7735(0x1E);
+          SendData_ST7735(0x2B);
+          SendData_ST7735(0x04);
+          SendData_ST7735(0x05);
+          SendData_ST7735(0x02);
+          SendData_ST7735(0x0E);
+          wait 10 ms;
+        SendCommand_ST7735(ST7735_GMCTRN1);
+          SendData_ST7735(0x0B);
+          SendData_ST7735(0x14);
+          SendData_ST7735(0x08);
+          SendData_ST7735(0x1E);
+          SendData_ST7735(0x22);
+          SendData_ST7735(0x1D);
+          SendData_ST7735(0x18);
+          SendData_ST7735(0x1E);
+          SendData_ST7735(0x1B);
+          SendData_ST7735(0x1A);
+          SendData_ST7735(0x24);
+          SendData_ST7735(0x2B);
+          SendData_ST7735(0x06);
+          SendData_ST7735(0x06);
+          SendData_ST7735(0x02);
+          SendData_ST7735(0x0F);
+          wait 10 ms;
+
+        SendCommand_ST7735(ST7735_CASET)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x02)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x81)
+          wait 20 ms
+
+        SendCommand_ST7735(ST7735_RASET)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x02)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x81)
+          wait 20 ms
+
+    else
+        'red or green tab
+
+        SendCommand_ST7735(ST7735_FRMCTR1)
+        SendData_ST7735(0x01)
+        SendData_ST7735(0x2C)
+        SendData_ST7735(0x2D)
+        Wait 10 ms
+
+        SendCommand_ST7735(ST7735_FRMCTR2)
+        SendData_ST7735(0x01)
+        SendData_ST7735(0x2C)
+        SendData_ST7735(0x2D)
+        Wait 10 ms
+
+        SendCommand_ST7735(ST7735_FRMCTR3)
+        SendData_ST7735(0x01)
+        SendData_ST7735(0x2C)
+        SendData_ST7735(0x2D)
+        Wait 10 ms
+
+        SendCommand_ST7735(ST7735_INVCTR)
+        SendData_ST7735(0x07)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR1)
+        SendData_ST7735(0xA2)
+        SendData_ST7735(0x02)
+        SendData_ST7735(0x84)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR2)
+        SendData_ST7735(0xC5)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR3)
+        SendData_ST7735(0x0A)
+        SendData_ST7735(0x00)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR4)
+        SendData_ST7735(0x8A)
+        SendData_ST7735(0x2A)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_PWCTR5)
+        SendData_ST7735(0x8A)
+        SendData_ST7735(0xEE)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_VMCTR1)
+        SendData_ST7735(0x0E)
+        wait 10 ms;
+
+        SendCommand_ST7735(ST7735_INVOFF)
+        wait 10 ms;
+
+
+        SendCommand_ST7735(ST7735_MADCTL)
+        'Assumed to be GreenTab and RedTab
+        SendData_ST7735(0xC8)     'row address/col address, bottom to top refresh/GBR.
+        wait 20 ms
+
+        SendCommand_ST7735(ST7735_COLMOD)
+        SendData_ST7735(0x05)
+
+        SendCommand_ST7735(ST7735_CASET)
+        IF ST7735TABCOLOR = ST7735_GREENTAB then
+          'Assumed to be GreenTab
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x02)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x7f+0x02)
+        end if
+        IF ST7735TABCOLOR = ST7735_REDTAB then
+          'Assumed to be RedTab
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x7f)
+        end if
+
+        wait 20 ms
+
+        SendCommand_ST7735(ST7735_RASET)
+        IF ST7735TABCOLOR = ST7735_GREENTAB then
+          'Assumed to be GreenTab
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x01)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x9f+0x01)
+        end if
+        IF ST7735TABCOLOR = ST7735_REDTAB then
+          'Assumed to be RedTab
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x00)
+          SendData_ST7735(0x9f)
+        end if
+        wait 20 ms
+
+
+        SendCommand_ST7735(ST7735_GMCTRP1)
+        SendData_ST7735(0x02)
+        SendData_ST7735(0x1c)
+        SendData_ST7735(0x07)
+        SendData_ST7735(0x12)
+        SendData_ST7735(0x37)
+        SendData_ST7735(0x32)
+        SendData_ST7735(0x29)
+        SendData_ST7735(0x2d)
+        SendData_ST7735(0x29)
+        SendData_ST7735(0x25)
+        SendData_ST7735(0x2b)
+        SendData_ST7735(0x39)
+        SendData_ST7735(0x00)
+        SendData_ST7735(0x01)
+        SendData_ST7735(0x03)
+        SendData_ST7735(0x10)
+        wait 10 ms
+        SendCommand_ST7735(ST7735_GMCTRN1)
+        SendData_ST7735(0x03)
+        SendData_ST7735(0x1d)
+        SendData_ST7735(0x07)
+        SendData_ST7735(0x06)
+        SendData_ST7735(0x2e)
+        SendData_ST7735(0x2c)
+        SendData_ST7735(0x29)
+        SendData_ST7735(0x2d)
+        SendData_ST7735(0x2e)
+        SendData_ST7735(0x2e)
+        SendData_ST7735(0x37)
+        SendData_ST7735(0x37)
+        SendData_ST7735(0x00)
+        SendData_ST7735(0x00)
+        SendData_ST7735(0x02)
+        SendData_ST7735(0x10)
+        wait 10 ms
+
+    end if
+
 
     'Display on
-    SendCommand_ST7735 0x29
+    SendCommand_ST7735 ST7735_NORON
+    Wait 10 ms
+
+    'Display on
+    SendCommand_ST7735 ST7735_DISPON
     Wait 100 ms
+
 
     'Colours
     GLCDForeground = TFT_WHITE
@@ -326,8 +511,8 @@ Sub InitGLCD_ST7735
     #endif
 
     'Variables required for device
-    GLCDDeviceWidth = GLCD_WIDTH
-    GLCDDeviceHeight = GLCD_HEIGHT
+    GLCDDeviceWidth = GLCD_WIDTH - 1
+    GLCDDeviceHeight = GLCD_HEIGHT - 1
 
     #ifndef GLCD_OLED_FONT
       GLCDFontWidth = 6
@@ -724,6 +909,10 @@ End Sub
 '''@param ST7735End Ending address
 '''@hide
 Sub SetAddress_ST7735(In ST7735AddressType, In ST7735Start As Word, In ST7735End As Word)
+
+  ST7735Start += ST7735_XSTART
+  ST7735End   += ST7735_YSTART
+
   SendCommand_ST7735 ST7735AddressType
   SendData_ST7735 ST7735Start_H
   SendData_ST7735 ST7735Start
@@ -737,27 +926,47 @@ sub   GLCDRotate_ST7735 ( in ST7735AddressType )
   SendCommand_ST7735 ( ST7735_MADCTL )
   select case ST7735AddressType
         case LANDSCAPE
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MV |  ST7735_MADCTL_RGB )
-             GLCDDeviceWidth = GLCD_HEIGHT - 1
-             GLCDDeviceHeight = GLCD_WIDTH - 1
+            else
+             SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MV |  ST7735_MADCTL_BGR )
+            end if
+            GLCDDeviceWidth = GLCD_HEIGHT - 1
+            GLCDDeviceHeight = GLCD_WIDTH - 1
 
         case PORTRAIT_REV
-             GLCDDeviceWidth = GLCD_WIDTH - 1
-             GLCDDeviceHeight = GLCD_HEIGHT - 1
-             SendData_ST7735( ST7735_MADCTL_RGB )
-
+            GLCDDeviceWidth = GLCD_WIDTH - 1
+            GLCDDeviceHeight = GLCD_HEIGHT - 1
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+              SendData_ST7735( ST7735_MADCTL_RGB )
+            else
+              SendData_ST7735( ST7735_MADCTL_BGR )
+            end if
         case LANDSCAPE_REV
-             SendData_ST7735( ST7735_MADCTL_MV | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
-             GLCDDeviceWidth = GLCD_HEIGHT - 1
-             GLCDDeviceHeight = GLCD_WIDTH - 1
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+              SendData_ST7735( ST7735_MADCTL_MV | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
+            else
+              SendData_ST7735( ST7735_MADCTL_MV | ST7735_MADCTL_MY | ST7735_MADCTL_BGR )
+            end if
+            GLCDDeviceWidth = GLCD_HEIGHT - 1
+            GLCDDeviceHeight = GLCD_WIDTH - 1
         case PORTRAIT
-             GLCDDeviceWidth = GLCD_WIDTH - 1
-             GLCDDeviceHeight = GLCD_HEIGHT - 1
-             SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
+            GLCDDeviceWidth = GLCD_WIDTH - 1
+            GLCDDeviceHeight = GLCD_HEIGHT - 1
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
+            else
+              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_BGR )
+            end if
         case else
-             GLCDDeviceWidth = GLCD_WIDTH - 1
-             GLCDDeviceHeight = GLCD_HEIGHT - 1
-             SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
+            GLCDDeviceWidth = GLCD_WIDTH - 1
+            GLCDDeviceHeight = GLCD_HEIGHT - 1
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
+            else
+              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_BGR )
+            end if
+
   end select
 
 end sub
