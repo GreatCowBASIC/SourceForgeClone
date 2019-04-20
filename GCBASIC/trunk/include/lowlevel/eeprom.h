@@ -40,7 +40,7 @@
 ' 10/9/17: Removed depencies on Register.Bits - just use Bits. This prevents variables being created. And, change Script from NVMADRH to NVMADRL test.
 ' 21/10/18: Added EEPROM support for 18fxxq10 the   'Select DATA EE section (0x310000 - 0x3100FF) section
 ' 20/02/19: Revised bit check to ensure bit exists in ProgWrite - Bit(EEPGD)
-
+' 20/04/19: Revised bit check to ensure bit exists in EPWrite - NVMEN and added cleared NVCON1
 'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 #script
   If Var(EEDATA) Then
@@ -364,8 +364,9 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
 
    #IFDEF BIT(NVMREG0)
    '' 18FXXk40/K42 and others with NVMREG0/NVMREG1
+       NVMCON1 = 0
        SysEEPromAddress = SysEEAddress
-       NVMADRH =SysEEPromAddress_h
+       NVMADRH =SysEEPromAddress_h & 0X03  'ERV
        NVMADRL =SysEEPromAddress
         'Access EEPROM LOcations
         NVMREG0 = 0
@@ -386,7 +387,9 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
 
     [canskip]FREE =0b'0'
     [canskip]WREN= 0b'1'
-    [canskip]NVMEN=0b'1'
+    #if bit(NVMEN)
+      NVMEN=0b'1'
+    #endif
     GIE = 0
     NVMCON2 = 0x55
     NVMCON2 = 0xAA
@@ -398,8 +401,9 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     NOP
     wait while WR = 1
     [canskip]WREN= 0b'0'
-    [canskip]NVMEN= 0b'0'
-
+    #if bit(NVMEN)
+      NVMEN=0b'0'
+    #endif
     'Restore interrupt to initial  State
     GIE = IntState
 end sub
