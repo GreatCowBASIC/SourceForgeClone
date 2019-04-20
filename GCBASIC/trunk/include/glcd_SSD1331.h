@@ -120,12 +120,14 @@ Dim GLCDForeground As Word
 '''Initialise the GLCD device
 Sub InitGLCD_SSD1331
 
-  '  Mapped to global variables to same RAM
-  ' dim SSD1331_GLCD_HEIGHT, SSD1331_GLCD_WIDTH as word
-
-
-  'Setup code for SSD1331 controllers
   #if GLCD_TYPE = GLCD_TYPE_SSD1331
+
+    '  Mapped to global variables to same RAM
+    ' dim SSD1331_GLCD_HEIGHT, SSD1331_GLCD_WIDTH as word
+
+
+    'Setup code for SSD1331 controllers
+
 
     'Pin directions
     Dir SSD1331_CS Out

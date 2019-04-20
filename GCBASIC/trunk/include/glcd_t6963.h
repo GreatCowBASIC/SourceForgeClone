@@ -563,8 +563,9 @@ end sub
 '''@hide
 Sub InitGLCD_T6963
 
-  'Setup code for T6963 controllers
   #if GLCD_TYPE = GLCD_TYPE_T6963
+
+    'Setup code for T6963 controllers
 
     dim T6963_GLCD_HEIGHT, T6963_GLCD_WIDTH as word
 

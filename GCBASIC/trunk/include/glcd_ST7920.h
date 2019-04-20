@@ -67,10 +67,12 @@
 
 #startup InitGLCD_ST7920
 
-'''Initialise the GLCD device
+
 Sub InitGLCD_ST7920
 
           #if GLCD_TYPE = GLCD_TYPE_ST7920
+
+              '''Initialise the GLCD device
 
               #IFDEF GLCD_IO 4,8
 

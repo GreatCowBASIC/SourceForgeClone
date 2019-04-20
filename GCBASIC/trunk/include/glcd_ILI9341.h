@@ -210,12 +210,13 @@
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9341
 
-  '  Mapped to global variables to same RAM
-  ' dim ILI9341_GLCD_HEIGHT, ILI9341_GLCD_WIDTH as word
-
-
-  'Setup code for ILI9341 controllers
   #if GLCD_TYPE = GLCD_TYPE_ILI9341
+
+    '  Mapped to global variables to same RAM
+    ' dim ILI9341_GLCD_HEIGHT, ILI9341_GLCD_WIDTH as word
+
+
+    'Setup code for ILI9341 controllers
 
     asm showdebug  SPI
     asm showdebug  ILI9341_SPI_MODE_SCRIPT

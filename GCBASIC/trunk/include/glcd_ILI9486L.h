@@ -228,11 +228,13 @@
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9486L
 
-  '  Mapped to global variables to same RAM
-  dim ILI9486L_GLCD_HEIGHT, ILI9486L_GLCD_WIDTH as word
 
 
   #if GLCD_TYPE = GLCD_TYPE_ILI9486L
+
+    '  Mapped to global variables to same RAM
+    dim ILI9486L_GLCD_HEIGHT, ILI9486L_GLCD_WIDTH as word
+
 
     #ifdef GLCD_DataPort
         InitGLCD_fullport_ILI9486L
