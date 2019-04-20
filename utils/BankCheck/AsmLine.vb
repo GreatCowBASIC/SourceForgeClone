@@ -341,7 +341,15 @@ Public Class AsmLine
 	End Function
 	
 	Private Function IsCommonLoc(Location As Integer) As Boolean
-		If Location >= 112 Then Return True
+		'RAM
+		Select Case Program.ChipModel
+			Case "12f629", "12f675", "16f630"
+				If Location >= &h20 And Location <= &h5F Then Return True
+			Case Else
+				If Location >= 112 Then Return True
+		End Select
+		
+		'Common registers
 		If Program.EnhancedChip Then
 			If Location < 12 Then Return True
 		Else
@@ -350,6 +358,8 @@ Public Class AsmLine
 				Case Else: Return False
 			End Select
 		End If
+		
+		Return False
 	End Function
 	
 	Public Function RequiredPage As Integer

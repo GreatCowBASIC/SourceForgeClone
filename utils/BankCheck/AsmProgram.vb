@@ -56,7 +56,7 @@ Public Class AsmProgram
 				If CurrLine.Tidied.StartsWith("list ") Then
 					Dim list As String = CurrLine.Tidied.Replace(" ", "")
 					If list.IndexOf("p=") <> -1 Then
-						pChipModel = list.Substring(list.IndexOf("p=") + 2)
+						pChipModel = list.Substring(list.IndexOf("p=") + 2).ToLower
 						If pChipModel.IndexOf(",") <> -1 Then
 							pChipModel = pChipModel.Substring(0, pChipModel.IndexOf(","))
 							Exit For
