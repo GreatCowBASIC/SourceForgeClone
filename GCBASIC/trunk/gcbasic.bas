@@ -5234,7 +5234,7 @@ SUB CompileDir (CompSub As SubType Pointer)
 			'SFR for variable should exist, unless 12 bit core PIC
 			Temp = VarName
 			If Instr(Temp, ".") <> 0 Then Temp = Left(Temp, Instr(Temp, ".") - 1)
-			If ChipFamily <> 12 And Not IsIOReg(Temp) Then NotIOPort = -1
+			If ChipFamily <> 12 And GetSysVar(Temp) = 0 Then NotIOPort = -1
 			'Error if port is not valid
 			If NotIOPort Then
 				Temp = Message("NotIO")
@@ -11777,7 +11777,7 @@ Function GetPinDirection(PinNameIn As String) As PinDirType Pointer
 		End If
 	End If
 	'Not IO, not a pin
-	If Not IsIOReg(CheckPin) Then Return 0
+	If GetSysVar(CheckPin) = 0 Then Return 0
 
 	'Check that direction of pin can be set
 	'Get the variable that sets port direction
@@ -11792,7 +11792,7 @@ Function GetPinDirection(PinNameIn As String) As PinDirType Pointer
 		PinDirVar = "DDR" + PinDirVar
 	End If
 	'TRISIO will not be IO on 12 bit PIC, but will be used as direction buffer
-	If ChipFamily <> 12 And Not IsIOReg(PinDirVar) Then Return 0
+	If ChipFamily <> 12 And GetSysVar(PinDirVar) = 0 Then Return 0
 
 	'If pin name starts with LAT or PIN, replace with PORT
 	If Left(PinName, 3) = "LAT" Then PinName = "PORT" + Mid(PinName, 4)
