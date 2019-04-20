@@ -12,10 +12,12 @@ RunCmd=0
 [Make]
 Module=Module Build,fbc -c
 Recompile=2
-Current=3
-1=Windows Console (debug),fbc -g -exx -arch 586
-2=Windows Console (old CPU),fbc -exx -s console -arch 386
-3=Windows Console,fbc -exx -arch 586
+Current=5
+1=Windows Console (profile),fbc -exx -profile -arch 586
+2=Windows Console (debug),fbc -g -exx -arch 586
+3=Windows Console (old CPU),fbc -exx -s console -arch 386
+4=With gcc,fbc -gen gcc -O 3
+5=Windows Console,fbc -exx -arch 586
 Output=
 Run=
 Delete=
@@ -26,10 +28,10 @@ Delete=
 4=utils.bi
 5=assembly.bi
 [FileInfo]
-1=0,5036,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1=0,5187,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 2=0,21,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-3=0,906,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-4=0,963,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3=0,493,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+4=0,1256,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 5=0,732,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 [TabOrder]
 TabOrder=1,2,4,5,3
