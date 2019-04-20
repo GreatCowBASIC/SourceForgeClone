@@ -502,7 +502,7 @@ SUB PreProcessor
 	Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro, CurrChar
 	Dim As Integer CurrCharPos, ReadType, ConvertAgain, UnconvertedFiles
 	Dim As Single CurrPerc, PercAdd, PercOld
-	Dim As Double LastCompTime
+	Dim As Double LastCompTime, StartTime
 
 	CurrentSub = ""
 	UnconvertedFiles = 0
@@ -554,14 +554,14 @@ SUB PreProcessor
 				End If
 
 				If Not SourceFile(T).RequiresConversion Then
-					OPEN SourceFile(T).FileName For INPUT AS #1
+					Open SourceFile(T).FileName For INPUT AS #1
 					LC = 0
 
 					DO WHILE NOT EOF(1)
 						LINE INPUT #1, Temp
 						LC += 1
 						Temp = LTrim(Temp, Any Chr(9) + " ")
-						IF Left(UCase(Temp), 8) = "#INCLUDE" THEN
+						IF UCase(Left(Temp, 8)) = "#INCLUDE" THEN
 							IF INSTR(Temp, Chr(34)) <> 0 THEN
 								Temp = Mid(Temp, INSTR(Temp, Chr(34)) + 1)
 								Temp = Trim(Left(Temp, INSTR(Temp, Chr(34)) - 1))
@@ -598,7 +598,7 @@ SUB PreProcessor
 						END IF
 					LOOP
 
-					CLOSE #1
+					Close #1
 				END If
 			End If
 		NEXT
@@ -664,6 +664,7 @@ SUB PreProcessor
 	CurrPerc = 0.5
 	PercAdd = 1 / SourceFiles * 100
 	LineOrigin = 0
+	StartTime = Timer
 	FOR RF = 1 TO SourceFiles
 
 		'Translate files if needed
@@ -726,7 +727,7 @@ SUB PreProcessor
 			BinHexTemp = ""
 			CurrCharPos = 1
 			Do While CurrCharPos <= Len(DataSource)
-				CurrChar = Asc(Mid(DataSource, CurrCharPos, 1))
+				CurrChar = Asc(DataSource, CurrCharPos)
 
 				If CurrChar = Asc("""") Then
 					'Start or end of string
@@ -883,15 +884,22 @@ SUB PreProcessor
 
 			'Only load line if it is valid
 			T = 0
-			IF Left(DataSource, 1) = ";" THEN T = 1
-			IF Left(DataSource, 1) = "'" THEN T = 1
-			IF Left(DataSource, 4) = "REM " THEN T = 1
-			IF DataSource = "REM" THEN T = 1
-			IF DataSource = "" THEN T = 1
-			IF Left(DataSource, 8) = "#INCLUDE" THEN T = 1
+			IF DataSource = "" Then
+				T = 1
+			ElseIf Left(DataSource, 1) = "'" Then
+				T = 1
+			ElseIF Left(DataSource, 1) = ";" Then
+				T = 1
+			ElseIf Left(DataSource, 4) = "REM " Then
+				T = 1
+			ElseIF DataSource = "REM" Then
+				T = 1
+			
+			ElseIf Left(DataSource, 8) = "#INCLUDE" Then
+				T = 1
 			
 			'Process #asmraw directive, anything after this goes straight to asm with no processing
-			If Left(DataSource, 8) = "#ASMRAW " Then
+			ElseIf Left(DataSource, 8) = "#ASMRAW " Then
 				PCC += 1: PreserveCode(PCC) = " " + Trim(Mid(DataSourceRaw, InStr(UCase(DataSourceRaw), "#ASMRAW ") + 8))
 				IF S = 0 THEN MainCurrPos = LinkedListInsert(MainCurrPos, "PRESERVE " + Str(PCC))
 				IF S = 1 THEN CurrPos = LinkedListInsert(CurrPos, "PRESERVE " + Str(PCC))
@@ -969,24 +977,27 @@ SUB PreProcessor
 				End If
 
 				'PIC timer prescaler constant workarounds
-				DataSourceOld = DataSource
-				ReplaceAll DataSource, "PS0_1/", "PS0_"
-				ReplaceAll DataSource, "PS1_1/", "PS1_"
-				ReplaceAll DataSource, "PS2_1/", "PS2_"
-				ReplaceAll DataSource, "PS3_1/", "PS3_"
-				ReplaceAll DataSource, "PS4_1/", "PS4_"
-				ReplaceAll DataSource, "PS5_1/", "PS5_"
-				ReplaceAll DataSource, "PS6_1/", "PS6_"
-				ReplaceAll DataSource, "PS7_1/", "PS7_"
-				ReplaceAll DataSource, "PS8_1/", "PS8_"
-				ReplaceAll DataSource, "PS10_1/", "PS10_"
-				ReplaceAll DataSource, "PS12_1/", "PS12_"
-				If DataSourceOld <> DataSource Then
-					'Code to show warning - enable later if any problems found with this workaround
-					Temp = Message("WarningTimerConst")
-					'LogWarning(Temp, ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?")
+				If InStr(DataSource, "PS") <> 0 Then
+					DataSourceOld = DataSource
+					ReplaceAll DataSource, "PS0_1/", "PS0_"
+					ReplaceAll DataSource, "PS1_1/", "PS1_"
+					ReplaceAll DataSource, "PS2_1/", "PS2_"
+					ReplaceAll DataSource, "PS3_1/", "PS3_"
+					ReplaceAll DataSource, "PS4_1/", "PS4_"
+					ReplaceAll DataSource, "PS5_1/", "PS5_"
+					ReplaceAll DataSource, "PS6_1/", "PS6_"
+					ReplaceAll DataSource, "PS7_1/", "PS7_"
+					ReplaceAll DataSource, "PS8_1/", "PS8_"
+					ReplaceAll DataSource, "PS10_1/", "PS10_"
+					ReplaceAll DataSource, "PS12_1/", "PS12_"
+					
+					If DataSourceOld <> DataSource Then
+						'Code to show warning - enable later if any problems found with this workaround
+						Temp = Message("WarningTimerConst")
+						'LogWarning(Temp, ";?F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC) + "?")
+					End If
 				End If
-
+				
 				'Remove any tabs and double spaces (again)
 				DO WHILE INSTR(DataSource, Chr(9)) <> 0: Replace DataSource, Chr(9), " ": Loop
 				DO WHILE INSTR(DataSource, Chr(194)) <> 0: Replace DataSource, Chr(194), " ": Loop 'Odd character that sometimes shows up
@@ -1241,56 +1252,6 @@ SUB PreProcessor
 
 				DontSplitLoad:
 
-				'Remove LET commands
-				IF Left(DataSource, 4) = "LET " THEN DataSource = Trim(Mid(DataSource, 5))
-
-				'Remove SET if line contains =
-				IF Left(DataSource, 4) = "SET " And INSTR(DataSource, "=") <> 0 THEN DataSource = Trim(Mid(DataSource, 5))
-
-				IF DataSource = "EXIT FUNCTION" THEN DataSource = "EXIT SUB"
-
-				'Convert WHILE and WEND to DO WHILE and LOOP
-				IF Left(DataSource, 6) = "WHILE " THEN DataSource = "DO " + DataSource
-				IF DataSource = "WEND" THEN DataSource = "LOOP"
-
-				'Convert DO FOREVER To DO
-				IF DataSource = "DO FOREVER" Then DataSource = "DO"
-
-				'Convert LEFT and RIGHT in ROTATE command to LC or RC
-				'Convert LEFT SIMPLE and RIGHT SIMPLE to L or R
-				'(Prevents conflict with LEFT and RIGHT string functions
-				If Left(DataSource, 7) = "ROTATE " Then
-					If Right(DataSource, 6) = " RIGHT" Then
-						DataSource = Left(DataSource, Len(DataSource) - 6) + " RC"
-					ElseIf Right(DataSource, 5) = " LEFT" Then
-						DataSource = Left(DataSource, Len(DataSource) - 5) + " LC"
-					ElseIf Right(DataSource, 13) = " RIGHT SIMPLE" Then
-						DataSource = Left(DataSource, Len(DataSource) - 13) + " R"
-					ElseIf Right(DataSource, 12) = " LEFT SIMPLE" Then
-						DataSource = Left(DataSource, Len(DataSource) - 12) + " L"
-					End If
-				End If
-
-				'Replace ++, --, +=, -=
-				IF INSTR(DataSource, "++") <> 0 THEN
-					Value = Trim(Left(DataSource, INSTR(DataSource, "++") - 1))
-					DataSource = Value + "=" + Value + "+1"
-				END IF
-				IF INSTR(DataSource, "--") <> 0 THEN
-					Value = Left(DataSource, INSTR(DataSource, "--") - 1)
-					DataSource = Value + "=" + Value + "-1"
-				END IF
-				IF INSTR(DataSource, "+=") <> 0 THEN
-					Value = Left(DataSource, INSTR(DataSource, "+=") - 1)
-					Temp = Mid(DataSource, INSTR(DataSource, "+=") + 2)
-					DataSource = Value + "=" + Value + "+" + Temp
-				END IF
-				IF INSTR(DataSource, "-=") <> 0 THEN
-					Value = Left(DataSource, INSTR(DataSource, "-=") - 1)
-					Temp = Mid(DataSource, INSTR(DataSource, "-=") + 2)
-					DataSource = Value + "=" + Value + "-" + Temp
-				END IF
-
 				'Add tag to show origin of line, and make copy of line for preserve mode
 				'Except for directives, ASM and labels
 				IF (Left(DataSource, 1) <> "#" OR Left(DataSource, 8) = "#DEFINE ") AND Left(DataSource, 1) <> " " AND Right(DataSource, 1) <> ":" THEN
@@ -1355,7 +1316,7 @@ LoadNextFile:
 	
 	'Find compiler directives, except SCRIPT, ENDSCRIPT, IFDEF and ENDIF
 	IF VBS = 1 THEN
-		PRINT SPC(5); Message("CompDirs");
+		Print SPC(5); Message("CompDirs");
 	END IF
 
 	PercOld = 0
@@ -2134,4 +2095,80 @@ SUB RunScripts
 		End If
 	Loop
 
-END SUB
+END Sub
+
+Sub TidyInputSource (CompSub As SubType Pointer)
+	Dim As String Value, Temp, Origin, InLine
+	Dim As LinkedListElement Pointer CurrLine
+	
+	CurrLine = CompSub->CodeStart
+	Do While CurrLine <> 0
+		
+		'Remove LET commands
+		If Left(CurrLine->Value, 4) = "LET " Then
+			CurrLine->Value = Trim(Mid(CurrLine->Value, 5))
+		
+		'Remove SET if line contains =
+		ElseIF Left(CurrLine->Value, 4) = "SET " And INSTR(CurrLine->Value, "=") <> 0 Then
+			CurrLine->Value = Trim(Mid(CurrLine->Value, 5))
+
+		ElseIF Left(CurrLine->Value, 13) = "EXIT FUNCTION" Then
+			CurrLine->Value = "EXIT SUB"
+
+		'Convert WHILE and WEND to DO WHILE and LOOP
+		ElseIF Left(CurrLine->Value, 6) = "WHILE " Then
+			CurrLine->Value = "DO " + CurrLine->Value
+		ElseIf Left(CurrLine->Value, 5) = "WEND;" Then
+			CurrLine->Value = "LOOP"
+
+		'Convert DO FOREVER To DO
+		ElseIF Left(CurrLine->Value, 10) = "DO FOREVER" Then
+			CurrLine->Value = "DO"
+
+		'Convert LEFT and RIGHT in ROTATE command to LC or RC
+		'Convert LEFT SIMPLE and RIGHT SIMPLE to L or R
+		'(Prevents conflict with LEFT and RIGHT string functions
+		ElseIf Left(CurrLine->Value, 7) = "ROTATE " Then
+			Origin = ""
+			InLine = CurrLine->Value
+			IF INSTR(CurrLine->Value, ";?F") <> 0 THEN
+				Origin = Mid(CurrLine->Value, INSTR(CurrLine->Value, ";?F"))
+				InLine = RTrim(Left(CurrLine->Value, INSTR(CurrLine->Value, ";?F") - 1))
+			END If
+			
+			If Right(InLine, 6) = " RIGHT" Then
+				CurrLine->Value = Left(InLine, Len(InLine) - 6) + " RC" + Origin
+			ElseIf Right(InLine, 5) = " LEFT" Then
+				CurrLine->Value = Left(InLine, Len(InLine) - 5) + " LC" + Origin
+			ElseIf Right(InLine, 13) = " RIGHT SIMPLE" Then
+				CurrLine->Value = Left(InLine, Len(InLine) - 13) + " R" + Origin
+			ElseIf Right(InLine, 12) = " LEFT SIMPLE" Then
+				CurrLine->Value = Left(InLine, Len(InLine) - 12) + " L" + Origin
+			End If
+		End If
+
+		'Replace ++, --, +=, -=
+		If INSTR(CurrLine->Value, "++") <> 0 THEN
+			Origin = ""
+			IF INSTR(CurrLine->Value, ";?F") <> 0 Then Origin = Mid(CurrLine->Value, INSTR(CurrLine->Value, ";?F"))
+			Value = Trim(Left(CurrLine->Value, INSTR(CurrLine->Value, "++") - 1))
+			CurrLine->Value = Value + "=" + Value + "+1" + Origin
+		ElseIf INSTR(CurrLine->Value, "--") <> 0 THEN
+			Origin = ""
+			IF INSTR(CurrLine->Value, ";?F") <> 0 Then Origin = Mid(CurrLine->Value, INSTR(CurrLine->Value, ";?F"))
+			Value = Left(CurrLine->Value, INSTR(CurrLine->Value, "--") - 1)
+			CurrLine->Value = Value + "=" + Value + "-1" + Origin
+			
+		ElseIf INSTR(CurrLine->Value, "+=") <> 0 THEN
+			Value = Left(CurrLine->Value, INSTR(CurrLine->Value, "+=") - 1)
+			Temp = Mid(CurrLine->Value, INSTR(CurrLine->Value, "+=") + 2)
+			CurrLine->Value = Value + "=" + Value + "+" + Temp
+		ElseIF INSTR(CurrLine->Value, "-=") <> 0 THEN
+			Value = Left(CurrLine->Value, INSTR(CurrLine->Value, "-=") - 1)
+			Temp = Mid(CurrLine->Value, INSTR(CurrLine->Value, "-=") + 2)
+			CurrLine->Value = Value + "=" + Value + "-" + Temp
+		END If
+		
+		CurrLine = CurrLine->Next
+	Loop
+End Sub
