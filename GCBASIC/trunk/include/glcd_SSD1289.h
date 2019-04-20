@@ -194,10 +194,10 @@ End Sub
 '''Initialises the device
 Sub InitGLCD_SSD1289
 
-  Dim Orientation_SSD1289 as Byte
-
-
     #if GLCD_TYPE = GLCD_TYPE_SSD1289
+
+        Dim Orientation_SSD1289 as Byte
+
         Dim GLCDBackground as Byte
         Orientation_SSD1289 = 4 'PORTRAIT
 

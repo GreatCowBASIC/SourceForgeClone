@@ -98,8 +98,10 @@ dim GLCDDeviceWidth, GLCDDeviceHeight as word
 
 Sub InitGLCD_ILI9481
 
-  'Setup code for ILI9481 controllers
+
   #if GLCD_TYPE = GLCD_TYPE_ILI9481
+
+  'Setup code for ILI9481 controllers
 
     #ifndef GLCD_ILI9481_16bit
 

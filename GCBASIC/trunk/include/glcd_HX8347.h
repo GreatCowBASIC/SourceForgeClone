@@ -90,8 +90,10 @@ dim GLCDDeviceWidth, GLCDDeviceHeight as word
 
 Sub InitGLCD_HX8347
 
-  'Setup code for HX8347 controllers
+
   #if GLCD_TYPE = GLCD_TYPE_HX8347
+
+      'Setup code for HX8347 controllers
 
       dir  HX8347_GLCD_DB7 OUT
       dir  HX8347_GLCD_DB6 OUT

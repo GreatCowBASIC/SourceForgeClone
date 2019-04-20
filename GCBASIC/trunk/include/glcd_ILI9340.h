@@ -154,12 +154,13 @@
 '''Initialise the GLCD device
 Sub InitGLCD_ILI9340
 
-  '  Mapped to global variables to same RAM
-  ' dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
-  '    #define InitGLCD_ILI9341 nop
 
-  'Setup code for ILI9340 controllers
   #if GLCD_TYPE = GLCD_TYPE_ILI9340
+    '  Mapped to global variables to same RAM
+    ' dim ILI9340_GLCD_HEIGHT, ILI9340_GLCD_WIDTH as word
+    '    #define InitGLCD_ILI9341 nop
+
+    'Setup code for ILI9340 controllers
 
     'Pin directions
     Dir ILI9340_CS Out

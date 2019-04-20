@@ -89,8 +89,10 @@ dim GLCDDeviceWidth, GLCDDeviceHeight as word
 
 Sub InitGLCD_uc8230
 
-  'Setup code for uc8230 controllers
+
   #if GLCD_TYPE = GLCD_TYPE_uc8230
+
+      'Setup code for uc8230 controllers
 
       dir  uc8230_GLCD_DB7 OUT
       dir  uc8230_GLCD_DB6 OUT
