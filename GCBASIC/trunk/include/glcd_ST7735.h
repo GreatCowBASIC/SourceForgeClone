@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2019 Hugh Considine and Evan Venn
+'    Copyright (C) 2012 - 2019 Hugh Considine, Giuseppe D'Elia and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -36,8 +36,10 @@
 '             Added PrintLocX and PrintLocY initialisation for character mode printing.
 '             Added GLCDPrintString support
 ' 18/04/18    Added support for ST7735_BLACKTAB | ST7735_GREENTAB | ST7735_REDTAB.  ST7735_MINI160x80 not seen in the wide therefore not supported...yet
-
-
+'             Corrected offset in SetAddress by the two constants ST7735_XSTART and ST7735_YSTART - these constants can be used to adjust (OR NOT) the X and Y position of the pixels.  Where the constant is a pixel size.
+'             Added ST7735_RASET_ADJUSTMENT and ST7735_RASET_ADJUSTMENT - these constants can be used to adjust (OR NOT) the CASET and RASET registers
+'             Added rotation handler to SetAddress for ST7735_XSTART and ST7735_YSTART
+'             Corrected SetAddress and Rotate to use GLCDRotateState
 '
 'Hardware settings
 'Type
@@ -73,8 +75,6 @@
 #define _ST7735_DO _GLCD_DO
 #define _ST7735_SCK _GLCD_SCK
 
-#define BigPrint BigPrint_SSD1289
-
 'Column/row select commands for ST7735
 #define ST7735_COLUMN 0x2A
 #define ST7735_ROW 0x2B
@@ -89,18 +89,47 @@
 'Determine the offset from the configuration of the TAB
 #script
 
-    ST7735_XSTART = 0
-    ST7735_YSTART = 0
-
-    IF ST7735TABCOLOR = ST7735_GREENTAB THEN
-      ST7735_XSTART = 2
-      ST7735_YSTART = 2
+    DEFAULTST7735_YSTARTFOUND = 0
+    IF ST7735_YSTART THEN
+        DEFAULTST7735_YSTARTFOUND = 1
+    END IF
+    IF DEFAULTST7735_YSTARTFOUND = 0 THEN
+        ST7735_YSTART = 0
+    END IF
+    IF DEFAULTST7735_YSTARTFOUND = 0 THEN
+        IF ST7735TABCOLOR = ST7735_GREENTAB THEN
+            IF ST7735_YSTART = 0 THEN
+              ST7735_YSTART = 2
+            END IF
+            IF ST7735TABCOLOR = ST7735_REDTAB THEN
+              IF ST7735_YSTART = 0 THEN
+                ST7735_YSTART = 2
+              END IF
+            END IF
+        END IF
     END IF
 
-    IF ST7735TABCOLOR = ST7735_REDTAB THEN
-      ST7735_XSTART = 2
-      ST7735_YSTART = 2
+
+    DEFAULTST7735_XSTARTFOUND = 0
+    IF ST7735_XSTART THEN
+        DEFAULTST7735_XSTARTFOUND = 1
     END IF
+    IF DEFAULTST7735_XSTARTFOUND = 0 THEN
+        ST7735_XSTART = 0
+    END IF
+    IF DEFAULTST7735_XSTARTFOUND = 0 THEN
+        IF ST7735TABCOLOR = ST7735_GREENTAB THEN
+            IF ST7735_XSTART = 0 THEN
+              ST7735_XSTART = 2
+            END IF
+            IF ST7735TABCOLOR = ST7735_REDTAB THEN
+              IF ST7735_XSTART = 0 THEN
+                ST7735_XSTART = 2
+              END IF
+            END IF
+        END IF
+    END IF
+
 
 #endscript
 
@@ -122,7 +151,10 @@
 #define ST7735_DISPOFF 0x28
 #define ST7735_DISPON 0x29
 #define ST7735_CASET 0x2A
+#define ST7735_CASET_ADJUSTMENT 0
 #define ST7735_RASET 0x2B
+#define ST7735_RASET_ADJUSTMENT 0
+
 #define ST7735_RAMWR 0x2C
 #define ST7735_RAMRD 0x2E
 
@@ -195,19 +227,22 @@
 '''Initialise the GLCD device
 Sub InitGLCD_ST7735
 
-  'mapped to global variable
-  'dim GLCDDeviceWidth, GLCDDeviceHeight as byte
-  dim GLCDForeground, GLCDBackground as word
-
-  'Setup code for ST7735 controllers
   #if GLCD_TYPE = GLCD_TYPE_ST7735
+    'Setup code for ST7735 controllers
+
+    'mapped to global variable
+    'dim GLCDDeviceWidth, GLCDDeviceHeight as byte
+    dim GLCDForeground, GLCDBackground as word
+
     'Pin directions
     #IFNDEF GLCD_LAT
         Dir ST7735_CS Out
         Dir ST7735_DC Out
         Dir ST7735_RST Out
 
-        Dir ST7735_DI In
+        #if bit(ST7735_DI)
+          Dir ST7735_DI In
+        #endif
         Dir ST7735_DO Out
         Dir ST7735_SCK Out
     #endif
@@ -217,8 +252,9 @@ Sub InitGLCD_ST7735
         Dir _ST7735_CS Out
         Dir _ST7735_DC Out
         Dir _ST7735_RST Out
-
-        Dir _ST7735_DI In
+        #if bit(_ST7735_DI)
+          Dir _ST7735_DI In
+        #endif
         Dir _ST7735_DO Out
         Dir _ST7735_SCK Out
     #endif
@@ -418,9 +454,9 @@ Sub InitGLCD_ST7735
         IF ST7735TABCOLOR = ST7735_GREENTAB then
           'Assumed to be GreenTab
           SendData_ST7735(0x00)
-          SendData_ST7735(0x02)
+          SendData_ST7735(ST7735_CASET_ADJUSTMENT)
           SendData_ST7735(0x00)
-          SendData_ST7735(0x7f+0x02)
+          SendData_ST7735(0x7f+ST7735_CASET_ADJUSTMENT)
         end if
         IF ST7735TABCOLOR = ST7735_REDTAB then
           'Assumed to be RedTab
@@ -436,9 +472,9 @@ Sub InitGLCD_ST7735
         IF ST7735TABCOLOR = ST7735_GREENTAB then
           'Assumed to be GreenTab
           SendData_ST7735(0x00)
-          SendData_ST7735(0x01)
+          SendData_ST7735(0x00+ST7735_RASET_ADJUSTMENT)
           SendData_ST7735(0x00)
-          SendData_ST7735(0x9f+0x01)
+          SendData_ST7735(0x9f+ST7735_RASET_ADJUSTMENT)
         end if
         IF ST7735TABCOLOR = ST7735_REDTAB then
           'Assumed to be RedTab
@@ -525,11 +561,13 @@ Sub InitGLCD_ST7735
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
 
+    GLCDRotate ( PORTRAIT )
+    'Clear screen
+    GLCDCLS
+
   #endif
 
-'  GLCDRotate ( PORTRAIT_REV )
-  'Clear screen
-  GLCDCLS
+
 
 End Sub
 
@@ -910,8 +948,26 @@ End Sub
 '''@hide
 Sub SetAddress_ST7735(In ST7735AddressType, In ST7735Start As Word, In ST7735End As Word)
 
-  ST7735Start += ST7735_XSTART
-  ST7735End   += ST7735_YSTART
+    if GLCDRotateState.0 = 0 then
+      if ST7735AddressType = ST7735_COLUMN then
+          ST7735Start += ST7735_XSTART
+          ST7735End   += ST7735_XSTART
+      end if
+      if ST7735AddressType = ST7735_ROW then
+          ST7735Start += ST7735_YSTART
+          ST7735End   += ST7735_YSTART
+      end if
+    else
+      if ST7735AddressType = ST7735_COLUMN then
+          ST7735Start += ST7735_YSTART
+          ST7735End   += ST7735_YSTART
+      end if
+      if ST7735AddressType = ST7735_ROW then
+          ST7735Start += ST7735_XSTART
+          ST7735End   += ST7735_XSTART
+      end if
+
+    end if
 
   SendCommand_ST7735 ST7735AddressType
   SendData_ST7735 ST7735Start_H
@@ -921,10 +977,10 @@ Sub SetAddress_ST7735(In ST7735AddressType, In ST7735Start As Word, In ST7735End
 End Sub
 
 '''@hide
-sub   GLCDRotate_ST7735 ( in ST7735AddressType )
+sub   GLCDRotate_ST7735 ( in GLCDRotateState )
 
   SendCommand_ST7735 ( ST7735_MADCTL )
-  select case ST7735AddressType
+  select case GLCDRotateState
         case LANDSCAPE
             IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MV |  ST7735_MADCTL_RGB )
