@@ -46,6 +46,7 @@
 '    6/3/19   Added GLCD_TYPE_UC8320/ILI9320  to map to GLCD_TYPE_UC8320/ILI9320
 '    3/4/19   Moved DrawBMP from SSD1289 libary to GLCD.H
 '    14/4/19  Added GLCDPrintWithSize and update DrawEllipse routine
+'    20/4/19  Added GLCDPrintBigString
 
 
 
@@ -3535,6 +3536,73 @@ Sub DrawBMP ( in TFTXPos as Word, in TFTYPos as Word, in SelectedTable as word)
                 Next
     Next
 End Sub
+
+
+
+
+
+Sub GLCDPrintBigString(In PrintLocX as Word , In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
+  'Ported from SSD1289 library to break the dependency on SSD1289 library
+  Dim GLCDPrintLoc as Word
+  PrintLen = PrintData(0)
+  If PrintLen = 0 Then Exit Sub
+  GLCDPrintLoc = PrintLocX
+  For SysPrintTemp = 1 To PrintLen
+    DrawBigChar GLCDPrintLoc, PrintLocY, PrintData(SysPrintTemp), Color
+    GLCDPrintLoc += 13
+  Next
+End Sub
+
+'''Displays a character in a larger font
+Sub DrawBigChar (In CharLocX as Word, In CharLocY as Word, In CharCode, Optional In  Color as word = GLCDForeground )
+    Dim LocX , LocY as Word
+    if CharCode <=126 Then
+       CharCode -=32
+       Goto Tables
+    end if
+    if CharCode <=210 Then
+       CharCode -=33
+       Goto Tables
+    end if
+    if CharCode <= 250 Then
+       CharCode -=34
+       Goto Tables
+    end if
+    Tables:
+    For CurrCharCol = 1 to 24
+        CurrCol=CurrCharCol+CharCode*24-(CharCode/10)*240
+        if CharCode>=0 and CharCode<=9 then ReadTable BigFont32_41 , CurrCol, CurrCharVal
+        if CharCode>=10 and CharCode<=19 then ReadTable BigFont42_51 , CurrCol, CurrCharVal
+        if CharCode>=20 and CharCode<=29 then ReadTable BigFont52_61 , CurrCol, CurrCharVal
+        if CharCode>=30 and CharCode<=39 then ReadTable BigFont62_71 , CurrCol, CurrCharVal
+        if CharCode>=40 and CharCode<=49 then ReadTable BigFont72_81 , CurrCol, CurrCharVal
+        if CharCode>=50 and CharCode<=59 then ReadTable BigFont82_91 , CurrCol, CurrCharVal
+        if CharCode>=60 and CharCode<=69 then ReadTable BigFont92_101 , CurrCol, CurrCharVal
+        if CharCode>=70 and CharCode<=79 then ReadTable BigFont102_111 , CurrCol, CurrCharVal
+        if CharCode>=80 and CharCode<=89 then ReadTable BigFont112_121 , CurrCol, CurrCharVal
+        if CharCode>=90 and CharCode<=99 then ReadTable BigFont122_126 , CurrCol, CurrCharVal
+        if CharCode>=160 and CharCode<=169 then ReadTable BigFont193_202 , CurrCol, CurrCharVal
+        if CharCode>=170 and CharCode<=179 then ReadTable BigFont203_212 , CurrCol, CurrCharVal
+        if CharCode>=180 and CharCode<=183 then ReadTable BigFont213_216 , CurrCol, CurrCharVal
+
+        if CurrCharVal=36 then CurrCharVal=33
+        For CurrCharRow = 1 to 8
+          LocX=[word]CharLocX+CurrCharCol
+          LocY=[word]CharLocY+CurrCharRow
+          if CurrCharCol>12 then
+             LocX= LocX - 12
+             LocY= LocY + 8
+          end if
+          if CurrCharVal.0=1 then
+             PSet LocX , LocY , Color
+          else
+             PSet LocX , LocY , GLCDBackground
+          end if
+          Rotate CurrCharVal Right
+        Next
+    Next
+End Sub
+
 
 Table OLEDFont2 as byte
 0x00
