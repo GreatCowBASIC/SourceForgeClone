@@ -56,7 +56,7 @@
 '    07062018 - Added 24mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    08062018 - Added 0.0625mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    09012018 - Updated type 103 to support 18f25j53 class oscillator
-'    10042019 - Updated to remove script message and comment tidyup only
+'    19042019 - Updated to remove script message and comment tidyup only
 
 
 
@@ -143,7 +143,7 @@ Sub InitSys
 
 
          #IFDEF ChipFamily 16
-            'is ChipFamily16
+            'The MCU is a ChipFamily16
            'Section support many MCUs, 18FxxK40, 18FxxK42 etc etc all have NDIV3 bit
             #IFDEF Bit(NDIV3)
 
@@ -228,16 +228,19 @@ Sub InitSys
          #Endif
 
          #IFNDEF CHIPFamily 16
+                asm showdebug The MCU is a chip family ChipFamily
 
-                asm showdebug OSCCON type is 102 'therefore not CHIPFamily 16
+                asm showdebug OSCCON type is 102
 
                 #IFDEF ChipMHz 32
                   #IFDEF Var(OSCSTAT)
-                     OSCFRQ = 0b00000110 'OSCSTAT chip.... the 16f18855 style chip
+                     'Set OSCFRQ values for MCUs with OSCSTAT... the 16F18855 MCU family
+                     OSCFRQ = 0b00000110
                   #ENDIF
 
                   #IFDEF Var(OSCSTAT1)
-                    OSCFRQ = 0b00000111 'OSCSTAT1 chip... the 16F18326/18346 style chip
+                    'Set OSCFRQ values for MCUs with OSCSTAT1 chip... the 16F18326/18346 MCU family
+                    OSCFRQ = 0b00000111
                   #ENDIF
 
                 #ENDIF
@@ -929,16 +932,12 @@ Sub InitSys
   #IFDEF Var(CMCON)
 
     #IFNDEF BIT(CMEN0)
-      'Turn off comparator - this default setting not changed since 2013
+      'Turn off comparator - this is the default setting
       CMCON = 7
     #ENDIF
 
     #IFDEF BIT(CMEN0)
-      'Applied for following chips
-      '    18f1230.dat:CMEN1,CMCON,1
-      '    18f1231.dat:CMEN1,CMCON,1
-      '    18f1330.dat:CMEN1,CMCON,1
-      '    18f1331.dat:CMEN1,CMCON,1
+      'Applied for following MCU types 18f1xxx
       CMEN0 = 0
       CMEN1 = 0
       CMEN2 = 0
@@ -971,7 +970,7 @@ Sub InitSys
 
 
   #IFDEF ChipFamily 12
-    'Set GPIO.2 to digital (clear T0CS bit)
+    'The MCU is a chip family ChipNameStr, so, set GPIO.2 to digital by clear T0CS bit
     #IFDEF Bit(T0CS)
       movlw b'11000111'
       option
