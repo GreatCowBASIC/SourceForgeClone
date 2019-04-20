@@ -299,6 +299,9 @@
             DebugPrintCRLF
          next
               
+	
+	TempVarTest "TempVar"
+	
           end
           
 Function strtest
@@ -309,4 +312,11 @@ Function strtest
            end if
           next
 End Function
+
+Sub TempVarTest(InValue As String)
+	DebugPrint "Testing "
+	DebugPrint InValue
+	DebugPrint " Testing"
+	DebugPrintCRLF
+End Sub
 

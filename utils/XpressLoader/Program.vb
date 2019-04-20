@@ -41,8 +41,8 @@ Module Program
 		
 		'Need to find correct drive (should have name XPRESS, be removable, and be small)
 		Dim destDir As DirectoryInfo = Nothing
-		Dim driveList() As DriveInfo = DriveInfo.GetDrives
-		For Each drive In driveList
+		'Dim driveList() As DriveInfo = DriveInfo.GetDrives
+		For Each drive In My.Computer.FileSystem.Drives 'driveList
 			If drive.IsReady Then
 				If drive.DriveType = DriveType.Removable And drive.VolumeLabel = "XPRESS" And drive.AvailableFreeSpace < 1048576 Then
 					destDir = drive.RootDirectory
