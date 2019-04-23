@@ -12,6 +12,8 @@
 #2018-11-25: install copies SupportFiles, too, chmod enabled again
 #2018-12-06: some MixedCase filenames changed
 #2018-12-12: MixedCase found again sources were not ommitted while install
+#2019-04-23: corrected Path for readme-linux-install.txt
+
 # NOT to be used on any other operating system (eg. Windows/macOS/FreeBSD).
 
 echo -e "\nGreat Cow Basic generic Linux installer, Version 0.6\n"
@@ -118,7 +120,7 @@ install()
     fi
   else
     echo "The Target Directory \"$installdir\" already exists."
-    echo "Please read \"../README-LINUX-INSTALL.txt\" Step 7 carefully."
+    echo "Please read \"readme-linux-install.txt\" Step 7 carefully."
     echo "Exiting."
     exit 1
   fi
