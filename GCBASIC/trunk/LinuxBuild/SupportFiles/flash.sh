@@ -14,7 +14,7 @@
 ## USBASP firmware (2011-05-28) benefit from. Actually most of the chinese USBASPs can be updated (needs two programmers).
 
 basename=${0##*/}
-
+export LC_ALL=C
 if [ $# -ne 2 ]; then
   echo "Usage: $basename <hexfile> <chipmodel>"
   echo "Example: $basename myfile.hex tiny44"
