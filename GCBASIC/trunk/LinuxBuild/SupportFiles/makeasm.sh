@@ -7,7 +7,7 @@
 basename=${0##*/}
 installdir=$(dirname $(which gcbasic))
 proc=awk
-
+export LC_ALL=C
 if [ $# -ne 1 ]; then
   echo "Usage: $basename <sourcefile>"
   echo "Example: $basename myfile.gcb"
