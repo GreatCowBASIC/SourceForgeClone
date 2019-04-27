@@ -91,6 +91,7 @@
 ' 05/02/2017: Corrected Typos in Inittimer 5/7
 ' 21/01/2019: Added timersource timer source variants #1,2and3 - handled in the script by testing bit(TMR1CLK_T1CS4) then changing the clock source constants
 ' 23/01/2019: Revised Clock sources 'Added set Clock Source on1/12/2016' the script was incorrect and was not operating as expected
+' 27/04/2019: Revised InitTimer1, 3 and 5 to resolve missing clock source  LFINTOSC. Chip requires TMR1CS1 and TMR1CS0 to support LFINTOSC.
 '***********************************************************
 
 'Subroutines:
@@ -265,6 +266,8 @@
   #define Ext 2
   #define ExtOsc 3
   #define sosc ExtOsc
+  #define LFINTOSC 4
+
  #SCRIPT
 
   if PIC then
@@ -1494,19 +1497,23 @@ End Sub
 Sub InitTimer1(In TMRSource, In TMRPres)
 
   #ifdef PIC
-    'Pwr On Reset State of TxCON for 1/3/5/7 is "0"
-    'TXCON Timer REGISTER for 1/3/5/7 are NOT the Same on ALL PICS
-    'TMRON is Bit0 on all Chips
+    'Asummptions
+    '- Pwr On Reset State of TxCON for 1/3/5/7 is "0"
+    '- TXCON Timer REGISTER for 1/3/5/7 are NOT the Same on ALL PICS
+    '- TMRON is Bit0 on all Chips
+    '- OSCEN & SOSCEN are always TxCON.3 and perform the same function
+    'but, of course, see Datasheet for Detailed Register Information
 
-    '** OSCEN & SOSCEN are always TxCON.3 and perform the same function
-    'See Datasheet for Detailed Register Information
-
-     #ifdef Var(T1CON) 'ALL Pics w/Timer1 module have T1CON reg
+     #ifdef Var(T1CON)
+        'Handle PICs with Timer1 module have T1CON register
 
         #IF NoVar(T1CLK)
-
+           '
+           'Handle NoVar(T1CLK)
+           '
            'Test for valid Pres parameter
-            'uses less memory than multiple boulean "AND"
+           '
+           'This coding approach uses less memory than multiple boolean "AND" statements
             If TMRPres <> 0 then
                IF TMRPres <> 16 then
                   IF TMRPres <> 32 then
@@ -1520,20 +1527,24 @@ Sub InitTimer1(In TMRSource, In TMRPres)
             'Re-Using TMRPres as TxCON Temp Register
             IF TMR1ON = 1 then Set TMRPres.0 ON  'The timer running/ Dont Stop !
 
-           'Select Case uses too much memory - changed
+           'Examine parameter TMRSource
             IF TMRSource = OSC then
-               #ifdef bit(TMR1CS)    'TXCON.1 on some chips
+               #ifdef bit(TMR1CS)
+                   'TMR1CS1 is TXCON.1 on some chips
                    Set TMRPres.1 OFF
                #endif
 
-               #ifdef Bit(TMR1CS1)   'TXcon.7 on other chips
+               #ifdef Bit(TMR1CS1)
+                   'TMR1CS1 is TXcon.7 on other chips
                    Set TMRPres.7 OFF
                #endif
-               Set TMRPres.3 OFF  'SOSCEN and OSCEN are Always Bit 3
+               'Assumes that SOSCEN and OSCEN are always Bit 3
+               Set TMRPres.3 OFF
             END IF
 
             IF TMRSource = EXT then
                #ifdef bit(TMR1CS)
+                   'See datasheet 16f690 for TMR1CS example as T1CON.bit
                    Set TMRPres.1 ON
                #endif
 
@@ -1545,6 +1556,7 @@ Sub InitTimer1(In TMRSource, In TMRPres)
 
             If TMRSource = ExtOsc Then
                #ifdef bit(TMR1CS)
+                  'See datasheet 16f690 for TMR1CS example as T1CON.bit
                    Set TMRPres.1 ON
                #endif
 
@@ -1553,20 +1565,37 @@ Sub InitTimer1(In TMRSource, In TMRPres)
                #endif
                 Set TMRPres.3 ON
             END IF
+
+
+            If TMRSource = LFINTOSC Then
+               'Added to resolve missing clock source  LFINTOSC
+               'Chip requires TMR1CS1 and TMR1CS0
+               #ifdef bit(TMR1CS)
+                   'No supportted on this type of chip
+               #endif
+
+               #ifdef Bit(TMR1CS1)
+                   Set TMRPres.7 ON
+                   Set TMRPres.6 ON
+               #endif
+               Set TMRPres.3 OFF
+            END IF
+
            'Done building Temp Variable. Now write register
            T1CON = TMRPres
          #endif
      #ENDIF
 
 
-      ; 33 Newer Chips have TxCLK Register ( TIMER 1/3/5/7 )
-      ;
-      ' 12/16F16xx   Series
-      ' 16F153xx     Series
-      ' 16F188xx     Series
-      ' 18F1xxK40    series
 
-       #IFDEF VAR(T1CLK)  ;
+       #IFDEF VAR(T1CLK)
+        ; 33 Newer Chips have TxCLK Register ( TIMER 1/3/5/7 )
+        ;
+        ' 12/16F16xx   Series
+        ' 16F153xx     Series
+        ' 16F188xx     Series
+        ' 18F1xxK40    series
+
 
            If TMRPres <> 0 then
                  IF TMRPres <> 16 then
@@ -1755,6 +1784,21 @@ Sub InitTimer3(In TMRSource, In TMRPres)
                #endif
                 Set TMRPres.3 ON
             END IF
+
+            If TMRSource = LFINTOSC Then
+               'Added to resolve missing clock source  LFINTOSC
+               'Chip requires TMR3CS1 and TMR3CS0
+               #ifdef bit(TMR3CS)
+                   'No supportted on this type of chip
+               #endif
+
+               #ifdef Bit(TMR3CS1)
+                   Set TMRPres.7 ON
+                   Set TMRPres.6 ON
+               #endif
+               Set TMRPres.3 OFF
+            END IF
+
            'Done building Temp Variable. Now write register
            T3CON = TMRPres
          #endif
@@ -1948,6 +1992,21 @@ Sub InitTimer5(In TMRSource, In TMRPres)
                #endif
                 Set TMRPres.3 ON
             END IF
+
+            If TMRSource = LFINTOSC Then
+               'Added to resolve missing clock source  LFINTOSC
+               'Chip requires TMR5CS1 and TMR5CS0
+               #ifdef bit(TMR5CS)
+                   'No supportted on this type of chip
+               #endif
+
+               #ifdef Bit(TMR5CS1)
+                   Set TMRPres.7 ON
+                   Set TMRPres.6 ON
+               #endif
+               Set TMRPres.3 OFF
+            END IF
+
            'Done building Temp Variable. Now write register
            T5CON = TMRPres
          #endif
