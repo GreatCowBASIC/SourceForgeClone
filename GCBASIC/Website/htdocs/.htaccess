@@ -1,2 +1,13 @@
-Redirect /index.html http://gcbasic.sourceforge.net/index.php
+Redirect /index.php http://gcbasic.sourceforge.net/Typesetter/index.php
+Redirect /starting.html http://gcbasic.sourceforge.net/Typesetter/index.php
+Redirect /download.html http://gcbasic.sourceforge.net/Typesetter/index.php/Download
+Redirect /pickit.html   http://www.pickitplus.co.uk/
+Redirect /pickit   http://www.pickitplus.co.uk/
+Redirect /pickit   http://www.pickitplus.co.uk/
+Redirect /pickit.html   http://www.pickitplus.co.uk/
+Redirect /Typesetter/index.php/pickit http://www.pickitplus.co.uk/
+Redirect /PICkitPlus  http://www.pickitplus.co.uk/
+Redirect /PICkitPlus  http://www.pickitplus.co.uk/
+Redirect /pickitPlus    http://www.pickitplus.co.uk/
+
 
