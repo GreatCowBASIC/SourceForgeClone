@@ -1,5 +1,5 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2018 Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
+'    Copyright (C) 2006 - 2019 Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
 '
 '
 '    This library is free software; you can redistribute it and/or
@@ -121,7 +121,8 @@
 ''' 25/8/2018 Revised to add clock source for PWM method. Datasheet was incorrect!!! In PWM Harware module.
 ''' 24/11/2018 Added PWM8 for K42
 ''' 13/11/2018 Added channels 1,2 and 3 to HPWUpdate
-''' 14/12/2019 Added PWMxOE enable bits to support parts that need it. 16f1503 etc.
+''' 14/12/2018 Added PWMxOE enable bits to support parts that need it. 16f1503 etc.
+''' 02/05/2019 Added HPWMUpdate for CCP1..CCP5. Two sections one for the hardware PWM module(s) and one for the CCP module(s)
 
 
   'define the defaults
@@ -2895,10 +2896,11 @@ SetupCCPPWMRegisters:
       AddHPWMCCPSetup1
     #endif
 
-    #ifdef NoVar(CCP2CON)   'We assumne there is is only 1 CCP module on Chip
+    #ifdef NoVar(CCP2CON)
+      'NoVar(CCP2CON) - We assumne there is is only 1 CCP module on Chip
       PRx_Temp = PWMDuty * (PRx_Temp + 2)
       CCPR1L = PRx_Temp_H
-      If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+      If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero
       SET CCP1CON.CCP1M3 ON
       SET CCP1CON.CCP1M2 ON
       SET CCP1CON.CCP1M1 OFF
@@ -2917,9 +2919,9 @@ SetupCCPPWMRegisters:
   #endif
 
 
-  'Devices with more than one CCP
-  #ifdef Var(CCP2CON)
 
+  #ifdef Var(CCP2CON)
+   'Devices with more than one CCP
     #ifdef USE_HPWMCCP1 TRUE 'USE_HPWMCCP1 TRUE
 
       #ifdef AddHPWMCCPSetup1
@@ -2929,19 +2931,21 @@ SetupCCPPWMRegisters:
       if PWMChannel = 1 then
 
 
-        'Testing this bit is to identify the 2016 chip that use CCPR1H and CCPR1L of PWM
+
         #ifndef BIT(CCP1FMT)
-            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction  - WMR
+            'ifndef BIT(CCP1FMT) Testing this bit is to identify the 2016 chip that use CCPR1H and CCPR1L for PWM
+            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction
             CCPR1L = PRx_Temp_H
-            If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero - WMR
+            If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero
             SET CCP1M3 ON
             SET CCP1M2 ON
             SET CCP1M1 OFF
             SET CCP1M0 OFF
         #ENDIF
 
-        'Testing this bit is to identify the 2016 chip that use CCPR1H and CCPR1L of PWM
+
         #ifdef BIT(CCP1FMT)
+            'ifdef BIT(CCP1FMT) Testing this bit is to identify the 2016 chip that use CCPR1H and CCPR1L for PWM
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
             CCPR1H = PRx_Temp_H
             CCPR1L = PRx_Temp
@@ -2982,47 +2986,49 @@ SetupCCPPWMRegisters:
         AddHPWMCCPSetup2
       #endif
 
-      if PWMChannel = 2 then
+      #IFDEF VAR(CCP2CON)
 
+          if PWMChannel = 2 then
 
-        #ifndef BIT(CCP2FMT)
-            PRx_Temp = PWMDuty * ( PRx_Temp + 2)  'Correction  - WMR
-            CCPR2L = PRx_Temp_H
-            If PWMDuty = 0 Then CCPR2L = 0  ' Assure OFF at Zero - WMR
-            SET CCP2M3 ON
-            SET CCP2M2 ON
-            SET CCP2M1 OFF
-            SET CCP2M0 OFF
-        #ENDIF
+            #ifndef BIT(CCP2FMT)
+                PRx_Temp = PWMDuty * ( PRx_Temp + 2)  'Correction
+                CCPR2L = PRx_Temp_H
+                If PWMDuty = 0 Then CCPR2L = 0  ' Assure OFF at Zero
+                SET CCP2M3 ON
+                SET CCP2M2 ON
+                SET CCP2M1 OFF
+                SET CCP2M0 OFF
+            #ENDIF
 
-        #ifdef BIT(CCP2FMT)
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
-            CCPR2H = PRx_Temp_H
-            CCPR2L = PRx_Temp
-            SET CCP2M3 ON
-            SET CCP2M2 ON
-            SET CCP2M1 ON
-            SET CCP2M0 ON
+            #ifdef BIT(CCP2FMT)
+                calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+                CCPR2H = PRx_Temp_H
+                CCPR2L = PRx_Temp
+                SET CCP2M3 ON
+                SET CCP2M2 ON
+                SET CCP2M1 ON
+                SET CCP2M0 ON
 
-            #ifdef bit(CCP2EN)
-              SET CCP2EN ON
+                #ifdef bit(CCP2EN)
+                  SET CCP2EN ON
+                #endif
+
+                #ifdef bit(CCP2CON_EN)
+                  SET CCP2CON_EN ON
+                #endif
+
+                #ifdef bit(CCP2FMT)
+                  SET CCP2FMT ON
+                #endif
+            #ENDIF
+
+            #ifdef BIT(C2TSEL0)
+            C2TSEL0 = TimerSelectionBits.0
+            C2TSEL1 = TimerSelectionBits.1
             #endif
 
-            #ifdef bit(CCP2CON_EN)
-              SET CCP2CON_EN ON
-            #endif
-
-            #ifdef bit(CCP2FMT)
-              SET CCP2FMT ON
-            #endif
-        #ENDIF
-
-        #ifdef BIT(C2TSEL0)
-        C2TSEL0 = TimerSelectionBits.0
-        C2TSEL1 = TimerSelectionBits.1
-        #endif
-
-      end if
+          end if
+      #endif
 
       #ifdef AddHPWMCCPExit2
         AddHPWMCCPExit2
@@ -3042,9 +3048,9 @@ SetupCCPPWMRegisters:
       if PWMChannel = 3 then 'USE_HPWMCCP3 TRUE
 
         #ifndef BIT(CCP3FMT)
-            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction  - WMR
+            PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction
             CCPR3L = PRx_Temp_H
-            If PWMDuty = 0 Then CCPR3L = 0  ' Assure OFF at Zero - WMR
+            If PWMDuty = 0 Then CCPR3L = 0  ' Assure OFF at Zero
             SET CCP3M3 ON
             SET CCP3M2 ON
             SET CCP3M1 OFF
@@ -3095,13 +3101,13 @@ SetupCCPPWMRegisters:
       AddHPWMCCPSetup4
     #endif
 
-    #ifdef Var(CCP4CON)    'Added 17.04.2105 - WMR
+    #ifdef Var(CCP4CON)    'Added 17.04.2105
       if PWMChannel = 4 then  'USE_HPWMCCP4 TRUE
 
         #ifndef BIT(CCP4FMT)
             PRx_Temp = PWMDuty * (PRx_Temp + 2)  '
             CCPR4L = PRx_Temp_H
-            If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero - WMR
+            If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero
 
             SET CCP4M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM @1@CCP4
             SET CCP4M2 ON'These my have been remapped using a script - do check ASM and script in INITPWM
@@ -3158,7 +3164,7 @@ SetupCCPPWMRegisters:
         #ifndef BIT(CCP5FMT)
             PRx_Temp = PWMDuty * (PRx_Temp + 2)
             CCPR5L = PRx_Temp_H
-            If PWMDuty = 0 Then CCPR5L = 0  ' Assure OFF at Zero - WMR
+            If PWMDuty = 0 Then CCPR5L = 0  ' Assure OFF at Zero
 
             SET CCP5M3 ON'These my have been remapped using a script - do check ASM and script in INITPWM @1@CCP5
             SET CCP5M2 ON'These my have been remapped using a script - do check ASM and script in INITPWM
@@ -3881,84 +3887,86 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
     'Restore the cache value
     PRx_Temp = PRx_Temp_Cache
 
-    #ifdef USE_HPWM1 TRUE
+PWMUPDATE_HARDWAREMODE:
 
-      #ifdef AddHPWMUpdate1
-        AddHPWMUpdate1
-      #endif
+    #ifdef USE_HPWM1 TRUE
 
       #if var(PWM1DCH)   'If no channel.... no-point in compiling the code
 
-        if PWMChannel = 1 then  'in section USE_HPWM1
+          if PWMChannel = 1 then  'in section USE_HPWM1
 
-            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
-            'assumes PRx_Temp and PWMDuty are valid
-            PWM1DCH = PRx_Temp_H
-            PWM1DCL = PRx_Temp
+              #ifdef AddHPWMUpdate1
+                AddHPWMUpdate1
+              #endif
 
-            #IFDEF BIT(PWM1OE)
-              PWM1OE = 1
-            #ENDIF
+              ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+              calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+              'assumes PRx_Temp and PWMDuty are valid
+              PWM1DCH = PRx_Temp_H
+              PWM1DCL = PRx_Temp
 
-            #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
-              'Start PMW1
-              Set PWM1EN On
-            #ENDIF
+              #IFDEF BIT(PWM1OE)
+                PWM1OE = 1
+              #ENDIF
 
-        End if
+              #IFDEF BIT(PWM1EN) 'this simply stops error messages when the does not exit
+                'Start PMW1
+                Set PWM1EN On
+              #ENDIF
 
-      #endif
+              #ifdef AddHPWMExit1
+                AddHPWMExit1
+              #endif
 
-      #ifdef AddHPWMExit1
-        AddHPWMExit1
+          End if
+
       #endif
 
     #endif
 
     #ifdef USE_HPWM2 TRUE
 
-      #ifdef AddHPWMUpdate2
-        AddHPWMUpdate2
-      #endif
-
       #if var(PWM2DCH)   'If no channel.... no-point in compiling the code
 
-        if PWMChannel = 2 then  'in section USE_HPWM2
+          if PWMChannel = 2 then  'in section USE_HPWM2
 
-            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
-            'assumes PRx_Temp and PWMDuty are valid
-            PWM2DCH = PRx_Temp_H
-            PWM2DCL = PRx_Temp
+              #ifdef AddHPWMUpdate2
+                AddHPWMUpdate2
+              #endif
 
-            #IFDEF BIT(PWM2OE)
-              PWM2OE = 1
-            #ENDIF
+              ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+              calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+              'assumes PRx_Temp and PWMDuty are valid
+              PWM2DCH = PRx_Temp_H
+              PWM2DCL = PRx_Temp
 
-            #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
-              Set PWM2EN On
-            #ENDIF
+              #IFDEF BIT(PWM2OE)
+                PWM2OE = 1
+              #ENDIF
 
-        End if
+              #IFDEF BIT(PWM2EN) 'this simply stops error messages when the does not exit
+                Set PWM2EN On
+              #ENDIF
 
-      #endif
+              #ifdef AddHPWMExit2
+                AddHPWMExit2
+              #endif
 
-      #ifdef AddHPWMExit2
-        AddHPWMExit2
+          end if
+
       #endif
 
     #endif
 
     #ifdef USE_HPWM3 TRUE
 
-      #ifdef AddHPWMUpdate3
-        AddHPWMUpdate3
-      #endif
-
       #if var(PWM3DCH)   'If no channel.... no-point in compiling the code
 
-        if PWMChannel = 3 then  'in section USE_HPWM3
+          if PWMChannel = 3 then  'in section USE_HPWM3
+
+            #ifdef AddHPWMUpdate3
+            AddHPWMUpdate3
+            #endif
 
             ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
             calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
@@ -3974,12 +3982,12 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
               Set PWM3EN On
             #ENDIF
 
-        End if
+            #ifdef AddHPWMExit3
+            AddHPWMExit3
+            #endif
 
-      #endif
+          End if
 
-      #ifdef AddHPWMExit3
-        AddHPWMExit3
       #endif
 
     #endif
@@ -3987,32 +3995,33 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
     #ifdef USE_HPWM4 TRUE
 
-      #ifdef AddHPWMUpdate4
-        AddHPWMUpdate4
-      #endif
-
       #if var(PWM4DCH)   'If no channel.... no-point in compiling the code
 
-        if PWMChannel = 4 then  'in section USE_HPWM4
-            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
-            PWM4DCH = PRx_Temp_H
-            PWM4DCL = PRx_Temp
+          if PWMChannel = 4 then  'in section USE_HPWM4
 
-            #IFDEF BIT(PWM4OE)
-              PWM4OE = 1
-            #ENDIF
+              #ifdef AddHPWMUpdate4
+                AddHPWMUpdate4
+              #endif
 
-            #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
-              Set PWM4EN On
-            #ENDIF
+              ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+              calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+              PWM4DCH = PRx_Temp_H
+              PWM4DCL = PRx_Temp
 
-        End if
+              #IFDEF BIT(PWM4OE)
+                PWM4OE = 1
+              #ENDIF
 
-      #endif
+              #IFDEF BIT(PWM4EN) 'this simply stops error messages when the does not exit
+                Set PWM4EN On
+              #ENDIF
 
-      #ifdef AddHPWMExit4
-        AddHPWMExit4
+              #ifdef AddHPWMExit4
+                AddHPWMExit4
+              #endif
+
+          End if
+
       #endif
 
     #endif
@@ -4020,32 +4029,33 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
     #ifdef USE_HPWM5 TRUE
 
-      #ifdef AddHPWMUpdate5
-        AddHPWMUpdate5
-      #endif
-
       #if var(PWM5DCH)   'If no channel.... no-point in compiling the code
 
-        if PWMChannel = 5 then  'in section USE_HPWM5
-            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
-            PWM5DCH = PRx_Temp_H
-            PWM5DCL = PRx_Temp
+          if PWMChannel = 5 then  'in section USE_HPWM5
 
-            #IFDEF BIT(PWM5OE)
-              PWM5OE = 1
-            #ENDIF
+              #ifdef AddHPWMUpdate5
+                AddHPWMUpdate5
+              #endif
 
-            #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
-              Set PWM5EN On
-            #ENDIF
+              ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+              calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+              PWM5DCH = PRx_Temp_H
+              PWM5DCL = PRx_Temp
 
-        End if
+              #IFDEF BIT(PWM5OE)
+                PWM5OE = 1
+              #ENDIF
 
-      #endif
+              #IFDEF BIT(PWM5EN) 'this simply stops error messages when the does not exit
+                Set PWM5EN On
+              #ENDIF
 
-      #ifdef AddHPWMExit5
-        AddHPWMExit5
+              #ifdef AddHPWMExit5
+                AddHPWMExit5
+              #endif
+
+          End if
+
       #endif
 
     #endif
@@ -4053,32 +4063,32 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
     #ifdef USE_HPWM6 TRUE
 
-      #ifdef AddHPWMUpdate6
-        AddHPWMUpdate6
-      #endif
-
       #if var(PWM6DCH)   'If no channel.... no-point in compiling the code
 
-        if PWMChannel = 6 then  'in section USE_HPWM6
-            ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
-            calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
-            PWM6DCH = PRx_Temp_H
-            PWM6DCL = PRx_Temp
+          #ifdef AddHPWMUpdate6
+            AddHPWMUpdate6
+          #endif
 
-            #IFDEF BIT(PWM6OE)
-              PWM6OE = 1
-            #ENDIF
+          if PWMChannel = 6 then  'in section USE_HPWM6
+              ' calculates duty, assisgns duty to  bits 15-8 and 7-6 of PMWxDH(H&L) and links this PWM to the correct timer
+              calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+              PWM6DCH = PRx_Temp_H
+              PWM6DCL = PRx_Temp
 
-            #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
-              Set PWM6EN On
-            #ENDIF
+              #IFDEF BIT(PWM6OE)
+                PWM6OE = 1
+              #ENDIF
 
-        End if
+              #IFDEF BIT(PWM6EN) 'this simply stops error messages when the does not exit
+                Set PWM6EN On
+              #ENDIF
 
-      #endif
+          End if
 
-      #ifdef AddHPWMExit6
-        AddHPWMExit6
+          #ifdef AddHPWMExit6
+            AddHPWMExit6
+          #endif
+
       #endif
 
     #endif
@@ -4086,11 +4096,11 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
     #ifdef USE_HPWM7 TRUE
 
-      #ifdef AddHPWMUpdate7
-        AddHPWMUpdate7
-      #endif
-
       #if var(PWM7DCH)   'If no channel.... no-point in compiling the code
+
+        #ifdef AddHPWMUpdate7
+          AddHPWMUpdate7
+        #endif
 
         if PWMChannel = 7 then   'in section USE_HPWM7
 
@@ -4109,21 +4119,21 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
         end if
 
-      #endif
+        #ifdef AddHPWMExit7
+          AddHPWMExit7
+        #endif
 
-      #ifdef AddHPWMExit7
-        AddHPWMExit7
       #endif
 
     #endif
 
     #ifdef USE_HPWM8 TRUE
 
-      #ifdef AddHPWMUpdate8
-        AddHPWMUpdate8
-      #endif
-
       #if var(PWM8DCH)   'If no channel.... no-point in compiling the code
+
+        #ifdef AddHPWMUpdate8
+          AddHPWMUpdate8
+        #endif
 
         if PWMChannel = 8 then   'in section USE_HPWM8
 
@@ -4142,16 +4152,211 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
 
         end if
 
-      #endif
+        #ifdef AddHPWMExit8
+          AddHPWMExit8
+        #endif
 
-      #ifdef AddHPWMExit8
-        AddHPWMExit8
       #endif
 
     #endif
 
-end sub
 
+PWMUPDATE_CCPMODE:
+
+    #ifdef USE_HPWMCCP1 TRUE
+
+       #ifdef VAR(CCPR1L)
+         'ifdef BIT(CCPR1L) Testing this bit is to identify the use of CCPR1L for PWM
+
+          if PWMChannel = 1 then  'in section USE_HPWMCCP1
+
+              #ifdef AddHPWMCCPSetup1
+                AddHPWMCCPSetup1
+              #endif
+
+              #ifdef NoVar(CCP2CON)
+                  'Assume only one CCP
+                  PRx_Temp = PWMDuty * (PRx_Temp + 2)  'a correction
+                  CCPR1L = PRx_Temp_H
+                  If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero
+              #ENDIF
+
+              #ifdef Var(CCP2CON)
+                  'Assume more that one CCP
+                  #ifndef BIT(CCP1FMT)
+                      'ifndef BIT(CCP1FMT) Testing this bit is to identify the use of CCPR1L for PWM
+                      PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction
+                      CCPR1L = PRx_Temp_H
+                      If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero
+                  #ENDIF
+
+
+                  #ifdef BIT(CCP1FMT)
+                      'ifdef BIT(CCP1FMT) Testing this bit is to identify the use of CCPR1H and CCPR1L for PWM
+                      calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+                      CCPR1H = PRx_Temp_H
+                      CCPR1L = PRx_Temp
+                  #ENDIF
+              #ENDIF
+
+
+              #ifdef AddHPWMCCPExit1
+                AddHPWMCCPExit1
+              #endif
+
+          End if
+
+        #endif
+
+    #endif
+
+    #ifdef USE_HPWMCCP2 TRUE
+
+      #ifdef VAR(CCPR2L)
+
+
+          if PWMChannel = 2 then  'in section USE_HPWMCCP2
+
+              #ifdef AddHPWMCCPSetup2
+                AddHPWMCCPSetup2
+              #endif
+
+              #ifndef BIT(CCP2FMT)
+                  'ifndef BIT(CCP2FMT) Testing this bit is to identify the use of CCPR2L for PWM
+                  PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction
+                  CCPR2L = PRx_Temp_H
+                  If PWMDuty = 0 Then CCPR2L = 0  ' Assure OFF at Zero
+              #ENDIF
+
+
+              #ifdef BIT(CCP2FMT)
+                  'ifdef BIT(CCP2FMT) Testing this bit is to identify the use of CCPR2H and CCPR2L for PWM
+                  calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+                  CCPR2H = PRx_Temp_H
+                  CCPR2L = PRx_Temp
+              #ENDIF
+
+              #ifdef AddHPWMCCPExit2
+                AddHPWMCCPExit2
+              #endif
+
+          end if
+
+      #ENDIF
+
+    #endif
+
+    #ifdef USE_HPWMCCP3 TRUE
+
+      #ifdef VAR(CCPR3L)
+
+          if PWMChannel = 3 then  'in section USE_HPWMCCP3
+
+              #ifdef AddHPWMCCPSetup3
+                AddHPWMCCPSetup3
+              #endif
+
+              #ifndef BIT(CCP3FMT)
+                  'ifndef BIT(CCP3FMT) Testing this bit is to identify the use of CCPR3L for PWM
+                  PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction
+                  CCPR3L = PRx_Temp_H
+                  If PWMDuty = 0 Then CCPR3L = 0  ' Assure OFF at Zero
+              #ENDIF
+
+
+              #ifdef BIT(CCP3FMT)
+                  'ifdef BIT(CCP3FMT) Testing this bit is to identify the use of CCPR3H and CCPR3L for PWM
+                  calculateDuty 'Sets PRx_Temp  to the duty value for bits 0x0F-8 and 7-6
+                  CCPR3H = PRx_Temp_H
+                  CCPR3L = PRx_Temp
+              #ENDIF
+
+              #ifdef AddHPWMCCPExit3
+                AddHPWMCCPExit3
+              #endif
+
+          End if
+
+      #ENDIF
+
+
+    #endif
+
+
+    #ifdef USE_HPWMCCP4 TRUE
+
+      #ifdef VAR(CCPR4L)
+
+          if PWMChannel = 4 then  'in section USE_HPWMCCP4
+
+              #ifdef AddHPWMCCPSetup4
+                AddHPWMCCPSetup4
+              #endif
+
+              #ifndef BIT(CCP4FMT)
+                  'ifndef BIT(CCP4FMT) Testing this bit is to identify the use of CCPR4L for PWM
+                  PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction
+                  CCPR4L = PRx_Temp_H
+                  If PWMDuty = 0 Then CCPR4L = 0  ' Assure OFF at Zero
+              #ENDIF
+
+
+              #ifdef BIT(CCP4FMT)
+                  'ifdef BIT(CCP4FMT) Testing this bit is to identify the use of CCPR4H and CCPR4L for PWM
+                  calculateDuty 'Sets PRx_Temp  to the duty value for bits 0x0F-8 and 7-6
+                  CCPR4H = PRx_Temp_H
+                  CCPR4L = PRx_Temp
+              #ENDIF
+
+              #ifdef AddHPWMCCPExit4
+                AddHPWMCCPExit4
+              #endif
+
+          End if
+
+      #ENDIF
+
+    #endif
+
+
+    #ifdef USE_HPWMCCP5 TRUE
+
+      #ifdef VAR(CCPR5L)
+
+          if PWMChannel = 5 then  'in section USE_HPWMCCP5
+
+              #ifdef AddHPWMCCPSetup5
+                AddHPWMCCPSetup5
+              #endif
+
+
+              #ifndef BIT(CCP5FMT)
+                  'ifndef BIT(CCP5FMT) Testing this bit is to identify the use of CCPR5L for PWM
+                  PRx_Temp = PWMDuty * (PRx_Temp + 2)  'Correction
+                  CCPR5L = PRx_Temp_H
+                  If PWMDuty = 0 Then CCPR5L = 0  ' Assure OFF at Zero
+              #ENDIF
+
+
+              #ifdef BIT(CCP5FMT)
+                  'ifdef BIT(CCP5FMT) Testing this bit is to identify the use of CCPR5H and CCPR5L for PWM
+                  calculateDuty 'Sets PRx_Temp  to the duty value for bits 0x0F-8 and 7-6
+                  CCPR5H = PRx_Temp_H
+                  CCPR5L = PRx_Temp
+              #ENDIF
+
+              #ifdef AddHPWMCCPExit5
+                AddHPWMCCPExit5
+              #endif
+
+          End if
+
+      #ENDIF
+
+    #endif
+
+
+end sub
 
 
 '''@Hidden
