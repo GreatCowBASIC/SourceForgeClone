@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2018 Hugh Considine, Joseph Realmuto and Evan Venn,
+'    Copyright (C) 2012 - 2018 Hugh Considine, Joseph Realmuto, Evan Venn and Giuseppe D'Elia
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -46,8 +46,11 @@
 '    6/3/19   Added GLCD_TYPE_UC8320/ILI9320  to map to GLCD_TYPE_UC8320/ILI9320
 '    3/4/19   Moved DrawBMP from SSD1289 libary to GLCD.H
 '    14/4/19  Added GLCDPrintWithSize and update DrawEllipse routine
-'    20/4/19  Added GLCDPrintBigString
-
+'    20/4/19  Added GLCDPrintLargeFont - fixed font at 13pixels - ported from sdd1289
+'    1/5/19   Added Hyperbole and Parabola
+'              See the following article:  "Generating Conic Sections Using an Efficient Algorithms"
+'              Author: Abdul-Aziz Solyman Khalil,
+'              Department of Computer Science, University of Mosul, Mosul, Iraq, available on Internet.
 
 
 'Constants that might need to be set
@@ -3382,6 +3385,423 @@ Sub Draw_Filled_Ellipse_Points
 
 End Sub
 
+'******************************************************************************************
+'** Function name:        Hyperbole   equation= x^2/a^2-y^2/b^2=1
+'**
+'** Description:          Draw an Hyperbole outline using major and minor axis.
+'**
+'** Input paramters:
+'**       (x_0, y_0) = coordinates (x, y) of hyperbole center
+'**       a_axis, b_axis = a, b
+'**       Type  (Type=1 Hyperbole is aligned along x axis) (Type=2 Hyperbole is aligned along y axis)
+'**	  ModeStop (ModeStop=1 drawing stops when  one reacheable side of the display border is encountered.
+'**		    ModeStop=2 drawing stops when all the reacheable sides of the display border are encountered)
+'**	  LineColour Color of the Hyperbole drawing
+'**
+'******************************************************************************************
+sub Hyperbole(x_0, y_0, a_axis, b_axis, type, ModeStop, optional LineColour=GLCDForeground)
+
+    'if type=1 is alined along x
+    'if type=2 is alined along y
+    'if ModeStop=1 drawing stops when one of the borders has been encountered
+    'if ModeStop=2 drawing stops when all (possible) borders has been encountered
+    'ModeStop is not relevant for hyperbola centered on the display
+
+    Dim a_axis, b_axis, a_sq, b_sq, half_a_sq, half_b_sq as word  'axis smaller than 254
+    Dim dist as Long
+    Dim a_sq2, b_sq2, a_sq4, b_sq4, half_ab_sq as Long
+    Dim x_slope, y_slope as Long
+    Dim dist_sign as byte
+    Dim x_offset, y_offset, x_0, y_0  as word
+    Dim x_coord, y_coord, x_max, y_max as Word
+    Dim x_plus, x_minus, y_plus, y_minus as Word
+    Dim type, ModeStop as byte
+    Dim Linecolour as word
+    Dim HyperboleCondition, intersect as byte
+
+    if Type=1 then
+      x_offset=x_0
+      y_offset=y_0
+      x_max=GLCD_WIDTH
+      y_max=GLCD_HEIGHT
+    else
+      y_offset=x_0
+      x_offset=y_0
+      y_max=GLCD_WIDTH
+      x_max=GLCD_HEIGHT
+    end if
+
+    x_coord=a_axis
+    y_coord=0
+    a_sq=a_axis*a_axis
+    b_sq=b_axis*b_axis
+    a_sq2=a_sq+a_sq
+    b_sq2=b_sq+b_sq
+    a_sq4=a_sq2+a_sq2
+    b_sq4=b_sq2+b_sq2
+    x_slope=a_sq4*(x_coord+1)
+    y_slope=b_sq4             '*(y_coord+1)
+    half_a_sq=FNLSR(a_sq,1)
+    half_b_sq=FNLSR(b_sq,1)
+    half_ab_sq=half_a_sq+half_b_sq
+    dist=a_sq2+half_b_sq
+    dist_sign=0
+    HyperboleParabolaDiffvar(dist, b_sq*(1+2*a_axis), dist_sign)
+
+    intersect=0
+    x_plus=x_offset+x_coord
+    x_minus=x_offset-x_coord
+    y_plus=y_offset+y_coord
+    y_minus=y_offset-y_coord
+
+    do while (dist_sign=1 or (dist_sign=0 and dist<=x_slope))
+      if HyperboleCondition(ModeStop)=0 then
+        exit do
+      end if
+
+      HyperboleDisplayPixel(LineColour)
+
+      if dist_sign=0 then
+        HyperboleParabolaDiffvar (dist, x_slope, dist_sign)
+        x_coord=x_coord+1
+        x_slope=x_slope+b_sq4
+      end if
+      HyperboleParabolaSumvar(dist, a_sq2+y_slope, dist_sign)
+      y_coord=y_coord+1
+      y_slope=y_slope+a_sq4
+
+      x_plus=x_offset+x_coord
+      x_minus=x_offset-x_coord
+      y_plus=y_offset+y_coord
+      y_minus=y_offset-y_coord
+    Loop
+
+    HyperboleParabolaSumvar(dist,a_sq+b_sq, dist_sign)
+    HyperboleParabolaDiffvar(dist,FNLSR(x_slope+y_slope,1)+half_ab_sq, dist_sign)
+    intersect=0
+
+    if a_axis>b_axis then
+      do
+        if HyperboleCondition(ModeStop)=0 then
+          exit do
+        end if
+
+      HyperboleDisplayPixel(LineColour)
+
+
+      if dist_sign=1 then
+          HyperboleParabolaSumvar(dist,y_slope,dist_sign)
+          y_coord=y_coord+1
+          y_slope=y_slope+a_sq4
+        end if
+        HyperboleParabolaDiffvar(dist,b_sq2+x_slope,dist_sign)
+        x_coord=x_coord+1
+        x_slope=x_slope+b_sq4
+
+        x_plus=x_offset+x_coord
+        x_minus=x_offset-x_coord
+        y_plus=y_offset+y_coord
+        y_minus=y_offset-y_coord
+
+      loop
+    end if
+
+end sub
+
+function HyperboleCondition(ModeStop)
+
+  Dim HyperboleCondition, ModeStop as Byte
+  Dim x_coord, y_coord, x_max, y_max, x_offset, y_offset, x_plus, y_plus as Word
+  Dim intersect as Byte
+
+  if ModeStop=1 then
+'    if (y_plus<y_max and x_plus<x_max) and (x_coord<=x_offset and y_coord<=y_offset) then
+    if intersect=0 then
+     HyperboleCondition=1
+    else
+      HyperboleCondition=0
+    end if
+  else
+'    if (y_plus<y_max or x_plus<x_max) or (x_coord<=x_offset or y_coord<=y_offset) then
+    if intersect=0b1111 then
+      HyperboleCondition=0
+    else
+      HyperboleCondition=1
+    end if
+  end if
+end function
+
+sub HyperboleDisplayPixel(LineColour)
+
+  Dim x_max, y_max, x_plus, x_minus, y_plus, y_minus as Word
+  Dim LineColour as word
+  Dim Type, intersect as Byte
+
+  if Type = 1 then
+    if x_plus<=x_max  then
+      if y_plus<=y_max then
+        Pset(x_plus, y_plus, Linecolour)
+      else
+        intersect.0=1
+      end if
+      if y_minus.15=0 then
+        Pset(x_plus, y_minus, Linecolour)
+      else
+        intersect.1=1
+      end if
+    else
+      intersect.0=1
+      intersect.1=1
+    end if
+    if x_minus.15=0 then
+      if y_plus<=y_max then
+        Pset(x_minus,y_plus, LineColour)
+      else
+        intersect.2=1
+      end if
+      if y_minus.15=0 then
+        Pset(x_minus, y_minus, Linecolour)
+      else
+        intersect.3=1
+      end if
+    else
+      intersect.2=1
+      intersect.3=1
+    end if
+  else '---------------------------------------------------
+    if x_plus<=x_max then
+      if y_plus<=y_max then
+        Pset(y_plus, x_plus, Linecolour)
+      else
+        intersect.0=1
+      end if
+      if y_minus.15=0 then
+        Pset(y_minus, x_plus, Linecolour)
+      else
+        intersect.1=1
+      end if
+    else
+      intersect.0=1
+      intersect.1=1
+    end if
+    if x_minus.15=0 then
+      if y_plus<=y_max then
+        Pset(y_plus, x_minus, Linecolour)
+      else
+        intersect.2=1
+      end if
+      if y_minus.15=0 then
+        Pset(y_minus, x_minus, Linecolour)
+      else
+        intersect.3=1
+      end if
+    else
+      intersect.2=1
+      intersect.3=1
+    end if
+  end if
+
+end sub
+
+sub HyperboleParabolaDiffvar(var1, var2, sign)
+
+      'var2 MUST be >=0
+
+  Dim var1, var2 as Long
+  Dim sign as Byte
+
+  if sign=0 then
+    if var1 > var2 then
+      var1=var1-var2
+    else
+      var1=var2-var1
+      sign=1
+    end if
+  else
+    var1=var1+var2
+  end if
+
+end sub
+
+sub HyperboleParabolaSumvar(var1, var2, sign)
+
+      'var2 MUST be >=0
+
+  Dim var1, var2 as Long
+  Dim sign as Byte
+
+  if sign=0 then
+    var1=var1+var2
+  else
+    if var1 < var2 then
+      var1=var2-var1
+      sign=0
+    else
+      var1=var1-var2
+      sign=1
+    end if
+  end if
+
+end sub
+
+'***************************************************************************************
+
+sub Parabola(x_0, y_0, p_factor, type, ModeStop, optional LineColour=GLCDForeground)
+
+    'if type=1 is alined along x
+    'if type=2 is alined along y
+    'if ModeStop=1 drawing stops when one of the borders has been encountered
+    'if ModeStop=2 drawing stops when all (possible) borders has been encountered
+    'ModeStop is not relevant for hyperbola centered on the display
+
+    Dim p_factor, p2_factor, p4_factor as word  'axis smaller than 254
+    Dim dist as Long
+    Dim dist_sign as byte
+    Dim x_offset, y_offset, x_0, y_0  as word
+    Dim x_coord, y_coord, x_max, y_max as Word
+    Dim x_plus, x_minus, y_plus, y_minus as Word
+    Dim type, ModeStop as byte
+    Dim Linecolour as word
+    Dim ParabolaCondition, intersect as byte
+
+    if Type=1 then
+      x_offset=x_0
+      y_offset=y_0
+      x_max=GLCD_WIDTH
+      y_max=GLCD_HEIGHT
+    else
+      y_offset=x_0
+      x_offset=y_0
+      y_max=GLCD_WIDTH
+      x_max=GLCD_HEIGHT
+    end if
+
+    x_coord=0
+    y_coord=0
+    p2_factor=2*p_factor
+    p4_factor=4*p_factor
+    dist_sign=0
+    dist=1
+    HyperboleParabolaDiffvar(dist,p_factor,dist_sign)
+
+    intersect=0
+    x_plus=x_offset+x_coord
+    x_minus=x_offset-x_coord
+    y_plus=y_offset+y_coord
+    y_minus=y_offset-y_coord
+
+    do while y_coord<P_factor
+      if ParabolaCondition(ModeStop)=0 then
+        exit do
+      end if
+
+      ParabolaDisplayPixel(LineColour)
+
+      if dist_sign=0 then
+        HyperboleParabolaDiffvar (dist, p2_factor, dist_sign)
+        x_coord=x_coord+1
+      end if
+      y_coord=y_coord+1
+      HyperboleParabolaSumvar(dist, 2*y_coord+1, dist_sign)
+
+      x_plus=x_offset+x_coord
+      x_minus=x_offset-x_coord
+      y_plus=y_offset+y_coord
+      y_minus=y_offset-y_coord
+    Loop
+
+    if dist=1 then
+      HyperboleParabolaDiffvar(dist,p4_factor,dist_sign)
+    else
+      HyperboleParabolaDiffvar(dist,p2_factor,dist_sign)
+    end if
+    intersect=0
+
+      do while ParabolaCondition(ModeStop)=1
+
+      ParabolaDisplayPixel(LineColour)
+
+
+      if dist_sign=1 then
+          HyperboleParabolaSumvar(dist,4*y_coord,dist_sign)
+          y_coord=y_coord+1
+        end if
+        x_coord=x_coord+1
+        HyperboleparabolaDiffvar(dist,p4_factor,dist_sign)
+
+        x_plus=x_offset+x_coord
+        x_minus=x_offset-x_coord
+        y_plus=y_offset+y_coord
+        y_minus=y_offset-y_coord
+
+      loop
+
+end sub
+
+function ParabolaCondition(ModeStop)
+
+  Dim ParabolaCondition, ModeStop as Byte
+  Dim x_coord, y_coord, x_max, y_max, x_offset, y_offset, x_plus, y_plus as Word
+  Dim intersect as Byte
+
+  if ModeStop=1 then
+    if intersect=0 then
+      ParabolaCondition=1
+    else
+      ParabolaCondition=0
+    end if
+  else
+    if intersect=0b0011 then
+      ParabolaCondition=0
+    else
+      ParabolaCondition=1
+    end if
+  end if
+end function
+
+sub ParabolaDisplayPixel(LineColour)
+
+  Dim x_max, y_max, x_plus, x_minus, y_plus, y_minus as Word
+  Dim LineColour as word
+  Dim Type, intersect as Byte
+
+  if Type = 1 then
+    if x_plus<=x_max  then
+      if y_plus<=y_max then
+        Pset(x_plus, y_plus, Linecolour)
+      else
+        intersect.0=1
+      end if
+      if y_minus.15=0 then
+        Pset(x_plus, y_minus, Linecolour)
+      else
+        intersect.1=1
+      end if
+    else
+      intersect.0=1
+      intersect.1=1
+    end if
+  else '---------------------------------------------------
+    if x_plus<=x_max then
+      if y_plus<=y_max then
+        Pset(y_plus, x_plus, Linecolour)
+      else
+        intersect.0=1
+      end if
+      if y_minus.15=0 then
+        Pset(y_minus, x_plus, Linecolour)
+      else
+        intersect.1=1
+      end if
+    else
+      intersect.0=1
+      intersect.1=1
+    end if
+  end if
+
+end sub
+
+
 '***************************************************************************************
 '** Function name:           Triangle
 '** Description:             Draw a triangle outline using 3 arbitrary points
@@ -3541,8 +3961,8 @@ End Sub
 
 
 
-Sub GLCDPrintBigString(In PrintLocX as Word , In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
-  'Ported from SSD1289 library to break the dependency on SSD1289 library
+Sub GLCDPrintLargeFont (In PrintLocX as Word , In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
+  'Ported from SSD1289 library to break the dependency on the SSD1289 library
   Dim GLCDPrintLoc as Word
   PrintLen = PrintData(0)
   If PrintLen = 0 Then Exit Sub
