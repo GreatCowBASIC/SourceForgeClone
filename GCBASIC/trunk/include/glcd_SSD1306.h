@@ -103,6 +103,7 @@
 '  1.23 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
 '  1.24 Added support for GLCDPrintStringLN etc. Setting variables to zero on print screen
 '  1.25 Added HWI2C2 support
+'  1.26 Added IGNORE_GLCD_TYPE_SSD1306_LOW_MEMORY_WARNINGS to support low memory MCU warnings
 
 #define SSD1306_vccstate 0
 
@@ -157,16 +158,28 @@
 'Setup code for SSD1306 controllers
   #script     ' This script set the capabilities based upon the amount of RAM
 
-     if GLCD_TYPE = GLCD_TYPE_SSD1306 then
+     IGNORE_SPECIFIED_GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = 0
+     if IGNORE_GLCD_TYPE_SSD1306_LOW_MEMORY_WARNINGS then
+        IGNORE_SPECIFIED_GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = 1
+     end if
 
+     if GLCD_TYPE = GLCD_TYPE_SSD1306 then
        If ChipRAM < 1024  Then
            GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = TRUE
+           GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE = TRUE
+           if IGNORE_SPECIFIED_GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = 0 then
+              Warning "Memory < 1024 bytes."
+              Warning "Selected MCU requires use of GLCD Open&Close Page Transaction."
+              Warning "See Help for usage."
+              Warning "Define a constant IGNORE_GLCD_TYPE_SSD1306_LOW_MEMORY_WARNINGS to remove this message."
+           end if
        End If
      end if
 
      if GLCD_TYPE = GLCD_TYPE_SSD1306_32 then
        If ChipRAM < 512  Then
            GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = TRUE
+           GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE = TRUE
        End If
      end if
 
@@ -180,15 +193,18 @@
 
    #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
      #if GLCD_TYPE = GLCD_TYPE_SSD1306
+       asm showdebug  GGLCD SSD1306 buffer is 1024bytes
        Dim SSD1306_BufferAlias(1024)
      #endif
      #if GLCD_TYPE = GLCD_TYPE_SSD1306_32
+       asm showdebug  GLCD SSD1306 buffer is 512bytes
        Dim SSD1306_BufferAlias(512)
      #endif
    #endif
 
    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
      #ifdef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
+       asm showdebug  GLCD SSD1306 buffer is 128bytes
        Dim SSD1306_BufferAlias(128)
      #endif
    #endif
