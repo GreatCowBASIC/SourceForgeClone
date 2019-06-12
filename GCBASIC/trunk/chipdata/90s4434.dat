@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: AT90S4434
-'Generated 16/7/2015
-'Format last revised: 23/9/2007
+'Generated 6/4/2019
+'Format last revised: 5/4/2019
 
 [ChipData]
 Prog=2048

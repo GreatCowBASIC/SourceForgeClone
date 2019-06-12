@@ -6096,6 +6096,8 @@ CHS4,ADCON0,6
 0:1FFF
 
 [NoBankRAM]
+0:5F
+F60:FFF
 
 [Pins-TQFP]
 

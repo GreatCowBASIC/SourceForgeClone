@@ -717,6 +717,8 @@ STKOVF,STKPTR,7
 0:1FF
 
 [NoBankRAM]
+0:7F
+F80:FFF
 
 [Pins-DIP]
 2,RA0(IO)

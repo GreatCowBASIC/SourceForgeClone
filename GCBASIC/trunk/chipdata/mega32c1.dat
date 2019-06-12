@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega32c1
-'Generated 16/7/2015
-'Format last revised: 23/9/2007
+'Generated 6/4/2019
+'Format last revised: 5/4/2019
 
 [ChipData]
 Prog=16384
@@ -10,7 +10,7 @@ RAM=2048
 I/O=0
 ADC=0
 MaxMHz=1
-Pins=40
+Pins=44
 Family=120
 ConfigWords=0
 GPR=32
@@ -999,6 +999,52 @@ EEMPE,EECR,2
 
 [FreeRAM]
 100:900
+
+[Pins-TQFP]
+1,PE6(IO)
+2,UVCC
+3,DN
+4,DP
+5,UGND
+6,UCAP
+7,VBUS
+8,PB0(IO)
+9,PB1(IO),SCK(IO)
+10,PB2(IO),MOSI(IO)
+11,PB3(IO),MISO(IO)
+12,PB7(IO)
+13,RESET
+14,VCC
+15,GND
+16,XTAL2
+17,XTAL1
+18,PD0(IO)
+19,PD1(IO)
+20,PD2(IO)
+21,PD3(IO)
+22,PD5(IO)
+23,GND
+24,AVCC
+25,PD4(IO)
+26,PD6(IO)
+27,PD7(IO)
+28,PB4(IO)
+29,PB5(IO)
+30,PB6(IO)
+31,PC6(IO)
+32,PC7(IO)
+33,PE2(IO)
+34,VCC
+35,GND
+36,PF7(IO)
+37,PF6(IO)
+38,PF5(IO)
+39,PF4(IO)
+40,PF1(IO)
+41,PF0(IO)
+42,AREF
+43,GND
+44,AVCC
 
 [ConfigOps]
 NoConfig-PRG
