@@ -5820,6 +5820,8 @@ CHS4,ADCON0,6
 0:7FF
 
 [NoBankRAM]
+0:5F
+F60:FFF
 
 [Pins-DIP]
 2,RA0(IO)

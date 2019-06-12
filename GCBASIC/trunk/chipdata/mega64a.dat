@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega64a
-'Generated 16/7/2015
-'Format last revised: 23/9/2007
+'Generated 6/4/2019
+'Format last revised: 5/4/2019
 
 [ChipData]
 Prog=32768
@@ -10,7 +10,7 @@ RAM=4096
 I/O=53
 ADC=8
 MaxMHz=16
-Pins=40
+Pins=64
 Family=120
 ConfigWords=0
 GPR=32
@@ -852,6 +852,72 @@ WDTOE,WDTCR,4
 
 [FreeRAM]
 100:1100
+
+[Pins-TQFP]
+1
+2
+3
+4
+5
+6,MOSI(IO)
+7,MISO(IO)
+8,SCK(IO)
+9,RESET(I),RESET(I)
+10,VCC
+11,GND
+12,XTAL2
+13,XTAL1
+14,RXD(I)
+15,TXD(O)
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30,AVCC
+31,GND
+32,AREF
+33,ADC7(I)
+34,ADC6(I)
+35,ADC5(I)
+36,ADC4(I)
+37,ADC3(I)
+38,ADC2(I)
+39,ADC1(I)
+40,ADC0(I)
+41,ADC0(I)
+42,AREF
+43,GND
+44,AVCC
+45,SEG2(IO)
+46,SEG1(IO)
+47,SEG0(IO)
+48,COM3(IO)
+49,COM2(IO)
+50,COM1(IO)
+51,COM0(IO)
+52,VCC
+53,GND
+54,ADC7(I),TDI(IO)
+55,ADC6(I),TD0(IO)
+56,ADC5(I),TMS(IO)
+57,ADC4(I),TCK(IO)
+58,ADC3(I)
+59,ADC2(I)
+60,ADC1(I)
+61,ADC0(I)
+62,AREF
+63,GND
+64,AVCC
 
 [ConfigOps]
 NoConfig-PRG

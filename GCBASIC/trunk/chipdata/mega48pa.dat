@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega48pa
-'Generated 16/7/2015
-'Format last revised: 23/9/2007
+'Generated 6/4/2019
+'Format last revised: 5/4/2019
 
 [ChipData]
 Prog=2048
@@ -10,7 +10,7 @@ RAM=512
 I/O=23
 ADC=8
 MaxMHz=20
-Pins=28
+Pins=32
 Family=120
 ConfigWords=0
 GPR=32
@@ -711,6 +711,40 @@ GPIOR07,GPIOR0,7
 26,PC3(IO),ADC3(I)
 27,PC4(IO),ADC4(I)
 28,PC5(IO),ADC5(I)
+
+[Pins-TQFP]
+1
+2,UVCC
+3,DN
+4,DP
+5,UGND
+6,UCAP
+7,VBUS
+8
+9,SCK(IO)
+10,MOSI(IO)
+11,MISO(IO)
+12
+13,RESET
+14,VCC
+15,GND
+16,XTAL2
+17,XTAL1
+18
+19
+20,RXD(I)
+21,TXD(O)
+22
+23,GND
+24,AVCC
+25,ADC8(I)
+26,ADC9(I)
+27
+28
+29
+30
+31
+32
 
 [ConfigOps]
 NoConfig-PRG

@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATtiny88
-'Generated 16/7/2015
-'Format last revised: 23/9/2007
+'Generated 6/4/2019
+'Format last revised: 5/4/2019
 
 [ChipData]
 Prog=4096
@@ -10,7 +10,7 @@ RAM=512
 I/O=28
 ADC=8
 MaxMHz=12
-Pins=28
+Pins=32
 Family=120
 ConfigWords=0
 GPR=32
@@ -629,6 +629,40 @@ EEMWE,EECR,2
 26,PC3(IO),ADC3(I)
 27,PC4(IO),ADC4(I)
 28,PC5(IO),ADC5(I)
+
+[Pins-TQFP]
+1,MOSI(IO)
+2,MISO(IO)
+3,SCK(IO)
+4
+5,VCC
+6,GND
+7,ADC7(I)
+8,ADC8(I)
+9,ADC9(I)
+10,RESET(I),ADC10(I)
+11,ADC6(I)
+12,ADC5(I)
+13,ADC4(I)
+14,ADC3(I)
+15,AVCC
+16,AGND(IO)
+17
+18,ADC2(I)
+19,ADC1(I)
+20,ADC0(I)
+21,TXD(O)
+22
+23,GND
+24,AVCC
+25,ADC8(I)
+26,ADC9(I)
+27
+28
+29
+30
+31
+32
 
 [ConfigOps]
 NoConfig-PRG

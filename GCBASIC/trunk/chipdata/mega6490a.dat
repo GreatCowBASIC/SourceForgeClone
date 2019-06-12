@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega6490a
-'Generated 16/7/2015
-'Format last revised: 23/9/2007
+'Generated 6/4/2019
+'Format last revised: 5/4/2019
 
 [ChipData]
 Prog=32768
@@ -10,7 +10,7 @@ RAM=4096
 I/O=69
 ADC=8
 MaxMHz=20
-Pins=40
+Pins=100
 Family=120
 ConfigWords=0
 GPR=32
@@ -1050,6 +1050,108 @@ PCINT7,PCMSK0,7
 
 [FreeRAM]
 100:1100
+
+[Pins-TQFP]
+1
+2,UVCC
+3,DN
+4,DP
+5,UGND
+6,UCAP
+7,VBUS
+8
+9,SCK(IO)
+10,MOSI(IO)
+11,MISO(IO)
+12
+13,RESET
+14,VCC
+15,GND
+16,XTAL2
+17,XTAL1
+18
+19
+20,RXD(I)
+21,TXD(O)
+22
+23,GND
+24,AVCC
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34,VCC
+35,GND
+36
+37
+38
+39
+40
+41
+42,AREF
+43,GND
+44,AVCC
+45,SEG2(IO)
+46,SEG1(IO)
+47,SEG0(IO)
+48,COM3(IO)
+49,COM2(IO)
+50,COM1(IO)
+51,COM0(IO)
+52,VCC
+53,GND
+54,ADC7(I),TDI(IO)
+55,ADC6(I),TD0(IO)
+56,ADC5(I),TMS(IO)
+57,ADC4(I),TCK(IO)
+58,ADC3(I)
+59,ADC2(I)
+60,ADC1(I)
+61,ADC0(I)
+62,AREF
+63,GND
+64,AVCC
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
 
 [ConfigOps]
 NoConfig-PRG

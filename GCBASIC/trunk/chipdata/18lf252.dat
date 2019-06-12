@@ -595,6 +595,8 @@ SP4,STKPTR,4
 0:5FF
 
 [NoBankRAM]
+0:7F
+F80:FFF
 
 [Pins-DIP]
 2,RA0(IO)
