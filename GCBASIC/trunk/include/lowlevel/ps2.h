@@ -1,5 +1,5 @@
 '    PS/2 keyboard/mouse routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2017 Hugh Considine
+'    Copyright (C) 2006 - 2019 Hugh Considine
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -24,11 +24,13 @@
 
 'Changes:
 ' 31/1/2010: Added write support, and bus inhibit when not ready for data
+' 15/7/2019: Revised defines in this header
 
-'#define PS2Data SysTemp.0 'Set to data pin
-'#define PS2Clock SysTemp.0 'Set to clock pin
+'#define PS2Data  port.bit 'Set to a valid data pin, ie portc.1    Must be different to PS2Clock assignment.
+'#define PS2Clock port.bit  'Set to a valid clock pin, ie portc.0  Must be different to PS2Data assignment.
 
 #startup InitPS2
+
 
 'Flags
 #define PS2KeyShift PS2Flags.0
