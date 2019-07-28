@@ -124,6 +124,8 @@ Add18FBanks = "Adding RAM access bits ..."
 
 AddLongCalls = "Setting program counter high bits ..."
 
+DesiredOscillatorSource = "AutoSelected Oscillator Source: "
+
 OptimiseIF = "Optimising IFs ..."
 OptimiseVars = "Optimising variable operations ..."
 FixFunctions = "Verifying functions used in WAIT ..."
