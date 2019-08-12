@@ -676,7 +676,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-07-28"
+Version = "0.98.<<>> 2019-08-13"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
 	#ifndef __FB_64BIT__
@@ -7553,6 +7553,9 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
 			'Copy lines over, replacing params where needed
 			CurrPos = OutList
+			If PreserveMode = 2 Then
+				CurrPos = LinkedListInsert(CurrPos, ";Macro source " + GetFileLine(.Called->Origin))
+			End If
 
 			MacroLine = .Called->CodeStart->Next
 			Do While MacroLine <> 0
@@ -16676,3 +16679,4 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 	'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
 	Return 0
 END FUNCTION
+
