@@ -718,6 +718,34 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 	GetByte = Str(OutVal Shr (8 * BS) And 255)
 End FUNCTION
 
+Function GetFileLine(Origin As String) As String
+	Dim As String Temp
+	Dim As Integer F, L, S, I, T
+	
+	Temp = UCase(Origin)
+	IF INSTR(Temp, ";?F") = 0 Then Return ""
+	
+	'Get values
+	Replace Temp, "?", ""
+	F = VAL(Mid(Temp, INSTR(Temp, "F") + 1)) 'File
+	L = VAL(Mid(Temp, INSTR(Temp, "L") + 1)) 'Line
+
+	'If F and L = 0, location isn't known
+	If F = 0 And L = 0 Then
+		Return ""
+
+	Else
+		'Trim filename of path
+		Fi = SourceFile(F).FileName
+		FOR T = LEN(Fi) to 1 step -1
+			IF Mid(Fi, T, 1) = "\" Or Mid(Fi, T, 1) = "/" Then Fi = Mid(Fi, T + 1): Exit For
+		NEXT
+		'Prepare message
+		Return Fi + " (" + Str(L) + ")"
+		
+	End If
+End Function
+
 Function GetNextTempVar(CurrVar As String) As String
 	'Return next name for temporary variable if CurrVar is invalid
 	Dim As String BeforeNumber, Number, AfterNumber
