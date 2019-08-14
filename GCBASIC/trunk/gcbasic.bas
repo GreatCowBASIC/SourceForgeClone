@@ -676,7 +676,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-08-13"
+Version = "0.98.<<>> 2019-08-14"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
 	#ifndef __FB_64BIT__
@@ -16123,11 +16123,19 @@ Sub MergeSubroutines
 					CurrLine = LinkedListInsert(CurrLine, "")
 					CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (data memory)")
 					If ChipFamily = 12 Or ChipFamily = 14 Then
+						CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (data memory)")
 						CurrLine = LinkedListInsert(CurrLine, " ORG 0x2100")
 					ElseIf ChipFamily = 15 Then
+						CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (data memory)")
 						CurrLine = LinkedListInsert(CurrLine, " ORG 0xF000")
 					ElseIf ChipFamily = 16 Then
-						CurrLine = LinkedListInsert(CurrLine, " ORG 0xF00000")
+						If ChipFamilyVariant = 1 then
+							CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamilyVariant EEPROM Address 0x310000)")
+							CurrLine = LinkedListInsert(CurrLine, " ORG 0x310000")
+						Else
+							CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (Default EEPROM address)")
+							CurrLine = LinkedListInsert(CurrLine, " ORG 0xF00000")
+						End if
 					End If
 					EPDataHeader = -1
 					EPDataLoc = 0
