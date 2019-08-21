@@ -574,7 +574,7 @@ DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, Int
 DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
-DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue
+DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
 Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCounters
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
@@ -2251,6 +2251,9 @@ SUB CalcConfig
   Dim As LinkedListElement Pointer CurrSettingLoc, CurrSettingOptLoc
   Dim As ConfigSetting Pointer CurrSetting
 
+  Dim As Integer configreport
+  Dim As String ConfigReportFileName
+
   'Read config
   Do WHILE INSTR(CONFIG, "&") <> 0: Replace CONFIG, "&", ",": Loop
   'Split line into elements, put into list
@@ -2414,6 +2417,14 @@ SUB CalcConfig
     CurrSettingLoc = CurrSettingLoc->Next
   Loop
 
+  'Publish config
+  If OutPutConfigOptions = 0 then
+    configreport = FreeFile
+    ConfigReportFileName = ReplaceToolVariables("%filename%", "config")
+    Open ConfigReportFileName For Output As #configreport
+    Print #configreport, "[" + ChipName + "]"
+  End if
+
   'Store config
   'PIC 10/12/16 format
   If ChipFamily <> 16 Then
@@ -2435,8 +2446,14 @@ SUB CalcConfig
               CurrWord = ConfigOps(CurrConfConst).Loc
               If OutConfig(CurrWord) = "" Then
                 OutConfig(CurrWord) = "_" + ConfigOps(CurrConfConst).Op
+                If OutPutConfigOptions = 0 then
+                  Print #configreport, ConfigOps(CurrConfConst).Op
+                End if
               Else
                 OutConfig(CurrWord) = OutConfig(CurrWord) + " & _" + ConfigOps(CurrConfConst).Op
+                If OutPutConfigOptions = 0 then
+                  Print #configreport, ConfigOps(CurrConfConst).Op
+                End if
               End If
               Exit For
             End If
@@ -2459,6 +2476,7 @@ SUB CalcConfig
         'Only write non-blank words
         If OutConfig(CurrWord) <> "" Then
           CodeLoc = LinkedListInsert(CodeLoc, " __CONFIG _CONFIG" + Str(CurrWord) + ", " + OutConfig(CurrWord))
+
         End If
       Next
     End If
@@ -2493,8 +2511,14 @@ SUB CalcConfig
 
           If OutConfig(1) = "" Then
             OutConfig(1) = .Name + " = " + .Setting->Value
+            If OutPutConfigOptions = 0 then
+              Print  #configreport, .Name + " = " + .Setting->Value
+            End if
           Else
             OutConfig(1) = OutConfig(1) + ", " + .Name + " = " + .Setting->Value
+            If OutPutConfigOptions = 0 then
+              Print #configreport, .Name + " = " + .Setting->Value
+            End if
           End If
         End If
       End With
@@ -2504,6 +2528,10 @@ SUB CalcConfig
     LinkedListInsert(ChipConfigCode->CodeList, " CONFIG " + OutConfig(1))
 
   End If
+
+  If OutPutConfigOptions = 0 then
+    Close #configreport
+  End if
 
 END SUB
 
@@ -12155,6 +12183,7 @@ SUB InitCompiler
   IniNotSet = -1
   ReportNotSet = -1
   FlashOnlyNotSet = -1
+  OutPutConfigOptions = -1
 
   'Read parameters
   CD = 1
@@ -12273,6 +12302,9 @@ SUB InitCompiler
     ElseIf LeftThree = "/R:" Or LeftThree = "-R:" Then
       CompReportFormat = LCase(Mid(DataSource, 4))
       ReportNotSet = 0
+
+    ElseIf LeftThree = "/CP" Or LeftThree = "-CP" Then
+      OutPutConfigOptions = 0
 
     'Deprecated options
     'Clear screen
