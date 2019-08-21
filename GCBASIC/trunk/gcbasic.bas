@@ -9875,6 +9875,7 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String) As Intege
     If InStr(Config, "IRCIO67") <> 0 Then Return -1
     If InStr(Config, "IRC") <> 0 Then Return -1
     If InStr(Config, "HFINT32") <> 0 Then Return -1
+    If InStr(Config, "HFINTOSC_1MHZ") <> 0 Then Return -1
 
   End If
 
