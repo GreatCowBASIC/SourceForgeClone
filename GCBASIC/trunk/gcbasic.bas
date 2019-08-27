@@ -16065,10 +16065,12 @@ Sub MergeSubroutines
         StatsUsedProgram += CurrSubPtr->HexSize
 
         SubLoc = GetFileLine(CurrSubPtr->Origin)
-        If CurrSubPtr->Overloaded Then
-          CurrLine = LinkedListInsert(CurrLine, ";Overloaded signature: " + GetSubSig(*CurrSubPtr) + ", source: " + SubLoc)
-        Else
-          If SubLoc <> "" Then CurrLine = LinkedListInsert(CurrLine, ";Source " + SubLoc)
+        If PreserveMode = 2 Then
+            If CurrSubPtr->Overloaded Then
+              CurrLine = LinkedListInsert(CurrLine, ";Overloaded signature: " + GetSubSig(*CurrSubPtr) + ", source: " + SubLoc)
+            Else
+              If SubLoc <> "" Then CurrLine = LinkedListInsert(CurrLine, ";Source " + SubLoc)
+            End If
         End If
         'CurrLine = LinkedListInsert(CurrLine, ";Subroutine size:" + Str(CurrSubPtr->HexSize) + " words")
         CurrLine = LinkedListInsert(CurrLine, SubNameOut + LabelEnd)
