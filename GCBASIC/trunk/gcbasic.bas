@@ -7582,7 +7582,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
       'Copy lines over, replacing params where needed
       CurrPos = OutList
       If PreserveMode = 2 Then
-        CurrPos = LinkedListInsert(CurrPos, ";Macro source " + GetFileLine(.Called->Origin))
+        CurrPos = LinkedListInsert(CurrPos, ";Macro Source: " + GetFileLine(.Called->Origin))
       End If
 
       MacroLine = .Called->CodeStart->Next
@@ -16067,9 +16067,9 @@ Sub MergeSubroutines
         SubLoc = GetFileLine(CurrSubPtr->Origin)
         If PreserveMode = 2 Then
             If CurrSubPtr->Overloaded Then
-              CurrLine = LinkedListInsert(CurrLine, ";Overloaded signature: " + GetSubSig(*CurrSubPtr) + ", source: " + SubLoc)
+              CurrLine = LinkedListInsert(CurrLine, ";Overloaded signature: " + GetSubSig(*CurrSubPtr) + ", Source: " + SubLoc)
             Else
-              If SubLoc <> "" Then CurrLine = LinkedListInsert(CurrLine, ";Source " + SubLoc)
+              If SubLoc <> "" Then CurrLine = LinkedListInsert(CurrLine, ";Source: " + SubLoc)
             End If
         End If
         'CurrLine = LinkedListInsert(CurrLine, ";Subroutine size:" + Str(CurrSubPtr->HexSize) + " words")
