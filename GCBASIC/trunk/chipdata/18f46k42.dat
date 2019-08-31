@@ -4,28 +4,75 @@
 'Header Format last revised: 28/03/2019
 
 [ChipData]
+';All items in the ChipData section of this DAT file are available to user programs as constants.
+';The constants have the prefix of CHIP. See the examples below.
+
+'This constant is exposed as CHIPWORDS.
 Prog=32768
+
+'This constant is exposed as CHIPEEPROM.
 EEPROM=1024
+
+'This constant is exposed as CHIPRAM.
 RAM=4096
+
+'This constant is exposed as CHIPIO.
 I/O=36
+
+'This constant is exposed as CHIPADC.
 ADC=35
+
+'This constant is exposed as CHIPMHZ.
 MaxMHz=64
+
+'This constant is exposed with only the first parameter (if more than one parameter) exposed
 IntOsc=64, 48, 32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+
+'This constant is exposed as CHIPPINS.
 Pins=40
+
+'This constant is exposed as CHIPFAMILY.
 Family=16
+
+'This constant is exposed as CHIPFAMILYVARIANT.
 FamilyVariant=1
+
+'This constant is exposed as CHIPPSP
 PSP=0
+
+'This constant is exposed as CHIPMAXADDRESS
 MaxAddress=16383
+
+';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
+';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
+
+'CHIPPWMTIMERVARIANT is used within pwm.h.  This constant provides information with respect to the timer register used for PWM.
 PWMTimerVariant=2
+
+'CHIPSMTCLOCKSOURCEVARIANT is used within smt.h.  This constant provides information with respect to the register used for SMT.
 SMTClockSourceVariant=3
+
+'CHIPREADAD10BITFORCEVARIANT is used within adc.h.  This constant provides information with respect to the register used for setting the ADC operations
 ReadAD10BitForceVariant=4
+
+'CHIPSAFMEMWORDS is used within hefsaf.h.  This constant provides information with respect to the register used for setting the SAF operations
 SAFMemWords=128
+
+'CHIPERASEROWSIZEWORDS is used within hefsaf.h.  This constant provides information with respect to the register used for setting the HEFSAF operations
 EraseRowSizeWords=64
+
+'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
 Stacks=31
+
+'CHIPUSERIDADDRESS is used within user programs.  This constant provides information with respect to the address of the UserID.
 UserIDAddress=2097152
+
+'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
 UserIDLength=8
 
 [Interrupts]
+'For specific details of the interrupts see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC identifier used within user code to expose the specific interrupt.
 ADCReady:ADIE,ADIF
 ADThreshold:ADTIE,ADTIF
 CCP1:CCP1IE,CCP1IF
@@ -95,6 +142,8 @@ VoltageFail:HLVDIE,HLVDIF
 ZeroCrossDetect:ZCDIE,ZCDIF
 
 [Registers]
+'For specific details of the registers see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC register name that can be used within user code to expose the specific register.
 STATUS_CSHAD,14464
 WREG_CSHAD,14465
 BSR_CSHAD,14466
@@ -838,6 +887,8 @@ TOSH,16382
 TOSU,16383
 
 [Bits]
+'For specific details of the bits (all bits are relative to a register in terms of register.bits) see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC bit name that can be used within user code to expose the specific register.bit.
 INT0IP,IPR1,0
 ZCDIP,IPR1,1
 ADIP,IPR1,2
@@ -6054,7 +6105,7 @@ CHS4,ADCON0,6
 
 [NoBankRAM]
 0:5F
-F60:FFF
+3F60:3FFF
 
 [Pins-DIP]
 2,RA0(IO)
@@ -6099,6 +6150,7 @@ F60:FFF
 32,Vdd
 
 [ASMConfig]
+'The Great Cow BASIC compiler default configuration for a specific microcontroller
 BBEN=OFF
 BBSIZE=512
 BOREN=SBORDIS
@@ -6146,6 +6198,9 @@ ZCD=OFF
 255
 
 [ConfigOps]
+'For specific details of the config options see the microcontrollers datasheet.
+'The first parameter is the configuration field that can be used to expose the specific configuration bits.
+'The others parameter are the options the configuration field that can be set.
 FEXTOSC=LP,XT,HS,RESERVED,OFF,ECL,ECM,ECH
 RSTOSC=HFINTOSC_64MHZ,RESERVED_1,EXTOSC_4PLL,RESERVED_2,SOSC,LFINTOSC,HFINTOSC_1MHZ,EXTOSC
 CLKOUTEN=ON,OFF
@@ -6180,6 +6235,7 @@ LVP=OFF,ON
 CP=ON,OFF
 
 [Config]
+'For specific details of the config addresses see the microcontrollers datasheet.
 FEXTOSC_LP,1,248
 FEXTOSC_XT,1,249
 FEXTOSC_HS,1,250

@@ -4,28 +4,75 @@
 'Header Format last revised: 28/03/2019
 
 [ChipData]
+';All items in the ChipData section of this DAT file are available to user programs as constants.
+';The constants have the prefix of CHIP. See the examples below.
+
+'This constant is exposed as CHIPWORDS.
 Prog=16384
+
+'This constant is exposed as CHIPEEPROM.
 EEPROM=256
+
+'This constant is exposed as CHIPRAM.
 RAM=2048
+
+'This constant is exposed as CHIPIO.
 I/O=35
+
+'This constant is exposed as CHIPADC.
 ADC=31
+
+'This constant is exposed as CHIPMHZ.
 MaxMHz=32
+
+'This constant is exposed with only the first parameter (if more than one parameter) exposed
 IntOsc=32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0.0625
+
+'This constant is exposed as CHIPPINS.
 Pins=40
+
+'This constant is exposed as CHIPFAMILY.
 Family=15
+
+'This constant is exposed as CHIPFAMILYVARIANT.
 FamilyVariant=1
+
+'This constant is exposed as CHIPCONFIGWORDS.
 ConfigWords=5
+
+'This constant is exposed as CHIPPSP
 PSP=0
+
+'This constant is exposed as CHIPMAXADDRESS
 MaxAddress=8191
+
+';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
+';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
+
+'CHIPPWMTIMERVARIANT is used within pwm.h.  This constant provides information with respect to the timer register used for PWM.
 PWMTimerVariant=2
+
+'CHIPREADAD10BITFORCEVARIANT is used within adc.h.  This constant provides information with respect to the register used for setting the ADC operations
 ReadAD10BitForceVariant=4
+
+'CHIPSAFMEMWORDS is used within hefsaf.h.  This constant provides information with respect to the register used for setting the SAF operations
 SAFMemWords=128
+
+'CHIPERASEROWSIZEWORDS is used within hefsaf.h.  This constant provides information with respect to the register used for setting the HEFSAF operations
 EraseRowSizeWords=32
+
+'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
 Stacks=16
+
+'CHIPUSERIDADDRESS is used within user programs.  This constant provides information with respect to the address of the UserID.
 UserIDAddress=32768
+
+'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
 UserIDLength=4
 
 [Interrupts]
+'For specific details of the interrupts see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC identifier used within user code to expose the specific interrupt.
 ADCReady:ADIE,ADIF
 ADThreshold:ADTIE,ADTIF
 CCP1:CCP1IE,CCP1IF
@@ -61,6 +108,8 @@ UsartTX2Ready:TX2IE,TX2IF
 ZeroCrossDetect:ZCDIE,ZCDIF
 
 [Registers]
+'For specific details of the registers see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC register name that can be used within user code to expose the specific register.
 INDF0,0
 INDF1,1
 PCL,2
@@ -550,6 +599,8 @@ TOSL,8174
 TOSH,8175
 
 [Bits]
+'For specific details of the bits (all bits are relative to a register in terms of register.bits) see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC bit name that can be used within user code to expose the specific register.bit.
 DSEN,ADCON1,0
 GPOL_ADCON1,ADCON1,5
 IPEN,ADCON1,6
@@ -4059,6 +4110,9 @@ CA0:CBF
 32,Vdd
 
 [ConfigOps]
+'For specific details of the config options see the microcontrollers datasheet.
+'The first parameter is the configuration field that can be used to expose the specific configuration bits.
+'The others parameter are the options the configuration field that can be set.
 FEXTOSC=OFF,ECL,ECM,ECH
 RSTOSC=HFINT32,HFINTPLL,EXT4X,RESERVED,SOSC,LFINT,HFINT1,EXT1X
 CLKOUTEN=ON,OFF
@@ -4090,6 +4144,7 @@ LVP=OFF,ON
 CP=ON,OFF
 
 [Config]
+'For specific details of the config addresses see the microcontrollers datasheet.
 FEXTOSC_OFF,1,16376
 FEXTOSC_ECL,1,16381
 FEXTOSC_ECM,1,16382

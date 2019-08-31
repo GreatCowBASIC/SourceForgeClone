@@ -4,22 +4,57 @@
 'Header Format last revised: 28/03/2019
 
 [ChipData]
+';All items in the ChipData section of this DAT file are available to user programs as constants.
+';The constants have the prefix of CHIP. See the examples below.
+
+'This constant is exposed as CHIPWORDS.
 Prog=8192
+
+'This constant is exposed as CHIPEEPROM.
 EEPROM=0
+
+'This constant is exposed as CHIPRAM.
 RAM=768
+
+'This constant is exposed as CHIPIO.
 I/O=50
+
+'This constant is exposed as CHIPADC.
 ADC=12
+
+'This constant is exposed as CHIPMHZ.
 MaxMHz=40
+
+'This constant is exposed with only the first parameter (if more than one parameter) exposed
 IntOsc=32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+
+'This constant is exposed as CHIPPINS.
 Pins=64
+
+'This constant is exposed as CHIPFAMILY.
 Family=16
+
+'This constant is exposed as CHIPPSP
 PSP=0
+
+'This constant is exposed as CHIPMAXADDRESS
 MaxAddress=4095
+
+';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
+';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
+
+'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
 Stacks=31
+
+'CHIPUSERIDADDRESS is used within user programs.  This constant provides information with respect to the address of the UserID.
 UserIDAddress=2097152
+
+'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
 UserIDLength=8
 
 [Interrupts]
+'For specific details of the interrupts see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC identifier used within user code to expose the specific interrupt.
 ADCReady:ADIE,ADIF
 CCP1:CCP1IE,CCP1IF
 CCP2:CCP2IE,CCP2IF
@@ -45,6 +80,8 @@ UsartTX2Ready:TX2IE,TX2IF
 VoltageFail:HLVDIE,HLVDIF
 
 [Registers]
+'For specific details of the registers see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC register name that can be used within user code to expose the specific register.
 LCDPS,3928
 LCDCON,3929
 LCDSE0,3930
@@ -218,6 +255,8 @@ TOSH,4094
 TOSU,4095
 
 [Bits]
+'For specific details of the bits (all bits are relative to a register in terms of register.bits) see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC bit name that can be used within user code to expose the specific register.bit.
 SE8,LCDSE1,0
 SE9,LCDSE1,1
 SE10,LCDSE1,2
@@ -1627,6 +1666,7 @@ F60:FFF
 57,Vdd
 
 [ASMConfig]
+'The Great Cow BASIC compiler default configuration for a specific microcontroller
 BOREN=SBORDIS
 BORV=3
 CCP2MX=PORTC
@@ -1656,6 +1696,9 @@ XINST=OFF
 1
 
 [ConfigOps]
+'For specific details of the config options see the microcontrollers datasheet.
+'The first parameter is the configuration field that can be used to expose the specific configuration bits.
+'The others parameter are the options the configuration field that can be set.
 OSC=LP,XT,HS,RC,EC,ECIO,HSPLL,RCIO,INTIO67,INTIO7
 FCMEN=OFF,ON
 IESO=OFF,ON
@@ -1673,6 +1716,7 @@ DEBUG=ON,OFF
 CP=ON,OFF
 
 [Config]
+'For specific details of the config addresses see the microcontrollers datasheet.
 OSC_LP,2,240
 OSC_XT,2,241
 OSC_HS,2,242

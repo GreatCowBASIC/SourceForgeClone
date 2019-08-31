@@ -4,24 +4,63 @@
 'Header Format last revised: 28/03/2019
 
 [ChipData]
+';All items in the ChipData section of this DAT file are available to user programs as constants.
+';The constants have the prefix of CHIP. See the examples below.
+
+'This constant is exposed as CHIPWORDS.
 Prog=256
+
+'This constant is exposed as CHIPEEPROM.
 EEPROM=0
+
+'This constant is exposed as CHIPRAM.
 RAM=64
+
+'This constant is exposed as CHIPIO.
 I/O=4
+
+'This constant is exposed as CHIPADC.
 ADC=3
+
+'This constant is exposed as CHIPMHZ.
 MaxMHz=16
+
+'This constant is exposed with only the first parameter (if more than one parameter) exposed
 IntOsc=16, 8, 4, 2
+
+'This constant is exposed as CHIPPINS.
 Pins=8
+
+'This constant is exposed as CHIPFAMILY.
 Family=14
+
+'This constant is exposed as CHIPCONFIGWORDS.
 ConfigWords=1
+
+'This constant is exposed as CHIPPSP
 PSP=0
+
+'This constant is exposed as CHIPMAXADDRESS
 MaxAddress=127
+
+';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
+';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
+
+'CHIPINTOSCCONFORMAT is used within system.h.  This constant provides information with respect to the register used for setting the frequency.
 IntOSCCONFormat=1
+
+'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
 Stacks=8
+
+'CHIPUSERIDADDRESS is used within user programs.  This constant provides information with respect to the address of the UserID.
 UserIDAddress=8192
+
+'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
 UserIDLength=4
 
 [Interrupts]
+'For specific details of the interrupts see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC identifier used within user code to expose the specific interrupt.
 ADCReady:ADIE,ADIF
 ExtInt0:INTE,INTF
 LogicCell1Event:CLC1IE,CLC1IF
@@ -32,6 +71,8 @@ Timer0Overflow:TMR0IE,TMR0IF
 Timer2Match:TMR2IE,TMR2IF
 
 [Registers]
+'For specific details of the registers see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC register name that can be used within user code to expose the specific register.
 INDF,0
 TMR0,1
 PCL,2
@@ -103,6 +144,8 @@ VREGCON,62
 BORCON,63
 
 [Bits]
+'For specific details of the bits (all bits are relative to a register in terms of register.bits) see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC bit name that can be used within user code to expose the specific register.bit.
 PWM1DCL0,PWM1DCL,6
 PWM1DCL1,PWM1DCL,7
 PWM1DCH0,PWM1DCH,0
@@ -455,6 +498,9 @@ _BOREN_SBODEN,BORCON,16379
 2,Vdd
 
 [ConfigOps]
+'For specific details of the config options see the microcontrollers datasheet.
+'The first parameter is the configuration field that can be used to expose the specific configuration bits.
+'The others parameter are the options the configuration field that can be set.
 OSC=INTOSC,EC
 BOREN=OFF,SBODEN,NSLEEP,ON
 WDTE=OFF,SWDTEN,NSLEEP,ON
@@ -467,6 +513,7 @@ BORV=HI,27,LO,24
 WRT=ALL,HALF,BOOT,OFF
 
 [Config]
+'For specific details of the config addresses see the microcontrollers datasheet.
 FOSC_INTOSC,1,16382
 FOSC_EC,1,16383
 BOREN_OFF,1,16377
