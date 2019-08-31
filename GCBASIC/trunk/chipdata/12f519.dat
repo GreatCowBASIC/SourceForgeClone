@@ -4,25 +4,64 @@
 'Header Format last revised: 28/03/2019
 
 [ChipData]
+';All items in the ChipData section of this DAT file are available to user programs as constants.
+';The constants have the prefix of CHIP. See the examples below.
+
+'This constant is exposed as CHIPWORDS.
 Prog=1024
+
+'This constant is exposed as CHIPEEPROM.
 EEPROM=64
+
+'This constant is exposed as CHIPRAM.
 RAM=41
+
+'This constant is exposed as CHIPIO.
 I/O=6
+
+'This constant is exposed as CHIPADC.
 ADC=0
+
+'This constant is exposed as CHIPMHZ.
 MaxMHz=8
+
+'This constant is exposed with only the first parameter (if more than one parameter) exposed
 IntOsc=8
+
+'This constant is exposed as CHIPPINS.
 Pins=8
+
+'This constant is exposed as CHIPFAMILY.
 Family=12
+
+'This constant is exposed as CHIPCONFIGWORDS.
 ConfigWords=1
+
+'This constant is exposed as CHIPPSP
 PSP=0
+
+'This constant is exposed as CHIPMAXADDRESS
 MaxAddress=63
+
+';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
+';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
+
+'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
 Stacks=2
+
+'CHIPUSERIDADDRESS is used within user programs.  This constant provides information with respect to the address of the UserID.
 UserIDAddress=1088
+
+'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
 UserIDLength=4
 
 [Interrupts]
+'For specific details of the interrupts see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC identifier used within user code to expose the specific interrupt.
 
 [Registers]
+'For specific details of the registers see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC register name that can be used within user code to expose the specific register.
 INDF,0
 TMR0,1
 PCL,2
@@ -36,6 +75,8 @@ EEDATA,37
 EEADR,38
 
 [Bits]
+'For specific details of the bits (all bits are relative to a register in terms of register.bits) see the microcontrollers datasheet.
+'The first parameter is the Great Cow BASIC bit name that can be used within user code to expose the specific register.bit.
 C,STATUS,0
 DC,STATUS,1
 Z,STATUS,2
@@ -130,6 +171,9 @@ TRISGPIO_TRISB5,TRISGPIO,5
 1,Vdd
 
 [ConfigOps]
+'For specific details of the config options see the microcontrollers datasheet.
+'The first parameter is the configuration field that can be used to expose the specific configuration bits.
+'The others parameter are the options the configuration field that can be set.
 OSC=LP,XT,INTRC,EXTRC,IOSCFS_4MHZ,IOSCFS_8MHZ
 WDTE=OFF,ON
 CP=ON,OFF
@@ -137,6 +181,7 @@ MCLRE=OFF,ON
 CPDF=ON,OFF
 
 [Config]
+'For specific details of the config addresses see the microcontrollers datasheet.
 FOSC_LP,1,4092
 LP_OSC,1,4092
 FOSC_XT,1,4093
