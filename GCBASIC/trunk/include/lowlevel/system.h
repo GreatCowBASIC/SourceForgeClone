@@ -56,7 +56,7 @@
 '    07062018 - Added 24mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    08062018 - Added 0.0625mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    09012018 - Updated type 103 to support 18f25j53 class oscillator
-'    19042019 - Updated to remove script message and comment tidyup only
+'    19042019 - Updated to remove script message and comment tidyup only, moved ANSELx clear in INITSYS as this needs to clear MCUS without ADCON[0]
 
 
 
@@ -839,46 +839,46 @@ Sub InitSys
       #ENDIF
     #ENDIF
 
-    'Commence clearing any ANSEL variants in the part
-    #IFDEF Var(ANSEL)
-      ANSEL = 0
-    #ENDIF
-    #IFDEF Var(ANSELH)
-      ANSELH = 0
-    #ENDIF
-    #IFDEF Var(ANSEL0)
-      ANSEL0 = 0
-    #ENDIF
-    #IFDEF Var(ANSEL1)
-      ANSEL1 = 0
-    #ENDIF
-    #IFDEF Var(ANSELA)
-      ANSELA = 0
-    #ENDIF
-    #IFDEF Var(ANSELB)
-      ANSELB = 0
-    #ENDIF
-    #IFDEF Var(ANSELC)
-      ANSELC = 0
-    #ENDIF
-    #IFDEF Var(ANSELD)
-      ANSELD = 0
-    #ENDIF
-    #IFDEF Var(ANSELE)
-      ANSELE = 0
-    #ENDIF
-    'End clearing any ANSEL variants in the part
   #ENDIF
 
+  'Commence clearing any ANSEL variants in the part
+  #IFDEF Var(ANSEL)
+    ANSEL = 0
+  #ENDIF
+  #IFDEF Var(ANSELH)
+    ANSELH = 0
+  #ENDIF
+  #IFDEF Var(ANSEL0)
+    ANSEL0 = 0
+  #ENDIF
+  #IFDEF Var(ANSEL1)
+    ANSEL1 = 0
+  #ENDIF
+  #IFDEF Var(ANSELA)
+    ANSELA = 0
+  #ENDIF
+  #IFDEF Var(ANSELB)
+    ANSELB = 0
+  #ENDIF
+  #IFDEF Var(ANSELC)
+    ANSELC = 0
+  #ENDIF
+  #IFDEF Var(ANSELD)
+    ANSELD = 0
+  #ENDIF
+  #IFDEF Var(ANSELE)
+    ANSELE = 0
+  #ENDIF
+  'End clearing any ANSEL variants in the part
 
   #IFDEF VAR(ANCON0)
    'For 18f devices
-    #IFDEF BIT(ANSEL0)
-      Set ANSEL0 off
-    #ENDIF
-    #IFDEF BIT(ANSEL1)
-      Set ANSEL1 off
-    #ENDIF
+'    #IFDEF BIT(ANSEL0)
+'      Set ANSEL0 off
+'    #ENDIF
+'    #IFDEF BIT(ANSEL1)
+'      Set ANSEL1 off
+'    #ENDIF
     #IFDEF BIT(ANSEL2)
       Set ANSEL2 off
     #ENDIF
