@@ -41,7 +41,9 @@
 ' 21/10/18: Added EEPROM support for 18fxxq10 the   'Select DATA EE section (0x310000 - 0x3100FF) section
 ' 20/02/19: Revised bit check to ensure bit exists in ProgWrite - Bit(EEPGD)
 ' 20/04/19: Revised bit check to ensure bit exists in EPWrite - NVMEN and added cleared NVCON1
-'Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
+'           Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
+' 23/09/19: Revised to handle K40 Per  Chip Errata Sheets to correctly support table reads on specific chips.
+
 #script
   If Var(EEDATA) Then
     EEDATL_REF = EEDATA
@@ -178,6 +180,16 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
   'Read
   SET RD ON
 
+  #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+     ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+     ' Sets NVRAM pointer to Static RAM as default location.
+      #Ifdef Var(NVMCON1)
+         NVMCON1.7 = 1
+         NVMCON1.6 = 0
+      #endif
+  #ENDIF
+
+
   'Restore interrupt
   IntOn
 #ENDIF
@@ -196,6 +208,8 @@ sub SysEPRead(In EEAddress, Out EEDataValue)
 
   'Start read
   Set EERE On
+
+
 
 #ENDIF
 
@@ -352,6 +366,15 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     IntState = GIE
     Dim SysEEPromAddress As Word
 
+    #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+       ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+       ' Sets NVRAM pointer to Static RAM as default location.
+        #Ifdef Var(NVMCON1)
+           Dim  NVMCON1_7_State, NVMCON1_6_State as bit
+           NVMCON1_7_State = NVMCON1.7
+           NVMCON1_6_State = NVMCON1.6
+        #endif
+    #ENDIF
 
    #IFDEF BIT(NVMREGS)
   'ALL 16F NVMREGS Devices Except 18FxxK40/K42
@@ -404,13 +427,32 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     #if bit(NVMEN)
       NVMEN=0b'0'
     #endif
+
+    #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+       ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+       ' Sets NVRAM pointer to Static RAM as default location.
+        #Ifdef Var(NVMCON1)
+           Dim  NVMCON1_7_State, NVMCON1_6_State as bit
+           NVMCON1.7 = NVMCON1_7_State
+           NVMCON1.6 = NVMCON1_6_State
+        #endif
+    #ENDIF
+
     'Restore interrupt to initial  State
     GIE = IntState
 end sub
 
 Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
 
-
+  #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+     ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+     ' Sets NVRAM pointer to Static RAM as default location.
+      #Ifdef Var(NVMCON1)
+         Dim  NVMCON1_7_State, NVMCON1_6_State as bit
+         NVMCON1_7_State = NVMCON1.7
+         NVMCON1_6_State = NVMCON1.6
+      #endif
+  #ENDIF
 
   #IFDEf bit(NVMREGS)
       Dim SysEEPromAddress As Word
@@ -454,5 +496,16 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
         NOP
         EEDataValue = NVMDATL
     #ENDIF
+
+    #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+       ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+       ' Sets NVRAM pointer to Static RAM as default location.
+        #Ifdef Var(NVMCON1)
+           Dim  NVMCON1_7_State, NVMCON1_6_State as bit
+           NVMCON1.7 = NVMCON1_7_State
+           NVMCON1.6 = NVMCON1_6_State
+        #endif
+    #ENDIF
+
 
 End Sub
