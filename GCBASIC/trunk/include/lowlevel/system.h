@@ -57,7 +57,7 @@
 '    08062018 - Added 0.0625mhz  clock treatment for 16f USB parts for type 102 oscillator
 '    09012018 - Updated type 103 to support 18f25j53 class oscillator
 '    19042019 - Updated to remove script message and comment tidyup only, moved ANSELx clear in INITSYS as this needs to clear MCUS without ADCON[0]
-
+'    04102019 - Comments tidy up. No functional changes.
 
 
 
@@ -588,7 +588,8 @@ Sub InitSys
 
         #IFDEF ChipMHz 64
           'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
-          'OSCCON = OSCCON OR b'01111000'
+          'equates to OSCCON = OSCCON OR b'01111000'
+          ' = 64Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 On
@@ -596,7 +597,8 @@ Sub InitSys
         #ENDIF
         #IFDEF ChipMHz 48
           'Same as for 16, assuming 48 MHz clock is 16 MHz x 3
-          'OSCCON = OSCCON OR b'01111000'
+          'equates to OSCCON = OSCCON OR b'01111000'
+          ' = 48Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 On
@@ -609,9 +611,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 32
-          'Same as for 8, assuming 32 MHz clock is 8 MHz x 4
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'11110000'
+          'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'11110000'
+          ' = 32Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 On
@@ -624,7 +625,9 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 24
-          'Same as for 8, assuming 24 MHz clock is 8 MHz x 3
+          'equates to OSCCON = OSCCON AND b'10000111' &  OSCCON = OSCCON OR b'01110000'
+          'same as for 8khz, assuming 24 MHz clock is 8 MHz x 3
+          ' = 24Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 On
@@ -637,7 +640,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 16
-          'OSCCON = OSCCON OR b'01111000'
+          'eqates to OSCCON = OSCCON OR b'01111000'
+          ' = 16Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 On
@@ -647,8 +651,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 8
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'01110000'
+          'equates to OSCCON = OSCCON AND b'10000111' &  OSCCON = OSCCON OR b'01110000'
+          ' = 8Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 On
@@ -658,8 +662,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 4
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'01101000'
+          'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01101000'
+          ' = 4Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 Off
@@ -669,8 +673,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 2
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'01100000'
+          'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01100000'
+          ' = 2Mhz
           Set IRCF3 On
           Set IRCF2 On
           Set IRCF1 Off
@@ -680,8 +684,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 1
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'01011000'
+          'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01011000'
+          ' = 1Mhz
           Set IRCF3 On
           Set IRCF2 Off
           Set IRCF1 On
@@ -691,8 +695,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 0.5
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'00111000'
+          'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00111000'
+          ' = 0.5Mhz
           Set IRCF3 Off
           Set IRCF2 On
           Set IRCF1 On
@@ -702,8 +706,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 0.25
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'00110000'
+          'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00110000'
+          ' = 0.25Mhz
           Set IRCF3 Off
           Set IRCF2 On
           Set IRCF1 On
@@ -713,8 +717,8 @@ Sub InitSys
           #endif
         #ENDIF
         #IFDEF ChipMHz 0.125
-          'OSCCON = OSCCON AND b'10000111'
-          'OSCCON = OSCCON OR b'00101000'
+          'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00101000'
+          ' = 0.125Mhz
           Set IRCF3 Off
           Set IRCF2 On
           Set IRCF1 Off
