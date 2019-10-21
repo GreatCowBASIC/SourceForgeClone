@@ -60,7 +60,6 @@
 '    04102019 - Comments tidy up. No functional changes.
 
 
-
 'Constants
 #define ON 1
 #define OFF 0
@@ -441,6 +440,8 @@ Sub InitSys
         asm showdebug OSCCON type is 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
 
         #IFDEF ChipMHz 64 'the SPLLEN needs to set after the IRCF
+			asm showdebug The chip mhz is 64
+            '= 64Mhz
             [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
             #ifdef Bit(SPLLMULT)
               Set SPLLMULT On
@@ -449,8 +450,8 @@ Sub InitSys
 
 
         #IFDEF ChipMHz 48 'the PLLEN needs to set after the IRCF
-          asm showdebug The chip mhz is 48, therefore probably an 18f USB part
-
+          asm showdebug The chip mhz is 48
+          '= 48Mhz
           [canskip] IRCF2, IRCF1, IRCF0 = b'111'   ;'111' for ChipMHz 48
 
           #ifdef Bit(SPLLMULT)
@@ -471,6 +472,8 @@ Sub InitSys
 
 
         #IFDEF ChipMHz 32 'the SPLLEN needs to set after the IRCF
+		 asm showdebug The chip mhz is 32
+         '= 32Mhz
           #if ChipIntOSCCONFormat = 1
               [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'   ;'1101' with PLL for ChipMHz 32
               #ifdef Bit(SPLLMULT)
@@ -485,6 +488,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 16
+		 asm showdebug The chip mhz is 16
+          '= 16Mhz
           OSCCON = OSCCON OR b'01110000'
           'Address the two true tables for IRCF
           #if ChipIntOSCCONFormat = 1
@@ -498,6 +503,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 8
+		 asm showdebug The chip mhz is 8
+          '= 8Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
           #if ChipIntOSCCONFormat = 1
@@ -510,6 +517,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 4
+		 asm showdebug The chip mhz is 4
+          '= 4Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
           #if ChipIntOSCCONFormat = 1
@@ -522,6 +531,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 2
+		 asm showdebug The chip mhz is 2
+          '= 2Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
           #if ChipIntOSCCONFormat = 1
@@ -534,6 +545,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 1
+		 asm showdebug The chip mhz is 1
+          '= 1Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
           #if ChipIntOSCCONFormat = 1
@@ -546,6 +559,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 0.5
+		 asm showdebug The chip mhz is 0_5
+          '= 0.5Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
           #if ChipIntOSCCONFormat = 1
@@ -558,6 +573,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 0.25
+		 asm showdebug The chip mhz is 0_25
+          '= 0.25Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
           #if ChipIntOSCCONFormat = 1
@@ -570,6 +587,8 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 0.125
+		 asm showdebug The chip mhz is 0_125
+          '= 0.125Mhz
           OSCCON = OSCCON AND b'10001111'
           #ifndef ChipIntOSCCONFormat
              [canskip] IRCF2, IRCF1, IRCF0 = b'001'         ;001 = 125 kHz
