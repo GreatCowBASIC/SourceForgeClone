@@ -15492,7 +15492,7 @@ Sub WriteCompilationReport
     Print #F, "<p>" + Message("ChipM") + ChipName + "</p>"
     Print #F, "<p>" + UsedProgram + "</p>"
     Print #F, "<p>" + UsedRAM + "</p>"
-    Print #F, "<p> OSC: " + DesiredOscillatorSource + "</p>"
+    Print #F, "<p> OSC: " + DesiredOscillatorSource+", "+str(ChipMhz)+  "</p>"
 
   ElseIf RF = "text" Then
     Print #F, Message("ChipUsage")
