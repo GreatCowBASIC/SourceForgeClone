@@ -2485,12 +2485,19 @@ SUB CalcConfig
                   Print #configreport, ConfigOps(CurrConfConst).Op
                 End if
               End If
+              if instr(OutConfig(CurrWord),"OSC") <> 0 then
+                  IF VBS=1 THEN PRINT SPC(5); Message("DesiredOscillatorSource")+ConfigOps(CurrConfConst).Op
+                  DesiredOscillatorSource = ConfigOps(CurrConfConst).Op
+              End if
+
               Exit For
             End If
           Next
 
         End If
       End With
+
+
       CurrSettingLoc = CurrSettingLoc->Next
     Loop
 
