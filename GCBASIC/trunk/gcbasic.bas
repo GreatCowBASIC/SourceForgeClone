@@ -677,7 +677,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-11-02"
+Version = "0.98.<<>> 2019-11-14"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2423,7 +2423,6 @@ SUB CalcConfig
               End If
             End If
 
-            IF VBS=1 THEN PRINT SPC(5); Message("DesiredOscillatorSource")+DesiredSetting
             DesiredOscillatorSource = DesiredSetting
           End If
 
@@ -2486,7 +2485,6 @@ SUB CalcConfig
                 End if
               End If
               if instr(OutConfig(CurrWord),"OSC") <> 0 then
-                  IF VBS=1 THEN PRINT SPC(5); Message("DesiredOscillatorSource")+ConfigOps(CurrConfConst).Op
                   DesiredOscillatorSource = ConfigOps(CurrConfConst).Op
               End if
 
@@ -2500,6 +2498,9 @@ SUB CalcConfig
 
       CurrSettingLoc = CurrSettingLoc->Next
     Loop
+
+    'Output the osc
+    IF VBS=1 THEN PRINT SPC(5); Message("DesiredOscillatorSource")+ConfigOps(CurrConfConst).Op
 
     'Write code
     'Single config word
