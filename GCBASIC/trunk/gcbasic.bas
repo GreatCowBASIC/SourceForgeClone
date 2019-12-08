@@ -677,7 +677,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-11-14"
+Version = "0.98.<<>> 2019-12-08"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2484,7 +2484,7 @@ SUB CalcConfig
                   Print #configreport, ConfigOps(CurrConfConst).Op
                 End if
               End If
-              if instr(OutConfig(CurrWord),"OSC") <> 0 then
+              if instr(OutConfig(CurrWord),"OSC") <> 0   and instr(OutConfig(CurrWord),"OFF") = 0 then
                   DesiredOscillatorSource = ConfigOps(CurrConfConst).Op
               End if
 
@@ -15220,13 +15220,12 @@ Function TranslateFile(InFile As String) As String
             If ConvertRequired Then
               ConvParams = InFile
               If .Params <> "" Then
-                ConvParams = ReplaceToolVariables(.Params, CurrType, InFile)
+                ConvParams = ConvParams+" "+ReplaceToolVariables(.Params, CurrType, InFile)
                 'If chip model required but not known, cannot convert
                 If InStr(LCase(.Params), "%chipmodel%") <> 0 And ChipName = "" Then
                   Return ""
                 End If
               End If
-
               ConvExe = AddFullPath(.ExeName, ConvDir)
               If Exec(ConvExe, ConvParams) <> -1 Then
                 If VBS = 1 Then Print Message("Success")
