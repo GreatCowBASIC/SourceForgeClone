@@ -26,7 +26,7 @@ ADC=2
 MaxMHz=8
 
 'This constant is exposed with only the first parameter (if more than one parameter) exposed
-IntOsc=8
+IntOsc=8, 4
 
 'This constant is exposed as CHIPPINS.
 Pins=8
