@@ -179,7 +179,6 @@ Sub PrepareBuiltIn
 	AddConstant("CHIPNAME", ChipName)
 	AddConstant("CHIP_" + ChipName, "")
 	AddConstant("CHIPMHZ", Str(ChipMhz))
-	AddConstant("CHIPOSC", OSCType)
 	AddConstant("CHIPRESERVEHIGHPROG", Str(ReserveHighProg))
 
 	If ModePIC Then AddConstant("PIC", "")
@@ -794,7 +793,7 @@ SUB PreProcessor
 
 				ElseIf ReadType = 0 And CurrChar = Asc("0") Then
 					OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
-					If (OtherChar = "b" Or OtherChar = "x") And IsDivider(Mid(DataSource, CurrCharPos - 1, 1)) Then
+					If (OtherChar = "b" Or OtherChar = "x") And (IsDivider(Mid(DataSource, CurrCharPos - 1, 1)) Or CurrCharPos = 1) Then
 						ReadType = 4
 						BinHexTemp = Chr(CurrChar)
 						CurrChar = -1
@@ -1444,7 +1443,14 @@ LoadNextFile:
 	End If
 	'If still skipping compilation, exit sub
 	If FlashOnly Then Exit Sub
-
+	
+	'Determine the correct setting for the CONFIG directive
+	'Do this once chip, config settings and programmer are known, but before replacing constants
+	If ConfWords > 0 Then
+		IF VBS = 1 THEN PRINT SPC(5); Message("CalcConfig")
+		CalcConfig
+	End If
+	
 	'Display chip data
 	IF VBS = 1 THEN
 		PRINT
@@ -1455,6 +1461,7 @@ LoadNextFile:
 		If ModeZ8 Then PRINT SPC(15); Message("ChipF") + "Z8"
 		PRINT SPC(15); Message("ChipC") + Trim(Str(ChipMhz))
 		PRINT SPC(15); Message("ChipR") + Trim(Str(ChipRam))
+		If ModePIC Then	Print SPC(15); Message("ChipO") + ChipOscSource
 	END If
 
 	'Find and run compiler scripts
