@@ -1,5 +1,5 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2019 Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
+'    Copyright (C) 2006-2020  Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
 '
 '
 '    This library is free software; you can redistribute it and/or
@@ -123,7 +123,7 @@
 ''' 13/11/2018 Added channels 1,2 and 3 to HPWUpdate
 ''' 14/12/2018 Added PWMxOE enable bits to support parts that need it. 16f1503 etc.
 ''' 02/05/2019 Added HPWMUpdate for CCP1..CCP5. Two sections one for the hardware PWM module(s) and one for the CCP module(s)
-
+''' 14/08/2019 Added labels only. No functional changes.
 
   'define the defaults
   #define AVRTC0
@@ -3887,9 +3887,10 @@ Sub HPWMUpdate (In PWMChannel, in PWMDuty as WORD  )
     'Restore the cache value
     PRx_Temp = PRx_Temp_Cache
 
-PWMUPDATE_HARDWAREMODE:
+
 
     #ifdef USE_HPWM1 TRUE
+PWMUPDATE_HARDWAREMODEPWM1:
 
       #if var(PWM1DCH)   'If no channel.... no-point in compiling the code
 
@@ -3925,6 +3926,7 @@ PWMUPDATE_HARDWAREMODE:
     #endif
 
     #ifdef USE_HPWM2 TRUE
+PWMUPDATE_HARDWAREMODEPWM2:
 
       #if var(PWM2DCH)   'If no channel.... no-point in compiling the code
 
@@ -3959,6 +3961,7 @@ PWMUPDATE_HARDWAREMODE:
     #endif
 
     #ifdef USE_HPWM3 TRUE
+PWMUPDATE_HARDWAREMODEPWM3:
 
       #if var(PWM3DCH)   'If no channel.... no-point in compiling the code
 
@@ -3992,8 +3995,8 @@ PWMUPDATE_HARDWAREMODE:
 
     #endif
 
-
     #ifdef USE_HPWM4 TRUE
+PWMUPDATE_HARDWAREMODEPWM4:
 
       #if var(PWM4DCH)   'If no channel.... no-point in compiling the code
 
@@ -4026,8 +4029,8 @@ PWMUPDATE_HARDWAREMODE:
 
     #endif
 
-
     #ifdef USE_HPWM5 TRUE
+PWMUPDATE_HARDWAREMODEPWM5:
 
       #if var(PWM5DCH)   'If no channel.... no-point in compiling the code
 
@@ -4060,8 +4063,8 @@ PWMUPDATE_HARDWAREMODE:
 
     #endif
 
-
     #ifdef USE_HPWM6 TRUE
+PWMUPDATE_HARDWAREMODEPWM6:
 
       #if var(PWM6DCH)   'If no channel.... no-point in compiling the code
 
@@ -4093,8 +4096,8 @@ PWMUPDATE_HARDWAREMODE:
 
     #endif
 
-
     #ifdef USE_HPWM7 TRUE
+PWMUPDATE_HARDWAREMODEPWM7:
 
       #if var(PWM7DCH)   'If no channel.... no-point in compiling the code
 
@@ -4128,6 +4131,7 @@ PWMUPDATE_HARDWAREMODE:
     #endif
 
     #ifdef USE_HPWM8 TRUE
+PWMUPDATE_HARDWAREMODEPWM8:
 
       #if var(PWM8DCH)   'If no channel.... no-point in compiling the code
 
@@ -4164,7 +4168,7 @@ PWMUPDATE_HARDWAREMODE:
 PWMUPDATE_CCPMODE:
 
     #ifdef USE_HPWMCCP1 TRUE
-
+PWMUPDATE_HARDWAREMODEPWMCCP1:
        #ifdef VAR(CCPR1L)
          'ifdef BIT(CCPR1L) Testing this bit is to identify the use of CCPR1L for PWM
 
@@ -4211,6 +4215,7 @@ PWMUPDATE_CCPMODE:
     #endif
 
     #ifdef USE_HPWMCCP2 TRUE
+PWMUPDATE_HARDWAREMODEPWMCCP2:
 
       #ifdef VAR(CCPR2L)
 
@@ -4247,6 +4252,7 @@ PWMUPDATE_CCPMODE:
     #endif
 
     #ifdef USE_HPWMCCP3 TRUE
+PWMUPDATE_HARDWAREMODEPWMCCP3:
 
       #ifdef VAR(CCPR3L)
 
@@ -4282,8 +4288,8 @@ PWMUPDATE_CCPMODE:
 
     #endif
 
-
     #ifdef USE_HPWMCCP4 TRUE
+PWMUPDATE_HARDWAREMODEPWMCCP4:
 
       #ifdef VAR(CCPR4L)
 
@@ -4318,8 +4324,8 @@ PWMUPDATE_CCPMODE:
 
     #endif
 
-
     #ifdef USE_HPWMCCP5 TRUE
+PWMUPDATE_HARDWAREMODEPWMCCP5:
 
       #ifdef VAR(CCPR5L)
 

@@ -1,5 +1,5 @@
 '    Analog to Digital conversion routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2013, 2018 - 2019 Hugh Considine, Kent Schafer, William Roth, Evan Venn
+'    Copyright (C) 2006-2020  Hugh Considine, Kent Schafer, William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -136,7 +136,7 @@
 ' 11/12/18 Added references to support 16f1834x ADC channels
 ' 14/12/18 Added references to support 16f1834x ADC channels
 ' 17/02/19 Corrected AN29 address. Removed a typo. Prevented PORTD.5 ADC from operating as expected.
-
+' 21/08/19 Improved documentation only. No functional change
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -377,7 +377,7 @@ macro LLReadAD (ADLeftAdjust)
 
       #IFDEF NoVar(ANSEL)
         #IFDEF NoVar(ANSEL0)
-          'ANSEL0/ANSEL
+          'Handle devices with no ANSEL0 AND no ANSEL
           #IFDEF NoVar(ANSELA)
             #IFDEF NoVar(ANSELB)
 
@@ -400,8 +400,8 @@ macro LLReadAD (ADLeftAdjust)
                 #ENDIF
 
                 #IFDEF Var(ADCON2)
-                  'Example: 18F4620
                   #IFDEF BIT(PCFG3)
+                    'ADCON2 and bit PCFG3 exist. Example: 18F4620
                     SET PCFG3 OFF
                     SET PCFG2 OFF
                     SET PCFG1 OFF
@@ -410,9 +410,10 @@ macro LLReadAD (ADLeftAdjust)
                 #ENDIF
               #ENDIF
 
-              'PICs with PCFG4 and higher use ADCON1 as an ANSEL type register
-              'Example: 18F1320
+
               #IFDEF Bit(PCFG4)
+                'PICs with PCFG4 and higher use ADCON1 as an ANSEL type register
+                'Example: 18F1320
                 'Some 18F8xxxx chips have error in chip definition
                 'They claim to have PCFG4, but actually don't, can spot them by presence of ADCON2
                 Dim AllANSEL As Byte Alias ADCON1
@@ -425,13 +426,12 @@ macro LLReadAD (ADLeftAdjust)
                 Loop
               #ENDIF
 
-            'ANSELB/A
             #ENDIF
           #ENDIF
 
 
           #IFDEF Var(ANSELA)
-            'Code for devcies with ANSELA/ANSELB/ANSELE registers
+            'Code for devices with ANSELA/ANSELB/ANSELE registers
             Select Case ADReadPort ' #IFDEF Var(ANSELA). ANSELA exists @DebugADC_H
 
               #IF ChipPins = 14  Or ChipPins = 8
@@ -976,7 +976,7 @@ macro LLReadAD (ADLeftAdjust)
 
 
       #IFDEF Var(ANSEL)
-        'Code for PICs with newer A/D (with ANSEL register)
+        'Code for PICs with with ANSEL register
         #IFDEF DebugADC_H
             NOP '#IFDEF Var(ANSEL). ANSEL exists @DebugADC_H
         #ENDIF
@@ -997,7 +997,7 @@ macro LLReadAD (ADLeftAdjust)
 
       #ENDIF
       #IFDEF Var(ANSEL0)
-       'Code for 18F4431, uses ANSEL0 and ANSEL1
+       'Code for 18F4431 family parts, uses ANSEL0 and ANSEL1
         #IFDEF DebugADC_H
             NOP '#IFDEF Var(ANSEL0). ANSEL0 exists @DebugADC_H
         #ENDIF
@@ -1028,23 +1028,27 @@ macro LLReadAD (ADLeftAdjust)
 
         SET ACONV OFF  'Single shot mode
         SET ACSCH OFF  'Single channel CONVERSION
-        'GroupA
+
         IF ADReadPort = 0 OR ADReadPort = 4 OR ADReadPort = 8 Then
+          'GroupA
           SET ACMOD1 OFF
           SET ACMOD0 OFF
         END IF
-        'GroupB
+
         IF ADReadPort = 1 OR ADReadPort = 5 Then
+          'GroupB
           SET ACMOD1 OFF
           SET ACMOD0 ON
         END IF
-        'GroupC
+
         IF ADReadPort = 2 OR ADReadPort = 6 Then
+          'GroupC
           SET ACMOD1 ON
           SET ACMOD0 OFF
         END IF
-        'GroupD
+
         IF ADReadPort = 3 OR ADReadPort = 7 Then
+          'GroupD
           SET ACMOD1 ON
           SET ACMOD0 ON
         END IF
@@ -1053,7 +1057,7 @@ macro LLReadAD (ADLeftAdjust)
 
 
       #IFDEF Bit(ADCS0)
-        'Set conversion clock - improved to handle ADCS2
+
         #IFDEF DebugADC_H
             NOP '#IFDEF Bit(ADCS0). Set conversion clock @DebugADC_H
         #ENDIF
@@ -1062,8 +1066,9 @@ macro LLReadAD (ADLeftAdjust)
           #IFDEF DebugADC_H
               NOP 'ADSpeed HighSpeed @DebugADC_H 'set to  FOSC/2
           #ENDIF
-          'Later microcontrollers have three bits not two
+
           #IFDEF BIT(ADCS2)
+            'Later microcontrollers have three bits not two bites. Set conversion clock - to handle ADCS2
             SET ADCS2 OFF
           #ENDIF
           SET ADCS1 OFF
@@ -1496,16 +1501,17 @@ macro LLReadAD (ADLeftAdjust)
             #ENDIF
           #ENDIF
 
-          'For 18F1320, which uses ADCON1 as an ANSEL register
+
           #IFDEF Bit(PCFG4)
+            'For 18F1320, which uses ADCON1 as an ANSEL register
             ADCON1 = 0
           #ENDIF
         #ENDIF
       #ENDIF
     #ENDIF
 
-    'Clear whatever ANSEL variants the chip has
-    #IFDEF Var(ANSEL)
+
+    #IFDEF Var(ANSEL)      'Clear whatever ANSEL variants the chip has
       ANSEL = 0
     #ENDIF
     #IFDEF Var(ANSELH)
@@ -1640,9 +1646,7 @@ end macro
 
 'Returns Byte
 function ReadAD( in ADReadPort) as byte
-  'ADFM must be OFF! BACKWARDS Compatbility!
-  'ADFM should be be changed.
-  'Always LEFT justified
+    'ADFM should configured to ensure LEFT justified
 
 
   #IFDEF DebugADC_H
@@ -1704,8 +1708,9 @@ LLReadAD 1
     #ENDIF
 
 
-    ' Support 8-bit differential reads
+
     #IFDEF Bit(CHSN0)
+        ' Support 8-bit differential reads
 
         #IFDEF DebugADC_H
             NOP 'Chip has differential ADC. @DebugADC_H
@@ -1749,7 +1754,7 @@ End Function
 
 'ReadAD - suppports Differential reads
 function ReadAD( in ADReadPort, in ADN_PORT ) as integer
- 'added optional ADN_PORT to support differential ADC
+  'Optional ADN_PORT to support differential ADC
   'Always LEFT justified
 
   #IFDEF DebugADC_H
@@ -2271,7 +2276,7 @@ sub ADOff
 end sub
 
 Sub ConfigNegativeChannel
-   'Sub added to support PICS with Differential ADC MOdule- WMR
+   'Sub added to support PICS with Differential ADC MOdule
 
    #IFNDEF Bit(CHSN3) '18F
         'Configure Negative A/D Channel
@@ -2366,7 +2371,7 @@ end macro
 '''Initializes the FVR
 '''@param FVR_OFF, FVR_1x, FVR_2x or FVR_4x = (1.024v, 2.048v or 4.096v)
 sub FVRInitialize ( Optional in FVR_Bits = FVR_OFF )
-   'strip the bits we need to retain
+   'Strip the bits we need to retain
    FVRCON = FVRCON and 0xc0 '0x7C
     'FVREN enabled; FVR
     if FVR_Bits <> FVR_OFF then

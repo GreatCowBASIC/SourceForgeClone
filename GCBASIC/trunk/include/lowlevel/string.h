@@ -1,5 +1,5 @@
 '    String routines for the GCBASIC compiler
-'    Copyright (C) 2006 - 2017 Hugh Considine, Evan Venn & Immo Freudenberg
+'    Copyright (C) 2006-2020  Hugh Considine, Evan Venn & Immo Freudenberg
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
