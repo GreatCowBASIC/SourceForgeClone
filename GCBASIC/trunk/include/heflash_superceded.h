@@ -1,3 +1,5 @@
+'''Copyright 2015 -2020 Jaques Nilo
+'''
 '''GCB Library for reading/writing to High Endurance Flash Memory
 '''-----------------------------------------------------------------------------
 '''The high endurance flash memory (HEFM) is a block of 128 locations found
