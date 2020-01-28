@@ -1,5 +1,5 @@
 '    Hardware I2C2 routines for Great Cow BASIC
-'    Copyright (C) 2015 - 2017 Evan R. Venn
+'    Copyright (C) 2015-2020  Evan R. Venn
 '    Version 1.1
 
 '    This library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 '********************************************************************************
 '    Updated Oct 2016  - for Option Explicit and to fix the script issue
 '    Updated jan 2019  - Correct support in HI2C2Start
+'    Updated Jan 2020 - Correct SSPxADD calculation for out of bound values
 
 'SPI mode constants ALSO used by hardware I2C:
 ' Define HI2C2 settings - CHANGE PORTS
@@ -70,11 +71,30 @@
 #startup HI2C2Init, 90
 
 #script
-  HI2C2_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C2_BAUD_RATE)) - 1
 
-  If PIC Then
-             HI2C2HasData = "SSP2STAT_BF = On"
-  End If
+  'has the defined this constant?  We cannot  use HI2C2_BAUD_RATE as this is always defined
+  if hi2c2_DATA then
+
+      HI2C2_BAUD_TEMP = 0
+
+      if int( (ChipMhz * 1000000)/(4000 * HI2C2_BAUD_RATE))-1 > 0 then
+          HI2C2_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C2_BAUD_RATE)) - 1
+
+      end if
+      if int((ChipMhz * 1000000)/(4000 * HI2C2_BAUD_RATE)) < 0 then
+          Warning "Clock Frequency to slow for desired I2C2 baud rate"
+          HI2C2_BAUD_TEMP = 0
+      end if
+
+      if HI2C2_BAUD_TEMP > 255 then
+        Warning "Clock Frequency for desired I2C2 baud rate high"
+      end if
+
+      If PIC Then
+        HI2C2HasData = "SSP2STAT_BF = On"
+      End If
+
+  end if
 
 #endscript
 
@@ -93,7 +113,8 @@ Sub HI2C2Mode (In HI2C2CurrentMode)
       set SSP2CON1_SSPM2 off
       set SSP2CON1_SSPM1 off
       set SSP2CON1_SSPM0 off
-      SSP2ADD = HI2C2_BAUD_TEMP And 127
+      ' and 3 to ensure Values of 0x00, 0x01 and 0x02 are not valid for SSPADD when used as a Baud Rate Generator for I2C. This is an implementation limitation
+      SSP2ADD = HI2C2_BAUD_TEMP and 3
     end if
 
     if HI2C2CurrentMode = Slave then
