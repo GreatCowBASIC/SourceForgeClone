@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
+'    Copyright (C) 2012-2020 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -149,8 +149,9 @@ Sub InitGLCD_PCD8544
               ' required variables
 
                         #ifdef PCD8544_HardwareSPI
-                          ' harware SPI mode
-                          SPIMode Master, 0
+                         '  harware SPI mode
+                          asm showdebug SPI constant used equates to HWSPIMODESCRIPT
+                          SPIMode HWSPIMODESCRIPT, 0
                           wait 10 ms
                         #endif
 
@@ -218,6 +219,7 @@ Sub InitGLCD_PCD8544
                         GLCDFontWidth = 5
                         GLCDfntDefault = 0
                         GLCDfntDefaultsize = 1
+                        GLCDfntDefaultHeight = 7
 
           #endif
 

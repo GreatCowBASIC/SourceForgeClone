@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2019 Evan Venn
+'    Copyright (C) 2018-2020 Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -19,9 +19,9 @@
 ' Supports uc8230 controller only.
 
 'Changes
-  '7/6/2018 Initial release including OLED fonts
-  '3/4/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
-
+'  7/6/2018 Initial release including OLED fonts
+'  3/4/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 
 'Hardware settings
 'Type
@@ -206,6 +206,7 @@ Sub InitGLCD_uc8230
       GLCDfntDefaultsize = 1
       GLCDDeviceHeight = GLCD_HEIGHT - 1
       GLCDDeviceWidth  = GLCD_WIDTH - 1
+      GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
   #endif
 
@@ -542,7 +543,12 @@ Sub GLCDDrawChar_uc8230(In CharLocX as word, In CharLocY as word, In CharCode, O
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table

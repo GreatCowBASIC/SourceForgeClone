@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2017 Hugh Considine and Evan Venn
+'    Copyright (C) 2012-2020 Hugh Considine and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@
 ' 19/2/16 Revised to ensure compatibility with old code and the help file!
 ' 22/4/17 Revised to support () and binary
 ' 11/4/19 Revised to clean up position and therefore the bleeding of constants into ASM
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 '
 'Hardware settings
 'Type
@@ -231,6 +232,7 @@ Sub InitGLCD_ST7920
               GLCDFontWidth = 6
               GLCDfntDefault = 0
               GLCDfntDefaultsize = 1
+              GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
           #ENDIF
 
   'Clear screen

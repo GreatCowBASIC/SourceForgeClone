@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Evan Venn
+'    Copyright (C) 2017-2020 Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -19,14 +19,14 @@
 ' Supports ILI9486L controller only.
 
 'Changes
-' 21/04/2017:      Initial release
-' 29/12/2018       Added 8Wire_Data_Bus support - beta
-' 30/12/2018       Added Touch support, OLED, fixed rotate and FilledBox
-' 24/1/2019        Revised UNO_8bit_Shield GLCDCLS (typos) and correct command and data send
-' 28/1/2019        Revised to support GLCD_RESET and GLCD_RST
-' 03/04/2019       Revised to support DEFAULT_GLCDBACKGROUND constant
-' 11/04/2019       Revised to clean up position and therefore the bleeding of constants into ASM
-
+'  21/04/2017:      Initial release
+'  29/12/2018       Added 8Wire_Data_Bus support - beta
+'  30/12/2018       Added Touch support, OLED, fixed rotate and FilledBox
+'  24/1/2019        Revised UNO_8bit_Shield GLCDCLS (typos) and correct command and data send
+'  28/1/2019        Revised to support GLCD_RESET and GLCD_RST
+'  03/04/2019       Revised to support DEFAULT_GLCDBACKGROUND constant
+'  11/04/2019       Revised to clean up position and therefore the bleeding of constants into ASM
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 
 '
 'Hardware settings
@@ -379,7 +379,7 @@ Sub InitGLCD_ILI9486L
         GLCDFontWidth = 6
         GLCDfntDefault = 0
         GLCDfntDefaultsize = 2
-
+        GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
         GLCDRotate Portrait
 
         GLCDCLS
@@ -512,6 +512,7 @@ Sub InitGLCD_fullport_ILI9486L
       GLCDFontWidth = 6
       GLCDfntDefault = 0
       GLCDfntDefaultsize = 2
+      GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
       GLCDRotate Portrait
 
@@ -790,7 +791,12 @@ Sub GLCDDrawChar_ILI9486L(In CharLocX as word, In CharLocY as word, In CharCode,
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table

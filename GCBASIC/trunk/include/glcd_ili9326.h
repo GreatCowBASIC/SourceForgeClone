@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014, 2017 Hugh Considine, Evan Venn and Paolo Iocco
+'    Copyright (C) 2012-2020 Hugh Considine, Evan Venn and Paolo Iocco
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 'Changes
 ' 03/04/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
 ' 11/04/2019 Revised to clean up position and therefore the bleeding of constants into ASM
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 
 'Hardware settings
 'Type
@@ -279,6 +280,7 @@ sub InitGLCD_ILI9326
       #endif
 
       GLCDfntDefaultsize = 1
+      GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
       'Clear screen
       GLCDCLS ( GLCDBackground )
@@ -555,7 +557,12 @@ Sub GLCDDrawChar_ILI9326(In CharLocX as word, In CharLocY as word, In CharCode, 
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table

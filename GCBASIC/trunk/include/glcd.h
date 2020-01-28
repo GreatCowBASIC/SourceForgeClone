@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2018 Hugh Considine, Joseph Realmuto, Evan Venn and Giuseppe D'Elia
+'    Copyright (C) 2012-2020 Hugh Considine, Joseph Realmuto, Evan Venn and Giuseppe D'Elia
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -47,10 +47,17 @@
 '    3/4/19   Moved DrawBMP from SSD1289 libary to GLCD.H
 '    14/4/19  Added GLCDPrintWithSize and update DrawEllipse routine
 '    20/4/19  Added GLCDPrintLargeFont - fixed font at 13pixels - ported from sdd1289
-'    1/5/19   Added Hyperbole and Parabola
+'    1/5/19   Added Hyperbole
 '              See the following article:  "Generating Conic Sections Using an Efficient Algorithms"
 '              Author: Abdul-Aziz Solyman Khalil,
 '              Department of Computer Science, University of Mosul, Mosul, Iraq, available on Internet.
+'    23/9/19  Added GLCD_TYPE_UC1601 support and added improved XPOS for GLCDPrintString
+'    10/9/19  Added GLCD_TYPE_ST7735R support               GLCD_WIDTH = 128  GLCD_HEIGHT = 160
+
+'    13/10/19 Added GLCD_TYPE_SSD1351 support
+'    3/11/19  Added GLCD_TYPE_ST7735R_160_80 support.       GLCD_WIDTH = 160 GLCD_HEIGHT = 80
+'    29/11/19 Corrected GLCDLocateString and removed CONSTANTS from GLCD_TYPE_EPD_EPD2in13D
+'    1/12/19  Addded GLCD_TYPE_EPD_EPD7in5 support
 
 
 'Constants that might need to be set
@@ -58,7 +65,7 @@
 
 'GLCD types - add new types here!
 #define GLCD_TYPE_KS0108  1
-#define GLCD_TYPE_ST7735  2
+#define GLCD_TYPE_ST7735  2            'GLCD_WIDTH = 128  GLCD_HEIGHT = 160
 #define GLCD_TYPE_ST7920  3
 #define GLCD_TYPE_PCD8544 4
 #define GLCD_TYPE_SSD1306 5
@@ -75,12 +82,17 @@
 #define GLCD_TYPE_Nextion 16
 #define GLCD_TYPE_ILI9326 17
 #define GLCD_TYPE_NT7108C 18
-#define GLCD_TYPE_T6963   19     'ASSIGNED TO THE _64 AND _128
+#define GLCD_TYPE_T6963   19           'ASSIGNED TO THE _64 AND _128
 #define GLCD_TYPE_T6963_64    20
 #define GLCD_TYPE_T6963_128   21
 #define GLCD_TYPE_UC8230  22
 #define GLCD_TYPE_ILI9320 23
-
+#define GLCD_TYPE_UC1601  24
+#define GLCD_TYPE_ST7735R 25           'GLCD_WIDTH = 128  GLCD_HEIGHT = 160
+#define GLCD_TYPE_SSD1351 26
+#define GLCD_TYPE_EPD_EPD2in13D     27
+#define GLCD_TYPE_ST7735R_160_80 28    'GLCD_WIDTH = 160 GLCD_HEIGHT = 80
+#define GLCD_TYPE_EPD_EPD7in5  29
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
@@ -89,12 +101,12 @@
 #define GLCD_TYPE GLCD_TYPE_KS0108
 #define GLCD_WIDTH 128
 #define GLCD_HEIGHT 64
-dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
+dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize, GLCDfntDefaultheight as byte
 #define GLCDLineWidth 1
 
 '''default font size
 'GLCDfntDefaultsize = 1
-
+'GLCDfntDefaultHeight = 8
 
 ' Screen rotation
 #define LANDSCAPE 1
@@ -127,7 +139,8 @@ dim GLCDFontWidth,GLCDfntDefault, GLCDfntDefaultsize as byte
 #define TFT_GREENYELLOW 0xAFE5
 #define TFT_PINK        0xF81F
 
-
+#define EPD_WHITE       0x33
+#define EPD_BLACK       0x00
 
 ' Do not remove - global variable required for Circles.
 dim GLCD_yordinate as integer
@@ -144,6 +157,7 @@ Dim GLCDDeviceWidth as Word
 
 #script
 
+  GLCDVERSION=7
   ' add new type here!
   If GLCD_TYPE = GLCD_TYPE_KS0108 Then
 
@@ -179,6 +193,7 @@ Dim GLCDDeviceWidth as Word
 
 
   If GLCD_TYPE = GLCD_TYPE_SSD1306 Then
+     'Support I2C, I2C2 and 4wire SPI with low memory optimisation.
      #include <glcd_ssd1306.h>
      InitGLCD = InitGLCD_SSD1306
      GLCDCLS = GLCDCLS_SSD1306
@@ -193,6 +208,26 @@ Dim GLCDDeviceWidth as Word
      GLCD_HEIGHT = 64
      SSD1306_GLCD_HEIGHT = GLCDDeviceHeight
      SSD1306_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
+
+  If GLCD_TYPE = GLCD_TYPE_UC1601 Then
+     'Support I2C, I2C2 and 4wire SPI with low memory optimisation.
+     #include <glcd_UC1601.h>
+     InitGLCD = InitGLCD_UC1601
+     GLCDCLS = GLCDCLS_UC1601
+     GLCDDrawChar = GLCDDrawChar_UC1601
+     FilledBox = FilledBox_UC1601
+     Pset = Pset_UC1601
+     GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_UC1601
+     GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_UC1601
+     GLCDSetContrast = SetContrast_UC1601
+     GLCDRotate = GLCDRotate_UC1601
+     glcd_type_string = "UC1601"
+     GLCD_WIDTH = 132
+     GLCD_HEIGHT = 22
+     UC1601_GLCD_HEIGHT = GLCDDeviceHeight
+     UC1601_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
 
@@ -288,6 +323,49 @@ Dim GLCDDeviceWidth as Word
      ST7735_GLCD_HEIGHT = GLCDDeviceHeight
      ST7735_GLCD_WIDTH = GLCDDeviceWidth
 
+  End If
+
+  If GLCD_TYPE = GLCD_TYPE_ST7735R Then
+
+     #include <glcd_st7735r.h>
+     'Device specific
+     InitGLCD = InitGLCD_ST7735R
+     Pset = Pset_ST7735R
+
+     'Shared with ST7735
+     GLCDCLS = GLCDCLS_ST7735
+     GLCDDrawChar = GLCDDrawChar_ST7735
+     FilledBox = FilledBox_ST7735
+     GLCDRotate = GLCDRotate_ST7735
+
+     glcd_type_string = "ST7735R"
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 160
+     ST7735R_GLCD_HEIGHT = GLCDDeviceHeight
+     ST7735R_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
+
+
+  If GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 Then
+
+     #include <glcd_st7735r.h>
+     'Device specific
+     InitGLCD = InitGLCD_ST7735R
+     Pset = Pset_ST7735R
+
+     'Shared with ST7735
+     GLCDCLS = GLCDCLS_ST7735
+     GLCDDrawChar = GLCDDrawChar_ST7735
+     FilledBox = FilledBox_ST7735
+     GLCDRotate = GLCDRotate_ST7735
+
+     glcd_type_string = "ST7735R"
+     GLCD_WIDTH = 80
+     GLCD_HEIGHT = 160
+
+     ST7735R_GLCD_HEIGHT = GLCDDeviceHeight
+     ST7735R_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
 
@@ -361,6 +439,26 @@ Dim GLCDDeviceWidth as Word
      ILI9326_GLCD_HEIGHT = GLCDDeviceHeight
      ILI9326_GLCD_WIDTH = GLCDDeviceWidth
   End If
+
+
+  If GLCD_TYPE = GLCD_TYPE_SSD1351 Then
+
+     #include <glcd_SSD1351.h>
+     InitGLCD = InitGLCD_SSD1351
+     GLCDCLS = GLCDCLS_SSD1351
+     GLCDDrawChar = GLCDDrawChar_SSD1351
+     GLCDDrawString = GLCDDrawString_SSD1351
+     FilledBox = FilledBox_SSD1351
+     Pset = Pset_SSD1351
+     GLCDRotate = GLCDRotate_SSD1351
+     GLCDSetContrast = SetContrast_SSD1351
+     glcd_type_string = "SSD1351"
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 128
+     SSD1351_GLCD_HEIGHT = GLCDDeviceHeight
+     SSD1351_GLCD_WIDTH = GLCDDeviceWidth
+  End If
+
 
   'Loads extended fonts set ASCII characters 31-254
   'Requires 1358 bytes of program memory
@@ -605,7 +703,187 @@ If GLCD_TYPE = GLCD_TYPE_Nextion Then
 
   End If
 
+' For E-Paper Waveshare EP2.13inch HAT (D)
+  If GLCD_TYPE = GLCD_TYPE_EPD_EPD2in13D Then
 
+     #include <epd_epd2in13d.h>
+     InitGLCD = Init_EPD2in13D
+     GLCDCLS  = CLS_EPD2in13D
+     GLCDDrawChar = DrawChar_EPD2in13D
+     GLCDDrawString = DrawString_EPD2in13D
+     FilledBox = FilledBox_EPD2in13D
+     Pset = Pset_EPD2in13D
+     GLCDRotate = Rotate_EPD2in13D
+     GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_EPD2in13D
+     GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_EPD2in13D
+     GLCDSleep = Display_EPD2in13D
+     GLCDDisplay = Display_EPD2in13D
+     GLCD_TYPE_STRING = "EPD2in13D"
+     GLCD_WIDTH =  104
+     GLCD_HEIGHT = 212
+
+    Ifdef GLCD_EXTENDEDFONTSET1 then
+
+       GLCDCharCol3 = GLCDCharCol3Extended1
+       GLCDCharCol4 = GLCDCharCol4Extended1
+       GLCDCharCol5 = GLCDCharCol5Extended1
+       GLCDCharCol6 = GLCDCharCol6Extended1
+       GLCDCharCol7 = GLCDCharCol7Extended1
+
+    End If
+
+     IF GLCD_TYPE = GLCD_TYPE_EPD_EPD2in13D then
+       'One buffer. No issues... just need a lot of RAM in the chip
+       BUFFWIDTH= 2756
+       EPD_N_PAGE=  1
+       EPD_CORRECTED_HEIGHT = 208
+       EPD_ROWS_PER_PAGE = 26
+       EPD_PIXELS_PER_PAGE = 212
+
+     end if
+     if GLCD_TYPE_EPD2in13D_LOWMEMORY1_GLCD_MODE then
+       'Smallest buffer.
+       '
+       'One pixel per row buffer. WIDTH = 104. Pixel Row = 1.  (104*1)/8 = 13
+       'We have 212 pages
+       'The corrected height is 208 to cater for page wrap in GLCDPrintString
+       'Character rows per page = 1 as this is the minimum value.
+       'Pixels per row = 1
+
+       BUFFWIDTH= 13
+       EPD_N_PAGE= 212
+       EPD_CORRECTED_HEIGHT = 208
+       EPD_ROWS_PER_PAGE = 1
+       EPD_PIXELS_PER_PAGE = 1
+     end if
+     if GLCD_TYPE_EPD2in13D_LOWMEMORY2_GLCD_MODE then
+       '
+       '8 pixels per row buffer. WIDTH = 104. Pixel Row = 8.  (104*8)/8 = 104
+       'We have 27 pages, one partial page to cater for the 4 row pixels
+       'The corrected height is 208 to cater for page wrap in GLCDPrintString
+       'Character rows per page = 1
+       'Pixels per row = 8
+
+       BUFFWIDTH= 104
+       EPD_N_PAGE= 27
+       EPD_CORRECTED_HEIGHT = 208
+       EPD_ROWS_PER_PAGE = 1
+       EPD_PIXELS_PER_PAGE = 8
+     end if
+     if GLCD_TYPE_EPD2in13D_LOWMEMORY3_GLCD_MODE then
+       '
+       '16 pixels per row buffer. WIDTH = 104. Pixel Row = 16.  (104*16)/8 = 208
+       'We have 13 pages, one partial page to cater for the 4 row pixels
+       'The corrected height is 208 to cater for page wrap in GLCDPrintString
+       'Character rows per page = 2
+       'Pixels per row = 16
+      BUFFWIDTH= 208
+       EPD_N_PAGE= 13
+       EPD_CORRECTED_HEIGHT = 208
+       EPD_ROWS_PER_PAGE = 2
+       EPD_PIXELS_PER_PAGE = 16
+     end if
+     if GLCD_TYPE_EPD2in13D_LOWMEMORY4_GLCD_MODE then
+       '
+       '104 pixels per row buffer. WIDTH = 104. Pixel Row = 104.  (104*104)/8 = 1352
+       'We have 3 pages, one partial page to cater for the 4 row pixels
+       'The corrected height is 208 to cater for page wrap in GLCDPrintString
+       'Character rows per page = 13
+       'Pixels per row = 104
+       BUFFWIDTH =1352
+       EPD_N_PAGE= 3
+       EPD_CORRECTED_HEIGHT = 208
+       EPD_ROWS_PER_PAGE = 13
+       EPD_PIXELS_PER_PAGE = 104
+     end if
+     'Last calcualtion is needed
+     IF GLCD_TYPE = GLCD_TYPE_EPD_EPD2in13D then
+         GLCD_WIDTH8 = GLCD_WIDTH / 8
+     end if
+
+     'Resolve BUFFER when SPIRam is available
+     if SPISRAM_TYPE then
+       'One SRAM buffer. No issues... just need a lot of RAM in the chip
+       BUFFWIDTH= 2756
+       EPD_N_PAGE=  1
+       EPD_CORRECTED_HEIGHT = 208
+       EPD_ROWS_PER_PAGE = 26
+       EPD_PIXELS_PER_PAGE = 212
+     end if
+
+  End If
+
+
+
+' For E-Paper Waveshare EP7.5inch HAT ( not the BC version - needs to use another library for that)
+  If GLCD_TYPE = GLCD_TYPE_EPD_EPD7in5 Then
+
+     #include <EPD_EPD7in5.h>
+     InitGLCD = Init_EPD7in5
+     GLCDCLS  = CLS_EPD7in5
+     GLCDDrawChar = DrawChar_EPD7in5
+     GLCDDrawString = DrawString_EPD7in5
+     FilledBox = FilledBox_EPD7in5
+     Pset = Pset_EPD7in5
+     GLCDRotate = Rotate_EPD7in5
+     GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_EPD7in5
+     GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_EPD7in5
+     GLCDSleep = Display_EPD7in5
+     GLCDDisplay = Display_EPD7in5
+     GLCD_TYPE_STRING = "EPD7in5"
+     GLCD_WIDTH =  640
+     GLCD_HEIGHT = 384
+
+     if GLCD_TYPE = GLCD_TYPE_EPD_EPD7in5 then
+       BUFFWIDTH= 30720
+       EPD_N_PAGE=  1
+     end if
+     if GLCD_TYPE_EPD7in5_LOWMEMORY1_GLCD_MODE then
+       BUFFWIDTH= 960
+       EPD_N_PAGE=  32
+     end if
+     if GLCD_TYPE_EPD7in5_LOWMEMORY2_GLCD_MODE then
+       BUFFWIDTH= 1920
+       EPD_N_PAGE=  16
+     end if
+     if GLCD_TYPE_EPD7in5_LOWMEMORY3_GLCD_MODE then
+       BUFFWIDTH= 3840
+       EPD_N_PAGE=  8
+     end if
+     if GLCD_TYPE_EPD7in5_LOWMEMORY4_GLCD_MODE then
+       BUFFWIDTH =7680
+       EPD_N_PAGE=4
+
+     end if
+
+
+     'Resolve BUFFER when SPIRam is available
+     if SPISRAM_TYPE then
+       'One SRAM buffer. No issues... just need a lot of RAM in the chip
+       BUFFWIDTH = 30720
+       EPD_N_PAGE=  1
+     end if
+
+
+     if GLCD_TYPE = GLCD_TYPE_EPD_EPD7in5 then
+
+       GLCD_WIDTH8 = GLCD_WIDTH / 8
+       EPD_CORRECTED_HEIGHT = int(GLCD_HEIGHT / 8)*8
+       EPD_ROWS_PER_PAGE = INT(EPD_CORRECTED_HEIGHT /  EPD_N_PAGE)
+       EPD_PIXELS_PER_PAGE = INT( GLCD_HEIGHT / EPD_N_PAGE )
+
+    end if
+
+    Ifdef GLCD_EXTENDEDFONTSET1 then
+
+       GLCDCharCol3 = GLCDCharCol3Extended1
+       GLCDCharCol4 = GLCDCharCol4Extended1
+       GLCDCharCol5 = GLCDCharCol5Extended1
+       GLCDCharCol6 = GLCDCharCol6Extended1
+       GLCDCharCol7 = GLCDCharCol7Extended1
+
+    End If
+  End If
 
 #endscript
 
@@ -620,8 +898,9 @@ end sub
 'Subs
 '''Clears the GLCD screen
 Sub GLCDCLS
-          ' initialise global variable. Required variable for Circle - DO NOT DELETE
-          GLCD_yordinate = 0
+ ' initialise global variable. Required variable for Circle - DO NOT DELETE
+
+       GLCD_yordinate = 0
 
 End Sub
 
@@ -642,12 +921,13 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as str
   #endif
 
   GLCDPrintLoc = PrintLocX
-
   'Write Data
   For GLCDPrint_String_Counter = 1 To GLCDPrintLen
     GLCDDrawChar  GLCDPrintLoc, PrintLocY, LCDPrintData(GLCDPrint_String_Counter)
     GLCDPrintIncrementPixelPositionMacro
   Next
+  'Update the current X position for GLCDPrintString
+  PrintLocX = GLCDPrintLoc
 
   #ifdef GLCD_OLED_FONT
       GLCDFontWidth = OldGLCDFontWidth
@@ -673,6 +953,8 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, in LCDPrintData as str
     GLCDDrawChar GLCDPrintLoc, PrintLocY, LCDPrintData(GLCDPrint_String_Counter), LineColour
     GLCDPrintIncrementPixelPositionMacro
   Next
+  'Update the current X position for GLCDPrintString
+  PrintLocX = GLCDPrintLoc
 
   #ifdef GLCD_OLED_FONT
       GLCDFontWidth = OldGLCDFontWidth
@@ -711,13 +993,16 @@ Sub GLCDPrintWithSize(In PrintLocX as word, In PrintLocY as word, in LCDPrintDat
       OldGLCDFontWidth = GLCDFontWidth
   #endif
 
-  GLCDPrintLoc = PrintLocX
+  'Update the current X position for GLCDPrintString
+  PrintLocX = GLCDPrintLoc
 
   'Write Data
   For GLCDPrint_String_Counter = 1 To GLCDPrintLen
     GLCDDrawChar  GLCDPrintLoc, PrintLocY, LCDPrintData(GLCDPrint_String_Counter)
     GLCDPrintIncrementPixelPositionMacro
   Next
+
+  'Update the current X position for GLCDPrintString
 
   #ifdef GLCD_OLED_FONT
       GLCDFontWidth = OldGLCDFontWidth
@@ -761,6 +1046,9 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, In LCDValue As Long)
     GLCDPrintIncrementPixelPositionMacro
   Next
 
+  'Update the current X position for GLCDPrintString
+  PrintLocX = GLCDPrintLoc
+
   #ifdef GLCD_OLED_FONT
       GLCDFontWidth = OldGLCDFontWidth
   #endif
@@ -793,6 +1081,9 @@ Sub GLCDPrint(In PrintLocX as word, In PrintLocY as word, In LCDValue As Long, I
     GLCDDrawChar GLCDPrintLoc, PrintLocY, SysPrintBuffer(GLCDPrint_String_Counter) + 48, LineColour
     GLCDPrintIncrementPixelPositionMacro
   Next
+
+  'Update the current X position for GLCDPrintString
+  PrintLocX = GLCDPrintLoc
 
   #ifdef GLCD_OLED_FONT
       GLCDFontWidth = OldGLCDFontWidth
@@ -847,6 +1138,7 @@ Sub GLCDPrintWithSize(In PrintLocX as word, In PrintLocY as word, In LCDValue As
       GLCDFontWidth = OldGLCDFontWidth
   #endif
 
+  PrintLocX = GLCDPrintLoc
   'Restore font size
   GLCDFntDefaultSize = Old_GLCDPrintSize
   GLCDForeground = Old_LineColour
@@ -869,8 +1161,9 @@ End Macro
 
 Sub GLCDPrintString ( in LCDPrintData as string )
     dim PrintLocX as word
+
+    'Print at the current X and Y post
     GLCDPrint( PrintLocX , PrintLocY , LCDPrintData )
-    PrintLocX = PrintLocX + ( GLCDFontWidth * LCDPrintData (0) )+2  '2 extra pixels
 End Sub
 
 
@@ -878,23 +1171,47 @@ Sub GLCDPrintStringLn( in LCDPrintData as string )
     dim PrintLocX, PrintLocY as word
 
     GLCDPrint( PrintLocX , PrintLocY , LCDPrintData )
+
+    'Update the current X and Y position
     PrintLocX = 0
-    PrintLocY = ( PrintLocY + ( 8 * GLCDfntDefaultSize ) ) mod GLCD_HEIGHT
+
+    'When using Transaction  PrintLocY will get incremented. This needs to be protected
+    #if GLCD_TYPE =  GLCD_TYPE_EPD_EPD2in13D
+        PrintLocY = ( PrintLocY + ( GLCDfntDefaultHeight * GLCDfntDefaultSize ) ) mod EPD_CORRECTED_HEIGHT
+    #endif
+
+    #if GLCD_TYPE <>  GLCD_TYPE_EPD_EPD2in13D
+       PrintLocY = ( PrintLocY + ( GLCDfntDefaultHeight * GLCDfntDefaultSize ) ) mod GLCD_HEIGHT
+    #endif
+
 
 End Sub
 
 Sub GLCDLocateString( in PrintLocX as word, in PrintLocY as word )
-    dim PrintLocY as word
+   dim PrintLocY as word
 
-    PrintLocY = ( 8 * GLCDfntDefaultSize ) * ( PrintLocY - 1 )
+   if PrintLocY < 2 then
+      PrintLocY = 0
+   else
 
+     PrintLocY--
+
+     #if GLCD_TYPE =  GLCD_TYPE_EPD_EPD2in13D
+        PrintLocY = ( PrintLocY * ( GLCDfntDefaultHeight * GLCDfntDefaultSize ) ) mod EPD_CORRECTED_HEIGHT
+     #endif
+
+     #if GLCD_TYPE <>  GLCD_TYPE_EPD_EPD2in13D
+         PrintLocY = ( PrintLocY * ( GLCDfntDefaultHeight * GLCDfntDefaultSize ) ) mod GLCD_HEIGHT
+     #endif
+
+    end if
 End Sub
-
-'''Draws a string at the specified location on the ST7920 GLCD
-'''@param StringLocX X coordinate for message
-'''@param CharLocY Y coordinate for message
-'''@param Chars String to display
-'''@param LineColour Line Color, either 1 or 0
+'
+''''Draws a string at the specified location on the ST7920 GLCD
+''''@param StringLocX X coordinate for message
+''''@param CharLocY Y coordinate for message
+''''@param Chars String to display
+''''@param LineColour Line Color, either 1 or 0
 Sub GLCDDrawString( In StringLocX, In CharLocY, In Chars as string, Optional In LineColour as word = GLCDForeground )
 
   dim GLCDPrintLoc as word
@@ -935,8 +1252,6 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
   '
   'You can make independent change to section 2 and 3 but they are mutual exclusive with many common pieces
 
-
-
     'invert colors if required
     if LineColour <> GLCDForeground  then
       'Inverted Colours
@@ -946,8 +1261,6 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
 
    dim CharCol, CharRow as word
    CharCode -= 15
-
-
 
    CharCol=0
 
@@ -1012,7 +1325,12 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7
 
             case 2 'This is one font table
@@ -3394,9 +3712,9 @@ End Sub
 '**       (x_0, y_0) = coordinates (x, y) of hyperbole center
 '**       a_axis, b_axis = a, b
 '**       Type  (Type=1 Hyperbole is aligned along x axis) (Type=2 Hyperbole is aligned along y axis)
-'**	  ModeStop (ModeStop=1 drawing stops when  one reacheable side of the display border is encountered.
-'**		    ModeStop=2 drawing stops when all the reacheable sides of the display border are encountered)
-'**	  LineColour Color of the Hyperbole drawing
+'**   ModeStop (ModeStop=1 drawing stops when  one reacheable side of the display border is encountered.
+'**       ModeStop=2 drawing stops when all the reacheable sides of the display border are encountered)
+'**   LineColour Color of the Hyperbole drawing
 '**
 '******************************************************************************************
 sub Hyperbole(x_0, y_0, a_axis, b_axis, type, ModeStop, optional LineColour=GLCDForeground)

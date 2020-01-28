@@ -1,5 +1,5 @@
 '''    Graphical LCD routines for the GCBASIC compiler
-'''    Copyright (C) 2019 Evan Venn
+'''    Copyright (C) 2018-2020 Evan Venn
 ''
 '''    This library is free software; you can redistribute it and/or
 '''    modify it under the terms of the GNU Lesser General Public
@@ -18,10 +18,10 @@
 '********************************************************************************
 '********************************************************************************
 '********************************************************************************
-'      08.02.2019         Initial release.  Tested on 16f1939, see the demos for the test suite.
-'      16.02.2019         Added 8bit in addressing for 8-bit data bus
-'      11.04.2019         Revised to clean up position and therefore the bleeding of constants into ASM
-
+'  08.02.2019         Initial release.  Tested on 16f1939, see the demos for the test suite.
+'  16.02.2019         Added 8bit in addressing for 8-bit data bus
+'  11.04.2019         Revised to clean up position and therefore the bleeding of constants into ASM
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 
 
 
@@ -642,6 +642,7 @@ Sub InitGLCD_T6963
     GLCDFontWidth = 5
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
+    GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
     T6963_GLCD_WIDTH = GLCD_WIDTH
     T6963_GLCD_HEIGHT = GLCD_HEIGHT

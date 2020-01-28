@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2014, 2017 Hugh Considine, Evan Venn and Paolo Iocco
+'    Copyright (C) 2012-2020 Hugh Considine, Evan Venn and Paolo Iocco
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,8 @@
 '                  Revised to support SPI without WCOL in CLS
 ' 03/04/2019: Revised to support DEFAULT_GLCDBACKGROUND constant
 ' 11/04/2019: Revised to clean up position and therefore the bleeding of constants into ASM
+' 27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+' 11/10/19  Corrected Dim GLCDPixelCount As Long in FilledBox method, was a Word.  A word can overflow.
 '
 'Hardware settings
 'Type
@@ -319,6 +321,7 @@ Sub InitGLCD_ILI9340
   GLCDFontWidth = 6
   GLCDfntDefault = 0
   GLCDfntDefaultsize = 2
+  GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
   #endif
 
@@ -523,7 +526,7 @@ Sub FilledBox_ILI9340(In LineX1 as word, In LineY1 as word, In LineX2 as word, I
 '   SetAddress_ILI9340 ILI9340_ROW, LineY1, LineY2
     SetAddressWindow_ILI9340 (  LineX1, LineY1, LineX2, LineY2 )
     'Fill with colour
-    Dim GLCDPixelCount As Word
+    Dim GLCDPixelCount As Long
     GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
     Repeat GLCDPixelCount
       SendWord_ILI9340 LineColour

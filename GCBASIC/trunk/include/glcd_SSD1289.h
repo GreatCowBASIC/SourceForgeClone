@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2018 Dimitris  Katsaounis based on works of Hugh Considine and  Evan Venn
+'    Copyright (C) 2018-2020 Dimitris  Katsaounis based on works of Hugh Considine and  Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,7 @@
 '    28.01.2019   Reverted GLCDPrint as this version has SIZE.
 '    03.04.2019   Mapped DrawBMP_SSD1289 to DrawBMP in GLCD.H
 '                 Revised to support DEFAULT_GLCDBACKGROUND constant
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 
 'Notes:
 ' Supports SSD1289 controller only.
@@ -302,6 +303,7 @@ Sub InitGLCD_SSD1289
             GLCDFontWidth = 6
             'Default size
             GLCDfntDefaultSize = 2
+            GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
 
             GLCDForeground = 0xffff
@@ -652,7 +654,12 @@ Sub GLCDDrawChar_SSD1289(In CharLocX as word, In CharLocY as word, In CharCode, 
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table

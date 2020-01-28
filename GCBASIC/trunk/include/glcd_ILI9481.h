@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Evan Venn and Kent Schafer
+'    Copyright (C) 2017-2020 Evan Venn and Kent Schafer
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,8 @@
   '17/9/2017 revised to handle port output EvanRVenn.
   '03/04/2019 Revised to support DEFAULT_GLCDBACKGROUND constant
   '11/04/2019 Revised to clean up position and therefore the bleeding of constants into ASM
+  '27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+  '11/11/19  Removal of commented code
 
 'Hardware settings
 'Type
@@ -330,6 +332,7 @@ Sub InitGLCD_ILI9481
       GLCDFontWidth = 6
       GLCDfntDefault = 0
       GLCDfntDefaultsize = 1
+      GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
     #endif
 
@@ -687,53 +690,6 @@ Function PixelStatus_ILI9481(In GLCDX, In GLCDY ) as word
 
 end function
 
-
-
-
-'''Draws a filled box on the GLCD screen
-'''@param LineX1 Top left corner X location
-'''@param LineY1 Top left corner Y location
-'''@param LineX2 Bottom right corner X location
-'''@param LineY2 Bottom right corner Y location
-'''@param LineColour Colour of box (0 = erase, 1 = draw, default is 1)
-'Sub FilledBox_ILI9481(In LineX1 as word, In LineY1 as word, In LineX2 as word, In LineY2 as word, Optional In LineColour As Word = GLCDForeground)
-'  dim GLCDTemp as word
-'  'Make sure that starting point (1) is always less than end point (2)
-'  If LineX1 > LineX2 Then
-'    GLCDTemp = LineX1
-'    LineX1 = LineX2
-'    LineX2 = GLCDTemp
-'  End If
-'  If LineY1 > LineY2 Then
-'    GLCDTemp = LineY1
-'    LineY1 = LineY2
-'    LineY2 = GLCDTemp
-'  End If
-'
-'  'Set address window
-'  set ILI9481_GLCD_CS OFF
-'  SetAddressWindow_ILI9481 (  LineX1, LineY1, LineX2, LineY2 )
-'  'Fill with colour
-'  Dim GLCDPixelCount As Word
-'  GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
-'
-'  #if GLCD_TYPE = GLCD_TYPE_ILI9481
-'    #ifndef GLCD_ILI9481_16bit
-'      Repeat GLCDPixelCount
-'        SendData_ILI9481 LineColour_H
-'        SendData_ILI9481 LineColour
-'      End Repeat
-'    #endif
-'
-'    #ifdef GLCD_ILI9481_16bit
-'      Repeat GLCDPixelCount
-'        SendWord_ILI9481 LineColour
-'      End Repeat
-'    #endif
-'  #endif
-'    set ILI9481_GLCD_CS ON
-'
-'End Sub
 
 
 '''Draws a string at the specified location on the ST7920 GLCD

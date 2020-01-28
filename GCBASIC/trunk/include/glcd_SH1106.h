@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Marco Cariboni, Evan Venn and Joseph Realmuto
+'    Copyright (C) 2017-2020 Marco Cariboni, Evan Venn and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -225,6 +225,7 @@ Sub InitGLCD_SH1106
     GLCDFontWidth = 6
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
+    GLCDfntDefaultHeight = 7
 
     'Clear screen
     GLCDCLS_SH1106
