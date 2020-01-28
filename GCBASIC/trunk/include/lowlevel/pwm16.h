@@ -1,5 +1,5 @@
 '    16 bit pulse Width Modulation routines for Great Cow BASIC
-'    Copyright (C) 2017 Peter Everett
+'    Copyright (C) 2017-2020  Peter Everett
 
 
 '    This library is free software; you can redistribute it and/or

@@ -1,5 +1,5 @@
 '    7 Segment LED/LCD display routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2018 Hugh Considine, Evan R. Venn, Kent Shafer and Mike Otte
+'    Copyright (C) 2006-2020 Hugh Considine, Evan R. Venn, Kent Shafer and Mike Otte
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public

@@ -1,5 +1,5 @@
 '    System routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2019 Hugh Considine,  William Roth and Evan Venn
+'    Copyright (C) 2006-2020 Hugh Considine,  William Roth and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -58,6 +58,7 @@
 '    09012018 - Updated type 103 to support 18f25j53 class oscillator
 '    19042019 - Updated to remove script message and comment tidyup only, moved ANSELx clear in INITSYS as this needs to clear MCUS without ADCON[0]
 '    04102019 - Comments tidy up. No functional changes.
+'    19122019 - Comments tidy up. No functional changes
 
 
 'Constants
@@ -98,6 +99,8 @@
 Sub InitSys
 
    #Ifdef PIC
+        'Section sets up internal oscillator only - not intented to setup external or other oscillators
+
        #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
            ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
            ' Sets NVRAM pointer to Static RAM as default location.
@@ -124,29 +127,31 @@ Sub InitSys
 
 
   #IFNDEF Var(OSCCON)
-      #ifdef PIC
-     'Set up internal oscillator
-     'Handle OSCCON1 register for parts that have this register
-      #endif
       #IFDEF Var(OSCCON1)
+        asm showdebug Default settings for microcontrollers with OSCCON1
 
-        asm showdebug OSCCON type is 100 'This is the routine to support OSCCON1 config addresss
-        OSCCON1 = 0x60 ' NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
+        'Default OSCCON1 typically, NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
+        asm showdebug OSCCON type is default
+        OSCCON1 = 0x60
 
-        OSCCON3 = 0x00 ' CSWHOLD may proceed; SOSCPWR Low power
+        'Default value typically, CSWHOLD may proceed; SOSCPWR Low power
+        OSCCON3 = 0x00
 
-        OSCEN = 0x00   ' MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
+        'Default value typically, MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
+        OSCEN = 0x00
 
-        OSCTUNE = 0x00 ' HFTUN 0
+        'Default value
+        OSCTUNE = 0x00
 
 
 
          #IFDEF ChipFamily 16
-            'The MCU is a ChipFamily16
-           'Section support many MCUs, 18FxxK40, 18FxxK42 etc etc all have NDIV3 bit
-            #IFDEF Bit(NDIV3)
+            asm showdebug The MCU is a chip family ChipFamily
 
-                asm showdebug OSCCON type is 101 ' ChipFamily16 and NDIV3 bit
+            #IFDEF Bit(NDIV3)
+                'Section supports many MCUs, 18FxxK40, 18FxxK42 etc that have NDIV3 bit
+
+                asm showdebug OSCCON type is 101
 
                 'Clear NDIV3:0
                 NDIV3 = 0
@@ -440,7 +445,6 @@ Sub InitSys
         asm showdebug OSCCON type is 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
 
         #IFDEF ChipMHz 64 'the SPLLEN needs to set after the IRCF
-			asm showdebug The chip mhz is 64
             '= 64Mhz
             [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
             #ifdef Bit(SPLLMULT)
@@ -450,7 +454,7 @@ Sub InitSys
 
 
         #IFDEF ChipMHz 48 'the PLLEN needs to set after the IRCF
-          asm showdebug The chip mhz is 48
+          asm showdebug The chip mhz is 48, therefore probably an 18f USB part
           '= 48Mhz
           [canskip] IRCF2, IRCF1, IRCF0 = b'111'   ;'111' for ChipMHz 48
 
@@ -472,7 +476,6 @@ Sub InitSys
 
 
         #IFDEF ChipMHz 32 'the SPLLEN needs to set after the IRCF
-		 asm showdebug The chip mhz is 32
          '= 32Mhz
           #if ChipIntOSCCONFormat = 1
               [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'   ;'1101' with PLL for ChipMHz 32
@@ -488,7 +491,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 16
-		 asm showdebug The chip mhz is 16
           '= 16Mhz
           OSCCON = OSCCON OR b'01110000'
           'Address the two true tables for IRCF
@@ -503,7 +505,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 8
-		 asm showdebug The chip mhz is 8
           '= 8Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
@@ -517,7 +518,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 4
-		 asm showdebug The chip mhz is 4
           '= 4Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
@@ -531,7 +531,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 2
-		 asm showdebug The chip mhz is 2
           '= 2Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
@@ -545,7 +544,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 1
-		 asm showdebug The chip mhz is 1
           '= 1Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
@@ -559,7 +557,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 0.5
-		 asm showdebug The chip mhz is 0_5
           '= 0.5Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
@@ -573,7 +570,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 0.25
-		 asm showdebug The chip mhz is 0_25
           '= 0.25Mhz
           OSCCON = OSCCON AND b'10001111'
           'Address the two true tables for IRCF
@@ -587,7 +583,6 @@ Sub InitSys
         #ENDIF
 
         #IFDEF ChipMHz 0.125
-		 asm showdebug The chip mhz is 0_125
           '= 0.125Mhz
           OSCCON = OSCCON AND b'10001111'
           #ifndef ChipIntOSCCONFormat
@@ -606,7 +601,7 @@ Sub InitSys
         asm showdebug OSCCON type is 105 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifdef Bit(IRCF3)
 
         #IFDEF ChipMHz 64
-          'Same as for 16, assuming 64 MHz clock is 16 MHz x 4
+          'Same as for 16hhz, assuming 64 MHz clock is 16 MHz x 4
           'equates to OSCCON = OSCCON OR b'01111000'
           ' = 64Mhz
           Set IRCF3 On
@@ -615,7 +610,7 @@ Sub InitSys
           Set IRCF0 On
         #ENDIF
         #IFDEF ChipMHz 48
-          'Same as for 16, assuming 48 MHz clock is 16 MHz x 3
+          'Same as for 16hhz, assuming 48 MHz clock is 16 MHz x 3
           'equates to OSCCON = OSCCON OR b'01111000'
           ' = 48Mhz
           Set IRCF3 On
