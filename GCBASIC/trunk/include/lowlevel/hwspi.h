@@ -1,5 +1,5 @@
 '    Hardware SPI routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2019 Hugh Considine and Evan R. Venn
+'    Copyright (C) 2006-2020  Hugh Considine and Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,10 @@
 '
 '              Scripts added to calculate the baudrate
 '              Update the SPIMode to using 1/4, 1/16 and 1/64 of clock speed when using SPIMode if Baud rate not set
+'  13/10/2019: Added MasterSSPADDMode support.
+'              #define HWSPIMode MasterSSPADDMode
+'              It will set the two bits that are needed and then set SSP1ADD =1.   This way all the SPI libraries can use the feature.
+'              And, if the user does not add the `HWSPIMode` constant it will work as before.
 
 
 'To make the PIC pause until it receives an SPI message while in slave mode, set the
@@ -51,6 +55,7 @@
 'SPI mode constants
 'Also used for hardware I2C
 
+#define MasterSSPADDMode 16
 #define MasterUltraFast 14
 #define MasterFast 13
 #define Master 12
@@ -96,7 +101,6 @@
         end if
         userspecifiedHWSPIMode = 1
     end if
-
 
     'create a constant, as this IS needed, if the user have not defined
     USERHASDEFINETHESPI_BAUD_RATE = 0
@@ -185,13 +189,19 @@ Sub SPIMode (In SPICurrentMode)
         Set SSPCON1.SSPM0 Off
 
         Select Case SPICurrentMode
+        Case MasterSSPADDMode   '1010
+          Set SSPCON1.SSPM3 On
+          Set SSPCON1.SSPM1 On
+          #ifdef Var(SSP1ADD)
+              SSP1ADD = 1
+          #endif
         Case MasterUltraFast
           'Nothing to do on PIC
-        Case MasterFast
+        Case MasterFast   '0000
           'Nothing to do
-        Case Master
+        Case Master    '0001
           Set SSPCON1.SSPM0 On
-        Case MasterSlow
+        Case MasterSlow   '0010
           Set SSPCON1.SSPM1 On
         Case Slave
           Set SSPCON1.SSPM2 On
@@ -397,6 +407,12 @@ Sub SPIMode (In SPICurrentMode, In SPIClockMode)
         Set SSPCON1.SSPM0 Off
 
         Select Case SPICurrentMode
+        Case MasterSSPADDMode   '1010
+          Set SSPCON1.SSPM3 On
+          Set SSPCON1.SSPM1 On
+          #ifdef Var(SSP1ADD)
+              SSP1ADD = 1
+          #endif
         Case MasterUltraFast
           'Nothing to do on PIC
         Case MasterFast
