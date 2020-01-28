@@ -1,5 +1,5 @@
 '    USART routines for Great Cow BASIC
-'    Copyright (C) 2009 - 2019 Hugh Considine, William Roth and Mike Otte and Evan Venn
+'    Copyright (C) 2009-2020  Hugh Considine, William Roth and Mike Otte and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -58,6 +58,15 @@
 ' 23/09/2018: Edited as part of the QA check
 ' 17/11/2018: Correct errant setting of SYNC on K42/83
 ' 02/01/2019: Added IF-DEF to protect WAIT in HSerSend
+' 13/08/2019: Adapted as follows
+'              Added new overloaded method for HSerSend
+'              Added new handler in HSerSend for USART modules with the TXREG register to improve performance
+' 17/11/2019  Added USARTHasDataSet to work around the evaluation issue in If USARTHasData Then issue
+' 18/12/2019  Revised #ifdef Var(TXREG) section of HSerReceive methods to ensure that previous data has been transmitted
+'             Revised init to improve documentation
+
+
+
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -88,9 +97,9 @@
 'a design decision, and has been made to keep included routines consistent
 'with each other.
 
-'To slow down print, set this delay:
-'(Setting to 0 ms will remove all delays)
+'Set the default value of the USART_DELAY using a constant
 #define USART_DELAY 1 ms
+
 
 'When Not using USART_BLOCKING the return value is defined by
 #define DefaultUsartReturnValue = 255
@@ -112,18 +121,6 @@
 #samebit TXSTA2.TRMT, TX2STA.TRMT, U2ERRIR.TXMTIF
 #samebit TXSTA2_TRMT, TX2STA_TRMT, U2ERRIR_TXMTIF '// PIC16F1946/47
 
-Sub HserPrintByteCRLF(In PrintValue,optional In comport =1)
-  HSerPrint(PrintValue)
-  HSerSend(13,comport)
-  HSerSend(10,comport)
-End Sub
-
-Sub HserPrintCRLF  ( Optional in HSerPrintCRLFCount = 1,Optional In comport =1 )
-    repeat HSerPrintCRLFCount
-      HSerSend(13,comport)
-      HSerSend(10,comport)
-    end Repeat
-End Sub
 
 'Script to calculate baud rate generator values
 'Also sets constants to check if byte received
@@ -170,12 +167,18 @@ End Sub
         SYNC = SYNC_TX1STA
     end if
 
-    If Bit(RC1IF) Then
-      USARTHasData = "RC1IF = On"
-    End If
+    'Added USARTHasDataSet to work around the evaluation issue in If USARTHasData Then
+    USARTHasDataSet = 0
 
     If Bit(RCIF) Then
       USARTHasData = "RCIF = On"
+      USARTHasDataSet = 1
+    End If
+
+    If Bit(RC1IF) Then
+      If USARTHasDataSet = 0 then
+        USARTHasData = "RC1IF = On"
+      End If
     End If
 
     If Bit(RC2IF) Then
@@ -272,6 +275,12 @@ End Sub
 
 
     End If
+
+    IF USART_BAUD_RATE then
+        IF SPBRGL_TEMP < 0 then
+            warning Chip frequency to slow for desired baud rate
+        end if
+    end if
 
 
       'added 02.10.2015 to resolve PIC devices without SPBRG define.  SPBRG needs to map to SPBRGL
@@ -460,12 +469,25 @@ Sub InitUSART
           #ifndef Bit(TXEN1)
 
               #ifndef var(U1BRGH)
-               'Set baud rate for legacy chips
-                 SPBRG = SPBRGL_TEMP
+                  asm showdebug Values_calculated_in_the_script
+                  asm showdebug _SPBRGH_TEMP=_ SPBRGH_TEMP
+                  asm showdebug _BRG16_TEMP=_ BRG16_TEMP
+                  asm showdebug _BRGH_TEMP=_ BRGH_TEMP
+
+
+                  #ifndef Bit(BRG16)
+                    'Set baud rate for legacy chips
+                    SPBRG = SPBRGL_TEMP
+                  #endif
                   #ifdef Bit(BRG16)
+                    'Set baud rate for chips with BRG16 bit
                     SPBRGH = SPBRGH_TEMP
+                    'BRG16: 16-bit Baud Rate Generator bit
+                    '1 = 16-bit Baud Rate Generator is used
+                    '0 = 8-bit Baud Rate Generator is used
                     BRG16 = BRG16_TEMP
                   #endif
+                  'Set High Baud Rate Select bit
                   BRGH = BRGH_TEMP
               #endif
 
@@ -648,40 +670,131 @@ Sub InitUSART
   #endif
 End Sub
 
-sub HSerSend(In SerData, optional In comport = 1)
-  'Block before sending (if needed)
-  'Send byte
+sub HSerSend(In SerData)
 
  #ifdef PIC
     #If USART_BAUD_RATE Then
-      'Registers/Bits determined by #samevar at top of file
+      'Registers/Bits determined by #samevar at top of library
 
-       if comport = 1 Then
-          'HSerSendBlocker
           #ifdef USART_TX_BLOCKING
+            'USART_TX_BLOCKING
             #ifdef Bit(TXIF)
               Wait While TXIF = Off
             #endif
+
           #endif
 
           #ifdef USART_BLOCKING
+
+            #ifndef USART_TX_BLOCKING 'The ifndef tests ensure the only one of USART_BLOCKING or USART_TX_BLOCKING is implemented
+                'USART_BLOCKING and NOT USART_TX_BLOCKING
+                #ifdef Bit(TXIF)
+                  Wait While TXIF = Off
+                #endif
+
+            #endif
+
+          #endif
+
+
+          #ifdef Var(TXREG)
+              'ensure any previous operation has completed
+              Wait until TRMT = 1
+              'Write the data byte to the USART.
+              ' Sets register to value of SerData - where register could be TXREG or TXREG1 or U1TXB set via the #samevar
+              TXREG = SerData
+
+              #IF USART_DELAY <> OFF
+                  'Add USART_DELAY after the byte is sent by the USART module
+                  Wait USART_DELAY
+              #ENDIF
+
+          #endif
+
+    #endif
+
+  #endif
+
+  #ifdef AVR
+'AVR USART1 Send
+    #If USART_BAUD_RATE Then
+
+
+        #ifdef USART_BLOCKING
+          #ifdef Bit(UDRE0)
+            Wait While UDRE0 = Off    'Blocking Both Transmit buffer empty ,ready for data
+          #endif
+
+          #ifndef Bit(UDRE0)
+            Wait While UDRE = Off
+          #endif
+        #endif
+
+        #ifdef  USART_TX_BLOCKING
+          #ifdef Bit(UDRE0)
+            Wait While UDRE0 = Off    'Blocking Transmit buffer empty ,ready for data
+          #endif
+
+          #ifndef Bit(UDRE0)
+            Wait While UDRE = Off
+          #endif
+        #endif
+
+        #ifdef Var(UDR) ' ***************
+          UDR = SerData
+        #endif
+
+        #ifdef Var(UDR0)
+          UDR0 = SerData ' *******************
+        #endif
+
+    #endif
+
+  #endif
+end sub
+
+
+sub HSerSend(In SerData, optional In comport = 1)
+
+ #ifdef PIC
+    #If USART_BAUD_RATE Then
+      'Registers/Bits determined by #samevar at top of library
+
+       if comport = 1 Then
+
+          #ifdef USART_TX_BLOCKING
+            'USART_TX_BLOCKING
             #ifdef Bit(TXIF)
               Wait While TXIF = Off
             #endif
+
           #endif
 
-           asm showdebug TXREG equals SerData below will assign SerData to TXREG or TXREG1 or U1TXB  via the #samevar
+          #ifdef USART_BLOCKING
+
+            #ifndef USART_TX_BLOCKING 'The ifndef tests ensure the only one of USART_BLOCKING or USART_TX_BLOCKING is implemented
+                'USART_BLOCKING and NOT USART_TX_BLOCKING
+
+                #ifdef Bit(TXIF)
+                  Wait While TXIF = Off
+                #endif
+
+            #endif
+
+          #endif
+
           #ifdef Var(TXREG)
-           '
+              'ensure any previous operation has completed
+              Wait until TRMT = 1
+              'Write the data byte to the USART.
+              ' Sets register to value of SerData - where register could be TXREG or TXREG1 or U1TXB set via the #samevar
               TXREG = SerData
 
-             'Add USART_DELAY After all bits are shifted out
-              Wait until TRMT = 1
-                  #IF USART_DELAY <> OFF
-                  'Add USART_DELAY After all bits are shifted out
+              #IF USART_DELAY <> OFF
+                  'Add USART_DELAY after the byte is sent by the USART module
                   Wait USART_DELAY
-                  #ENDIF
-              exit sub
+              #ENDIF
+
           #endif
 
        end if
@@ -691,26 +804,32 @@ sub HSerSend(In SerData, optional In comport = 1)
        'Registers/Bits determined by #samevar at top of file
        if comport = 2 Then
 
-          #ifdef USART2_BLOCKING     'Blocking TX and RX
+          #ifdef USART2_TX_BLOCKING     'Blocking TX and RX
              #ifdef Bit(TX2IF)
                 Wait While TX2IF = Off
              #endif
           #endif
 
-          #ifdef USART2_TX_BLOCKING
-             #ifdef Bit(TX2IF)
-                Wait While TX2IF = Off
-             #endif
+          #ifdef USART2_BLOCKING
+            #ifndef USART2_TX_BLOCKING   'The ifndef tests ensure the only one of USART2_BLOCKING or USART2_TX_BLOCKING is implemented
+                'USART2_BLOCKING and NOT USART2_TX_BLOCKING
+
+                 #ifdef Bit(TX2IF)
+                    Wait While TX2IF = Off
+                 #endif
+            #endif
           #endif
 
-          asm showdebug TXREG2 equals SerData below will assign SerData to TX2REG, TXREG2  or U2TXB  via the #samevar
           #ifdef Var(TXREG2)
-
+             'Write the data byte to the USART.
+             ' Sets register to value of SerData - where register could be TX2REG, TXREG2  or U2TXB  via the #samevar
              TXREG2 = SerData
 
-            'Add USART_DELAY After all bits are shifted out
-             Wait until TXSTA2_TRMT = 1  'All bits shifted out on TX Pin
-             Wait USART_DELAY
+             #IF USART_DELAY <> OFF
+                'Add USART_DELAY After all bits are shifted out
+                Wait until TXSTA2_TRMT = 1  'All bits shifted out on TX Pin
+                Wait USART_DELAY
+             #ENDIF
           #endif
 
        end if
@@ -852,26 +971,36 @@ End Function
 
 
 Sub HSerReceive(Out SerData)
-  'Needs comport to be set first
+
+  'Needs comport to be set first by calling routines
   #ifdef PIC
+
     #If USART_BAUD_RATE Then
+
       if comport = 1 Then
+
         SerData = DefaultUsartReturnValue
-        'If set up to block, wait for data
+
         #ifdef USART_BLOCKING
+           'If set up to block, wait for data
            Wait Until USARTHasData
         #endif
 
         #ifdef var(U1RXB)
+
+            If USARTHasData Then
+              SerData = U1RXB
+            end if
+
             U1RXEN = 1
+            U1ERRIR=0
             if ( U1FERIF = 1 ) then
                 'UART1 error - restart
                 ON_U1CON1 = 0
                 ON_U1CON1 = 1
             end if
-            If USARTHasData Then
-              SerData = U1RXB
-            end if
+
+
         #endif
 
 
@@ -1126,7 +1255,7 @@ End Sub
 
 
 sub HSerPrintStringCRLF (In PrintData As String, optional In comport = 1)
-  'PrintLen = LEN(PrintData$)
+
   PrintLen = PrintData(0)
 
   If PrintLen <> 0 then
@@ -1142,7 +1271,7 @@ sub HSerPrintStringCRLF (In PrintData As String, optional In comport = 1)
 End Sub
 
 sub HSerPrint (In PrintData As String, optional In comport = 1)
-  'PrintLen = LEN(PrintData$)
+
   PrintLen = PrintData(0)
 
   If PrintLen <> 0 then
@@ -1259,8 +1388,6 @@ Sub HSerPrint (In SerPrintValInt As Integer, optional In comport = 1)
 End Sub
 
 Sub HSerPrint (In SerPrintVal As Long, optional In comport = 1)
-              ' Updated 16th Feb 2014.  Incorrect variable defined
-              ' Changed to SysCalcTempA
 
   Dim SysCalcTempA As Long
   Dim SysPrintBuffer(10)
@@ -1287,4 +1414,17 @@ Sub HSerPrint (In SerPrintVal As Long, optional In comport = 1)
     HSerSend(10 )
   #ENDIF
 
+End Sub
+
+Sub HserPrintByteCRLF(In PrintValue,optional In comport =1)
+  HSerPrint(PrintValue)
+  HSerSend(13,comport)
+  HSerSend(10,comport)
+End Sub
+
+Sub HserPrintCRLF  ( Optional in HSerPrintCRLFCount = 1,Optional In comport =1 )
+    repeat HSerPrintCRLFCount
+      HSerSend(13,comport)
+      HSerSend(10,comport)
+    end Repeat
 End Sub
