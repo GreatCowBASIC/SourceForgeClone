@@ -1,5 +1,5 @@
 '    MicroChip specific to support Sotfware Serial for Great Cow BASIC
-'    Copyright (C) 2017 Frank Steinberg
+'    Copyright (C) 2017-2020 Frank Steinberg
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public

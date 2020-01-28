@@ -1,5 +1,5 @@
 '
-'    Created Evan R Venn - Oct 2013 - 2017
+'    Copyright Evan R Venn - Oct 2013-2020
 '
 
 

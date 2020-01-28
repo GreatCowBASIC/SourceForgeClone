@@ -1,3 +1,4 @@
+''' Copyright 2015--2020 Evan R. Venn
 '''A driver for GCGB and GCB.
 '''--------------------------------------------------------------------------------------------------------------------------------
 '''This driver support the Nunchuck joystick
@@ -7,19 +8,19 @@
 '''Nunchuck_init alternatively you may have to use Nunchuck_Init_Alternate
 '''Nunchuck_Send_Zero which simply set the joystick for the next read
 '''Nunchuck_Read_Sensors which set the variables are follows:
-'''		JoyX							a byte
-'''		JoyY							a byte
-'''		Nunchuck_AccelX		a word
-'''		Nunchuck_AccelY		a word
-'''		Nunchuck_AccelZ		a word
-'''		Nunchuck_SwitchState where this is 0,1,2 or 3 dependent on switches C and Z
-'''		NunChuck_Decode 	a function to decode the data. Not normally reqired.
+'''   JoyX              a byte
+'''   JoyY              a byte
+'''   Nunchuck_AccelX   a word
+'''   Nunchuck_AccelY   a word
+'''   Nunchuck_AccelZ   a word
+'''   Nunchuck_SwitchState where this is 0,1,2 or 3 dependent on switches C and Z
+'''   NunChuck_Decode   a function to decode the data. Not normally reqired.
 ''':
 ''':
-'''@author	EvanV
-'''@licence	GPL
-'''@version	1.00
-'''@date   	01.11.2015
+'''@author  EvanV
+'''@licence GPL
+'''@version 1.00
+'''@date    01.11.2015
 '''*******
 
 Sub nunchuck_init
@@ -39,11 +40,11 @@ Sub nunchuck_init
      I2CSEND ( 0xFB , ACK)
      I2CSEND ( 0x00 , NACK)
      I2CSTOP
-	#endif
+  #endif
 
   #ifdef HI2C_DATA
      wait 10 ms
-		 HI2CMode Master
+     HI2CMode Master
      HI2CSTART
      HI2CSEND ( NunChuck_address , ACK)
      HI2CSEND ( 0xF0 , ACK)
@@ -60,17 +61,17 @@ Sub nunchuck_init
   #endif
 
   wait 10 ms
-	Nunchuck_Send_Zero
+  Nunchuck_Send_Zero
 
-	wait 10 ms
-	Nunchuck_Read_Sensors
+  wait 10 ms
+  Nunchuck_Read_Sensors
 
 End Sub
 
 
 Sub Nunchuck_Init_Alternate
 
-	#define NunChuck_Memory_Address 0x40
+  #define NunChuck_Memory_Address 0x40
 
   #ifdef I2C_DATA
      I2CSTART
@@ -82,7 +83,7 @@ Sub Nunchuck_Init_Alternate
   #endif
 
   #ifdef HI2C_DATA
-		 HI2CMode Master
+     HI2CMode Master
      HI2CSTART
      HI2CSEND ( NunChuck_address , ACK)
      HI2CSEND ( NunChuck_Memory_Address , ACK)
@@ -92,10 +93,10 @@ Sub Nunchuck_Init_Alternate
   #endif
 
   wait 10 ms
-	Nunchuck_Send_Zero
+  Nunchuck_Send_Zero
 
-	wait 10 ms
-	Nunchuck_Read_Sensors
+  wait 10 ms
+  Nunchuck_Read_Sensors
 
 End Sub
 
@@ -111,13 +112,13 @@ Sub Nunchuck_Send_Zero
   #endif
 
   #ifdef HI2C_DATA
-		 HI2CSTART
+     HI2CSTART
      HI2CSEND ( NunChuck_address , ACK)
      HI2CSEND ( 0 , ACK)
      HI2CSTOP
   #endif
 
-	WAIT Nunchuck_Read_DelayMs  ms
+  WAIT Nunchuck_Read_DelayMs  ms
 
 End Sub
 
@@ -128,7 +129,7 @@ Sub Nunchuck_Read_Sensors
      I2CRESTART
      I2CSEND ( NunChuck_address | 1 , ACK)
      I2CReceive ( JoyX , ACK)
-		 I2CReceive ( JoyY , ACK)
+     I2CReceive ( JoyY , ACK)
      I2CReceive ( Nunchuck_AccelX , ACK)
      I2CReceive ( Nunchuck_AccelY , ACK)
      I2CReceive ( Nunchuck_AccelZ , ACK)
@@ -138,7 +139,7 @@ Sub Nunchuck_Read_Sensors
   #endif
 
   #ifdef HI2C_DATA
-		 HI2CSTART
+     HI2CSTART
      HI2CSEND ( NunChuck_address | 1 , ACK)
      HI2CReceive ( JoyX , ACK)
      HI2CReceive ( JoyY , ACK)
@@ -150,13 +151,13 @@ Sub Nunchuck_Read_Sensors
   #endif
 
   #ifdef decode
-  	 Nunchuck_AccelX  = ((Nunchuck_AccelX XOR 0x17)+0x17)
-  	 Nunchuck_AccelY  = ((Nunchuck_AccelY XOR 0x17)+0x17)
+     Nunchuck_AccelX  = ((Nunchuck_AccelX XOR 0x17)+0x17)
+     Nunchuck_AccelY  = ((Nunchuck_AccelY XOR 0x17)+0x17)
      Nunchuck_AccelZ  = ((Nunchuck_AccelZ XOR 0x17)+0x17)
      JoyX  = ((JoyX XOR 0x17)+0x17)
      JoyY  = ((JoyY XOR 0x17)+0x17)
      NunChuck_Status  = ((NunChuck_Status XOR 0x17)+0x17)
-	#endif
+  #endif
 
 
 
@@ -182,6 +183,6 @@ End Sub
 
 Function NunChuck_Decode ( Nunchuck_Value )
 
-		 NunChuck_Scale  = ((Nunchuck_Value XOR 0x17)+0x17)
+     NunChuck_Scale  = ((Nunchuck_Value XOR 0x17)+0x17)
 
 End Function

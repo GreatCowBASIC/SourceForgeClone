@@ -1,11 +1,12 @@
+''' Copyright 2015-2020 Immo
 '''----------------------------------------------
 ''' This program is a includefile for ALPS rotary Encoder EC11
 ''' ALPS-EC11.h
 '''
-''' @author 	Immo, DL5KB &EvanV
-''' @licence	GPL
-''' @version	3.0
-''' @date   	Dec. 2015
+''' @author   Immo, DL5KB &EvanV
+''' @licence  GPL
+''' @version  3.0
+''' @date     Dec. 2015
 '''**********************************************
 ''' enjoy it!
 '
@@ -105,7 +106,7 @@
   'switch not pressed.nSet intial state of button selection
   Alps_ESB_Bit = 1
 
-	'No clock has happened yet
+  'No clock has happened yet
   Alps_EncoderEvent = 0
 
   'Initialise variable
@@ -132,7 +133,7 @@
 
  sub Alps_ENCODER_Clock_Event   'Prevent re-entry to this event routine
 
- 	if ClearExternalEvent_Clock = 1 and Alps_EncoderEvent = 0 then
+  if ClearExternalEvent_Clock = 1 and Alps_EncoderEvent = 0 then
       SetExternalEventEnable_Clock = 0
 
       'Clear Interrupt. See the datasheet for more information.
@@ -140,8 +141,8 @@
 
       if Alps_ENCODER_A = 1 then
 
-					'Purely debounce
-					wait Alps_ENCODER_ENC_READ_DELAY us
+          'Purely debounce
+          wait Alps_ENCODER_ENC_READ_DELAY us
 
           'Set clock event pending
           Alps_EncoderEvent = 1
@@ -160,7 +161,7 @@
       'Re-Enable Interrupt
       SetExternalEventEnable_Clock = 1
 
-	end if
+  end if
 
 
  end sub

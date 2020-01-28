@@ -1,5 +1,5 @@
 '   Great Cow BASIC Library for Microchip EERAM - (74XXX)
-'   Copyright (C) 2017 Chris Roper
+'   Copyright (C) 2017-2020 Chris Roper
 '
 '   This library is free software for the  GNU Lesser General Public License please see the bottom of this library.
 '

@@ -1,5 +1,5 @@
 '    Library to allow the Arduino mega2560 to work with GCBASIC
-'    Copyright (C) 2018 R. White
+'    Copyright (C) 2018-2020 R. White
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -16,16 +16,16 @@
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-'    28/02/2018	    Created by R. White based on the works of Hugh Considine.  The original works was the the UNO_328p.h pin map
+'    28/02/2018     Created by R. White based on the works of Hugh Considine.  The original works was the the UNO_328p.h pin map
 
 
 
 
-'    Used to connect the correct GCBASIC port to the relevant pin as labelled on an Arduino mega 2560    
+'    Used to connect the correct GCBASIC port to the relevant pin as labelled on an Arduino mega 2560
 '    i.e GCBasic PORTE.0 corresponds to the pin marked DIGITAL_0 on an Arduino mega 2560 PCB
 
 '    usage example #define BUZZER DIGITAL_12
-'	 usage example     set BUZZER out        
+'  usage example     set BUZZER out
 
 
 'Analog inputs
@@ -49,8 +49,8 @@
 #define ANALOG_15 PORTK.7
 
 'Digital pins
-#define DIGITAL_0 PORTE.0		'UART1 RX
-#define DIGITAL_1 PORTE.1		'UART1 TX
+#define DIGITAL_0 PORTE.0   'UART1 RX
+#define DIGITAL_1 PORTE.1   'UART1 TX
 #define DIGITAL_2 PORTE.4
 #define DIGITAL_3 PORTE.5
 #define DIGITAL_4 PORTG.5
@@ -70,10 +70,10 @@
 #define DIGITAL_16 PORTH.1
 #define DIGITAL_17 PORTH.0
 
-#define DIGITAL_18 PORTD.3		'		  , EXT INT 3	
-#define DIGITAL_19 PORTD.2		'		  , EXT INT 2	
-#define DIGITAL_20 PORTD.1   	'I2C SDA  , EXT INT 1 
-#define DIGITAL_21 PORTD.0		'I2C SCL  , EXT INT 0
+#define DIGITAL_18 PORTD.3    '     , EXT INT 3
+#define DIGITAL_19 PORTD.2    '     , EXT INT 2
+#define DIGITAL_20 PORTD.1    'I2C SDA  , EXT INT 1
+#define DIGITAL_21 PORTD.0    'I2C SCL  , EXT INT 0
 
 #define DIGITAL_22 PORTA.0
 #define DIGITAL_23 PORTA.1
@@ -129,4 +129,3 @@
 #define DIGITAL_67 PORTK.5
 #define DIGITAL_68 PORTK.6
 #define DIGITAL_69 PORTK.7
-

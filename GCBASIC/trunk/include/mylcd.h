@@ -1,5 +1,5 @@
 ﻿'    Liquid Crystal Display routines for Great Cow BASIC
-'    Copyright (C) 2006 - 2017 Hugh Considine, Stefano Bonomi
+'    Copyright (C) 2006-2020 Hugh Considine, Stefano Bonomi
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public

@@ -1,5 +1,5 @@
 '    DS18s20 routines for the Great Cow BASIC compiler
-'    Copyright (C) 2017 Kent Schafer
+'    Copyright (C) 2017-2020 Kent Schafer
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public

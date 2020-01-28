@@ -1,6 +1,7 @@
 ;DHT Humidity/Temperature Sensor Library for Great Cow Basic
 
-;Thomas Henry
+;Copyright 2017 - -2020 Thomas Henry
+;
 ;Version 2.0 -- 4/21/2014 - 2017
 
 ;This include file will let you easily exploit the
