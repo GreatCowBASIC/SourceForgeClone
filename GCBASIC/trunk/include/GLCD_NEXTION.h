@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2018 Evan Venn
+'    Copyright (C) 2018-2020 Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,7 @@
 '06/06/2018 Revised GLCDGetTouch_Nextion method to support consumption of last three bytes.
 '07/06/2018 Revised GLCDGetTouch_Nextion method to support long not string.
 '03/04/2018 Revised to support DEFAULT_GLCDBACKGROUND constant
-
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 
 
 
@@ -100,6 +100,7 @@ Sub InitGLCD_Nextion
 
   GLCDfntDefault = 0
   GLCDfntDefaultsize = 1
+  GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
 End Sub
 

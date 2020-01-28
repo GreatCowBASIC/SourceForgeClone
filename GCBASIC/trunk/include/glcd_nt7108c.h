@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2018 Hugh Considine and Evan Venn
+'    Copyright (C) 2018-2020  Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,9 @@
 '  19/11/18  Initial release
 '  22/11/18  Revised to improve timings and read byte
 '  11/02/19  Removed GLCDDirection constant from script as this was impacted KS0108 library
-
+'  11/06/19  This header file did not allow for individual port assignments.  Modified it to allow for GLCD_DB0 - GLCD_DB7 to be set to any pin.  If the GLCD_PORT is defined then that is used.  PIC18F14K22 tested display.
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+'  13/11/19  Revolved IFDEF error in WriteByte and ReadByte
 
 
 'Hardware settings
@@ -95,6 +97,7 @@ Sub InitGLCD_NT7108C
     GLCDFontWidth = 5
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
+    GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
   #endif
 
@@ -260,14 +263,48 @@ End Sub
 '''Write byte to LCD
 '''@hide
 Sub GLCDWriteByte_NT7108C (In LCDByte)
-
-
   'Set LCD data direction
   Set GLCD_RW Off
-  'Set data port direction
-  dir GLCD_DATA_PORT out
-  'Set output data
-  GLCD_DATA_PORT = LCDByte
+
+  #ifdef GLCD_DB0 then
+    'Set Data Direction
+    dir GLCD_DB0 Out
+    dir GLCD_DB1 Out
+    dir GLCD_DB2 Out
+    dir GLCD_DB3 Out
+    dir GLCD_DB4 Out
+    dir GLCD_DB5 Out
+    dir GLCD_DB6 Out
+    dir GLCD_DB7 Out
+
+    'Clear Bits
+    Set GLCD_DB0 Off
+    Set GLCD_DB1 Off
+    Set GLCD_DB2 Off
+    Set GLCD_DB3 Off
+    Set GLCD_DB4 Off
+    Set GLCD_DB5 Off
+    Set GLCD_DB6 Off
+    Set GLCD_DB7 Off
+
+    'Set Bits if needed
+    If LCDByte.0 On then Set GLCD_DB0 On
+    If LCDByte.1 On then Set GLCD_DB1 On
+    If LCDByte.2 On then Set GLCD_DB2 On
+    If LCDByte.3 On then Set GLCD_DB3 On
+    If LCDByte.4 On then Set GLCD_DB4 On
+    If LCDByte.5 On then Set GLCD_DB5 On
+    If LCDByte.6 On then Set GLCD_DB6 On
+    If LCDByte.7 On then Set GLCD_DB7 On
+  #ENDIF
+
+  #IFDEF GLCD_DATA_PORT then
+    'Set data port direction
+    dir GLCD_DATA_PORT out
+    'Set output data
+    GLCD_DATA_PORT = LCDByte
+  #ENDIF
+
   'Latch data
   Wait NT7108CWriteDelay us
   Set GLCD_ENABLE On
@@ -280,18 +317,56 @@ End Sub
 '''Read byte from LCD
 '''@hide
 Function GLCDReadByte_NT7108C
+  #ifdef GLCD_DB0 then
+    dim GLCD_Byte as Byte
 
-  'Set data port direction
-  dir GLCD_DATA_PORT in
+    'Set data port direction
+    'dir GLCD_DATA_PORT in
+    dir GLCD_DB0 In
+    dir GLCD_DB1 In
+    dir GLCD_DB2 In
+    dir GLCD_DB3 In
+    dir GLCD_DB4 In
+    dir GLCD_DB5 In
+    dir GLCD_DB6 In
+    dir GLCD_DB7 In
 
-  'Set LCD data direction
-  Set GLCD_RW On
-  'Read
-  Set GLCD_ENABLE On
-  Wait NT7108CClockDelay  US
-  'Get input data
-  Set GLCD_ENABLE Off
-  Wait NT7108CReadDelay  US
-  GLCDReadByte = GLCD_DATA_PORT
+    'Set LCD data direction
+    Set GLCD_RW On
+    'Read
+    Set GLCD_ENABLE On
+    Wait NT7108CClockDelay  US
+    'Get input data
+    GLCD_Byte = 0
+    If GLCD_DB0 On then set GLCD_Byte.0 On
+    If GLCD_DB1 On then set GLCD_Byte.1 On
+    If GLCD_DB2 On then set GLCD_Byte.2 On
+    If GLCD_DB3 On then set GLCD_Byte.3 On
+    If GLCD_DB4 On then set GLCD_Byte.4 On
+    If GLCD_DB5 On then set GLCD_Byte.5 On
+    If GLCD_DB6 On then set GLCD_Byte.6 On
+    If GLCD_DB7 On then set GLCD_Byte.7 On
+
+    Set GLCD_ENABLE Off
+    Wait NT7108CReadDelay  US
+
+    GLCDReadByte = GLCD_Byte
+  #ENDIF
+
+  #IFDEF GLCD_DATA_PORT then
+    'Set data port direction
+    dir GLCD_DATA_PORT in
+
+    'Set LCD data direction
+    Set GLCD_RW On
+    'Read
+    Set GLCD_ENABLE On
+    Wait NT7108CClockDelay  US
+    'Get input data
+    Set GLCD_ENABLE Off
+    Wait NT7108CReadDelay  US
+
+    GLCDReadByte = GLCD_DATA_PORT
+  #ENDIF
 
 End Function

@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Evan Venn and Kent Schafer
+'    Copyright (C) 2017-2020 Evan Venn and Kent Schafer
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -249,6 +249,7 @@ Sub InitGLCD_HX8347
       GLCDfntDefaultsize = 1
       GLCDDeviceHeight = GLCD_HEIGHT - 1
       GLCDDeviceWidth  = GLCD_WIDTH - 1
+      GLCDfntDefaultHeight = 8
 
   #endif
 
@@ -638,7 +639,12 @@ Sub GLCDDrawChar_HX8347(In CharLocX as word, In CharLocY as word, In CharCode, O
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table

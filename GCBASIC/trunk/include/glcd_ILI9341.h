@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015, 2019 Paolo Iocco, Stan Cartwright and Evan Venn
+'    Copyright (C) 2015-2020 Paolo Iocco, Stan Cartwright and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,9 @@
 ' 15/01/2019       Revised to support SPI without WCOL in CLS
 ' 10/02/2019:      Revised to add constant and script to resolve 64mhz at MasterFast.  #define HWSPIMode masterfast where #define HWSPIMode is masterslow|master|masterfast
 ' 03/04/2019:      Revised to support DEFAULT_GLCDBACKGROUND constant
-
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+' 11/10/19  Corrected Dim GLCDPixelCount As Long in FilledBox method, was a Word.  A word can overflow.
+'
 #script
 
     'examine what is operational SPI or 8Bit
@@ -415,6 +417,7 @@ Sub InitGLCD_ILI9341
 
   GLCDfntDefault = 0
   GLCDfntDefaultsize = 1
+  GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
   #endif
 
@@ -868,7 +871,12 @@ Sub GLCDDrawChar_ILI9341(In CharLocX as word, In CharLocY as word, In CharCode, 
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table
@@ -970,7 +978,7 @@ Sub FilledBox_ILI9341(In LineX1 as word, In LineY1 as word, In LineX2 as word, I
 '   SetAddress_ILI9341 ILI9341_ROW, LineY1, LineY2
     SetAddressWindow_ILI9341 (  LineX1, LineY1, LineX2, LineY2 )
     'Fill with colour
-    Dim GLCDPixelCount As Word
+    Dim GLCDPixelCount As Long
     GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
     Repeat GLCDPixelCount
       SendWord_ILI9341 LineColour

@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017 Evan Venn
+'    Copyright (C) 2017-2020 Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -19,8 +19,8 @@
 ' Supports SSD1331 controller only.
 
 'Changes
-' 03/04/2019  Revised to support DEFAULT_GLCDBACKGROUND constant
-
+'  03/04/2019  Revised to support DEFAULT_GLCDBACKGROUND constant
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 #define SSD1331_GLCDCLS_Delay 500
 
 
@@ -227,6 +227,7 @@ Sub InitGLCD_SSD1331
 
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
+    GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
 
   #endif
 
@@ -381,7 +382,12 @@ Sub GLCDDrawChar_SSD1331(In CharLocX as word, In CharLocY as word, In CharCode, 
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table

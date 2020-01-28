@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012 - 2019 Hugh Considine, Giuseppe D'Elia and Evan Venn
+'    Copyright (C) 2012-2020 Hugh Considine, Giuseppe D'Elia and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,8 @@
 '             Added ST7735_RASET_ADJUSTMENT and ST7735_RASET_ADJUSTMENT - these constants can be used to adjust (OR NOT) the CASET and RASET registers
 '             Added rotation handler to SetAddress for ST7735_XSTART and ST7735_YSTART
 '             Corrected SetAddress and Rotate to use GLCDRotateState
+' 03/11/2019  Added GLCD_TYPE_ST7735R_160_80 shared support
+
 '
 'Hardware settings
 'Type
@@ -107,6 +109,10 @@
               END IF
             END IF
         END IF
+        IF GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 THEN
+          'geomtery
+          ST7735_YSTART = 0
+        END IF
     END IF
 
 
@@ -128,8 +134,12 @@
               END IF
             END IF
         END IF
-    END IF
+        IF GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 THEN
+          'geomtery
+          ST7735_XSTART = 24
+        END IF
 
+    END IF
 
 #endscript
 
@@ -227,6 +237,12 @@
 '''Initialise the GLCD device
 Sub InitGLCD_ST7735
 
+
+  #if GLCD_TYPE = GLCD_TYPE_ST7735R  or GLCD_TYPE = GLCD_TYPE_ST7735R_160_80
+      'This method is called when the about GLCD types are selected.
+      'Why? This is a shared library and therefore this INIT is called, but, this will be empty. Cannot avoid this.
+  #endif
+
   #if GLCD_TYPE = GLCD_TYPE_ST7735
     'Setup code for ST7735 controllers
 
@@ -283,10 +299,10 @@ Sub InitGLCD_ST7735
 
     'Out of sleep mode
     SendCommand_ST7735 ST7735_SLPOUT
-    Wait 255 ms
+    Wait 1 s
 
     IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
-
+        'ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80
         SendCommand_ST7735(ST7735_COLMOD)
         SendData_ST7735(0x05)               ; 16-bit color
         Wait 10 ms
@@ -308,6 +324,12 @@ Sub InitGLCD_ST7735
         SendCommand_ST7735(ST7735_INVCTR )
         SendData_ST7735(0x00);
         wait 10 ms;
+
+        SendCommand_ST7735(ST7735_FRMCTR1)
+        SendData_ST7735(0x01)
+        SendData_ST7735(0x2C)
+        SendData_ST7735(0x2D)
+        Wait 10 ms
 
         SendCommand_ST7735(ST7735_PWCTR1)
         SendData_ST7735(0x02)
@@ -410,18 +432,17 @@ Sub InitGLCD_ST7735
         wait 10 ms;
 
         SendCommand_ST7735(ST7735_PWCTR1)
-        SendData_ST7735(0xA2)
         SendData_ST7735(0x02)
-        SendData_ST7735(0x84)
+        SendData_ST7735(0x70)
         wait 10 ms;
 
         SendCommand_ST7735(ST7735_PWCTR2)
-        SendData_ST7735(0xC5)
+        SendData_ST7735(0x05)
         wait 10 ms;
 
         SendCommand_ST7735(ST7735_PWCTR3)
         SendData_ST7735(0x0A)
-        SendData_ST7735(0x00)
+        SendData_ST7735(0x02)
         wait 10 ms;
 
         SendCommand_ST7735(ST7735_PWCTR4)
@@ -528,7 +549,7 @@ Sub InitGLCD_ST7735
 
     'Display on
     SendCommand_ST7735 ST7735_NORON
-    Wait 10 ms
+    Wait 100 ms
 
     'Display on
     SendCommand_ST7735 ST7735_DISPON
@@ -558,8 +579,12 @@ Sub InitGLCD_ST7735
       GLCDFontWidth = 5
     #endif
 
+
+
+
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
+    GLCDfntDefaultHeight = 8
 
     GLCDRotate ( PORTRAIT )
     'Clear screen
@@ -584,6 +609,18 @@ Sub GLCDCLS_ST7735 ( Optional In  GLCDBackground as word = GLCDBackground)
 
 
   #if GLCD_TYPE = GLCD_TYPE_ST7735
+    SetAddress_ST7735 ST7735_COLUMN, 0, GLCDDeviceWidth
+    wait 2 ms
+    SetAddress_ST7735 ST7735_ROW, 0, GLCDDeviceHeight
+    wait 2 ms
+    SendCommand_ST7735 ST7735_RAMWR
+    wait 2 ms
+    Repeat [word] GLCD_WIDTH * GLCD_HEIGHT
+      SendWord_ST7735 GLCDBackground
+    End Repeat
+  #endif
+
+  #if GLCD_TYPE = GLCD_TYPE_ST7735R or GLCD_TYPE = GLCD_TYPE_ST7735R_160_80
     SetAddress_ST7735 ST7735_COLUMN, 0, GLCDDeviceWidth
     wait 2 ms
     SetAddress_ST7735 ST7735_ROW, 0, GLCDDeviceHeight
@@ -696,7 +733,12 @@ Sub GLCDDrawChar_ST7735(In CharLocX as word, In CharLocY as word, In CharCode, O
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
               ROWSperfont = 7  'which is really 8 as we start at 0
 
             case 2 'This is one font table
@@ -805,6 +847,33 @@ Sub FilledBox_ST7735(In LineX1, In LineY1, In LineX2, In LineY2, Optional In Lin
       SendWord_ST7735 LineColour
     End Repeat
   #endif
+
+  #if GLCD_TYPE = GLCD_TYPE_ST7735R
+    'Set address window
+    SetAddress_ST7735 ST7735_COLUMN, LineX1, LineX2
+    SetAddress_ST7735 ST7735_ROW, LineY1, LineY2
+    'Fill with colour
+    Dim GLCDPixelCount As Word
+    GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
+    SendCommand_ST7735 0x2C
+    Repeat GLCDPixelCount
+      SendWord_ST7735 LineColour
+    End Repeat
+  #endif
+
+  #if GLCD_TYPE = GLCD_TYPE_ST7735R_160_80
+    'Set address window
+    SetAddress_ST7735 ST7735_COLUMN, LineX1, LineX2
+    SetAddress_ST7735 ST7735_ROW, LineY1, LineY2
+    'Fill with colour
+    Dim GLCDPixelCount As Word
+    GLCDPixelCount = (LineX2 - LineX1 + 1) * (LineY2 - LineY1 + 1)
+    SendCommand_ST7735 0x2C
+    Repeat GLCDPixelCount
+      SendWord_ST7735 LineColour
+    End Repeat
+  #endif
+
 End Sub
 
 '''Draws a pixel on the GLCD
@@ -856,6 +925,7 @@ End Sub
 sub  SendCommand_ST7735( IN ST7735SendByte as byte )
 
   set ST7735_CS OFF;
+
   set ST7735_DC OFF;
 
   #ifdef ST7735_HardwareSPI
@@ -871,9 +941,12 @@ sub  SendCommand_ST7735( IN ST7735SendByte as byte )
     else
       set ST7735_DO OFF;
     end if
+
     SET GLCD_SCK OFF;
+
     rotate ST7735SendByte left
     set GLCD_SCK ON;
+
 
   end repeat
   set ST7735_CS ON;
@@ -886,6 +959,7 @@ end Sub
 sub  SendData_ST7735( IN ST7735SendByte as byte )
 
   set ST7735_CS OFF;
+
   set ST7735_DC ON;
 
   #ifdef ST7735_HardwareSPI
@@ -902,7 +976,9 @@ sub  SendData_ST7735( IN ST7735SendByte as byte )
     else
       set ST7735_DO OFF;
     end if
+
     SET GLCD_SCK OFF;
+
     rotate ST7735SendByte left
     set GLCD_SCK ON;
 
@@ -916,6 +992,7 @@ end Sub
 '''@hide
 Sub SendWord_ST7735(In ST7735SendWord As Word)
   set ST7735_CS OFF;
+
   set ST7735_DC ON;
 
   #ifdef ST7735_HardwareSPI
@@ -932,9 +1009,12 @@ Sub SendWord_ST7735(In ST7735SendWord As Word)
     else
       set ST7735_DO OFF;
     end if
+
     SET GLCD_SCK OFF;
+
     rotate ST7735SendWord left
     set GLCD_SCK ON;
+
 
   end repeat
   set ST7735_CS ON;
@@ -982,7 +1062,7 @@ sub   GLCDRotate_ST7735 ( in GLCDRotateState )
   SendCommand_ST7735 ( ST7735_MADCTL )
   select case GLCDRotateState
         case LANDSCAPE
-            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 or GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 then
              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MV |  ST7735_MADCTL_RGB )
             else
              SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MV |  ST7735_MADCTL_BGR )
@@ -993,13 +1073,13 @@ sub   GLCDRotate_ST7735 ( in GLCDRotateState )
         case PORTRAIT_REV
             GLCDDeviceWidth = GLCD_WIDTH - 1
             GLCDDeviceHeight = GLCD_HEIGHT - 1
-            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 or GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 then
               SendData_ST7735( ST7735_MADCTL_RGB )
             else
               SendData_ST7735( ST7735_MADCTL_BGR )
             end if
         case LANDSCAPE_REV
-            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 or GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 then
               SendData_ST7735( ST7735_MADCTL_MV | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
             else
               SendData_ST7735( ST7735_MADCTL_MV | ST7735_MADCTL_MY | ST7735_MADCTL_BGR )
@@ -1009,7 +1089,7 @@ sub   GLCDRotate_ST7735 ( in GLCDRotateState )
         case PORTRAIT
             GLCDDeviceWidth = GLCD_WIDTH - 1
             GLCDDeviceHeight = GLCD_HEIGHT - 1
-            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 or GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 then
               SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
             else
               SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_BGR )
@@ -1017,7 +1097,7 @@ sub   GLCDRotate_ST7735 ( in GLCDRotateState )
         case else
             GLCDDeviceWidth = GLCD_WIDTH - 1
             GLCDDeviceHeight = GLCD_HEIGHT - 1
-            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 then
+            IF ST7735TABCOLOR = ST7735_BLACKTAB or ST7735TABCOLOR = ST7735_MINI160x80 or GLCD_TYPE = GLCD_TYPE_ST7735R_160_80 then
               SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_RGB )
             else
               SendData_ST7735( ST7735_MADCTL_MX | ST7735_MADCTL_MY | ST7735_MADCTL_BGR )

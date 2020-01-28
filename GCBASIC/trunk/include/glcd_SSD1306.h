@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015 - 2017 Kent Schafer, Evan Venn and Joseph Realmuto
+'    Copyright (C) 2015-2020 Kent Schafer, Evan Venn and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -104,6 +104,9 @@
 '  1.24 Added support for GLCDPrintStringLN etc. Setting variables to zero on print screen
 '  1.25 Added HWI2C2 support
 '  1.26 Added IGNORE_GLCD_TYPE_SSD1306_LOW_MEMORY_WARNINGS to support low memory MCU warnings
+'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+'  10/01/20  Revised GLCDDrawChar If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+'            Variables required for device in InitGLCD
 
 #define SSD1306_vccstate 0
 
@@ -310,6 +313,7 @@ Sub InitGLCD_SSD1306
     GLCDBackground = 0
     GLCDForeground = 1
     GLCDFontWidth = 5
+    GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
     dim PrintLocX, PrintLocY as word
 
     GLCDfntDefault = 0
@@ -404,6 +408,10 @@ Sub InitGLCD_SSD1306
     GLCDCLS_SSD1306
 
     Write_Command_SSD1306(SSD1306_DISPLAYON)                     '--turn on oled panel
+
+    'Variables required for device
+    GLCDDeviceWidth = GLCD_WIDTH - 1
+    GLCDDeviceHeight= GLCD_HEIGHT- 1
 
 End Sub
 
@@ -500,15 +508,15 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
 
     Cursor_Position_SSD1306 ( CharLocX , CharLocY )
 
-  '1.14 Added transaction
+
    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
     Open_Transaction_SSD1306
    #endif
 
-'****** GCB Font set handler
+
 
    #ifndef GLCD_OLED_FONT
-
+        '****** GCB Font set handler
         if CharCode>=178 and CharCode<=202 then
            CharLocY=CharLocY-1
         end if
@@ -613,23 +621,28 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
     #endif
 
 
-'****** OLED Font set handler
-   #ifdef GLCD_OLED_FONT
 
-        'Calc pointer to the OLED fonts
+   #ifdef GLCD_OLED_FONT
+        '****** OLED Font set handler
 
         Dim LocalCharCode as word
 
         'Set up the font information
         Select case GLCDfntDefaultSize
-            case 1 'this is two font tables of an index and data
+            case 1 'Two font tables of an index and data
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              GLCDFontWidth = COLSperfont + 1
+              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              if LocalCharCode = 1 then
+                  GLCDFontWidth = 1
+              else
+                  GLCDFontWidth = COLSperfont+1
+              end if
+
               #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
                 #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
-                  'Only use the correct bits/columns
+                  'CONSTANTS define config as SSD1306_CHARACTER_MODE _and_not_LOWMEMORY_GLCD_MODE
                   COLSperfont--
                 #endif
               #endif
@@ -641,7 +654,7 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
                   ROWSperfont = 1
                 #endif
               #endif
-            case 2 'this is one font table
+            case 2 'One font table
               CharCode = CharCode - 17
               'Pointer to table of font elements
               LocalCharCode = (CharCode * 20)
@@ -677,9 +690,9 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
 
           End Select
 
-          '1.21 Full GLCD mode
-          #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
 
+          #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
+            '1.21 Full GLCD mode
             'Handle 16 pixels of height
             For CurrCharRow = 0 to ROWSperfont
                 If CurrCharVal.0 = 0 Then
@@ -818,8 +831,6 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
     #endif
 
 
-
-   '1.14 Added transaction
    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
     Close_Transaction_SSD1306
    #endif
@@ -1267,8 +1278,6 @@ End Macro
 'added 1.14 to improved performance
 Macro Close_Transaction_SSD1306
 
-    '4wire not supported, see Write_Transaction_Data_SSD1306
-
      #ifdef I2C_DATA
 
        I2CStop
@@ -1287,5 +1296,5 @@ Macro Close_Transaction_SSD1306
 
      #endif
 
-
 End Macro
+
