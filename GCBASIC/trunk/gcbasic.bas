@@ -1,5 +1,5 @@
 ' GCBASIC - A BASIC Compiler for microcontrollers
-' Copyright (C) 2006 - 2019 Hugh Considine and the Great Cow BASIC team
+' Copyright (C) 2006 - 2020 Hugh Considine and the Great Cow BASIC team
 '
 ' This program is free software; you can redistribute it and/or modify
 ' it under the terms of the GNU General Public License as published by
@@ -368,7 +368,7 @@ Declare Function CompileVarSet (SourceIn As String, Dest As String, Origin As St
 DECLARE SUB CompileWait (CompSub As SubType Pointer)
 Declare Function CompileWholeArray (InLine As String, Origin As String) As LinkedListElement Pointer
 Declare Function ConfigNameMatch(ConfigIn As String, ConfigNameIn As String) As Integer
-Declare Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String) As Integer
+Declare Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny As Integer = 0) As Integer
 Declare Sub CreateCallTree
 Declare Sub DisplayProgram
 Declare Sub DisplayCallTree
@@ -647,6 +647,7 @@ Dim Shared GlitchFreeOutputs As HashMap Pointer
 Dim Shared As String Star80
 
 Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION
+Dim Shared As String ChipOscSource
 Dim Shared As String FI, OFI, HFI, ID, Version, ProgDir, CLD, LabelEnd
 Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams
 Dim Shared As ExternalTool Pointer AsmTool, PrgTool
@@ -655,7 +656,6 @@ Dim Shared As String CompReportFormat
 #Define MAX_OUTPUT_MESSAGES 200
 Dim Shared As String OutMessage(MAX_OUTPUT_MESSAGES)
 Dim Shared As Integer OutMessages, ErrorsFound
-Dim Shared As String DesiredOscillatorSource
 
 Dim As Integer CD, T, PD
 
@@ -677,7 +677,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2019-12-18"
+Version = "0.98.<<>> 2020-01-28"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
 	#ifndef __FB_64BIT__
@@ -781,12 +781,6 @@ MergeSubroutines
 
 'Final optimisation
 FinalOptimise
-
-'Determine the correct setting for the CONFIG directive
-If ConfWords > 0 Then
-	IF VBS = 1 THEN PRINT SPC(5); Message("CalcConfig")
-	CalcConfig
-End If
 
 If VBS = 1 THEN PRINT : PRINT SPC(5); Message("WritingASM")
 WriteAssembly
@@ -2272,7 +2266,10 @@ SUB BuildMemoryMap
 End SUB
 
 SUB CalcConfig
-
+	
+	'Process config flags from CONFIG variable and programmer required settings
+	'Store required settings in OutConfig array
+	
 	'No config registers on AVR that can be set by GCBASIC
 	If ModeAVR Then Exit Sub
 	'Do not set CONFIG if TBL+
@@ -2426,7 +2423,7 @@ SUB CalcConfig
 							End If
 						End If
 
-						DesiredOscillatorSource = DesiredSetting
+						ChipOscSource = DesiredSetting
 					End If
 
 				End If
@@ -2455,7 +2452,26 @@ SUB CalcConfig
 		ConfigReportFileName = ReplaceToolVariables("%filename%", "config")
 		Open ConfigReportFileName For Output As #configreport
 		Print #configreport, "[" + ChipName + "]"
-	End if
+	End If
+	
+	'Check oscillator type, add constant
+	CurrSettingLoc = ConfigSettings->Next
+	Do While CurrSettingLoc <> 0
+		CurrSetting = CurrSettingLoc->MetaData
+		With (*CurrSetting)
+			If ConfigNameMatch(.Name, "OSC") Then
+				ChipOscSource = .Setting->Value
+				AddConstant("CHIPOSC", ChipOscSource)
+				If ConfigValueMatch(ChipOscSource, "INT", -1) Then
+					AddConstant("CHIPUSINGINTOSC", "TRUE")
+				End If
+				
+				Exit Do
+			End If
+		End With
+		CurrSettingLoc = CurrSettingLoc->Next
+	Loop
+		
 
 	'Store config
 	'PIC 10/12/16 format
@@ -2487,10 +2503,7 @@ SUB CalcConfig
 									Print #configreport, ConfigOps(CurrConfConst).Op
 								End if
 							End If
-							if instr(OutConfig(CurrWord),"OSC") <> 0   and instr(OutConfig(CurrWord),"OFF") = 0 then
-									DesiredOscillatorSource = ConfigOps(CurrConfConst).Op
-							End if
-
+							
 							Exit For
 						End If
 					Next
@@ -2501,9 +2514,6 @@ SUB CalcConfig
 
 			CurrSettingLoc = CurrSettingLoc->Next
 		Loop
-
-		'Output the osc
-		IF VBS=1 THEN PRINT SPC(5); Message("DesiredOscillatorSource")+ConfigOps(CurrConfConst).Op
 
 		'Write code
 		'Single config word
@@ -9889,7 +9899,9 @@ Function ConfigNameMatch(ConfigIn As String, ConfigNameIn As String) As Integer
 	Return 0
 End Function
 
-Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String) As Integer
+Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny As Integer = 0) As Integer
+	'MatchAny is set when checking if ConfigValueIn is any internal oscillator, not just the fastest one
+	
 	'Checks whether an input config setting (ie MCLR_OFF) matches a value (ie OFF)
 	Dim As String Config, ConfigValue, CurrValue
 	Dim As Integer CurrOption
@@ -9931,6 +9943,7 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String) As Intege
 		'If "INTOSC" found, make sure it's the option with IO
 		If InStr(Config, "INTOSC") <> 0 Then
 			If InStr(Config, "IO") <> 0 Then Return -1
+			If MatchAny Then Return -1
 			'This option doesn't have IO, return false if one with IO is found
 			For CurrOption = 1 To COC
 				If InStr(ConfigOps(CurrOption).OP, "IO") <> 0 Then
@@ -9945,6 +9958,11 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String) As Intege
 		If InStr(Config, "IRC") <> 0 Then Return -1
 		If InStr(Config, "HFINT32") <> 0 Then Return -1
 		If InStr(Config, "HFINTOSC 1MHZ") <> 0 Then Return -1
+		'Normally only want the highest to match, but if match any then match any internal oscillator
+		If MatchAny Then
+			If InStr(Config, "HFINT") <> 0 Then Return -1
+			If InStr(Config, "LFINT") <> 0 Then Return -1
+		EndIf
 
 	End If
 
@@ -11088,10 +11106,11 @@ Function GenerateAutoPinDir As LinkedListElement Pointer
 End Function
 
 Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As String, CurrSub As SubType Pointer = 0) As LinkedListElement Pointer
-
+	'Set a given bit either on or off
+	
 	Dim As String InLine, Temp, BitName
 	Dim As String VarName, VarType, VarBit, Status, VarNameOld, VarBitOld
-	Dim As Integer FindShadow
+	Dim As Integer FindShadow, BitAndValue
 
 	Dim As LinkedListElement Pointer OutList, CurrLine
 
@@ -11136,6 +11155,69 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 		LogError Temp, Origin
 		Return OutList
 	End Select
+	
+	'Status should be 0 or 1
+	If Status <> "0" And Status <> "1" Then
+		Temp = Message("BadSetStatus")
+		Replace Temp, "%status%", Status
+		LogError Temp, Origin
+		Return OutList
+	End If
+	
+	'Is bit number fixed?
+	If Not IsConst(VarBit) And Not HasSFRBit(VarBit) Then
+		'Bit number isn't a number or SFR, must be referenced by variable
+		'Get maximum allowed bit number
+		BitAndValue = GetTypeSize(VarType) * 8 - 1
+		
+		'Variable to operate on specified by FSR (or FSR0) on PIC or SysReadA on AVR
+		'Bit to operate on comes from SysByteTempX
+		'New state of bit is in bit 0 of SysByteTempB
+		If ChipFamily = 12 Or ChipFamily = 14 Then
+			CurrLine = LinkedListInsert(CurrLine, " movlw low " + VarName)
+			CurrLine = LinkedListInsert(CurrLine, " movwf FSR")
+			If HighFSR Then CurrLine = LinkedListInsert(CurrLine, " bankisel " + VarName)
+			
+		ElseIf ChipFamily = 15 Then
+			CurrLine = LinkedListInsert(CurrLine, " movlw low " + VarName)
+			CurrLine = LinkedListInsert(CurrLine, " movwf FSR0L")
+			CurrLine = LinkedListInsert(CurrLine, " movlw high " + VarName)
+			CurrLine = LinkedListInsert(CurrLine, " movwf FSR0H")
+			
+		ElseIf ChipFamily = 16 Then
+			CurrLine = LinkedListInsert(CurrLine, " lfsr 0," + VarName)
+		
+		End If
+		
+		If ModePIC Then
+			CurrLine = LinkedListInsert(CurrLine, " movlw " + Str(BitAndValue))
+			CurrLine = LinkedListInsert(CurrLine, " andwf " + VarBit + ", W")
+			CurrLine = LinkedListInsert(CurrLine, " movwf SysByteTempX")
+			Temp = " bsf ": IF Status = "0" THEN Temp = " bcf "
+			CurrLine = LinkedListInsert(CurrLine, Temp + "SysByteTempB, 0")
+			CurrLine = LinkedListInsert(CurrLine, " call SysSetBit")
+			
+			RequestSub(CurrSub, "SysSetBit")
+			If Not IsIOReg(VarName) Then AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
+			
+		ElseIf ModeAVR Then
+			CurrLine = LinkedListInsert(CurrLine, " ldi SysStringA, low(" + VarName + ")")
+			CurrLine = LinkedListInsert(CurrLine, " ldi SysStringA_H, high(" + VarName + ")")
+			
+			CurrLine = LinkedListInsertList(CurrLine, CompileVarSet(VarBit, "SysReadA", Origin))
+			CurrLine = LinkedListInsert(CurrLine, " andi SysReadA, " + Str(BitAndValue))
+			
+			Temp = " sbr ": IF Status = "0" THEN Temp = " cbr "
+			CurrLine = LinkedListInsert(CurrLine, Temp + "SysByteTempB, 1")
+			CurrLine = LinkedListInsert(CurrLine, " rcall SysSetBit")
+			
+			RequestSub(CurrSub, "SysSetBit")
+			If Not IsIOReg(VarName) Then AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
+			
+		End If
+		
+		Return OutList
+	End If
 
 	'If bit > 7, operate on high byte
 	If Val(VarBit) > 7 And Val(VarBit) < 8 * GetTypeSize(VarType) Then
@@ -11149,14 +11231,6 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 		Replace Temp, "%var%", VarNameOld
 		Replace Temp, "%type%", LCase(VarType)
 		Replace Temp, "%bit", VarBitOld
-		LogError Temp, Origin
-		Return OutList
-	End If
-
-	'Status should be 0 or 1
-	If Status <> "0" And Status <> "1" Then
-		Temp = Message("BadSetStatus")
-		Replace Temp, "%status%", Status
 		LogError Temp, Origin
 		Return OutList
 	End If
@@ -15486,7 +15560,7 @@ Sub WriteCompilationReport
 	End If
 
 	'Write chip resource usage information
-	Dim As String UsedProgram, UsedRAM
+	Dim As String UsedProgram, UsedRAM, OscType
 	UsedProgram = Message("UsedProgram")
 	Replace UsedProgram, "%used%", Str(StatsUsedProgram + ReserveHighProg)
 	Replace UsedProgram, "%total%", Str(ChipProg)
@@ -15495,21 +15569,30 @@ Sub WriteCompilationReport
 	Replace UsedRAM, "%used%", Str(StatsUsedRam)
 	Replace UsedRAM, "%total%", Str(ChipRAM)
 	If ChipRAM <> 0 Then UsedRAM += Format(StatsUsedRAM / ChipRAM, " (###.##%)")
-
+	
+	OscType = ""
+	If ModePIC Then
+		If HashMapGet(Constants, "CHIPUSINGINTOSC") <> 0 Then
+			OscType = " (" + Message("CRIntOsc") + ")"
+		Else
+			OscType = " (" + Message("CRExtOsc") + ")"
+		End If
+	End If
+	
 	If RF = "html" Then
 		Print #F, "<h2>" + Message("ChipUsage") + "</h2>"
 		'This needs to match g@Stools.bas
 		Print #F, "<p>" + Message("ChipM") + ChipName + "</p>"
 		Print #F, "<p>" + UsedProgram + "</p>"
 		Print #F, "<p>" + UsedRAM + "</p>"
-		Print #F, "<p> OSC: " + DesiredOscillatorSource+", "+str(ChipMhz)+  "</p>"
+		Print #F, "<p> OSC: " + ChipOscSource + ", " + Str(ChipMhz) + OscType + "</p>"
 
 	ElseIf RF = "text" Then
 		Print #F, Message("ChipUsage")
 		Print #F, Message("ChipM") + ChipName
 		Print #F, UsedProgram
 		Print #F, UsedRAM
-		Print #F, DesiredOscillatorSource
+		Print #F, ChipOscSource + OscType
 		Print #F, ""
 		Print #F, Star80
 		Print #F, ""

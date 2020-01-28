@@ -1,6 +1,6 @@
 'English messages.dat for Great Cow BASIC
 'Original translation creator Hugh Considine
-'Translation last updated 2017-10-23 by Hugh Considine
+'Translation last updated 2020-01-28 by Hugh Considine
 
 'Common Messages
 AnyKey = "Press any key to continue"
@@ -48,7 +48,7 @@ End Block
 
 Block License
 Great Cow BASIC - A BASIC Compiler for microcontrollers
-Copyright (C) 2006 - 2018 Hugh Considine and the Great Cow BASIC team
+Copyright (C) 2006 - 2020 Hugh Considine and the Great Cow BASIC team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@ ChipC = "Clock MHz: "
 ChipO = "Oscillator: "
 ChipF = "Chip Family: "
 ChipR = "RAM: "
+'DesiredOscillatorSource = "AutoSelected Oscillator Source: "
 
 'Conversion messages
 Converting = "Converting %infile%: "
@@ -123,8 +124,6 @@ AddBankCommands = "Adding bank setting commands ..."
 Add18FBanks = "Adding RAM access bits ..."
 
 AddLongCalls = "Setting program counter high bits ..."
-
-DesiredOscillatorSource = "AutoSelected Oscillator Source: "
 
 OptimiseIF = "Optimising IFs ..."
 OptimiseVars = "Optimising variable operations ..."
@@ -308,4 +307,6 @@ CRCalls = "Outgoing calls"
 CRRAM = "RAM Allocation"
 CRBank = "Bank"
 CRBankLoc = "Bank Location"
+CRIntOsc = "Internal oscillator"
+CRExtOsc = "External oscillator, clock source must be connected to PIC oscillator pins"
 InternalError = "Internal error in TypeOfVar - processing "
