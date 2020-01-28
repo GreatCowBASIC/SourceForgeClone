@@ -1,5 +1,5 @@
 ;    Liquid Crystal Display routines for Great Cow BASIC
-;    Copyright (C) 2006 - 2019 Hugh Considine, Stefano Bonomi William Roth and Ruud de Vreugd and Evan Venn
+;    Copyright (C) 2006-2020  Hugh Considine, Stefano Bonomi, Ruud de Vreugd, Evan Venn and Wiliam Roth
 
 ;    This library is free software; you can redistribute it and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -132,7 +132,14 @@
 '''
 '''
 '''  12/04/2019    Commentry tidy-up only
-
+'''
+'''  12/14/2019  by William Roth
+'''              Improved Method for toggling "E" in sub LCDNormalWriteByte
+'''              Applies only to IC2/HI2C (LCD_I0, 12)
+'''              Improves LCD I2C performance by ~ 25%
+'''              Removed inaccurate speed comments for LCD_I0 10,12
+'''  12/24/2019  by by William Roth
+'''              Improved delay in LCDHome
 '*************************************************************************
 
 
@@ -309,7 +316,7 @@ Sub LCDHOME
 
           'Return CURSOR to home
           LCDWriteByte (0b00000010)
-          Wait 12 10us
+          Wait 2 ms
 End Sub
 
 Sub LCDcmd ( In LCDValue )
@@ -1115,13 +1122,12 @@ sub LCDNormalWriteByte(In LCDByte )
              i2c_lcd_bl  = LCD_Backlight.0;
              I2CReStart
              I2CSend LCD_I2C_Address_Current
+
              ''' Send upper nibble
              i2c_lcd_d7 = LCDByte.7
              i2c_lcd_d6 = LCDByte.6
              i2c_lcd_d5 = LCDByte.5
              i2c_lcd_d4 = LCDByte.4
-             i2c_lcd_e = 0;
-             I2CSend i2c_lcd_byte
              i2c_lcd_e = 1;
              I2CSend i2c_lcd_byte
              i2c_lcd_e = 0;
@@ -1132,8 +1138,6 @@ sub LCDNormalWriteByte(In LCDByte )
              i2c_lcd_d6 = LCDByte.2
              i2c_lcd_d5 = LCDByte.1
              i2c_lcd_d4 = LCDByte.0
-             i2c_lcd_e = 0;
-             I2CSend i2c_lcd_byte
              i2c_lcd_e = 1;
              I2CSend i2c_lcd_byte
              i2c_lcd_e = 0;
@@ -1141,6 +1145,7 @@ sub LCDNormalWriteByte(In LCDByte )
              I2CStop
              LCD_State = 12
           #ENDIF
+
          #ifdef HI2C_DATA
              IF LCD_RS = 1 then
                 i2c_lcd_rs=1;   ''' Data
@@ -1154,23 +1159,21 @@ sub LCDNormalWriteByte(In LCDByte )
              HI2CStart                        ;generate a start signal
              HI2CSend LCD_I2C_Address_Current   ;indicate a write
 
+             ''' Send upper nibble
              i2c_lcd_d7 = LCDByte.7
              i2c_lcd_d6 = LCDByte.6
              i2c_lcd_d5 = LCDByte.5
              i2c_lcd_d4 = LCDByte.4
-             i2c_lcd_e = 0;
-             HI2CSend i2c_lcd_byte
              i2c_lcd_e = 1;
              HI2CSend i2c_lcd_byte
              i2c_lcd_e = 0;
              HI2CSend i2c_lcd_byte
+
              ''' Send lower nibble
              i2c_lcd_d7 = LCDByte.3
              i2c_lcd_d6 = LCDByte.2
              i2c_lcd_d5 = LCDByte.1
              i2c_lcd_d4 = LCDByte.0
-             i2c_lcd_e = 0;
-             HI2CSend i2c_lcd_byte
              i2c_lcd_e = 1;
              HI2CSend i2c_lcd_byte
              i2c_lcd_e = 0;
@@ -1180,15 +1183,15 @@ sub LCDNormalWriteByte(In LCDByte )
 
           #ENDIF
           'character delay settings
-           #IFDEF LCD_Speed FAST   'Char Rate ~20K
+           #IFDEF LCD_Speed FAST
                 wait fast_us us
            #ENDIF
 
-           #IFDEF LCD_SPEED MEDIUM  'Char Rate ~15K
+           #IFDEF LCD_SPEED MEDIUM
                 wait medium_us us
            #ENDIF
 
-           #IFDEF LCD_SPEED SLOW  ' Char Rate ~10K
+           #IFDEF LCD_SPEED SLOW
                 wait slow_us us
            #ENDIF
 
