@@ -1,8 +1,5 @@
 '    Software I2C routines for the GCBASIC compiler
-'    Copyright (C) 2010 Hugh Considine
-'    Copyright (C) 2013 Evan R. Venn
-'    Copyright (C) 2014 Evan R. Venn
-'    Copyright (C) 2014 Thomas Henry
+'    Copyright (C) 2010-2020 Hugh Considine, Evan R. Venn and  Thomas Henry
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
 '    License as published by the Free Software Foundation' either
@@ -28,15 +25,15 @@
 '    1.00    Released
 '    A library for a Ramtron I2C FRAM serial memory
 
-'	Device	Page			Device
-'	1	0	0x00000	0x0FFFF	A0
-'	1	1	0x10000	0x1FFFF	A2
-'	2	0	0x20000	0x2FFFF	A4
-'	2	1	0x30000	0x3FFFF	A6
-'	3	0	0x40000	0x4FFFF	A8
-'	3	1	0x50000	0x5FFFF	AA
-'	4	0	0x60000	0x6FFFF	AC
-'	4	1	0x70000	0x7FFFF	AE
+' Device  Page      Device
+' 1 0 0x00000 0x0FFFF A0
+' 1 1 0x10000 0x1FFFF A2
+' 2 0 0x20000 0x2FFFF A4
+' 2 1 0x30000 0x3FFFF A6
+' 3 0 0x40000 0x4FFFF A8
+' 3 1 0x50000 0x5FFFF AA
+' 4 0 0x60000 0x6FFFF AC
+' 4 1 0x70000 0x7FFFF AE
 
 
 
@@ -48,7 +45,7 @@
 ' 4 chips 0,1,2,3
 #define FRAM_PAGE_SIZE    0x10000
 #script
-	' FRAM_MAX_ADDRESS = (FRAM_PAGE_SIZE*FRAM_CHIPS)-1
+  ' FRAM_MAX_ADDRESS = (FRAM_PAGE_SIZE*FRAM_CHIPS)-1
 #endscript
 ' this is the TOTAL of all FRAM Devices
 #DEFINE FRAM_MAX_ADDRESS = 0x20000
@@ -433,4 +430,3 @@ Sub fram_next_page( addr as Long )
         I2CSEND(addrl)
 
 End Sub
-

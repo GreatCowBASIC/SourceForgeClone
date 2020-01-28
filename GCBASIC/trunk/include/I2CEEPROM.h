@@ -2,7 +2,7 @@
 '    Copyright (C) 2013 Evan R. Venn
 '    Copyright (C) 2014 Thomas Henry
 '    Copyright (C) 2014 Evan R. Venn
-'    Copyright (C) 2015 - 2017 Evan R. Venn
+'    Copyright (C) 2015 -2020 Evan R. Venn
 
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@
 ' Evan R.  Venn Revised        --- 7/13/2014  - Removed error in use of byte variable eepPageSize
 ' Evan R.  Venn Revised        --- 16/3/2015  - Renamed systemp to CalcNextPage to remove AVR error
 ' Evan R.  Venn Revised        --- 17/3/2015  - Revised to fix AVR timing errors
-
+' Evan R.  Venn Revised        --- 29/8/2019  - Revised to add ASMDEBUG for documentation purposes
 
 ;This include file began life as Evan R. Venn's "24LCxxxx.h"
 ;include file (version 0.85).
@@ -86,14 +86,14 @@
 
 
 
-;------ Word support for larger memory devices
+;------ Word eepAddr support for larger memory devices that require two bytes to address memory location
 sub eeprom_wr_byte (in eepDev as byte, in eepAddr as word, in eepromVal as byte)
-  ;write a single byte to an address
+  asm showdebug  `eeprom_wr_byte - Uses a WORD for eepAddr.  Intended for larger memory eeproms that require ADDRESS_H and ADDRESS (two bytes, therefore passed as a word ) to set addreess`
 
   #ifdef HI2C_DATA
       do
         HI2CReStart                            ;generate a start signal
-        HI2CSend(eepDev)                       ;inidcate a write
+        HI2CSend(eepDev)                       ;indicate a write
       loop While HI2CAckPollState
       HI2CSend(eepAddr_H)                    ;send address as two bytes
       HI2CSend(eepAddr)
@@ -113,14 +113,14 @@ sub eeprom_wr_byte (in eepDev as byte, in eepAddr as word, in eepromVal as byte)
   #endif
 end sub
 
-;------ Byte support for smaller memory devices
+;------ Byte eepAddr support for larger small devices that requires one  byte to address memory location
 sub eeprom_wr_byte (in eepDev as byte, in eepAddr as byte, in eepromVal as byte)
-  ;write a single byte to an address
+asm showdebug  `eeprom_wr_byte - Uses a BYTE for eepAddr.  Intended for smaller memory eeproms that requires only ADDRESS (one byte ) to set addreess`
 
   #ifdef HI2C_DATA
       do
         HI2CReStart                              ;generate a start signal
-        HI2CSend(eepDev)                       ;inidcate a write
+        HI2CSend(eepDev)                       ;indicate a write
       loop While HI2CAckPollState
       HI2CSend(eepAddr)
       HI2CSend(eepromVal)                    ;then the value
@@ -141,13 +141,14 @@ end sub
 
 ;-----
 
-;------ Word support for larger memory devices
+;------ Word eepAddr support for larger memory devices that require two bytes to address memory location
 sub eeprom_rd_byte(in eepDev as byte, in eepAddr as word, out eepromVal as byte )
-  ;read a single byte from an address
+    asm showdebug  `eeprom_rd_byte - Uses a WORD for eepAddr.  Intended for larger memory eeproms that require ADDRESS_H and ADDRESS (two bytes, therefore passed as a word ) to set addreess`
+
   #ifdef HI2C_DATA
       do
         HI2CReStart                              ;generate a start signal
-        HI2CSend(eepDev)                       ;inidcate a write
+        HI2CSend(eepDev)                       ;indicate a write
       loop While HI2CAckPollState
       HI2CSend(eepAddr_H)                    ;send address as two bytes
       HI2CSend(eepAddr)
@@ -159,7 +160,7 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as word, out eepromVal as byte 
 
   #ifdef I2C_DATA
       I2CStart                              ;generate a start signal
-      I2CSend(eepDev)                       ;inidcate a write
+      I2CSend(eepDev)                       ;indicate a write
       I2CSend(eepAddr_H)                    ;send address as two bytes
       I2CSend(eepAddr)
       I2CReStart
@@ -170,13 +171,14 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as word, out eepromVal as byte 
   #endif
 end sub
 
-;------ Byte support for smller memory devices
+;------ Byte eepAddr support for larger small devices that requires one  byte to address memory location
 sub eeprom_rd_byte(in eepDev as byte, in eepAddr as byte, out eepromVal as byte )
-  ;read a single byte from an address
+  asm showdebug  `eeprom_rd_byte - Uses a BYTE for eepAddr.  Intended for smaller memory eeproms that requires only ADDRESS (one byte ) to set addreess`
+
   #ifdef HI2C_DATA
       do
         HI2CReStart                              ;generate a start signal
-        HI2CSend(eepDev)                       ;inidcate a write
+        HI2CSend(eepDev)                       ;indicate a write
       loop While HI2CAckPollState
       HI2CSend(eepAddr)
       HI2CReStart
@@ -187,7 +189,7 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as byte, out eepromVal as byte 
 
   #ifdef I2C_DATA
       I2CStart                              ;generate a start signal
-      I2CSend(eepDev)                       ;inidcate a write
+      I2CSend(eepDev)                       ;indicate a write
       I2CSend(eepAddr)
       I2CReStart
       I2CSend(eepDev + 1)                   ;set the read flag
@@ -198,15 +200,15 @@ sub eeprom_rd_byte(in eepDev as byte, in eepAddr as byte, out eepromVal as byte 
 end sub
 ;-----
 #define eeprom_wr_string eeprom_wr_array
-;------ Word support for larger memory devices
+;------ Word eepAddr support for larger memory devices that require two bytes to address memory location
 sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as word, in eepArray() as byte, in eepLen as byte)
-  ;write array/string to EEPROM, starting at specified address
+    asm showdebug  `eeprom_wr_array - Uses a WORD for eepAddr.  Intended for larger memory eeproms that require ADDRESS_H and ADDRESS (two bytes, therefore passed as a word ) to set addreess`
 
   #ifdef HI2C_DATA
 
       do
         HI2CReStart                              ;generate a start signal
-        HI2CSend(eepDev)                       ;inidcate a write
+        HI2CSend(eepDev)                       ;indicate a write
       loop While HI2CAckPollState
       HI2CSend(eepAddr_H)                    ;and the start address
       HI2CSend(eepAddr)                      ;as two bytes
@@ -219,14 +221,14 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
           HI2CStop                           ;so, lock in place
           do
             HI2CReStart                              ;generate a start signal
-            HI2CSend(eepDev)                         ;inidcate a write
+            HI2CSend(eepDev)                         ;indicate a write
           loop While HI2CAckPollState
           HI2CSend(eepAddr_H)                ;send next page address
           HI2CSend(eepAddr)
         end if
       next
 
-      HI2CStop                               ;could be redundant in one
+      HI2CStop
   #endif
 
   #ifdef I2C_DATA
@@ -256,15 +258,15 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as wor
   #endif
 end sub
 
-;------ Byte support for smaller memory devices
+;------ Byte eepAddr support for larger small devices that requires one  byte to address memory location
 sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byte, in eepArray() as byte, in eepLen as byte)
-  ;write array/string to EEPROM, starting at specified address
+asm showdebug  `eeprom_wr_array - Uses a BYTE for eepAddr.  Intended for smaller memory eeproms that requires only ADDRESS (one byte ) to set addreess`
 
   #ifdef HI2C_DATA
 
       do
         HI2CReStart                              ;generate a start signal
-        HI2CSend(eepDev)                       ;inidcate a write
+        HI2CSend(eepDev)                       ;indicate a write
       loop While HI2CAckPollState
       HI2CSend(eepAddr)                      ;as one byte
 
@@ -276,13 +278,13 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
           HI2CStop                           ;so, lock in place
           do
             HI2CReStart                              ;generate a start signal
-            HI2CSend(eepDev)                       ;inidcate a write
+            HI2CSend(eepDev)                       ;indicate a write
           loop While HI2CAckPollState
           HI2CSend(eepAddr)
         end if
       next
 
-      HI2CStop                               ;could be redundant in one
+      HI2CStop
   #endif
 
   #ifdef I2C_DATA
@@ -295,31 +297,32 @@ sub eeprom_wr_array(in eepDev as byte, in eepPageSize as byte, in eepAddr as byt
         I2CSend(eepArray(eep_i))            ;write next byte from array
         eepAddr++                           ;prep for next one
         CalcNextPage = eepAddr mod eepPageSize  ; calculate next page
-        if CalcNextPage = 0 then ;end of page
+        if CalcNextPage = 0 then            ;end of page
           I2CStop                           ;so, lock in place
           I2CAckPoll(eepDev)                ;wait for buffer write
-          I2CReStart                          ;generate a start signal
+          I2CReStart                        ;generate a start signal
           I2CSend(eepDev)                   ;indicate a write
           I2CSend(eepAddr_H)                ;send next page address
           I2CSend(eepAddr)
         end if
       next
 
-      I2CStop                               ;could be redundant in one
+      I2CStop
       I2CAckPoll(eepDev)                ;wait for buffer write
 
   #endif
 end sub
 
 ;-----
-;------ Word support for larger memory devices
+;------ Word eepAddr support for larger memory devices that require two bytes to address memory location
 #define eeprom_rd_string eeprom_rd_array
 sub eeprom_rd_array(in eepDev as byte, in eepAddr as word, out eepArray() as byte, in eepLen as byte)
-  ;Read an entire array/string from EEPROM
+    asm showdebug  `eeprom_rd_array - Uses a WORD for eepAddr.  Intended for larger memory eeproms that require ADDRESS_H and ADDRESS (two bytes, therefore passed as a word ) to set addreess`
+
     #ifdef HI2C_DATA
         do
           HI2CReStart                              ;generate a start signal
-          HI2CSend(eepDev)                       ;inidcate a write
+          HI2CSend(eepDev)                       ;indicate a write
         loop While HI2CAckPollState
         HI2CSend(eepAddr_H)                    ;as two bytes
         HI2CSend(eepAddr)
@@ -361,13 +364,14 @@ sub eeprom_rd_array(in eepDev as byte, in eepAddr as word, out eepArray() as byt
     #endif
 end sub
 
-;------ Byte support for larger memory devices
+;------ Byte eepAddr support for larger small devices that requires one  byte to address memory location
 sub eeprom_rd_array(in eepDev as byte, in eepAddr as byte, out eepArray() as byte, in eepLen as byte)
-  ;Read an entire array/string from EEPROM
+asm showdebug  `eeprom_rd_array - Uses a BYTE for eepAddr.  Intended for smaller memory eeproms that requires only ADDRESS (one byte ) to set addreess`
+
     #ifdef HI2C_DATA
         do
           HI2CReStart                              ;generate a start signal
-          HI2CSend(eepDev)                       ;inidcate a write
+          HI2CSend(eepDev)                       ;indicate a write
         loop While HI2CAckPollState
         HI2CSend(eepAddr)
         HI2CReStart

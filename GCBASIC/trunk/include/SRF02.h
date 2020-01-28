@@ -1,5 +1,5 @@
 '       Ultrasonic distance sensor routines for the GCBASIC compiler
-'      Copyright (C) 2014 - 2017 Peter Everett
+'      Copyright (C) 2014-2020 Peter Everett
 
 ' LIBRARY FOR SRF02 ULTRASONIC SENSOR MODULE IN I2C MODE
 ' V0.2 Peter Everett 30/11/2014
@@ -202,5 +202,4 @@ Sub SRF_ChangeAddr (SRF_OldBase, SRF_NewBase)
   I2CStop
 
 End Sub
-
 

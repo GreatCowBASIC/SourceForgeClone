@@ -1,3 +1,4 @@
+''' Copyright 2016-2020 Evan R. Venn
 '''A program  for GCGB and GCB.
 '''--------------------------------------------------------------------------------------------------------------------------------
 '''This program is for the Digital potentiometer 2.7 to 5.5V 7-bit linear digital potentiometer with SPI interface.
@@ -8,44 +9,44 @@
 '''They are: Microchip MCP4131, MCP4132, MCP4231, MCP4232, MCP4141, MCP4142, MCP4241, MCP4242, MCP4151, MCP4152, MCP4251, MCP4252, MCP4161, MCP4162, MCP4261, MCP4262.
 '''
 '''  #define _MCP4XXXHardwareSPI     ' remove or comment out if you want to use software SPI.
-'''	 #define _MCP4XXXSoftwareSPI    ' remove or comment out if you want to use software SPI.
-'''	 You need to define for hardware or software:
-'''				DigitalPot_CS  <port>
-'''				DigitalPot_SCK  <port>
-'''				DigitalPot_DO  <port>
-'''				DigitalPot_DI  <port>
-'''	You need to include tis file
-'''		   #include <MCP4XXXDigitalPot.h>
-'''	And, you must call for either hardware or software:
-'''			MCP4XXXInit
-'''	And, for hardware SPI support you must call:
-'''				SPIMode MasterFast, 0
+'''  #define _MCP4XXXSoftwareSPI    ' remove or comment out if you want to use software SPI.
+'''  You need to define for hardware or software:
+'''       DigitalPot_CS  <port>
+'''       DigitalPot_SCK  <port>
+'''       DigitalPot_DO  <port>
+'''       DigitalPot_DI  <port>
+''' You need to include tis file
+'''      #include <MCP4XXXDigitalPot.h>
+''' And, you must call for either hardware or software:
+'''     MCP4XXXInit
+''' And, for hardware SPI support you must call:
+'''       SPIMode MasterFast, 0
 ''':
 ''':
-'''@author 		EvanV
-'''@licence		GPL
-'''@version		1.02
-'''@date   		June 2015
+'''@author    EvanV
+'''@licence   GPL
+'''@version   1.02
+'''@date      June 2015
 '''********************************************************************************
 
-'''1.01	  Changed read time from 3 ms to 3950 us
-'''1.02   Documentation added 
+'''1.01   Changed read time from 3 ms to 3950 us
+'''1.02   Documentation added
 
 
   #ifdef AVR
     'For AVR
-    #define DigitalPot_CS 	DIGITAL_10
-    #define DigitalPot_SCK 	DIGITAL_13
-    #define DigitalPot_DO 	DIGITAL_11
-    #define DigitalPot_DI 	DIGITAL_12
+    #define DigitalPot_CS   DIGITAL_10
+    #define DigitalPot_SCK  DIGITAL_13
+    #define DigitalPot_DO   DIGITAL_11
+    #define DigitalPot_DI   DIGITAL_12
   #endif
 
   #ifdef PIC
     'For PIC
-    #define DigitalPot_CS 	portd.3
-    #define DigitalPot_SCK 	portc.3
-    #define DigitalPot_DO 	portc.5
-    #define DigitalPot_DI 	portc.4
+    #define DigitalPot_CS   portd.3
+    #define DigitalPot_SCK  portc.3
+    #define DigitalPot_DO   portc.5
+    #define DigitalPot_DI   portc.4
   #endif
 
   #define DigitalPot_ADR_WIPER0       0B00000000
@@ -94,14 +95,14 @@ sub MCP4XXXInit
 
 end sub
 
-'''Read a word value from the device 
+'''Read a word value from the device
 '''@param MCPValue.  The value to written to device. Valid addresses are [0-9]
 '''@return a 9-bit value in a WORD variable
 function DigitalReadMemory ( optional in MCPValue = DigitalPot_ADR_WIPER0 ) as Word
 
     MCPTemp = DigitalPot_CMD_READ + ( MCPValue * 16 )
 
-    'Handle the memory addresses correcrtly - these registers only return an 8 bit value.	
+    'Handle the memory addresses correcrtly - these registers only return an 8 bit value.
     if ( ( MCPValue <> DigitalPot_TCON_REGISTER ) and  ( MCPValue <> DigitalPot_STATUS_REGISTER ) ) then
         MCPTemp = MCPTemp or 0x01
     end if
@@ -119,7 +120,7 @@ end Function
 'Define a simple user name to this method.
 #define DigitalPotSetWiperPosition DigitalWriteMemory
 
-'''Write a word value to the device 
+'''Write a word value to the device
 '''@param MCPValue.  The value to written to device
 '''@param MCPAddress. An optional memory address [0-15], default to 0. Beware of writing to memory address 4 without referring to datasheet
 sub  DigitalWriteMemory ( in MCPValue as Word, optional MCPAddress = DigitalPot_ADR_VOLATILE )
@@ -136,20 +137,20 @@ sub  DigitalWriteMemory ( in MCPValue as Word, optional MCPAddress = DigitalPot_
     'Delaying when  eeprom address memory - do not add delay when not EEPROM
     if ( ( MCPAddress = 2 ) or ( MCPAddress = 3 ) or ( MCPAddress > 5 ) ) then
         wait 3950 us
-	'Examine status to ensure write has completed
+  'Examine status to ensure write has completed
         wait while DigitalReadMemory ( DigitalPot_STATUS_REGISTER ).4 = 1
     end if
 end sub
 
 
-'''Decrement Pot Wiper 
+'''Decrement Pot Wiper
 sub  DigitalPotIncrement
     Set DigitalPot_CS Off
     SPITransfer(DigitalPot_VOLATILE_INC, MCPValue)
     Set DigitalPot_CS On
 end sub
 
-'''Increment Pot Wiper 
+'''Increment Pot Wiper
 sub  DigitalPotDecrement
     Set DigitalPot_CS Off
     SPITransfer(DigitalPot_VOLATILE_DEC, MCPValue)
@@ -192,7 +193,7 @@ sub  SWSPITransfer( IN DigitalPotSendByte as byte, OUT DigitalPotTempOut as byte
       if DigitalPot_DI = On then
         set DigitalPotTempOut.0 On
       Else
-      	set DigitalPotTempOut.0 Off
+        set DigitalPotTempOut.0 Off
       end if
 
       SET DigitalPot_SCK OFF

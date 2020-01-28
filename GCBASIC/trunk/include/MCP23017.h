@@ -1,4 +1,4 @@
-'       Copyright (C) 2013 .. 2018.  Perry, Evan Venn and Jack James
+'       Copyright (C) 2013-2020  Perry, Evan Venn and Jack James
 '       ================================================================================
 '       MCP23017 Library for Great Cow BASIC Compiler
 '       --------------------------------------------------------------------------------
@@ -450,5 +450,4 @@ Function IN_GPB_BIT (In DeviceAddress, In BIT_B) As Byte
         DataGpBByte = IN_GPB_BYTE (DeviceAddress)
         IN_GPB_BIT = DataGpBByte.BIT_B
 End Function
-
 

@@ -1,5 +1,5 @@
 '    MicroChip PIC specific to read GetUserID routines for Great Cow BASIC
-'    Copyright (C) 2016 Chris Roper
+'    Copyright (C) 2016-2020 Chris Roper
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public

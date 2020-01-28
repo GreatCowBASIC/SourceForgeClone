@@ -1,3 +1,4 @@
+''' Copyright 2015-2020 Evan R. Venn
 '''A suppport program  for GCGB and GCB.
 '''--------------------------------------------------------------------------------------------------------------------------------
 '''This driver support the 8-bit quasi-bidirectional port via an I2C-bus interface.
@@ -7,8 +8,8 @@
 '''This means that the PCF8574 can remain a simple slave device.
 ''':
 ''':The driver support two commands via I2C - this supports hardware and software I2C
-''':			PCF8574_sendbyte( PCF8574_device, [out_byte] )		' where PCF8574_device is the 8bit I2C address and out_byte is the byte variable data to be sent
-''':			PCF8574_readbyte( PCF8574_device, [in_byte] )		' where PCF8574_device is the 8bit I2C address and in_byte is the byte variable data to be received
+''':      PCF8574_sendbyte( PCF8574_device, [out_byte] )    ' where PCF8574_device is the 8bit I2C address and out_byte is the byte variable data to be sent
+''':      PCF8574_readbyte( PCF8574_device, [in_byte] )   ' where PCF8574_device is the 8bit I2C address and in_byte is the byte variable data to be received
 ''':
 ''':
 ''':I2C must be defined prior to calling these methods, as follows:
@@ -32,10 +33,10 @@
 ''': #define I2C_END_DELAY 0 us
 ''':
 ''':
-'''@author 		EvanV
-'''@licence		GPL
-'''@version		1.01
-'''@date   		June 2015
+'''@author    EvanV
+'''@licence   GPL
+'''@version   1.01
+'''@date      June 2015
 '''********************************************************************************
 
 'Whilst not required use defines to address multiple devices.
@@ -101,4 +102,3 @@ sub PCF8574_readbyte( in PCF8574_device, Out PCF8574_data )
 
 
 end sub
-

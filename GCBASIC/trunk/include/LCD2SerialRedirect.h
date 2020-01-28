@@ -1,8 +1,4 @@
-;   FILE:    LCD2SerialRedirect.h
-;   DATE:    14.02.15
-;   VERSION: 1.11a
-;   AUTHOR:  Anobium
-
+;    Copyright 2012 - -2020 Evan R.Venn
 ;    A redirector for LCD to a Serial Terminal
 ;
 ;    This code is free software; you can redistribute it and/or

@@ -1,5 +1,5 @@
 '    USB routines for the GCBASIC compiler
-'    Copyright (C) 2014-2018 Hugh Considine and Evan R. Venn
+'    Copyright (C) 2014-2020 Hugh Considine and Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public

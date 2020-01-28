@@ -16,9 +16,10 @@
 '    Bosch BME280/BMP280  routines for Great Cow BASIC
 '   This is a library for the BME280 humidity, temperature & pressure sensor. It
 '   only supports the I2C bus. It does not support the SPI bus connection.
-'    Copyright (C) 2006 - 2018 Hugh Considine,  Evan R. Venn, Mike Otte,
+'    Copyright (C) 2006 -2020 Hugh Considine,  Evan R. Venn, Mike Otte,
 '   David Thomson, David Stephenson, Theo, Thomas Henry
-
+'
+'   24/09/2019   Change the library to I2CReceive BME280_DataBuffer( BME280_DataBuffer_Pointer) , ACK
 
 '
 'There are the public methods that the calling program will use:
@@ -608,9 +609,9 @@ sub BME280_ReadData ( in BME280Address,  in BME280GetByteData as byte, out BME28
           I2CReStart
           I2CSend(BME280_I2C_ADDRESS+1)               ;indicate a read operation
           For BME280_DataBuffer_Pointer = 0 to (BME280GetByteData -1)
-              I2CReceive BME280_DataBuffer( BME280_DataBuffer_Pointer, ACK )
+              I2CReceive BME280_DataBuffer( BME280_DataBuffer_Pointer), ACK
           next
-          I2CReceive BME280_DataBuffer( BME280GetByteData  , NACK )
+          I2CReceive BME280_DataBuffer( BME280GetByteData ) , NACK
           I2CStop
       #endif
 
@@ -622,7 +623,7 @@ sub BME280_ReadData ( in BME280Address,  in BME280GetByteData as byte, out BME28
           HI2CSend(BME280_I2C_ADDRESS+1)               ;indicate a read operation
 
           For BME280_DataBuffer_Pointer = 0 to (BME280GetByteData -1)
-              HI2CReceive BME280_DataBuffer( BME280_DataBuffer_Pointer ), ACK
+              HI2CReceive BME280_DataBuffer( BME280_DataBuffer_Pointer), ACK
           next
           HI2CReceive BME280_DataBuffer( BME280GetByteData  ), NACK
           HI2CStop

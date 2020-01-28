@@ -1,5 +1,5 @@
 ;    Library for reading/writing to Microchip DS1337 RTC for the GCBASIC compiler
-;    Copyright (C) 2017 Evan Venn
+;    Copyright (C) 2017-2020 Evan Venn
 ;;
 ;    This code is free software; you can redistribute it and/or
 ;    modify it under the terms of the GNU Lesser General Public
