@@ -1,30 +1,5 @@
 '    Hardware I2C routines for Great Cow BASIC
-'    Copyright (C) 2010 - 2018 Hugh Considine, Jacques Erdemaal and Evan R. Venn
-
-
-'    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
-'            and to improve the initialisation of the AVR
-'
-'    Updated Feb 2015 to support AVR and correct HI2CReceive parameter error.
-'    Moved defines ACK/NACK to sysen.ini to
-'
-'    Updated May 2015 - enhance hi2cwaitmssp
-'    Updated Oct 2015 - enhance hi2cwaitmssp
-'    Updated Jan 2016 - enhance hi2cwaitmssp
-'    Updated May 2016 - resolved AVR TWINT lockup issues
-'    Updated Sept 2016 - resolve 16f18855 register mapping
-'    Updated Oct 2016  - for Option Explicit and to fix the script issue
-'    Updated Oct 2016  - ... Slave10 was NOT defined.
-'    Updated Dec 2016  - ... Added SSPIF = SSP1IF to correct error
-'    Updated Feb 2017  - Added AVRDisable_HI2CAckPollState for AVR performance
-'    Updated May 2017 -  Added support for PIC chips with bit "SEN_SSP1CON2"
-'    Updated Sep 2017 -  Added SAMEVAR and optimised HSerReceive
-'    Updated Oct 2017 - Added MASTER for I2C module. No slave.
-'    Updated Oct 2017 - Updated to add SI2C discovery support methods.
-'    Updated Jan 2018 - Updated to handle AVR frequency and I2C baud rate. Warning added
-'    Updated Jan 2018 - Updated to handle AVR I2C message handling
-
-
+'    Copyright (C) 2010-2020  Hugh Considine, Jacques Erdemaal and Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -48,7 +23,35 @@
 '********************************************************************************
 
 
-'SPI mode constants ALSO used by hardware I2C:
+'    Updated Feb 2015 by Jacques Erdemaal to improve (to remove the guess work) from the configuration for AVR
+'            and to improve the initialisation of the AVR
+'
+'    Updated Feb 2015 to support AVR and correct HI2CReceive parameter error.
+'    Moved defines ACK/NACK to sysen.ini to
+'
+'    Updated May 2015 - enhance hi2cwaitmssp
+'    Updated Oct 2015 - enhance hi2cwaitmssp
+'    Updated Jan 2016 - enhance hi2cwaitmssp
+'    Updated May 2016 - resolved AVR TWINT lockup issues
+'    Updated Sept 2016 - resolve 16f18855 register mapping
+'    Updated Oct 2016  - for Option Explicit and to fix the script issue
+'    Updated Oct 2016  - ... Slave10 was NOT defined.
+'    Updated Dec 2016  - ... Added SSPIF = SSP1IF to correct error
+'    Updated Feb 2017  - Added AVRDisable_HI2CAckPollState for AVR performance
+'    Updated May 2017 -  Added support for PIC chips with bit "SEN_SSP1CON2"
+'    Updated Sep 2017 -  Added SAMEVAR and optimised HSerReceive
+'    Updated Oct 2017 - Added MASTER for I2C module. No slave.
+'    Updated Oct 2017 - Updated to add SI2C discovery support methods.
+'    Updated Jan 2018 - Updated to handle AVR frequency and I2C baud rate. Warning added
+'    Updated Jan 2018 - Updated to handle AVR I2C message handling
+'    Updated Aug 2019 - Updated documentation only. No functional changes
+'    Updated Jan 2020 - Correct SSPxADD calculation for out of bound values
+
+
+
+
+'SPI mode constants also SHARED by hardware I2C:
+
 ' Define HI2C settings - CHANGE PORTS
 '  #define MasterFast 13
 '  #define Master 12             ; Used in this module
@@ -59,7 +62,7 @@
 
 'HI2C Mode constants
 #define Slave10 3
-'use Slave for 7-bit slave mode and Master for master mode
+'use Slave for 7-bit slave mode and Master for Master_mode
 
 
 'Setup
@@ -107,24 +110,47 @@
 #startup HIC2Init, 90
 
 #script
-  HI2C_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) - 1
-
-    If PIC Then
-          HI2CHasData = "BF = On"
-
-          If Bit(I2C1CON0_EN) Then
-              'Redirects to I2C Module CODE
-              HIC2Init =    SI2CInit
-              HI2CStart =   SI2CStart
-              HI2CStop =    SI2CStop
-              HI2CReStart = SI2CReStart
-              HI2CSend =    SI2CSend
-              HI2CReceive = SI2CReceive
-          end if
-
-    end If
 
 
+  if hi2c_DATA  then
+
+      HI2C_BAUD_TEMP = 0
+
+      if int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE))-1 > 0 then
+          HI2C_BAUD_TEMP = int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) - 1
+      end if
+      if int((ChipMhz * 1000000)/(4000 * HI2C_BAUD_RATE)) = 0 then
+          Warning "Clock Frequency to slow for desired I2C baud rate"
+          HI2C_BAUD_TEMP = 0
+      end if
+
+      if HI2C_BAUD_TEMP > 255 then
+        Warning "Clock Frequency for desired I2C baud rate high"
+      end if
+
+      If PIC Then
+                 HI2CHasData = "SSP2STAT_BF = On"
+      End If
+
+
+
+
+      If PIC Then
+            HI2CHasData = "BF = On"
+
+            If Bit(I2C1CON0_EN) Then
+                'Redirects to I2C Module for new MSSP aka K42 family
+                HIC2Init =    SI2CInit
+                HI2CStart =   SI2CStart
+                HI2CStop =    SI2CStop
+                HI2CReStart = SI2CReStart
+                HI2CSend =    SI2CSend
+                HI2CReceive = SI2CReceive
+            end if
+
+      end If
+
+    end if
 
     IF AVR then
         'Redirects to AVR CODE
@@ -218,20 +244,15 @@
 #endscript
 
 Sub HI2CMode (In HI2CCurrentMode)
-
+  asm showdebug  This method sets the variable `HI2CCurrentMode`, and, if required, sets the SSPCON1.bits
   #samebit SSPIF, SSP1IF
   #samebit SSPIF, SSP1IF
 
   #ifdef PIC
 
-      '    #ifndef Var(SSPCON1)
-      '      #ifdef Var(SSPCON)
-      '        Dim SSPCON1 Alias SSPCON
-      '      #endif
-      '    #endif
 
-    'added to seperate from newer i2C module which does not have an MSSP
     #ifdef var(SSPCON1)
+        '#ifdef var(SSPCON1) added to separate from newer i2C module which does not have an SSPCON1
         set SSPSTAT.SMP on
         set SSPCON1.CKP on
         set SSPCON1.WCOL Off
@@ -242,7 +263,8 @@ Sub HI2CMode (In HI2CCurrentMode)
           set SSPCON1.SSPM2 off
           set SSPCON1.SSPM1 off
           set SSPCON1.SSPM0 off
-          SSPADD = HI2C_BAUD_TEMP And 127
+          ' and 3 to ensure Values of 0x00, 0x01 and 0x02 are not valid for SSPADD when used as a Baud Rate Generator for I2C. This is an implementation limitation
+          SSPADD = HI2C_BAUD_TEMP and 3
         end if
 
         if HI2CCurrentMode = Slave then
@@ -267,6 +289,7 @@ Sub HI2CMode (In HI2CCurrentMode)
 End Sub
 
 Sub HI2CSetAddress(In I2CAddress)
+ asm showdebug  This method sets the `SSPADD` register to the variable `I2CAddress` when slave mode only
   #ifdef PIC
     'Slave mode only
     If HI2CCurrentMode <= 10 Then
@@ -276,9 +299,10 @@ Sub HI2CSetAddress(In I2CAddress)
 End Sub
 
 Sub HI2CStart
-  'Master mode
-  If HI2CCurrentMode > 10 Then
+  asm showdebug  This method sets the registers and register bits to generate the I2C  START signal
 
+  If HI2CCurrentMode > 10 Then
+    'Master_mode operational
     #ifdef PIC
 
       #ifdef bit(SEN)
@@ -294,8 +318,8 @@ Sub HI2CStart
 
     #endif
 
-  'Slave mode
   Else
+    'Slave mode operational
     #ifdef PIC
       Wait Until SSPSTAT.S = On
     #endif
@@ -305,8 +329,9 @@ Sub HI2CStart
 End Sub
 
 Sub HI2CReStart
-  'Master mode
+  asm showdebug  This method sets the registers and register bits to generate the I2C  RESTART signal
   If HI2CCurrentMode > 10 Then
+    'Master_mode operational
     #ifdef PIC
       #ifdef BIT(RSEN)
             Set RSEN On
@@ -322,7 +347,7 @@ End Sub
 
 Sub HI2CStop
 
-  'Master mode
+  'Master_mode
   If HI2CCurrentMode > 10 Then
     #ifdef PIC
       #ifdef BIT(PEN)
@@ -344,14 +369,16 @@ Sub HI2CStop
 End Sub
 
 Function HI2CStartOccurred
-  'Master mode
-  'Always return true
+
+  'Should return true
   If HI2CCurrentMode > 10 Then
+    'Master_mode operational
     HI2CStartOccurred = TRUE
     Exit Function
 
-  'Slave mode, check if start condition received last
+
   Else
+  'Slave mode, check if start condition received last
     HI2CStartOccurred = FALSE
     #ifdef PIC
       #ifdef BIT(S)
@@ -363,14 +390,14 @@ Function HI2CStartOccurred
 End Function
 
 Function HI2CStopped
-  'Master mode
-  'Always return false
+
+  'Should return false
   If HI2CCurrentMode > 10 Then
+    'Master_mode operational
     HI2CStopped = FALSE
     Exit Function
-
-  'Slave mode, check if start condition received last
   Else
+  'Slave mode, check if start condition received last
     HI2CStopped = FALSE
     #ifdef PIC
       #ifdef BIT(P)
@@ -384,7 +411,7 @@ End Function
 Dim HI2CACKPOLLSTATE  as Byte
 
 Sub HI2CSend(In I2CByte)
-
+  asm showdebug  This method sets the registers and register bits to send I2C data
   #ifdef PIC
 
     RetryHI2CSend:
@@ -417,7 +444,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
 
    'Enable receive
 
-     'Master mode
+     'Master_mode
      If HI2CCurrentMode > 10 Then
        if HI2CGetAck.0 = 1 then
           ' Acknowledge
@@ -438,6 +465,7 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
    SET SSPCON1.SSPOV Off
 
 
+
    'Wait for receive
    Wait Until SSPSTAT.BF = 1 AND SSPIF = 1
 
@@ -449,9 +477,9 @@ Sub HI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
    SSPSTAT.BF = 0
    HI2CWaitMSSP
 
-   'Disable receive (master mode)
+   'Disable receive (Master_mode)
 
-   'Master mode
+   'Master_mode
    If HI2CCurrentMode > 10 Then
      Set SSPCON2.RCEN Off
    'Slave mode
@@ -665,6 +693,7 @@ End Sub
 
 
 sub HIC2Init
+    asm showdebug  This method sets the variable `HI2CCurrentMode`, and, if required calls the method `SI2CInit` to set up new MSSP modules - aka K42s family chips
     HI2CCurrentMode = 0
 
     'Initialise the I2C module
@@ -684,28 +713,29 @@ end sub
     Dim HI2CACKPOLLSTATE  as Byte
     Dim HI2C1lastError as Byte
 
-    #define I2C1_GOOD             0
-    #define I2C1_FAIL_TIMEOUT     1
-    #define I2C1_TXBE_TIMEOUT     2
-    #define I2C1_START_TIMEOUT    4
-    #define I2C1_RESTART_TIMEOUT  8
-    #define I2C1_RXBF_TIMEOUT     16
-    #define I2C1_ACK_TIMEOUT      32
-    #define I2C1_MDR_TIMEOUT      64
-    #define I2C1_STOP_TIMEOUT     128
+    #DEFINE I2C1_GOOD             0
+    #DEFINE I2C1_FAIL_TIMEOUT     1
+    #DEFINE I2C1_TXBE_TIMEOUT     2
+    #DEFINE I2C1_START_TIMEOUT    4
+    #DEFINE I2C1_RESTART_TIMEOUT  8
+    #DEFINE I2C1_RXBF_TIMEOUT     16
+    #DEFINE I2C1_ACK_TIMEOUT      32
+    #DEFINE I2C1_MDR_TIMEOUT      64
+    #DEFINE I2C1_STOP_TIMEOUT     128
 
-    #define I2C1Clock_SMT1           0x09
-    #define I2C1Clock_Timer6PSO      0x08
-    #define I2C1Clock_Timer4PSO      0x07
-    #define I2C1Clock_Timer2PSO      0x06
-    #define I2C1Clock_Timer0Overflow 0x05
-    #define I2C1Clock_ReferenceOut   0x04
-    #define I2C1Clock_MFINTOSC       0x03
-    #define I2C1Clock_HFINTOSC       0x02
-    #define I2C1Clock_FOSC           0x01
-    #define I2C1Clock_FOSC4          0x00
+    #DEFINE I2C1CLOCK_SMT1           0X09
+    #DEFINE I2C1CLOCK_TIMER6PSO      0X08
+    #DEFINE I2C1CLOCK_TIMER4PSO      0X07
+    #DEFINE I2C1CLOCK_TIMER2PSO      0X06
+    #DEFINE I2C1CLOCK_TIMER0OVERFLOW 0X05
+    #DEFINE I2C1CLOCK_REFERENCEOUT   0X04
+    #DEFINE I2C1CLOCK_MFINTOSC       0X03
+    #DEFINE I2C1CLOCK_HFINTOSC       0X02
+    #DEFINE I2C1CLOCK_FOSC           0X01
+    #DEFINE I2C1CLOCK_FOSC4          0X00
 
-    #define I2C1ClockSource         I2C1Clock_MFINTOSC
+    #DEFINE I2C1CLOCKSOURCE         I2C1CLOCK_MFINTOSC
+
 
     #define I2C1I2C1CON0Default     0x04
     #define I2C1I2C1CON1Default     0x80
@@ -728,13 +758,14 @@ end sub
 'Check the define above this method
 
 Sub SI2CInit
+    asm showdebug  This method sets the MSSP modules for K42s family chips
 
     Dir HI2C_DATA out
     Dir HI2C_CLOCK out
 
     I2C1CON1 = I2C1I2C1CON1Default
     I2C1CON2 = I2C1I2C1CON2Default
-    I2C1CLK =  I2C1ClockSource
+    I2C1CLK =  I2C1CLOCKSOURCE
     I2C1CON0 = I2C1I2C1CON0Default
 
     I2C1PIR = 0    ;Clear all the error flags
@@ -746,7 +777,7 @@ Sub SI2CInit
     I2C1CON2.ABD=0
     I2C1CON0.MDR=1
 
-    'Initialise correct state of I2C module. Not sure why this is needed but it is. Awaiting Microchip analysis
+    'Initialise correct state of I2C module. Not sure why this is needed but it is. Microchip failed to explain why this is required. But, it is.
     SI2CStart
     SI2CSend ( 0xff )
     SI2CStop
@@ -756,26 +787,29 @@ Sub SI2CInit
 End sub
 
 Sub SI2CStart
+  asm showdebug  Redirected for K42 family probalby called HI2CStart
+  asm showdebug  This method sets the registers and register bits to generate the I2C  START signal. Master_mode only.
 
-  'Current/this release assumes Master Mode ONLY
         HI2C1StateMachine = 1
         HI2CWaitMSSPTimeout = false
-        'Clear the errors
+        'Clear the error state variable
         HI2C1lastError = I2C1_GOOD
 
 End Sub
 
 Sub SI2CReStart
-
+  asm showdebug  Redirected for K42 family probalby called HI2CReStart
+  asm showdebug  This method sets the registers and register bits to generate the I2C  RESTART signal. Master_mode only.
         HI2C1StateMachine = 3
         HI2CWaitMSSPTimeout = false
 
 End Sub
 
 Sub SI2CStop
+  asm showdebug  Redirected for K42 family probalby called HI2CStop
+  asm showdebug  This method sets the registers and register bits to generate the I2C  STOP signal
 
-  'Current/this release assumes Master Mode ONLY
-    'waits up to 254us then creates error message
+    'Waits up to 254us then set the error state
     HI2C1StateMachine = 0
     HI2CWaitMSSPTimeout = 0
 
@@ -801,10 +835,10 @@ End Sub
 
 
 Sub SI2CSend ( in I2Cbyte )
+    asm showdebug  Redirected for K42 family probalby called HI2CSend
+    asm showdebug  This method sets the registers and register bits to send I2C data
+
     'This is now a state Machine to cater for the new approach with the I2C module
-
-'Current/this release assumes Master Mode ONLY
-
     Select Case HI2C1StateMachine
 
 
@@ -903,7 +937,8 @@ End Sub
 
 
 Sub SI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
-
+  asm showdebug  Redirected for K42 family probalby called HI2CReceive
+  asm showdebug  This method sets the registers and register bits to get I2C data
       I2C1CNT = 255
       HI2CWaitMSSPTimeout = 0
 
@@ -1010,7 +1045,7 @@ sub SI2CWrite1ByteRegister(  address, reg,  data )
 
     I2C1CON1 = I2C1I2C1CON1Default
     I2C1CON2 = I2C1I2C1CON2Default
-    I2C1CLK =  I2C1ClockSource
+    I2C1CLK =  I2C1CLOCKSOURCE
     I2C1CON0 = I2C1I2C1CON0Default
 
     I2C1PIR = 0    ;Clear all the error flags
