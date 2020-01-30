@@ -1,52 +1,52 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C56A
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 28/03/2019
+'Header Format last revised: 20/01/2020
 
 [ChipData]
 ';All items in the ChipData section of this DAT file are available to user programs as constants.
-';The constants have the prefix of CHIP. See the examples below.
+';The constants have the prefix of Chip. See the examples below.
 
-'This constant is exposed as CHIPWORDS.
+'This constant is exposed as ChipWORDS.
 Prog=1024
 
-'This constant is exposed as CHIPEEPROM.
+'This constant is exposed as ChipEEPROM.
 EEPROM=0
 
-'This constant is exposed as CHIPRAM.
+'This constant is exposed as ChipRAM.
 RAM=25
 
-'This constant is exposed as CHIPIO.
+'This constant is exposed as ChipIO.
 I/O=12
 
-'This constant is exposed as CHIPADC.
+'This constant is exposed as ChipADC.
 ADC=0
 
-'This constant is exposed as CHIPMHZ.
+'This constant is exposed as ChipMhz.
 MaxMHz=40
 
 'This constant is exposed with only the first parameter (if more than one parameter) exposed
 IntOsc=0
 
-'This constant is exposed as CHIPPINS.
+'This constant is exposed as ChipPins.
 Pins=18
 
-'This constant is exposed as CHIPFAMILY.
+'This constant is exposed as ChipFamily.
 Family=12
 
-'This constant is exposed as CHIPCONFIGWORDS.
+'This constant is exposed as ChipConfWords.
 ConfigWords=1
 
-'This constant is exposed as CHIPPSP
+'This constant is exposed as ChipPSP
 PSP=0
 
-'This constant is exposed as CHIPMAXADDRESS
+'This constant is exposed as ChipMaxAddress
 MaxAddress=31
 
 ';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
 ';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
 
-'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
+'ChipStacks can be used within  user programs.  This constant provides information with respect to the stack depth available 
 Stacks=8
 
 [Interrupts]
