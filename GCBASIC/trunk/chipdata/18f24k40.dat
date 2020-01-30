@@ -1,62 +1,65 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F24K40
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 28/03/2019
+'Header Format last revised: 20/01/2020
 
 [ChipData]
 ';All items in the ChipData section of this DAT file are available to user programs as constants.
-';The constants have the prefix of CHIP. See the examples below.
+';The constants have the prefix of Chip. See the examples below.
 
-'This constant is exposed as CHIPWORDS.
+'This constant is exposed as ChipWORDS.
 Prog=8192
 
-'This constant is exposed as CHIPEEPROM.
+'This constant is exposed as ChipEEPROM.
 EEPROM=256
 
-'This constant is exposed as CHIPRAM.
+'This constant is exposed as ChipRAM.
 RAM=1024
 
-'This constant is exposed as CHIPIO.
+'This constant is exposed as ChipIO.
 I/O=25
 
-'This constant is exposed as CHIPADC.
+'This constant is exposed as ChipADC.
 ADC=24
 
-'This constant is exposed as CHIPMHZ.
+'This constant is exposed as ChipMhz.
 MaxMHz=64
 
 'This constant is exposed with only the first parameter (if more than one parameter) exposed
 IntOsc=64, 48, 32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
 
-'This constant is exposed as CHIPPINS.
+'This constant is exposed as ChipPins.
 Pins=28
 
-'This constant is exposed as CHIPFAMILY.
+'This constant is exposed as ChipFamily.
 Family=16
 
-'This constant is exposed as CHIPPSP
+'This constant is exposed as ChipPSP
 PSP=0
 
-'This constant is exposed as CHIPMAXADDRESS
+'This constant is exposed as ChipMaxAddress
 MaxAddress=4095
 
 ';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
 ';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
 
-'CHIPPWMTIMERVARIANT is used within pwm.h.  This constant provides information with respect to the timer register used for PWM.
+'ChipPWMTimerVariant is used within pwm.h.  This constant provides information with respect to the timer register used for PWM.
 PWMTimerVariant=2
 
-'CHIPINTOSCCONFORMAT is used within system.h.  This constant provides information with respect to the register used for setting the frequency.
+'ChipIntOSCCONFormat is used within system.h.  This constant provides information with respect to the register used for setting the frequency.
 IntOSCCONFormat=1
 
-'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
+'ChipStacks can be used within  user programs.  This constant provides information with respect to the stack depth available 
 Stacks=31
 
-'CHIPUSERIDADDRESS is used within user programs.  This constant provides information with respect to the address of the UserID.
+'ChipUserIDAddressis used within user programs.  This constant provides information with respect to the address of the UserID.
 UserIDAddress=2097152
 
-'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
+'ChipUserIDLength is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
 UserIDLength=16
+
+'ChipLFINTOSCClockSourceRegisterValue can be used within user programs.  This constant provides information with respect to value to set the clock source to LFINTOSC. 
+LFINTOSCClockSourceRegisterValue=80
 
 [Interrupts]
 'For specific details of the interrupts see the microcontrollers datasheet.
@@ -2928,8 +2931,7 @@ SP5,STKPTR,5
 0:3FF
 
 [NoBankRAM]
-0:5F
-F60:FFF
+80
 
 [Pins-DIP]
 2,RA0(IO)
