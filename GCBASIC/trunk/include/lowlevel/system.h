@@ -76,8 +76,8 @@
 #define MOD %
 
 'Required for INITSYS
-#define INTERNALSOSC 0.03268
-
+#define 32.768K 0.03268
+#define 31k     0.031
 'Options
 #define CheckDivZero TRUE
 
@@ -96,14 +96,6 @@
     SYS_CLOCK_INT_PLL_USED = True
   End If
 
-  'Warn user... you cannot select internal SOSC when the chip does not support
-  SCRIPT_CHIPSOSCCLOCKSOURCEREGISTERVALUE = ChipSOSCClockSourceRegisterValue + 0
-  If ChipMHz = INTERNALSOSC then
-    if SCRIPT_CHIPSOSCCLOCKSOURCEREGISTERVALUE = 0 then
-        Warning "An internal SOSC selected but this chip does not have in internal SOSC"
-    end if
-  end if
-
 #endscript
 
 '********************************************************************************
@@ -118,21 +110,20 @@ Sub InitSys
 
           #IFDEF Var(OSCCON1)
 
-              #IFDEF ChipOsc SOSC
-                asm showdebug Default settings for microcontrollers with _OSCCON1_ with _SOSC_
+              #IFDEF ChipOsc LFINTOSC
+                asm showdebug Default settings for microcontrollers with _OSCCON1_ with _LFINTOSC_
               #ENDIF
 
-              #IFDEF ChipMHz INTERNALSOSC
+              #IFDEF ChipMHz 31k
                   asm showdebug _ChipMHz_ is ChipMHz
                   'Data from .dat file
-                  OSCCON1 = ChipSOSCClockSourceRegisterValue
+                  OSCCON1 = ChipLFINTOSCClockSourceRegisterValue
 
                   'Default value CSWHOLD may proceed; SOSCPWR Low power
                   OSCCON3 = 0x00
 
                   'Default value LFOEN disabled; ADOEN disabled; SOSCEN enabled; EXTOEN disabled; HFOEN disabled;
                   OSCEN = 0x00
-                  SOSCEN = 1
 
                   'Default value
                   OSCTUNE = 0x00
@@ -168,6 +159,23 @@ Sub InitSys
 
   #IFDEF ChipUsingIntOsc
       'This code block sets the internal oscillator
+
+    #IFDEF ChipMHz 31k
+        asm showdebug _ChipMHz_ is ChipMHz
+        'Data from .dat file
+        OSCCON1 = ChipLFINTOSCClockSourceRegisterValue
+
+        'Default value CSWHOLD may proceed; SOSCPWR Low power
+        OSCCON3 = 0x00
+
+        'Default value LFOEN disabled; ADOEN disabled; SOSCEN enabled; EXTOEN disabled; HFOEN disabled;
+        OSCEN = 0x00
+
+        'Default value
+        OSCTUNE = 0x00
+    #ENDIF
+
+    #IFNDEF ChipMHz 31k
 
       #IFNDEF Var(OSCCON)
           #IFDEF Var(OSCCON1)
@@ -845,6 +853,8 @@ Sub InitSys
         #endif
 
       #ENDIF
+
+    #ENDIF
 
   #ENDIF
 
