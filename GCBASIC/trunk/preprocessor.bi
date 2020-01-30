@@ -1225,9 +1225,14 @@ SUB PreProcessor
 
           ElseIf Left(DataSource, 6) = "#CHIP " THEN
             If ChipName = "" THEN
-              IF INSTR( DataSource, "INTERNALSOSC") > 0 Then
-                  Replace DataSource, "INTERNALSOSC", "0.03268"
+              IF INSTR( DataSource, "32.768K") > 0 Then
+                  Replace DataSource, "32.768K", "0.03268"
               End If
+
+              IF INSTR( DataSource, "31K") > 0 Then
+                  Replace DataSource, "31K", "0.031"
+              End If
+
               ChipName = Trim(Mid(DataSource, 6))
               ChipMhz = 0
               If InStr(ChipName, ",") <> 0 Then
