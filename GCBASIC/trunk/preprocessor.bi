@@ -1233,6 +1233,18 @@ SUB PreProcessor
                   Replace DataSource, "31K", "0.031"
               End If
 
+              IF INSTR( DataSource, "500K") > 0 Then
+                  Replace DataSource, "500K", "0.5"
+              End If
+
+              IF INSTR( DataSource, "250K") > 0 Then
+                  Replace DataSource, "250K", "0.25"
+              End If
+
+              IF INSTR( DataSource, "125K") > 0 Then
+                  Replace DataSource, "125K", "0.125"
+              End If
+
               ChipName = Trim(Mid(DataSource, 6))
               ChipMhz = 0
               If InStr(ChipName, ",") <> 0 Then
