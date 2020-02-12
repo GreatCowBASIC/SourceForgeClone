@@ -2459,7 +2459,7 @@ SUB CalcConfig
   Do While CurrSettingLoc <> 0
     CurrSetting = CurrSettingLoc->MetaData
     With (*CurrSetting)
-      If ConfigNameMatch(.Name, "OSC") and not ConfigNameMatch(.Name, "SOSC")  Then
+      If ConfigNameMatch(.Name, "OSC") and not ConfigNameMatch(.Name, "SOSCSEL")  Then
         ChipOscSource = .Setting->Value
         AddConstant("CHIPOSC", ChipOscSource)
         If ConfigValueMatch(ChipOscSource, "INT", -1) Then
