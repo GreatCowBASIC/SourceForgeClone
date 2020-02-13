@@ -571,7 +571,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid
+DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
@@ -2357,15 +2357,23 @@ SUB CalcConfig
     UserSettingLoc = UserSettingLoc->Next
   Loop
 
+
   'Add default options
   'Find settings with nothing specified
   Dim As String DesiredSetting
+  'Check here as I could not find better place for it!
+  IntOscSpeedValid = 0
+  If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValue <> 0 Then
+      DesiredSetting = "INT"
+      IntOscSpeedValid = 1
+  End If
+
+
   CurrSettingLoc = ConfigSettings->Next
   Do While CurrSettingLoc <> 0
     CurrSetting = CurrSettingLoc->MetaData
     With (*CurrSetting)
       If .Setting = 0 Then
-
         'Get the desired default setting
         DesiredSetting = ""
         If ConfigNameMatch(.Name, "MCLR") Then
@@ -2396,16 +2404,13 @@ SUB CalcConfig
 
           IF OSCType <> "" Then
             DesiredSetting = OSCType
-
           Else
 
             'No oscillator chosen, need to find best option
             'If ChipMhz = IntOscSpeed(x), use Int Osc
             'If ChipMhz > 4, use HS
             'If 4 > ChipMhz > ChipIntOsc, use XT
-
             'Check for internal osc
-            IntOscSpeedValid = 0
             If IntOscSpeeds <> 0 Then
               For CurrSpeed = 1 To IntOscSpeeds
                 If ChipMhz = IntOscSpeed(CurrSpeed) Then
@@ -2461,7 +2466,8 @@ SUB CalcConfig
   Do While CurrSettingLoc <> 0
     CurrSetting = CurrSettingLoc->MetaData
     With (*CurrSetting)
-      If ConfigNameMatch(.Name, "OSC") and not ConfigNameMatch(.Name, "SOSCSEL")  Then
+
+      If ConfigNameMatch(.Name, "OSC") and not ( ConfigNameMatch(.Name, "SOSCSEL") or ConfigNameMatch(.Name, "LPT1OSC") ) Then
         ChipOscSource = .Setting->Value
         AddConstant("CHIPOSC", ChipOscSource)
         If ConfigValueMatch(ChipOscSource, "INT", -1) Then
@@ -14447,6 +14453,8 @@ SUB ReadChipData
         Case "hardwaremult":
           HMult = 0: If TempData = "y" Then HMult = -1
           ConstValue = Str(-HMult)
+
+        Case "lfintoscclocksourceregistervalue": ChipLFINTOSCClockSourceRegisterValue = Val(TempData)
 
       End Select
 
