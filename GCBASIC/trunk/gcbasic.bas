@@ -677,7 +677,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-02-12"
+Version = "0.98.<<>> 2020-02-13"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -9962,6 +9962,7 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny 
     If MatchAny Then
       If InStr(Config, "HFINT") <> 0 Then Return -1
       If InStr(Config, "LFINT") <> 0 Then Return -1
+      If InStr(Config, "INTIO") <> 0 Then Return -1
     EndIf
 
   End If
