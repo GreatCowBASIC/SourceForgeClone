@@ -571,7 +571,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg
+DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
@@ -2405,10 +2405,12 @@ SUB CalcConfig
             'If 4 > ChipMhz > ChipIntOsc, use XT
 
             'Check for internal osc
+            IntOscSpeedValid = 0
             If IntOscSpeeds <> 0 Then
               For CurrSpeed = 1 To IntOscSpeeds
                 If ChipMhz = IntOscSpeed(CurrSpeed) Then
                   DesiredSetting = "INT"
+                  IntOscSpeedValid = 1
                   Exit For
                 End If
               Next
@@ -2463,9 +2465,12 @@ SUB CalcConfig
         ChipOscSource = .Setting->Value
         AddConstant("CHIPOSC", ChipOscSource)
         If ConfigValueMatch(ChipOscSource, "INT", -1) Then
-          AddConstant("CHIPUSINGINTOSC", "TRUE")
+          If IntOscSpeedValid = 1 then
+            AddConstant("CHIPUSINGINTOSC", "TRUE")
+          else
+            LogWarning(Message("BadIntFreq"))
+          End if
         End If
-
         Exit Do
       End If
     End With
@@ -9952,6 +9957,7 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny 
       Next
       Return -1
     End If
+
     If InStr(Config, "INTIO67") <> 0 Then Return -1
     If InStr(Config, "INTIO2") <> 0 Then Return -1
     If InStr(Config, "IRCIO67") <> 0 Then Return -1
