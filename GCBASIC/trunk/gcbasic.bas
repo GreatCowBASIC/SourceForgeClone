@@ -677,7 +677,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-02-13"
+Version = "0.98.<<>> 2020-02-14"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2364,7 +2364,8 @@ SUB CalcConfig
   'Check here as I could not find better place for it!
   IntOscSpeedValid = 0
   If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValue <> 0 Then
-      DesiredSetting = "INT"
+      'This is not required but for clarity, it helpe
+      DesiredSetting = "LFINT"
       IntOscSpeedValid = 1
   End If
 
@@ -2419,6 +2420,11 @@ SUB CalcConfig
                   Exit For
                 End If
               Next
+            End If
+
+            If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValue <> 0 Then
+                DesiredSetting = "LFINT"
+                IntOscSpeedValid = 1
             End If
 
             'Can't use int osc, come up with suitable ext osc
