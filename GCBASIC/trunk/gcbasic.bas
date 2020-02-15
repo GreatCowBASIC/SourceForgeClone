@@ -677,7 +677,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-02-14"
+Version = "0.98.<<>> 2020-02-15"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2369,7 +2369,6 @@ SUB CalcConfig
       IntOscSpeedValid = 1
   End If
 
-
   CurrSettingLoc = ConfigSettings->Next
   Do While CurrSettingLoc <> 0
     CurrSetting = CurrSettingLoc->MetaData
@@ -2416,7 +2415,6 @@ SUB CalcConfig
               For CurrSpeed = 1 To IntOscSpeeds
                 If ChipMhz = IntOscSpeed(CurrSpeed) Then
                   DesiredSetting = "INT"
-                  IntOscSpeedValid = 1
                   Exit For
                 End If
               Next
@@ -2472,11 +2470,19 @@ SUB CalcConfig
   Do While CurrSettingLoc <> 0
     CurrSetting = CurrSettingLoc->MetaData
     With (*CurrSetting)
-
       If ConfigNameMatch(.Name, "OSC") and not ( ConfigNameMatch(.Name, "SOSCSEL") or ConfigNameMatch(.Name, "LPT1OSC") ) Then
         ChipOscSource = .Setting->Value
         AddConstant("CHIPOSC", ChipOscSource)
         If ConfigValueMatch(ChipOscSource, "INT", -1) Then
+            'Check for internal osc
+            If IntOscSpeeds <> 0 Then
+              For CurrSpeed = 1 To IntOscSpeeds
+                If ChipMhz = IntOscSpeed(CurrSpeed) Then
+                  IntOscSpeedValid = 1
+                  Exit For
+                End If
+              Next
+            End If
           If IntOscSpeedValid = 1 then
             AddConstant("CHIPUSINGINTOSC", "TRUE")
           else
@@ -9957,6 +9963,7 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny 
     If InStr(Config, "INTRC IO") <> 0 Then Return -1
     If InStr(Config, "INTRC OSC") <> 0 Then Return -1
     If Config = "INTRC" Then Return -1
+
     'If "INTOSC" found, make sure it's the option with IO
     If InStr(Config, "INTOSC") <> 0 Then
       If InStr(Config, "IO") <> 0 Then Return -1
