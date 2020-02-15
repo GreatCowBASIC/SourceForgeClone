@@ -2357,7 +2357,6 @@ SUB CalcConfig
     UserSettingLoc = UserSettingLoc->Next
   Loop
 
-
   'Add default options
   'Find settings with nothing specified
   Dim As String DesiredSetting
@@ -2413,7 +2412,7 @@ SUB CalcConfig
             'Check for internal osc
             If IntOscSpeeds <> 0 Then
               For CurrSpeed = 1 To IntOscSpeeds
-                If ChipMhz = IntOscSpeed(CurrSpeed) Then
+                If CSng(ChipMhz) = CSng(IntOscSpeed(CurrSpeed)) Then
                   DesiredSetting = "INT"
                   Exit For
                 End If
@@ -2470,19 +2469,20 @@ SUB CalcConfig
   Do While CurrSettingLoc <> 0
     CurrSetting = CurrSettingLoc->MetaData
     With (*CurrSetting)
-      If ConfigNameMatch(.Name, "OSC") and not ( ConfigNameMatch(.Name, "SOSCSEL") or ConfigNameMatch(.Name, "LPT1OSC") ) Then
+      If ConfigNameMatch(.Name, "OSC") and not ( ConfigNameMatch(.Name, "SOSCSEL") or ConfigNameMatch(.Name, "LPT1OSC")  or ConfigNameMatch(.Name, "INTOSC_XT") ) Then
         ChipOscSource = .Setting->Value
         AddConstant("CHIPOSC", ChipOscSource)
         If ConfigValueMatch(ChipOscSource, "INT", -1) Then
-            'Check for internal osc
-            If IntOscSpeeds <> 0 Then
-              For CurrSpeed = 1 To IntOscSpeeds
-                If ChipMhz = IntOscSpeed(CurrSpeed) Then
-                  IntOscSpeedValid = 1
-                  Exit For
-                End If
-              Next
-            End If
+          'Check for internal osc
+          If IntOscSpeeds <> 0 Then
+            For CurrSpeed = 1 To IntOscSpeeds
+              If CSng(ChipMhz) = CSng(IntOscSpeed(CurrSpeed)) Then
+                IntOscSpeedValid = 1
+                Exit For
+              End If
+            Next
+          End If
+
           If IntOscSpeedValid = 1 then
             AddConstant("CHIPUSINGINTOSC", "TRUE")
           else
