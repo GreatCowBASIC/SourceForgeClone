@@ -64,7 +64,7 @@
 ' 17/11/2019  Added USARTHasDataSet to work around the evaluation issue in If USARTHasData Then issue
 ' 18/12/2019  Revised #ifdef Var(TXREG) section of HSerReceive methods to ensure that previous data has been transmitted
 '             Revised init to improve documentation
-
+' 16/02/2020  Revised to restore setting in  INIT
 
 
 
@@ -471,6 +471,7 @@ Sub InitUSART
               #ifndef var(U1BRGH)
                   asm showdebug Values_calculated_in_the_script
                   asm showdebug _SPBRGH_TEMP=_ SPBRGH_TEMP
+                  asm showdebug _SPBRGL_TEMP=_ SPBRGL_TEMP
                   asm showdebug _BRG16_TEMP=_ BRG16_TEMP
                   asm showdebug _BRGH_TEMP=_ BRGH_TEMP
 
@@ -482,6 +483,7 @@ Sub InitUSART
                   #ifdef Bit(BRG16)
                     'Set baud rate for chips with BRG16 bit
                     SPBRGH = SPBRGH_TEMP
+                    SPBRGL = SPBRGL_TEMP
                     'BRG16: 16-bit Baud Rate Generator bit
                     '1 = 16-bit Baud Rate Generator is used
                     '0 = 8-bit Baud Rate Generator is used
