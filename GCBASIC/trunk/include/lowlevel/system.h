@@ -76,8 +76,8 @@
 #define MOD %
 
 'Required for INITSYS
-#define 32.768K 0.03268
-#define 31k     0.031
+#define OSC_SOURCE_EXTSOSC 0.03268
+#define 31k 0.031
 'Options
 #define CheckDivZero TRUE
 
@@ -96,6 +96,13 @@
     SYS_CLOCK_INT_PLL_USED = True
   End If
 
+  if ChipMHz = 31k then
+    SCRIPT_CHIPLFINTOSCCLOCKSOURCEREGISTERVALUE = ChipLFINTOSCClockSourceRegisterValue + 0
+    if SCRIPT_CHIPLFINTOSCCLOCKSOURCEREGISTERVALUE = 0 then
+        Warning "Chip does not support LFINT"
+    end if
+  end if
+
 #endscript
 
 '********************************************************************************
@@ -106,7 +113,7 @@ Sub InitSys
 
       #IFNDEF ChipUsingIntOsc
 
-        asm showdebug For selected frequency the external oscillator is selected
+        asm showdebug _For_selected_frequency_-_the_external_oscillator_has_been_selected_by_compiler ChipMHz
 
           #IFDEF Var(OSCCON1)
 
@@ -146,9 +153,6 @@ Sub InitSys
 
     #ifdef PIC
         #ifdef Var(OSCCAL)
-            'Resolve OSCCAL calibration
-            'GCB does not load saved calibration data into OSCCAL register on Baseline PIC. Therefore the FOSC is inaccurate when using internal RC oscillator.
-            'Solution:  Add following as the FIRST lines in the INITSYS sub in the System.h file
             'This loads the saved calibration data from the last flash memory location at POR or any time the chip is reset.
             #ifdef  chipfamily 14
                  CALL 0x3ff
@@ -158,7 +162,7 @@ Sub InitSys
     #endif
 
   #IFDEF ChipUsingIntOsc
-      'This code block sets the internal oscillator
+    asm showdebug This code block sets the internal oscillator to ChipMHz
 
     #IFDEF ChipMHz 31k
         asm showdebug _ChipMHz_ is ChipMHz
@@ -858,6 +862,7 @@ Sub InitSys
 
   #ENDIF
 
+  asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
   #IFDEF ChipFamily 16
     'Clear BSR on ChipFamily16 MCUs
     BSR = 0
