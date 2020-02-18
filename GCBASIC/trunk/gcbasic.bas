@@ -23,6 +23,7 @@
 'Number of buckets to use in hash maps - increasing makes operations faster but uses more RAM
 #Define HASH_MAP_BUCKETS 512
 
+#Define RESERVED_WORDS 1024
 'Type for sections of code returned from subs
 Type LinkedListElement
   Value As String
@@ -370,6 +371,7 @@ Declare Function CompileWholeArray (InLine As String, Origin As String) As Linke
 Declare Function ConfigNameMatch(ConfigIn As String, ConfigNameIn As String) As Integer
 Declare Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny As Integer = 0) As Integer
 Declare Sub CreateCallTree
+Declare Sub CreateReservedWordsList
 Declare Sub DisplayProgram
 Declare Sub DisplayCallTree
 Declare Sub ExtAssembler
@@ -643,6 +645,7 @@ Dim Shared OutConfig(16) As String
 Dim Shared PinDirections As LinkedListElement Pointer
 Dim Shared PinDirShadow(20) As String
 Dim Shared GlitchFreeOutputs As HashMap Pointer
+Dim Shared ReservedWords( RESERVED_WORDS ) as String
 
 Dim Shared As String Star80
 
@@ -703,6 +706,7 @@ Version = "0.98.<<>> 2020-02-15"
   Version = Version + " (Windows 32 bit)"
 #endif
 
+CreateReservedWordsList()
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
@@ -5884,9 +5888,11 @@ End SUB
 
 Sub CompileGoto (CompSub As SubType Pointer)
   'Compile GOSUBs, GOTOs and labels
-  Dim As String InLine, DestLabel, Origin
+  Dim As String InLine, DestLabel, Origin, TempData
   'Dim As Integer PD
   Dim As LinkedListElement Pointer CurrLine, Labels
+  Dim ReservedWordCounter as Integer
+
 
   FoundCount = 0
 
@@ -5919,6 +5925,15 @@ Sub CompileGoto (CompSub As SubType Pointer)
       'Should check label!
       If Right(DestLabel, 1) = ":" Then DestLabel = Trim(Left(DestLabel, Len(DestLabel) - 1))
 
+      'Check for Reservedword as label
+      For ReservedWordCounter = 0 to RESERVED_WORDS
+          If Ucase(Trim(DestLabel)) = Ucase(trim(ReservedWords(ReservedWordCounter))) THEN
+              TempData = Message("CannotUseReservedWords")
+              Replace TempData, "%label%", DestLabel
+              LogError TempData, Origin
+              exit for
+          End if
+      Next
       If ModePIC Then
         CurrLine->Value = " goto " + DestLabel
       ElseIf ModeAVR Then
@@ -16875,3 +16890,49 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
   'Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
   Return 0
 END FUNCTION
+
+Sub CreateReservedWordsList
+  dim ReservedWordFile as string
+  dim ReservedWordIn as string
+  dim ReservedWordCounter as Integer
+
+  'Detect GCBASIC install directory
+  ID = ExePath
+  If ID = "" Or ID = "." THEN
+    ID = CURDIR
+    #IFDEF __FB_UNIX__
+      If Right(ID, 1) = "/" Then ID = Left(ID, Len(ID) - 1)
+    #ELSE
+      If Right(ID, 1) = "\" Then ID = Left(ID, Len(ID) - 1)
+    #ENDIF
+  End If
+
+  'Read list
+  #IFDEF __FB_UNIX__
+    ReservedWordFile = ID + "/reservedwords.dat"
+  #ELSE
+    ReservedWordFile = ID + "\reservedwords.dat"
+  #ENDIF
+  IF Dir(ReservedWordFile) = "" THEN
+    PRINT "Cannot find " + ReservedWordFile
+    Print
+    PRINT "Great Cow BASIC cannot operate without this file"
+    If PauseOnErr = 1 THEN
+      PRINT
+      PRINT "Press any key to continue"
+      Sleep
+    END IF
+    END
+  END IF
+
+  ReservedWordCounter = 0
+  OPEN ReservedWordFile FOR INPUT AS #1
+  Do While NOT EOF(1)
+      Line Input #1,  ReservedWordIn
+      ReservedWords( ReservedWordCounter )  = ReservedWordIn
+'      print ReservedWords( ReservedWordCounter )
+      ReservedWordCounter = ReservedWordCounter +1
+  Loop
+  CLOSE  #1
+
+End Sub
