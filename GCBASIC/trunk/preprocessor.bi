@@ -217,6 +217,7 @@ Sub PrepareBuiltIn
   If ModePIC Then
     'Each nop takes .2 us on 20 MHz chip
     L = ChipMhz / 4 - 3
+
     'Make sure L is positive integer
     'If not, us delays will be inaccurate
     If L < 0 Then
@@ -1249,8 +1250,18 @@ SUB PreProcessor
               ChipMhz = 0
               If InStr(ChipName, ",") <> 0 Then
                 ChipMhz = VAL(Mid(ChipName, INSTR(ChipName, ",") + 1))
+
+                'Resolve the error condition when a user specifics 32k... and other k's
+                IF INSTR( DataSource, "K" ) <> 0 THEN
+                      Temp = Message("BadFreqCharacter")
+                      Replace Temp, "%string%", ":"+MID(ChipName, INSTR(ChipName, ",") + 1)
+                      LogError Temp, .Origin
+                End if
+
                 ChipName = Trim(Left(ChipName, INSTR(ChipName, ",") - 1))
               End If
+
+
               IF Left(UCase(ChipName), 3) = "PIC" THEN ChipName = Mid(ChipName, 4)
               IF Left(UCase(ChipName), 1) = "P" THEN ChipName = Mid(ChipName, 2)
 
