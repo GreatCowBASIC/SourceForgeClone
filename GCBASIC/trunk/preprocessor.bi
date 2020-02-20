@@ -1252,7 +1252,8 @@ SUB PreProcessor
                 ChipMhz = VAL(Mid(ChipName, INSTR(ChipName, ",") + 1))
 
                 'Resolve the error condition when a user specifics 32k... and other k's
-                IF INSTR( DataSource, "K" ) <> 0 THEN
+                IF INSTR( Mid(ChipName, INSTR(ChipName, ",") + 1), "K" ) <> 0 THEN
+
                       Temp = Message("BadFreqCharacter")
                       Replace Temp, "%string%", ":"+MID(ChipName, INSTR(ChipName, ",") + 1)
                       LogError Temp, .Origin
