@@ -6885,7 +6885,11 @@ Sub CompileReturn (CompSub As SubType Pointer)
   Do While CurrLine <> 0
     InLine = UCASE(CurrLine->Value)
 
-    If Left(InLine, 6) = "RETURN" THEN
+    'Added Instr(InLine," ") = 7  to permitted variables that start with RETURN
+    'This bug was introduced at 98.03, fixes in 98.07
+    'A dormat bug for a while
+    If Left(InLine, 6) = "RETURN" AND Instr(Trim(InLine)," ") = 7  THEN
+
       'Remove origin
       IF INSTR(CurrLine->Value, ";?F") <> 0 THEN
         Origin = Mid(InLine, INSTR(InLine, ";?F"))
@@ -6897,6 +6901,7 @@ Sub CompileReturn (CompSub As SubType Pointer)
       'If in a function, check for value after return
       Dim Value As String
       Value = Trim(Mid(CurrLine->Value, 7))
+
       If Value <> "" Then
         If CompSub->IsFunction Then
           LinkedListInsert(CurrLine->Prev, CompSub->Name + "=" + Value + Origin)
