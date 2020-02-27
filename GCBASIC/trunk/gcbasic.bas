@@ -680,7 +680,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-02-20"
+Version = "0.98.<<>> 2020-02-27"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2279,7 +2279,7 @@ SUB CalcConfig
   'Do not set CONFIG if TBL+
   If ConfigDisabled Then Exit Sub
 
-  Dim As String CurrItem, CurrName, CurrVal, Temp
+  Dim As String CurrItem, CurrName, CurrVal, Temp, LFINTOSCString
   Dim As Integer CurrWord, CurrConfConst, CurrSpeed
   Dim As LinkedListElement Pointer UserSettingList, UserSettingLoc, CodeLoc
   Dim As LinkedListElement Pointer CurrSettingLoc, CurrSettingOptLoc
@@ -2287,6 +2287,8 @@ SUB CalcConfig
 
   Dim As Integer configreport
   Dim As String ConfigReportFileName
+  'Set default - this is needed as some dont use the same LF INT OSC
+  LFINTOSCString = "LFINT"
 
   'Read config
   Do WHILE INSTR(CONFIG, "&") <> 0: Replace CONFIG, "&", ",": Loop
@@ -2327,13 +2329,13 @@ SUB CalcConfig
     Do While CurrSettingLoc <> 0
       CurrSetting = CurrSettingLoc->MetaData
       With (*CurrSetting)
-
         'Check for setting name in user setting
         If ConfigNameMatch(UserSettingLoc->Value, .Name) Then
           'Print "Name match for " + .Name
           'If found, find matching setting value
           CurrSettingOptLoc = .Options
           Do While CurrSettingOptLoc <> 0
+
             If ConfigValueMatch(CurrSettingOptLoc->Value, UserSettingLoc->Value) <> 0 Then
               'Matching setting value found
               'Print "Found match for: "; UserSettingLoc->Value; ", "; .Name; " = "; CurrSettingOptLoc->Value
@@ -2368,7 +2370,7 @@ SUB CalcConfig
   IntOscSpeedValid = 0
   If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValue <> 0 Then
       'This is not required but for clarity, it helpe
-      DesiredSetting = "LFINT"
+      DesiredSetting = LFINTOSCString
       IntOscSpeedValid = 1
   End If
 
@@ -2424,7 +2426,7 @@ SUB CalcConfig
             End If
 
             If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValue <> 0 Then
-                DesiredSetting = "LFINT"
+                DesiredSetting = LFINTOSCString   'LFINTOSC or LFINT
                 IntOscSpeedValid = 1
             End If
 
@@ -2446,6 +2448,13 @@ SUB CalcConfig
         If DesiredSetting <> "" Then
           CurrSettingOptLoc = .Options
           Do While CurrSettingOptLoc <> 0
+            'Select correct LFINT.. if this chip is LFINTOSC
+            'print CurrSettingOptLoc->Value, WholeINSTR(CurrSettingOptLoc->Value, "LFINTOSC" )
+            If WholeINSTR(CurrSettingOptLoc->Value, "LFINTOSC" ) = 2 Then
+              If DesiredSetting = "LFINT" then
+                DesiredSetting = "LFINTOSC"
+              end if
+            end if
             If ConfigValueMatch(CurrSettingOptLoc->Value, DesiredSetting) Then
               'Matching setting value found
               .Setting = CurrSettingOptLoc
@@ -9961,6 +9970,7 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny 
   'Return -2 for best match
   If Config = ConfigValue Then Return -2
 
+
   'If value of setting in input config, value matches
   If WholeINSTR(Config, ConfigValue) = 2 Then Return -1
   If WholeINSTR(ConfigValue, Config) = 2 Then Return -1
@@ -9981,11 +9991,13 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny 
 
     'Possible matches
     If InStr(Config, "INTRC IO") <> 0 Then Return -1
+
     If InStr(Config, "INTRC OSC") <> 0 Then Return -1
+
     If Config = "INTRC" Then Return -1
 
     'If "INTOSC" found, make sure it's the option with IO
-    If InStr(Config, "INTOSC") <> 0 Then
+    If InStr(Config, "INTOSC") <> 0  Then
       If InStr(Config, "IO") <> 0 Then Return -1
       If MatchAny Then Return -1
       'This option doesn't have IO, return false if one with IO is found
@@ -10006,7 +10018,10 @@ Function ConfigValueMatch(ConfigIn As String, ConfigValueIn As String, MatchAny 
     'Normally only want the highest to match, but if match any then match any internal oscillator
     If MatchAny Then
       If InStr(Config, "HFINT") <> 0 Then Return -1
+      If InStr(Config, "LFINTOSC") <> 0 Then Return -1
+
       If InStr(Config, "LFINT") <> 0 Then Return -1
+
       If InStr(Config, "INTIO") <> 0 Then Return -1
     EndIf
 
