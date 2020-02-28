@@ -1,5 +1,5 @@
 '    Hardware I2C routines for Great Cow BASIC
-'    Copyright (C) 2010-2020  Hugh Considine, Jacques Erdemaal and Evan R. Venn
+'    Copyright (C) 2010-2020 Hugh Considine, Jacques Erdemaal and Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -263,8 +263,8 @@ Sub HI2CMode (In HI2CCurrentMode)
           set SSPCON1.SSPM2 off
           set SSPCON1.SSPM1 off
           set SSPCON1.SSPM0 off
-          ' and 3 to ensure Values of 0x00, 0x01 and 0x02 are not valid for SSPADD when used as a Baud Rate Generator for I2C. This is an implementation limitation
-          SSPADD = HI2C_BAUD_TEMP and 3
+          
+          SSPADD = HI2C_BAUD_TEMP and 127
         end if
 
         if HI2CCurrentMode = Slave then

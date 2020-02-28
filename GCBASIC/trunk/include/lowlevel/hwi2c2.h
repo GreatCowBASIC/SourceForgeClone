@@ -113,8 +113,8 @@ Sub HI2C2Mode (In HI2C2CurrentMode)
       set SSP2CON1_SSPM2 off
       set SSP2CON1_SSPM1 off
       set SSP2CON1_SSPM0 off
-      ' and 3 to ensure Values of 0x00, 0x01 and 0x02 are not valid for SSPADD when used as a Baud Rate Generator for I2C. This is an implementation limitation
-      SSP2ADD = HI2C2_BAUD_TEMP and 3
+      
+      SSP2ADD = HI2C2_BAUD_TEMP and 127
     end if
 
     if HI2C2CurrentMode = Slave then
