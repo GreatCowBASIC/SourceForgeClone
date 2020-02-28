@@ -1,5 +1,5 @@
 '    Software I2C routines for the GCBASIC compiler
-'    Copyright (C) 2009-2020  Hugh Considine, Evan R. Venn, Thomas Henry, William Roth
+'    Copyright (C) 2009-2020 Hugh Considine, Evan R. Venn, Thomas Henry, William Roth
 
 '    This library is free software' you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -49,6 +49,7 @@
 '     0.96 revised to support I2C_USE_TIMEOUT for I2C Master
 '     To enable failsafe in I2C Master mode, user must add #define I2C_USE_TIMEOUT to source code
 '    Updated Oct 2016  - for Option Explicit
+'    28/92/2020   Updated to add LEFT to rotate I2CByte left on line 412
 
 
 
@@ -409,7 +410,7 @@ sub I2CSend(in I2CByte )
         I2C_DATA_LOW
       end if
 
-      rotate I2CByte
+      rotate I2CByte left
       wait until I2C_CLOCK = ON   'wait for SCL=1
 
       #ifndef I2C_USE_TIMEOUT     'never give up on the Master
