@@ -680,7 +680,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-02-27"
+Version = "0.98.<<>> 2020-02-29"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2402,6 +2402,8 @@ SUB CalcConfig
         ElseIf ConfigNameMatch(.Name, "VCAPEN") Then
           DesiredSetting = "OFF"
         ElseIf ConfigNameMatch(.Name, "WRTD") Then
+          DesiredSetting = "OFF"
+        ElseIf ConfigNameMatch(.Name, "XINST") Then
           DesiredSetting = "OFF"
 
         ElseIf ConfigNameMatch(.Name, "OSC") Then
