@@ -33,7 +33,8 @@
 ' 03/04/2019:      Revised to support DEFAULT_GLCDBACKGROUND constant
 '  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 ' 11/10/19  Corrected Dim GLCDPixelCount As Long in FilledBox method, was a Word.  A word can overflow.
-'
+' 02/02/20  Correct INIT to handle DI port
+
 #script
 
     'examine what is operational SPI or 8Bit
@@ -233,7 +234,7 @@ Sub InitGLCD_ILI9341
     Dir ILI9341_DC Out
     Dir ILI9341_RST Out
 
-    #if bit(ILI9341_DI)
+    #ifdef ILI9341_DI
       Dir ILI9341_DI In
     #endif
     Dir ILI9341_DO Out
