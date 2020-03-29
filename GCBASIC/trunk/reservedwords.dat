@@ -82,7 +82,6 @@ EERAM_Write_Command
 Ellipse
 Else
 Else If
-End
 End Function
 End Macro
 End Repeat
