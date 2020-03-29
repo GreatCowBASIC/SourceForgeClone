@@ -46,13 +46,13 @@ MaxAddress=223
 ';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
 ';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
 
-'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable 
+'CHIPSTACKS csn be used within  user programs.  This constant provides information with respect to the number of stacks avaiable
 Stacks=8
 
-'CHIPUSERIDADDRESS is used within user programs.  This constant provides information with respect to the address of the UserID.
+'CHIPUSERIDADDRESS  is used within user programs.  This constant provides information with respect to the address of the UserID.
 UserIDAddress=8192
 
-'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
+'CHIPUSERIDLENGTH is used within user programs.  This constant provides information with respect to the length of the UserID (in words).
 UserIDLength=4
 
 [Interrupts]
