@@ -4,40 +4,40 @@
 'Header Format last revised: 20/01/2020
 
 [ChipData]
-';All items in the ChipData section of this DAT file are available to user programs as constants.
-';The constants have the prefix of Chip. See the examples below.
+';All items in the ChipData section are available to user programs as constants
+';The constants have the prefix of Chip: See the examples below
 
-'This constant is exposed as ChipWORDS.
+'This constant is exposed as ChipWORDS
 Prog=8192
 
-'This constant is exposed as ChipEEPROM.
+'This constant is exposed as ChipEEPROM
 EEPROM=0
 
-'This constant is exposed as ChipRAM.
+'This constant is exposed as ChipRAM
 RAM=1024
 
-'This constant is exposed as ChipIO.
+'This constant is exposed as ChipIO
 I/O=25
 
-'This constant is exposed as ChipADC.
+'This constant is exposed as ChipADC
 ADC=24
 
-'This constant is exposed as ChipMhz.
+'This constant is exposed as ChipMhz
 MaxMHz=32
 
-'This constant is exposed with only the first parameter (if more than one parameter) exposed
+'This constant is exposed with only the first parameter (if more than one)
 IntOsc=32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0.0625
 
-'This constant is exposed as ChipPins.
+'This constant is exposed as ChipPins
 Pins=28
 
-'This constant is exposed as ChipFamily.
+'This constant is exposed as ChipFamily
 Family=15
 
-'This constant is exposed as ChipChipFamilyVariant.
+'This constant is exposed as ChipChipFamilyVariant
 FamilyVariant=1
 
-'This constant is exposed as ChipConfWords.
+'This constant is exposed as ChipConfWords
 ConfigWords=5
 
 'This constant is exposed as ChipPSP
@@ -46,8 +46,8 @@ PSP=0
 'This constant is exposed as ChipMaxAddress
 MaxAddress=8191
 
-';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
-';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
+';Microcontroller specific configuration Constants used in specific libraries, compiler or user programs
+';This section of constants is specific to a microcontroller, so the constants may not be present for all microcontrollers
 
 'ChipSAFMemWords is used within hefsaf.h.  This constant provides information with respect to the register used for setting the SAF operations
 SAFMemWords=128
@@ -55,21 +55,21 @@ SAFMemWords=128
 'ChipsEraseRowSizeWords is used within hefsaf.h.  This constant provides information with respect to the register used for setting the HEFSAF operations
 EraseRowSizeWords=32
 
-'ChipStacks can be used within  user programs.  This constant provides information with respect to the stack depth available 
+'ChipStacks constant can be used in user programs and provides the available stack depth
 Stacks=16
 
-'ChipUserIDAddressis used within user programs.  This constant provides information with respect to the address of the UserID.
+'ChipUserIDAddress constant is used in user programs and provides the User ID address
 UserIDAddress=32768
 
-'ChipUserIDLength is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
+'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=4
 
-'ChipLFINTOSCClockSourceRegisterValue can be used within user programs.  This constant provides information with respect to value to set the clock source to LFINTOSC. 
+'ChipLFINTOSCClockSourceRegisterValue constant is used in user programs to provide the value to set the clock source to LFINTOSC
 LFINTOSCClockSourceRegisterValue=80
 
 [Interrupts]
-'For specific details of the interrupts see the microcontrollers datasheet.
-'The first parameter is the Great Cow BASIC identifier used within user code to expose the specific interrupt.
+'For specific details of the interrupts see the microcontroller datasheet
+'The first parameter is the Great Cow BASIC identifier used in user code to expose the specific interrupt
 ADCReady:ADIE,ADIF
 ADThreshold:ADTIE,ADTIF
 CCP1:CCP1IE,CCP1IF
@@ -101,8 +101,8 @@ UsartTX2Ready:TX2IE,TX2IF
 ZeroCrossDetect:ZCDIE,ZCDIF
 
 [Registers]
-'For specific details of the registers see the microcontrollers datasheet.
-'The first parameter is the Great Cow BASIC register name that can be used within user code to expose the specific register.
+'For specific details of the registers see the microcontroller datasheet
+'The first parameter is the Great Cow BASIC register name used in user code to expose the specific register
 INDF0,0
 INDF1,1
 PCL,2
@@ -453,8 +453,8 @@ TOSL,8174
 TOSH,8175
 
 [Bits]
-'For specific details of the bits (all bits are relative to a register in terms of register.bits) see the microcontrollers datasheet.
-'The first parameter is the Great Cow BASIC bit name that can be used within user code to expose the specific register.bit.
+'For details of the bits (relative to a register in terms of registerbits) see the microcontroller datasheet
+'The first parameter is the Great Cow BASIC bit name used in user code to expose the specific registerbit
 CKP,SSP1CON1,4
 SSPEN,SSP1CON1,5
 SSPOV,SSP1CON1,6
@@ -2779,9 +2779,9 @@ A0:EF
 20,Vdd
 
 [ConfigOps]
-'For specific details of the config options see the microcontrollers datasheet.
-'The first parameter is the configuration field that can be used to expose the specific configuration bits.
-'The others parameter are the options the configuration field that can be set.
+'For details of the config options see the microcontroller datasheet
+'The first parameter is the configuration field that can be used to expose specific configuration bits
+'The other parameters are the configuration field options that can be set
 FEXTOSC=LP,XT,HS,RESERVED,OFF,ECL,ECM,ECH
 RSTOSC=HFINT32,HFINTPLL,EXT4X,RESERVED,SOSC,LFINT,HFINT1,EXT1X
 CLKOUTEN=ON,OFF
@@ -2810,7 +2810,7 @@ LVP=OFF,ON
 CP=ON,OFF
 
 [Config]
-'For specific details of the config addresses see the microcontrollers datasheet.
+'For details of the config addresses see the microcontroller datasheet
 FEXTOSC_LP,1,16376
 FEXTOSC_XT,1,16377
 FEXTOSC_HS,1,16378

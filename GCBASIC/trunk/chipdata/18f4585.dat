@@ -4,34 +4,34 @@
 'Header Format last revised: 20/01/2020
 
 [ChipData]
-';All items in the ChipData section of this DAT file are available to user programs as constants.
-';The constants have the prefix of Chip. See the examples below.
+';All items in the ChipData section are available to user programs as constants
+';The constants have the prefix of Chip: See the examples below
 
-'This constant is exposed as ChipWORDS.
+'This constant is exposed as ChipWORDS
 Prog=24576
 
-'This constant is exposed as ChipEEPROM.
+'This constant is exposed as ChipEEPROM
 EEPROM=1024
 
-'This constant is exposed as ChipRAM.
+'This constant is exposed as ChipRAM
 RAM=3328
 
-'This constant is exposed as ChipIO.
+'This constant is exposed as ChipIO
 I/O=36
 
-'This constant is exposed as ChipADC.
+'This constant is exposed as ChipADC
 ADC=11
 
-'This constant is exposed as ChipMhz.
+'This constant is exposed as ChipMhz
 MaxMHz=40
 
-'This constant is exposed with only the first parameter (if more than one parameter) exposed
+'This constant is exposed with only the first parameter (if more than one)
 IntOsc=8, 4, 2, 1, 0.5, 0.25, 0.125
 
-'This constant is exposed as ChipPins.
+'This constant is exposed as ChipPins
 Pins=40
 
-'This constant is exposed as ChipFamily.
+'This constant is exposed as ChipFamily
 Family=16
 
 'This constant is exposed as ChipPSP
@@ -40,21 +40,21 @@ PSP=1
 'This constant is exposed as ChipMaxAddress
 MaxAddress=4095
 
-';Microcontroller specific configuration. Constants used within specific libraries, the compiler or user programs. All sourced from chip data database.
-';This section of constants is specific to a microcontroller.  Therefore, the constants may not be present for a specific microcontroller.
+';Microcontroller specific configuration Constants used in specific libraries, compiler or user programs
+';This section of constants is specific to a microcontroller, so the constants may not be present for all microcontrollers
 
-'ChipStacks can be used within  user programs.  This constant provides information with respect to the stack depth available 
+'ChipStacks constant can be used in user programs and provides the available stack depth
 Stacks=31
 
-'ChipUserIDAddressis used within user programs.  This constant provides information with respect to the address of the UserID.
+'ChipUserIDAddress constant is used in user programs and provides the User ID address
 UserIDAddress=2097152
 
-'ChipUserIDLength is used within user programs.  This constant provides information with respect to the length of the UserID (in words). 
+'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=8
 
 [Interrupts]
-'For specific details of the interrupts see the microcontrollers datasheet.
-'The first parameter is the Great Cow BASIC identifier used within user code to expose the specific interrupt.
+'For specific details of the interrupts see the microcontroller datasheet
+'The first parameter is the Great Cow BASIC identifier used in user code to expose the specific interrupt
 ADCReady:ADIE,ADIF
 CANActivity:WAKIE,WAKIF
 CANBadMessage:IRXIE,IRXIF
@@ -88,8 +88,8 @@ UsartTX1Ready:TXIE,TXIF
 VoltageFail:HLVDIE,HLVDIF
 
 [Registers]
-'For specific details of the registers see the microcontrollers datasheet.
-'The first parameter is the Great Cow BASIC register name that can be used within user code to expose the specific register.
+'For specific details of the registers see the microcontroller datasheet
+'The first parameter is the Great Cow BASIC register name used in user code to expose the specific register
 RXF6SIDH,3424
 RXF6SIDL,3425
 RXF6EIDH,3426
@@ -496,8 +496,8 @@ TOSH,4094
 TOSU,4095
 
 [Bits]
-'For specific details of the bits (all bits are relative to a register in terms of register.bits) see the microcontrollers datasheet.
-'The first parameter is the Great Cow BASIC bit name that can be used within user code to expose the specific register.bit.
+'For details of the bits (relative to a register in terms of registerbits) see the microcontroller datasheet
+'The first parameter is the Great Cow BASIC bit name used in user code to expose the specific registerbit
 SID3,RXF1SIDH,0
 SID4,RXF1SIDH,1
 SID5,RXF1SIDH,2
@@ -3641,9 +3641,9 @@ XINST=OFF
 64
 
 [ConfigOps]
-'For specific details of the config options see the microcontrollers datasheet.
-'The first parameter is the configuration field that can be used to expose the specific configuration bits.
-'The others parameter are the options the configuration field that can be set.
+'For details of the config options see the microcontroller datasheet
+'The first parameter is the configuration field that can be used to expose specific configuration bits
+'The other parameters are the configuration field options that can be set
 OSC=LP,XT,HS,RC,EC,ECIO,HSPLL,RCIO,IRCIO67,IRCIO7
 FCMEN=OFF,ON
 IESO=OFF,ON
@@ -3677,7 +3677,7 @@ EBTR2=ON,OFF
 EBTRB=ON,OFF
 
 [Config]
-'For specific details of the config addresses see the microcontrollers datasheet.
+'For details of the config addresses see the microcontroller datasheet
 OSC_LP,2,240
 OSC_XT,2,241
 OSC_HS,2,242
