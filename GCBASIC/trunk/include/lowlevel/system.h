@@ -405,7 +405,6 @@ Sub InitSys
             asm showdebug 'OSCCON type is 103 - This part does not have Bit HFIOFS @ ifndef Bit(HFIOFS)
 
             #IFDEF SYS_CLOCK_DIV_NEEDED 1
-              'added for 18F(L)K20 -WMR
               OSCCON = OSCCON OR b'01110000'
             #ENDIF
 
