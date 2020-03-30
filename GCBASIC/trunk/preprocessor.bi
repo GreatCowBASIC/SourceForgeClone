@@ -701,8 +701,9 @@ SUB PreProcessor
         PreserveIn = TRIM(PreserveIn)
 
         'Preserve Comments
-        If Left(PreserveIn, 1) = "'" OR Left(PreserveIn, 1) = ";" OR Left(PreserveIn, 4) = "REM " Then
+        If Left(PreserveIn, 1) = "'" OR Left(PreserveIn, 1) = ";" OR Left(PreserveIn, 4) = "REM " OR Left(PreserveIn, 2) = "//" Then
           IF Left(PreserveIn, 4) = "REM " Then PreserveIn = "'" + Trim(Mid(PreserveIn, 4))
+          IF Left(PreserveIn, 2) = "//" Then PreserveIn = "'" + Trim(Mid(PreserveIn, 3))
           PreserveIn = Trim(Mid(PreserveIn, 2))
           PCC += 1
           PreserveCode(PCC) = ";" + PreserveIn
@@ -769,7 +770,9 @@ SUB PreProcessor
           'Comment, or possibly part of binary/hex constant
           If ReadType = 0 Then
             OtherChar = LCase(Mid(DataSource, CurrCharPos - 1, 1))
-            If OtherChar = "b" Or OtherChar = "h" Then
+             'added AND ( instr( DataSource, "0x" ) = 0 ) to ensure 0x{somechar}b was not truncated
+            '30/3/2020
+            If ( OtherChar = "b" Or OtherChar = "h" ) AND ( instr( DataSource, "0x" ) = 0 ) Then
               ReadType = 2
               BinHexTemp = OtherChar + Chr(CurrChar)
               CurrChar = -1
@@ -785,6 +788,7 @@ SUB PreProcessor
             If LCase(Left(BinHexTemp, 1)) = "h" Then
               BinHexTemp = "0x" + Mid(BinHexTemp, 3, Len(BinHexTemp) - 3)
             End If
+
             CodeTemp += Str(MakeDec(BinHexTemp))
 
             BinHexTemp = ""
@@ -792,8 +796,10 @@ SUB PreProcessor
             ReadType = 0
           End If
 
+        ' Commence to process line that leading Zero/0
         ElseIf ReadType = 0 And CurrChar = Asc("0") Then
           OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
+          'Ensure IS  Binary, Hex
           If (OtherChar = "b" Or OtherChar = "x") And (IsDivider(Mid(DataSource, CurrCharPos - 1, 1)) Or CurrCharPos = 1) Then
             ReadType = 4
             BinHexTemp = Chr(CurrChar)
@@ -803,6 +809,7 @@ SUB PreProcessor
         ElseIf ReadType = 4 Then
           OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
           If IsDivider(OtherChar) Or OtherChar = "'" Or OtherChar = Chr(34) Or CurrCharPos = Len(DataSource) Then
+
             'Last part of binary/hex literal, 0x or 0b format
             BinHexTemp += Chr(CurrChar)
             If UCase(Left(BinHexTemp, 2)) = "0B" Then
@@ -891,6 +898,8 @@ SUB PreProcessor
       ElseIF Left(DataSource, 1) = ";" Then
         T = 1
       ElseIf Left(DataSource, 4) = "REM " Then
+        T = 1
+      ElseIf Left(DataSource, 2) = "//" Then
         T = 1
       ElseIF DataSource = "REM" Then
         T = 1
