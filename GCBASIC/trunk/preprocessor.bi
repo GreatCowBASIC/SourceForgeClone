@@ -504,6 +504,8 @@ SUB PreProcessor
   Dim As Single CurrPerc, PercAdd, PercOld
   Dim As Double LastCompTime, StartTime
 
+  Dim As Single StartOfCommentBlock, EndOfCommentBlock
+
   CurrentSub = ""
   UnconvertedFiles = 0
 
@@ -679,6 +681,9 @@ SUB PreProcessor
     LC = 0
     LCS = 0
 
+    StartOfCommentBlock = 0
+    EndOfCommentBlock   = 0
+
     DO WHILE NOT EOF(1)
     LoadFileData:
       LINE INPUT #1, DataSource
@@ -690,11 +695,36 @@ SUB PreProcessor
       LineOrigin->FileNo = RF
       LineOrigin->LineNo = LC
 
+      If Instr(  DataSource, "#pragma config" ) <> 0 then
+        Replace DataSource, "#pragma config", "#config"
+      End if
+
       'Save copy for Preserve mode
       'Only save stuff in main file or inside a subroutine
       '0 = nothing, 1 = comments (K:C), 2 = code (K:A), 3 = line numbers (K:L)
       PreserveIn = ""
       DataSourceRaw = DataSource
+
+      'CommentBlock checks  StartOfCommentBlock, EndOfCommentBlock
+      If Left(Trim(DataSource), 2 ) = "/*" And StartOfCommentBlock = 0 Then
+        StartOfCommentBlock = LC
+        EndOfCommentBlock   = 0
+'        print DataSource
+        DataSource = "'" + DataSource + "Start of Comment Block"
+      end if
+
+      If Left(Trim(DataSource), 2 ) = "*/" And StartOfCommentBlock  <> 0 Then
+        StartOfCommentBlock = 0
+        EndOfCommentBlock   = LC
+'        print DataSource
+        DataSource = "'" + DataSource + "End of Comment Block"
+      end if
+
+      IF StartOfCommentBlock <> 0   Then
+          'Suffix with a comment
+          DataSource = "'" + DataSource
+      End if
+
       If (PreserveMode = 1 Or PreserveMode = 2) And (RF = 1 OR S = 1) Then
         PreserveIn = DataSource
         Do While Left(PreserveIn, 1) = Chr(9): PreserveIn = Mid(PreserveIn, 2): Loop
@@ -819,6 +849,14 @@ SUB PreProcessor
             BinHexTemp = ""
             CurrChar = -1
             ReadType = 0
+          End If
+
+        'Added to support // commments
+        ElseIf CurrChar = Asc("/") Then
+          OtherChar = LCase(Mid(DataSource, CurrCharPos + 1, 1))
+          If OtherChar = "/" Then
+            'If this occurs outside of a string, it means comment start
+            If ReadType <> 1 Then ReadType = 3
           End If
 
         ElseIf CurrChar = Asc(";") Then
