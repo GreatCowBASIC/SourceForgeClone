@@ -695,6 +695,7 @@ SUB PreProcessor
       LineOrigin->FileNo = RF
       LineOrigin->LineNo = LC
 
+      'Support inclusion of C++ code direct from MPLAB-IDE
       If Instr(  DataSource, "#pragma config" ) <> 0 then
         Replace DataSource, "#pragma config", "#config"
       End if
@@ -706,18 +707,22 @@ SUB PreProcessor
       DataSourceRaw = DataSource
 
       'CommentBlock checks  StartOfCommentBlock, EndOfCommentBlock
-      If Left(Trim(DataSource), 2 ) = "/*" And StartOfCommentBlock = 0 Then
+      If Left(Trim(DataSource), 2 ) = "/*" And StartOfCommentBlock = 0  Then
         StartOfCommentBlock = LC
         EndOfCommentBlock   = 0
-'        print DataSource
-        DataSource = "'" + DataSource + "Start of Comment Block"
+        'Is this a one line comment?
+        If instr(DataSource,"*/") <> 0 then
+            StartOfCommentBlock = 0
+            EndOfCommentBlock   = LC
+             Replace DataSource, "/*", "'"
+             Replace DataSource, "*/", ""
+        End if
       end if
 
       If Left(Trim(DataSource), 2 ) = "*/" And StartOfCommentBlock  <> 0 Then
         StartOfCommentBlock = 0
         EndOfCommentBlock   = LC
-'        print DataSource
-        DataSource = "'" + DataSource + "End of Comment Block"
+        DataSource = "'" + Left(DataSource, 2)
       end if
 
       IF StartOfCommentBlock <> 0   Then
