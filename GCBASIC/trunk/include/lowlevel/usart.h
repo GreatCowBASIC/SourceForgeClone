@@ -1,5 +1,5 @@
 '    USART routines for Great Cow BASIC
-'    Copyright (C) 2009-2020  Hugh Considine, William Roth and Mike Otte and Evan Venn
+'    Copyright (C) 2009-2020 Hugh Considine, William Roth and Mike Otte and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -96,6 +96,10 @@
 'library, it is a subroutine, as with SerReceive in rs232.h. This is purely
 'a design decision, and has been made to keep included routines consistent
 'with each other.
+
+'#option REQUIRED PIC TXREG "Hardware Serial Not Supported"
+
+
 
 'Set the default value of the USART_DELAY using a constant
 #define USART_DELAY 1 ms

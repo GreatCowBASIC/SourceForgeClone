@@ -1,5 +1,5 @@
 '    Pulse Width Modulation routines for Great Cow BASIC
-'    Copyright (C) 2006-2020  Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
+'    Copyright (C) 2006-2020 Hugh Considine, William Roth, Kent Schafer and Evan R. Venn
 '
 '
 '    This library is free software; you can redistribute it and/or

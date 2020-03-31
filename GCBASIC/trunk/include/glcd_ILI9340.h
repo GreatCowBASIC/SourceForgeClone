@@ -37,7 +37,6 @@
 ' 11/04/2019: Revised to clean up position and therefore the bleeding of constants into ASM
 ' 27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 ' 11/10/19  Corrected Dim GLCDPixelCount As Long in FilledBox method, was a Word.  A word can overflow.
-' 02/02/20  Correct INIT to handle DI port
 '
 'Hardware settings
 'Type

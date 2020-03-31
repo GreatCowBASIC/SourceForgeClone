@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015-2020 Kent Schafer, Evan Venn and Joseph Realmuto
+'    Copyright (C) 2015- 2020 Kent Schafer, Evan Venn and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -105,8 +105,6 @@
 '  1.25 Added HWI2C2 support
 '  1.26 Added IGNORE_GLCD_TYPE_SSD1306_LOW_MEMORY_WARNINGS to support low memory MCU warnings
 '  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
-'  10/01/20  Revised GLCDDrawChar If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
-'            Variables required for device in InitGLCD
 
 #define SSD1306_vccstate 0
 
@@ -309,109 +307,109 @@ End Sub
 '''@hide
 Sub InitGLCD_SSD1306
 
-    'Colours //Set these first
-    GLCDBackground = 0
-    GLCDForeground = 1
-    GLCDFontWidth = 5
-    GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
-    dim PrintLocX, PrintLocY as word
 
-    GLCDfntDefault = 0
-    GLCDfntDefaultsize = 1
-    wait 255 ms             'added to ensure the charge pump and power is operational.
- #IFDEF HI2C_DATA
-         HI2CMode Master
-         Wait 15 ms  'wait for power-up and reset
- #ENDIF
+  #IFDEF GLCD_TYPE_SSD1306_32 or GLCD_TYPE_SSD1306 then
+        'Colours //Set these first
+        GLCDBackground = 0
+        GLCDForeground = 1
+        GLCDFontWidth = 5
+        GLCDfntDefaultHeight = 7  'used by GLCDPrintString and GLCDPrintStringLn
+        dim PrintLocX, PrintLocY as word
 
- #IFDEF HI2C2_DATA
-         HI2C2Mode Master
-         Wait 15 ms  'wait for power-up and reset
- #ENDIF
+        GLCDfntDefault = 0
+        GLCDfntDefaultsize = 1
+        wait 255 ms             'added to ensure the charge pump and power is operational.
+         #IFDEF HI2C_DATA
+                 HI2CMode Master
+                 Wait 15 ms  'wait for power-up and reset
+         #ENDIF
 
- #ifdef S4Wire_DATA
-      dir MOSI_SSD1306 Out
-      dir SCK_SSD1306 Out
-      dir DC_SSD1306 Out
-      dir CS_SSD1306 Out
-      dir RES_SSD1306 Out
-      RES_SSD1306 = 0
-      wait 10 us
-      RES_SSD1306 = 1
-    #endif
+         #IFDEF HI2C2_DATA
+                 HI2C2Mode Master
+                 Wait 15 ms  'wait for power-up and reset
+         #ENDIF
 
-   'Setup code for SSD1306 controllers
-    'Init sequence for 128x64 OLED module
-    Write_Command_SSD1306(SSD1306_DISPLAYOFF)                    ' 0xAE
+         #ifdef S4Wire_DATA
+              dir MOSI_SSD1306 Out
+              dir SCK_SSD1306 Out
+              dir DC_SSD1306 Out
+              dir CS_SSD1306 Out
+              dir RES_SSD1306 Out
+              RES_SSD1306 = 0
+              wait 10 us
+              RES_SSD1306 = 1
+            #endif
 
-    Write_Command_SSD1306(SSD1306_DEACTIVATE_SCROLL)
-    Write_Command_SSD1306(SSD1306_SETDISPLAYCLOCKDIV)            ' 0xD5
-    Write_Command_SSD1306(0x80)                                  ' the suggested ratio 0x80
+       'Setup code for SSD1306 controllers
+        'Init sequence for 128x64 OLED module
+        Write_Command_SSD1306(SSD1306_DISPLAYOFF)                    ' 0xAE
 
-    Write_Command_SSD1306(SSD1306_SETMULTIPLEX)                  ' 0xA8
-    #if GLCD_HEIGHT = 64
-      Write_Command_SSD1306(0x3f)                                 '64 pixels
-    #endif
+        Write_Command_SSD1306(SSD1306_DEACTIVATE_SCROLL)
+        Write_Command_SSD1306(SSD1306_SETDISPLAYCLOCKDIV)            ' 0xD5
+        Write_Command_SSD1306(0x80)                                  ' the suggested ratio 0x80
 
-    #if GLCD_HEIGHT = 32
-      Write_Command_SSD1306(0x1f)                                 '32 pixels
-    #endif
+        Write_Command_SSD1306(SSD1306_SETMULTIPLEX)                  ' 0xA8
+        #if GLCD_HEIGHT = 64
+          Write_Command_SSD1306(0x3f)                                 '64 pixels
+        #endif
 
-    Write_Command_SSD1306(SSD1306_SETDISPLAYOFFSET)              ' 0xD3
-    Write_Command_SSD1306(0x00)                                   ' no offset
+        #if GLCD_HEIGHT = 32
+          Write_Command_SSD1306(0x1f)                                 '32 pixels
+        #endif
 
-    Write_Command_SSD1306(SSD1306_SETSTARTLINE | 0x00)            ' line #0
-    Write_Command_SSD1306(SSD1306_CHARGEPUMP)                    ' 0x8D
+        Write_Command_SSD1306(SSD1306_SETDISPLAYOFFSET)              ' 0xD3
+        Write_Command_SSD1306(0x00)                                   ' no offset
 
-    if (SSD1306_vccstate = SSD1306_EXTERNALVCC) then
-      Write_Command_SSD1306(0x10)
-    else
-      Write_Command_SSD1306(0x14)
-    end if
+        Write_Command_SSD1306(SSD1306_SETSTARTLINE | 0x00)            ' line #0
+        Write_Command_SSD1306(SSD1306_CHARGEPUMP)                    ' 0x8D
 
-    Write_Command_SSD1306(SSD1306_MEMORYMODE)                    ' 0x20
-    'Write_Command_SSD1306(0x00)                                  ' 0x00 act like ks0108 - DO NOT SELECT!!
-    Write_Command_SSD1306(0x10)                                  ' 0x01 act like PCD8544
+        if (SSD1306_vccstate = SSD1306_EXTERNALVCC) then
+          Write_Command_SSD1306(0x10)
+        else
+          Write_Command_SSD1306(0x14)
+        end if
 
-    Write_Command_SSD1306(SSD1306_SEGREMAP | 0x1)
-    Write_Command_SSD1306(SSD1306_COMSCANDEC)
-    Write_Command_SSD1306(SSD1306_SETCOMPINS)                    ' 0xDA
+        Write_Command_SSD1306(SSD1306_MEMORYMODE)                    ' 0x20
+        'Write_Command_SSD1306(0x00)                                  ' 0x00 act like ks0108 - DO NOT SELECT!!
+        Write_Command_SSD1306(0x10)                                  ' 0x01 act like PCD8544
 
-    #if GLCD_HEIGHT = 64
-      Write_Command_SSD1306(0x12)                                 '64 pixels
-    #endif
+        Write_Command_SSD1306(SSD1306_SEGREMAP | 0x1)
+        Write_Command_SSD1306(SSD1306_COMSCANDEC)
+        Write_Command_SSD1306(SSD1306_SETCOMPINS)                    ' 0xDA
 
-    #if GLCD_HEIGHT = 32
-      Write_Command_SSD1306(0x02)                                 '32 pixels
-    #endif
+        #if GLCD_HEIGHT = 64
+          Write_Command_SSD1306(0x12)                                 '64 pixels
+        #endif
 
-    Write_Command_SSD1306(SSD1306_SETCONTRAST)                   ' 0x81
-    if SSD1306_vccstate = SSD1306_EXTERNALVCC then
-      Write_Command_SSD1306(0x9F)
-    else
-      Write_Command_SSD1306(0xCF)
-    end if
-    Write_Command_SSD1306(SSD1306_SETPRECHARGE)                  ' 0xd9
-    if SSD1306_vccstate = SSD1306_EXTERNALVCC then
-      Write_Command_SSD1306(0x22)
-    else
-      Write_Command_SSD1306(0xF1)
-    end if
+        #if GLCD_HEIGHT = 32
+          Write_Command_SSD1306(0x02)                                 '32 pixels
+        #endif
 
-    Write_Command_SSD1306(SSD1306_SETVCOMDETECT)                 ' 0xDB
-    Write_Command_SSD1306(0x40)
+        Write_Command_SSD1306(SSD1306_SETCONTRAST)                   ' 0x81
+        if SSD1306_vccstate = SSD1306_EXTERNALVCC then
+          Write_Command_SSD1306(0x9F)
+        else
+          Write_Command_SSD1306(0xCF)
+        end if
+        Write_Command_SSD1306(SSD1306_SETPRECHARGE)                  ' 0xd9
+        if SSD1306_vccstate = SSD1306_EXTERNALVCC then
+          Write_Command_SSD1306(0x22)
+        else
+          Write_Command_SSD1306(0xF1)
+        end if
 
-    Write_Command_SSD1306(SSD1306_DISPLAYALLON_RESUME)           ' 0xA4
-    Write_Command_SSD1306(SSD1306_NORMALDISPLAY)                 ' 0xA6
+        Write_Command_SSD1306(SSD1306_SETVCOMDETECT)                 ' 0xDB
+        Write_Command_SSD1306(0x40)
 
-   'Clear screen Here
-    GLCDCLS_SSD1306
+        Write_Command_SSD1306(SSD1306_DISPLAYALLON_RESUME)           ' 0xA4
+        Write_Command_SSD1306(SSD1306_NORMALDISPLAY)                 ' 0xA6
 
-    Write_Command_SSD1306(SSD1306_DISPLAYON)                     '--turn on oled panel
+       'Clear screen Here
+        GLCDCLS_SSD1306
 
-    'Variables required for device
-    GLCDDeviceWidth = GLCD_WIDTH - 1
-    GLCDDeviceHeight= GLCD_HEIGHT- 1
+        Write_Command_SSD1306(SSD1306_DISPLAYON)                     '--turn on oled panel
+
+  #ENDIF
 
 End Sub
 
@@ -508,15 +506,15 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
 
     Cursor_Position_SSD1306 ( CharLocX , CharLocY )
 
-
+  '1.14 Added transaction
    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
     Open_Transaction_SSD1306
    #endif
 
-
+'****** GCB Font set handler
 
    #ifndef GLCD_OLED_FONT
-        '****** GCB Font set handler
+
         if CharCode>=178 and CharCode<=202 then
            CharLocY=CharLocY-1
         end if
@@ -621,28 +619,23 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
     #endif
 
 
-
+'****** OLED Font set handler
    #ifdef GLCD_OLED_FONT
-        '****** OLED Font set handler
+
+        'Calc pointer to the OLED fonts
 
         Dim LocalCharCode as word
 
         'Set up the font information
         Select case GLCDfntDefaultSize
-            case 1 'Two font tables of an index and data
+            case 1 'this is two font tables of an index and data
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
-              if LocalCharCode = 1 then
-                  GLCDFontWidth = 1
-              else
-                  GLCDFontWidth = COLSperfont+1
-              end if
-
+              GLCDFontWidth = COLSperfont + 1
               #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
                 #ifndef GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE
-                  'CONSTANTS define config as SSD1306_CHARACTER_MODE _and_not_LOWMEMORY_GLCD_MODE
+                  'Only use the correct bits/columns
                   COLSperfont--
                 #endif
               #endif
@@ -654,7 +647,7 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
                   ROWSperfont = 1
                 #endif
               #endif
-            case 2 'One font table
+            case 2 'this is one font table
               CharCode = CharCode - 17
               'Pointer to table of font elements
               LocalCharCode = (CharCode * 20)
@@ -690,9 +683,9 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
 
           End Select
 
-
+          '1.21 Full GLCD mode
           #ifndef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY         ' Same as code below. Repeated as the Define is the limitation
-            '1.21 Full GLCD mode
+
             'Handle 16 pixels of height
             For CurrCharRow = 0 to ROWSperfont
                 If CurrCharVal.0 = 0 Then
@@ -831,6 +824,8 @@ Sub GLCDDrawChar_SSD1306(In CharLocX as word, In CharLocY as word, In CharCode, 
     #endif
 
 
+
+   '1.14 Added transaction
    #ifdef GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY
     Close_Transaction_SSD1306
    #endif
@@ -1278,6 +1273,8 @@ End Macro
 'added 1.14 to improved performance
 Macro Close_Transaction_SSD1306
 
+    '4wire not supported, see Write_Transaction_Data_SSD1306
+
      #ifdef I2C_DATA
 
        I2CStop
@@ -1296,5 +1293,5 @@ Macro Close_Transaction_SSD1306
 
      #endif
 
-End Macro
 
+End Macro
