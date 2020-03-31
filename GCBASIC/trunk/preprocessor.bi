@@ -673,6 +673,8 @@ SUB PreProcessor
     If SourceFile(RF).RequiresConversion Then
       SourceFile(RF).FileName = TranslateFile(SourceFile(RF).FileName)
       SourceFile(RF).RequiresConversion = 0
+      SourceFile(RF).RequiredOption = 0
+
     EndIf
 
     If OPEN(SourceFile(RF).FileName FOR INPUT AS #1) <> 0 Then Goto LoadNextFile
@@ -1256,10 +1258,16 @@ SUB PreProcessor
             If WholeINSTR(DataSource, "EXPLICIT") = 2 Then
               SourceFile(RF).OptionExplicit = -1
             End If
-            IF gcOPTION <> "" THEN DataSource = "," + DataSource
-            gcOPTION = gcOPTION + DataSource
-            GoTo LoadNextLine
-
+            If WholeINSTR(DataSource,"REQUIRED") <> 0 Then
+              IF rcOPTION <> "" THEN DataSource = "|" + DataSource + "," + SourceFile(RF).Filename
+              SourceFile(RF).RequiredOption = 1
+              rcOPTION = rcOPTION + DataSource + "," + SourceFile(RF).Filename
+              GoTo LoadNextLine
+            Else
+              IF gcOPTION <> "" THEN DataSource = "," + DataSource
+              gcOPTION = gcOPTION + DataSource
+              GoTo LoadNextLine
+            End if
           ElseIF Left(DataSource, 5) = "#OSC " Then
             ForceMain = 1
           ElseIF Left(DataSource, 8) = "#CONFIG " Then
