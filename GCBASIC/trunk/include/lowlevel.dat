@@ -18,5 +18,6 @@ usart.h
 i2c.h
 hwi2c.h
 pwm16.h
-hefsaf.h
+saf.h
+hef.h
 spisram.h

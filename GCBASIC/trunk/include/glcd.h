@@ -1,65 +1,65 @@
-'    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2012-2020 Hugh Considine, Joseph Realmuto, Evan Venn and Giuseppe D'Elia
+/*    Graphical LCD routines for the GCBASIC compiler
+    Copyright (C) 2012-2020 Hugh Considine, Joseph Realmuto, Evan Venn and Giuseppe DElia
 
-'    This library is free software; you can redistribute it and/or
-'    modify it under the terms of the GNU Lesser General Public
-'    License as published by the Free Software Foundation; either
-'    version 2.1 of the License, or (at your option) any later version.
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
 
-'    This library is distributed in the hope that it will be useful,
-'    but WITHOUT ANY WARRANTY; without even the implied warranty of
-'    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-'    Lesser General Public License for more details.
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
 
-'    You should have received a copy of the GNU Lesser General Public
-'    License along with this library; if not, write to the Free Software
-'    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-'
-'    9/11/14  New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
-'    26/7/16  Moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc. in Drawstring and DrawChar
-'    22/8/16  removal of X1 and Y1 varibles. these clashed with register addresses
-'    08/4/17  added GLCD_TYPE_SSD1306_32 support
-'    01/5/17  added GLCD_TYPE_ILI9481 support
-'    2/05/17  Reverted to standard line routine. Local version overan Byte values
-'    3/07/17  Add overloaded function to cater for GLCDPrint with color
-'    25/07/17 Added support for low memory SSD1306 usage by adding GLCDDrawChar_SSD1306
-'    17/08/17 Added support for low memory SSD1306 and SH1106 GLCD by adding GLCD_Open_PageTransaction
-'             and GLCD_Close_PageTransaction
-'    21/08/17 Added support for Ellipse methods
-'    22/08/17 Added stubs for Triangle
-'    23/08/17 Revised Circle and FilledCircle, updated Draw_Filled_Ellipse_Points
-'    13/09/17 Added OLED font handler
-'    14/09/17 Added OLED font handler - revised GLCDDrawString to support OLED
-'    19/09/17 Revert Circle and FilledCircle
-'    21/09/17 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
-'    17/11/17 Added GLCDPrintLn
-'    10/12/17 Added SSD1331 driver
-'    22/02/18 Added Nextion driver
-'    13/03/18 Correct Ypixel position of putting out a white intercharacter pixel/space
-'    24/04/18 Added Nextion support
-'    26/09/18 dim GLCDTemp as word added
-'    27/09/18 ILI9326 driver
-'    19/11/18 NT7108C driver
-'    22/11/18 Increased scope of NT7108C methods.
-'    07/12/18 Remove silly script warning
-'    24/1/19  Added GLCD_TYPE_ILI9486  to map to GLCD_TYPE_ILI9486L
-'    6/3/19   Added GLCD_TYPE_UC8320/ILI9320  to map to GLCD_TYPE_UC8320/ILI9320
-'    3/4/19   Moved DrawBMP from SSD1289 libary to GLCD.H
-'    14/4/19  Added GLCDPrintWithSize and update DrawEllipse routine
-'    20/4/19  Added GLCDPrintLargeFont - fixed font at 13pixels - ported from sdd1289
-'    1/5/19   Added Hyperbole
-'              See the following article:  "Generating Conic Sections Using an Efficient Algorithms"
-'              Author: Abdul-Aziz Solyman Khalil,
-'              Department of Computer Science, University of Mosul, Mosul, Iraq, available on Internet.
-'    23/9/19  Added GLCD_TYPE_UC1601 support and added improved XPOS for GLCDPrintString
-'    10/9/19  Added GLCD_TYPE_ST7735R support               GLCD_WIDTH = 128  GLCD_HEIGHT = 160
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-'    13/10/19 Added GLCD_TYPE_SSD1351 support
-'    3/11/19  Added GLCD_TYPE_ST7735R_160_80 support.       GLCD_WIDTH = 160 GLCD_HEIGHT = 80
-'    29/11/19 Corrected GLCDLocateString and removed CONSTANTS from GLCD_TYPE_EPD_EPD2in13D
-'    1/12/19  Addded GLCD_TYPE_EPD_EPD7in5 support
+    9/11/14  New revised version.  Requires GLCD.H.  Do not call hardware files directly.  Always load via GLCD.H
+    26/7/16  Moved code from ILIxxxx to support GLCDfntDefaultsize = 1,2,3 etc. in Drawstring and DrawChar
+    22/8/16  removal of X1 and Y1 varibles. these clashed with register addresses
+    08/4/17  added GLCD_TYPE_SSD1306_32 support
+    01/5/17  added GLCD_TYPE_ILI9481 support
+    2/05/17  Reverted to standard line routine. Local version overan Byte values
+    3/07/17  Add overloaded function to cater for GLCDPrint with color
+    25/07/17 Added support for low memory SSD1306 usage by adding GLCDDrawChar_SSD1306
+    17/08/17 Added support for low memory SSD1306 and SH1106 GLCD by adding GLCD_Open_PageTransaction
+             and GLCD_Close_PageTransaction
+    21/08/17 Added support for Ellipse methods
+    22/08/17 Added stubs for Triangle
+    23/08/17 Revised Circle and FilledCircle, updated Draw_Filled_Ellipse_Points
+    13/09/17 Added OLED font handler
+    14/09/17 Added OLED font handler - revised GLCDDrawString to support OLED
+    19/09/17 Revert Circle and FilledCircle
+    21/09/17 Adapted to ensure fonts in correct position and they fill the intercharacter pixels
+    17/11/17 Added GLCDPrintLn
+    10/12/17 Added SSD1331 driver
+    22/02/18 Added Nextion driver
+    13/03/18 Correct Ypixel position of putting out a white intercharacter pixel/space
+    24/04/18 Added Nextion support
+    26/09/18 dim GLCDTemp as word added
+    27/09/18 ILI9326 driver
+    19/11/18 NT7108C driver
+    22/11/18 Increased scope of NT7108C methods.
+    07/12/18 Remove silly script warning
+    24/1/19  Added GLCD_TYPE_ILI9486  to map to GLCD_TYPE_ILI9486L
+    6/3/19   Added GLCD_TYPE_UC8320/ILI9320  to map to GLCD_TYPE_UC8320/ILI9320
+    3/4/19   Moved DrawBMP from SSD1289 libary to GLCD.H
+    14/4/19  Added GLCDPrintWithSize and update DrawEllipse routine
+    20/4/19  Added GLCDPrintLargeFont - fixed font at 13pixels - ported from sdd1289
+    1/5/19   Added Hyperbole
+              See the following article:  "Generating Conic Sections Using an Efficient Algorithms"
+              Author: Abdul-Aziz Solyman Khalil,
+              Department of Computer Science, University of Mosul, Mosul, Iraq, available on Internet.
+    23/9/19  Added GLCD_TYPE_UC1601 support and added improved XPOS for GLCDPrintString
+    10/9/19  Added GLCD_TYPE_ST7735R support               GLCD_WIDTH = 128  GLCD_HEIGHT = 160
 
+    13/10/19 Added GLCD_TYPE_SSD1351 support
+    3/11/19  Added GLCD_TYPE_ST7735R_160_80 support.       GLCD_WIDTH = 160 GLCD_HEIGHT = 80
+    29/11/19 Corrected GLCDLocateString and removed CONSTANTS from GLCD_TYPE_EPD_EPD2in13D
+    1/12/19  Addded GLCD_TYPE_EPD_EPD7in5 support
 
+*/
 'Constants that might need to be set
 '#define GLCD_TYPE GLCD_TYPE_KS0108 | GLCD_TYPE_ST7735 | GLCD_TYPE_ST7920 | GLCD_TYPE_PCD8544 | GLCD_TYPE_SSD1306 etc etc
 
@@ -93,6 +93,7 @@
 #define GLCD_TYPE_EPD_EPD2in13D     27
 #define GLCD_TYPE_ST7735R_160_80 28    'GLCD_WIDTH = 160 GLCD_HEIGHT = 80
 #define GLCD_TYPE_EPD_EPD7in5  29
+#define GLCD_TYPE_SSD1306_TWIN 30
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
@@ -213,7 +214,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_UC1601 Then
      'Support I2C, I2C2 and 4wire SPI with low memory optimisation.
-     #include <glcd_UC1601.h>
+     #include <glcd_uc1601.h>
      InitGLCD = InitGLCD_UC1601
      GLCDCLS = GLCDCLS_UC1601
      GLCDDrawChar = GLCDDrawChar_UC1601
@@ -247,6 +248,26 @@ Dim GLCDDeviceWidth as Word
      GLCD_HEIGHT = 32
      SSD1306_GLCD_HEIGHT = GLCDDeviceHeight
      SSD1306_GLCD_WIDTH = GLCDDeviceWidth
+
+  End If
+
+
+  If GLCD_TYPE = GLCD_TYPE_SSD1306_TWIN Then
+
+     #include <glcd_ssd1306_twin.h>
+     InitGLCD = InitGLCD_TwinSSD1306
+     GLCDCLS = GLCDCLS_TwinSSD1306
+     GLCDDrawChar = GLCDDrawChar_TwinSSD1306
+'     FilledBox = FilledBox_SSD1306_twin
+'     Pset = Pset_SSD1306_twin
+'     GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_SSD1306_twin
+'     GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_SSD1306_twin
+'     GLCDSetContrast = SetContrast_SSD1306_twin
+'     glcd_type_string = "SSD1306_TWIN"
+     GLCD_WIDTH = 128
+     GLCD_HEIGHT = 128
+'     SSD1306_GLCD_HEIGHT = GLCDDeviceHeight
+'     SSD1306_GLCD_WIDTH = GLCDDeviceWidth
 
   End If
 
@@ -443,7 +464,7 @@ Dim GLCDDeviceWidth as Word
 
   If GLCD_TYPE = GLCD_TYPE_SSD1351 Then
 
-     #include <glcd_SSD1351.h>
+     #include <glcd_ssd1351.h>
      InitGLCD = InitGLCD_SSD1351
      GLCDCLS = GLCDCLS_SSD1351
      GLCDDrawChar = GLCDDrawChar_SSD1351
@@ -818,7 +839,7 @@ If GLCD_TYPE = GLCD_TYPE_Nextion Then
 ' For E-Paper Waveshare EP7.5inch HAT ( not the BC version - needs to use another library for that)
   If GLCD_TYPE = GLCD_TYPE_EPD_EPD7in5 Then
 
-     #include <EPD_EPD7in5.h>
+     #include <epd_epd7in5.h>
      InitGLCD = Init_EPD7in5
      GLCDCLS  = CLS_EPD7in5
      GLCDDrawChar = DrawChar_EPD7in5
@@ -1325,7 +1346,7 @@ Sub GLCDDrawChar(In CharLocX as word, In CharLocY as word, In CharCode, Optional
               CharCode = CharCode - 16
               ReadTable OLEDFont1Index, CharCode, LocalCharCode
               ReadTable OLEDFont1Data, LocalCharCode , COLSperfont
-              'If the char is the ASC(32) a SPACE set the fontwidth =1 (not 2)
+              GLCDFontWidth = COLSperfont + 1
               if LocalCharCode = 1 then
                   GLCDFontWidth = 1
               else

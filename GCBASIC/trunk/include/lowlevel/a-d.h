@@ -1,5 +1,5 @@
 '    Analog to Digital conversion routines for Great Cow BASIC
-'    Copyright (C) 2006-2020  Hugh Considine, Kent Schafer, William Roth, Evan Venn
+'    Copyright (C) 2006-2020 Hugh Considine, Kent Schafer, William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -174,7 +174,7 @@
 #define LowSpeed 0
 #define InternalClock 192
 
-#define AD_Acquisition_Time_Select_bits 0b100  'set the three bits
+#define AD_Acquisition_Time_Select_bits 0b00000100  'set the three bits
 
 'ADC reference sources (AVR only)
 #define AD_REF_SOURCE AD_REF_AVCC

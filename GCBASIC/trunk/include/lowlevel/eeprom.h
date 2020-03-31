@@ -1,5 +1,5 @@
 '    EEPROM routines for Great Cow BASIC
-'    Copyright (C) 2006-2020  Hugh Considine, William Roth and Evan R. Venn
+'    Copyright (C) 2006-2020 Hugh Considine, William Roth and Evan R. Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,13 @@
 '           Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 ' 23/09/19: Revised to handle K40 Per  Chip Errata Sheets to correctly support table reads on specific chips.
 
+
+#option REQUIRED PIC CHipEEPROM %NoEEProm%
+#option REQUIRED AVR CHipEEPROM %NoEEProm%
+
+
 #script
+
   If Var(EEDATA) Then
     EEDATL_REF = EEDATA
   End If

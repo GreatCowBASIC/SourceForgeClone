@@ -61,6 +61,7 @@
 '    19122019 - Comments tidy up. No functional changes
 '    29012019 - Functional change to add SOSC setup to initsys
 '             - Added InternalSOSC check to script
+'    01032020 - Restore ANSEL setting in InitSys
 
 'Constants
 #define ON 1
@@ -918,7 +919,7 @@ Sub InitSys
 
   #ENDIF
 
-  'Commence clearing any ANSEL variants in the part
+  'Commence clearing any ANSELx variants in the part, if the ANSEL regsier/bit exists
   #IFDEF Var(ANSEL)
     ANSEL = 0
   #ENDIF
@@ -946,16 +947,15 @@ Sub InitSys
   #IFDEF Var(ANSELE)
     ANSELE = 0
   #ENDIF
-  'End clearing any ANSEL variants in the part
+
 
   #IFDEF VAR(ANCON0)
-   'For 18f devices
-'    #IFDEF BIT(ANSEL0)
-'      Set ANSEL0 off
-'    #ENDIF
-'    #IFDEF BIT(ANSEL1)
-'      Set ANSEL1 off
-'    #ENDIF
+    #IFDEF BIT(ANSEL0)
+      Set ANSEL0 off
+    #ENDIF
+    #IFDEF BIT(ANSEL1)
+      Set ANSEL1 off
+    #ENDIF
     #IFDEF BIT(ANSEL2)
       Set ANSEL2 off
     #ENDIF
@@ -1002,9 +1002,8 @@ Sub InitSys
     #IFDEF BIT(ANSEL15)
       Set ANSEL15 off
     #ENDIF
-
   #ENDIF
-
+  'End  clearing ANSEL
 
   #IFDEF Var(CMCON)
 
