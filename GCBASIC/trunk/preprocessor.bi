@@ -808,8 +808,19 @@ SUB PreProcessor
           If ReadType = 0 Then
             OtherChar = LCase(Mid(DataSource, CurrCharPos - 1, 1))
              'added AND ( instr( DataSource, "0x" ) = 0 ) to ensure 0x{somechar}b was not truncated
-            '30/3/2020
-            If ( OtherChar = "b" Or OtherChar = "h" ) AND ( instr( DataSource, "0x" ) = 0 ) Then
+             'revised as the test for 0x was finding 0x in the comments field! like   b'10101010'              '0xAA, d170
+'                 'Test Data tables
+'                  Table StringData
+'                   0x4C'
+'                   0x4B'
+'                   0x3B'
+'                   0x0b
+'                   0x0B
+'                  End Table
+
+            '1/4/2020
+            If ( OtherChar = "b" Or OtherChar = "h" )  AND instr( trim(ucase(DataSource)), "0X" ) <> 1  Then
+
               ReadType = 2
               BinHexTemp = OtherChar + Chr(CurrChar)
               CurrChar = -1
