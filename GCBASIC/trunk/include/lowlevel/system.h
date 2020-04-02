@@ -3099,3 +3099,170 @@ sub SysCompLessThanInt
   #ENDIF
 
 end sub
+
+'Read a bit
+'Variable to operate on specified by FSR (or FSR0) on PIC or SysStringA on AVR
+'Bit to operate on comes from SysByteTempX (PIC) or SysReadA (AVR)
+'Read state of bit is somewhere in SysByteTempA, and Z set if bit is 0
+Sub SysReadBit
+	#ifdef PIC
+		Dim SysByteTempA, SysByteTempX As Byte
+		
+		incf SysByteTempX, F
+		clrf SysByteTempA
+		bsf STATUS,C
+		SysGetBitLoop:
+			rlf SysByteTempA, F
+			btfsc STATUS,C
+			#ifdef ChipFamily 12, 14
+				incf FSR, F
+			#endif
+			#ifdef ChipFamily 15
+				addfsr 0, 1
+			#endif
+			#ifdef ChipFamily 16
+				swapf POSTINC0, W
+			#endif
+			btfsc STATUS,C
+			rlf SysByteTempA, F
+		decfsz SysByteTempX, F
+		goto SysGetBitLoop
+		
+		#ifdef ChipFamily 12, 14
+			movf INDF, W
+		#endif
+		#ifdef ChipFamily 15, 16
+			movf INDF0, W
+		#endif
+		andwf SysByteTempA, F
+		'Must exit with byte X = 0, natural side effect as code is currently
+	#endif
+	
+	#ifdef AVR
+		Dim SysReadA, SysByteTempA As Byte
+		
+		inc SysReadA
+		clr SysByteTempA
+		sec
+		SysGetBitLoop:
+			rol SysByteTempA
+			brcc SysGetBitNoInc
+			inc SysStringA
+			brne PC + 2
+			inc SysStringA_H
+			rol SysByteTempA
+			SysGetBitNoInc:
+		dec SysReadA
+		brne SysGetBitLoop
+		ld SysValueCopy, X
+		
+		#asmraw and SysByteTempA, SysValueCopy
+		
+	#endif
+	
+End Sub
+
+'Set a bit
+'Variable to operate on specified by FSR (or FSR0) on PIC or SysStringA on AVR
+'Bit to operate on comes from SysByteTempX (PIC) or SysReadA (AVR)
+'New state of bit is in bit 0 of SysByteTempB
+Sub SysSetBit
+	#ifdef ChipFamily 12, 14
+		Dim SysByteTempA, SysByteTempX As Byte
+		
+		incf SysByteTempX, F
+		clrf SysByteTempA
+		bsf STATUS,C
+		SysSetBitLoop:
+			rlf SysByteTempA, F
+			btfsc STATUS,C
+			incf FSR, F
+			btfsc STATUS,C
+			rlf SysByteTempA, F
+		decfsz SysByteTempX, F
+		goto SysSetBitLoop
+		If SysByteTempB.0 Then
+			movf SysByteTempA, W
+			iorwf INDF, F
+		Else
+			comf SysByteTempA, W
+			andwf INDF, F
+		End If
+	#endif
+	
+	#ifdef ChipFamily 15
+		Dim SysByteTempA, SysByteTempX As Byte
+		
+		incf SysByteTempX, F
+		clrf SysByteTempA
+		bsf STATUS,C
+		SysSetBitLoop:
+			rlf SysByteTempA, F
+			btfsc STATUS,C
+			addfsr 0, 1
+			btfsc STATUS,C
+			rlf SysByteTempA, F
+		decfsz SysByteTempX, F
+		goto SysSetBitLoop
+		If SysByteTempB.0 Then
+			movf SysByteTempA, W
+			iorwf INDF0, F
+		Else
+			comf SysByteTempA, W
+			andwf INDF0, F
+		End If
+	#endif
+	
+	#ifdef ChipFamily 16
+		Dim SysByteTempA, SysByteTempX As Byte
+		
+		incf SysByteTempX, F
+		clrf SysByteTempA
+		bsf STATUS,C
+		SysSetBitLoop:
+			rlcf SysByteTempA, F
+			btfsc STATUS,C
+			swapf POSTINC0, W
+			btfsc STATUS,C
+			rlcf SysByteTempA, F
+		decfsz SysByteTempX, F
+		goto SysSetBitLoop
+		
+		If SysByteTempB.0 Then
+			movf SysByteTempA, W
+			iorwf INDF0, F
+		Else
+			comf SysByteTempA, W
+			andwf INDF0, F
+		End If
+	#endif
+	
+	#ifdef AVR
+		Dim SysReadA, SysByteTempA, SysByteTempB As Byte
+		
+		inc SysReadA
+		clr SysByteTempA
+		sec
+		SysSetBitLoop:
+			rol SysByteTempA
+			brcc SysSetBitNoInc
+			inc SysStringA
+			brne PC + 2
+			inc SysStringA_H
+			rol SysByteTempA
+			SysSetBitNoInc:
+		dec SysReadA
+		brne SysSetBitLoop
+		ld SysValueCopy, X
+		
+		sbrc SysByteTempB, 0
+		rjmp SysSetBitHigh
+		com SysByteTempA
+		#asmraw and SysValueCopy, SysByteTempA
+		rjmp SysSetBitDone
+		SysSetBitHigh:
+		#asmraw or SysValueCopy, SysByteTempA
+		SysSetBitDone:
+		st X, SysValueCopy
+	#endif
+End Sub
