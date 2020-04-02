@@ -1027,7 +1027,6 @@ Adding CHS bits to ADCON0
 18F24K50 (16) 553/1015
 Adding CHS bits to ADCON0
 18F24Q10 (16) 554/1015
-No DEBUG config bit!
 18F2510 (16) 555/1015
 18F2515 (16) 556/1015
 18F252 (16) 557/1015
@@ -1069,7 +1068,6 @@ Added missing XINST default (set OFF)
 Adding CHS bits to ADCON0
 Unrecognised interrupt source:            FIFOFIE
 18F25Q10 (16) 577/1015
-No DEBUG config bit!
 18F2610 (16) 578/1015
 18F2620 (16) 579/1015
 18F2680 (16) 580/1015
@@ -1094,7 +1092,6 @@ Added missing XINST default (set OFF)
 Adding CHS bits to ADCON0
 Unrecognised interrupt source:            FIFOFIE
 18F26Q10 (16) 593/1015
-No DEBUG config bit!
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE
@@ -1107,15 +1104,12 @@ No DEBUG config bit!
 18F27K42 (16) 597/1015
 Adding CHS bits to ADCON0
 18F27Q10 (16) 598/1015
-No DEBUG config bit!
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE
 Unrecognised interrupt source:            CLC8IE
 18F27Q43 (16) 599/1015
-Missing data in chipdata.csv
-Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
-No pinout found, and could not guess
+Adding CHS bits to ADCON0
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            DMA4SCNTIE
 Unrecognised interrupt source:            DMA4DCNTIE
@@ -1156,7 +1150,6 @@ Unrecognised interrupt source:            DMA6AIE
 Unrecognised interrupt source:            CLC7IE
 Unrecognised interrupt source:            NCO3IE
 Unrecognised interrupt source:            CLC8IE
-Chip data file is suspect
 18F27Q84 (16) 600/1015
 18F4220 (16) 601/1015
 18F4221 (16) 602/1015
@@ -1225,7 +1218,6 @@ Adding CHS bits to ADCON0
 No DEBUG config bit!
 Added missing SOSCSEL default (set DIG)
 18F45Q10 (16) 645/1015
-No DEBUG config bit!
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE
@@ -1250,7 +1242,6 @@ Adding CHS bits to ADCON0
 No DEBUG config bit!
 Added missing SOSCSEL default (set DIG)
 18F46Q10 (16) 660/1015
-No DEBUG config bit!
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE
@@ -1263,7 +1254,6 @@ No DEBUG config bit!
 18F47K42 (16) 664/1015
 Adding CHS bits to ADCON0
 18F47Q10 (16) 665/1015
-No DEBUG config bit!
 Unrecognised interrupt source:            CLC5IE
 Unrecognised interrupt source:            CLC6IE
 Unrecognised interrupt source:            CLC7IE

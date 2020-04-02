@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATtiny10
-'Generated 6/4/2019
+'Generated 1/4/2020
 'Format last revised: 5/4/2019
 
 [ChipData]
@@ -11,6 +11,7 @@ I/O=4
 ADC=4
 MaxMHz=12
 Pins=32
+USART=0
 Family=120
 ConfigWords=0
 GPR=32

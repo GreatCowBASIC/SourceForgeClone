@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 12LF1612
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 20/01/2020
+'Header Format last revised: 04/02/2020
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -39,6 +39,9 @@ ConfigWords=3
 
 'This constant is exposed as ChipPSP
 PSP=0
+
+'This constant is exposed as ChipUSART
+USART=0
 
 'This constant is exposed as ChipMaxAddress
 MaxAddress=4095
