@@ -97,7 +97,8 @@
 'a design decision, and has been made to keep included routines consistent
 'with each other.
 
-'#option REQUIRED PIC TXREG "Hardware Serial Not Supported"
+#option REQUIRED PIC CHIPUSART "Hardware Serial operations. Remove USART commands to resolve errors."
+#option REQUIRED AVR CHIPUSART "Hardware Serial operations. Remove USART commands to resolve errors."
 
 
 
