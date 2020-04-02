@@ -233,7 +233,7 @@ Sub InitGLCD_ILI9341
     Dir ILI9341_DC Out
     Dir ILI9341_RST Out
 
-    #ifdef ILI9341_DI
+    #if bit(ILI9341_DI)
       Dir ILI9341_DI In
     #endif
     Dir ILI9341_DO Out
