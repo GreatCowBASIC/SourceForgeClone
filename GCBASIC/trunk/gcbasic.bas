@@ -15776,8 +15776,6 @@ Sub WriteCompilationReport
     Else
       OscType = " (" + Message("CRExtOsc") + ")"
     End If
-  Else
-    OscType = " (" + Message("CRExtOscSelectedAVR") + ")"
   End If
 
   If RF = "html" Then
@@ -15787,9 +15785,9 @@ Sub WriteCompilationReport
     Print #F, "<p>" + UsedProgram + "</p>"
     Print #F, "<p>" + UsedRAM + "</p>"
     If ModePIC Then
-        Print #F, "<p> OSC: " + ChipOscSource + ", " + Str(ChipMhz) + OscType + "</p>"
+        Print #F, "<p> OSC: " + ChipOscSource + ", " + Str(ChipMhz) + "Mhz" + OscType + "</p>"
     Else
-        Print #F, "<p> OSC: " + Str(ChipMhz) + OscType + "</p>"
+        Print #F, "<p> OSC: " + Str(ChipMhz) + "Mhz</p>"
     End if
 
   ElseIf RF = "text" Then
