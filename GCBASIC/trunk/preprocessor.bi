@@ -673,9 +673,8 @@ SUB PreProcessor
 		If SourceFile(RF).RequiresConversion Then
 			SourceFile(RF).FileName = TranslateFile(SourceFile(RF).FileName)
 			SourceFile(RF).RequiresConversion = 0
-			SourceFile(RF).RequiredOption = 0
-
-		EndIf
+			SourceFile(RF).RequiredModules = LinkedListCreate
+		End If
 
 		If OPEN(SourceFile(RF).FileName FOR INPUT AS #1) <> 0 Then Goto LoadNextFile
 
@@ -1268,11 +1267,14 @@ SUB PreProcessor
 						DataSource = Trim(Mid(DataSource, 8))
 						If WholeINSTR(DataSource, "EXPLICIT") = 2 Then
 							SourceFile(RF).OptionExplicit = -1
-						End If
-						If WholeINSTR(DataSource,"REQUIRED") <> 0 Then
-							IF rcOPTION <> "" THEN DataSource = "|" + DataSource + "," + SourceFile(RF).Filename
-							SourceFile(RF).RequiredOption = 1
-							rcOPTION = rcOPTION + DataSource + "," + SourceFile(RF).Filename
+						ElseIf WholeINSTR(DataSource, "REQUIRED") <> 0 Then
+							With SourceFile(RF)
+								If .RequiredModules = 0 Then
+									.RequiredModules = LinkedListCreate
+								End If
+								LinkedListInsert(.RequiredModules, DataSource)
+							End With
+														
 							GoTo LoadNextLine
 						Else
 							IF gcOPTION <> "" THEN DataSource = "," + DataSource

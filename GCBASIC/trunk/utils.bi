@@ -2185,29 +2185,3 @@ SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 	Exit Sub
 
 END SUB
-
-
-Declare Function StrUbound(STR_LigneFichier As String, STR_Motif As String=";") As Integer
-Function StrUbound(STR_LigneFichier As String, STR_Motif As String=";") As Integer
-		Dim t As uLongInt=0 : Dim k As uLongInt=1 : Dim Posi As uLongInt=1
-		While k<>0 : k=Instr(Posi,STR_LigneFichier, STR_Motif) : Posi=k+1 : t+=1 : Wend
-		StrUbound = t
-End Function
-
-Declare Function GetField(STR_LigneFichier As String, Posi As uLongInt, sep As String=";", NumPos As uInteger, ByRef NumField As uInteger, ByRef i As uInteger, ByRef i_prev As uInteger) As String
-Function GetField(STR_LigneFichier As String, Posi As uLongInt, sep As String=";", NumPos As uInteger, ByRef NumField As uInteger, ByRef i As uInteger, ByRef i_prev As uInteger) As String
-		Do : i_prev=i : i=Instr(i_prev+1, STR_LigneFichier, sep) : NumField +=1 : Loop Until NumField=NumPos Or i=0
-		If i=0 Then : i=Len(STR_LigneFichier)+1 : End If
-		If NumField=NumPos Then : GetField = Mid(STR_LigneFichier, i_prev+1, i-i_prev-1)  ' Right( Left(STR_LigneFichier, i-1), i-i_prev-1)
-		Else GetField = "EMPTY" : End If
-End Function
-
-Declare Sub Split(MyString As String, Str_Res() As String, sep As String=";")
-Sub Split(MyString As String, Str_Res() As String, sep As String=";")
-		Dim a As uInteger : Dim b As uInteger : Dim c As uInteger
-		Dim i As uInteger : Dim ub As uInteger=StrUbound(MyString,sep)-1
-		ReDim As String  Str_Res(0 To ub)
-		For i=0 To ub
-				Str_Res(i)=GetField(MyString, i, sep, i+1, a, b, c )
-		Next i
-End Sub

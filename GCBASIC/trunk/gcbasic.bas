@@ -76,8 +76,8 @@ Type SourceFileType
 	IncludeOrigin As String
 
 	OptionExplicit As Integer
-
-	RequiredOption As Integer
+	
+	RequiredModules As LinkedListElement Pointer
 End Type
 
 Type VariableType
@@ -651,7 +651,7 @@ Dim Shared ReservedWords( RESERVED_WORDS ) as String
 
 Dim Shared As String Star80
 
-Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION, rcOption
+Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION
 Dim Shared As String ChipOscSource
 Dim Shared As String FI, OFI, HFI, ID, Version, ProgDir, CLD, LabelEnd
 Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams
@@ -16382,74 +16382,75 @@ Sub MergeSubroutines
 			If CurrSubPtr->Required And CurrSubPtr->LocationSet And CurrSubPtr->DestPage = CurrPage Then
 
 				'Check for required parameters
-				Dim Str_Res()  As String
-				Dim Line_Res()  As String
-				Dim Req_Res() As String
-				Dim i As Integer
-				Dim ii As Integer
-				Dim LongFileName as string
-				Dim ShortFileLibraryName as string
 				Dim RequiredString as String
 				Dim MandatedStringMessage as String
 				Dim OutMessage as String
 				Dim RequiredCommand as String
+				Dim As String ReqChip, ReqConst
+				
+				Dim As LinkedListElement Pointer RequiredListPos, ItemList, ItemListPos
+				Dim ReqListItem As String
+				
+				'Get array of REQUIRED pieces from current file
+				Dim SourceFileNo As Integer = CurrSubPtr->SourceFile
+				RequiredListPos = 0
+				If SourceFile(SourceFileNo).RequiredModules <> 0 Then
+					RequiredListPos = SourceFile(SourceFileNo).RequiredModules->Next
+				End If
+				Do While RequiredListPos <> 0
+					
+					RequiredCommand = RequiredListPos->Value
+					ItemList = GetElements(RequiredCommand, " ")
+					ItemListPos = ItemList->Next
+					If LinkedListSize(ItemList) >= 3 Then
+						' Req_Res(0)  will always be REQUIRED
+						ItemListPos = ItemListPos->Next
+						' Req_Res(1)  PIC or AVR
+						ReqChip = ItemListPos->Value
+						ItemListPos = ItemListPos->Next
+						' Req_Res(2)  what we are looking for ... a constant in the DAT file
+						ReqConst = ItemListPos->Value
+						ItemListPos = ItemListPos->Next
 
-
-
-						'Create arrray of REQUIRED pieces, delinited with |
-						Split(rcOption, Str_Res(), "|" )
-
-						For i=0 to Ubound(Str_Res)
-
-							Split(Str_Res(i), Line_Res(),"," )
-
-							RequiredCommand =  Line_Res(0)
-							LongFileName  = Ucase(Line_Res(1))
-							ShortFileLibraryName  = ucase( trim(left(GetFileLine(CurrSubPtr->Origin),instr(GetFileLine(CurrSubPtr->Origin),"(")-2 ) ) )
-
-							If instr( LongFileName, ShortFileLibraryName ) <> 0 Then
-								Split(RequiredCommand, Req_Res() ," " )
-								' Req_Res(0)  will always be REQUIRED
-								' Req_Res(1)  PIC or AVR
-								' Req_Res(2)  what we are looking for ... a constant in the DAT file
-
-								'Build the string  from element 2 onwards
-								 RequiredString=""
-								 For ii = 3 to ubound(Req_Res)
-									 RequiredString = RequiredString+ Req_Res(ii)
-								 next
-
-								 IF ( UCASE(Req_Res(1))="PIC" AND MODEPIC ) or ( UCASE(Req_Res(1))="AVR" AND MODEAVR )  then
-
-										 IF HASSFR(Req_Res(2)) = 0 then
-
-														If MakeDec(ReplaceConstantsLine( Req_Res(2) , 0)) = 0 Then
-
-																If Instr(RequiredString, ";STRING" ) <> 0 Then
-																		MandatedStringMessage = GetString(RequiredString)
-																		OutMessage = Message("BadMandatedOption")
-																		Replace OutMessage, "%string%", MandatedStringMessage
-																End if
-
-																If Left(RequiredString, 1 ) = "%"  Then
-																	 MandatedStringMessage = RequiredString
-																	 Replace MandatedStringMessage , "%", ""
-																	 Replace MandatedStringMessage , "%", ""
-																	 OutMessage = Message(MandatedStringMessage)
-																 End if
-
-																LogError (OutMessage, "")
-
-														End if
-
-											End if
-
-								 end if
-
+						'Build the string  from element 2 onwards
+						RequiredString = ""
+						Do While ItemListPos <> 0
+							RequiredString = RequiredString + ItemListPos->Value
+							ItemListPos = ItemListPos->Next
+						Loop
+						
+						IF (UCASE(ReqChip) = "PIC" AND ModePIC) or (UCASE(ReqChip) = "AVR" AND ModeAVR) Then
+							'Do we have SFR?
+							IF Not HasSFR(ReqConst) Then
+								'Do we have no constant, or a constant that's zero?
+								If Val(HashMapGetStr(Constants, UCase(ReqConst))) = 0 Then
+					
+									If Instr(RequiredString, ";STRING" ) <> 0 Then
+											MandatedStringMessage = GetString(RequiredString)
+											OutMessage = Message("BadMandatedOption")
+											Replace OutMessage, "%string%", MandatedStringMessage
+									End if
+				
+									If Left(RequiredString, 1 ) = "%"  Then
+										MandatedStringMessage = RequiredString
+										Replace MandatedStringMessage , "%", ""
+										Replace MandatedStringMessage , "%", ""
+										OutMessage = Message(MandatedStringMessage)
+									End if
+				
+									LogError (OutMessage, "")
+					
+								End if
 							End If
-						Next
+						 end if
 
-
+					Else
+						'Malformed required list
+						
+					End If	
+					
+					RequiredListPos = RequiredListPos->Next
+				Loop
 
 				'Need to put the sub here
 				'Name of sub
