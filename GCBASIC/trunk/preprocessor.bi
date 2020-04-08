@@ -1267,6 +1267,7 @@ SUB PreProcessor
 						DataSource = Trim(Mid(DataSource, 8))
 						If WholeINSTR(DataSource, "EXPLICIT") = 2 Then
 							SourceFile(RF).OptionExplicit = -1
+							GoTo LoadNextLine
 						ElseIf WholeINSTR(DataSource, "REQUIRED") <> 0 Then
 							With SourceFile(RF)
 								If .RequiredModules = 0 Then
