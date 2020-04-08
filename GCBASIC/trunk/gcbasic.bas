@@ -682,7 +682,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-04-02"
+Version = "0.98.<<>> 2020-04-08"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
 	#ifndef __FB_64BIT__
@@ -6576,10 +6576,10 @@ SUB CompileOn (CompSub As SubType Pointer)
 
 			'Error, bad type
 			Else
-				TempData = Message("MissingTarget")
+				TempData = Message("BadOnType")
 				Replace TempData, "%found%", OnType
 				LogError TempData, Origin
-				Continue Do
+				CurrLine = LinkedListDelete(CurrLine)
 			End If
 
 			FoundCount = FoundCount + 1
