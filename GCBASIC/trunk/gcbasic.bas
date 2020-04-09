@@ -76,7 +76,7 @@ Type SourceFileType
 	IncludeOrigin As String
 
 	OptionExplicit As Integer
-	
+
 	RequiredModules As LinkedListElement Pointer
 End Type
 
@@ -682,7 +682,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-04-08"
+Version = "0.98.<<>> 2020-04-09"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
 	#ifndef __FB_64BIT__
@@ -14029,7 +14029,7 @@ Sub PrepareProgrammer
 						Exit Do
 					Else
 						'Found programmer with conditions, check
-						Cmd = .UseIf
+						Cmd = Ucase(.UseIf)
 						OldCmd = ""
 						RecDetect = 0
 						Do While OldCmd <> Cmd
@@ -16387,10 +16387,10 @@ Sub MergeSubroutines
 				Dim OutMessage as String
 				Dim RequiredCommand as String
 				Dim As String ReqChip, ReqConst
-				
+
 				Dim As LinkedListElement Pointer RequiredListPos, ItemList, ItemListPos
 				Dim ReqListItem As String
-				
+
 				'Get array of REQUIRED pieces from current file
 				Dim SourceFileNo As Integer = CurrSubPtr->SourceFile
 				RequiredListPos = 0
@@ -16398,7 +16398,7 @@ Sub MergeSubroutines
 					RequiredListPos = SourceFile(SourceFileNo).RequiredModules->Next
 				End If
 				Do While RequiredListPos <> 0
-					
+
 					RequiredCommand = RequiredListPos->Value
 					ItemList = GetElements(RequiredCommand, " ")
 					ItemListPos = ItemList->Next
@@ -16418,37 +16418,37 @@ Sub MergeSubroutines
 							RequiredString = RequiredString + ItemListPos->Value
 							ItemListPos = ItemListPos->Next
 						Loop
-						
+
 						IF (UCASE(ReqChip) = "PIC" AND ModePIC) or (UCASE(ReqChip) = "AVR" AND ModeAVR) Then
 							'Do we have SFR?
 							IF Not HasSFR(ReqConst) Then
 								'Do we have no constant, or a constant that's zero?
 								If Val(HashMapGetStr(Constants, UCase(ReqConst))) = 0 Then
-					
+
 									If Instr(RequiredString, ";STRING" ) <> 0 Then
 											MandatedStringMessage = GetString(RequiredString)
 											OutMessage = Message("BadMandatedOption")
 											Replace OutMessage, "%string%", MandatedStringMessage
 									End if
-				
+
 									If Left(RequiredString, 1 ) = "%"  Then
 										MandatedStringMessage = RequiredString
 										Replace MandatedStringMessage , "%", ""
 										Replace MandatedStringMessage , "%", ""
 										OutMessage = Message(MandatedStringMessage)
 									End if
-				
+
 									LogError (OutMessage, "")
-					
+
 								End if
 							End If
 						 end if
 
 					Else
 						'Malformed required list
-						
-					End If	
-					
+
+					End If
+
 					RequiredListPos = RequiredListPos->Next
 				Loop
 
