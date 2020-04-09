@@ -96,6 +96,9 @@ Type VariableType
 
 	FixedSize As Integer
 	Used As Integer
+	
+	NeedsSequentialLoc As Integer ' Set if individual bits accessed, and must have bytes in sequential order
+	UndeclaredError As Integer ' Set if option explicit used and this variable wasn't declared
 
 End Type
 
@@ -523,6 +526,7 @@ Declare Function GetString(StringName As String, UsedInProgram As Integer = -1) 
 Declare Sub GetTokens(InData As String, OutArray() As String, ByRef OutSize As Integer, DivChar As String = "", IncludeDividers As Integer = 0)
 Declare Function GetTypeLetter(InType As String) As String
 Declare Function GetTypeSize(InType As String) As Integer
+Declare Function GetVarByteNumber(VarName As String) As Integer
 Declare Function HashMapCreate As HashMap Pointer
 Declare Function HashMapCalcHash(Key As String) As Integer
 Declare Sub HashMapDestroy(Map As HashMap Pointer)
@@ -11301,6 +11305,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 	Dim As String InLine, Temp, BitName
 	Dim As String VarName, VarType, VarBit, Status, VarNameOld, VarBitOld
 	Dim As Integer FindShadow, BitAndValue
+	Dim As VariableType Pointer VarFound
 
 	Dim As LinkedListElement Pointer OutList, CurrLine
 
@@ -11316,7 +11321,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 		End If
 	End If
 
-		'Get Bit var and name
+	'Get Bit var and name
 	BitName = BitNameIn
 	'If no var, might be dealing with an SFR bit
 	If InStr(BitName, ".") = 0 Then
@@ -11391,7 +11396,7 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 
 			RequestSub(CurrSub, "SysSetBit")
 			If Not IsIOReg(VarName) Then AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
-
+			
 		ElseIf ModeAVR Then
 			CurrLine = LinkedListInsert(CurrLine, " ldi SysStringA, low(" + VarName + ")")
 			CurrLine = LinkedListInsert(CurrLine, " ldi SysStringA_H, high(" + VarName + ")")
@@ -11409,6 +11414,12 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
 			If Not IsIOReg(VarName) Then AddVar VarName, "BYTE", 1, CurrSub, "REAL", Origin
 			AddVar "SysStringA", "WORD", 1, 0, "REAL", Origin, , -1 'Needs to be global
 
+		End If
+		
+		'Request sequential bytes
+		VarFound = HashMapGet(@(CurrSub->Variables), VarName)
+		If VarFound <> 0 Then
+			VarFound->NeedsSequentialLoc = -1
 		End If
 
 		Return OutList
