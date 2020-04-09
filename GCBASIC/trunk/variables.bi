@@ -41,7 +41,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Dim As String VarName, VarType, VarPointer, Origin, Temp, VarAlias, ConstName
 	Dim As String AliasList(16)
 	Dim As Integer VarSize, CL, TempSize, PD, VarSearchStart, T, VarFixedSize
-	Dim As Integer CurrFile, ALC, ParentByte, CheckSub
+	Dim As Integer CurrFile, ALC, ParentByte, CheckSub, UndeclaredError
 	Dim As VariableType Pointer VarFound, MainVarFound
 	Dim As SubType Pointer VarSub, MainSub
 	Dim As LinkedListElement Pointer SearchConstPos
@@ -54,6 +54,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	Origin = OriginIn
 	VarSub = VarSubIn
 	MainSub = Subroutine(0)
+	UndeclaredError = 0
 	
 	'Do this to prevent null pointer access
 	If VarSub = 0 Then
@@ -286,11 +287,9 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 		'Implicit declaration of new variable
 		If (Not ExplicitDeclaration) And MainVarFound = 0 And Not IsSysTemp(VarName) And VarPointer = "REAL" And _
 			Left(UCase(VarName), 9) <> "SYSBITVAR" And Left(UCase(VarName), 15) <> "SYSINTSTATESAVE" Then
-			'If explicit declaration required, generate error
 			If SourceFile(CurrFile).OptionExplicit Then
-				Temp = Message("UndeclaredVar")
-				Replace Temp, "%var%", VarName
-				LogError Temp, Origin
+				'If explicit declaration required, request error message if it remains undeclared
+				UndeclaredError = -1
 			End If
 		End If
 		
@@ -329,6 +328,8 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 			VarFound->ExplicitDeclaration = ExplicitDeclaration
 			VarFound->Alias = ""
 			VarFound->Used = 0
+			VarFound->UndeclaredError = UndeclaredError
+			VarFound->NeedsSequentialLoc = 0
 			
 			HashMapSet(@(VarSub->Variables), UCase(VarName), VarFound)
 		End With
@@ -337,6 +338,11 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
 	'Choose Type
 	'Explicit declarations override implicit ones - so manually added bits override automatically added bytes
 	If CastOrder(VarFound->Type) > CastOrder(VarType) Or (VarFound->ExplicitDeclaration And Not ExplicitDeclaration) Then VarType = VarFound->Type
+	
+	'If found var was explicitly declared, clear undeclared error
+	If ExplicitDeclaration Then
+		VarFound->UndeclaredError = 0
+	End If
 	
 	'Choose Size
 	If (VarSize = 1 And VarFound->Size <> 1) Or (VarSize <> 1 And VarFound->Size = 1) Then
@@ -425,7 +431,7 @@ SUB AllocateRAM
 	Dim As String TempData, Origin, Temp
 	Dim As String VarName, VarType
 	Dim As Integer SV, ListSorted, PD, SkipVar, CD, ArraySize, SR, VLC
-	Dim As Integer HighReg, AD, VarSize, ED, FreeStart, FreeSize
+	Dim As Integer HighReg, AD, VarSize, ED, FreeStart, FreeSize, FirstLoc
 	Dim As String OccursInSub(50)
 	Dim As Integer OccursInSubs, CurrSub, SearchVarList
 	Dim As Integer CurrByte, SRStart, SREnd, SRDir, UnallocatedVars, AllocAttempts
@@ -527,6 +533,10 @@ SUB AllocateRAM
 						If FinalVar->Origin = "" And SubVar->Origin <> "" Then
 							FinalVar->Origin = SubVar->Origin
 						End If
+						'Requires sequential locations?
+						If SubVar->NeedsSequentialLoc Then
+							FinalVar->NeedsSequentialLoc = SubVar->NeedsSequentialLoc
+						End If
 					End If
 						
 					SubVarLoc = SubVarLoc->Next
@@ -551,6 +561,18 @@ SUB AllocateRAM
 		FinalVar = CurrVarItem->MetaData
 		If Not FinalVar->Used Then
 			CurrVarItem = LinkedListDelete(CurrVarItem, 0)
+		ElseIf Left(Right(CurrVarItem->Value, 2), 1) = "_" Then 
+			'Is this a byte of a larger variable? Prevent add if it is
+			CurrByte = GetVarByteNumber(CurrVarItem->Value)
+			If CurrByte > 0 Then
+				VarName = Left(CurrVarItem->Value, Len(CurrVarItem->Value) - 2)
+				SearchVar = HashMapGet(@Variables, VarName)
+				If SearchVar <> 0 Then
+					If GetTypeSize(SearchVar->Type) > CurrByte Then
+						CurrVarItem = LinkedListDelete(CurrVarItem, 0)
+					End If
+				End If
+			End If
 		End If
 		CurrVarItem = CurrVarItem->Next
 	Loop
@@ -858,6 +880,20 @@ SUB AllocateRAM
 										UnallocatedVars = -1
 										GoTo NextVarAdd
 									End If
+									
+									'Ensure sequential bytes if needed
+									If .NeedsSequentialLoc Then
+										If CurrByte = 0 Then
+											FirstLoc = .Location
+										Else
+											If .Location <> FirstLoc + CurrByte Then
+												'Error, byte n is not at first location + n
+												Temp = Message("AliasLocNotSequential")
+												Replace Temp, "%var%", .Name
+												LogError Temp, .Origin
+											End If
+										End If
+									End If
 								Next
 								If .Location <> -1 Then FALC += VarSize
 							End If
@@ -871,6 +907,12 @@ SUB AllocateRAM
 						
 					Else
 						'Variable isn't alias, isn't register, so must be normal RAM variable or array
+						'Show error if adding variable that wasn't explicitly declared but should have been
+						If .UndeclaredError And Not .ExplicitDeclaration Then
+							Temp = Message("UndeclaredVar")
+							Replace Temp, "%var%", .Name
+							LogError Temp, .Origin
+						End If
 						
 						'Array or normal variable?
 						If .Size > 1 Then

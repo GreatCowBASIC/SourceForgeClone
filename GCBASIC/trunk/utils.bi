@@ -716,7 +716,24 @@ FUNCTION GetByte (DataSource As String, BS As Integer) As String
 	END IF
 
 	GetByte = Str(OutVal Shr (8 * BS) And 255)
-End FUNCTION
+End Function
+
+Function GetVarByteNumber(VarName As String) As Integer
+	If Mid(VarName, Len(VarName) - 1, 1) = "_" Then
+		Select Case UCase(Right(VarName, 2))
+			Case "_H": Return 1
+			Case "_U": Return 2
+			Case "_E": Return 3
+				
+			Case "_A": Return 4
+			Case "_B": Return 5
+			Case "_C": Return 6
+			Case "_D": Return 7
+		End Select
+	End If
+	
+	Return 0
+End Function
 
 Function GetFileLine(Origin As String) As String
 	Dim As String Temp
