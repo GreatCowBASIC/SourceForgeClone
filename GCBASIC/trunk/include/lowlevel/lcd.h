@@ -1,5 +1,5 @@
 '     Liquid Crystal Display routines for Great Cow BASIC
-'     Copyright (C) 2006-{copyrightdate} Hugh Considine, Stefano Bonomi, Ruud de Vreugd, Evan Venn and Wiliam Roth
+'     Copyright (C) 2006-2020 Hugh Considine, Stefano Bonomi, Ruud de Vreugd, Evan Venn and Wiliam Roth
 '
 '     This library is free software; you can redistribute it and/or
 '     modify it under the terms of the GNU Lesser General Public
@@ -60,7 +60,7 @@
 '                William Roth cyber.roth @gmail.com
 '
 '***********************************************************************
-' Revised on test to correct constant and added debug
+' 06/04/2020   Added K107 Capabilities
 '
 '
 '
@@ -80,6 +80,8 @@
 
 'LCD configuratio 1,2, 4, 8 OR 10, 12
 #define LCD_IO 4
+
+#define K107  107
 
 'Redirect methods used to write to LCD. Can be altered to allow custom LCD interfaces.
 #define LCDWriteByte LCDNormalWriteByte
@@ -302,6 +304,26 @@ Dim SysLCDTemp as Byte
         LCDSpace = LCDSpace404
         LCDDisplaysOff = LCDDisplaysOff404
         LCDDisplaysOn = LCDDisplaysOn404
+
+    END IF
+
+    IF LCD_IO = K107 THEN
+
+'        PUT = PUT404
+        LOCATE = K107LOCATE
+        CLS = K107CLS
+        LCDHOME = K107LCDHOME
+        LCDcmd = K107LCDcmd
+        Print = K107Print
+        LCDHex = K107LCDHex
+        LCDCursor = K107LCDCursor
+        LCDCreateChar = K107LCDCreateChar
+        LCDCreateGraph = K107LCDCreateGraph
+        LCDSpace = K107LCDSpace
+        LCDDisplaysOff = K107LCDDisplaysOff
+        LCDDisplaysOn = K107LCDDisplaysOn
+        LCDBACKLIGHT =  K107LCDBACKLIGHT
+        LCDSpace = K107LCDSpace
 
     END IF
 
@@ -753,6 +775,12 @@ sub InitLCD
                    initI2CLCD
             #endif
         end repeat
+    #ENDIF
+
+    #IFDEF LCD_IO 107
+
+        CLS
+
     #ENDIF
 
     LCD_State = 12
@@ -1992,3 +2020,198 @@ sub LCDDisplaysOn404
     setwith ( LCD_enable1, lcdvalue.0 )
 
 End Sub
+
+
+'K107 Section
+
+
+
+
+
+sub K107SendData ( in SendString as string)
+
+    'Send data
+    #if USART_BAUD_RATE
+        HSerPrint SendString
+    #endif
+    wait 10 ms
+
+end sub
+
+sub K107SendRaw ( in SendValue as byte)
+
+    'Send data
+    #if USART_BAUD_RATE
+        HSerSend SendValue
+    #endif
+
+
+end sub
+
+'#define CLS K107CLS
+sub K107CLS
+    K107SendData ( "?f" )
+end sub
+
+
+'#define LOCATE K107LOCATE
+sub K107LOCATE (In LCDLine, In LCDColumn)
+    if LCDColumn < 10 then
+        K107SendData ( "?x0"+str(LCDColumn) )
+    else
+        K107SendData ( "?x"+str(LCDColumn) )
+    end if
+    K107SendData ( "?y"+str(LCDLine  ) )
+end sub
+
+'#define LCDHOME K107LCDHOME
+Sub K107LCDHOME
+'Sub to set the cursor to the home position
+    K107SendData ( "?h" )
+End Sub
+
+'#define LCDcmd K107LCDcmd
+Sub K107LCDcmd ( In PrintData )
+'Sub to send specified command direct to the LCD
+    K107SendData ( PrintData  )
+End Sub
+
+'#DEFINE Print K107Print
+sub K107Print (In PrintData As String)
+'Sub to print a string variable on the LCD
+    K107SendData ( PrintData  )
+End Sub
+
+
+Sub K107Print (In LCDValue)
+'Sub to print a byte variable on the LCD
+    Dim LCDValueTemp as Byte
+    LCDValueTemp = 0
+
+    IF LCDValue >= 100 Then
+        LCDValueTemp = LCDValue / 100
+        LCDValue = SysCalcTempX
+        K107SendData chr((LCDValueTemp + 48))
+    End If
+
+    If LCDValueTemp > 0 Or LCDValue >= 10 Then
+        LCDValueTemp = LCDValue / 10
+        LCDValue = SysCalcTempX
+        K107SendData chr(LCDValueTemp + 48)
+    End If
+    K107SendData chr(LCDValue + 48)
+End Sub
+
+Sub K107Print (In LCDValue As Word)
+'Sub to print a word variable on the LCD
+    Dim LCDValueTemp as Byte
+    Dim SysCalcTempX As Word
+
+    LCDValueTemp = 0
+
+    If LCDValue >= 10000 then
+        LCDValueTemp = LCDValue / 10000 [word]
+        LCDValue = SysCalcTempX
+        K107SendData( chr(LCDValueTemp + 48))
+        Goto LCDPrintWord1000
+    End If
+
+    If LCDValue >= 1000 then
+        LCDPrintWord1000:
+        LCDValueTemp = LCDValue / 1000 [word]
+        LCDValue = SysCalcTempX
+        K107SendData(chr(LCDValueTemp + 48))
+        Goto LCDPrintWord100
+    End If
+
+    If LCDValue >= 100 then
+        LCDPrintWord100:
+        LCDValueTemp = LCDValue / 100 [word]
+        LCDValue = SysCalcTempX
+        K107SendData(chr(LCDValueTemp + 48))
+        Goto LCDPrintWord10
+    End If
+
+    If LCDValue >= 10 then
+        LCDPrintWord10:
+        LCDValueTemp = LCDValue / 10 [word]
+        LCDValue = SysCalcTempX
+        K107SendData(chr(LCDValueTemp + 48))
+    End If
+
+    K107SendData (chr(LCDValue + 48))
+End Sub
+
+Sub K107Print (In LCDValueInt As Integer)
+'Sub to print an integer variable on the LCD
+
+    Dim LCDValue As Word
+
+    'If sign bit is on, print - sign and then negate
+    If LCDValueInt.15 = On Then
+              LCDWriteChar("-")
+              LCDValue = -LCDValueInt
+
+    'Sign bit off, so just copy value
+    Else
+              LCDValue = LCDValueInt
+    End If
+
+    'Use Print(word) to display value
+    Print LCDValue
+End Sub
+
+Sub K107Print (In LCDValue As Long)
+'Sub to print a long variable on the LCD
+    Dim SysPrintBuffLen, SysPrintTemp as byte
+    Dim SysCalcTempA As Long
+    Dim SysPrintBuffer(10)
+    SysPrintBuffLen = 0
+
+    Do
+        'Divide number by 10, remainder into buffer
+        SysPrintBuffLen += 1
+        SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
+        LCDValue = SysCalcTempA
+    Loop While LCDValue <> 0
+
+    'Display
+    For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+      LCDValue = SysPrintBuffer(SysPrintTemp) + 48
+      K107SendRaw LCDValue
+    Next
+
+End Sub
+
+'#define LCDBacklight K107LCDBacklight
+sub K107LCDBacklight(IN LCDValue)
+    K107SendData( "?B" )
+
+    K107LCDHEX ( LCDValue ,2 )
+
+End Sub
+
+'#define LCDCursor K107LCDCursor
+sub K107LCDCursor(In LCDCRSR)
+    K107SendData( "?c"+str(LCDCRSR) )
+End Sub
+
+'#define LCDHex K107LCDHex
+sub K107LCDHex  (In LCDValue, optional in LCDChar = 1)
+'Sub to print a hex string from the specified byte variable on the LCD
+
+    dim myK107LCDHexString as string * 3
+    myK107LCDHexString = Hex ( LCDValue )
+    K107SendData myK107LCDHexString
+
+end sub
+
+sub K107LCDSpace(in LCDValue)
+'Sub to print a number of spaces - upto 40
+
+    if LCDValue > 40 then LCDValue = 40
+    do until LCDValue = 0
+        K107SendData " "
+        LCDValue --
+    loop
+end sub
