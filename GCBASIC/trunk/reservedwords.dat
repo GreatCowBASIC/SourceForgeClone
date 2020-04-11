@@ -27,6 +27,7 @@ Array
 As
 Asc
 At
+ATan
 Average
 BcdToDec_GCB
 BIT
@@ -56,6 +57,7 @@ ClearSMT1
 ClearSMT2
 ClearTimer
 CLS
+cos
 CreateButton
 CURSOROFF
 CURSORON
@@ -82,6 +84,7 @@ EERAM_Write_Command
 Ellipse
 Else
 Else If
+End
 End Function
 End Macro
 End Repeat
@@ -375,8 +378,10 @@ SetSMT2
 SetSMT2Period
 SetTimer
 SetWith
+shiftR
 ShortTone
 Simple
+sin
 SLOW
 SOSC
 SPIMode
@@ -419,6 +424,7 @@ Sub
 SWAP
 SWAP4
 Table
+tan
 TFT_BLACK
 TFT_BLUE
 TFT_CYAN
