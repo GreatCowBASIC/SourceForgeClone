@@ -92,6 +92,7 @@
 ' 21/01/2019: Added timersource timer source variants #1,2and3 - handled in the script by testing bit(TMR1CLK_T1CS4) then changing the clock source constants
 ' 23/01/2019: Revised Clock sources 'Added set Clock Source on1/12/2016' the script was incorrect and was not operating as expected
 ' 27/04/2019: Revised InitTimer1, 3 and 5 to resolve missing clock source  LFINTOSC. Chip requires TMR1CS1 and TMR1CS0 to support LFINTOSC.
+' 05/04/2020: Improve InitTimer0 to better support new class of timers.
 '***********************************************************
 
 'Subroutines:
@@ -1027,15 +1028,16 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
   #ifdef PIC
     #ifdef USE_Timer0 TRUE
        If TMRNumber = 0 Then
-          ' Handle chips withOUT TMR0H
+
           #ifndef Var(TMR0H)
+             ' Handle chips withOUT TMR0H
              TMR0 = TMRValue
              exit sub 'just get out faster
           #endif
 
-          ' Handle chips with TMR0H
-          #ifdef Var(TMR0H)
 
+          #ifdef Var(TMR0H)
+             ' Handle chips with TMR0H
              #ifdef TMR0_16BIT
                 TMR0H = TMRValue_H
                 TMR0L = TMRValue
@@ -1043,12 +1045,21 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
                 exit sub
              #endif
 
-             'This is therefore the default action of any chip with TMR0H and the TMR0_16BIT is NOT defined
-               'Added to resolve 16f18855 (chip type) using 8bit Timer0
-               'High byte is timer0 register
-             #ifndef TMR0_16BIT  ; USe default 8-bit mode
-                 TMR0L = TMRValue
-                 'Setting TMR0H/Match to Zero will stop the timer
+
+             #ifndef TMR0_16BIT
+               'Use default 8-bit mode therefore _TMR0_16BIT_ not defined
+                #ifdef bit(T016BIT)
+                   'Added to resolve using 8bit Timer0 with enhance timer
+                  'High byte is timer0 register of interest
+                   TMR0H = TMRValue
+                #endif
+
+                #ifndef bit(T016BIT)
+                    'This is therefore the default action of any chip with TMR0H and the T016BIT does not exist
+                    'Low byte is timer0 register of interest
+                   TMR0L = TMRValue
+                #endif
+
              #endif
 
           #endif
