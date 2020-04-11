@@ -65,6 +65,7 @@
 ' 18/12/2019  Revised #ifdef Var(TXREG) section of HSerReceive methods to ensure that previous data has been transmitted
 '             Revised init to improve documentation
 ' 16/02/2020  Revised to restore setting in  INIT
+' 03/04/2020  Revised HSerSend to correct TRMT blocking error
 
 
 
@@ -688,7 +689,10 @@ sub HSerSend(In SerData)
             #ifdef Bit(TXIF)
               Wait While TXIF = Off
             #endif
-
+            #ifdef Bit(TRMT)
+              'ensure any previous operation has completed
+              Wait until TRMT = 1
+            #endif
           #endif
 
           #ifdef USART_BLOCKING
@@ -698,15 +702,17 @@ sub HSerSend(In SerData)
                 #ifdef Bit(TXIF)
                   Wait While TXIF = Off
                 #endif
-
+                #ifdef Bit(TRMT)
+                  'ensure any previous operation has completed
+                  Wait until TRMT = 1
+                #endif
             #endif
 
           #endif
 
 
           #ifdef Var(TXREG)
-              'ensure any previous operation has completed
-              Wait until TRMT = 1
+
               'Write the data byte to the USART.
               ' Sets register to value of SerData - where register could be TXREG or TXREG1 or U1TXB set via the #samevar
               TXREG = SerData
@@ -774,7 +780,10 @@ sub HSerSend(In SerData, optional In comport = 1)
             #ifdef Bit(TXIF)
               Wait While TXIF = Off
             #endif
-
+            #ifdef Bit(TRMT)
+              'ensure any previous operation has completed
+              Wait until TRMT = 1
+            #endif
           #endif
 
           #ifdef USART_BLOCKING
@@ -785,14 +794,17 @@ sub HSerSend(In SerData, optional In comport = 1)
                 #ifdef Bit(TXIF)
                   Wait While TXIF = Off
                 #endif
+                #ifdef Bit(TRMT)
+                  'ensure any previous operation has completed
+                  Wait until TRMT = 1
+                #endif
 
             #endif
 
           #endif
 
           #ifdef Var(TXREG)
-              'ensure any previous operation has completed
-              Wait until TRMT = 1
+
               'Write the data byte to the USART.
               ' Sets register to value of SerData - where register could be TXREG or TXREG1 or U1TXB set via the #samevar
               TXREG = SerData
