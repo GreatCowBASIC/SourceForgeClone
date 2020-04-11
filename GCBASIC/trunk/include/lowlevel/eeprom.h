@@ -43,7 +43,7 @@
 ' 20/04/19: Revised bit check to ensure bit exists in EPWrite - NVMEN and added cleared NVCON1
 '           Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 ' 23/09/19: Revised to handle K40 Per  Chip Errata Sheets to correctly support table reads on specific chips.
-
+' 10/04/20: Revised to EEPGD within ProgramRead() and implement NVMREGS check
 
 #option REQUIRED PIC CHipEEPROM %NoEEProm%
 #option REQUIRED AVR CHipEEPROM %NoEEProm%
@@ -315,12 +315,22 @@ end sub
 sub ProgramRead(In EEAddress, Out EEDataWord)
   Dim EEAddress As Word Alias EEADRH, EEADR
   Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+  Dim NVMREGSState as Bit
 
   'Disable Interrupt
   IntOff
 
   'Select program memory
-  SET EEPGD ON
+  #IFDEF Bit(EEPGD)
+    Set EEPGD OFF
+  #ENDIF
+
+  #IFDEF Bit(NVMREGS)
+    NVMREGSState = NVMREGS
+    NVMREGS = 0
+  #ENDIF
+
+
   #IFDEF Bit(CFGS)
     Set CFGS OFF
   #ENDIF
@@ -329,6 +339,9 @@ sub ProgramRead(In EEAddress, Out EEDataWord)
   SET RD ON
   NOP
   NOP
+  #IFDEF Bit(NVMREGS)
+    NVMREGS = NVMREGSState
+  #ENDIF
 
   'Enable interrupt
   IntOn
