@@ -158,8 +158,8 @@ Sub Init_MsCtr_Int
   #ifdef PIC
     #IFDEF ChipFamily 14
       ' Set prescaler
-'what is this?
       InitTimer0 Osc, PS0_4
+
 
       #IFDEF ChipMHz 8
         InitTimer0 Osc, PS0_8
