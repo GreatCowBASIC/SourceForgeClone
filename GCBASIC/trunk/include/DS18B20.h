@@ -81,6 +81,7 @@
   ' The wait of 1ms between one wire commands is unnecessary.
 ' 15/9/2014 - Correct silly errors in the code.  Timings were incorrect.
 '    Revised 28.08.2017 to resolve non-ANSI characters
+'    Added   14.04.2020  D18B20SetResolution  ( DS18B20_TEMP_9_BIT | DS18B20_TEMP_10_BIT, DS18B20_TEMP_11_BIT, DS18B20_TEMP_12_BIT )
 
 
 
@@ -119,6 +120,13 @@
       'Protocol for recalling alarm trigger values from EEPROM
  #define ReadPowerSupply 180  '0xB4 (180)
       'Protocol for identifying Power Supply Mode
+
+      'Protocol resolution
+#define DS18B20_TEMP_9_BIT  0x1F
+#define DS18B20_TEMP_10_BIT 0x3F
+#define DS18B20_TEMP_11_BIT 0x5F
+#define DS18B20_TEMP_12_BIT 0x7F
+
 
 ' Public Routines
 
@@ -324,3 +332,37 @@ Sub OWin
       wait 60 us                   ' Set to 60 uS  for use with longer wires
    Next ClocksB
 end sub
+
+
+
+Sub DS18B20SetResolution ( in DS18B20SetResolutionValue  )
+
+   wait 250 ms ' Not really needed but left in just in case ***
+   MasterRST
+   PPulse
+   wait 1 ms
+   OWout SkipRom         ' Bypass ds18b20 serial number read
+   wait 1 ms
+   OWout WriteScratch
+   wait 1 ms
+   OWout 0x00             'User byte 0 - Unused
+   OWout 0x00             'User byte 1 - Unused
+
+
+   Select Case DS18B20SetResolutionValue
+        Case DS18B20_TEMP_9_BIT
+              OWout ( DS18B20_TEMP_9_BIT )  'set up 9bits
+        Case DS18B20_TEMP_10_BIT
+              OWout ( DS18B20_TEMP_10_BIT )  'set up 10bits
+        Case DS18B20_TEMP_11_BIT
+              OWout ( DS18B20_TEMP_11_BIT )  'set up 11bits
+        Case DS18B20_TEMP_12_BIT
+              OWout ( DS18B20_TEMP_12_BIT )  'set up 12bits
+        Case Else
+              OWout ( DS18B20_TEMP_12_BIT )  'set up en 12 bits (0x7F)
+   End Select
+
+      wait 250 ms ' wait for write to complete
+
+
+End Sub
