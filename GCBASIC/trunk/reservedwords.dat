@@ -68,6 +68,7 @@ Dir
 DisplayChar
 DisplayValue
 Do
+DS18B20SetResolution
 EERAM_AutoStore
 EERAM_Backup
 EERAM_HS
@@ -378,7 +379,6 @@ SetSMT2
 SetSMT2Period
 SetTimer
 SetWith
-shiftR
 ShortTone
 Simple
 sin
