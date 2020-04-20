@@ -1,5 +1,5 @@
 '     Liquid Crystal Display routines for Great Cow BASIC
-'     Copyright (C) 2006-2020 Hugh Considine, Stefano Bonomi, Ruud de Vreugd, Evan Venn and Wiliam Roth
+'     Copyright (C) 2006-2020 Hugh Considine, Stefano Bonomi, Ruud de Vreugd, Evan Venn, Theo Loermans and Wiliam Roth
 '
 '     This library is free software; you can redistribute it and/or
 '     modify it under the terms of the GNU Lesser General Public
@@ -22,13 +22,14 @@
 '     COMMANDS UNUSABLE!
 '   ******************************************************************************
 '     Credits:
-'     4 and 8 bit routines        Hugh Considine
-'     2 bit routines    Stefano Bonomi
-'     Revised 4 bit routines    Evan Venn
-'     Revised to improve performance and improved functionality William Roth
+'     Hugh Considine:   4 and 8 bit routines
+'     Stefano Bonomi:   2 bit routines
+'     Evan Venn:        Revised 4 bit routines, K107  and 404 Support
+'     William Roth:     Revised to improve performance and improved functionality
+'     Theo Loermans:    LCD_IO 1, LCD_IO 2m LCD_IO 2_74XX174 and LCD_IO 2_74XX164 for 1 and 2-wire modes
 '   ***********************************************************************
 '
-'     Supports
+' Supports
 ' Set LCD_10 to 10 for the YwRobot LCD1602 IIC V1 or the Sainsmart LCD_PIC I2C adapter
 ' Set LCD_10 to 12 for the Ywmjkdz I2C adapter with pot bent over top of chip
 
@@ -2215,3 +2216,117 @@ sub K107LCDSpace(in LCDValue)
         LCDValue --
     loop
 end sub
+
+
+;    Credits:
+;    4 and 8 bit routines        Hugh Considine
+;    2 bit routines    Stefano Bonomi
+;    Testing           Stefano Adami
+;    Revised 4 bit routines    Evan Venn
+;    and adapted to support LAT port support for fast devices
+;    Revised to improve performance and improved functionality William Roth
+;*************************************************************************
+;*************************************************************************
+;    08-17-2014
+;    Modified for speed improvement in 4 and 8 bit modes.
+;
+;    1. MOdified sub LCDNormalWriteByte.
+;     A. Changed enable pulse duration duration to 2 us
+;     B. Added DEFINE  LCD_SPEED
+;         1. LCD_SPEED FAST
+;         2. LCD_SPEED MEDIUM
+;         3. LCD_SPEED SLOW
+;     C. The speed is improved from about 5,000 chars per second to
+;         apppoximately 20,000 CPS (FAST), 15,000 CPS (MEDUIM) and
+;         10,000 CPS (SLOW).
+;     D.  IF LCD_SPEED is not defined, the speed defaults to SLOW
+;
+;    2. Created separate code sections for 4-Bit & 8-bit initalization
+;
+;    23-1-2015 by William Roth
+;
+;    3. Added comments to some code sections
+;
+;    4. Added sub routines for LCD_OFF and LCD_ON
+;
+;    26-1-2015 by William and Evan following Hughs code review;
+;
+;    5. Added new Sub for LCDHex with optional parameter
+;
+;    6. Deprecated LCD_On replaced with LCDDisplayOn
+;
+;    7. Deprecated LCD_Off replaced with LCDDisplayOff
+;
+;    8. Added new method LCDBackLight
+;
+'**********************************************************************
+;    28-1-2015 by Evan R Venn
+;
+;    Removed errant CLS from outside of methods.
+;
+;    14-2-15 by Evan R Vemm
+;
+;    Added I2C support.  Added/revixed functions and added scripts
+;    Revised speed from constant to defines
+;    Fixed Cursor to remove IF AND THEN as a fix for AVR
+;    Changed init to support AVR
+;    Changed backlight to support IC2 and Transistor support.
+;    Revised to support multiple I2C.
+;
+;    Revised 31/07/2-15 to removed defines being defined when not needed.
+;
+
+;    Uses
+'''Set LCD_10 to 10 for the YwRobot LCD1602 IIC V1 or the Sainsmart LCD_PIC I2C adapter
+'''Set LCD_10 to 12 for the Ywmjkdz I2C adapter with pot bent over top of chip
+
+'''   #define LCD_I2C_Address_1 0x4e
+'''   #define LCD_I2C_Address_2 0x4c
+'''   #define LCD_I2C_Address_3 0x4a
+'''   #define LCD_I2C_Address_4 0x49
+'''
+'''   Use LCD_I2C_Address_Current = LCD_I2C_Address to change the LCD output routines to a specific device.
+'''       LCD_I2C_Address_Current = LCD_I2C_Address
+'''       Print "LCD Address is now": LCDHex(  LCD_I2C_Address_Current, 2)
+
+'**************************************************************************
+'''   14-08-2015 by Theo Loermans
+'''
+'''   Added LCD_IO 1: 1-wire support with shift-register 74HC595
+'''   Use LCD_CD as port for combined data and clock
+'''
+'''   Added LCDBacklight On/Off for LCD_IO 1,2 mode
+'''
+'''   30-08-2015
+'''   Added LCD_IO 2_74XX174 and LCD_IO 2_74XX164: 2-wire modes for different shiftregisters
+'''
+'''   02/01/2015  added 404 support
+'*************************************************************************
+'''   14/02/2019  revised LCDNormalWriteByte to correct LCDstate error
+
+
+'''
+'''   30/01/2017  edit the binary notation to prevent silly error message
+
+'''   18-02-2017 by Ruud de Vreugd
+'''   Added a forced write for instant backlightcontrol as suggested by Theo Loermans
+'''   Changed binary number format to not use quotationmarks (to avoid compiler errors)
+'''
+'''   Changed Restart to Start in i2c section
+'''   29-03-2018 by Evan Added LCD_WIDTH to support variable LCD widths.
+'''   use #define LCD_WIDTH 16 to change the standard of 20 character width to 16.
+'''   Revised 8-bit init from 200us to 20ms and revised LCDReady for 8bit schmitt trigger ports added 1 us delay
+
+'''   28/10/2015  added LCD_3  support Evan R. Venn for the Picsimlab board K16F for the  LS74574 connectivity see the Help in the application for connectivity
+'''              ;Setup LCD Parameters
+'''              #define LCD_IO 3
+'''
+'''              'Change as necessary
+'''              #define LCD_DB     PORTb.3            ; databit
+'''              #define LCD_CB     PORTb.4            ; clockbit
+'''              #define LCD_EB     PORTa.0            ; enable bit
+'''
+'''
+'''  12/04/2019    Commentry tidy-up only
+
+'*************************************************************************
