@@ -105,6 +105,7 @@
 '  1.25 Added HWI2C2 support
 '  1.26 Added IGNORE_GLCD_TYPE_SSD1306_LOW_MEMORY_WARNINGS to support low memory MCU warnings
 '  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+'  21/04/20  Updated InitGLCD to correctly handle GLCD_TYPE
 
 #define SSD1306_vccstate 0
 
@@ -307,8 +308,7 @@ End Sub
 '''@hide
 Sub InitGLCD_SSD1306
 
-
-  #IFDEF GLCD_TYPE_SSD1306_32 or GLCD_TYPE_SSD1306 then
+  #IF ( GLCD_TYPE  = GLCD_TYPE_SSD1306_32 ) or ( GLCD_TYPE  = GLCD_TYPE_SSD1306 )then
         'Colours //Set these first
         GLCDBackground = 0
         GLCDForeground = 1
