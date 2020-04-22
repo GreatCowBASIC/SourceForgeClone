@@ -46,7 +46,7 @@
 '    Updated Jan 2018 - Updated to handle AVR I2C message handling
 '    Updated Aug 2019 - Updated documentation only. No functional changes
 '    Updated Jan 2020 - Correct SSPxADD calculation for out of bound values
-
+'    Updated Apr 2020 - Corrected Si2CReceive.  Was set to 255 bytes, not 1!
 
 
 
@@ -263,7 +263,7 @@ Sub HI2CMode (In HI2CCurrentMode)
           set SSPCON1.SSPM2 off
           set SSPCON1.SSPM1 off
           set SSPCON1.SSPM0 off
-          
+
           SSPADD = HI2C_BAUD_TEMP and 127
         end if
 
@@ -939,7 +939,7 @@ End Sub
 Sub SI2CReceive (Out I2CByte, Optional In HI2CGetAck = 1 )
   asm showdebug  Redirected for K42 family probalby called HI2CReceive
   asm showdebug  This method sets the registers and register bits to get I2C data
-      I2C1CNT = 255
+      I2C1CNT = 1
       HI2CWaitMSSPTimeout = 0
 
       'waits up to 254us then creates error message
