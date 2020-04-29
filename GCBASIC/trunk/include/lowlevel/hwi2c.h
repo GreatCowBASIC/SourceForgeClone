@@ -47,6 +47,7 @@
 '    Updated Aug 2019 - Updated documentation only. No functional changes
 '    Updated Jan 2020 - Correct SSPxADD calculation for out of bound values
 '    Updated Apr 2020 - Corrected Si2CReceive.  Was set to 255 bytes, not 1!
+'    Updated Apr 2020 - Updated to SI32CDisovery. Now using I2C1PIR.7 to detect part and renamed HIC2Init to HI2CInit
 
 
 
@@ -107,7 +108,7 @@
   #define MR_DATA_NACK_REC 0x58
 
 
-#startup HIC2Init, 90
+#startup HI2CInit, 90
 
 #script
 
@@ -140,7 +141,7 @@
 
             If Bit(I2C1CON0_EN) Then
                 'Redirects to I2C Module for new MSSP aka K42 family
-                HIC2Init =    SI2CInit
+                HI2CInit =    SI2CInit
                 HI2CStart =   SI2CStart
                 HI2CStop =    SI2CStop
                 HI2CReStart = SI2CReStart
@@ -692,7 +693,7 @@ End Sub
 
 
 
-sub HIC2Init
+sub HI2CInit
     asm showdebug  This method sets the variable `HI2CCurrentMode`, and, if required calls the method `SI2CInit` to set up new MSSP modules - aka K42s family chips
     HI2CCurrentMode = 0
 
@@ -1038,60 +1039,39 @@ End Sub
 
 sub SI2CDiscovery ( address )
 
-    SI2CWrite1ByteRegister(  address, reg,  data )
-end sub
-
-sub SI2CWrite1ByteRegister(  address, reg,  data )
-
     I2C1CON1 = I2C1I2C1CON1Default
     I2C1CON2 = I2C1I2C1CON2Default
     I2C1CLK =  I2C1CLOCKSOURCE
     I2C1CON0 = I2C1I2C1CON0Default
 
     I2C1PIR = 0    ;Clear all the error flags
-    I2C1ERR = 0
+
     I2C1CON0.EN=1
 
     'Commence I2C protocol
     I2C1CON2.ACNT = 0
     I2C1CON2.ABD=0
     I2C1CON0.MDR=1
+    I2C1CON1.7=0
 
     I2C1ADB1= address
-    I2C1CNT=2
     I2C1CON0.S=1
-    SI2CDiscoveryByte(reg)
-    SI2CDiscoveryByte(data)
-    HI2CAckPollState = I2C1CON1.5
+
+    wait while I2C1STAT1.TXBE <> 1
+
+    'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
+    I2C1CNT = 1
+    I2C1TXB = 0 'reg
+    I2C1CNT = 1
+    I2C1TXB = 0 'data
     SI2CStop
-
-end Sub
-
-
-sub SI2CDiscoveryByte( data)
-
-        HI2CWaitMSSPTimeout = 0
-        'waits up to 254us then creates error message
-        do while HI2CWaitMSSPTimeout < 255
-
-            HI2CWaitMSSPTimeout++
-            'Wait for this event
-            if I2C1STAT1.TXBE = 1 then
-
-                'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
-                I2C1CNT = 1
-                I2C1TXB = data
-
-                HI2CAckPollState = I2C1CON1.5
-
-
-            else
-
-                wait 1 us
-
-            end if
-        loop
-
-        if HI2CWaitMSSPTimeout = 255 then HI2C1lastError = HI2C1lastError or I2C1_TXBE_TIMEOUT
+    HI2CAckpollState = 0
+    HI2CAckpollState.0 = !I2C1PIR.7
+    'Reset module
+    I2C1CON0.EN=0
+    wait 1 ms
+    I2C1CON0.EN=1
 
 end sub
+
+
