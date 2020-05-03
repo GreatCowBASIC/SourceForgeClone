@@ -62,6 +62,8 @@
 '    29012019 - Functional change to add SOSC setup to initsys
 '             - Added InternalSOSC check to script
 '    01032020 - Restore ANSEL setting in InitSys
+'    03052020 - Moved ProgramErase, ProgramRead and ProgramWrite from EEPROM.h to ensure we isolate EEPRom code.
+
 
 'Constants
 #define ON 1
@@ -3105,61 +3107,61 @@ end sub
 'Bit to operate on comes from SysByteTempX (PIC) or SysReadA (AVR)
 'Read state of bit is somewhere in SysByteTempA, and Z set if bit is 0
 Sub SysReadBit
-	#ifdef PIC
-		Dim SysByteTempA, SysByteTempX As Byte
-		
-		incf SysByteTempX, F
-		clrf SysByteTempA
-		bsf STATUS,C
-		SysGetBitLoop:
-			rlf SysByteTempA, F
-			btfsc STATUS,C
-			#ifdef ChipFamily 12, 14
-				incf FSR, F
-			#endif
-			#ifdef ChipFamily 15
-				addfsr 0, 1
-			#endif
-			#ifdef ChipFamily 16
-				swapf POSTINC0, W
-			#endif
-			btfsc STATUS,C
-			rlf SysByteTempA, F
-		decfsz SysByteTempX, F
-		goto SysGetBitLoop
-		
-		#ifdef ChipFamily 12, 14
-			movf INDF, W
-		#endif
-		#ifdef ChipFamily 15, 16
-			movf INDF0, W
-		#endif
-		andwf SysByteTempA, F
-		'Must exit with byte X = 0, natural side effect as code is currently
-	#endif
-	
-	#ifdef AVR
-		Dim SysReadA, SysByteTempA As Byte
-		
-		inc SysReadA
-		clr SysByteTempA
-		sec
-		SysGetBitLoop:
-			rol SysByteTempA
-			brcc SysGetBitNoInc
-			inc SysStringA
-			brne PC + 2
-			inc SysStringA_H
-			rol SysByteTempA
-			SysGetBitNoInc:
-		dec SysReadA
-		brne SysGetBitLoop
-		ld SysValueCopy, X
-		
-		#asmraw and SysByteTempA, SysValueCopy
-		
-	#endif
-	
+  #ifdef PIC
+    Dim SysByteTempA, SysByteTempX As Byte
+
+    incf SysByteTempX, F
+    clrf SysByteTempA
+    bsf STATUS,C
+    SysGetBitLoop:
+      rlf SysByteTempA, F
+      btfsc STATUS,C
+      #ifdef ChipFamily 12, 14
+        incf FSR, F
+      #endif
+      #ifdef ChipFamily 15
+        addfsr 0, 1
+      #endif
+      #ifdef ChipFamily 16
+        swapf POSTINC0, W
+      #endif
+      btfsc STATUS,C
+      rlf SysByteTempA, F
+    decfsz SysByteTempX, F
+    goto SysGetBitLoop
+
+    #ifdef ChipFamily 12, 14
+      movf INDF, W
+    #endif
+    #ifdef ChipFamily 15, 16
+      movf INDF0, W
+    #endif
+    andwf SysByteTempA, F
+    'Must exit with byte X = 0, natural side effect as code is currently
+  #endif
+
+  #ifdef AVR
+    Dim SysReadA, SysByteTempA As Byte
+
+    inc SysReadA
+    clr SysByteTempA
+    sec
+    SysGetBitLoop:
+      rol SysByteTempA
+      brcc SysGetBitNoInc
+      inc SysStringA
+      brne PC + 2
+      inc SysStringA_H
+      rol SysByteTempA
+      SysGetBitNoInc:
+    dec SysReadA
+    brne SysGetBitLoop
+    ld SysValueCopy, X
+
+    #asmraw and SysByteTempA, SysValueCopy
+
+  #endif
+
 End Sub
 
 'Set a bit
@@ -3167,102 +3169,211 @@ End Sub
 'Bit to operate on comes from SysByteTempX (PIC) or SysReadA (AVR)
 'New state of bit is in bit 0 of SysByteTempB
 Sub SysSetBit
-	#ifdef ChipFamily 12, 14
-		Dim SysByteTempA, SysByteTempX As Byte
-		
-		incf SysByteTempX, F
-		clrf SysByteTempA
-		bsf STATUS,C
-		SysSetBitLoop:
-			rlf SysByteTempA, F
-			btfsc STATUS,C
-			incf FSR, F
-			btfsc STATUS,C
-			rlf SysByteTempA, F
-		decfsz SysByteTempX, F
-		goto SysSetBitLoop
-		If SysByteTempB.0 Then
-			movf SysByteTempA, W
-			iorwf INDF, F
-		Else
-			comf SysByteTempA, W
-			andwf INDF, F
-		End If
-	#endif
-	
-	#ifdef ChipFamily 15
-		Dim SysByteTempA, SysByteTempX As Byte
-		
-		incf SysByteTempX, F
-		clrf SysByteTempA
-		bsf STATUS,C
-		SysSetBitLoop:
-			rlf SysByteTempA, F
-			btfsc STATUS,C
-			addfsr 0, 1
-			btfsc STATUS,C
-			rlf SysByteTempA, F
-		decfsz SysByteTempX, F
-		goto SysSetBitLoop
-		If SysByteTempB.0 Then
-			movf SysByteTempA, W
-			iorwf INDF0, F
-		Else
-			comf SysByteTempA, W
-			andwf INDF0, F
-		End If
-	#endif
-	
-	#ifdef ChipFamily 16
-		Dim SysByteTempA, SysByteTempX As Byte
-		
-		incf SysByteTempX, F
-		clrf SysByteTempA
-		bsf STATUS,C
-		SysSetBitLoop:
-			rlcf SysByteTempA, F
-			btfsc STATUS,C
-			swapf POSTINC0, W
-			btfsc STATUS,C
-			rlcf SysByteTempA, F
-		decfsz SysByteTempX, F
-		goto SysSetBitLoop
-		
-		If SysByteTempB.0 Then
-			movf SysByteTempA, W
-			iorwf INDF0, F
-		Else
-			comf SysByteTempA, W
-			andwf INDF0, F
-		End If
-	#endif
-	
-	#ifdef AVR
-		Dim SysReadA, SysByteTempA, SysByteTempB As Byte
-		
-		inc SysReadA
-		clr SysByteTempA
-		sec
-		SysSetBitLoop:
-			rol SysByteTempA
-			brcc SysSetBitNoInc
-			inc SysStringA
-			brne PC + 2
-			inc SysStringA_H
-			rol SysByteTempA
-			SysSetBitNoInc:
-		dec SysReadA
-		brne SysSetBitLoop
-		ld SysValueCopy, X
-		
-		sbrc SysByteTempB, 0
-		rjmp SysSetBitHigh
-		com SysByteTempA
-		#asmraw and SysValueCopy, SysByteTempA
-		rjmp SysSetBitDone
-		SysSetBitHigh:
-		#asmraw or SysValueCopy, SysByteTempA
-		SysSetBitDone:
-		st X, SysValueCopy
-	#endif
+  #ifdef ChipFamily 12, 14
+    Dim SysByteTempA, SysByteTempX As Byte
+
+    incf SysByteTempX, F
+    clrf SysByteTempA
+    bsf STATUS,C
+    SysSetBitLoop:
+      rlf SysByteTempA, F
+      btfsc STATUS,C
+      incf FSR, F
+      btfsc STATUS,C
+      rlf SysByteTempA, F
+    decfsz SysByteTempX, F
+    goto SysSetBitLoop
+    If SysByteTempB.0 Then
+      movf SysByteTempA, W
+      iorwf INDF, F
+    Else
+      comf SysByteTempA, W
+      andwf INDF, F
+    End If
+  #endif
+
+  #ifdef ChipFamily 15
+    Dim SysByteTempA, SysByteTempX As Byte
+
+    incf SysByteTempX, F
+    clrf SysByteTempA
+    bsf STATUS,C
+    SysSetBitLoop:
+      rlf SysByteTempA, F
+      btfsc STATUS,C
+      addfsr 0, 1
+      btfsc STATUS,C
+      rlf SysByteTempA, F
+    decfsz SysByteTempX, F
+    goto SysSetBitLoop
+    If SysByteTempB.0 Then
+      movf SysByteTempA, W
+      iorwf INDF0, F
+    Else
+      comf SysByteTempA, W
+      andwf INDF0, F
+    End If
+  #endif
+
+  #ifdef ChipFamily 16
+    Dim SysByteTempA, SysByteTempX As Byte
+
+    incf SysByteTempX, F
+    clrf SysByteTempA
+    bsf STATUS,C
+    SysSetBitLoop:
+      rlcf SysByteTempA, F
+      btfsc STATUS,C
+      swapf POSTINC0, W
+      btfsc STATUS,C
+      rlcf SysByteTempA, F
+    decfsz SysByteTempX, F
+    goto SysSetBitLoop
+
+    If SysByteTempB.0 Then
+      movf SysByteTempA, W
+      iorwf INDF0, F
+    Else
+      comf SysByteTempA, W
+      andwf INDF0, F
+    End If
+  #endif
+
+  #ifdef AVR
+    Dim SysReadA, SysByteTempA, SysByteTempB As Byte
+
+    inc SysReadA
+    clr SysByteTempA
+    sec
+    SysSetBitLoop:
+      rol SysByteTempA
+      brcc SysSetBitNoInc
+      inc SysStringA
+      brne PC + 2
+      inc SysStringA_H
+      rol SysByteTempA
+      SysSetBitNoInc:
+    dec SysReadA
+    brne SysSetBitLoop
+    ld SysValueCopy, X
+
+    sbrc SysByteTempB, 0
+    rjmp SysSetBitHigh
+    com SysByteTempA
+    #asmraw and SysValueCopy, SysByteTempA
+    rjmp SysSetBitDone
+    SysSetBitHigh:
+    #asmraw or SysValueCopy, SysByteTempA
+    SysSetBitDone:
+    st X, SysValueCopy
+  #endif
 End Sub
+
+;**************** code was initially in EEPROM.h
+
+
+sub ProgramWrite(In EEAddress, In EEDataWord)
+
+#IFDEF PIC
+
+
+  Dim EEAddress As Word Alias EEADRH, EEADR
+  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+
+  'Disable Interrupt
+  IntOff
+
+  'Select program memory
+  #IFDEF Bit(EEPGD)
+    SET EEPGD OFF
+  #ENDIF  SET EEPGD ON
+  #IFDEF Bit(CFGS)
+    Set CFGS OFF
+  #ENDIF
+
+  'Enable write
+  SET WREN ON
+  #ifdef bit(FREE)
+    SET FREE OFF
+  #endif
+
+  'Write enable code
+  EECON2 = 0x55
+  EECON2 = 0xAA
+
+  'Start write, wait for it to finish
+  SET WR ON
+  NOP
+  NOP
+  SET WREN OFF
+
+  'Enable Interrupt
+  IntOn
+#ENDIF
+
+end sub
+
+sub ProgramRead(In EEAddress, Out EEDataWord)
+  Dim EEAddress As Word Alias EEADRH, EEADR
+  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+  Dim NVMREGSState as Bit
+
+  'Disable Interrupt
+  IntOff
+
+  'Select program memory
+  #IFDEF Bit(EEPGD)
+    Set EEPGD OFF
+  #ENDIF
+
+  #IFDEF Bit(NVMREGS)
+    NVMREGSState = NVMREGS
+    NVMREGS = 0
+  #ENDIF
+
+
+  #IFDEF Bit(CFGS)
+    Set CFGS OFF
+  #ENDIF
+
+  'Start read, wait for it to finish
+  SET RD ON
+  NOP
+  NOP
+  #IFDEF Bit(NVMREGS)
+    NVMREGS = NVMREGSState
+  #ENDIF
+
+  'Enable interrupt
+  IntOn
+end sub
+
+sub ProgramErase(In EEAddress)
+  Dim EEAddress As Word Alias EEADRH, EEADR
+
+  'Disable Interrupt
+  IntOff
+
+  'Select program memory
+  SET EEPGD ON
+  #IFDEF Bit(CFGS)
+    Set CFGS OFF
+  #ENDIF
+
+  SET WREN ON
+  #ifdef bit(FREE)
+    SET FREE ON
+  #endif
+  EECON2 = 0x55
+  EECON2 = 0xAA
+  SET WR ON
+  NOP
+  NOP
+  #ifdef bit(FREE)
+    SET FREE OFF
+  #endif
+  SET WREN OFF
+
+  'Enable interrupt
+  IntOn
+end sub

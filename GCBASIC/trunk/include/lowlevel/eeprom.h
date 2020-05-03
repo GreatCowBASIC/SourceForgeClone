@@ -44,6 +44,7 @@
 '           Set EEDATL_REF to whatever it is actually called (EEDAT, EEDATA or EEDATL)
 ' 23/09/19: Revised to handle K40 Per  Chip Errata Sheets to correctly support table reads on specific chips.
 ' 10/04/20: Revised to EEPGD within ProgramRead() and implement NVMREGS check
+' 03/05/20: Moved ProgramErase, ProgramRead and ProgramWrite to system.h to ensure we isolate EEPRom code.
 
 #option REQUIRED PIC CHipEEPROM %NoEEProm%
 #option REQUIRED AVR CHipEEPROM %NoEEProm%
@@ -271,111 +272,6 @@ function ReadEP(EEAddress)
 
 end function
 
-sub ProgramWrite(In EEAddress, In EEDataWord)
-
-#IFDEF PIC
-
-
-  Dim EEAddress As Word Alias EEADRH, EEADR
-  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
-
-  'Disable Interrupt
-  IntOff
-
-  'Select program memory
-  #IFDEF Bit(EEPGD)
-    SET EEPGD OFF
-  #ENDIF  SET EEPGD ON
-  #IFDEF Bit(CFGS)
-    Set CFGS OFF
-  #ENDIF
-
-  'Enable write
-  SET WREN ON
-  #ifdef bit(FREE)
-    SET FREE OFF
-  #endif
-
-  'Write enable code
-  EECON2 = 0x55
-  EECON2 = 0xAA
-
-  'Start write, wait for it to finish
-  SET WR ON
-  NOP
-  NOP
-  SET WREN OFF
-
-  'Enable Interrupt
-  IntOn
-#ENDIF
-
-end sub
-
-sub ProgramRead(In EEAddress, Out EEDataWord)
-  Dim EEAddress As Word Alias EEADRH, EEADR
-  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
-  Dim NVMREGSState as Bit
-
-  'Disable Interrupt
-  IntOff
-
-  'Select program memory
-  #IFDEF Bit(EEPGD)
-    Set EEPGD OFF
-  #ENDIF
-
-  #IFDEF Bit(NVMREGS)
-    NVMREGSState = NVMREGS
-    NVMREGS = 0
-  #ENDIF
-
-
-  #IFDEF Bit(CFGS)
-    Set CFGS OFF
-  #ENDIF
-
-  'Start read, wait for it to finish
-  SET RD ON
-  NOP
-  NOP
-  #IFDEF Bit(NVMREGS)
-    NVMREGS = NVMREGSState
-  #ENDIF
-
-  'Enable interrupt
-  IntOn
-end sub
-
-sub ProgramErase(In EEAddress)
-  Dim EEAddress As Word Alias EEADRH, EEADR
-
-  'Disable Interrupt
-  IntOff
-
-  'Select program memory
-  SET EEPGD ON
-  #IFDEF Bit(CFGS)
-    Set CFGS OFF
-  #ENDIF
-
-  SET WREN ON
-  #ifdef bit(FREE)
-    SET FREE ON
-  #endif
-  EECON2 = 0x55
-  EECON2 = 0xAA
-  SET WR ON
-  NOP
-  NOP
-  #ifdef bit(FREE)
-    SET FREE OFF
-  #endif
-  SET WREN OFF
-
-  'Enable interrupt
-  IntOn
-end sub
 
 '  Section: Data EEPROM Module APIs
 
