@@ -49,7 +49,7 @@
 '     0.96 revised to support I2C_USE_TIMEOUT for I2C Master
 '     To enable failsafe in I2C Master mode, user must add #define I2C_USE_TIMEOUT to source code
 '    Updated Oct 2016  - for Option Explicit
-'    28/92/2020   Updated to add LEFT to rotate I2CByte left on line 412
+'    28/92/2020   Updated to add LEFT to rotate I2CByte left on line 412 and removed I2C_DATA_LOW in I2CSend SLAVE method (caused SDA line glitch)
 
 
 
@@ -161,8 +161,10 @@ dim I2CAckPollState as byte
 
 #startup InitI2C, 90                  'automatically call in main program
 
-sub InitI2C()
 
+
+
+sub InitI2C()
   ' Moved to prevent variable defintion when not required
   dim I2COldState, I2CState, I2CMatch, I2CTemp as byte
   dim I2CCount alias I2CState
@@ -401,7 +403,8 @@ sub I2CSend(in I2CByte )
       loop                        'else, try again
     #endif
 
-    I2C_DATA_LOW                  'begin with SDA=0 as a baseline
+                                   'removed I2C_DATA_LOW as this caused glitches on I2C bus
+    'I2C_DATA_LOW                  'begin with SDA=0 as a baseline
 
     repeat 8                      '8 data bits
       if I2CByte.7 = ON then      'put most significant bit on SDA line
