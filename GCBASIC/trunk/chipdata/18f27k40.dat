@@ -2974,7 +2974,8 @@ SP5,STKPTR,5
 0:E87
 
 [NoBankRAM]
-80
+0:5F
+F60:FFF
 
 [Pins-DIP]
 2,RA0(IO)

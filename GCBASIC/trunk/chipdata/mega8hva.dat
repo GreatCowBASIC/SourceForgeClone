@@ -1,6 +1,6 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega8hva
-'Generated 1/4/2020
+'Generated 6/4/2019
 'Format last revised: 5/4/2019
 
 [ChipData]
@@ -11,7 +11,6 @@ I/O=0
 ADC=0
 MaxMHz=1
 Pins=32
-USART=-1
 Family=120
 ConfigWords=0
 GPR=32

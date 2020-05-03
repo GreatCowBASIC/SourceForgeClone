@@ -79,6 +79,7 @@ ComplementaryGenerator:COGIE,COGIF
 ExtInt0:INTE,INTF
 LogicCell1Event:CLC1IE,CLC1IF
 LogicCell2Event:CLC2IE,CLC2IF
+LogicCell3Event:CLC3IE,CLC3IF
 OscillatorFail:OSFIE,OSFIF
 PORTABChange:IOCIE,IOCIF
 PortChange:IOCIE,IOCIF
