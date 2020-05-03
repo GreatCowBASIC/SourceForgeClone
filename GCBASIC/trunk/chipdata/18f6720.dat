@@ -1096,6 +1096,8 @@ SP4,STKPTR,4
 0:EFF
 
 [NoBankRAM]
+0:5F
+F60:FFF
 
 [Pins-TQFP]
 1,RE1(IO),WR(O)

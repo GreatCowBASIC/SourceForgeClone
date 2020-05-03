@@ -1092,10 +1092,6 @@ Added missing XINST default (set OFF)
 Adding CHS bits to ADCON0
 Unrecognised interrupt source:            FIFOFIE
 18F26Q10 (16) 593/1015
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            CLC8IE
 18F27J13 (16) 594/1015
 No DEBUG config bit!
 18F27J53 (16) 595/1015
@@ -1104,52 +1100,9 @@ No DEBUG config bit!
 18F27K42 (16) 597/1015
 Adding CHS bits to ADCON0
 18F27Q10 (16) 598/1015
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            CLC8IE
 18F27Q43 (16) 599/1015
+ 8192
 Adding CHS bits to ADCON0
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            DMA4SCNTIE
-Unrecognised interrupt source:            DMA4DCNTIE
-Unrecognised interrupt source:            DMA4ORIE
-Unrecognised interrupt source:            DMA4AIE
-Unrecognised interrupt source:            PWM1PIE
-Unrecognised interrupt source:            SPI2RXIE
-Unrecognised interrupt source:            SPI2TXIE
-Unrecognised interrupt source:            SPI2IE
-Unrecognised interrupt source:            PWM2PIE
-Unrecognised interrupt source:            PWM3PIE
-Unrecognised interrupt source:            U3RXIE
-Unrecognised interrupt source:            U3TXIE
-Unrecognised interrupt source:            U3EIE
-Unrecognised interrupt source:            U3IE
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            NCO2IE
-Unrecognised interrupt source:            DMA3SCNTIE
-Unrecognised interrupt source:            DMA3DCNTIE
-Unrecognised interrupt source:            DMA3ORIE
-Unrecognised interrupt source:            DMA3AIE
-Unrecognised interrupt source:            U4RXIE
-Unrecognised interrupt source:            U4TXIE
-Unrecognised interrupt source:            U4EIE
-Unrecognised interrupt source:            U4IE
-Unrecognised interrupt source:            DMA5SCNTIE
-Unrecognised interrupt source:            DMA5DCNTIE
-Unrecognised interrupt source:            DMA5ORIE
-Unrecognised interrupt source:            DMA5AIE
-Unrecognised interrupt source:            U5RXIE
-Unrecognised interrupt source:            U5TXIE
-Unrecognised interrupt source:            U5EIE
-Unrecognised interrupt source:            U5IE
-Unrecognised interrupt source:            DMA6SCNTIE
-Unrecognised interrupt source:            DMA6DCNTIE
-Unrecognised interrupt source:            DMA6ORIE
-Unrecognised interrupt source:            DMA6AIE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            NCO3IE
-Unrecognised interrupt source:            CLC8IE
 18F27Q84 (16) 600/1015
 18F4220 (16) 601/1015
 18F4221 (16) 602/1015
@@ -1218,10 +1171,6 @@ Adding CHS bits to ADCON0
 No DEBUG config bit!
 Added missing SOSCSEL default (set DIG)
 18F45Q10 (16) 645/1015
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            CLC8IE
 18F4610 (16) 646/1015
 18F4620 (16) 647/1015
 18F4680 (16) 648/1015
@@ -1242,10 +1191,6 @@ Adding CHS bits to ADCON0
 No DEBUG config bit!
 Added missing SOSCSEL default (set DIG)
 18F46Q10 (16) 660/1015
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            CLC8IE
 18F47J13 (16) 661/1015
 No DEBUG config bit!
 18F47J53 (16) 662/1015
@@ -1254,55 +1199,9 @@ No DEBUG config bit!
 18F47K42 (16) 664/1015
 Adding CHS bits to ADCON0
 18F47Q10 (16) 665/1015
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            CLC8IE
 18F47Q43 (16) 666/1015
-Missing data in chipdata.csv
-Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
-No pinout found, and could not guess
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            DMA4SCNTIE
-Unrecognised interrupt source:            DMA4DCNTIE
-Unrecognised interrupt source:            DMA4ORIE
-Unrecognised interrupt source:            DMA4AIE
-Unrecognised interrupt source:            PWM1PIE
-Unrecognised interrupt source:            SPI2RXIE
-Unrecognised interrupt source:            SPI2TXIE
-Unrecognised interrupt source:            SPI2IE
-Unrecognised interrupt source:            PWM2PIE
-Unrecognised interrupt source:            PWM3PIE
-Unrecognised interrupt source:            U3RXIE
-Unrecognised interrupt source:            U3TXIE
-Unrecognised interrupt source:            U3EIE
-Unrecognised interrupt source:            U3IE
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            NCO2IE
-Unrecognised interrupt source:            DMA3SCNTIE
-Unrecognised interrupt source:            DMA3DCNTIE
-Unrecognised interrupt source:            DMA3ORIE
-Unrecognised interrupt source:            DMA3AIE
-Unrecognised interrupt source:            U4RXIE
-Unrecognised interrupt source:            U4TXIE
-Unrecognised interrupt source:            U4EIE
-Unrecognised interrupt source:            U4IE
-Unrecognised interrupt source:            DMA5SCNTIE
-Unrecognised interrupt source:            DMA5DCNTIE
-Unrecognised interrupt source:            DMA5ORIE
-Unrecognised interrupt source:            DMA5AIE
-Unrecognised interrupt source:            U5RXIE
-Unrecognised interrupt source:            U5TXIE
-Unrecognised interrupt source:            U5EIE
-Unrecognised interrupt source:            U5IE
-Unrecognised interrupt source:            DMA6SCNTIE
-Unrecognised interrupt source:            DMA6DCNTIE
-Unrecognised interrupt source:            DMA6ORIE
-Unrecognised interrupt source:            DMA6AIE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            NCO3IE
-Unrecognised interrupt source:            CLC8IE
-Chip data file is suspect
+ 8192
+Adding CHS bits to ADCON0
 18F47Q84 (16) 667/1015
 18F55K42 (16) 668/1015
 Adding CHS bits to ADCON0
@@ -1312,48 +1211,9 @@ Adding CHS bits to ADCON0
 Adding CHS bits to ADCON0
 18F57Q43 (16) 671/1015
 Missing data in chipdata.csv
+ 0
 Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
 No pinout found, and could not guess
-Unrecognised interrupt source:            CLC6IE
-Unrecognised interrupt source:            DMA4SCNTIE
-Unrecognised interrupt source:            DMA4DCNTIE
-Unrecognised interrupt source:            DMA4ORIE
-Unrecognised interrupt source:            DMA4AIE
-Unrecognised interrupt source:            PWM1PIE
-Unrecognised interrupt source:            SPI2RXIE
-Unrecognised interrupt source:            SPI2TXIE
-Unrecognised interrupt source:            SPI2IE
-Unrecognised interrupt source:            PWM2PIE
-Unrecognised interrupt source:            PWM3PIE
-Unrecognised interrupt source:            U3RXIE
-Unrecognised interrupt source:            U3TXIE
-Unrecognised interrupt source:            U3EIE
-Unrecognised interrupt source:            U3IE
-Unrecognised interrupt source:            CLC5IE
-Unrecognised interrupt source:            NCO2IE
-Unrecognised interrupt source:            DMA3SCNTIE
-Unrecognised interrupt source:            DMA3DCNTIE
-Unrecognised interrupt source:            DMA3ORIE
-Unrecognised interrupt source:            DMA3AIE
-Unrecognised interrupt source:            U4RXIE
-Unrecognised interrupt source:            U4TXIE
-Unrecognised interrupt source:            U4EIE
-Unrecognised interrupt source:            U4IE
-Unrecognised interrupt source:            DMA5SCNTIE
-Unrecognised interrupt source:            DMA5DCNTIE
-Unrecognised interrupt source:            DMA5ORIE
-Unrecognised interrupt source:            DMA5AIE
-Unrecognised interrupt source:            U5RXIE
-Unrecognised interrupt source:            U5TXIE
-Unrecognised interrupt source:            U5EIE
-Unrecognised interrupt source:            U5IE
-Unrecognised interrupt source:            DMA6SCNTIE
-Unrecognised interrupt source:            DMA6DCNTIE
-Unrecognised interrupt source:            DMA6ORIE
-Unrecognised interrupt source:            DMA6AIE
-Unrecognised interrupt source:            CLC7IE
-Unrecognised interrupt source:            NCO3IE
-Unrecognised interrupt source:            CLC8IE
 Chip data file is suspect
 18F6310 (16) 672/1015
 18F6390 (16) 673/1015

@@ -1,0 +1,39 @@
+'GCBASIC/GCGB Chip Data File
+'Chip: AT
+'Generated 6/4/2019
+'Format last revised: 23/9/2007
+
+[ChipData]
+Prog=0
+EEPROM=0
+RAM=0
+I/O=0
+ADC=0
+MaxMHz=1
+Pins=0
+Family=120
+ConfigWords=0
+GPR=0
+MaxAddress=0
+HardwareMult=n
+
+[Pointers]
+XL:26
+XH:27
+YL:28
+YH:29
+ZL:30
+ZH:31
+
+[Interrupts]
+
+[Registers]
+
+[Bits]
+
+[ConfigOps]
+NoConfig-PRG
+
+[Config]
+NoConfig-PRG
+

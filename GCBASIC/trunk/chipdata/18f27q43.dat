@@ -14,7 +14,7 @@ Prog=65536
 EEPROM=1024
 
 'This constant is exposed as ChipRAM
-RAM=8096
+RAM=8192
 
 'This constant is exposed as ChipIO
 I/O=25
@@ -48,6 +48,12 @@ MaxAddress=9471
 
 ';Microcontroller specific configuration Constants used in specific libraries, compiler or user programs
 ';This section of constants is specific to a microcontroller, so the constants may not be present for all microcontrollers
+
+'ChipSAFMemWords is used within hefsaf.h.  This constant provides information with respect to the register used for setting the SAF operations
+SAFMemWords=128
+
+'ChipsEraseRowSizeWords is used within hefsaf.h.  This constant provides information with respect to the register used for setting the HEFSAF operations
+EraseRowSizeWords=64
 
 'ChipStacks constant can be used in user programs and provides the available stack depth
 Stacks=128
@@ -85,6 +91,22 @@ DMA2AbortInterrupt:DMA2AIE,DMA2AIF
 DMA2DestinationCountInterrupt:DMA2DCNTIE,DMA2DCNTIF
 DMA2OverrunInterrupt:DMA2ORIE,DMA2ORIF
 DMA2SourceCountInterrupt:DMA2SCNTIE,DMA2SCNTIF
+DMA3AbortInterrupt:DMA3AIE,DMA3AIF
+DMA3DestinationCountInterrupt:DMA3DCNTIE,DMA3DCNTIF
+DMA3OverrunInterrupt:DMA3ORIE,DMA3ORIF
+DMA3SourceCountInterrupt:DMA3SCNTIE,DMA3SCNTIF
+DMA4AbortInterrupt:DMA4AIE,DMA4AIF
+DMA4DestinationCountInterrupt:DMA4DCNTIE,DMA4DCNTIF
+DMA4OverrunInterrupt:DMA4ORIE,DMA4ORIF
+DMA4SourceCountInterrupt:DMA4SCNTIE,DMA4SCNTIF
+DMA5AbortInterrupt:DMA5AIE,DMA5AIF
+DMA5DestinationCountInterrupt:DMA5DCNTIE,DMA5DCNTIF
+DMA5OverrunInterrupt:DMA5ORIE,DMA5ORIF
+DMA5SourceCountInterrupt:DMA5SCNTIE,DMA5SCNTIF
+DMA6AbortInterrupt:DMA6AIE,DMA6AIF
+DMA6DestinationCountInterrupt:DMA6DCNTIE,DMA6DCNTIF
+DMA6OverrunInterrupt:DMA6ORIE,DMA6ORIF
+DMA6SourceCountInterrupt:DMA6SCNTIE,DMA6SCNTIF
 ExtInt0:INT0IE,INT0IF
 ExtInt1:INT1IE,INT1IF
 ExtInt2:INT2IE,INT2IF
@@ -94,20 +116,34 @@ I2C1ReceiveInterrupt:I2C1RXIE,I2C1RXIF
 I2C1TransmitInterrupt:I2C1TXIE,I2C1TXIF
 LogicCell1Event:CLC1IE,CLC1IF
 LogicCell2Event:CLC2IE,CLC2IF
+LogicCell3Event:CLC3IE,CLC3IF
+LogicCell4Event:CLC4IE,CLC4IF
+LogicCell5Event:CLC5IE,CLC5IF
+LogicCell6Event:CLC6IE,CLC6IF
+LogicCell7Event:CLC7IE,CLC7IF
+LogicCell8Event:CLC8IE,CLC8IF
 NVMComplete:NVMIE,NVMIF
 NumericOscOverflow:NCO1IE,NCO1IF
+NumericOscOverflow2:NCO2IE,NCO2IF
+NumericOscOverflow3:NCO3IE,NCO3IF
 OscillatorFail:OSFIE,OSFIF
 PORTABChange:IOCIE,IOCIF
 PWM1MatchEvent:PWM1IE,PWM1IF
 PWM2MatchEvent:PWM2IE,PWM2IF
+PWM2PeriodEvent:PWM2PIE,PWM2PIF
 PWM3MatchEvent:PWM3IE,PWM3IF
+PWM3PeriodEvent:PWM3PIE,PWM3PIF
+PWMPeriodEvent:PWM1PIE,PWM1PIF
 PortChange:IOCIE,IOCIF
 SMT1Overflow:SMT1IE,SMT1IF
 SMT1PeriodAcquired:SMT1PRAIE,SMT1PRAIF
 SMT1PulseWidthAcquired:SMT1PWAIE,SMT1PWAIF
-SPI1Interrupt:SPI1IE,SPI1IF
-SPI1ReceiveInterrupt:SPI1RXIE,SPI1RXIF
-SPI1TransmitInterrupt:SPI1TXIE,SPI1TXIF
+SPI2Interrupt:SPI2IE,SPI2IF
+SPI2ReceiveInterrupt:SPI2RXIE,SPI2RXIF
+SPI2TransmitInterrupt:SPI2TXIE,SPI2TXIF
+SPIInterrupt:SPI1IE,SPI1IF
+SPIReceiveInterrupt:SPI1RXIE,SPI1RXIF
+SPITransmitInterrupt:SPI1TXIE,SPI1TXIF
 ScanComplete:SCANIE,SCANIF
 SoftwareInterrupt:SWIE,SWIF
 Timer0Overflow:TMR0IE,TMR0IF
@@ -128,6 +164,18 @@ UART2FramingErrorInterrupt:U2EIE,U2EIF
 UART2Interrupt:U2IE,U2IF
 UART2ReceiveInterrupt:U2RXIE,U2RXIF
 UART2TransmitInterrupt:U2TXIE,U2TXIF
+UART3FramingErrorInterrupt:U3EIE,U3EIF
+UART3Interrupt:U3IE,U3IF
+UART3ReceiveInterrupt:U3RXIE,U3RXIF
+UART3TransmitInterrupt:U3TXIE,U3TXIF
+UART4FramingErrorInterrupt:U4EIE,U4EIF
+UART4Interrupt:U4IE,U4IF
+UART4ReceiveInterrupt:U4RXIE,U4RXIF
+UART4TransmitInterrupt:U4TXIE,U4TXIF
+UART5FramingErrorInterrupt:U5EIE,U5EIF
+UART5Interrupt:U5IE,U5IF
+UART5ReceiveInterrupt:U5RXIE,U5RXIF
+UART5TransmitInterrupt:U5TXIE,U5TXIF
 VoltageFail:HLVDIE,HLVDIF
 ZeroCrossDetect:ZCDIE,ZCDIF
 
@@ -5880,10 +5928,11 @@ CHS3,ADCON0,5
 CHS4,ADCON0,6
 
 [FreeRAM]
-0:1F9F
+500:24FF
 
 [NoBankRAM]
-80
+460:4FF
+500:55F
 
 [Pins-DIP]
 2,RA0(IO)

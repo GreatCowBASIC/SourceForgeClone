@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: AT90S4433
-'Generated 2/4/2020
-'Format last revised: 2/4/2020
+'Generated 6/4/2019
+'Format last revised: 5/4/2019
 
 [ChipData]
 Prog=2048
@@ -11,7 +11,6 @@ I/O=13
 ADC=6
 MaxMHz=8
 Pins=8
-USART=-1
 Family=110
 ConfigWords=0
 GPR=32

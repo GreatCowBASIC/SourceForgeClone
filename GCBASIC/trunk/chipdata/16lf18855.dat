@@ -87,6 +87,8 @@ Comp2Change:C2IE,C2IF
 ExtInt0:INTE,INTF
 LogicCell1Event:CLC1IE,CLC1IF
 LogicCell2Event:CLC2IE,CLC2IF
+LogicCell3Event:CLC3IE,CLC3IF
+LogicCell4Event:CLC4IE,CLC4IF
 NVMComplete:NVMIE,NVMIF
 NumericOscOverflow:NCO1IE,NCO1IF
 OscillatorFail:OSFIE,OSFIF
