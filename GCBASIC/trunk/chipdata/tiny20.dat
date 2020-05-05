@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATtiny20
-'Generated 6/4/2019
-'Format last revised: 5/4/2019
+'Generated 5/5/2020
+'Format last revised: 2/4/2020
 
 [ChipData]
 Prog=1024
@@ -10,7 +10,8 @@ RAM=128
 I/O=12
 ADC=8
 MaxMHz=12
-Pins=14
+Pins=20
+USART=0
 Family=120
 ConfigWords=0
 GPR=32
@@ -464,22 +465,6 @@ SPDR7,SPDR,7
 
 [FreeRAM]
 40:C0
-
-[Pins-SOIC]
-1,VCC
-2,PB0(IO)
-3,PB1(IO)
-4,PB3(IO),RESET(I)
-5,PB2(IO)
-6,PA7(IO),ADC7(I)
-7,PA6(IO),MOSI(IO),ADC6(I)
-8,PA5(IO),MISO(IO),ADC5(I)
-9,PA4(IO),SCK(IO),ADC4(I)
-10,PA3(IO),ADC3(I)
-11,PA2(IO),ADC2(I)
-12,PA1(IO),ADC1(I)
-13,PA0(IO),ADC0(I)
-14,GND
 
 [ConfigOps]
 NoConfig-PRG

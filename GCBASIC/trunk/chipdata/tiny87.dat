@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATtiny87
-'Generated 6/4/2019
-'Format last revised: 5/4/2019
+'Generated 5/5/2020
+'Format last revised: 2/4/2020
 
 [ChipData]
 Prog=4096
@@ -11,6 +11,7 @@ I/O=16
 ADC=11
 MaxMHz=16
 Pins=20
+USART=0
 Family=120
 ConfigWords=0
 GPR=32
@@ -628,28 +629,6 @@ BBMB,PORTCR,5
 
 [FreeRAM]
 100:300
-
-[Pins-SOIC]
-1,PB0(IO),MOSI(IO)
-2,PB1(IO),MISO(IO)
-3,PB2(IO),SCK(IO)
-4,PB3(IO)
-5,VCC
-6,GND
-7,PB4(IO),ADC7(I)
-8,PB5(IO),ADC8(I)
-9,PB6(IO),ADC9(I)
-10,PB7(IO),RESET(I),ADC10(I)
-11,PA7(IO),ADC6(I)
-12,PA6(IO),ADC5(I)
-13,PA5(IO),ADC4(I)
-14,PA4(IO),ADC3(I)
-15,AVCC
-16,AGND(IO)
-17,PA3(IO)
-18,PA2(IO),ADC2(I)
-19,PA1(IO),ADC1(I)
-20,PA0(IO),ADC0(I)
 
 [ConfigOps]
 NoConfig-PRG
