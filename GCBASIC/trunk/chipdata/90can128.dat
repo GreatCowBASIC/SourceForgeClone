@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: AT90can128
-'Generated 6/4/2019
-'Format last revised: 5/4/2019
+'Generated 5/5/2020
+'Format last revised: 2/4/2020
 
 [ChipData]
 Prog=65536
@@ -10,7 +10,8 @@ RAM=4096
 I/O=53
 ADC=8
 MaxMHz=16
-Pins=64
+Pins=0
+USART=0
 Family=120
 ConfigWords=0
 GPR=32
@@ -1105,72 +1106,6 @@ IDMSK28,CANIDM1,7
 
 [FreeRAM]
 100:1100
-
-[Pins-TQFP]
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
 
 [ConfigOps]
 NoConfig-PRG

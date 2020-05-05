@@ -66,6 +66,7 @@
 '             Revised init to improve documentation
 ' 16/02/2020  Revised to restore setting in  INIT
 ' 03/04/2020  Revised HSerSend to correct TRMT blocking error
+' 04/05/2020  Changed to canskip to silently exit when no USART for TXEN bits
 
 
 
@@ -466,7 +467,6 @@
 
 Sub InitUSART
 
-
   'Set the default value for comport
   comport = 1
 
@@ -511,8 +511,11 @@ Sub InitUSART
 
              #IFNDEF var(U1CON0)
               'Enable async and TX mode for most non K42
-                 Set SYNC Off
-                 Set TXEN On
+                 'Set SYNC Off
+                 'Set TXEN On
+                'Changed to canskip to silently exit when no USART
+                [canskip]SYNC=0
+                [canskip]TXEN=1
              #ENDIF
 
              #ifdef bit(SPEN)

@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega8u2
-'Generated 6/4/2019
-'Format last revised: 5/4/2019
+'Generated 5/5/2020
+'Format last revised: 2/4/2020
 
 [ChipData]
 Prog=4096
@@ -11,6 +11,7 @@ I/O=22
 ADC=0
 MaxMHz=16
 Pins=32
+USART=1
 Family=120
 ConfigWords=0
 GPR=32
@@ -707,40 +708,6 @@ PC7,PORTC,7
 
 [FreeRAM]
 100:300
-
-[Pins-TQFP]
-1,RESET(I)
-2,RXD(I)
-3,TXD(O)
-4
-5
-6
-7,VCC
-8,GND
-9
-10
-11
-12
-13
-14
-15
-16
-17,MOSI(IO)
-18,MISO(IO)
-19,SCK(IO)
-20,AVCC
-21,AREF
-22,GND
-23,ADC0(I)
-24,ADC1(I)
-25,ADC2(I)
-26,ADC3(I)
-27,ADC4(I)
-28,ADC5(I)
-29
-30
-31
-32
 
 [ConfigOps]
 NoConfig-PRG

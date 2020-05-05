@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: AT90usb162
-'Generated 6/4/2019
-'Format last revised: 5/4/2019
+'Generated 5/5/2020
+'Format last revised: 2/4/2020
 
 [ChipData]
 Prog=8192
@@ -10,7 +10,8 @@ RAM=512
 I/O=22
 ADC=0
 MaxMHz=16
-Pins=32
+Pins=8
+USART=0
 Family=120
 ConfigWords=0
 GPR=32
@@ -708,40 +709,6 @@ PC7,PORTC,7
 
 [FreeRAM]
 100:300
-
-[Pins-TQFP]
-1,MOSI(IO)
-2,MISO(IO)
-3,SCK(IO)
-4,RESET
-5,VCC
-6,GND
-7,XTAL2
-8,XTAL1
-9,RXD(IO)
-10,TXD(IO)
-11,INT0(IO)
-12,INT1(IO)
-13,OC1B(IO)
-14,OC1A(IO)
-15,ICP(IO)
-16,OC2(IO)
-17,VCC
-18,GND
-19
-20
-21
-22
-23
-24
-25,TOSC1(IO)
-26,TOSC2(IO)
-27,AVCC
-28,AGND
-29,AREF
-30,ADC7(I)
-31,ADC6(I)
-32,ADC5(I)
 
 [ConfigOps]
 NoConfig-PRG

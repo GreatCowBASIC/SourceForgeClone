@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega169p
-'Generated 6/4/2019
-'Format last revised: 5/4/2019
+'Generated 5/5/2020
+'Format last revised: 2/4/2020
 
 [ChipData]
 Prog=8192
@@ -11,6 +11,7 @@ I/O=54
 ADC=8
 MaxMHz=16
 Pins=64
+USART=1
 Family=120
 ConfigWords=0
 GPR=32
@@ -905,7 +906,7 @@ PING5,PING,5
 [FreeRAM]
 100:500
 
-[Pins-QFN]
+[Pins-TQFP]
 1,LCDCAP(IO)
 2,RXD(IO),PCINT0(IO)
 3,TXD(IO),PCINT1(IO)
@@ -970,72 +971,6 @@ PING5,PING,5
 62,AREF
 63,GND
 64,AVCC
-
-[Pins-TQFP]
-1
-2,UVCC
-3,DN
-4,DP
-5,UGND
-6,UCAP
-7,VBUS
-8
-9,SCK(IO)
-10,MOSI(IO)
-11,MISO(IO)
-12
-13,RESET
-14,VCC
-15,GND
-16,XTAL2
-17,XTAL1
-18
-19
-20,RXD(I)
-21,TXD(O)
-22
-23,GND
-24,AVCC
-25,ADC8(I)
-26,ADC9(I)
-27
-28
-29
-30
-31
-32
-33
-34,VCC
-35,GND
-36,ADC7(I)
-37,ADC6(I)
-38,ADC5(I)
-39,ADC4(I)
-40,ADC1(I)
-41,ADC0(I)
-42,AREF
-43,GND
-44,AVCC
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
-0
 
 [ConfigOps]
 NoConfig-PRG

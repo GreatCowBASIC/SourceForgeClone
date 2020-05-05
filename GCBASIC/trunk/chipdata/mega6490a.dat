@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega6490a
-'Generated 6/4/2019
-'Format last revised: 5/4/2019
+'Generated 5/5/2020
+'Format last revised: 2/4/2020
 
 [ChipData]
 Prog=32768
@@ -11,6 +11,7 @@ I/O=69
 ADC=8
 MaxMHz=20
 Pins=100
+USART=1
 Family=120
 ConfigWords=0
 GPR=32
