@@ -1,5 +1,5 @@
 '     Liquid Crystal Display routines for Great Cow BASIC
-'     Copyright (C) 2006-2020 Hugh Considine, Stefano Bonomi, Ruud de Vreugd, Evan Venn, Theo Loermans and Wiliam Roth
+'     Copyright (C) 2006-xxxx Hugh Considine, Stefano Bonomi, Ruud de Vreugd, Evan Venn, Theo Loermans and Wiliam Roth
 '
 '     This library is free software; you can redistribute it and/or
 '     modify it under the terms of the GNU Lesser General Public
@@ -49,21 +49,10 @@
 '      #define LCD_CB     PORTb.4            ; clockbit
 '      #define LCD_EB     PORTa.0            ; enable bit
 '
-' ***********************************************************************
-
-'***********************************************************************
-'                02/06/2020  (6 Feb 2020)
-'
-'            Revised LCD.H  for review & test.
-'
-'                  Do not distribute!
-'
-'                William Roth cyber.roth @gmail.com
 '
 '***********************************************************************
 ' 06/04/2020   Added K107 Capabilities
-'
-'
+' 04/05/2020   Added Support for HWI2C2 - WMR (4 May 2020)
 '
 '***********************************************************************
 
@@ -751,6 +740,11 @@ sub InitLCD
           HI2CMode Master    ;call to Master required to init I2C Baud Rate here!
         #endif
 
+        #ifdef HI2C2_DATA
+          HI2C2Mode Master    ;call to Master required to init I2C Baud Rate here!
+        #endif
+
+
         LCD_Backlight = LCD_Backlight_On_State
         wait 2 ms
 
@@ -1205,6 +1199,44 @@ sub LCDNormalWriteByte(In LCDByte )
             LCD_State = 12
 
          #ENDIF
+
+         #ifdef HI2C2_DATA
+            IF LCD_RS = 1 then
+               i2c_lcd_rs=1;
+            ELSE
+               i2c_lcd_rs=0;
+            end if
+
+            i2c_lcd_rw  = 0;
+            i2c_lcd_bl  = LCD_Backlight.0;
+
+            HI2C2Start                        ;generate a start signal
+            HI2C2Send LCD_I2C_Address_Current   ;indicate a write
+
+            ''' Send upper nibble
+            i2c_lcd_d7 = LCDByte.7
+            i2c_lcd_d6 = LCDByte.6
+            i2c_lcd_d5 = LCDByte.5
+            i2c_lcd_d4 = LCDByte.4
+            i2c_lcd_e = 1;
+            HI2C2Send i2c_lcd_byte
+            i2c_lcd_e = 0;
+            HI2C2Send i2c_lcd_byte
+
+            ''' Send lower nibble
+            i2c_lcd_d7 = LCDByte.3
+            i2c_lcd_d6 = LCDByte.2
+            i2c_lcd_d5 = LCDByte.1
+            i2c_lcd_d4 = LCDByte.0
+            i2c_lcd_e = 1;
+            HI2C2Send i2c_lcd_byte
+            i2c_lcd_e = 0;
+            HI2C2Send i2c_lcd_byte
+            HI2C2Stop
+            LCD_State = 12
+
+         #ENDIF
+
 
         WAIT LCD_SPEED us
 
