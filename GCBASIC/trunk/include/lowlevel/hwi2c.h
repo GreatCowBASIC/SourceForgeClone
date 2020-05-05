@@ -48,7 +48,7 @@
 '    Updated Jan 2020 - Correct SSPxADD calculation for out of bound values
 '    Updated Apr 2020 - Corrected Si2CReceive.  Was set to 255 bytes, not 1!
 '    Updated Apr 2020 - Updated to SI32CDisovery. Now using I2C1PIR.7 to detect part and renamed HIC2Init to HI2CInit
-
+'    Updated May 2020 - Removed Unused Constant
 
 
 'SPI mode constants also SHARED by hardware I2C:
@@ -129,15 +129,8 @@
         Warning "Clock Frequency for desired I2C baud rate high"
       end if
 
-      If PIC Then
-                 HI2CHasData = "SSP2STAT_BF = On"
-      End If
-
-
-
 
       If PIC Then
-            HI2CHasData = "BF = On"
 
             If Bit(I2C1CON0_EN) Then
                 'Redirects to I2C Module for new MSSP aka K42 family
@@ -1073,5 +1066,4 @@ sub SI2CDiscovery ( address )
     I2C1CON0.EN=1
 
 end sub
-
 
