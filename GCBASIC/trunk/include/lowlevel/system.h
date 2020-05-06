@@ -63,6 +63,8 @@
 '             - Added InternalSOSC check to script
 '    01032020 - Restore ANSEL setting in InitSys
 '    03052020 - Moved ProgramErase, ProgramRead and ProgramWrite from EEPROM.h to ensure we isolate EEPRom code.
+'    05052020 - Adapted ProgramErase, ProgramRead and ProgramWrite to support PMADRH, PMADRL
+
 
 
 'Constants
@@ -3276,17 +3278,22 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
 
 #IFDEF PIC
 
-
-  Dim EEAddress As Word Alias EEADRH, EEADR
-  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+  #IF VAR(EEADRH)
+    Dim EEAddress As Word Alias EEADRH, EEADR
+    Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+  #ENDIF
+  #IF VAR(PMADRH)
+    Dim EEAddress As Word Alias PMADRH, PMADRL
+    Dim EEDataWord As Word Alias PMDATH, PMDATL
+  #ENDIF
 
   'Disable Interrupt
   IntOff
 
   'Select program memory
   #IFDEF Bit(EEPGD)
-    SET EEPGD OFF
-  #ENDIF  SET EEPGD ON
+    SET EEPGD ON
+  #ENDIF
   #IFDEF Bit(CFGS)
     Set CFGS OFF
   #ENDIF
@@ -3298,8 +3305,15 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
   #endif
 
   'Write enable code
-  EECON2 = 0x55
-  EECON2 = 0xAA
+
+  #IF VAR(EEADRH)
+    EECON2 = 0x55
+    EECON2 = 0xAA
+  #ENDIF
+  #IF VAR(PMADRH)
+    PMCON2 = 0x55
+    PMCON2 = 0xAA
+  #ENDIF
 
   'Start write, wait for it to finish
   SET WR ON
@@ -3314,8 +3328,17 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
 end sub
 
 sub ProgramRead(In EEAddress, Out EEDataWord)
-  Dim EEAddress As Word Alias EEADRH, EEADR
-  Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+
+  #IF VAR(EEADRH)
+    Dim EEAddress As Word Alias EEADRH, EEADR
+    Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+  #ENDIF
+  #IF VAR(PMADRH)
+    Dim EEAddress As Word Alias PMADRH, PMADRL
+    Dim EEDataWord As Word Alias PMDATH, PMDATL
+  #ENDIF
+
+
   Dim NVMREGSState as Bit
 
   'Disable Interrupt
@@ -3323,7 +3346,7 @@ sub ProgramRead(In EEAddress, Out EEDataWord)
 
   'Select program memory
   #IFDEF Bit(EEPGD)
-    Set EEPGD OFF
+    Set EEPGD ON
   #ENDIF
 
   #IFDEF Bit(NVMREGS)
@@ -3349,13 +3372,21 @@ sub ProgramRead(In EEAddress, Out EEDataWord)
 end sub
 
 sub ProgramErase(In EEAddress)
-  Dim EEAddress As Word Alias EEADRH, EEADR
+  #IF VAR(EEADRH)
+    Dim EEAddress As Word Alias EEADRH, EEADR
+  #ENDIF
+  #IF VAR(PMADRH)
+    Dim EEAddress As Word Alias PMADRH, PMADRL
+  #ENDIF
+
 
   'Disable Interrupt
   IntOff
 
   'Select program memory
-  SET EEPGD ON
+  #IFDEF Bit(EEPGD)
+    SET EEPGD ON
+  #ENDIF
   #IFDEF Bit(CFGS)
     Set CFGS OFF
   #ENDIF
@@ -3364,8 +3395,16 @@ sub ProgramErase(In EEAddress)
   #ifdef bit(FREE)
     SET FREE ON
   #endif
-  EECON2 = 0x55
-  EECON2 = 0xAA
+
+  #IF VAR(EEADRH)
+    EECON2 = 0x55
+    EECON2 = 0xAA
+  #ENDIF
+  #IF VAR(PMADRH)
+    PMCON2 = 0x55
+    PMCON2 = 0xAA
+  #ENDIF
+
   SET WR ON
   NOP
   NOP
