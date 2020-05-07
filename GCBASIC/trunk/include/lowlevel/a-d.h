@@ -137,6 +137,7 @@
 ' 14/12/18 Added references to support 16f1834x ADC channels
 ' 17/02/19 Corrected AN29 address. Removed a typo. Prevented PORTD.5 ADC from operating as expected.
 ' 21/08/19 Improved documentation only. No functional change
+' 07/05/20 Isolation of ANSELx to reduce variables creation
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -442,80 +443,84 @@ macro LLReadAD (ADLeftAdjust)
 
                 #ifndef Bit(CHS5)
                     '#ifNdef Bit(CHS5)
-
-                    #ifdef USE_AD0 TRUE
-                      Case 0: Set ANSELA.0 On
-                    #endif
-                    #ifdef USE_AD1 TRUE
-                      Case 1: Set ANSELA.1 On
-                    #endif
-                    #ifdef USE_AD2 TRUE
-                      Case 2: Set ANSELA.2 On
-                    #endif
-                    #ifdef USE_AD3 TRUE
-                      Case 3: Set ANSELA.4 On
-                    #endif
-                    #ifdef USE_AD4 TRUE
-                      Case 4: Set ANSELA.5 On
-                    #endif
-                    #Ifdef USE_AD16 TRUE
-                      Case 16: Set ANSELC.0 On
-                    #endif
-                    #Ifdef USE_AD17 TRUE
-                      Case 17: Set ANSELC.1 On
-                    #endif
-                    #Ifdef USE_AD18 TRUE
-                      Case 18: Set ANSELC.2 On
-                    #endif
-                    #Ifdef USE_AD19 TRUE
-                      Case 19: Set ANSELC.3 On
-                    #endif
-                    #Ifdef USE_AD20 TRUE
-                      Case 20: Set ANSELC.4 On
-                    #endif
-                    #Ifdef USE_AD21 TRUE
-                      Case 21: Set ANSELC.5 On
-                    #endif
-
+                  #if var(ANSELA)
+                      #ifdef USE_AD0 TRUE
+                        Case 0: Set ANSELA.0 On
+                      #endif
+                      #ifdef USE_AD1 TRUE
+                        Case 1: Set ANSELA.1 On
+                      #endif
+                      #ifdef USE_AD2 TRUE
+                        Case 2: Set ANSELA.2 On
+                      #endif
+                      #ifdef USE_AD3 TRUE
+                        Case 3: Set ANSELA.4 On
+                      #endif
+                      #ifdef USE_AD4 TRUE
+                        Case 4: Set ANSELA.5 On
+                      #endif
+                  #endif
+                  #if var(ANSELC)
+                      #Ifdef USE_AD16 TRUE
+                        Case 16: Set ANSELC.0 On
+                      #endif
+                      #Ifdef USE_AD17 TRUE
+                        Case 17: Set ANSELC.1 On
+                      #endif
+                      #Ifdef USE_AD18 TRUE
+                        Case 18: Set ANSELC.2 On
+                      #endif
+                      #Ifdef USE_AD19 TRUE
+                        Case 19: Set ANSELC.3 On
+                      #endif
+                      #Ifdef USE_AD20 TRUE
+                        Case 20: Set ANSELC.4 On
+                      #endif
+                      #Ifdef USE_AD21 TRUE
+                        Case 21: Set ANSELC.5 On
+                      #endif
+                  #endif
                 #endif '#ifNdef Bit(CHS5)
 
                 #ifdef Bit(CHS5)
                     '#ifdef Bit(CHS5)
-
-                    #ifdef USE_AD0 TRUE
-                      Case 0: Set ANSELA.0 On
-                    #endif
-                    #ifdef USE_AD1 TRUE
-                      Case 1: Set ANSELA.1 On
-                    #endif
-                    #ifdef USE_AD2 TRUE
-                      Case 2: Set ANSELA.2 On
-                    #endif
-                    #ifdef USE_AD3 TRUE
-                      Case 3: Set ANSELA.4 On
-                    #endif
-                    #ifdef USE_AD4 TRUE
-                      Case 4: Set ANSELA.5 On
-                    #endif
-                    #Ifdef USE_AD16 TRUE
-                      Case 16: Set ANSELC.0 On
-                    #endif
-                    #Ifdef USE_AD17 TRUE
-                      Case 17: Set ANSELC.1 On
-                    #endif
-                    #Ifdef USE_AD18 TRUE
-                      Case 18: Set ANSELC.2 On
-                    #endif
-                    #Ifdef USE_AD19 TRUE
-                      Case 19: Set ANSELC.3 On
-                    #endif
-                    #Ifdef USE_AD20 TRUE
-                      Case 20: Set ANSELC.4 On
-                    #endif
-                    #Ifdef USE_AD21 TRUE
-                      Case 21: Set ANSELC.5 On
-                    #endif
-
+                  #if var(ANSELA)
+                      #ifdef USE_AD0 TRUE
+                        Case 0: Set ANSELA.0 On
+                      #endif
+                      #ifdef USE_AD1 TRUE
+                        Case 1: Set ANSELA.1 On
+                      #endif
+                      #ifdef USE_AD2 TRUE
+                        Case 2: Set ANSELA.2 On
+                      #endif
+                      #ifdef USE_AD3 TRUE
+                        Case 3: Set ANSELA.4 On
+                      #endif
+                      #ifdef USE_AD4 TRUE
+                        Case 4: Set ANSELA.5 On
+                      #endif
+                  #endif
+                  #if var(ANSELC)
+                      #Ifdef USE_AD16 TRUE
+                        Case 16: Set ANSELC.0 On
+                      #endif
+                      #Ifdef USE_AD17 TRUE
+                        Case 17: Set ANSELC.1 On
+                      #endif
+                      #Ifdef USE_AD18 TRUE
+                        Case 18: Set ANSELC.2 On
+                      #endif
+                      #Ifdef USE_AD19 TRUE
+                        Case 19: Set ANSELC.3 On
+                      #endif
+                      #Ifdef USE_AD20 TRUE
+                        Case 20: Set ANSELC.4 On
+                      #endif
+                      #Ifdef USE_AD21 TRUE
+                        Case 21: Set ANSELC.5 On
+                      #endif
+                  #endif
                 #endif '#ifdef Bit(CHS5)
 
 
@@ -528,42 +533,47 @@ macro LLReadAD (ADLeftAdjust)
                     #IFDEF DebugADC_H
                         NOP 'ChipPins = 20 @DebugADC_H
                     #ENDIF
-
-                    #ifdef USE_AD0 TRUE
-                      Case 0: Set ANSELA.0 On
+                    #if var(ANSELA)
+                        #ifdef USE_AD0 TRUE
+                          Case 0: Set ANSELA.0 On
+                        #endif
+                        #ifdef USE_AD1 TRUE
+                          Case 1: Set ANSELA.1 On
+                        #endif
+                        #ifdef USE_AD2 TRUE
+                          Case 2: Set ANSELA.2 On
+                        #endif
+                        #ifdef USE_AD3 TRUE
+                          Case 3: Set ANSELA.4 On
+                        #endif
                     #endif
-                    #ifdef USE_AD1 TRUE
-                      Case 1: Set ANSELA.1 On
+                    #if var(ANSELC)
+                        #ifdef USE_AD4 TRUE
+                          Case 4: Set ANSELc.0 On
+                        #endif
+                        #ifdef USE_AD5 TRUE
+                          Case 5: Set ANSELc.1 On
+                        #endif
+                        #ifdef USE_AD6 TRUE
+                          Case 6: Set ANSELc.2 On
+                        #endif
+                        #ifdef USE_AD7 TRUE
+                          Case 7: Set ANSELc.3 On
+                        #endif
+                        #ifdef USE_AD8 TRUE
+                          Case 8: Set ANSELc.6 On
+                        #endif
+                        #ifdef USE_AD9 TRUE
+                          Case 9: Set ANSELc.7 On
+                        #endif
                     #endif
-                    #ifdef USE_AD2 TRUE
-                      Case 2: Set ANSELA.2 On
-                    #endif
-                    #ifdef USE_AD3 TRUE
-                      Case 3: Set ANSELA.4 On
-                    #endif
-                    #ifdef USE_AD4 TRUE
-                      Case 4: Set ANSELc.0 On
-                    #endif
-                    #ifdef USE_AD5 TRUE
-                      Case 5: Set ANSELc.1 On
-                    #endif
-                    #ifdef USE_AD6 TRUE
-                      Case 6: Set ANSELc.2 On
-                    #endif
-                    #ifdef USE_AD7 TRUE
-                      Case 7: Set ANSELc.3 On
-                    #endif
-                    #ifdef USE_AD8 TRUE
-                      Case 8: Set ANSELc.6 On
-                    #endif
-                    #ifdef USE_AD9 TRUE
-                      Case 9: Set ANSELc.7 On
-                    #endif
-                    #Ifdef USE_AD10 TRUE
-                      Case 10: Set ANSELb.4 On
-                    #endif
-                    #Ifdef USE_AD11 TRUE
-                      Case 11: Set ANSELb.5 On
+                    #if var(ANSELB)
+                        #Ifdef USE_AD10 TRUE
+                          Case 10: Set ANSELb.4 On
+                        #endif
+                        #Ifdef USE_AD11 TRUE
+                          Case 11: Set ANSELb.5 On
+                        #endif
                     #endif
                 #endif '#ifNdef Bit(CHS5)
                 #ifdef Bit(CHS5)
@@ -571,59 +581,63 @@ macro LLReadAD (ADLeftAdjust)
                     #IFDEF DebugADC_H
                         NOP 'ChipPins = 20 @DebugADC_H
                     #ENDIF
-                    #ifdef USE_AD0 TRUE
-                      Case 0: Set ANSELA.0 On
+                    #if var(ANSELA)
+                        #ifdef USE_AD0 TRUE
+                          Case 0: Set ANSELA.0 On
+                        #endif
+                        #ifdef USE_AD1 TRUE
+                          Case 1: Set ANSELA.1 On
+                        #endif
+                        #ifdef USE_AD2 TRUE
+                          Case 2: Set ANSELA.2 On
+                        #endif
+                        #ifdef USE_AD3 TRUE
+                          Case 3: Set ANSELA.4 On
+                        #endif
+                        #ifdef USE_AD4 TRUE
+                          Case 4: Set ANSELA.5 On
+                        #endif
                     #endif
-                    #ifdef USE_AD1 TRUE
-                      Case 1: Set ANSELA.1 On
+                    #if var(ANSELB)
+                        #ifdef USE_AD12 TRUE
+                          Case 12: Set ANSELb.4 On
+                        #endif
+                        #ifdef USE_AD13 TRUE
+                          Case 13: Set ANSELb.5 On
+                        #endif
+                        #ifdef USE_AD14 TRUE
+                          Case 14: Set ANSELb.6 On
+                        #endif
+                        #ifdef USE_AD15 TRUE
+                          Case 15: Set ANSELb.7 On
+                        #endif
                     #endif
-                    #ifdef USE_AD2 TRUE
-                      Case 2: Set ANSELA.2 On
-                    #endif
-                    #ifdef USE_AD3 TRUE
-                      Case 3: Set ANSELA.4 On
-                    #endif
-                    #ifdef USE_AD4 TRUE
-                      Case 4: Set ANSELA.5 On
-                    #endif
-
-                    #ifdef USE_AD12 TRUE
-                      Case 12: Set ANSELb.4 On
-                    #endif
-                    #ifdef USE_AD13 TRUE
-                      Case 13: Set ANSELb.5 On
-                    #endif
-                    #ifdef USE_AD14 TRUE
-                      Case 14: Set ANSELb.6 On
-                    #endif
-                    #ifdef USE_AD15 TRUE
-                      Case 15: Set ANSELb.7 On
-                    #endif
-
-                    #ifdef USE_AD16 TRUE
-                      Case 16: Set ANSELc.0 On
-                    #endif
-                    #ifdef USE_AD17 TRUE
-                      Case 17: Set ANSELc.1 On
-                    #endif
-                    #Ifdef USE_AD18 TRUE
-                      Case 18: Set ANSELc.2 On
-                    #endif
-                    #Ifdef USE_AD19 TRUE
-                      Case 19: Set ANSELc.3 On
-                    #endif
-                    #Ifdef USE_AD20 TRUE
-                      Case 20: Set ANSELc.4 On
-                    #endif
-                    #Ifdef USE_AD21 TRUE
-                      Case 21: Set ANSELc.5 On
-                    #endif
-                    #Ifdef USE_AD22 TRUE
-                      Case 22: Set ANSELc.6 On
-                    #endif
-                    #Ifdef USE_AD23 TRUE
-                      Case 23: Set ANSELc.7 On
-                    #endif
+                    #if var(ANSELC)
+                        #ifdef USE_AD16 TRUE
+                          Case 16: Set ANSELc.0 On
+                        #endif
+                        #ifdef USE_AD17 TRUE
+                          Case 17: Set ANSELc.1 On
+                        #endif
+                        #Ifdef USE_AD18 TRUE
+                          Case 18: Set ANSELc.2 On
+                        #endif
+                        #Ifdef USE_AD19 TRUE
+                          Case 19: Set ANSELc.3 On
+                        #endif
+                        #Ifdef USE_AD20 TRUE
+                          Case 20: Set ANSELc.4 On
+                        #endif
+                        #Ifdef USE_AD21 TRUE
+                          Case 21: Set ANSELc.5 On
+                        #endif
+                        #Ifdef USE_AD22 TRUE
+                          Case 22: Set ANSELc.6 On
+                        #endif
+                        #Ifdef USE_AD23 TRUE
+                          Case 23: Set ANSELc.7 On
+                        #endif
+                     #endif
                 #endif '#ifdef Bit(CHS5)
 
               #ENDIF
@@ -634,42 +648,45 @@ macro LLReadAD (ADLeftAdjust)
                 #IFDEF DebugADC_H
                     NOP 'ChipPins = 18 @DebugADC_H
                 #ENDIF
-
-                #ifdef USE_AD0 TRUE
-                  Case 0: Set ANSELA.0 On
+                #if var(ANSELA)
+                    #ifdef USE_AD0 TRUE
+                      Case 0: Set ANSELA.0 On
+                    #endif
+                    #ifdef USE_AD1 TRUE
+                      Case 1: Set ANSELA.1 On
+                    #endif
+                    #ifdef USE_AD2 TRUE
+                      Case 2: Set ANSELA.2 On
+                    #endif
+                    #ifdef USE_AD3 TRUE
+                      Case 3: Set ANSELA.3 On
+                    #endif
+                    #ifdef USE_AD4 TRUE
+                      Case 4: Set ANSELA.4 On
+                    #endif
                 #endif
-                #ifdef USE_AD1 TRUE
-                  Case 1: Set ANSELA.1 On
-                #endif
-                #ifdef USE_AD2 TRUE
-                  Case 2: Set ANSELA.2 On
-                #endif
-                #ifdef USE_AD3 TRUE
-                  Case 3: Set ANSELA.3 On
-                #endif
-                #ifdef USE_AD4 TRUE
-                  Case 4: Set ANSELA.4 On
-                #endif
-                #ifdef USE_AD11 TRUE
-                  Case 11: Set ANSELB.1 On
-                #endif
-                #ifdef USE_AD10 TRUE
-                  Case 10: Set ANSELB.2 On
-                #endif
-                #ifdef USE_AD9 TRUE
-                  Case 9: Set ANSELB.3 On
-                #endif
-                #ifdef USE_AD8 TRUE
-                  Case 8: Set ANSELB.4 On
-                #endif
-                #ifdef USE_AD7 TRUE
-                  Case 7: Set ANSELB.5 On
-                #endif
-                #ifdef USE_AD5 TRUE
-                  Case 5: Set ANSELB.6 On
-                #endif
-                #ifdef USE_AD6 TRUE
-                  Case 6: Set ANSELB.7 On
+                #if var(ANSELB)
+                    #ifdef USE_AD11 TRUE
+                      Case 11: Set ANSELB.1 On
+                    #endif
+                    #ifdef USE_AD10 TRUE
+                      Case 10: Set ANSELB.2 On
+                    #endif
+                    #ifdef USE_AD9 TRUE
+                      Case 9: Set ANSELB.3 On
+                    #endif
+                    #ifdef USE_AD8 TRUE
+                      Case 8: Set ANSELB.4 On
+                    #endif
+                    #ifdef USE_AD7 TRUE
+                      Case 7: Set ANSELB.5 On
+                    #endif
+                    #ifdef USE_AD5 TRUE
+                      Case 5: Set ANSELB.6 On
+                    #endif
+                    #ifdef USE_AD6 TRUE
+                      Case 6: Set ANSELB.7 On
+                    #endif
                 #endif
               #ENDIF
 
@@ -681,20 +698,22 @@ macro LLReadAD (ADLeftAdjust)
                         NOP 'ChipPins = 28  Or ChipPins = 40 @DebugADC_H
                     #ENDIF
 
-                    #Ifdef USE_AD0 TRUE
-                      Case 0: Set ANSELA.0 On
-                    #endif
-                    #Ifdef USE_AD1 TRUE
-                      Case 1: Set ANSELA.1 On
-                    #endif
-                    #Ifdef USE_AD2 TRUE
-                      Case 2: Set ANSELA.2 On
-                    #endif
-                    #Ifdef USE_AD3 TRUE
-                      Case 3: Set ANSELA.3 On
-                    #endif
-                    #Ifdef USE_AD4 TRUE
-                      Case 4: Set ANSELA.5 On
+                    #if var(ANSELA)
+                        #Ifdef USE_AD0 TRUE
+                          Case 0: Set ANSELA.0 On
+                        #endif
+                        #Ifdef USE_AD1 TRUE
+                          Case 1: Set ANSELA.1 On
+                        #endif
+                        #Ifdef USE_AD2 TRUE
+                          Case 2: Set ANSELA.2 On
+                        #endif
+                        #Ifdef USE_AD3 TRUE
+                          Case 3: Set ANSELA.3 On
+                        #endif
+                        #Ifdef USE_AD4 TRUE
+                          Case 4: Set ANSELA.5 On
+                        #endif
                     #endif
 
                     #IFDEF Var(ANSELB)
