@@ -124,6 +124,7 @@
 ''' 14/12/2018 Added PWMxOE enable bits to support parts that need it. 16f1503 etc.
 ''' 02/05/2019 Added HPWMUpdate for CCP1..CCP5. Two sections one for the hardware PWM module(s) and one for the CCP module(s)
 ''' 14/08/2019 Added labels only. No functional changes.
+''' 07/05/2020 Revised to isolate Timer4 and Timer6 in HPWM()
 
   'define the defaults
   #define AVRTC0
@@ -249,6 +250,14 @@ Sub InitPWM
 
         'T2PR was used in these routines, but, that is now a register, so, Changed to TxPR
           PR2_CPP_PWM_Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
+
+          warning PR2_CPP_PWM_Temp
+          if PR2_CPP_PWM_Temp = 0 then
+            error msg(BadPWMFreq)
+            warning "PWM Frequency too high for microcontroller clock frequency"
+          end if
+
+
           TxPR = 1
           if PR2_CPP_PWM_Temp > 255 then
               PR2_CPP_PWM_Temp = int((1/PWM_Freq)/(16*(1/(ChipMHz*1000))))
@@ -2661,19 +2670,23 @@ sub HPWM_CCPTimerN (In PWMChannel, In PWMFreq, PWMDuty, Optional in _PWMTimerSel
       #ifdef USE_HPWM_TIMER2 TRUE
       Case 2
             HPWM (PWMChannel, PWMFreq, PWMDuty )
-            [canskip]TMR2ON= 0b'1'
+            TMR2ON= 1
       #endif
 
       #ifdef USE_HPWM_TIMER4 TRUE
+        #ifdef var(T4CON)
           case 4
             HPWM (PWMChannel, PWMFreq, PWMDuty )
-            [canskip]TMR4ON= 0b'1'
+            TMR4ON= 1
+        #endif
       #endif
 
         #ifdef USE_HPWM_TIMER6 TRUE
-          case 6
-            HPWM (PWMChannel, PWMFreq, PWMDuty )
-            [canskip]TMR6ON= 0b'1'
+          #ifdef var(T4CON)
+            case 6
+              HPWM (PWMChannel, PWMFreq, PWMDuty )
+              TMR6ON= 1
+          #endif
       #endif
 
     End Select
@@ -2780,82 +2793,87 @@ CCPPWMSetupClockSource:
               #endif
 
              #ifdef USE_HPWM_TIMER4 TRUE
-             case 4:
-                 PR4 = PRx_Temp
-                'Set the Bits for the Postscaler
-                'Setup Timerx by clearing the Prescaler bits - it is set next....
-                #ifdef bit(T4CKPS4)
-                    SET T4CKPS0 OFF
-                    SET T4CKPS1 OFF
-                    SET T4CKPS4 OFF
-                    'Set Prescaler bits
-                    if Tx_PR = 4  then SET T4CKPS1 ON
-                    if Tx_PR = 16 then SET T4CKPS4 ON
-                    if Tx_PR = 64 then SET T4CKPS4 ON: SET T4CKPS1 ON
-                #endif
+                #ifdef var(T4CON)
+                 case 4:
+                     PR4 = PRx_Temp
+                    'Set the Bits for the Postscaler
+                    'Setup Timerx by clearing the Prescaler bits - it is set next....
+                    #ifdef bit(T4CKPS4)
+                        SET T4CKPS0 OFF
+                        SET T4CKPS1 OFF
+                        SET T4CKPS4 OFF
+                        'Set Prescaler bits
+                        if Tx_PR = 4  then SET T4CKPS1 ON
+                        if Tx_PR = 16 then SET T4CKPS4 ON
+                        if Tx_PR = 64 then SET T4CKPS4 ON: SET T4CKPS1 ON
+                    #endif
 
-                'Revised to show overflow issue
-                #ifndef bit(T4CKPS4)
-                  #ifdef bit(T4CKPS0)
-                    SET T4CKPS0 OFF
-                    SET T4CKPS1 OFF
-                    'Set Prescaler bits
-                    if Tx_PR = 4  then SET T4CKPS0 ON
-                    if Tx_PR = 16 then SET T4CKPS1 ON
-                    'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
-                    'if T4CON and 3 = 3 then an overflow has occured!
-                    if Tx_PR = 64 then SET T4CKPS0 ON: SET T4CKPS1 ON
-                  #endif
-                #endif
+                    'Revised to show overflow issue
+                    #ifndef bit(T4CKPS4)
+                      #ifdef bit(T4CKPS0)
+                        SET T4CKPS0 OFF
+                        SET T4CKPS1 OFF
+                        'Set Prescaler bits
+                        if Tx_PR = 4  then SET T4CKPS0 ON
+                        if Tx_PR = 16 then SET T4CKPS1 ON
+                        'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
+                        'if T4CON and 3 = 3 then an overflow has occured!
+                        if Tx_PR = 64 then SET T4CKPS0 ON: SET T4CKPS1 ON
+                      #endif
+                    #endif
 
-                'Set Clock Source, if required
-                #ifdef var(T4CLKCON)
-                    'Set to FOSC/4 for backward compatibility
-                    T4CLKCON.T4CS0 = 1
-                    T4CLKCON.T4CS1 = 0
-                    T4CLKCON.T4CS2 = 0
-                    T4CLKCON.T4CS3 = 0
+                    'Set Clock Source, if required
+                    #ifdef var(T4CLKCON)
+                        'Set to FOSC/4 for backward compatibility
+                        T4CLKCON.T4CS0 = 1
+                        T4CLKCON.T4CS1 = 0
+                        T4CLKCON.T4CS2 = 0
+                        T4CLKCON.T4CS3 = 0
+                    #endif
                 #endif
              #endif
 
              #ifdef USE_HPWM_TIMER6 TRUE
-             case 6:
-                PR6 = PRx_Temp
-                'Set the Bits for the Postscaler
-                'Setup Timerx by clearing the Prescaler bits - it is set next....
-                #ifdef bit(T6CKPS6)
-                    SET T6CKPS0 OFF
-                    SET T6CKPS1 OFF
-                    SET T6CKPS6 OFF
-                    'Set Prescaler bits
-                    if Tx_PR = 4  then SET T6CKPS1 ON
-                    if Tx_PR = 16 then SET T6CKPS6 ON
-                    if Tx_PR = 64 then SET T6CKPS6 ON: SET T6CKPS1 ON
-                #endif
+                #ifdef var(T6CON)
+                  case 6:
+                    PR6 = PRx_Temp
+                    'Set the Bits for the Postscaler
+                    'Setup Timerx by clearing the Prescaler bits - it is set next....
+                    #ifdef bit(T6CKPS6)
+                        SET T6CKPS0 OFF
+                        SET T6CKPS1 OFF
+                        SET T6CKPS6 OFF
+                        'Set Prescaler bits
+                        if Tx_PR = 4  then SET T6CKPS1 ON
+                        if Tx_PR = 16 then SET T6CKPS6 ON
+                        if Tx_PR = 64 then SET T6CKPS6 ON: SET T6CKPS1 ON
+                    #endif
 
-                'Revised to show overflow issue
-                #ifndef bit(T6CKPS6)
-                  #ifdef bit(T6CKPS0)
-                    SET T6CKPS0 OFF
-                    SET T6CKPS1 OFF
-                    'Set Prescaler bits
-                    if Tx_PR = 4  then SET T6CKPS0 ON
-                    if Tx_PR = 16 then SET T6CKPS1 ON
-                    'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
-                    'if T6CON and 3 = 3 then an overflow has occured!
-                    if Tx_PR = 64 then SET T6CKPS0 ON: SET T6CKPS1 ON
-                  #endif
-                #endif
+                    'Revised to show overflow issue
+                    #ifndef bit(T6CKPS6)
+                      #ifdef bit(T6CKPS0)
+                        SET T6CKPS0 OFF
+                        SET T6CKPS1 OFF
+                        'Set Prescaler bits
+                        if Tx_PR = 4  then SET T6CKPS0 ON
+                        if Tx_PR = 16 then SET T6CKPS1 ON
+                        'Overflowed - this chip cannot handle the desired PWMFrequency. Lower clock speed.
+                        'if T6CON and 3 = 3 then an overflow has occured!
+                        if Tx_PR = 64 then SET T6CKPS0 ON: SET T6CKPS1 ON
+                      #endif
+                    #endif
 
-                'Set Clock Source, if required
-                #ifdef var(T6CLKCON)
-                    'Set to FOSC/4 for backward compatibility
-                    T6CLKCON.T6CS0 = 1
-                    T6CLKCON.T6CS1 = 0
-                    T6CLKCON.T6CS2 = 0
-                    T6CLKCON.T6CS3 = 0
+                    'Set Clock Source, if required
+                    #ifdef var(T6CLKCON)
+                        'Set to FOSC/4 for backward compatibility
+                        T6CLKCON.T6CS0 = 1
+                        T6CLKCON.T6CS1 = 0
+                        T6CLKCON.T6CS2 = 0
+                        T6CLKCON.T6CS3 = 0
+                    #endif
                 #endif
-             #endif
+              #endif
+
           end Select
 
 End_of_CCPPWMSetupClockSource:
