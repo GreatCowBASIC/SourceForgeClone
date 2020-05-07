@@ -251,13 +251,6 @@ Sub InitPWM
         'T2PR was used in these routines, but, that is now a register, so, Changed to TxPR
           PR2_CPP_PWM_Temp = int((1/PWM_Freq)/(4*(1/(ChipMHz*1000))))
 
-          warning PR2_CPP_PWM_Temp
-          if PR2_CPP_PWM_Temp = 0 then
-            error msg(BadPWMFreq)
-            warning "PWM Frequency too high for microcontroller clock frequency"
-          end if
-
-
           TxPR = 1
           if PR2_CPP_PWM_Temp > 255 then
               PR2_CPP_PWM_Temp = int((1/PWM_Freq)/(16*(1/(ChipMHz*1000))))
