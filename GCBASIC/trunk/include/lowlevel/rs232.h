@@ -1,5 +1,5 @@
 ;    Serial/RS232 routines for Great Cow BASIC
-;    Copyright (C) 2006-2020 Hugh Considine, William Roth and Evan Venn
+;    Copyright (C) 2006, 2014, 2015, 2017 Hugh Considine, William Roth and Evan Venn
 
 ;    This library is free software; you can redistributet and/or
 ;    modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,8 @@
 ;     2. Added Padding to bit delay times to balance High/Low bit times
 ;  26 Aug 2016. Added Serprint Long support.
 ;  29 Aug 2016. Added 5 ms delay to init to ensure lines are settled.
-
+;  08 May 2020. Reduced RAM consumption using Serprint with string constants.
+;
 ;********************************************************************************
 
 ;    Usage of Sys232Temp
@@ -270,7 +271,7 @@ Sub SerReceive(In Ser_Select, Out Ser_Byte, Optional  Ser_DoNotChangeInterruptSt
   end if
 end sub
 
-sub SerPrint (In Ser_Select, PrintData As String)
+sub SerPrint (In Ser_Select, In PrintData As String)
    'PrintLen = LEN(PrintData$)
    PrintLen = PrintData(0)
 
