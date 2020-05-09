@@ -52,6 +52,8 @@
 '''******************************************************************************
 '  20.02.2018     Updated license only
 '  05.02.2019     Bugfix for AVR-receive
+'  08.05.2020     Reduced RAM consumption using SerNPrint with string constants
+
 
 '*** 3 independent channels in 3 different files:
 #include <SoftSerialCh1.h>
