@@ -54,6 +54,7 @@
 ' 06/04/2020   Added K107 Capabilities
 ' 04/05/2020   Added Support for HWI2C2
 ' 08/05/2020   Increase init delays to support VFDs, added LCD_VFD_DELAY
+' 09/05/2020   Added LCD_VARIANT = 1601a
 '***********************************************************************
 
 
@@ -61,7 +62,7 @@
 #startup InitLCD
 
 'Version
-#define LCD_Version 1502020
+#define LCD_Version 05052020
 
 'Compatibility with older programs
 #define LCDInt Print
@@ -316,6 +317,16 @@ Dim SysLCDTemp as Byte
         LCDSpace = K107LCDSpace
 
     END IF
+
+    IF LCD_VARIANT = 1601a THEN
+
+        PRINT  =  V1601aPRINT
+        LOCATE =  V1601aLOCATE
+        CLS =     V1601aCLS
+        LCDHOME = V1601aLCDHOME
+
+    END IF
+
 
 #ENDSCRIPT
 
@@ -2256,6 +2267,241 @@ sub K107LCDSpace(in LCDValue)
         LCDValue --
     loop
 end sub
+
+;LCD_VARIANT 1601a
+;
+;The variant assummes 8chars by 1row.
+;Memory maps as follows - columne to memory
+;0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
+;0  1  2  3  4  5  6  7 40 41  42 43 44 45 46 47
+;
+;So, by locating to the first row on a twenty row display, the default LCD width, the additional locatates address the memory correctly.
+;
+
+
+
+
+
+
+Sub V1601aPrint (In PrintData As String)
+'Sub to print a string variable on the LCD
+    Dim CurrentCol, CurrentLine as Byte
+    Dim PrintLen, SysPrintTemp  as byte
+
+    PrintLen = PrintData(0)
+
+    If PrintLen = 0 Then Exit Sub
+    Set LCD_RS On
+
+    'Write Data
+    For SysPrintTemp = 1 To PrintLen
+        LCDWriteByte PrintData(SysPrintTemp)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+    Next
+
+End Sub
+
+Sub V1601aPrint (In LCDValue)
+'Sub to print a byte variable on the LCD
+
+    Dim CurrentCol, CurrentLine as Byte
+
+    LCDValueTemp = 0
+    Set LCD_RS On
+
+    IF LCDValue >= 100 Then
+        LCDValueTemp = LCDValue / 100
+        LCDValue = SysCalcTempX
+        LCDWriteByte(LCDValueTemp + 48)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+    End If
+
+    If LCDValueTemp > 0 Or LCDValue >= 10 Then
+        LCDValueTemp = LCDValue / 10
+        LCDValue = SysCalcTempX
+        LCDWriteByte(LCDValueTemp + 48)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+    End If
+    LCDWriteByte (LCDValue + 48)
+    CurrentCol++
+    Locate ( CurrentLine, CurrentCol )
+    Set LCD_RS On
+
+End Sub
+
+Sub V1601aPrint (In LCDValue As Word)
+'Sub to print a word variable on the LCD
+    dim LCDValueTemp as Byte
+    Dim CurrentCol, CurrentLine as Byte
+
+    Dim SysCalcTempX As Word
+    Set LCD_RS On
+    LCDValueTemp = 0
+
+    If LCDValue >= 10000 then
+        LCDValueTemp = LCDValue / 10000 [word]
+        LCDValue = SysCalcTempX
+        LCDWriteByte(LCDValueTemp + 48)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+        Goto LCDPrintWord1000
+    End If
+
+    If LCDValue >= 1000 then
+        LCDPrintWord1000:
+        LCDValueTemp = LCDValue / 1000 [word]
+        LCDValue = SysCalcTempX
+        LCDWriteByte(LCDValueTemp + 48)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+        Goto LCDPrintWord100
+    End If
+
+    If LCDValue >= 100 then
+        LCDPrintWord100:
+        LCDValueTemp = LCDValue / 100 [word]
+        LCDValue = SysCalcTempX
+        LCDWriteByte(LCDValueTemp + 48)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+        Goto LCDPrintWord10
+    End If
+
+    If LCDValue >= 10 then
+        LCDPrintWord10:
+        LCDValueTemp = LCDValue / 10 [word]
+        LCDValue = SysCalcTempX
+        LCDWriteByte(LCDValueTemp + 48)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+    End If
+
+    LCDWriteByte (LCDValue + 48)
+    CurrentCol++
+    Locate ( CurrentLine, CurrentCol )
+    Set LCD_RS On
+End Sub
+
+Sub V1601aPrint (In LCDValueInt As Integer)
+'Sub to print an integer variable on the LCD
+
+    Dim CurrentCol, CurrentLine as Byte
+    Dim LCDValue As Word
+
+    'If sign bit is on, print - sign and then negate
+    If LCDValueInt.15 = On Then
+              LCDWriteChar("-")
+              CurrentCol++
+              Locate ( CurrentLine, CurrentCol )
+              Set LCD_RS On
+              LCDValue = -LCDValueInt
+
+    'Sign bit off, so just copy value
+    Else
+              LCDValue = LCDValueInt
+    End If
+
+    'Use Print(word) to display value
+    Print LCDValue
+End Sub
+
+Sub V1601aPrint (In LCDValue As Long)
+'Sub to print a long variable on the LCD
+
+    Dim CurrentCol, CurrentLine as Byte
+
+    Dim SysPrintBuffLen as byte
+    Dim SysCalcTempA As Long
+    Dim SysPrintBuffer(10)
+    SysPrintBuffLen = 0
+
+    Do
+        'Divide number by 10, remainder into buffer
+        SysPrintBuffLen += 1
+        SysPrintBuffer(SysPrintBuffLen) = LCDValue % 10
+        LCDValue = SysCalcTempA
+    Loop While LCDValue <> 0
+
+    'Display
+    Set LCD_RS On
+    For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+        LCDWriteByte(SysPrintBuffer(SysPrintTemp) + 48)
+        CurrentCol++
+        Locate ( CurrentLine, CurrentCol )
+        Set LCD_RS On
+    Next
+
+End Sub
+
+Sub V1601aLOCATE (In LCDLine, In LCDColumn)
+'Sub to locate the cursor
+'Where LCDColumn is 0 to screen width-1, LCDLine is 0 to screen height-1
+   CurrentCol = LCDColumn
+   CurrentLine = LCDLine
+
+   Set LCD_RS Off
+   If LCDColumn > 7 Then
+       LCDLine = 1
+       LCDColumn = LCDColumn - 8
+   else
+       LCDLine = 0
+   End If
+
+   LCDWriteByte(0x80 or 0x40 * LCDLine + LCDColumn)
+   wait 5 10us
+
+End Sub
+
+Sub V1601aCLS
+'Sub to clear the LCD
+
+    Dim CurrentCol, CurrentLine as Byte
+
+
+    SET LCD_RS OFF
+
+    'Clear screen
+    LCDWriteByte (0b00000001)
+    Wait 4 ms
+
+    'Move to start of visible DDRAM
+    LCDWriteByte(0x80)
+    Wait 50 us
+
+    CurrentCol = 0
+    CurrentLine = 0
+
+
+End Sub
+
+Sub V1601aLCDHOME
+'Sub to set the cursor to the home position
+
+    Dim CurrentCol, CurrentLine as Byte
+
+    SET LCD_RS OFF
+    'Return CURSOR to home
+    LCDWriteByte (0b00000010)
+    Wait 2 ms 'Must be > 1.52 ms
+
+    CurrentCol = 0
+    CurrentLine = 0
+
+End Sub
+
+
+
+
 
 
 ;    Credits:
