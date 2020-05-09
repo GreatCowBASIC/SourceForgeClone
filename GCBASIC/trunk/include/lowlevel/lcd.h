@@ -52,8 +52,8 @@
 '
 '***********************************************************************
 ' 06/04/2020   Added K107 Capabilities
-' 04/05/2020   Added Support for HWI2C2 - WMR (4 May 2020)
-'
+' 04/05/2020   Added Support for HWI2C2
+' 08/05/2020   Increase init delays to support VFDs, added LCD_VFD_DELAY
 '***********************************************************************
 
 
@@ -548,7 +548,6 @@ sub InitLCD
               DIR LCD_RW OUT
         #ENDIF
 
-        wait 20 ms
         SET LCD_RS OFF
     #ENDIF
 
@@ -569,6 +568,8 @@ sub InitLCD
     #ENDIF
 
     #IFDEF LCD_IO 8
+
+        wait 50 ms
 
         DIM LCDByte as Byte
 
@@ -599,6 +600,8 @@ sub InitLCD
     #ENDIF
 
     #IFDEF LCD_IO 4
+
+        wait 50 ms
 
         DIR LCD_DB4 OUT
         DIR LCD_DB5 OUT
@@ -1080,6 +1083,11 @@ sub LCDNormalWriteByte(In LCDByte )
         if LCDByte.6 ON THEN SET LCD_DB6 ON
         if LCDByte.5 ON THEN SET LCD_DB5 ON
         if LCDByte.4 ON THEN SET LCD_DB4 ON
+
+        #IFDEF LCD_VFD_DELAY
+            Wait LCD_VFD_DELAY
+        #ENDIF
+
         Wait 1 us
         pulseout LCD_enable, 1 us
 
