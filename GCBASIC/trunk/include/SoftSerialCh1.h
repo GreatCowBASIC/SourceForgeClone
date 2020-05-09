@@ -39,6 +39,8 @@
 '''******************************************************************************
 '  20.02.2018     Updated license only
 '  05.02.2019     Bugfix for AVR-receive
+'  08.05.2020     Reduced RAM consumption using Ser1Print with string constants
+
 
   '*** Set default value of SER1_INVERT if no user value:
   #ifndef SER1_INVERT
@@ -305,7 +307,7 @@ Sub Ser1Send (In STxDataByte)
 End Sub
 
 
-Sub Ser1Print (PrintData As String)
+Sub Ser1Print (In PrintData As String)
    'PrintLen = LEN(PrintData$)
    PrintLen = PrintData(0)
 
