@@ -283,7 +283,7 @@ EEPGD,EECON1,7
 A0:BF
 
 [NoBankRAM]
-70:7F
+40:7F
 
 [Pins-DIP]
 17,RA0(IO),AN0(I)
