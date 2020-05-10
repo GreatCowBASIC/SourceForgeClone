@@ -187,7 +187,7 @@ TRISB5,TRISB,5
 70:7F
 
 [NoBankRAM]
-0D:0F
+D:F
 
 [Pins-DIP]
 13,RB0(IO)

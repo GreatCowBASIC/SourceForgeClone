@@ -272,7 +272,7 @@ RD,PMCON1,0
 A0:BF
 
 [NoBankRAM]
-70:7F
+40:7F
 
 [Pins-DIP]
 2,RA0(IO),AN0(I)

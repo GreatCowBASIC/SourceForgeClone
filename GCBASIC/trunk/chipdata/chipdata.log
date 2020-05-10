@@ -479,9 +479,7 @@ Adding CHS bits to ADCON0
 (A)Old_and_Legacy             EQU  H'0000'
 (A)Old_and_Legacy             EQU  H'0000'
 (A)Old_and_Legacy             EQU  H'0000'
-Could not build memory map
 Adding CHS bits to ADCON0
-Chip data file is suspect
 16F1933 (15) 258/1015
 16F1934 (15) 259/1015
 16F1936 (15) 260/1015
@@ -885,9 +883,7 @@ Adding CHS bits to ADCON0
 16LF19196 (15) 461/1015
 Adding CHS bits to ADCON0
 16LF19197 (15) 462/1015
-Could not build memory map
 Adding CHS bits to ADCON0
-Chip data file is suspect
 16LF1933 (15) 463/1015
 16LF1934 (15) 464/1015
 16LF1936 (15) 465/1015
@@ -1101,7 +1097,6 @@ No DEBUG config bit!
 Adding CHS bits to ADCON0
 18F27Q10 (16) 598/1015
 18F27Q43 (16) 599/1015
- 8192
 Adding CHS bits to ADCON0
 18F27Q84 (16) 600/1015
 18F4220 (16) 601/1015
@@ -1200,7 +1195,6 @@ No DEBUG config bit!
 Adding CHS bits to ADCON0
 18F47Q10 (16) 665/1015
 18F47Q43 (16) 666/1015
- 8192
 Adding CHS bits to ADCON0
 18F47Q84 (16) 667/1015
 18F55K42 (16) 668/1015
@@ -1211,7 +1205,6 @@ Adding CHS bits to ADCON0
 Adding CHS bits to ADCON0
 18F57Q43 (16) 671/1015
 Missing data in chipdata.csv
- 0
 Warning: W103: unusual int osc speed:0 (No OSCCON, Has OSCCON2)
 No pinout found, and could not guess
 Chip data file is suspect
