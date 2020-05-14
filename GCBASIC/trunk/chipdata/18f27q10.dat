@@ -14,7 +14,7 @@ Prog=65536
 EEPROM=1024
 
 'This constant is exposed as ChipRAM
-RAM=3615
+RAM=3359
 
 'This constant is exposed as ChipIO
 I/O=25
@@ -4568,7 +4568,9 @@ SP4,STKPTR,4
 SP5,STKPTR,5
 
 [FreeRAM]
-0:E1E
+0:CFF
+'D00:DFF   Sector RAM. Excluded from RAM usage, and overall RAM reduced by 256 bytes.  Was 3615 bytes now mofified to 3359 bytes
+E00:E1E
 
 [NoBankRAM]
 0:5F

@@ -14,7 +14,7 @@ Prog=8192
 EEPROM=256
 
 'This constant is exposed as ChipRAM
-RAM=1024
+RAM=768
 
 'This constant is exposed as ChipIO
 I/O=25
@@ -2980,6 +2980,8 @@ SP5,STKPTR,5
 
 [FreeRAM]
 0:3FF
+'400:4FF   Sector RAM. Excluded from RAM usage, and overall RAM reduced by 256 bytes.  Was 1024 bytes now mofified to 768 bytes
+500:3FF
 
 [NoBankRAM]
 0:5F
