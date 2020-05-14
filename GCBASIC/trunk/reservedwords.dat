@@ -1,3 +1,4 @@
+KeyWord
 #ASMRAW
 #CHIP
 #CONFIG
@@ -275,6 +276,8 @@ LCD_I2C_Address_4
 LCD_I2C_Address_Current
 LCD_IO
 LCD_SPEED
+LCD_VARIANT
+LCD_VFD_DELAY
 Left
 LeftPad
 Len
@@ -379,6 +382,7 @@ SetSMT2
 SetSMT2Period
 SetTimer
 SetWith
+shiftR
 ShortTone
 Simple
 sin
@@ -479,3 +483,7 @@ XOR
 _GLCDPage
 _GLCDPagesH
 _GLCDPagesL
+MasterRst
+Ppulse
+Owout
+Owin
