@@ -67,7 +67,7 @@
 ' 16/02/2020  Revised to restore setting in  INIT
 ' 03/04/2020  Revised HSerSend to correct TRMT blocking error
 ' 04/05/2020  Changed to canskip to silently exit when no USART for TXEN bits
-
+' 15/02/2020  Correct legacy chip init. #ifndef BIT(BRG16) change to  #ifdef VAR(SPBRG) to prevent creation of SPBRG on newer chips.
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -481,15 +481,17 @@ Sub InitUSART
                   asm showdebug _BRG16_TEMP=_ BRG16_TEMP
                   asm showdebug _BRGH_TEMP=_ BRGH_TEMP
 
-
-                  #ifndef Bit(BRG16)
+                  #ifdef VAR(SPBRG)
                     'Set baud rate for legacy chips
                     SPBRG = SPBRGL_TEMP
                   #endif
+
                   #ifdef Bit(BRG16)
                     'Set baud rate for chips with BRG16 bit
                     SPBRGH = SPBRGH_TEMP
-                    SPBRGL = SPBRGL_TEMP
+                    #ifdef var(SPBRGL)
+                      SPBRGL = SPBRGL_TEMP
+                    #endif
                     'BRG16: 16-bit Baud Rate Generator bit
                     '1 = 16-bit Baud Rate Generator is used
                     '0 = 8-bit Baud Rate Generator is used
@@ -699,7 +701,7 @@ sub HSerSend(In SerData)
           #endif
 
           #ifdef USART_BLOCKING
-
+            '#ifdef USART_BLOCKING
             #ifndef USART_TX_BLOCKING 'The ifndef tests ensure the only one of USART_BLOCKING or USART_TX_BLOCKING is implemented
                 'USART_BLOCKING and NOT USART_TX_BLOCKING
                 #ifdef Bit(TXIF)
