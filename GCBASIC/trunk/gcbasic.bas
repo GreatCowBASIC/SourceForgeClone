@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-04-20"
+Version = "0.98.<<>> 2020-05-16"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -706,10 +706,12 @@ Version = "0.98.<<>> 2020-04-20"
   #else
     Version = Version + " (Linux 64 bit)"
   #endif
-#elseif defined (__FB_WIN64__)  'Need to test first as WIN32 matches both 32 and 64 bit
-  Version = Version + " (Windows 64 bit)"
-#elseif defined (__FB_WIN32__)
-  Version = Version + " (Windows 32 bit)"
+#elseif defined (__FB_WIN32__)  'Need to test first as WIN32 matches both 32 and 64 bit
+   #ifdef __FB_64BIT__
+       Version = Version + " (Windows 64 bit)"
+   #else
+       Version = Version + " (Windows 32 bit)"
+   #endif
 #endif
 
 CreateReservedWordsList()
