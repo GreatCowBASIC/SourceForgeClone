@@ -61,6 +61,12 @@ UserIDLength=128
 'ChipLFINTOSCClockSourceRegisterValue constant is used in user programs to provide the value to set the clock source to LFINTOSC
 LFINTOSCClockSourceRegisterValue=80
 
+'ChipSectorRAMAddress constant is used in user programs to provide the value to Sector RAM Address
+SectorRAMAddress=1024
+
+'ChipSectorRAMAddressSize constant is used in user programs to provide the size of the Sector RAM
+SectorRAMAddressSize=256
+
 [Interrupts]
 'For specific details of the interrupts see the microcontroller datasheet
 'The first parameter is the Great Cow BASIC identifier used in user code to expose the specific interrupt
