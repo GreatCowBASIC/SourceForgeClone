@@ -93,6 +93,7 @@
 ' 23/01/2019: Revised Clock sources 'Added set Clock Source on1/12/2016' the script was incorrect and was not operating as expected
 ' 27/04/2019: Revised InitTimer1, 3 and 5 to resolve missing clock source  LFINTOSC. Chip requires TMR1CS1 and TMR1CS0 to support LFINTOSC.
 ' 05/04/2020: Improve InitTimer0 to better support new class of timers.
+' 23/05/2020: Improve InitTimer0 to better support new class of timers.
 '***********************************************************
 
 'Subroutines:
@@ -1051,7 +1052,7 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
                 #ifdef bit(T016BIT)
                    'Added to resolve using 8bit Timer0 with enhance timer
                   'High byte is timer0 register of interest
-                   TMR0H = TMRValue
+                   TMR0H = TMRValue_H
                 #endif
 
                 #ifndef bit(T016BIT)
