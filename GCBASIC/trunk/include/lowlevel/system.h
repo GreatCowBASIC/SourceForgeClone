@@ -64,6 +64,7 @@
 '    01032020 - Restore ANSEL setting in InitSys
 '    03052020 - Moved ProgramErase, ProgramRead and ProgramWrite from EEPROM.h to ensure we isolate EEPRom code.
 '    05052020 - Adapted ProgramErase, ProgramRead and ProgramWrite to support PMADRH, PMADRL
+'    21052020 - Removed InternalSOSC check to script
 
 
 
@@ -100,13 +101,6 @@
     SYS_CLOCK_DIV_NEEDED = SYS_CLOCK_DIV_NEEDED * 4
     SYS_CLOCK_INT_PLL_USED = True
   End If
-
-  if ChipMHz = 31k then
-    SCRIPT_CHIPLFINTOSCCLOCKSOURCEREGISTERVALUE = ChipLFINTOSCClockSourceRegisterValue + 0
-    if SCRIPT_CHIPLFINTOSCCLOCKSOURCEREGISTERVALUE = 0 then
-        Warning "Chip does not support LFINT"
-    end if
-  end if
 
 #endscript
 
