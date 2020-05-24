@@ -93,7 +93,7 @@
 ' 23/01/2019: Revised Clock sources 'Added set Clock Source on1/12/2016' the script was incorrect and was not operating as expected
 ' 27/04/2019: Revised InitTimer1, 3 and 5 to resolve missing clock source  LFINTOSC. Chip requires TMR1CS1 and TMR1CS0 to support LFINTOSC.
 ' 05/04/2020: Improve InitTimer0 to better support new class of timers.
-' 23/05/2020: Improve InitTimer0 to better support new class of timers.
+' 25/04/2020: Improve Settimer to better support new class of timers for timer 0
 '***********************************************************
 
 'Subroutines:
@@ -1020,6 +1020,27 @@ Sub ClearTimer (In TMRNumber)
 End Sub
 
 
+'Added overloaded SetTimer to resolve the 8/16 bit timer0 issue on the newer classes of chips with T016BIT bit
+'This simply take the Byte value in TMRValue, put in the TMRValue_H hi-byte and then clears [byte]TMRValue, then, calls the existing method.
+'This means
+Sub SetTimer (In TMRNumber, In TMRValue As Byte)
+
+  Dim TMRValue as word
+
+  #ifdef PIC
+    #ifdef USE_Timer0 TRUE
+      #ifdef bit(T016BIT)
+          If TMRNumber = 0 Then
+              TMRValue_H = [byte]TMRValue
+              [byte]TMRValue = 0
+          end if
+      #endif
+    #endif
+  #endif
+
+  SetTimer ( TMRNumber, [word]TMRValue )
+
+End Sub
 
 ' if device has T016BIT then YOU MUST pass a 16bit number
 ' Revised Settimer to improve support for 16f188xx and T016BIT 15/7/16
