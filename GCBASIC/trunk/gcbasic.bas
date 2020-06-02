@@ -579,7 +579,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue
+DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-05-16"
+Version = "0.98.<<>> 2020-06-02"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -12273,12 +12273,54 @@ Function GetRegisterLoc(RegName As String) As Integer
     'Get the location for the register
     RegNameTidy = LCase(Trim(RegName))
     Select Case RegNameTidy
-      Case "syscalctempx", "sysbytetempx", "syswordtempx", "sysintegertempx", "syslongtempx": DestLoc = 0
-      Case "syscalctempx_h", "syswordtempx_h", "sysintegertempx_h", "syslongtempx_h": DestLoc = 1
-      Case "syscalctempx_u", "syslongtempx_u", "sysdivmultx": DestLoc = 2
-      Case "syscalctempx_e", "syslongtempx_e", "sysdivmultx_h": DestLoc = 3
-      Case "syssignbyte": DestLoc = 4
-      Case "sysdivloop", "sysbittest": DestLoc = 5
+      Case "syscalctempx", "sysbytetempx", "syswordtempx", "sysintegertempx", "syslongtempx": 'DestLoc = 0
+          Select Case ChipGPR
+            Case 16
+              DestLoc = 16
+            Case Else
+              DestLoc = 3
+          End Select
+
+      Case "syscalctempx_h", "syswordtempx_h", "sysintegertempx_h", "syslongtempx_h":'DestLoc = 1
+          Select Case ChipGPR
+            Case 16
+              DestLoc = 17
+            Case Else
+              DestLoc = 1
+          End Select
+      Case "syscalctempx_u", "syslongtempx_u", "sysdivmultx": 'DestLoc = 2
+          Select Case ChipGPR
+            Case 16
+              DestLoc = 18
+            Case Else
+              DestLoc = 2
+          End Select
+
+      Case "syscalctempx_e", "syslongtempx_e", "sysdivmultx_h": 'DestLoc = 3
+          Select Case ChipGPR
+            Case 16
+              DestLoc = 19
+            Case Else
+              DestLoc = 3
+          End Select
+
+      Case "syssignbyte": 'DestLoc = 4
+          Select Case ChipGPR
+            Case 16
+              'usE ram
+              'DestLoc = 4
+            Case Else
+              DestLoc = 4
+          End Select
+
+      Case "sysdivloop", "sysbittest": 'DestLoc = 5
+          Select Case ChipGPR
+            Case 16
+              DestLoc = 20
+            Case Else
+              DestLoc = 5
+          End Select
+
 
       Case "sysvaluecopy": DestLoc = 21
       Case "syscalctempa", "sysbytetempa", "syswordtempa", "sysintegertempa", "syslongtempa": DestLoc = 22
@@ -14647,7 +14689,7 @@ SUB ReadChipData
         Case "configwords": ConfWords = VAL(TempData)
         Case "psp": PSP = VAL(TempData)
         Case "maxaddress": MemSize = VAL(TempData)
-
+        Case "gpr": ChipGPR = Val(TempData)
         Case "hardwaremult":
           HMult = 0: If TempData = "y" Then HMult = -1
           ConstValue = Str(-HMult)
