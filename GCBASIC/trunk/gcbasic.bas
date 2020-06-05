@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-06-02"
+Version = "0.98.<<>> 2020-06-04"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -12278,7 +12278,7 @@ Function GetRegisterLoc(RegName As String) As Integer
             Case 16
               DestLoc = 16
             Case Else
-              DestLoc = 3
+              DestLoc = 0
           End Select
 
       Case "syscalctempx_h", "syswordtempx_h", "sysintegertempx_h", "syslongtempx_h":'DestLoc = 1
