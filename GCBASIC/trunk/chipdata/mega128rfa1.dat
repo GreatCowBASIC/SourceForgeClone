@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega128rfa1
-'Generated 2/6/2020
-'Format last revised: 2/4/2020
+'Main Format last revised:   14/07/2017
+'Header Format last revised: 04/02/2020
 
 [ChipData]
 Prog=65536
@@ -341,8 +341,8 @@ DPDS0,310
 DPDS1,311
 PORTJ,261
 EIND,60
-ATBR18,224
-ATBR33,225
+ATBR18,208
+ATBR33,209
 PINH,256
 DDRH,257
 PORTH,258
