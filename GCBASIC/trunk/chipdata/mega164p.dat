@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: ATmega164p
-'Generated 2/6/2020
-'Format last revised: 2/4/2020
+'Main Format last revised:   14/07/2017
+'Header Format last revised: 04/02/2020
 
 [ChipData]
 Prog=8192
