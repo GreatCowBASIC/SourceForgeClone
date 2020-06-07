@@ -65,7 +65,7 @@
 '    03052020 - Moved ProgramErase, ProgramRead and ProgramWrite from EEPROM.h to ensure we isolate EEPRom code.
 '    05052020 - Adapted ProgramErase, ProgramRead and ProgramWrite to support PMADRH, PMADRL
 '    21052020 - Removed InternalSOSC check to script
-
+'    07062020 - Added ChipFamily 121 string handler
 
 
 'Constants
@@ -1435,7 +1435,16 @@ SysStringRead:
 
   'Get length
   'lpm SysCalcTempA, Z+
-  lpm
+  #IFNDEF ChipFamily 121
+    lpm
+  #ENDIF
+  #IFDEF ChipFamily 121
+    'Instance 1
+    'added 0x4000 to address PROGMEM by setting the one bit
+    SYSREADA_H.6  = 1
+    #asmraw ld SysCalcTempX, z
+  #ENDIF
+
   mov SysCalcTempA, SysCalcTempX
   SysReadA += 1
   st Y+, SysCalcTempA
@@ -1443,7 +1452,13 @@ SysStringRead:
 
 SysReadStringPart:
   'lpm SysCalcTempA, Z+
-  lpm
+  #IFNDEF ChipFamily 121
+    lpm
+  #ENDIF
+  #IFDEF ChipFamily 121
+    'Instance 2
+    #asmraw ld SysCalcTempX, z
+  #ENDIF
   mov SysCalcTempA, SysCalcTempX
   SysReadA += 1
   add SysStringLength, SysCalcTempA
@@ -1460,7 +1475,14 @@ SysStringRead:
 
   'Copy char
   'lpm SysCalcTempX, Z+
-  lpm
+  #IFNDEF ChipFamily 121
+    lpm
+  #ENDIF
+  #IFDEF ChipFamily 121
+    'Instance 3
+    #asmraw ld SysCalcTempX, z
+  #ENDIF
+
   SysReadA += 1
   st Y+, SysCalcTempX
 
