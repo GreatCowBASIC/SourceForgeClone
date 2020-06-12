@@ -1973,7 +1973,7 @@ Sub AddInterruptCode
 
     'Add context restore code
     CurrLine = SubEnd
-    CurrLine = LinkedListInsert(CurrLine, "INTERRUPTDONE")
+    CurrLine = LinkedListInsert(CurrLine, "INTERRUPTDONE")  'PIC
     If AutoContextSave Then
       CurrLine = LinkedListInsert(CurrLine, ";Restore Context")
       If ChipFamily = 14 Or ChipFamily = 15 Then
@@ -2134,7 +2134,7 @@ Sub AddInterruptCode
         CurrLine = CurrLine->Next
       Loop
       CurrLine = SubEnd
-      CurrLine = LinkedListInsert(CurrLine, "INTERRUPTDONE")
+      CurrLine = LinkedListInsert(CurrLine, "INTERRUPTDONE:")  'AVR
       If AutoContextSave Then
         CurrLine = LinkedListInsert(CurrLine," rjmp SysIntContextRestore")
       Else
