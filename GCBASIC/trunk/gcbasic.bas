@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-06-07"
+Version = "0.98.<<>> 2020-06-15"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8754,7 +8754,13 @@ Sub CompileTables
               CurrLine = LinkedListInsert(CurrLine, " inc SysReadA_H")
             End If
 
-            CurrLine = LinkedListInsert(CurrLine, " lpm") 'Value will be read, stored in R0
+            If ChipFamily = 121 then
+              CurrLine = LinkedListInsert(CurrLine, " sbr	 SysReadA_H,1<<6") 'added 0x4000 to address PROGMEM by setting the one bit
+              CurrLine = LinkedListInsert(CurrLine, " ld sysbytetempx, z") 'Value will be read, stored in R16
+            Else
+              CurrLine = LinkedListInsert(CurrLine, " lpm") 'Value will be read, stored in R0
+
+            End if
             CurrLine = LinkedListInsert(CurrLine, " ret")
 
             CurrLine = LinkedListInsert(CurrLine, Table + ":")
@@ -9217,7 +9223,12 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
           End If
 
         Else
-          CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + DestVarName)
+          If ChipFamily <> 121 then
+            CurrLine = LinkedListInsert(CurrLine, " lds SysValueCopy," + DestVarName)
+          Else
+            'Assumes the DestVarName address is 0 = A = 63
+            CurrLine = LinkedListInsert(CurrLine, " in SysValueCopy," + DestVarName)
+          End if
           If InvertBitCopy Then
             CurrLine = LinkedListInsert(CurrLine, " sbr SysValueCopy,1<<" + DestVarBit)
           Else
@@ -9229,7 +9240,12 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
           Else
             CurrLine = LinkedListInsert(CurrLine, " sbr SysValueCopy,1<<" + DestVarBit)
           End If
-          CurrLine = LinkedListInsert(CurrLine, " sts " + DestVarName + ",SysValueCopy")
+          If ChipFamily <> 121 then
+            CurrLine = LinkedListInsert(CurrLine, " sts " + DestVarName + ",SysValueCopy")
+          else
+            'Assumes the DestVarName is 0 = A = 63
+            CurrLine = LinkedListInsert(CurrLine, " out " + DestVarName + ",SysValueCopy")
+          End if
           If Not IsIOReg(DestVarName) Then AddVar DestVarName, "BYTE", 1, 0, "REAL", Origin
           AddVar "SysValueCopy", "BYTE", 1, 0, "REAL", "", , -1
         End If
