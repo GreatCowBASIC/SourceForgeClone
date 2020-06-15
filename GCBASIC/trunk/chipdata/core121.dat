@@ -1,9 +1,25 @@
 'GCBASIC assembler instruction data
 'Suits AVR chips
-'Last updated 07/06/2020
+'Last updated 09/06/2020
 
 'Format: command;words;word1;word2
 'Whitespace does not matter in word1/2
+
+
+' The format of the core file is
+'     Every line that is not a comment or blank has elements, divided by semicolons:
+'     1. The assembly command: First the mnemonic, then any parameters as single letters divided by commas.
+'     2. The number of words taken up by the instruction.
+'     3. The words that make up the instruction
+'
+'
+'When assembling the program, the assembler looks up the command, then extracts the parameters and finds the values.
+'The assembler then goes through each parameter, finding the corresponding letter and converting the value to binary.
+'The assembler then finds the occurrences of each letter, replacing the leftmost one with the most significant bit of the parameter, and the next letter with the next bit, until it has run out of bits to replace.   If there are more parameter bits than letters, the lowest bits are used and the high bits are discarded, with a warning being generated if the name of the parameter is k (as you found). (Only k causes warning messages, on PIC for example f is used for all of the RAM accessing instructions and address given in f will use more bits than available in the instruction if accessing anything outside bank 0).
+'
+'Adding a _ before the letter for a parameter in the file will result in the bit being inverted.
+
+'Note: Some commands are tweaked in the assembler because their bits could not be set using any of detailed state above.  For example, CLR which is turned into an EOR, and where the same address has to be given twice, but the bits are adapted together in an odd order within the assembler.
 
 ADC d,r;  1;  0001 11rd dddd rrrr
 ADD d,r;  1;  0000 11rd dddd rrrr
@@ -72,7 +88,7 @@ INC d;    1;  1001 010d dddd 0011
 LD d,s;   1;  100s 000d dddd ssss
 LDI d,k;  1;  1110 kkkk dddd kkkk
 ;LDS d,k;  2;  1001 000d dddd 0000;  kkkk kkkk kkkk kkkk
-LDS d,k;  1;  1010 0ddd dddd 0000;  kkkk kkkk kkkk kkkk
+LDS d,k;   1;  1010 0ddd dddd kkkk
 
 ;Issue #1  LPM is not supported
 ;LPM;    1;  1001 0101 1100 1000
@@ -120,10 +136,12 @@ SLEEP;    1;  1001 0101 1000 1000
 ;SPM;    1;  1001 0101 1110 1000
 ST d,r;   1;  100d 001r rrrr dddd
 ;STS k,d;  2;  1001 001d dddd 0000;  kkkk kkkk kkkk kkkk
-STS k,d;  1;  1010 1ddd dddd 0000;  kkkk kkkk kkkk kkkk
+STS k,d;   1;  1010 1ddd dddd kkkk
+
 
 SUB d,r;  1;  0001 10rd dddd rrrr
 SUBI d,k; 1;  0101 kkkk dddd kkkk
 SWAP d;   1;  1001 010d dddd 0010
 TST d;    1;  0010 00dd dddd dddd
 WDR;    1;  1001 0101 1010 1000
+
