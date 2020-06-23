@@ -65,7 +65,7 @@
 '    03052020 - Moved ProgramErase, ProgramRead and ProgramWrite from EEPROM.h to ensure we isolate EEPRom code.
 '    05052020 - Adapted ProgramErase, ProgramRead and ProgramWrite to support PMADRH, PMADRL
 '    21052020 - Removed InternalSOSC check to script
-'    07062020 - Added ChipFamily 121 string handler
+'    07062020 - Added ChipFamily 121 string handler and updated InitSys to set intenal osc for ChipFamily 121
 
 
 'Constants
@@ -860,7 +860,9 @@ Sub InitSys
 
   #ENDIF
 
-  asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
+  #IFDEF PIC
+      asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
+  #ENDIF
   #IFDEF ChipFamily 16
     'Clear BSR on ChipFamily16 MCUs
     BSR = 0
@@ -917,7 +919,6 @@ Sub InitSys
 
   #ENDIF
 
-  'Commence clearing any ANSELx variants in the part, if the ANSEL regsier/bit exists
   #IFDEF Var(ANSEL)
     ANSEL = 0
   #ENDIF
@@ -1000,8 +1001,9 @@ Sub InitSys
     #IFDEF BIT(ANSEL15)
       Set ANSEL15 off
     #ENDIF
+
   #ENDIF
-  'End  clearing ANSEL
+
 
   #IFDEF Var(CMCON)
 
@@ -1052,6 +1054,47 @@ Sub InitSys
     #ENDIF
   #ENDIF
 
+
+
+  #IFDEF AVR
+
+    #IF ChipFamily = 121
+        'Set the AVR frequency for chipfamily 121 - assumes internal OSC
+        'Only sets internal therfore is 12mhz, the default setting is selected, NO OSC will be set.
+        'Unlock the  frequency register where 0xD8 is the correct signature for the AVRrc chips
+        CCP = 0xD8            'signature to CCP
+        CLKMSR = 0            'use clock 00: Calibrated Internal 8 MHzOscillator
+        CCP = 0xD8            'signature to CCP
+        #IFDEF ChipMHz 8
+        CLKPSR = 0            '8mhz
+        #ENDIF
+        #IFDEF ChipMHz 4
+        CLKPSR = 1            '4mhz
+        #ENDIF
+        #IFDEF ChipMHz 2
+        CLKPSR = 2            '2mhz
+        #ENDIF
+        #IFDEF ChipMHz 1
+        CLKPSR = 3            '1mhz
+        #ENDIF
+        #IFDEF ChipMHz 0.5
+        CLKPSR = 4            '0.5mhz
+        #ENDIF
+        #IFDEF ChipMHz 0.25
+        CLKPSR = 5            '0.25mhz
+        #ENDIF
+        #IFDEF ChipMHz 0.125
+        CLKPSR = 6            '0.125mhz
+        #ENDIF
+        #IFDEF ChipMHz 0.0625
+        CLKPSR = 7            '0.0625mhz
+        #ENDIF
+        #IFDEF ChipMHz 0.03125
+        CLKPSR = 8            '0.03125mhz
+        #ENDIF
+    #ENDIF
+
+  #ENDIF
   'Turn off all ports
   #IFDEF Var(GPIO)
     GPIO = 0
