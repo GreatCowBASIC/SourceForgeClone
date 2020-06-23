@@ -138,6 +138,8 @@
 ' 17/02/19 Corrected AN29 address. Removed a typo. Prevented PORTD.5 ADC from operating as expected.
 ' 21/08/19 Improved documentation only. No functional change
 ' 07/05/20 Isolation of ANSELx to reduce variables creation
+' 20/06/20 Support for ChipFamily 121 and tidy up in LLREADAD and changed to ADLAR = ADLeftAdjust support 121 and reduce code size
+
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -1564,7 +1566,7 @@ macro LLReadAD (ADLeftAdjust)
   #IFDEF AVR
 
    #IF ChipADC > 0
-    'Select channel
+    'Select channel by setting ADMUX
     #IFNDEF Bit(MUX5)
       ADMUX = ADReadPort
     #endif
@@ -1584,81 +1586,101 @@ macro LLReadAD (ADLeftAdjust)
       #endif
     #endif
     #ifdef Bit(ADLAR)
-      If ADLeftAdjust = 1 Then
-        Set ADMUX.ADLAR On
-      End If
-      If ADLeftAdjust = 0 Then
-        Set ADMUX.ADLAR Off
-      End If
+        ADLAR = ADLeftAdjust
     #endif
 
-    'Select reference source
+
 
 
     #ifndef Bit(REFS2)
-      If AD_REF_SOURCE = AD_REF_AVCC Then
-          #ifndef Bit(REFS1)
-            ASM showdebug  'Bit(REFS1) does not exist, so assume 'VCC used as analog reference' REFS0=b'0'
-           [canskip]REFS0=b'0'
-          #endif
-          #ifdef Bit(REFS1)
-           #IFDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
-              ASM showdebug  'Assume REFS0 is set to 0 for AD_REF_AVCC
-              [canskip]REFS0=b'0
-           #ENDIF
 
-           #IFNDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
-              ASM showdebug  'Bit(REFS1) does exist, so assume 'VCC used as analog reference' REFS0=b'1'
+      #if ChipFamily <> 121
+
+        'Select reference source for chips that DO NOT HAVE Bit(REFS2)
+        If AD_REF_SOURCE = AD_REF_AVCC Then
+            #ifndef Bit(REFS1)
+              #ifdef Bit(REFS0)
+                ASM showdebug  'Bit(REFS1) does not exist, so assume 'VCC used as analog reference' REFS0=b'0'
+                [canskip]REFS0=b'0'
+              #endif
+            #endif
+            #ifdef Bit(REFS1)
+             #IFDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
+                ASM showdebug  'Assume REFS0 is set to 0 for AD_REF_AVCC
+                [canskip]REFS0=b'0
+             #ENDIF
+
+             #IFNDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
+                ASM showdebug  'Bit(REFS1) does exist, so assume 'VCC used as analog reference' REFS0=b'1'
+                [canskip]REFS0=b'1'
+             #ENDIF
+            #endif
+        end If
+
+        #IF AD_REF_SOURCE = AD_REF_256
+            If AD_REF_SOURCE = AD_REF_256 Then  ' case 1
               [canskip]REFS0=b'1'
-           #ENDIF
-          #endif
-      End If
-      If AD_REF_SOURCE = AD_REF_256 Then
-        [canskip]REFS0=b'1'
-        [canskip]REFS1=b'1'
-      End If
+              [canskip]REFS1=b'1'
+            End If
+        #ENDIF
+
+      #endif
     #endif
+
     #ifdef Bit(REFS2)
+      'Select reference source for chips that DO HAVE Bit(REFS2)
       If AD_REF_SOURCE = AD_REF_AREF Then
         Set ADMUX.REFS0 On
       End If
-      If AD_REF_SOURCE = AD_REF_256 Then
-        Set ADMUX.REFS0 On
-        Set ADMUX.REFS1 On
-        Set REFS2 On
-      End If
+      #IF AD_REF_SOURCE = AD_REF_256
+          If AD_REF_SOURCE = AD_REF_256 Then ' case 2
+            Set ADMUX.REFS0 On
+            Set ADMUX.REFS1 On
+            Set REFS2 On
+          End If
+      #ENDIF
     #endif
 
-    'Set conversion clock
+
     #IFDEF Bit(ADPS2)
+
       #IFDEF ADSpeed HighSpeed
+        'Set conversion clock to HighSpeed
         SET ADPS2 Off
         SET ADPS1 Off
       #ENDIF
       #IFDEF ADSpeed MediumSpeed
+        'Set conversion clock to MediumSpeed
         SET ADPS2 On
         SET ADPS1 Off
       #ENDIF
       #IFDEF ADSpeed LowSpeed
+        'Set conversion clock to LowSpeed
         SET ADPS2 On
         SET ADPS1 On
       #ENDIF
     #ENDIF
 
-    'Acquisition Delay
-    Wait AD_Delay
 
-    'Take reading
-    Set ADEN On
-    'After turning on ADC, let internal Vref stabilise
-    If AD_REF_SOURCE = AD_REF_256 Then
-      Wait AD_VREF_DELAY
-    End If
+    Wait AD_Delay   'Execute the acquisition Delay
+
+    Set ADEN On     'Take reading
+
+    #IF AD_REF_SOURCE = AD_REF_256
+
+      If AD_REF_SOURCE = AD_REF_256 Then ' case 3
+        'After turning on ADC, let internal Vref stabilise
+        Wait AD_VREF_DELAY
+      End If
+
+    #ENDIF
+
     Set ADSC On
     Wait While ADSC On
     Set ADEN Off
 
    #ENDIF  'CHIPADC>0
+
   #ENDIF
 
 end macro
@@ -1766,7 +1788,17 @@ LLReadAD 1
 
 
    #IFDEF AVR
-      ReadAD = ADCH
+      #IF ChipFamily = 121
+        #IFDEF BIT(ADLAR)
+          ReadAD = ADCH
+        #ENDIF
+        #IFNDEF BIT(ADLAR)
+          ReadAD = ADCL
+        #ENDIF
+      #ENDIF
+      #IF ChipFamily <> 121
+        ReadAD = ADCH
+      #ENDIF
    #ENDIF
 
 End Function
@@ -1899,9 +1931,19 @@ LLReadAD 1
 
  #ENDIF
 
- #IFDEF AVR
-    ReadAD = ADCH
- #ENDIF
+   #IFDEF AVR
+      #IF ChipFamily = 121
+        #IFDEF BIT(ADLAR)
+          ReadAD = ADCH
+        #ENDIF
+        #IFNDEF BIT(ADLAR)
+          ReadAD = ADCL
+        #ENDIF
+      #ENDIF
+      #IF ChipFamily <> 121
+        ReadAD = ADCH
+      #ENDIF
+   #ENDIF
 
 End Function
 
