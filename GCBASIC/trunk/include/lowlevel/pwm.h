@@ -125,6 +125,7 @@
 ''' 02/05/2019 Added HPWMUpdate for CCP1..CCP5. Two sections one for the hardware PWM module(s) and one for the CCP module(s)
 ''' 14/08/2019 Added labels only. No functional changes.
 ''' 07/05/2020 Revised to isolate Timer4 and Timer6 in HPWM()
+''' 21/06/2020 Revised to support ChipFamily 121
 
   'define the defaults
   #define AVRTC0
@@ -2117,14 +2118,14 @@ Rev2018_EndofFixedPWMModeCode:
 
       if AVR then
         ICR1temp = int(((chipMHZ*1000) / PWM_Freq) - 1)
-        PWMPrescaleTemp = 1
+        SCRIPT_PWMPRESCALER = 1
         If ICR1temp > 255 Then
           ICR1temp = int(ICR1temp / 8)
-          PWMPrescaleTemp = 8
+          SCRIPT_PWMPRESCALER = 8
 
           If ICR1temp > 255 Then
             ICR1temp = int(ICR1temp / 8)
-            PWMPrescaleTemp = 64
+            SCRIPT_PWMPRESCALER = 64
           End If
 
             If ICR1temp > 255 Then
@@ -2141,7 +2142,7 @@ Rev2018_EndofFixedPWMModeCode:
     'Set all defined channel modes, and default channel 2 mode
     'Mode must be set first
     AVRSetHPWMMode
-    PWMPrescale = PWMPrescaleTemp
+    PWMPrescale = SCRIPT_PWMPRESCALER
 
     'Set prescale and duty cycle on timer0 OCR0B (channel 2)
     'when using PWMON/PWMOFF
@@ -4785,10 +4786,10 @@ sub AVRSetPrescale (AVRTimer)
     #IFDEF AVRTC0
       If AVRTimer = 0 Then
         #ifdef var(TCCR0B)  'not all chips have this register
-          lds SysValueCopy,TCCR0B
+          SysValueCopy = TCCR0B
           andi SysValueCopy, 0xf8
           inc SysValueCopy
-          sts TCCR0B, SysValueCopy
+          TCCR0B = SysValueCopy
         #endif
       End If
     #ENDIF
@@ -4870,10 +4871,10 @@ sub AVRSetPrescale (AVRTimer)
     #IFDEF AVRTC0
       If AVRTimer = 0 Then
         #ifdef var(TCCR0B)  'not all chips have this register
-          lds SysValueCopy,TCCR0B
+          SysValueCopy = TCCR0B
           andi SysValueCopy, 0xf8
           ori SysValueCopy, 0x02
-          sts TCCR0B, SysValueCopy
+          TCCR0B = SysValueCopy
         #endif
       End If
     #ENDIF
@@ -4955,10 +4956,10 @@ sub AVRSetPrescale (AVRTimer)
     #IFDEF AVRTC0
       If AVRTimer = 0 Then
         #ifdef var(TCCR0B)  'not all chips have this register
-          lds SysValueCopy,TCCR0B
+          SysValueCopy = TCCR0B
           andi SysValueCopy, 0xf8
           ori SysValueCopy, 0x03
-          sts TCCR0B, SysValueCopy
+          TCCR0B = SysValueCopy
         #endif
       End If
     #ENDIF
