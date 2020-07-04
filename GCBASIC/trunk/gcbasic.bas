@@ -658,7 +658,7 @@ Dim Shared As String Star80
 Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION
 Dim Shared As String ChipOscSource
 Dim Shared As String FI, OFI, HFI, ID, Version, ProgDir, CLD, LabelEnd
-Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams
+Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams, PrgName
 Dim Shared As ExternalTool Pointer AsmTool, PrgTool
 Dim Shared As String CompReportFormat
 
@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-06-15"
+Version = "0.98.<<>> 2020-07-04"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -859,7 +859,10 @@ AsmEndTime = Timer
 DownloadProgram:
 IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
   PRINT
-  PRINT Message("SendToPIC")
+  Dim Temp As String
+  Temp = Message("SendToPIC")
+  Replace Temp, "%PrgName%", Trim(Str(PrgName))
+  PRINT Temp
   PrgExe = ReplaceToolVariables(PrgExe, "hex",, PrgTool)
   PrgParams = ReplaceToolVariables(PrgParams, "hex",, PrgTool)
   IF VBS = 1 THEN PRINT SPC(5); Message("Calling") + PrgExe
@@ -8755,7 +8758,7 @@ Sub CompileTables
             End If
 
             If ChipFamily = 121 then
-              CurrLine = LinkedListInsert(CurrLine, " sbr	 SysReadA_H,1<<6") 'added 0x4000 to address PROGMEM by setting the one bit
+              CurrLine = LinkedListInsert(CurrLine, " sbr  SysReadA_H,1<<6") 'added 0x4000 to address PROGMEM by setting the one bit
               CurrLine = LinkedListInsert(CurrLine, " ld sysbytetempx, z") 'Value will be read, stored in R16
             Else
               CurrLine = LinkedListInsert(CurrLine, " lpm") 'Value will be read, stored in R0
@@ -14159,6 +14162,7 @@ Sub PrepareProgrammer
   If PrgTool = 0 Then PrgTool = GetTool(PrgExe)
   If PrgTool <> 0 Then
     With *PrgTool
+      PrgName = .DispName
       PrgExe = ReplaceToolVariables(.Cmd, , , PrgTool)
       PrgParams = .Params
       PrgDir = .WorkingDir
