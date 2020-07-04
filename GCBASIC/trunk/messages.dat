@@ -153,7 +153,7 @@ UsedRAM = "RAM: %used%/%total% bytes"
 AssemblyWritten = "Assembly program lines written: "
 MakeASM = "Assembling program ..."
 
-SendToPIC = "Downloading program ..."
+SendToPIC = "Downloading via selected programmer: %PrgName%"
 
 'Errors
 Error = "An error has been found:"
@@ -288,6 +288,7 @@ WarningProgrammerFail = "The chip may not have programmed properly. Programmer r
 WarningNoValidProgrammer = "None of the chosen programmers were suitable for the current program"
 WarningReturnValueInSub = "Return value ignored, not permitted in subroutines"
 WarningBitByteCompare = "Comparison will fail if %nonbit% is any value other than 0 or 1"
+WarningSkip = "-1073741819"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."
