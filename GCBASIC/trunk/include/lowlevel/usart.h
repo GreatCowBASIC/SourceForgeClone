@@ -68,6 +68,7 @@
 ' 03/04/2020  Revised HSerSend to correct TRMT blocking error
 ' 04/05/2020  Changed to canskip to silently exit when no USART for TXEN bits
 ' 15/02/2020  Correct legacy chip init. #ifndef BIT(BRG16) change to  #ifdef VAR(SPBRG) to prevent creation of SPBRG on newer chips.
+' 06/07/2020  Added AVRrc support to reduce memory usage
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -368,6 +369,18 @@
 
 
   If AVR Then
+
+    'Remap to the AVRrc methods()
+    IF ChipFamily = 121 Then
+        HSerGetNum = HSerGetNumRC
+        HSerGetString = HSerGetStringRC
+        HSerPrint = HSerPrintRC
+        HSerPrintByteCRLF =HSerPrintByteCRLFRC
+        HSerPrintCRLF = HSerPrintCRLFRC
+        HSerSend = HSerSendRC
+        HSerReceive = HSerReceiveRC
+    End If
+
 'AVR Usart has data flags setup
     If Bit(RXC0) Then
       USARTHasData = "RXC0 = On"
@@ -384,7 +397,7 @@
     If Bit(RXC3) Then
       USART4HasData = "RXC3 = On"
     End If
-'AVR USART 0 baud calc
+'AVR USART 1 baud calc
     If USART_BAUD_RATE Then
       UBRR_TEMP = ChipMHz * 1000000 / (16 * USART_BAUD_RATE) - 1
       U2X0_TEMP = 0
@@ -402,8 +415,9 @@
       'Get high and low bytes
       UBRRL_TEMP = Int(UBRR_TEMP) And 255
       UBRRH_TEMP = Int(UBRR_TEMP / 256)
+
     End If
-'AVR USART 1 baud calc
+'AVR USART 2 baud calc
     If USART2_BAUD_RATE Then
       UBRR2_TEMP = ChipMHz * 1000000 / (16 * USART2_BAUD_RATE) - 1
       U2X02_TEMP = 0
@@ -441,7 +455,7 @@
       UBRRL3_TEMP = Int(UBRR3_TEMP) And 255
       UBRRH3_TEMP = Int(UBRR3_TEMP / 256)
     End If
-'AVR USART 2 baud clac
+'AVR USART 4 baud clac
     If USART4_BAUD_RATE Then
       UBRR4_TEMP = ChipMHz * 1000000 / (16 * USART4_BAUD_RATE) - 1
       U2X04_TEMP = 0
@@ -467,8 +481,10 @@
 
 Sub InitUSART
 
+  #IF CHIPUSART > 1
   'Set the default value for comport
   comport = 1
+  #ENDIF
 
   #ifdef PIC
       #If USART_BAUD_RATE Then
@@ -616,13 +632,13 @@ Sub InitUSART
       #ifndef Bit(U2X0)
 
         #ifndef Bit(U2X1)       'Check for second usart? why
-          U2X = U2X0_TEMP       'U2X in tiny2313 has one usart
+          U2X = U2X0_TEMP       'Set/Clear bit to double USART transmission speed
           UBRRL = UBRRL_TEMP
           UBRRH = UBRRH_TEMP
         #endif
       #endif
       #ifdef Bit(U2X0)
-        U2X0 = U2X0_TEMP        'U2X0 ex: mega328P
+        U2X0 = U2X0_TEMP        'Set/Clear bit to double USART transmission speed
         UBRR0L = UBRRL_TEMP
         UBRR0H = UBRRH_TEMP
       #endif
@@ -864,7 +880,6 @@ sub HSerSend(In SerData, optional In comport = 1)
 'AVR USART1 Send
     #If USART_BAUD_RATE Then
       if comport = 1 Then
-      'HSerSendBlocker    'comport 1 blocker
 
         #ifdef USART_BLOCKING
           #ifdef Bit(UDRE0)
@@ -890,11 +905,13 @@ sub HSerSend(In SerData, optional In comport = 1)
           UDR = SerData
         #endif
 
+        #ifdef Var(HIDETHESECOMMENTEDCODE)
         '#ifndef Var(UDR0)
         ' #ifdef Var(UDR1)
         '   UDR1 = SerData    '? second comport
         ' #endif
         '#endif
+        #endif
         #ifdef Var(UDR0)
           UDR0 = SerData ' *******************
         #endif
@@ -902,8 +919,9 @@ sub HSerSend(In SerData, optional In comport = 1)
     #endif
 
 ;----------------------------------------------------
-'AVR USART 2 send
+
     #If USART2_BAUD_RATE Then
+'AVR USART 2 send
       if comport = 2 Then
         #ifdef USART2_BLOCKING
           #ifdef Bit(UDRE1)       'comport 2 TX and Rxblocker
@@ -923,8 +941,9 @@ sub HSerSend(In SerData, optional In comport = 1)
 
       End If
     #endif
-'AVR USART 3 send
+
     #If USART3_BAUD_RATE Then
+'AVR USART 3 send
       if comport = 3 Then
         #ifdef USART3_BLOCKING
           #ifdef Bit(UDRE2)       'comport 3 TX and Rx blocker
@@ -943,8 +962,9 @@ sub HSerSend(In SerData, optional In comport = 1)
         #endif
       End If
     #endif
-'AVR USART 4 send
+
     #If USART4_BAUD_RATE Then
+'AVR USART 3 send
       if comport = 4 Then
         #ifdef USART4_BLOCKING
           #ifdef Bit(UDRE3)       'comport 4 TX and RX  blocker
@@ -1202,6 +1222,8 @@ End Sub
 
 
 'Added  11/4/2015 by mlo
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
+
 ' A number is input to a USART as a series of ASCII digits with a CR at the end
 'Output Value is in range of 0 to 65535 (Dec)
 'Input value is entered as decimal digits
@@ -1226,6 +1248,8 @@ sub HSerGetNum (Out HSerNum As Word, optional In comport = 1)
     End If
   Loop
 End Sub
+
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 
 ' A number is input to a USART as a series of ASCII digits with a CR at the end
 'Output Value is in range of 0 to 99999 (Dec)
@@ -1255,7 +1279,10 @@ sub HSerGetNum (Out HSerNum As Long, optional In comport = 1)
 End Sub
 
 
+
 'Added  11/4/2015 by mlo
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
+
 ' A string is input to a USART as a series of ASCII chars with a CR at the end
 'Output Value is a string
 'Input value is entered as digits,letters and most punctuation
@@ -1277,7 +1304,7 @@ sub HSerGetString (Out HSerString As String, optional In comport = 1)
   Loop
 End Sub
 
-
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 sub HSerPrintStringCRLF (In PrintData As String, optional In comport = 1)
 
   PrintLen = PrintData(0)
@@ -1294,6 +1321,7 @@ sub HSerPrintStringCRLF (In PrintData As String, optional In comport = 1)
 
 End Sub
 
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 sub HSerPrint (In PrintData As String, optional In comport = 1)
 
   PrintLen = PrintData(0)
@@ -1316,7 +1344,7 @@ sub HSerPrint (In PrintData As String, optional In comport = 1)
 end sub
 
 
-
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 sub HSerPrint (In SerPrintVal, optional In comport = 1)
 
   OutValueTemp = 0
@@ -1345,6 +1373,7 @@ sub HSerPrint (In SerPrintVal, optional In comport = 1)
 
 end sub
 
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
   Dim SysCalcTempX As Word
 
@@ -1393,6 +1422,7 @@ Sub HSerPrint (In SerPrintVal As Word, optional In comport = 1)
 
 End Sub
 
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 Sub HSerPrint (In SerPrintValInt As Integer, optional In comport = 1)
   Dim SerPrintVal As Word
 
@@ -1411,6 +1441,7 @@ Sub HSerPrint (In SerPrintValInt As Integer, optional In comport = 1)
   HSerPrint SerPrintVal,comport
 End Sub
 
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 Sub HSerPrint (In SerPrintVal As Long, optional In comport = 1)
 
   Dim SysCalcTempA As Long
@@ -1440,6 +1471,7 @@ Sub HSerPrint (In SerPrintVal As Long, optional In comport = 1)
 
 End Sub
 
+'Revised 05/07/2020 to  duplicate method without the comport parameter.  Change this method and you must change the duplicate method - the one without  comport.
 Sub HserPrintByteCRLF(In PrintValue,optional In comport =1)
   HSerPrint(PrintValue)
   HSerSend(13,comport)
@@ -1452,3 +1484,331 @@ Sub HserPrintCRLF  ( Optional in HSerPrintCRLFCount = 1,Optional In comport =1 )
       HSerSend(10,comport)
     end Repeat
 End Sub
+
+
+' NO COMPORT variable for these methods() below
+'***********  same methods, as above methods, but duplicated to remove COMPORT
+
+sub HSerSendRC(In SerData)
+
+  #ifdef AVR
+'AVR USART1 Send
+    #If USART_BAUD_RATE Then
+
+
+        #ifdef USART_BLOCKING
+          #ifdef Bit(UDRE0)
+            Wait While UDRE0 = Off    'Blocking Both Transmit buffer empty ,ready for data
+          #endif
+
+          #ifndef Bit(UDRE0)
+            Wait While UDRE = Off
+          #endif
+        #endif
+
+        #ifdef  USART_TX_BLOCKING
+          #ifdef Bit(UDRE0)
+            Wait While UDRE0 = Off    'Blocking Transmit buffer empty ,ready for data
+          #endif
+
+          #ifndef Bit(UDRE0)
+            Wait While UDRE = Off
+          #endif
+        #endif
+
+        #ifdef Var(UDR) ' ***************
+          UDR = SerData
+        #endif
+
+        #ifdef Var(UDR0)
+          UDR0 = SerData ' *******************
+        #endif
+
+    #endif
+
+  #endif
+end sub
+
+
+sub HSerGetNumRC (Out HSerNum As Word)
+  Dim HSerDataIn(5)
+  HSerIndex = 0
+  HSerNum = 0
+
+  Do
+    HSerReceive( HSerInByte )
+    'Enter key?
+    If HSerInByte = 13 OR HSerIndex >= 5 Then       ' ***** look for CR  OR digits >= 5****
+      For HSerTemp = 1 to HSerIndex
+        HSerNum = HSerNum * 10 + HSerDataIn(HSerTemp) - 48
+      Next
+      Exit Sub
+    End If
+    'Number?
+    If HSerInByte >= 48 and HSerInByte <= 57 Then
+        HSerIndex++
+        HSerDataIn(HSerIndex) = HSerInByte
+    End If
+  Loop
+End Sub
+
+' A number is input to a USART as a series of ASCII digits with a CR at the end
+'Output Value is in range of 0 to 99999 (Dec)
+'Input value is entered as decimal digits
+sub HSerGetNumRC (Out HSerNum As Long)
+  Dim HSerDataIn(5)
+  HSerIndex = 0
+  HSerNum = 0
+
+  Do
+    HSerReceive( HSerInByte )
+    'Enter key?
+    If HSerInByte = 13 OR HSerIndex >= 5 Then       ' ***** look for CR  OR digits >= 5****
+      For HSerTemp = 1 to HSerIndex
+        HSerNum = HSerNum * 10 + HSerDataIn(HSerTemp) - 48
+      Next
+
+      Exit Sub
+    End If
+
+   'Number?
+    If HSerInByte >= 48 and HSerInByte <= 57 Then
+        HSerIndex++
+        HSerDataIn(HSerIndex) = HSerInByte
+    End If
+  Loop
+End Sub
+
+
+'Added  11/4/2015 by mlo
+' A string is input to a USART as a series of ASCII chars with a CR at the end
+'Output Value is a string
+'Input value is entered as digits,letters and most punctuation
+sub HSerGetStringRC (Out HSerString As String)
+  HSerIndex = 0
+  Do
+    HSerReceive ( HSerInByte )
+    'Enter key?
+    If HSerInByte = 13 Then
+       Exit Sub
+    End If
+    'letters,numbers,punctuation
+    If HSerInByte >= 32 and HSerInByte <= 126 Then
+        HSerIndex++
+        HSerString(HSerIndex) = HSerInByte
+        HSerString(0) = HSerIndex
+    End If
+  Loop
+End Sub
+
+
+sub HSerPrintStringCRLFRC (In PrintData As String)
+
+  PrintLen = PrintData(0)
+
+  If PrintLen <> 0 then
+    'Write Data
+    for SysPrintTemp = 1 to PrintLen
+      HSerSend(PrintData(SysPrintTemp) )
+    next
+  End If
+
+  HSerSend(13)
+  HSerSend(10)
+
+End Sub
+
+sub HSerPrintRC (In PrintData As String)
+
+  PrintLen = PrintData(0)
+
+  If PrintLen <> 0 then
+    'Write Data
+    for SysPrintTemp = 1 to PrintLen
+      HSerSend(PrintData(SysPrintTemp) )
+    next
+  End If
+
+  'CR
+  #IFDEF SerPrintCR
+    HSerSend(13)
+  #ENDIF
+
+  #IFDEF SerPrintLF
+    HSerSend(10)
+  #ENDIF
+end sub
+
+
+
+sub HSerPrintRC (In SerPrintVal)
+
+  OutValueTemp = 0
+
+  IF SerPrintVal >= 100 Then
+    OutValueTemp = SerPrintVal / 100
+    SerPrintVal = SysCalcTempX
+    HSerSend(OutValueTemp + 48  )
+
+  End If
+  If OutValueTemp > 0 Or SerPrintVal >= 10 Then
+    OutValueTemp = SerPrintVal / 10
+    SerPrintVal = SysCalcTempX
+    HSerSend(OutValueTemp + 48  )
+  End If
+  HSerSend(SerPrintVal + 48 )
+
+  'CR
+  #IFDEF SerPrintCR
+    HSerSend(13)
+  #ENDIF
+
+  #IFDEF SerPrintLF
+    HSerSend(10)
+  #ENDIF
+
+end sub
+
+Sub HSerPrintRC (In SerPrintVal As Word)
+  Dim SysCalcTempX As Word
+
+  OutValueTemp = 0
+
+  If SerPrintVal >= 10000 then
+    OutValueTemp = SerPrintVal / 10000 [word]
+    SerPrintVal = SysCalcTempX
+    HSerSend(OutValueTemp + 48  )
+    Goto HSerPrintWord1000
+  End If
+
+  If SerPrintVal >= 1000 then
+  HSerPrintWord1000:
+    OutValueTemp = SerPrintVal / 1000 [word]
+    SerPrintVal = SysCalcTempX
+    HSerSend(OutValueTemp + 48   )
+    Goto HSerPrintWord100
+  End If
+
+  If SerPrintVal >= 100 then
+  HSerPrintWord100:
+    OutValueTemp = SerPrintVal / 100 [word]
+    SerPrintVal = SysCalcTempX
+    HSerSend(OutValueTemp + 48  )
+    Goto HSerPrintWord10
+  End If
+
+  If SerPrintVal >= 10 then
+  HSerPrintWord10:
+    OutValueTemp = SerPrintVal / 10 [word]
+    SerPrintVal = SysCalcTempX
+    HSerSend(OutValueTemp + 48  )
+  End If
+
+  HSerSend(SerPrintVal + 48   )
+
+  'CR
+  #IFDEF SerPrintCR
+    HSerSend(13)
+  #ENDIF
+
+  #IFDEF SerPrintLF
+    HSerSend(10)
+  #ENDIF
+
+End Sub
+
+Sub HSerPrintRC (In SerPrintValInt As Integer)
+  Dim SerPrintVal As Word
+
+  'If sign bit is on, print - sign and then negate
+  If SerPrintValInt.15 = On Then
+    HSerSend("-" )
+
+    SerPrintVal = -SerPrintValInt
+
+  'Sign bit off, so just copy value
+  Else
+    SerPrintVal = SerPrintValInt
+  End If
+
+  'Use Print(word) to display value
+  HSerPrint SerPrintVal
+End Sub
+
+Sub HSerPrintRC (In SerPrintVal As Long)
+
+  Dim SysCalcTempA As Long
+  Dim SysPrintBuffer(10)
+  SysPrintBuffLen = 0
+
+  Do
+    'Divide number by 10, remainder into buffer
+    SysPrintBuffLen += 1
+    SysPrintBuffer(SysPrintBuffLen) = SerPrintVal % 10
+    SerPrintVal = SysCalcTempA
+  Loop While SerPrintVal <> 0
+
+  'Display
+  For SysPrintTemp = SysPrintBuffLen To 1 Step -1
+    HSerSend(SysPrintBuffer(SysPrintTemp) + 48 )
+  Next
+
+  'CR
+  #IFDEF SerPrintCR
+    HSerSend(13 )
+  #ENDIF
+
+  #IFDEF SerPrintLF
+    HSerSend(10 )
+  #ENDIF
+
+End Sub
+
+Sub HserPrintByteCRLFRC(In PrintValue )
+  HSerPrint(PrintValue)
+  HSerSend(13)
+  HSerSend(10)
+End Sub
+
+Sub HserPrintCRLFRC( Optional in HSerPrintCRLFCount = 1 )
+    repeat HSerPrintCRLFCount
+      HSerSend(13)
+      HSerSend(10)
+    end Repeat
+End Sub
+
+
+Function HSerReceiveRC
+  HSerReceiveRC( SerData )
+  HSerReceiveRC = SerData
+End Function
+
+Sub HSerReceiveRC(Out SerData)
+
+  #ifdef AVR
+    'AVR USART 1 receive
+    #If USART_BAUD_RATE Then
+        SerData = DefaultUsartReturnValue
+        'If set up to block, wait for data
+        #ifdef USART_BLOCKING
+        Wait Until USARTHasData
+        #endif
+        If USARTHasData Then
+          #ifndef Var(UDR0)
+            #ifdef Var(UDR1)
+              SerData = UDR1
+            #endif
+            #ifndef Var(UDR1)
+              SerData = UDR
+            #endif
+          #endif
+          #ifdef Var(UDR0)
+            SerData = UDR0
+          #endif
+        End If
+    #endif
+
+  #endif
+
+End Sub
+

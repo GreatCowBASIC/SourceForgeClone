@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-07-04"
+Version = "0.98.<<>> 2020-07-07"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -11494,7 +11494,11 @@ Function GenerateBitSet(BitNameIn As String, NewStatus As String, Origin As Stri
       Temp = " sbr ": IF Status = "0" THEN Temp = " cbr "
       CurrLine = LinkedListInsert(CurrLine, Temp + " " + VarName + ",1<<" + VarBit)
 
-    ElseIf IsLowIOReg(VarName) Then
+    'Adapted to support chipfamily121
+    'As chipfamily121 has USART registers that are NOT accessible using SBI and CBI instructions'
+    'Luckily the USART registers start with U
+    ElseIf IsLowIOReg(VarName) and not ( ChipFamily = 121 and Ucase(left(trim(VarName),1)) = "U" ) Then
+
       Temp = " sbi ": IF Status = "0" THEN Temp = " cbi "
       CurrLine = LinkedListInsert(CurrLine, Temp + VarName + "," + VarBit)
 
