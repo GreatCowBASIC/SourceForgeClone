@@ -579,7 +579,7 @@ DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
 DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue
+DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue, ChipMinimumBankSelect
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
@@ -7368,6 +7368,11 @@ SUB CompileSelect (CompSub As SubType Pointer)
       CurrCase = CaseStatements
 
       SelectValue = Trim(Mid(InLine, 12))
+
+      If LEN(TRIM(SelectValue)) = 0 then
+          LogError Message("NoSelectVariableParameter"), Origin
+      End if
+
       SCL = 1
       CC = 0
       CurrLine = LinkedListDelete(CurrLine)
@@ -14666,6 +14671,7 @@ SUB ReadChipData
 
   FirstSFR = &HFFFF
   ChipFamilyVariant = 0
+  ChipMinimumBankSelect = 0
 
   ReadDataMode = ""
   DO WHILE NOT EOF(1)
@@ -14719,6 +14725,8 @@ SUB ReadChipData
           ConstValue = Str(-HMult)
 
         Case "lfintoscclocksourceregistervalue": ChipLFINTOSCClockSourceRegisterValue = Val(TempData)
+
+        Case "minimumbankselect": ChipMinimumBankSelect = Val(TempData)
 
       End Select
 
