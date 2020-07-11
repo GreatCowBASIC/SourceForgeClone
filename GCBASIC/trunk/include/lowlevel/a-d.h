@@ -1658,6 +1658,7 @@ macro LLReadAD (ADLeftAdjust)
         'Set conversion clock to LowSpeed
         SET ADPS2 On
         SET ADPS1 On
+        SET ADPS0 On
       #ENDIF
     #ENDIF
 

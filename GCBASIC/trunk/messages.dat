@@ -153,7 +153,7 @@ UsedRAM = "RAM: %used%/%total% bytes"
 AssemblyWritten = "Assembly program lines written: "
 MakeASM = "Assembling program ..."
 
-SendToPIC = "Downloading via selected programmer: %PrgName%"
+SendToPIC = "Downloading program ..."
 
 'Errors
 Error = "An error has been found:"
@@ -189,6 +189,7 @@ ArrayTypeInvalid = "Cannot set the type of an array"
 NoEndRepeat = "Repeat without End Repeat"
 InvalidDelayLength = "Cannot use a variable with the microsecond delay on chips < 20 MHz"
 BadConfig = "Configuration setting not valid: %option%"
+NoSelectVariableParameter = "No Select Case variable specified"
 
 'New errors in 0.9.4.0
 ASMParamMismatch = "Number of parameters does not match"
@@ -288,7 +289,6 @@ WarningProgrammerFail = "The chip may not have programmed properly. Programmer r
 WarningNoValidProgrammer = "None of the chosen programmers were suitable for the current program"
 WarningReturnValueInSub = "Return value ignored, not permitted in subroutines"
 WarningBitByteCompare = "Comparison will fail if %nonbit% is any value other than 0 or 1"
-WarningSkip = "-1073741819"
 
 'GCASM messages
 SymbolTable = "Building symbol table ..."
