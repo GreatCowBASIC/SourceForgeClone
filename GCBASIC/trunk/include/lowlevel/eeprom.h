@@ -45,6 +45,8 @@
 ' 23/09/19: Revised to handle K40 Per  Chip Errata Sheets to correctly support table reads on specific chips.
 ' 10/04/20: Revised to EEPGD within ProgramRead() and implement NVMREGS check
 ' 03/05/20: Moved ProgramErase, ProgramRead and ProgramWrite to system.h to ensure we isolate EEPRom code.
+' 13/07/20: Revised to support Q43 chips
+
 
 #option REQUIRED PIC CHipEEPROM %NoEEProm%
 #option REQUIRED AVR CHipEEPROM %NoEEProm%
@@ -277,6 +279,8 @@ end function
 
 Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
 
+    #samebit WR, GO
+
     dim IntState as bit
     IntState = GIE
     Dim SysEEPromAddress As Word
@@ -313,8 +317,22 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
    #ENDIF
 
     #IFDEF VAR(NVMADRU)
-      'Select DATA EE section (0x310000 - 0x3100FF)
-       NVMADRU = 0x31
+       #IFDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
+       'Select DATA EE section (0x380000 - 0x3803FF)
+        NVMADRU = 0x38
+        #Ifdef Var(NVMCON1)
+           Dim  NVMCON1_0_State, NVMCON1_1_State, NVMCON1_2_State as bit
+           NVMCON1_0_State = NVMCON1.0
+           NVMCON1_1_State = NVMCON1.1
+           NVMCON1_2_State = NVMCON1.2
+        #endif
+
+       #ENDIF
+
+       #IFNDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
+         'Select DATA EE section (0x310000 - 0x3100FF)
+         NVMADRU = 0x31
+       #ENDIF
        NVMADRH =SysEEAddress_h
        NVMADRL =SysEEAddress
        NVMDATL = EEData
@@ -323,11 +341,20 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
 
 
 
-    [canskip]FREE =0b'0'
-    [canskip]WREN= 0b'1'
+    #if bit(FREE)
+        (FREE) =0b'0'
+    #endif
+    #if bit(WREN)
+        WREN= 0b'1'
+    #endif
     #if bit(NVMEN)
       NVMEN=0b'1'
     #endif
+
+    #if bit(NVMCMD0)
+      NVMCON1 = 3
+    #endif
+
     GIE = 0
     NVMCON2 = 0x55
     NVMCON2 = 0xAA
@@ -337,8 +364,12 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     NOP
     NOP
     NOP
+
     wait while WR = 1
-    [canskip]WREN= 0b'0'
+
+    #if bit(WREN)
+        WREN= 0b'0'
+    #endif
     #if bit(NVMEN)
       NVMEN=0b'0'
     #endif
@@ -353,11 +384,22 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
         #endif
     #ENDIF
 
+     #IFDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
+      #Ifdef Var(NVMCON1)
+         NVMCON1.0 = NVMCON1_0_State
+         NVMCON1.1 = NVMCON1_1_State
+         NVMCON1.2 = NVMCON1_2_State
+      #endif
+     #ENDIF
+
     'Restore interrupt to initial  State
     GIE = IntState
+
 end sub
 
 Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
+
+ #samebit WR, RD
 
   #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
      ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
@@ -399,28 +441,35 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
   #ENDIF
 
 
-    #IFDEF VAR(NVMADRU)
-        'Select DATA EE section (0x310000 - 0x3100FF)
-        NVMADRU = 0x31
-        NVMADRH =SysEEAddress_h
-        NVMADRL =SysEEAddress
-        RD = 1
-        NOP     ' NOPs may be required for latency at high frequencies
-        NOP
-        NOP
-        NOP
-        EEDataValue = NVMDATL
-    #ENDIF
+  #IFDEF VAR(NVMADRU)
+     #IFDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
+     'Select DATA EE section (0x380000 - 0x3803FF)
+      NVMADRU = 0x38
+     #ENDIF
 
-    #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
-       ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
-       ' Sets NVRAM pointer to Static RAM as default location.
-        #Ifdef Var(NVMCON1)
-           Dim  NVMCON1_7_State, NVMCON1_6_State as bit
-           NVMCON1.7 = NVMCON1_7_State
-           NVMCON1.6 = NVMCON1_6_State
-        #endif
-    #ENDIF
+     #IFNDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
+       'Select DATA EE section (0x310000 - 0x3100FF)
+       NVMADRU = 0x31
+     #ENDIF
+      NVMADRH =SysEEAddress_h
+      NVMADRL =SysEEAddress
+      RD = 1
+      NOP     ' NOPs may be required for latency at high frequencies
+      NOP
+      NOP
+      NOP
+      EEDataValue = NVMDATL
+  #ENDIF
+
+  #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
+     ' Added (Per  Chip Errata Sheets) to correctly support table reads on specific chips)
+     ' Sets NVRAM pointer to Static RAM as default location.
+      #Ifdef Var(NVMCON1)
+         Dim  NVMCON1_7_State, NVMCON1_6_State as bit
+         NVMCON1.7 = NVMCON1_7_State
+         NVMCON1.6 = NVMCON1_6_State
+      #endif
+  #ENDIF
 
 
 End Sub
