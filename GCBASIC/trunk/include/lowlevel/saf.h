@@ -25,7 +25,7 @@
 
 '    29.01.2019.   Updated to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
 '    05.02.2019.   Further revised  to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
-
+'    14.07.2020    Updated to support Q43 chips
 
 #option REQUIRED PIC ChipSAFMemWords "SAF.  No SAF memory."
 #option REQUIRED AVR ChipSAFMemWords "SAF.  No SAF memory."
@@ -47,6 +47,7 @@
       #SameVar NVMCON1, PMCON1
       #SameVar NVMCON2, PMCON2
       #SameBit NVMREGS, CFGS
+      #SameVar NVMLOCK, NVMCON2
 
       #DEFINE SAF_ROWSIZE_BYTES    HEF_ROWSIZE_BYTES
       #DEFINE SAF_ROWSIZE_WORDS    HEF_ROWSIZE_WORDS
@@ -90,8 +91,16 @@ Function SAFRead(in _HEF_REL_ADDR) as Byte
   #IFDEF HAS_HEFSAF TRUE
 
       #IFDEF ChipFamily 16
-          NVMCON1.REG0 = 0 ; point to Program Flash Memory
-          NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #IF BIT(REG0)
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #ENDIF
+
+          #IF BIT(NVMCMD0)
+            NVMCMD0 = 0 ; Read operations
+            NVMCMD1 = 0
+            NVMCMD2 = 0
+          #ENDIF
 
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
@@ -127,8 +136,16 @@ Function SAFReadWord(IN _HEF_REL_ADDR2) as Word
 
       #IFDEF ChipFamily 16
 
-          NVMCON1.REG0 = 0 ; point to Program Flash Memory
-          NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #IF BIT(REG0)
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #ENDIF
+
+          #IF BIT(NVMCMD0)
+            NVMCMD0 = 0 ; Read operations
+            NVMCMD1 = 0
+            NVMCMD2 = 0
+          #ENDIF
 
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR2
 
@@ -171,9 +188,16 @@ Sub SAFRead(in _HEF_REL_ADDR, out _HEF_DataByte as Byte)
   #IFDEF HAS_HEFSAF TRUE
 
       #IFDEF ChipFamily 16
-          NVMCON1.REG0 = 0 ; point to Program Flash Memory
-          NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #IF BIT(REG0)
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #ENDIF
 
+          #IF BIT(NVMCMD0)
+            NVMCMD0 = 0 ; Read operations
+            NVMCMD1 = 0
+            NVMCMD2 = 0
+          #ENDIF
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
           TBLPTRU = _HEF_ABS_ADDR_U
@@ -213,8 +237,16 @@ Sub SAFRead(in _HEF_REL_ADDR, out _HEF_DataWord as Word)
   #IFDEF HAS_HEFSAF TRUE
 
       #IFDEF ChipFamily 16
-          NVMCON1.REG0 = 0 ; point to Program Flash Memory
-          NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #IF BIT(REG0)
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #ENDIF
+
+          #IF BIT(NVMCMD0)
+            NVMCMD0 = 0 ; Read operations
+            NVMCMD1 = 0
+            NVMCMD2 = 0
+          #ENDIF
 
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
@@ -259,8 +291,15 @@ Sub SAFReadWord(IN _HEF_REL_ADDR, OUT _HEF_DataWord as Word)
 
       #IFDEF ChipFamily 16
 
-          NVMCON1.REG0 = 0 ; point to Program Flash Memory
-          NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #IF BIT(REG0)
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #ENDIF
+          #IF BIT(NVMCMD0)
+            NVMCMD0 = 0 ; Read operations
+            NVMCMD1 = 0
+            NVMCMD2 = 0
+          #ENDIF
 
           _HEF_ABS_ADDR = HEF_START_ADDR + _HEF_REL_ADDR
 
@@ -308,22 +347,43 @@ Sub SAFReadBlock(in _HEF_BlockNum, Out _HEF_Buffer(),Optional in _HEF_Count = HE
         'Reads a row of SAF Data and puts it into a array/buffer
         ' for later use
 
-        NVMCON1.REG0 = 0 ; point to Program Flash Memory
-        NVMCON1.REG1 = 1 ; access Program Flash Memory
+          _HEF_ABS_ADDR =  HEF_START_ADDR + (_HEF_BlockNum * HEF_ROWSIZE_BYTES)
 
-        _HEF_ABS_ADDR =  HEF_START_ADDR + (_HEF_BlockNum * HEF_ROWSIZE_BYTES)
+          #IF BIT(REG0)
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+            TBLPTRU = _HEF_ABS_ADDR_U
+            TBLPTRH = _HEF_ABS_ADDR_H
+            TBLPTRL = _HEF_ABS_ADDR
 
-        TBLPTRU = _HEF_ABS_ADDR_U
-        TBLPTRH = _HEF_ABS_ADDR_H
-        TBLPTRL = _HEF_ABS_ADDR
+            for  _HEF_Index = 1 to _HEF_Count -1
+               TBLRD*+ ; read into TABLAT and increment
+              _HEF_Buffer(_HEF_Index) = TABLAT
+            next
+            'Get last byte
+            TBLRD*
+            _HEF_Buffer(_HEF_Index+1) = TABLAT
+          #ENDIF
 
-        for  _HEF_Index = 1 to _HEF_Count -1
-           TBLRD*+ ; read into TABLAT and increment
-          _HEF_Buffer(_HEF_Index) = TABLAT
-        next
-          'Get last byte
-          TBLRD*
-          _HEF_Buffer(_HEF_Index+1) = TABLAT
+          #IF BIT(NVMCMD0)
+            NVMCON1 = 0 ; Read operations
+            TBLPTRU = _HEF_ABS_ADDR_U
+            TBLPTRH = _HEF_ABS_ADDR_H
+            TBLPTRL = _HEF_ABS_ADDR
+
+            for  _HEF_Index = 1 to _HEF_Count -1
+               TBLRD*+ ; read into TABLAT and increment
+              _HEF_Buffer(_HEF_Index) = TABLAT
+            next
+            'Get last byte
+            TBLRD*
+            _HEF_Buffer(_HEF_Index+1) = TABLAT
+
+          #ENDIF
+
+
+
+
     #ENDIF
 
     #IFDEF ChipFamily 15
@@ -361,27 +421,57 @@ Sub SAFEraseBlock(In _HEF_BlockNum)
 
           _HEF_ABS_ADDR = HEF_START_ADDR + (HEF_ROWSIZE_BYTES * _HEF_BlockNum)
 
-          NVMCON1 = 0
-          NVMCON1.REG0 = 0           'Select the Flash address space
-          NVMCON1.Reg1 = 1
-          NVMCON1.FREE = 1           'Next operation will be erase
-          NVMCON1.WREN = 1           'Enable Flash Memory write/erase
-
-          TBLPTRU = _HEF_ABS_ADDR_U
-          TBLPTRH = _HEF_ABS_ADDR_H
-          TBLPTRL = _HEF_ABS_ADDR
-
           _GIE_SAVE = INTCON0.GIE  'Save interrupt setting
           INTCON0.GIE = 0 'Disable interrupts
+
+
+
+          #IF BIT(REG0)
+            TBLPTRU = _HEF_ABS_ADDR_U
+            TBLPTRH = _HEF_ABS_ADDR_H
+            TBLPTRL = _HEF_ABS_ADDR
+
+            NVMCON1 = 0
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+          #ENDIF
+          #IF BIT(FREE)
+            NVMCON1.FREE = 1           'Next operation will be erase
+          #ENDIF
+          #IF BIT(WREN)
+            NVMCON1.WREN = 1           ''Enable Flash Memory write/erase
+          #ENDIF
+
+          #IF BIT(NVMCMD0)
+            NVMADRU = _HEF_ABS_ADDR_U
+            NVMADRH = _HEF_ABS_ADDR_H
+            NVMADRL = _HEF_ABS_ADDR
+            NVMCON1 = 2 ; Page read
+            NVMCON0.GO = 1            'Write takes place here for chips with NVMCON0.GO
+            NVMCON1 = 6 ; Erase operations
+          #ENDIF
 
           'unlock Sequence
           NVMCON2 = 0x55
           NVMCON2 = 0xAA
-          NVMCON1.WR = 1            'Write takes place here
+          #IF BIT(REG0)
+            NVMCON1.WR = 1            'Write takes place here for legacy chips with NVMCON1.WR
+          #ENDIF
+          #IF BIT(NVMCMD0)
+            NVMCON0.GO = 1            'Write takes place here for chips with NVMCON0.GO
+          #ENDIF
           NOP
           NOP
 
-          NVMCON1.WREN = 0           'Disable Flash Memory write/erase
+          #IF BIT(WREN)
+            NVMCON1.WREN = 0           ''Disable Flash Memory write/erase
+          #ENDIF
+          #IF BIT(NVMCMD0)
+            NVMCMD0 = 0 ; Read operations
+            NVMCMD1 = 0
+            NVMCMD2 = 0
+          #ENDIF
+
           INTCON0.GIE = _GIE_SAVE    ' Restore saved interrupt setting
       #ENDIF
 
@@ -425,36 +515,68 @@ Sub SAFWriteBlock(in _HEF_BlockNum, in _HEF_Buffer(), Optional in _HEF_Count = H
           ;Calculate Base Address of NVM Erase Block
          _HEF_ABS_ADDR =  HEF_START_ADDR + (_HEF_BlockNum * HEF_ROWSIZE_BYTES)
 
-          TBLPTRU = _HEF_ABS_ADDR_U
-          TBLPTRH = _HEF_ABS_ADDR_H
-          TBLPTRL = _HEF_ABS_ADDR
-
           ; Erase the entire row - Call sub
           SAFEraseBlock (_HEF_BlockNum)
-
-          NVMCON1.REG0 = 0     ; point to Program Flash Memory
-          NVMCON1.REG1 = 1     ; access Program Flash Memory
-          NVMCON1.FREE = 0     ; Next operation will be a write
-          NVMCON1.WREN = 1     ; Enable Flash Memory write/erase
 
           _GIE_SAVE = INTCON0.GIE    'Save interrupt
           INTCON0.GIE = 0           'disable interrupts
 
-          ; Fill the latches with data
-          For _HEF_Index = 1 to _HEF_Count -1
-           TABLAT = _HEF_Buffer(_HEF_Index)
-           TBLWT*+
-          Next
-          'last byte
-          TABLAT =  _HEF_Buffer(_HEF_Index +1)
-          TBLWT*
+          #IF BIT(REG0)
+            TBLPTRU = _HEF_ABS_ADDR_U
+            TBLPTRH = _HEF_ABS_ADDR_H
+            TBLPTRL = _HEF_ABS_ADDR
+            NVMCON1.REG0 = 0 ; point to Program Flash Memory
+            NVMCON1.REG1 = 1 ; access Program Flash Memory
+            NVMCON1.FREE = 0           'Next operation will be a write
+            NVMCON1.WREN = 1           ''Enable Flash Memory write/erase
+            ; Fill the latches with data
+            For _HEF_Index = 1 to _HEF_Count -1
+             TABLAT = _HEF_Buffer(_HEF_Index)
+             TBLWT*+
+            Next
+            'last byte
+            TABLAT =  _HEF_Buffer(_HEF_Index +1)
+            TBLWT*
+
+          #ENDIF
+
+          #IF BIT(NVMCMD0)
+            TBLPTRU = _HEF_ABS_ADDR_U
+            TBLPTRH = _HEF_ABS_ADDR_H
+            TBLPTRL = _HEF_ABS_ADDR
+            NVMCON1 = 5                ' Page Write operations
+            ; Fill the latches with data
+            For _HEF_Index = 1 to _HEF_Count -1
+             TABLAT = _HEF_Buffer(_HEF_Index)
+             TBLWT*+
+            Next
+            'last byte
+            TABLAT =  _HEF_Buffer(_HEF_Index +1)
+            TBLWT*
+
+          #ENDIF
+
 
           'unlock sequence
           NVMCON2 = 0x55
           NVMCON2 = 0xAA
-          NVMCON1.WR = 1             ; Write takes place here
 
-          NVMCON1.WREN = 0           ;Disable Flash Memory write/erase
+          #IF BIT(REG0)
+            NVMCON1.WR = 1            'Write takes place here for legacy chips with NVMCON1.WR
+          #ENDIF
+          #IF BIT(NVMCMD0)
+            NVMCON0.GO = 1            'Write takes place here for chips with NVMCON0.GO
+          #ENDIF
+
+
+          #IF BIT(WREN)
+            NVMCON1.WREN = 0           'Disnable Flash Memory write/erase
+          #ENDIF
+          #IF BIT(NVMCMD0)
+            NVMCMD0 = 0 ; Read operations
+            NVMCMD1 = 0
+            NVMCMD2 = 0
+          #ENDIF
           INTCON0.GIE = _GIE_SAVE     'restore saved interrupt
       #ENDIF
 
