@@ -152,7 +152,8 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
     IF UCase(VarName) = "SYSDIVLOOP" Then VarPointer = "REGISTER@-2"
     IF UCase(VarName) = "SYSSIGNBYTE" Then
       'Create this register in GPRs only when there is sufficient GPRs. 16 system vars in GPR is the maximum for a 16 GPR chip.
-      IF CHIPGPR > 16  then
+      'Create this register in GPRs only when there is sufficient GPRs. 16 system vars in GPR is the maximum for a 16 GPR chip.
+      IF ( CHIPGPR > 16 AND ModeAVR ) or ModePIC then
         VarPointer = "REGISTER@-2"
       End If
     End If
