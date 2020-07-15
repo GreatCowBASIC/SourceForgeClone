@@ -66,6 +66,7 @@
 '    05052020 - Adapted ProgramErase, ProgramRead and ProgramWrite to support PMADRH, PMADRL
 '    21052020 - Removed InternalSOSC check to script
 '    07062020 - Added ChipFamily 121 string handler and updated InitSys to set intenal osc for ChipFamily 121
+'    15072020 - Added Q43 support in ProgramWrite and ProgramRead
 
 
 'Constants
@@ -1265,7 +1266,7 @@ SysStringCopy:
 
 #IFDEF ChipFamily 16
 
- 'Get and copy length
+ 'Get and copy length for ChipFamily 16 support
  movff INDF0, SysCalcTempA
  movff SysCalcTempA, INDF1
 
@@ -1441,7 +1442,7 @@ SysStringRead:
   #endif
 
  #ifdef ChipFamily 16
-
+  'ChipFamily 16 support
   'Get length
   TBLRD*+
   movff TABLAT,SysCalcTempA
@@ -3345,6 +3346,11 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
     Dim EEAddress As Word Alias PMADRH, PMADRL
     Dim EEDataWord As Word Alias PMDATH, PMDATL
   #ENDIF
+  #IF BIT(NVMCMD0)
+    Dim EEAddress As Word Alias NVMADRH, NVMADRL
+    Dim EEDataWord As Word Alias NVMDATH, NVMDATL
+    NVMCON1 = 3                ' Byte Write operations
+  #ENDIF
 
   'Disable Interrupt
   IntOff
@@ -3358,7 +3364,9 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
   #ENDIF
 
   'Enable write
-  SET WREN ON
+  #ifdef bit(WREN)
+    SET WREN ON
+  #endif
   #ifdef bit(FREE)
     SET FREE OFF
   #endif
@@ -3369,17 +3377,31 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
     EECON2 = 0x55
     EECON2 = 0xAA
   #ENDIF
-  #IF VAR(PMADRH)
+  #IF VAR(PMCON2)
     PMCON2 = 0x55
     PMCON2 = 0xAA
   #ENDIF
+  #IF VAR(PMCON2)
+    PMCON2 = 0x55
+    PMCON2 = 0xAA
+  #ENDIF
+  #IF VAR(NVMCON2)
+    NVMCON2 = 0x55
+    NVMCON2 = 0xAA
+  #ENDIF
+
+
+
 
   'Start write, wait for it to finish
   SET WR ON
   NOP
   NOP
-  SET WREN OFF
-
+  NOP
+  NOP
+  #ifdef bit(WREN)
+    SET WREN OFF
+  #endif
   'Enable Interrupt
   IntOn
 #ENDIF
@@ -3388,46 +3410,67 @@ end sub
 
 sub ProgramRead(In EEAddress, Out EEDataWord)
 
-  #IF VAR(EEADRH)
-    Dim EEAddress As Word Alias EEADRH, EEADR
-    Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
-  #ENDIF
-  #IF VAR(PMADRH)
-    Dim EEAddress As Word Alias PMADRH, PMADRL
-    Dim EEDataWord As Word Alias PMDATH, PMDATL
-  #ENDIF
+    #IF BIT(NVMCMD0)
+        'Supports memory 18fxxQ43 family
+        Dim EEAddress As Word
+        Dim EEDataWord As Word
+        NVMCON1 = 0; Read operations
+
+        TBLPTRU = 0
+        TBLPTRH = EEAddress_H
+        TBLPTRL = EEAddress
+
+        TBLRD*+
+        EEDataWord   = TABLAT
+        TBLRD*
+        EEDataWord_H = TABLAT
+
+    #ENDIF
 
 
-  Dim NVMREGSState as Bit
-
-  'Disable Interrupt
-  IntOff
-
-  'Select program memory
-  #IFDEF Bit(EEPGD)
-    Set EEPGD ON
-  #ENDIF
-
-  #IFDEF Bit(NVMREGS)
-    NVMREGSState = NVMREGS
-    NVMREGS = 0
-  #ENDIF
+    #IF NOBIT(NVMCMD0)
+        #IF VAR(EEADRH)
+          Dim EEAddress As Word Alias EEADRH, EEADR
+          Dim EEDataWord As Word Alias EEDATH, EEDATL_REF
+        #ENDIF
+        #IF VAR(PMADRH)
+          Dim EEAddress As Word Alias PMADRH, PMADRL
+          Dim EEDataWord As Word Alias PMDATH, PMDATL
+        #ENDIF
 
 
-  #IFDEF Bit(CFGS)
-    Set CFGS OFF
-  #ENDIF
+        Dim NVMREGSState as Bit
 
-  'Start read, wait for it to finish
-  SET RD ON
-  NOP
-  NOP
-  #IFDEF Bit(NVMREGS)
-    NVMREGS = NVMREGSState
-  #ENDIF
+        'Disable Interrupt
+        IntOff
 
-  'Enable interrupt
-  IntOn
+        'Select program memory
+        #IFDEF Bit(EEPGD)
+          Set EEPGD ON
+        #ENDIF
+
+        #IFDEF Bit(NVMREGS)
+          NVMREGSState = NVMREGS
+          NVMREGS = 0
+        #ENDIF
+
+
+        #IFDEF Bit(CFGS)
+          Set CFGS OFF
+        #ENDIF
+
+        'Start read, wait for it to finish
+        SET RD ON
+        NOP
+        NOP
+        #IFDEF Bit(NVMREGS)
+          NVMREGS = NVMREGSState
+        #ENDIF
+
+        'Enable interrupt
+        IntOn
+    #ENDIF
+
 end sub
 
 sub ProgramErase(In EEAddress)
