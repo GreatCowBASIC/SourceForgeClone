@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-07-14"
+Version = "0.98.<<>> 2020-07-16"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -15096,7 +15096,8 @@ SUB ReadChipData
   'Check for high table pointer bytes
   HighTBLPTRBytes = 0
   If ChipFamily = 16 Then
-    If ChipProg > 32767 And HasSFR("TBLPTRU") Then
+    'The Q10 has SECTOR RAM and therefore "TBLPTRU" must be managed
+    If ( ChipProg > 32767 or  ( Instr( UCase(ChipName) , "Q10") <> 0 ) ) And HasSFR("TBLPTRU") Then
       HighTBLPTRBytes = 3
     Else
       HighTBLPTRBytes = 2
