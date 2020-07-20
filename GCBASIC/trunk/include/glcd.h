@@ -433,6 +433,7 @@ Dim GLCDDeviceWidth as Word
      GLCD_Open_PageTransaction = GLCD_Open_PageTransaction_SH1106
      GLCD_Close_PageTransaction = GLCD_Close_PageTransaction_SH1106
      GLCDSetContrast = GLCDSetContrast_SSH1106
+     GLCDRotate = GLCDRotate_SSH1106
      GLCDSetDisplayNormalMode = GLCDSetDisplayNormalMode_SSH1106
      GLCDSetDisplayInvertMode = GLCDSetDisplayInvertMode_SSH1106
      glcd_type_string = "SH1106"
