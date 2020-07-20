@@ -99,7 +99,7 @@ Sub Write_Command_SH1106 ( in SH1106SendByte as byte )
 
       CS_SH1106 = 0
       DC_SH1106 = 0
-      S4Wire_SH1106 SH1106SendByte
+      S4Wire_SSD1106 SH1106SendByte
       DC_SH1106 = 1
       CS_SH1106 = 1
       Exit Sub
@@ -135,7 +135,7 @@ Sub Write_Data_SH1106 ( in SH1106SendByte as byte )
 
       CS_SH1106 = 0
       DC_SH1106 = 1
-      S4Wire_SH1106 SH1106SendByte
+      S4Wire_SSD1106 SH1106SendByte
       DC_SH1106 = 0
       CS_SH1106 = 1
       Exit Sub
@@ -165,10 +165,52 @@ Sub Write_Data_SH1106 ( in SH1106SendByte as byte )
 End Sub
 
 
+sub S4Wire_SSD1106(in SH1106SendByte as byte)
+
+  SCK_SH1106 = 1
+  For clocks = 1 to 8
+    If SH1106SendByte.7 = 1 Then
+      DO_SH1106 = 1
+    Else
+      DO_SH1106 = 0
+    End if
+    SCK_SH1106 = 0
+    Rotate SH1106SendByte Left Simple
+    SCK_SH1106 = 1
+  Next
+
+end sub
+
 Sub InitGLCD_SH1106
 
-    ' added wait time to allow power supplies to stabilize
-    wait 255 ms
+      GLCDFontWidth = 5
+      dim PrintLocX, PrintLocY as word
+
+      #DEFINE DO_SH1106         GLCD_DO
+      #DEFINE SCK_SH1106        GLCD_SCK
+      #DEFINE DC_SH1106         GLCD_DC
+      #DEFINE CS_SH1106         GLCD_CS
+      #DEFINE RESET_SH1106      GLCD_RESET
+
+      DIR DO_SH1106 out
+      DIR SCK_SH1106  out
+      DIR DC_SH1106 out
+      DIR CS_SH1106 out
+      DIR RESET_SH1106 out
+
+
+
+      ' added wait time to allow power supplies to stabilize
+      wait 255 ms
+
+      'Reset display
+      Set RESET_SH1106 On
+      Wait 150 ms
+      'Reset sequence (lower line for at least 10 us)
+      Set RESET_SH1106 Off
+      Wait 150 us
+      Set RESET_SH1106 On
+      Wait 150 ms
 
       #IFDEF HI2C_DATA
              HI2CMode Master
@@ -176,7 +218,7 @@ Sub InitGLCD_SH1106
       #ENDIF
 
    'Setup code for SH1106 controllers
-    'Init sequence for 132x64 OLED module
+   'Init sequence for 132x64 OLED module
 
     Write_Command_SH1106(SH1106_DISPLAYOFF)                    ' 0xAE
     Write_Command_SH1106(SH1106_SETLOWCOLUMN)                  ' 0x02
@@ -185,9 +227,10 @@ Sub InitGLCD_SH1106
     Write_Command_SH1106(SH1106_PAGEADDR)                      ' 0xB0
 
     Write_Command_SH1106(SH1106_SETCONTRASTCRTL)               ' 0x81
-    Write_Command_SH1106(0x80)                   ' Contrast = 128
+    Write_Command_SH1106(0x80)                                 ' Contrast = 128
 
     Write_Command_SH1106(SH1106_SEGREMAP | 0x1)                ' 0xA1
+    Write_Command_SH1106(SH1106_COMSCANINC)
     Write_Command_SH1106(SH1106_NORMALDISPLAY)                 ' 0xA6
 
     Write_Command_SH1106(SH1106_SETMULTIPLEX)                  ' 0xA8
@@ -226,7 +269,8 @@ Sub InitGLCD_SH1106
     GLCDfntDefault = 0
     GLCDfntDefaultsize = 1
     GLCDfntDefaultHeight = 7
-
+   ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
+    GLCD_yordinate = 0
     'Clear screen
     GLCDCLS_SH1106
 
@@ -237,6 +281,7 @@ End Sub
 Sub GLCDCLS_SH1106 ( Optional In  GLCDBackground as word = GLCDBackground )
  ' initialise global variable. Required variable for Circle in all DEVICE DRIVERS- DO NOT DELETE
   GLCD_yordinate = 0
+
 
     #ifndef GLCD_TYPE_SH1106_CHARACTER_MODE_ONLY
       #ifndef GLCD_TYPE_SH1106_LOWMEMORY_GLCD_MODE
@@ -272,6 +317,8 @@ Sub GLCDCLS_SH1106 ( Optional In  GLCDBackground as word = GLCDBackground )
     '  next
 
   Cursor_Position_SH1106 ( 0 , 0 )
+  PrintLocX =0
+  PrintLocY =0
 
 End Sub
 
@@ -617,6 +664,30 @@ sub Cursor_Position_SH1106( in LocX as byte, in LocY as byte )
 
 end sub
 
+sub GLCDRotate_SSH1106 ( in GLCDRotateState )
+
+  select case GLCDRotateState
+        case LANDSCAPE
+            Write_Command_SH1106(SH1106_SEGREMAP | 0x01)
+            Write_Command_SH1106(SH1106_COMSCANINC | 0x08)
+            GLCDDeviceWidth = GLCD_HEIGHT - 1
+            GLCDDeviceHeight = GLCD_WIDTH - 1
+
+        case LANDSCAPE_REV
+            Write_Command_SH1106(SH1106_SEGREMAP )
+            Write_Command_SH1106(SH1106_COMSCANINC )
+            GLCDDeviceWidth = GLCD_HEIGHT - 1
+            GLCDDeviceHeight = GLCD_WIDTH - 1
+
+        case else
+            Write_Command_SH1106(SH1106_SEGREMAP | 0x01)
+            Write_Command_SH1106(SH1106_COMSCANINC| 0x08)
+            GLCDDeviceWidth = GLCD_WIDTH - 1
+            GLCDDeviceHeight = GLCD_HEIGHT - 1
+  end select
+
+end Sub
+
 '''Sets the constrast to select 1 out of 256 contrast steps.
 '''Contrast increases as the value increases.
 '''@param Dim byte value
@@ -703,9 +774,9 @@ Macro Write_Transaction_Data_SH1106 ( in SH1106SendByte as byte )
         #ifdef S4Wire_DATA
 
           CS_SH1106 = 0
-          DC_SH1106 = 0
-          S4Wire_SH1106 SH1106SendByte
           DC_SH1106 = 1
+          S4Wire_SSD1106 SH1106SendByte
+          DC_SH1106 = 0
           CS_SH1106 = 1
 
         #endif
