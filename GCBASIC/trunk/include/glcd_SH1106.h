@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2017-2020 Marco Cariboni, Evan Venn and Joseph Realmuto
+'    Copyright (C) 2017-2020 Marco Cariboni, Joseph Realmuto and Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 ' 17/08/2017: Added support for low-RAM GLCD mode (ported from SSD1306 code) - Joseph Realmuto
 ' 17/08/2017: Improved Pset for text mode
 ' 18/08/2017: Improved speed of GLCDDrawChar and Pset in low RAM GLCD mode (Joseph Realmuto)
+' 21/07/2020: Added SPI support - software only
 
 'Notes:
 ' Supports SH1106 controller only.
@@ -30,7 +31,17 @@
 '#define GLCD_I2C_Address 0x7A
 '#define GLCD_I2C_Address 0x7B
 
+'Hardware settings uses SPI
+'#DEFINE GLCD_DO  PORTC.5  'SPI
+'#DEFINE GLCD_SCK PORTC.4  'SPI
+'#DEFINE GLCD_DC PORTB.1 ' PIN AO
+'#DEFINE GLCD_CS PORTC.3 ' PIN CS
+'#DEFINE GLCD_RESET PORTC.2 ' PIN RST
 
+
+
+
+'****************************************************************************************************************
 #define SH1106_OLEDADJUSTMENT 0x02  ' required as the 132 bits are not all available.
 
 #define SH1106_DISPLAYOFF 0xAE
@@ -97,10 +108,10 @@ Sub Write_Command_SH1106 ( in SH1106SendByte as byte )
 
     #ifdef S4Wire_DATA
 
-      CS_SH1106 = 0
+      CS_SH1106 = 1
       DC_SH1106 = 0
+      CS_SH1106 = 0
       S4Wire_SSD1106 SH1106SendByte
-      DC_SH1106 = 1
       CS_SH1106 = 1
       Exit Sub
 
@@ -128,15 +139,18 @@ Sub Write_Command_SH1106 ( in SH1106SendByte as byte )
 
 End Sub
 
+
+
+
 '''@hide
 Sub Write_Data_SH1106 ( in SH1106SendByte as byte )
 
     #ifdef S4Wire_DATA
 
-      CS_SH1106 = 0
+      CS_SH1106 = 1
       DC_SH1106 = 1
+      CS_SH1106 = 0
       S4Wire_SSD1106 SH1106SendByte
-      DC_SH1106 = 0
       CS_SH1106 = 1
       Exit Sub
 
@@ -694,7 +708,8 @@ end Sub
 
 sub GLCDSetContrast_SSH1106 ( in dim_state )
 
-  Write_Command_SH1106(SH1106_SETCONTRAST)
+  'Write a word value
+  Write_Command_SH1106 ( SH1106_SETCONTRASTCRTL )
   Write_Command_SH1106(dim_state)
 
 end sub
