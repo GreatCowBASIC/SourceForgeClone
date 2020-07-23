@@ -153,6 +153,10 @@
 
 #endscript
 
+#samebit SSPM0 SSPCON_SSP1M0
+#samebit SSPM1 SSPCON_SSP1M1
+#samebit SSPM2 SSPCON_SSP1M2
+#samebit SSPM3 SSPCON_SSP1M3
 
 'Initialisation sub
 'Used to set mode
