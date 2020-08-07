@@ -686,7 +686,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-07-16"
+Version = "0.98.<<>> 2020-08-07"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8819,6 +8819,15 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
   Dim As LinkedListElement Pointer CurrLine, OutList
   OutList = LinkedListCreate
   CurrLine = OutList
+
+  'Check parameters
+  if Len( SourceIn ) = 0  then
+      LogWarning( Message("NoSourceParam"), Origin)
+  End if
+  if Len( Dest ) = 0 then
+      LogWarning( Message("NoDestParam"), Origin)
+  End if
+
 
   'Initialise
   Source = SourceIn
