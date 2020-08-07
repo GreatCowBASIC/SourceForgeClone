@@ -3493,7 +3493,7 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
         End If
       ElseIf ModeAVR Then
         NewCode = LinkedListCreate
-        R2 = PutInRegister(NewCode, R2, "BYTE", Origin)
+        R2 = PutInRegister(NewCode, V2, "BYTE", Origin)
         CurrLine = LinkedListInsertList(CurrLine, NewCode)
         CurrLine = LinkedListInsert(CurrLine, " inc " + R2)
         AV = R2
@@ -17258,3 +17258,4 @@ Sub CreateReservedWordsList
   CLOSE  #1
 
 End Sub
+
