@@ -3462,6 +3462,7 @@ FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As Str
 
   'Optimisations
   'Increment/Decrement (byte only)
+  'V1 and V2 are the two values in the calculation step, and R1 and R2 are the registers that they have been temporarily copied into on AVR.
   If CalcType = "BYTE" Then
     If V2 = "1" And INSTR(V1, "@") = 0 Then
       If ModePIC Then
@@ -17267,4 +17268,3 @@ Sub CreateReservedWordsList
   CLOSE  #1
 
 End Sub
-
