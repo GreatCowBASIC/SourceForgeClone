@@ -813,7 +813,11 @@ SUB AllocateRAM
                     RegisterUsed(SR) = -1
                   Next
                 Else
-                  LogError Message("OutOfRegSpace")
+                  If ChipFamily = 121 then
+                    LogError Message("OutOfRegSpaceAVRrc")
+                  Else
+                    LogError Message("OutOfRegSpace")
+                  End if
                 End If
               End If
             End If
