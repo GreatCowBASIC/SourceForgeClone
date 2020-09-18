@@ -94,6 +94,7 @@
 ' 27/04/2019: Revised InitTimer1, 3 and 5 to resolve missing clock source  LFINTOSC. Chip requires TMR1CS1 and TMR1CS0 to support LFINTOSC.
 ' 05/04/2020: Improve InitTimer0 to better support new class of timers.
 ' 25/04/2020: Improve Settimer to better support new class of timers for timer 0
+' 18/09/2020: Added TCNT1 handling SetTimer specific change for AVR
 '***********************************************************
 
 'Subroutines:
@@ -1185,6 +1186,11 @@ Sub SetTimer (In TMRNumber, In TMRValue As Word)
       If TMRNumber = 1 Then
         TCNT1H = TMRValue_H
         TCNT1L = TMRValue
+      End If
+    #endif
+    #ifdef Var(TCNT1)  'added 17/09/2020 for ATtiny 15/25/45/85, 261/461/861
+      If TMRNumber = 1 Then
+        TCNT1 = TMRValue
       End If
     #endif
     #ifdef Var(TCNT2)
