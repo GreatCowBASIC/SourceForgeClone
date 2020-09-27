@@ -13,7 +13,7 @@ Imports System.Runtime.InteropServices
 <assembly: AssemblyConfiguration("")>
 <assembly: AssemblyCompany("")>
 <assembly: AssemblyProduct("BankCheck")>
-<assembly: AssemblyCopyright("Copyright 2014")>
+<Assembly: AssemblyCopyright("Copyright 2014..2020")>
 <assembly: AssemblyTrademark("")>
 <assembly: AssemblyCulture("")>
 
@@ -28,4 +28,5 @@ Imports System.Runtime.InteropServices
 ' You can specify all values by your own or you can build default build and revision
 ' numbers with the '*' character (the default):
 
-<assembly: AssemblyVersion("1.0.*")>
+<Assembly: AssemblyVersion("1.0.2")>
+<Assembly: AssemblyFileVersion("1.0.2")>
