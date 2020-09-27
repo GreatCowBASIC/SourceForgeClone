@@ -175,7 +175,7 @@ BadParam = "Incorrect parameter syntax: %sub%. Correct syntax is %correct%"
 NoNext = "For without Next"
 NoBit = "Missing bit in Set command"
 SynErr = "Syntax Error"
-NoSourceParam = "Bad Source parameter in ASM. The compiler has failed to optimise correctly. Try changing mathematical order with constants at end of order, or, post to support forum for advice/resolution."
+NoSourceParam = "Bad Source parameter in ASM. The compiler has failed to optimise correctly. Try adding element(s) to complete the array definition, or, changing mathematical order with constants at end of order, or, post to support forum for advice/resolution."
 NoDestParam = "Bad Destination parameter in ASM. The compiler has failed to optimise correctly. Try changing mathematical order with constants at end of order, or, post to support forum for advice/resolution."
 
 'New errors in 0.9.3.0
