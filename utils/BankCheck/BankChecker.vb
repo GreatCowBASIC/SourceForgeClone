@@ -28,47 +28,67 @@ Public Class BankChecker
 	Public Dim Program As AsmProgram
 	
 	Public Sub New(IncPath As String, SourceFile As String)
-		Program = New AsmProgram(IncPath, SourceFile)
-		
-		If Program.Loaded Then
-			'Check bank selection
-			CheckBanks
-			
-			'Check page selection
-			CheckPages
-		End If
-		
-	End Sub
+        LogError("")
+        LogError("Bank and Page Checkter 1.02")
+        LogError("")
+        Program = New AsmProgram(IncPath, SourceFile)
+
+        If Program.Loaded Then
+
+
+            'Check bank selection
+            CheckBanks()
+
+            'Check page selection
+            CheckPages()
+        End If
+
+    End Sub
 	
 	Private Sub CheckBanks
 		Dim CurrLine As AsmLine
-		Dim PossBank As Integer
-		For Each CurrLine In Program.Lines
-			If CurrLine.RequiredBank <> -1 Then
-				'Line requires particular bank, which one is currently selected?
-				For Each PossBank In CurrLine.PossibleBanks
-					If PossBank <> CurrLine.RequiredBank Then
-						LogError(CurrLine.SourceFile + "(" + CurrLine.FileLine.ToString + "): Bad bank, requires " + CurrLine.RequiredBank.ToString + " but could be in " + PossBank.ToString)
-					End If
-				Next
-			End If
-		Next
-	End Sub
+        Dim PossBank As Integer
+        Dim ModCurrline As String
+        LogError("Bank Analysis")
+        For Each CurrLine In Program.Lines
+            If CurrLine.RequiredBank <> -1 Then
+                'Line requires particular bank, which one is currently selected?
+                For Each PossBank In CurrLine.PossibleBanks
+                    ModCurrline = Left(Replace(CurrLine.Original, vbTab, "|") + Space(32), 32)
+                    ModCurrline = Right(Space(3) + CurrLine.FileLine.ToString, 3) + Replace(ModCurrline, "|", " ")
+                    If PossBank <> CurrLine.RequiredBank Then
+                        'LogError(CurrLine.SourceFile + "(" + CurrLine.FileLine.ToString + "): Bad bank, requires " + CurrLine.RequiredBank.ToString + " but could be in " + PossBank.ToString)
+                        LogError(ModCurrline + ": Bad bank, requires " + CurrLine.RequiredBank.ToString + " but could be in " + PossBank.ToString)
+                    Else
+                        LogError(ModCurrline + ": Bank map " + CurrLine.RequiredBank.ToString + " - " + PossBank.ToString)
+                    End If
+                Next
+            End If
+        Next
+        LogError("")
+
+    End Sub
 	
 	Private Sub CheckPages
 		Dim CurrLine As AsmLine
-		Dim PossPage As Integer
-		For Each CurrLine In Program.Lines
-			If CurrLine.RequiredPage <> -1 Then
-				'Line requires particular page, which one is currently selected?
-				For Each PossPage In CurrLine.PossiblePages
-					If PossPage <> CurrLine.RequiredPage Then
-						LogError(CurrLine.SourceFile + "(" + CurrLine.FileLine.ToString + "): Bad page, requires " + CurrLine.RequiredPage.ToString + " but could be in " + PossPage.ToString)
-					End If
-				Next
-			End If
-		Next
-	End Sub
+        Dim PossPage As Integer
+        Dim ModCurrline As String
+        LogError("")
+        LogError("Page Analysis")
+        For Each CurrLine In Program.Lines
+            If CurrLine.RequiredPage <> -1 Then
+                'Line requires particular page, which one is currently selected?
+                For Each PossPage In CurrLine.PossiblePages
+                    If PossPage <> CurrLine.RequiredPage Then
+                        ModCurrline = Left(Replace(CurrLine.Original, vbTab, "|") + Space(32), 32)
+                        ModCurrline = Right(Space(3) + CurrLine.FileLine.ToString, 3) + Replace(ModCurrline, "|", " ")
+                        LogError(ModCurrline + ": Bad page, requires " + CurrLine.RequiredPage.ToString + " but could be in " + PossPage.ToString)
+                    End If
+                Next
+            End If
+        Next
+        LogError("")
+    End Sub
 	
 	Private Sub DumpProgram
 		Dim log As New StreamWriter("D:\Temp\bankchecker.txt")
