@@ -580,7 +580,7 @@ DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
 DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue, ChipMinimumBankSelect
-Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, ChipIO, ChipADC
+Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, UserCodeOnlyEnabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
@@ -666,6 +666,8 @@ Dim Shared As String CompReportFormat
 Dim Shared As String OutMessage(MAX_OUTPUT_MESSAGES)
 Dim Shared As Integer OutMessages, ErrorsFound
 
+Dim Shared As String UserDefineStartLabel
+
 Dim As Integer CD, T, PD
 
 'Other GCBASIC source files
@@ -686,7 +688,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-09-06"
+Version = "0.98.<<>> 2020-09-12"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -730,6 +732,7 @@ UseChipOutLatches = -1
 AutoContextSave = -1
 ReserveHighProg = 0
 ConfigDisabled = 0
+UserCodeOnlyEnabled = 0
 ExitValue = 0
 ToolVariables = LinkedListCreate
 CompileSkipped = 0
@@ -898,6 +901,7 @@ ProgEndTime = Timer
 'Write compilation report
 WriteCompilationReport
 
+Fin:
 'Write errors to file
 WriteErrorLog
 
@@ -1521,10 +1525,12 @@ Sub AddMainEndCode
   Loop
 
   If ModePIC Then
-    CurrPos = LinkedListInsert(CurrPos, "BASPROGRAMEND")
-    CurrPos = LinkedListInsert(CurrPos, " sleep")
-    'CurrPos = LinkedListInsert(CurrPos, " goto $")
-    CurrPos = LinkedListInsert(CurrPos, " goto BASPROGRAMEND")
+    If UserCodeOnlyEnabled = 0 then
+        CurrPos = LinkedListInsert(CurrPos, "BASPROGRAMEND")
+        CurrPos = LinkedListInsert(CurrPos, " sleep")
+        'CurrPos = LinkedListInsert(CurrPos, " goto $")
+        CurrPos = LinkedListInsert(CurrPos, " goto BASPROGRAMEND")
+    End If
   ElseIf ModeAVR Then
     CurrPos = LinkedListInsert(CurrPos, "BASPROGRAMEND:")
     CurrPos = LinkedListInsert(CurrPos, " sleep")
@@ -1574,7 +1580,9 @@ Sub AddMainInitCode
   End If
 
   'Call init routines
-  CurrLine = LinkedListInsert(CurrLine, ";Call initialisation routines")
+  If UserCodeOnlyEnabled = 0 then
+      CurrLine = LinkedListInsert(CurrLine, ";Call initialisation routines")
+  End If
   InitRoutineFiles = LinkedListCreate
   FOR CurrInc = 1 TO SourceFiles
     With SourceFile(CurrInc)
@@ -2419,6 +2427,8 @@ SUB CalcConfig
           DesiredSetting = "OFF"
         ElseIf ConfigNameMatch(.Name, "XINST") Then
           DesiredSetting = "OFF"
+        ElseIf ConfigNameMatch(.Name, "WRT") Then   'this was generating a config error in non GCASM implementations
+          DesiredSetting = "OFF"
 
         ElseIf ConfigNameMatch(.Name, "OSC") Then
           'Get setting from #osc directive
@@ -3140,11 +3150,13 @@ Sub CompileProgram
   TablesCompiled = 0
 
   'Request initialisation routine
-  RequestSub(0, "InitSys")
-  SubLoc = LocationOfSub("InitSys", "")
-  If SubLoc > 0 Then
-    SourceFile(Subroutine(SubLoc)->SourceFile).InitSubUsed = -1
-  End If
+  If UserCodeOnlyEnabled = 0 then
+      RequestSub(0, "InitSys")
+      SubLoc = LocationOfSub("InitSys", "")
+      If SubLoc > 0 Then
+        SourceFile(Subroutine(SubLoc)->SourceFile).InitSubUsed = -1
+      End If
+  End if
   'If main source file has startup routine, also call that
   With SourceFile(1)
     If .InitSub <> "" Then
@@ -11689,13 +11701,22 @@ Function GenerateVectorCode As LinkedListElement Pointer
     '12 and 14 bit instruction width cores
     If ChipFamily = 12 Or ChipFamily = 14 Or ChipFamily = 15 Then
       If HasSFR("INTCON") Then
-        CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
-        CurrLine = LinkedListInsert(CurrLine, " pagesel BASPROGRAMSTART")
-        CurrLine = LinkedListInsert(CurrLine, " goto BASPROGRAMSTART")
-        CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 4))
-        IntLoc = LocationOfSub("Interrupt", "")
+        If UserCodeOnlyEnabled = 0 then
+            CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
+            CurrLine = LinkedListInsert(CurrLine, " pagesel BASPROGRAMSTART")
+            CurrLine = LinkedListInsert(CurrLine, " goto BASPROGRAMSTART")
+            CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 4))
+            IntLoc = LocationOfSub("Interrupt", "")
+        Else
+            CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
+            CurrLine = LinkedListInsert(CurrLine, " pagesel " + UserDefineStartLabel)
+            CurrLine = LinkedListInsert(CurrLine, " goto " + UserDefineStartLabel)
+        End If
+
         If IntLoc = 0 Then
-          CurrLine = LinkedListInsert(CurrLine, " retfie")
+          If UserCodeOnlyEnabled = 0 then
+              CurrLine = LinkedListInsert(CurrLine, " retfie")
+          End If
         Else
           'Can't do this, must compile INTERRUPT inline
           'CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
@@ -15140,7 +15161,7 @@ Sub ReadOptions(OptionsIn As String)
 
     'Get bootloader setting
     ElseIf CurrElement->Value = "BOOTLOADER" Then
-      If CurrElement->Next <> 0 Then
+      If  CurrElement->Next <> 0 Then
         If IsConst(CurrElement->Next->Value) Then
           Bootloader = MakeDec(CurrElement->Next->Value)
           CurrElement = CurrElement->Next
@@ -15170,6 +15191,17 @@ Sub ReadOptions(OptionsIn As String)
     'Disable config (Used for TinyBootloader Support, possibly others)
     ElseIf CurrElement->Value = "NOCONFIG" Then
       ConfigDisabled = -1
+
+    'Disable INITSYS and BASPROGRAMEND
+    ElseIf CurrElement->Value = "USERCODEONLY" Then
+      UserCodeOnlyEnabled = -1
+      If InStr(CurrElement->Next->Value,":") <> 0 Then
+          UserDefineStartLabel = Trim(Mid(CurrElement->Next->Value,1,  InStr(CurrElement->Next->Value,":")-1))
+          CurrElement = CurrElement->Next
+      Else
+          OutMessage = Message("WarningUserCodeLabelIncorect")
+          LogWarning OutMessage, ""
+      End If
 
     'Volatile bit?
     ElseIf CurrElement->Value = "VOLATILE" Then
@@ -15646,7 +15678,15 @@ Sub WriteAssembly
   Dim As SysVarType Pointer SysVar
 
   'Write .ASM program
+  On error goto ASMLocked
   OPEN OFI FOR OUTPUT AS #1
+  If err <> 0 then
+      ASMLocked:
+      LogError "ASM File locked/open error. Cannot create output ASM", ""
+      ErrorsFound = -1
+      exit Sub
+  End if
+  On Error goto 0
 
   PRINT #1, ";Program compiled by Great Cow BASIC (" + Version + ")"
   Print #1, ";Need help? See the GCBASIC forums at http://sourceforge.net/projects/gcbasic/forums,"
@@ -16427,16 +16467,34 @@ Sub MergeSubroutines
   'Add subs that could be located
   For CurrPage = 1 To ProgMemPages
 
-    CurrLine = LinkedListInsert(CurrLine, ";Start of program memory page " + Str(CurrPage - 1))
+    If UserCodeOnlyEnabled = 0  Then
+        CurrLine = LinkedListInsert(CurrLine, ";Start of program memory page " + Str(CurrPage - 1))
+    End If
+
     If ModePIC Then
       If ChipFamily = 16 Or IntSub = 0 Or CurrPage > 1 Then
-        CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc))
-        CurrPagePos = ProgMemPage(CurrPage).StartLoc
+          If UserCodeOnlyEnabled = 0  Then
+            CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc))
+            CurrPagePos = ProgMemPage(CurrPage).StartLoc
+          Else
+              'Output as comments
+              CurrLine = LinkedListInsert(CurrLine, ";ORG " + Str(ProgMemPage(CurrPage).StartLoc))
+          End If
       Else
         'On 10/12/16, Interrupt must go at very start of program
         'Allow it space in page 0.
-        CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc + IntSub->HexSize))
-        CurrPagePos = ProgMemPage(CurrPage).StartLoc + IntSub->HexSize
+        If UserCodeOnlyEnabled = 0  Then
+            CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc + IntSub->HexSize))
+            CurrPagePos = ProgMemPage(CurrPage).StartLoc + IntSub->HexSize
+        Else
+           'only output once
+           If CurrPage = 1 then
+              CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc + IntSub->HexSize))
+              CurrPagePos = ProgMemPage(CurrPage).StartLoc + IntSub->HexSize
+           Else
+              CurrLine = LinkedListInsert(CurrLine, ";ORG " + Str(ProgMemPage(CurrPage).StartLoc + IntSub->HexSize))
+           End  If
+        End If
       End If
 
       'On 12 bit, insert list of GOTOs to allow calls to second half of pages
@@ -16553,7 +16611,9 @@ Sub MergeSubroutines
         'Need to put the sub here
         'Name of sub
         If SubQueue(CurrSub) = 0 Then
-          SubNameOut = "BASPROGRAMSTART"
+          If UserCodeOnlyEnabled = 0 Then
+              SubNameOut = "BASPROGRAMSTART"
+          End if
         Else
           SubNameOut = GetSubFullName(SubQueue(CurrSub))
           If ChipFamily = 12 Then
