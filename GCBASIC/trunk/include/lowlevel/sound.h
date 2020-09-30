@@ -14,6 +14,8 @@
 '    You should have received a copy of the GNU Lesser General Public
 '    License along with this library; if not, write to the Free Software
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+'
+'    30/09/2020 Fixed a VERY LONG STANDING BUG!! variable not initialised!
 
 '********************************************************************************
 'IMPORTANT:
@@ -53,6 +55,18 @@ End Sub
 '#define SysToneDelay Wait TonePeriod 10us: Wait TonePeriod 10us
 #define SysToneDelay Wait TonePeriod 10us
 
+
+sub InitSound
+ dir SoundOut out
+end sub
+
+sub ShortToneDelay
+ for ToneDelayLoop = 1 to TonePeriod
+  Wait 9 10us
+ next
+end sub
+
+
 'Frequency is Hz/10, Duration is in 1 ms units
 sub ShortTone (ToneFrequency, ToneDuration) #NR
 
@@ -71,12 +85,5 @@ sub ShortTone (ToneFrequency, ToneDuration) #NR
  next
 end sub
 
-sub ShortToneDelay
- for ToneDelayLoop = 1 to Period
-  Wait 9 10us
- next
-end sub
 
-sub InitSound
- dir SoundOut out
-end sub
+
