@@ -979,7 +979,7 @@ SUB AddBankCommands(CompSub As SubType Pointer)
   Select Case ChipFamily
     Case 12: BankMask = 32
     Case 14: BankMask = 384
-    Case 15: BankMask = 3968
+    Case 15: BankMask = 3968 : If ChipRAM >  4095 then BankMask = 8064
     Case 16: BankMask = 65280
   End Select
 
