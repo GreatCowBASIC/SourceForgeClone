@@ -688,7 +688,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-09-12"
+Version = "0.98.<<>> 2020-09-30"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -860,7 +860,7 @@ AsmEndTime = Timer
 
 'Download program
 DownloadProgram:
-IF PrgExe <> "" AND AsmExe <> "" AND Not ErrorsFound THEN
+IF ( PrgExe <> "" AND AsmExe <> "" ) AND ErrorsFound = 0 THEN
   PRINT
   Dim Temp As String
   Temp = Message("SendToPIC")
@@ -2429,6 +2429,11 @@ SUB CalcConfig
           DesiredSetting = "OFF"
         ElseIf ConfigNameMatch(.Name, "WRT") Then   'this was generating a config error in non GCASM implementations
           DesiredSetting = "OFF"
+        ElseIf ConfigNameMatch(.Name, "FCMEN") Then   'this was generating a config error in non GCASM implementations
+          DesiredSetting = "ON"
+
+
+
 
         ElseIf ConfigNameMatch(.Name, "OSC") Then
           'Get setting from #osc directive
