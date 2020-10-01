@@ -342,7 +342,7 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
 
 
     #if bit(FREE)
-        (FREE) =0b'0'
+        FREE =0b'0'
     #endif
     #if bit(WREN)
         WREN= 0b'1'
