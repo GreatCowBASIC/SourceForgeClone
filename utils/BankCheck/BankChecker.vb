@@ -55,7 +55,7 @@ Public Class BankChecker
                 'Line requires particular bank, which one is currently selected?
                 For Each PossBank In CurrLine.PossibleBanks
                     ModCurrline = Left(Replace(CurrLine.Original, vbTab, "|") + Space(32), 32)
-                    ModCurrline = Right(Space(3) + CurrLine.FileLine.ToString, 3) + Replace(ModCurrline, "|", " ")
+                    ModCurrline = Right(Space(6) + CurrLine.FileLine.ToString, 6) + Replace(ModCurrline, "|", " ")
                     If PossBank <> CurrLine.RequiredBank Then
                         'LogError(CurrLine.SourceFile + "(" + CurrLine.FileLine.ToString + "): Bad bank, requires " + CurrLine.RequiredBank.ToString + " but could be in " + PossBank.ToString)
                         LogError(ModCurrline + ": Bad bank, requires " + CurrLine.RequiredBank.ToString + " but could be in " + PossBank.ToString)
@@ -81,7 +81,7 @@ Public Class BankChecker
                 For Each PossPage In CurrLine.PossiblePages
                     If PossPage <> CurrLine.RequiredPage Then
                         ModCurrline = Left(Replace(CurrLine.Original, vbTab, "|") + Space(32), 32)
-                        ModCurrline = Right(Space(3) + CurrLine.FileLine.ToString, 3) + Replace(ModCurrline, "|", " ")
+                        ModCurrline = Right(Space(6) + CurrLine.FileLine.ToString, 6) + Replace(ModCurrline, "|", " ")
                         LogError(ModCurrline + ": Bad page, requires " + CurrLine.RequiredPage.ToString + " but could be in " + PossPage.ToString)
                     End If
                 Next
