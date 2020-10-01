@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18C442
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 04/02/2020
+'Header Format last revised: 29/09/2020
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -54,6 +54,9 @@ UserIDAddress=8192
 
 'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=4
+
+'ChipSelfWrite constant is used within the compiler to permit testing the chip is seff write capable
+SelfWrite=0
 
 [Interrupts]
 'For specific details of the interrupts see the microcontroller datasheet
@@ -720,6 +723,17 @@ SP4,STKPTR,4
 0:1FF
 
 [NoBankRAM]
+'NoBankRAM is somewhat misnamed - it is used for the defintion of (any) access bank locations
+'If a memory location is defined in both NoBankRAM and FreeRAM, then the compiler knows that it is access bank RAM.
+'If an SFR location is in one of the NoBankRAM ranges, then the compiler knows not to do any bank selection when accessing that register.
+
+'The NoBankRAM section must include two ranges, one for access bank RAM, one for access bank SFRs, or there will be issues.
+'The first range MUST be the ACCESS RAM range
+'The first range is the FAST SFR range
+
+'If there are no ranges defined in NoBankRAM, the compiler will try to guess them.
+'On 18Fs, it will guess based on where the lowest SFR is, and from what the total RAM on the chip is. If there's only one range defined
+'in the NoBankRAM locations, the compiler will assume that is the range for the RAM, and then will guess where the range for the access bank SFRs is.
 
 [Pins-DIP]
 1,MCLR
@@ -765,8 +779,8 @@ SP4,STKPTR,4
 
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
-OSCS=OFF
-PWRT=OFF
+STVR=ON
+WDTPS=128
 WDTPS=128
 WDT=ON
 '18FDefaultASMConfig Setting
@@ -774,17 +788,12 @@ DEBUG=OFF
 
 [ConfigMask]
 255
-39
+47
 15
 15
-255
-15
+1
+1
 129
-255
-255
-1
-255
-1
 
 [ConfigOps]
 'For details of the config options see the microcontroller datasheet
@@ -804,40 +813,41 @@ DEBUG=OFF,ON
 
 [Config]
 'For details of the config addresses see the microcontroller datasheet
+'CONFIG Single Byte config elements have been transformed into CONFIG Words for Great Cow BASIC compiler
 CP_ON,0,0
 CP_OFF,0,255
-LP_OSC,2,248
-XT_OSC,2,249
-HS_OSC,2,250
-RC_OSC,2,251
-EC_OSC,2,252
-ECIO_OSC,2,253
-HSPLL_OSC,2,254
-RCIO_OSC,2,255
-OSCS_ON,2,223
-OSCS_OFF,2,255
-PWRT_ON,4,254
-PWRT_OFF,4,255
-BOR_OFF,4,253
-BOR_ON,4,255
-BORV_45,4,243
-BORV_42,4,247
-BORV_27,4,251
-BORV_25,4,255
-WDT_OFF,6,254
-WDT_ON,6,255
-WDTPS_1,6,241
-WDTPS_2,6,243
-WDTPS_4,6,245
-WDTPS_8,6,247
-WDTPS_16,6,249
-WDTPS_32,6,251
-WDTPS_64,6,253
-WDTPS_128,6,255
-CCP2MX_OFF,10,254
-CCP2MX_ON,10,255
-STVR_OFF,12,254
-STVR_ON,12,255
+LP_OSC,1,248
+XT_OSC,1,249
+HS_OSC,1,250
+RC_OSC,1,251
+EC_OSC,1,252
+ECIO_OSC,1,253
+HSPLL_OSC,1,254
+RCIO_OSC,1,255
+OSCS_ON,1,223
+OSCS_OFF,1,255
+PWRT_ON,2,254
+PWRT_OFF,2,255
+BOR_OFF,2,253
+BOR_ON,2,255
+BORV_45,2,243
+BORV_42,2,247
+BORV_27,2,251
+BORV_25,2,255
+WDT_OFF,3,254
+WDT_ON,3,255
+WDTPS_1,3,241
+WDTPS_2,3,243
+WDTPS_4,3,245
+WDTPS_8,3,247
+WDTPS_16,3,249
+WDTPS_32,3,251
+WDTPS_64,3,253
+WDTPS_128,3,255
+CCP2MX_OFF,5,254
+CCP2MX_ON,5,255
+STVR_OFF,6,254
+STVR_ON,6,255
 DEBUG_ON,7,127
 DEBUG_OFF,7,255
 
