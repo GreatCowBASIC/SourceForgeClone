@@ -185,9 +185,15 @@ Sub InitSys
           #IFDEF Var(OSCCON1)
             asm showdebug Default settings for microcontrollers with _OSCCON1_
 
-            'Default OSCCON1 typically, NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
-            asm showdebug OSCCON type is default
-            OSCCON1 = 0x60
+            #IF CHIPMHZ <> 24
+                'Default OSCCON1 typically, NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
+                OSCCON1 = 0x60
+            #ENDIF
+
+            #IF CHIPMHZ = 24
+                'NOSC HFINTOSC with 2x PLL; NDIV 1;
+                OSCCON1 = 0x10;
+            #ENDIF
 
             'Default value typically, CSWHOLD may proceed; SOSCPWR Low power
             OSCCON3 = 0x00
