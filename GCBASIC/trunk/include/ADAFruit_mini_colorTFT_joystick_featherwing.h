@@ -62,17 +62,6 @@
 Function ReadMiniTFT as long
 
 
-        'Button B problem occurs AFTER it prints "Button B" on the GLCD.  i.e. it happens after the HI2C WRITES or READ. The LCD still works properly.
-        HI2CStart
-            HI2CSend MINITFT_WRITEADDR
-            HI2CSend MINITFT_MODULE_BASE_ADDRESS_GPIO
-            HI2CSend MINITFT_DIRCLR_GPIO
-            HI2CSend MINITFT_REGISTER_4_DEFAULT ;Writing a 1 to any bit in this register sets the direction of the corresponding pin to INPUT.
-            HI2CSend MINITFT_REGISTER_3_DEFAULT ;Writing zeros to this register has no effect.
-            HI2CSend MINITFT_REGISTER_2_DEFAULT ;PA15:PA08 = 1100 1111 - Pin 12 to Pin 7
-            HI2CSend MINITFT_REGISTER_1_DEFAULT ;PA07:PA02 = 1101 1100 - Pin 6 to Pin 1   LSB
-'        HI2CStop
-
         HI2CStart
             HI2CSend MINITFT_WRITEADDR
             HI2CSend MINITFT_MODULE_BASE_ADDRESS_GPIO ;Writing a 1 to any bit in this register enables the internal pullup or pulldown on the corresponding pin. The pull direction
@@ -81,6 +70,16 @@ Function ReadMiniTFT as long
             HI2CSend MINITFT_REGISTER_3_DEFAULT
             HI2CSend MINITFT_REGISTER_2_DEFAULT
             HI2CSend MINITFT_REGISTER_1_DEFAULT
+'        HI2CStop
+
+        HI2CStart
+            HI2CSend MINITFT_WRITEADDR
+            HI2CSend MINITFT_MODULE_BASE_ADDRESS_GPIO
+            HI2CSend MINITFT_DIRCLR_GPIO
+            HI2CSend MINITFT_REGISTER_4_DEFAULT ;Writing a 1 to any bit in this register sets the direction of the corresponding pin to INPUT.
+            HI2CSend MINITFT_REGISTER_3_DEFAULT ;Writing zeros to this register has no effect.
+            HI2CSend MINITFT_REGISTER_2_DEFAULT ;PA15:PA08 = 1100 1111 - Pin 12 to Pin 7
+            HI2CSend MINITFT_REGISTER_1_DEFAULT ;PA07:PA02 = 1101 1100 - Pin 6 to Pin 1   LSB
 '        HI2CStop
 
         HI2CStart
