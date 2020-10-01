@@ -22,6 +22,7 @@
 ' 17/08/2017: Improved Pset for text mode
 ' 18/08/2017: Improved speed of GLCDDrawChar and Pset in low RAM GLCD mode (Joseph Realmuto)
 ' 21/07/2020: Added SPI support - software only
+' 07/08/2020: Added #ifdef S4Wire_DATA isolation
 
 'Notes:
 ' Supports SH1106 controller only.
@@ -206,25 +207,28 @@ Sub InitGLCD_SH1106
       #DEFINE CS_SH1106         GLCD_CS
       #DEFINE RESET_SH1106      GLCD_RESET
 
-      DIR DO_SH1106 out
-      DIR SCK_SH1106  out
-      DIR DC_SH1106 out
-      DIR CS_SH1106 out
-      DIR RESET_SH1106 out
-
+      #IFDEF S4Wire_DATA   'therefore SOFTWARESPI
+          DIR DO_SH1106 out
+          DIR SCK_SH1106  out
+          DIR DC_SH1106 out
+          DIR CS_SH1106 out
+          DIR RESET_SH1106 out
+      #ENDIF
 
 
       ' added wait time to allow power supplies to stabilize
       wait 255 ms
 
-      'Reset display
-      Set RESET_SH1106 On
-      Wait 150 ms
-      'Reset sequence (lower line for at least 10 us)
-      Set RESET_SH1106 Off
-      Wait 150 us
-      Set RESET_SH1106 On
-      Wait 150 ms
+      #IFDEF S4Wire_DATA   'therefore SOFTWARESPI
+          'Reset display
+          Set RESET_SH1106 On
+          Wait 150 ms
+          'Reset sequence (lower line for at least 10 us)
+          Set RESET_SH1106 Off
+          Wait 150 us
+          Set RESET_SH1106 On
+          Wait 150 ms
+      #ENDIF
 
       #IFDEF HI2C_DATA
              HI2CMode Master
