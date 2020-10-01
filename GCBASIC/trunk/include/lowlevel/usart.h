@@ -69,6 +69,10 @@
 ' 04/05/2020  Changed to canskip to silently exit when no USART for TXEN bits
 ' 15/02/2020  Correct legacy chip init. #ifndef BIT(BRG16) change to  #ifdef VAR(SPBRG) to prevent creation of SPBRG on newer chips.
 ' 06/07/2020  Added AVRrc support to reduce memory usage
+' 14/09/2020  Added script adjustments for low frequency BPS
+' 29/09/2020  Added script to detect USART calc errors.  Use the following constants to control the checking and warning messages
+'             #define CHECK_USART_BAUD_RATE
+'             #define ISSUE_CHECK_USART_BAUD_RATE_WARNING
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -232,6 +236,8 @@
 
          'Try /16
         SPBRG_TEMP = ChipMHz / USART_BAUD_RATE / 16 * 1000000 - 1
+
+
         BRGH_TEMP = 1
         'If too high, try /64
         If SPBRG_TEMP > 255 Then
@@ -281,8 +287,56 @@
         SPBRGH_TEMP = Int((SPBRG_TEMP+1) / 256)
       END IF
 
+      'adjustments
+      IF USART_BAUD_RATE = 115200 AND ChipMHz < 8 then
+        SPBRGL_TEMP = Int(SPBRG_TEMP+1) And 255
+        SPBRGH_TEMP = Int((SPBRG_TEMP+1) / 256)
+      END IF
+
+      'adjustments
+      IF USART_BAUD_RATE = 57600 AND ChipMHz < 8 then
+        SPBRGL_TEMP = Int(SPBRG_TEMP+1) And 255
+        SPBRGH_TEMP = Int((SPBRG_TEMP+1) / 256)
+      END IF
 
     End If
+
+
+    if CHECK_USART_BAUD_RATE then
+
+        RoundResult = INT ( ( ChipMHz * 1000000 ) / ( 16 * ( int(SPBRG_TEMP) + 1 )) )
+
+        'What is the error %
+        if RoundResult > USART_BAUD_RATE then
+            resultingUSART_BAUD_RATE = RoundResult - USART_BAUD_RATE
+
+        end if
+        if RoundResult < USART_BAUD_RATE then
+            resultingUSART_BAUD_RATE = USART_BAUD_RATE - RoundResult
+
+        end if
+
+        resulting_error = int( ( resultingUSART_BAUD_RATE * 100 ) / USART_BAUD_RATE)
+        RoundResult = int( USART_BAUD_RATE * ( 1 + ( resulting_error / 100 )))
+
+        issuederrormessage = 0
+        if resulting_error > 4 then
+
+            Error "Big error in baudrate - percentage error =" resulting_error " @ " RoundResult
+            issuederrormessage = 1
+        end if
+
+        if ISSUE_CHECK_USART_BAUD_RATE_WARNING then
+          if resulting_error > 2 then
+              If issuederrormessage = 0 then
+                Warning "Baudrate not exact.  Error percentage = "  resulting_error " @ " RoundResult
+              end if
+          end if
+        end if
+
+        'end of error rate check
+    end if
+
 
     IF USART_BAUD_RATE then
         IF SPBRGL_TEMP < 0 then
@@ -302,6 +356,9 @@
     if  NoVar(SPBRG) then
       SPBRG = SPBRGL
     end if
+
+
+
 
 
     'USART2
@@ -1811,4 +1868,3 @@ Sub HSerReceiveRC(Out SerData)
   #endif
 
 End Sub
-
