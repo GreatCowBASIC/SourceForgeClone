@@ -58,10 +58,12 @@ ClearSMT1,Y,Y,,'ClearSMT1'
 ClearSMT2,Y,Y,,'ClearSMT2'
 ClearTimer,Y,Y,,'ClearTimer'
 CLS,Y,Y,,'CLS'
+CONFIG,N,Y,,
 cos,Y,Y,trignplaces.h,'cos'
 CreateButton,Y,Y,,'CreateButton'
 CURSOROFF,Y,Y,,'CURSOROFF'
 CURSORON,Y,Y,,'CURSORON'
+DATA,Y,N,,
 DecToBcd_GCB,Y,Y,,'DecToBcd_GCB'
 Difference,Y,Y,,'Difference'
 Dim,Y,Y,,'Dim'
