@@ -688,7 +688,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-09-30"
+Version = "0.98.<<>> 2020-10-01"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -938,7 +938,7 @@ SUB Add18FBanks(CompSub As SubType Pointer)
     TempData = UCase(CurrLine->Value)
     First8 = Left(TempData, 8)
     'Add banking mode where needed
-    IF INSTR(First8, "MOVFF") = 0 AND INSTR(First8, "LFSR") = 0 AND INSTR(First8, "RETFIE") = 0 AND INSTR(TempData, ",ACCESS") = 0 AND INSTR(TempData, ", ACCESS") = 0 AND TempData <> "" AND Left(TempData, 1) <> ";" THEN
+    IF INSTR(First8, "MOVFF") = 0 AND INSTR(First8, "LFSR") = 0 AND INSTR(First8, "RETFIE") = 0 AND INSTR(TempData, ",ACCESS") = 0 AND INSTR(TempData, ", ACCESS") = 0 AND TempData <> "" AND Left(TempData, 1) <> ";" AND ( Instr(TempData,"#DEFINE" ) = 0 ) THEN
       TempData = Trim(TempData)
       VarName = Mid(TempData, INSTR(TempData, " ") + 1)
       TempData = Left(TempData, INSTR(TempData, " ") - 1)
@@ -946,12 +946,22 @@ SUB Add18FBanks(CompSub As SubType Pointer)
         IF INSTR(VarName, ",") <> 0 THEN VarName = Left(VarName, INSTR(VarName, ",") - 1)
         VarName = Trim(VarName)
 
-        'Check if the variable being accessed is a SFR, and add banking mode
-        If IsInAccessBank(VarName) Then
-          CurrLine->Value = CurrLine->Value + ",ACCESS"
+        'permit raw ASM through the ASM source when is leading with #DEFINE and UserCodeOnlyEnabled, all other cases should be treated as-was
+'        IF ( INSTR( trim(CurrLine->Value), "#DEFINE" ) = 0 and ( UserCodeOnlyEnabled = 0 ) ) then
+        IF ( INSTR( trim(CurrLine->Value), "#DEFINE" ) <> 1 ) then
+            'Check if the variable being accessed is a SFR, and add banking mode
+            If IsInAccessBank(VarName) Then
+              CurrLine->Value = CurrLine->Value + ",ACCESS"
+            Else
+              CurrLine->Value = CurrLine->Value + ",BANKED"
+            End If
         Else
-          CurrLine->Value = CurrLine->Value + ",BANKED"
-        End If
+          'permit ASM with the format of asm #define  - used in MPASX
+          'pointless assignment - just left for total clarity
+          CurrLine->Value = CurrLine->Value
+        End if
+
+
       END IF
     End If
     CurrLine = CurrLine->Next
@@ -11737,17 +11747,31 @@ Function GenerateVectorCode As LinkedListElement Pointer
 
     '16 bit instruction width cores
     ElseIf ChipFamily = 16 Then
-      CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
-      CurrLine = LinkedListInsert(CurrLine, " goto BASPROGRAMSTART")
-      CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 8))
-      If LocationOfSub("Interrupt", "") = 0 Then
-        CurrLine = LinkedListInsert(CurrLine, " retfie")
-      Else
-        CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
-      End If
-      CurrLine = LinkedListInsert(CurrLine, "")
-      CurrLine = LinkedListInsert(CurrLine, Star80)
-      CurrLine = LinkedListInsert(CurrLine, "")
+      If UserCodeOnlyEnabled = 0 then
+          CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
+          CurrLine = LinkedListInsert(CurrLine, " goto BASPROGRAMSTART")
+          CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 8))
+          If LocationOfSub("Interrupt", "") = 0 Then
+            CurrLine = LinkedListInsert(CurrLine, " retfie")
+          Else
+            CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
+          End If
+          CurrLine = LinkedListInsert(CurrLine, "")
+          CurrLine = LinkedListInsert(CurrLine, Star80)
+          CurrLine = LinkedListInsert(CurrLine, "")
+      else
+          CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
+          CurrLine = LinkedListInsert(CurrLine, " goto "+ UserDefineStartLabel)
+          CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 8))
+          If LocationOfSub("Interrupt", "") = 0 Then
+            CurrLine = LinkedListInsert(CurrLine, " retfie")
+          Else
+            CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
+          End If
+          CurrLine = LinkedListInsert(CurrLine, "")
+          CurrLine = LinkedListInsert(CurrLine, Star80)
+          CurrLine = LinkedListInsert(CurrLine, "")
+      End if
     End If
 
   'AVR vectors
