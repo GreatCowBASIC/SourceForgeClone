@@ -67,6 +67,7 @@
 '    21052020 - Removed InternalSOSC check to script
 '    07062020 - Added ChipFamily 121 string handler and updated InitSys to set intenal osc for ChipFamily 121
 '    15072020 - Added Q43 support in ProgramWrite and ProgramRead
+'    06102020 - Added Family122 support in InitSys
 
 
 'Constants
@@ -106,6 +107,11 @@
 #endscript
 
 '********************************************************************************
+
+
+
+
+
 'System initialisation routine
 Sub InitSys
 
@@ -1063,6 +1069,7 @@ Sub InitSys
 
 
 
+
   #IFDEF AVR
 
     #IF ChipFamily = 121
@@ -1101,7 +1108,57 @@ Sub InitSys
         #ENDIF
     #ENDIF
 
+
+
+    #IF ChipFamily = 122
+          'MCUSR - IO Special Function Registers Control
+          MCUSR = 0
+          'WDT clock by 32KHz IRC
+          PMCR = 0x80
+          PMCR = 0x13
+
+          'Set the frequency - assumes internal OSC
+          CLKPCE = 1
+          #IFDEF ChipMHz 32
+          CLKPR = 0            '32mhz
+          #ENDIF
+          #IFDEF ChipMHz 16
+          CLKPR = 1            '16mhz
+          #ENDIF
+          #IFDEF ChipMHz 8
+          CLKPR = 2            '8mhz
+          #ENDIF
+          #IFDEF ChipMHz 4
+          CLKPR = 3            '4mhz
+          #ENDIF
+          #IFDEF ChipMHz 2
+          CLKPR = 4            '2mhz
+          #ENDIF
+          #IFDEF ChipMHz 1
+          CLKPR = 5            '1mhz
+          #ENDIF
+          #IFDEF ChipMHz 0.5
+          CLKPR = 6            '0.5mhz
+          #ENDIF
+          #IFDEF ChipMHz 0.25
+          CLKPR = 7            '0.25mhz
+          #ENDIF
+          #IFDEF ChipMHz 0.125
+          CLKPR = 8            '0.125mhz
+          #ENDIF
+
+'          'enable 1KB E2PROM for LGT8F328P
+          ECCR = 0x80
+          ECCR = 0x4C
+
+    #ENDIF
+
+
   #ENDIF
+
+
+
+
   'Turn off all ports
   #IFDEF Var(GPIO)
     GPIO = 0
@@ -1138,6 +1195,7 @@ Sub InitSys
   #ENDIF
 
 End Sub
+
 
 '********************************************************************************
 'String setting subroutines
