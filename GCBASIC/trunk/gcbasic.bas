@@ -1583,6 +1583,18 @@ Sub AddMainInitCode
       CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,low(RAMEND)")
       CurrLine = LinkedListInsert(CurrLine, " out SP, SysValueCopy")
     End If
+
+    If ChipFamily = 122 then
+      'Family122 specific init
+      CurrLine = LinkedListInsert(CurrLine, ";Family122 specific init")
+      CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,0")
+      CurrLine = LinkedListInsert(CurrLine, " out MCUSR,SysValueCopy")
+      CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,128")
+      CurrLine = LinkedListInsert(CurrLine, " sts PMCR,SysValueCopy")
+      CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,19")
+      CurrLine = LinkedListInsert(CurrLine, " sts PMCR,SysValueCopy")
+    End if
+
   ElseIf ModeZ8 Then
     CurrLine = LinkedListInsert(CurrLine, ";Initialise stack")
     CurrLine = LinkedListInsert(CurrLine, " ldx SPH, #HIGH(RAMEND)")
