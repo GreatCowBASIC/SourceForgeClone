@@ -655,7 +655,7 @@ Dim Shared ReservedWords( RESERVED_WORDS ) as String
 
 Dim Shared As String Star80
 
-Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION
+Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION, ChipProgrammerName
 Dim Shared As String ChipOscSource
 Dim Shared As String FI, OFI, HFI, ID, Version, ProgDir, CLD, LabelEnd
 Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams, PrgName
@@ -688,7 +688,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-10-01"
+Version = "0.98.<<>> 2020-10-07"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -738,6 +738,8 @@ ToolVariables = LinkedListCreate
 CompileSkipped = 0
 OldSBC = -1
 DebugTime = 0
+
+ChipProgrammerName=""
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -868,7 +870,9 @@ IF ( PrgExe <> "" AND AsmExe <> "" ) AND ErrorsFound = 0 THEN
   PRINT Temp
   PrgExe = ReplaceToolVariables(PrgExe, "hex",, PrgTool)
   PrgParams = ReplaceToolVariables(PrgParams, "hex",, PrgTool)
-  IF VBS = 1 THEN PRINT SPC(5); Message("Calling") + PrgExe
+  IF VBS = 1 THEN PRINT SPC(5);  "Calling    : " + PrgExe
+  IF VBS = 1 THEN PRINT SPC(5);  "Parameters : " + PrgParams
+
 
   Dim As String SaveCurrDir
   SaveCurrDir = CurDir
@@ -14795,6 +14799,11 @@ SUB ReadChipData
         Case "hardwaremult":
           HMult = 0: If TempData = "y" Then HMult = -1
           ConstValue = Str(-HMult)
+
+        Case "programmername":
+          ChipProgrammerName = TempData
+          print "**",
+          print ChipProgrammerName
 
         Case "lfintoscclocksourceregistervalue": ChipLFINTOSCClockSourceRegisterValue = Val(TempData)
 

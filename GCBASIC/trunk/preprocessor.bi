@@ -1348,6 +1348,8 @@ SUB PreProcessor
               IF Left(UCase(ChipName), 3) = "PIC" THEN ChipName = Mid(ChipName, 4)
               IF Left(UCase(ChipName), 1) = "P" THEN ChipName = Mid(ChipName, 2)
 
+              if trim(ChipProgrammerName) = "" then ChipProgrammerName = ChipName
+
             End If
             GoTo LoadNextLine
           End If
