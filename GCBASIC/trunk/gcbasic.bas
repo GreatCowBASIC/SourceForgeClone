@@ -14802,8 +14802,6 @@ SUB ReadChipData
 
         Case "programmername":
           ChipProgrammerName = TempData
-          print "**",
-          print ChipProgrammerName
 
         Case "lfintoscclocksourceregistervalue": ChipLFINTOSCClockSourceRegisterValue = Val(TempData)
 
