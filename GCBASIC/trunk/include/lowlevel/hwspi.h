@@ -714,9 +714,20 @@ Sub FastHWSPITransfer( In SPITxData )
     Do
       SPDR = SPITxData
     Loop While SPSR.WCOL
-    'Read buffer
+
+
     'Same for master and slave
-    Wait While SPSR.SPIF = Off
+    #IF ChipFamily <> 122
+      Wait While SPSR.SPIF = Off
+    #ENDIF
+
+    #IF ChipFamily = 122
+      'Chipfmaily 122 has different registers.... and, is so fast...
+      Wait While ( SPSR.SPIF = Off and RDEMPT = 0 )
+    #ENDIF
+
   #endif
 
 End Sub
+
+
