@@ -23,7 +23,9 @@
 ' 02/01/2019: 8 Bit TIMER0, 1Mhz - 32Mhz Clock support - ChrisR
 ' 04/01/2019: Add PIC support for 16Bit Timer0 - EvanV / ChrisR
 ' 06/01/2019: Add  support for 16Bit Timer0 no postscaler - EvanV
-' 04/04/2019: Add AVR support
+' 04/04/2019: Add AVR support - 16mhz only
+' 09/10/2020: Add AVR support - 32..1 mhz
+
 '***********************************************************
 
 'Subroutines:
@@ -71,21 +73,33 @@
   end if
   if ChipMHz=32 then
     MillisErrorHandler=1
+    if AVR then
+        Tmr0InitVal = 131
+    end if
   end if
   if ChipMHz=16 then
     MillisErrorHandler=1
   end if
   if ChipMHz=8 then
     MillisErrorHandler=1
+    if AVR then
+        Tmr0InitVal = 131
+    end if
   end if
   if ChipMHz=4 then
     MillisErrorHandler=1
+    if AVR then
+        Tmr0InitVal = 193
+    end if
   end if
   if ChipMHz=2 then
     MillisErrorHandler=1
   end if
   if ChipMHz=1 then
     MillisErrorHandler=1
+    if AVR then
+        Tmr0InitVal = 131
+    end if
   end if
 
   if MillisErrorHandler = 0 Then
@@ -104,6 +118,9 @@
     MillisErrorHandler=1
   End if
   if ChipFamily=120 then   'AVR core version V2E class microcontrollers
+    MillisErrorHandler=1
+  end if
+  if ChipFamily=122 then   'AVR core version V2E class microcontrollers
     MillisErrorHandler=1
   end if
   if ChipFamily=130 then   'AVR core version V3E class microcontrollers but essentially the mega32u6 only
@@ -150,9 +167,46 @@ Sub Init_MsCtr_Int
   MsCtr_ = 0
   Millis = 0
 
+'
+'  #define PS_0_0 0        ' no clock source
+'  #define PS_0_1 1
+'  #define PS_0_8 2
+'  #define PS_0_64 3
+'  #define PS_0_256 4
+'  #define PS_0_1024 5
+
   #ifdef AVR
-    ' Set prescaler to 64, Preload and then start the timer
-    InitTimer0 Osc, PS_0_64
+
+    #IFDEF ChipMHz 32
+      ' Set prescaler to 256, Preload and then start the timer
+      InitTimer0 Osc, PS_0_256
+    #endif
+
+    #IFDEF ChipMHz 16
+      ' Set prescaler to 64, Preload and then start the timer
+      InitTimer0 Osc, PS_0_64
+    #endif
+
+    #IFDEF ChipMHz 8
+      ' Set prescaler to 64, Preload and then start the timer
+      InitTimer0 Osc, PS_0_64
+    #endif
+
+    #IFDEF ChipMHz 4
+      ' Set prescaler to 64, Preload and then start the timer
+      InitTimer0 Osc, PS_0_64
+    #endif
+
+    #IFDEF ChipMHz 2
+      ' Set prescaler to 8, Preload and then start the timer
+      InitTimer0 Osc, PS_0_8
+    #endif
+
+    #IFDEF ChipMHz 1
+      ' Set prescaler to 8, Preload and then start the timer
+      InitTimer0 Osc, PS_0_8
+    #endif
+
   #endif
 
   #ifdef PIC

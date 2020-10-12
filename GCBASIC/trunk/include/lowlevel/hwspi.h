@@ -43,6 +43,7 @@
 '              #define HWSPIMode MasterSSPADDMode
 '              It will set the two bits that are needed and then set SSP1ADD =1.   This way all the SPI libraries can use the feature.
 '              And, if the user does not add the `HWSPIMode` constant it will work as before.
+'  12/10/2020  Add ChipFamily 122 support
 
 
 'To make the PIC pause until it receives an SPI message while in slave mode, set the
@@ -658,7 +659,14 @@ Sub HWSPITransfer(In SPITxData, Out SPIRxData)
 
     'Read buffer
     'Same for master and slave
-    Wait While SPSR.SPIF = Off
+    #IF ChipFamily <> 122
+      Wait While SPSR.SPIF = Off
+    #ENDIF
+
+    #IF ChipFamily = 122
+      'Chipfmaily 122 has different registers.... and, is so fast...
+      Wait While ( SPSR.SPIF = Off and RDEMPT = 0 )
+    #ENDIF
     SPIRxData = SPDR
   #endif
 

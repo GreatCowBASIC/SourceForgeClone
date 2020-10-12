@@ -139,7 +139,7 @@
 ' 21/08/19 Improved documentation only. No functional change
 ' 07/05/20 Isolation of ANSELx to reduce variables creation
 ' 20/06/20 Support for ChipFamily 121 and tidy up in LLREADAD and changed to ADLAR = ADLeftAdjust support 121 and reduce code size
-
+' 08/12/20 Support for ChipFamily 122 as these are 12bit ADCs
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -2182,6 +2182,11 @@ function ReadAD12( ADReadPort ) As Word
 
   #ENDIF
 
+
+  #IFDEF AVR
+      Dim LLADResult As Word Alias ADCH, ADCL
+  #ENDIF
+
   'Do conversion
   LLReadAD 0
 
@@ -2205,6 +2210,11 @@ function ReadAD12( ADReadPort ) As Word
     #ENDIF
 
   #ENDIF
+
+  #IFDEF AVR
+      ReadAD12 = LLADResult
+  #ENDIF
+
 
 end function
 
@@ -2257,6 +2267,10 @@ function ReadAD12(ADReadPort, ADN_PORT ) As integer
 
   #ENDIF
 
+  #IFDEF AVR
+      Dim LLADResult As Word Alias ADCH, ADCL
+  #ENDIF
+
   'Do conversion
   LLReadAD 0
 
@@ -2280,6 +2294,11 @@ function ReadAD12(ADReadPort, ADN_PORT ) As integer
     #ENDIF
 
   #ENDIF
+
+  #IFDEF AVR
+      ReadAD12 = LLADResult
+  #ENDIF
+
 
 end function
 
