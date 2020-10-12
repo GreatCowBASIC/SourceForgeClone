@@ -688,7 +688,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-10-07"
+Version = "0.98.<<>> 2020-10-08"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -11778,12 +11778,13 @@ Function GenerateVectorCode As LinkedListElement Pointer
       else
           CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
           CurrLine = LinkedListInsert(CurrLine, " goto "+ UserDefineStartLabel)
-          CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 8))
-          If LocationOfSub("Interrupt", "") = 0 Then
-            CurrLine = LinkedListInsert(CurrLine, " retfie")
-          Else
-            CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
-          End If
+          'No Interrupt handler is supported
+'          CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 8))
+'          If LocationOfSub("Interrupt", "") = 0 Then
+'            CurrLine = LinkedListInsert(CurrLine, " retfie")
+'          Else
+'            CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
+'          End If
           CurrLine = LinkedListInsert(CurrLine, "")
           CurrLine = LinkedListInsert(CurrLine, Star80)
           CurrLine = LinkedListInsert(CurrLine, "")
