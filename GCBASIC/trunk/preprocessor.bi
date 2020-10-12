@@ -194,6 +194,15 @@ Sub PrepareBuiltIn
   StringStore(SSC).Used = 0
   AddConstant("CHIPNAMESTR", ";STRING" + Str(SSC) + ";")
 
+'Constant to give chip name as string
+  SSC = SSC + 1
+  StringStore(SSC).Value = chipprogrammername
+  StringStore(SSC).Used = 0
+  AddConstant("CHIPPROGRAMMERNAMESTR", ";STRING" + Str(SSC) + ";")
+
+
+
+
   'Constants to provide information on RAM banks
   Dim As String TempData
   Dim As Integer Range, Min, Max
