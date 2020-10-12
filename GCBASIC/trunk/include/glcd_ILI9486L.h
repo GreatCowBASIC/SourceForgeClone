@@ -26,7 +26,8 @@
 '  28/1/2019        Revised to support GLCD_RESET and GLCD_RST
 '  03/04/2019       Revised to support DEFAULT_GLCDBACKGROUND constant
 '  11/04/2019       Revised to clean up position and therefore the bleeding of constants into ASM
-'  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+'  27/08/2019       Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
+'  10/10/2020       Revised to correct 1 pixel error in rotate and deprecate BIGPRINT() and DrayBigChar
 
 '
 'Hardware settings
@@ -233,7 +234,7 @@ Sub InitGLCD_ILI9486L
   #if GLCD_TYPE = GLCD_TYPE_ILI9486L
 
     '  Mapped to global variables to same RAM
-    dim ILI9486L_GLCD_HEIGHT, ILI9486L_GLCD_WIDTH as word
+    dim GLCDDeviceHeight, GLCDDeviceWidth as word
 
 
     #ifdef GLCD_DataPort
@@ -374,8 +375,8 @@ Sub InitGLCD_ILI9486L
         GLCDForeground = ILI9486L_WHITE
 
         'Variables required for device
-        ILI9486L_GLCD_WIDTH = GLCD_WIDTH
-        ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+        GLCDDeviceWidth = GLCD_WIDTH
+        GLCDDeviceHeight = GLCD_HEIGHT
         GLCDFontWidth = 6
         GLCDfntDefault = 0
         GLCDfntDefaultsize = 2
@@ -395,7 +396,7 @@ End Sub
 Sub InitGLCD_fullport_ILI9486L
 
   '  Mapped to global variables to same RAM
-  dim ILI9486L_GLCD_HEIGHT, ILI9486L_GLCD_WIDTH as word
+  dim GLCDDeviceHeight, GLCDDeviceWidth as word
 
   'Setup code for ILI9486L controllers
     #if GLCD_TYPE = GLCD_TYPE_ILI9486L
@@ -507,8 +508,8 @@ Sub InitGLCD_fullport_ILI9486L
 
 
       'Variables required for device
-      ILI9486L_GLCD_WIDTH = GLCD_WIDTH
-      ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+      GLCDDeviceWidth = GLCD_WIDTH
+      GLCDDeviceHeight = GLCD_HEIGHT
       GLCDFontWidth = 6
       GLCDfntDefault = 0
       GLCDfntDefaultsize = 2
@@ -963,15 +964,15 @@ Sub PSet_ILI9486L(In GLCDX as word, In GLCDY as word, In GLCDColour As Word)
               SendWord_ILI9486L GLCDColour
 
         case LANDSCAPE
-             SetAddressWindow_ILI9486L ( GLCDy, ILI9486L_GLCD_WIDTH -GLCDx -0, GLCDy, ILI9486L_GLCD_WIDTH -GLCDx -0 )
+             SetAddressWindow_ILI9486L ( GLCDy, GLCDDeviceWidth -GLCDx -1, GLCDy, GLCDDeviceWidth -GLCDx -1 )
              SendWord_ILI9486L GLCDColour
 
         case PORTRAIT_REV
-            SetAddressWindow_ILI9486L ( ILI9486L_GLCD_WIDTH - GLCDX-0, ILI9486L_GLCD_HEIGHT - GLCDY-0, ILI9486L_GLCD_WIDTH - GLCDX-0, ILI9486L_GLCD_HEIGHT - GLCDY-0 )
+            SetAddressWindow_ILI9486L ( GLCDDeviceWidth - GLCDX-1, GLCDDeviceHeight - GLCDY-1, GLCDDeviceWidth - GLCDX-1, GLCDDeviceHeight - GLCDY-1 )
             SendWord_ILI9486L GLCDColour
 
         case LANDSCAPE_REV
-             SetAddressWindow_ILI9486L ( ILI9486L_GLCD_HEIGHT - GLCDy-0, GLCDx, ILI9486L_GLCD_HEIGHT - GLCDy-0, GLCDx )
+             SetAddressWindow_ILI9486L ( GLCDDeviceHeight - GLCDy-1, GLCDx, GLCDDeviceHeight - GLCDy-1, GLCDx )
              SendWord_ILI9486L GLCDColour
 
         case else
@@ -1270,29 +1271,31 @@ sub   GLCDRotate_ILI9486L ( in GLCDRotateState as byte )
 
   select case GLCDRotateState
         case PORTRAIT  '0 degree
-             ILI9486L_GLCD_WIDTH = GLCD_WIDTH
-             ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+             GLCDDeviceWidth = GLCD_WIDTH
+             GLCDDeviceHeight = GLCD_HEIGHT
         case LANDSCAPE
-             ILI9486L_GLCD_WIDTH = GLCD_HEIGHT
-             ILI9486L_GLCD_HEIGHT = GLCD_WIDTH
+             GLCDDeviceWidth = GLCD_HEIGHT
+             GLCDDeviceHeight = GLCD_WIDTH
         case PORTRAIT_REV
-             ILI9486L_GLCD_WIDTH = GLCD_WIDTH
-             ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+             GLCDDeviceWidth = GLCD_WIDTH
+             GLCDDeviceHeight = GLCD_HEIGHT
         case LANDSCAPE_REV
-             ILI9486L_GLCD_WIDTH = GLCD_HEIGHT
-             ILI9486L_GLCD_HEIGHT = GLCD_WIDTH
+             GLCDDeviceWidth = GLCD_HEIGHT
+             GLCDDeviceHeight = GLCD_WIDTH
         case else
-             ILI9486L_GLCD_WIDTH = GLCD_WIDTH
-             ILI9486L_GLCD_HEIGHT = GLCD_HEIGHT
+             GLCDDeviceWidth = GLCD_WIDTH
+             GLCDDeviceHeight = GLCD_HEIGHT
   end select
 
 end sub
 
-'''Displays a string in a larger fonti.e.  BigPrint_ILI9486L ( 30, ILI9486L_GLCD_HEIGHT - 20 , "BigPrint_ILI9486L" )
+'''Displays a string in a larger fonti.e.  BigPrint_ILI9486L ( 30, GLCDDeviceHeight - 20 , "BigPrint_ILI9486L" )
 '''@param PrintLocX X coordinate for message
 '''@param PrintLocY Y coordinate for message
 '''@param PrintData String to display
 '''@param Color Optional color
+/*
+
 Sub BigPrint_ILI9486L(In PrintLocX as Word, In PrintLocY as Word,  PrintData As String, Optional In  Color as word = GLCDForeground)
   Dim GLCDPrintLoc as word
   PrintLen = PrintData(0)
@@ -1358,3 +1361,5 @@ Sub DrawBigChar_ILI9486L (In CharLocX as Word, In CharLocY as Word, In CharCode,
         Next
     Next
 End Sub
+
+*/
