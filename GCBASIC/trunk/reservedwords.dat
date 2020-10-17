@@ -50,6 +50,7 @@ ChipOsc
 ChipPins
 ChipRAM
 ChipReserveHighProg
+ChipProgrammerNameStr
 ChipUsingIntOsc
 ChipWords
 CHR
