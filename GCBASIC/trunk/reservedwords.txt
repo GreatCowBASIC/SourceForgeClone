@@ -45,6 +45,7 @@ ChipName
 ChipNameStr
 ChipRAM
 ChipReserveHighProg
+ChipProgrammerNameStr
 ChipWords
 CHR
 Circle
