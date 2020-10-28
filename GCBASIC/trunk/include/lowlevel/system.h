@@ -68,7 +68,7 @@
 '    07062020 - Added ChipFamily 121 string handler and updated InitSys to set intenal osc for ChipFamily 121
 '    15072020 - Added Q43 support in ProgramWrite and ProgramRead
 '    06102020 - Added Family122 support in InitSys
-
+'    28102020 - Added clear down RAM for Family122 in InitSys, added EEPROM support for Family122
 
 'Constants
 #define ON 1
@@ -1073,6 +1073,7 @@ Sub InitSys
   #IFDEF AVR
 
     #IF ChipFamily = 121
+
         'Set the AVR frequency for chipfamily 121 - assumes internal OSC
         'Only sets internal therfore is 12mhz, the default setting is selected, NO OSC will be set.
         'Unlock the  frequency register where 0xD8 is the correct signature for the AVRrc chips
@@ -1111,11 +1112,27 @@ Sub InitSys
 
 
     #IF ChipFamily = 122
+
+          'Clear down the ram
+            ldi r18, 0x01 ; 1
+            ldi r26, 0x00 ; 0
+            ldi r27, 0x01 ; 1
+            rjmp IniySysClearRAMStart
+
+            InitSysClearRAMLoop:
+            st  X+, r1
+
+            IniySysClearRAMStart:
+            cpi r26, 0x01 ; 1
+            cpc r27, r18
+            brne  InitSysClearRAMLoop
+
           'MCUSR - IO Special Function Registers Control
           MCUSR = 0
           'WDT clock by 32KHz IRC
           PMCR = 0x80
           PMCR = 0x13
+
 
           'Set the frequency - assumes internal OSC
           CLKPCE = 1
@@ -1147,9 +1164,24 @@ Sub InitSys
           CLKPR = 8            '0.125mhz
           #ENDIF
 
-'          'enable 1KB E2PROM for LGT8F328P
+'          'enable EEPROM for LGT8F328P
           ECCR = 0x80
-          ECCR = 0x4C
+
+          #IFDEF ChipEEProm 0
+          ECCR = 0x00  'No EEPROM
+          #ENDIF
+          #IFDEF ChipEEProm 1024
+          ECCR = 0x40 '1K EEPROM
+          #ENDIF
+          #IFDEF ChipEEProm 2048
+          ECCR = 0x44 '2K EEPROM
+          #ENDIF
+          #IFDEF ChipEEProm 4096
+          ECCR = 0x48 '4K EEPROM
+          #ENDIF
+          #IFDEF ChipEEProm 8192
+          ECCR = 0x4C '8K EEPROM
+          #ENDIF
 
     #ENDIF
 
@@ -1159,7 +1191,7 @@ Sub InitSys
 
 
 
-  'Turn off all ports
+'  'Turn off all ports
   #IFDEF Var(GPIO)
     GPIO = 0
   #ENDIF
