@@ -688,7 +688,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-10-08"
+Version = "0.98.<<>> 2020-10-28"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -1575,9 +1575,16 @@ Sub AddMainInitCode
 
   'Set up stack (AVR and Z8)
   If ModeAVR Then
+
+    If ChipFamily = 122 and Instr( UCASE(ChipName),"328" ) <> 0 then
+      CurrLine = LinkedListInsert(CurrLine, ";LGT8F328P support for .ORG to avoid bad interrupts ")
+      CurrLine = LinkedListInsert(CurrLine, ".ORG 72")
+    End If
+
     CurrLine = LinkedListInsert(CurrLine, ";Initialise stack")
     If HasSFR("SPH") Then
       CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,high(RAMEND)")
+
       CurrLine = LinkedListInsert(CurrLine, " out SPH, SysValueCopy")
     End If
     If HasSFR("SPL") Then
@@ -1587,17 +1594,6 @@ Sub AddMainInitCode
       CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,low(RAMEND)")
       CurrLine = LinkedListInsert(CurrLine, " out SP, SysValueCopy")
     End If
-
-    If ChipFamily = 122 then
-      'Family122 specific init
-      CurrLine = LinkedListInsert(CurrLine, ";Family122 specific init")
-      CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,0")
-      CurrLine = LinkedListInsert(CurrLine, " out MCUSR,SysValueCopy")
-      CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,128")
-      CurrLine = LinkedListInsert(CurrLine, " sts PMCR,SysValueCopy")
-      CurrLine = LinkedListInsert(CurrLine, " ldi SysValueCopy,19")
-      CurrLine = LinkedListInsert(CurrLine, " sts PMCR,SysValueCopy")
-    End if
 
   ElseIf ModeZ8 Then
     CurrLine = LinkedListInsert(CurrLine, ";Initialise stack")
@@ -11813,17 +11809,16 @@ Function GenerateVectorCode As LinkedListElement Pointer
       If IntLoc <> 0 Then
         With Interrupts(IntLoc)
           VectsAdded += 1
-          CurrLine = LinkedListInsert(CurrLine, ".ORG " + Str(.VectorLoc + Bootloader))
-          If .Handler = "" Then
-            IF UserInt THEN
-              CurrLine = LinkedListInsert(CurrLine, " rjmp INTERRUPT ;" + UCase(.Vector))
-            Else
-              CurrLine = LinkedListInsert(CurrLine, " reti ;" + UCase(.Vector))
-            End If
-          Else
-            CurrLine = LinkedListInsert(CurrLine, " rjmp Int" + UCase(.Vector) + " ;" + UCase(.Vector))
-
-          End If
+              CurrLine = LinkedListInsert(CurrLine, ".ORG " + Str(.VectorLoc + Bootloader))
+              If .Handler = "" Then
+                IF UserInt THEN
+                  CurrLine = LinkedListInsert(CurrLine, " rjmp INTERRUPT ;" + UCase(.Vector))
+                Else
+                  CurrLine = LinkedListInsert(CurrLine, " reti ;" + UCase(.Vector))
+                End If
+              Else
+                CurrLine = LinkedListInsert(CurrLine, " rjmp Int" + UCase(.Vector) + " ;" + UCase(.Vector))
+              End If
         End With
       End If
 
