@@ -1128,14 +1128,27 @@ Sub InitSys
             brne  InitSysClearRAMLoop
 
           'MCUSR - IO Special Function Registers Control
-          MCUSR = 0
-          'WDT clock by 32KHz IRC
-          PMCR = 0x80
-          PMCR = 0x13
+          MCUSR = 0xFF
+          MCUSR = 0xFF
 
+'          ' step 1. enable clock sources
+          Dim _btmp as Byte alias DELAYTEMP
+          _btmp = PMCR | 0x0F
+          PMCR = 0x80
+          PMCR = _btmp
+
+          'wait for clock stable
+          wait 20 us
+
+          ' step 2. configure main clock
+          _btmp = ( PMCR & 0x9f)
+          PMCR = 0x80
+          PMCR = _btmp
+          NOP
+          NOP
 
           'Set the frequency - assumes internal OSC
-          CLKPCE = 1
+          CLKPR = 0x80
           #IFDEF ChipMHz 32
           CLKPR = 0            '32mhz
           #ENDIF
@@ -1163,8 +1176,10 @@ Sub InitSys
           #IFDEF ChipMHz 0.125
           CLKPR = 8            '0.125mhz
           #ENDIF
+          NOP
+          NOP
 
-'          'enable EEPROM for LGT8F328P
+          'enable EEPROM for LGT8F328P
           ECCR = 0x80
 
           #IFDEF ChipEEProm 0
@@ -1189,7 +1204,7 @@ Sub InitSys
   #ENDIF
 
 
-
+'
 
 '  'Turn off all ports
   #IFDEF Var(GPIO)
@@ -1207,24 +1222,24 @@ Sub InitSys
   #IFDEF Var(PORTD)
     PORTD = 0
   #ENDIF
-  #IFDEF Var(PORTE)
-    PORTE = 0
-  #ENDIF
-  #IFDEF Var(PORTF)
-    PORTF = 0
-  #ENDIF
-  #IFDEF Var(PORTG)
-    PORTG = 0
-  #ENDIF
-  #IFDEF Var(PORTH)
-    PORTH = 0
-  #ENDIF
-  #IFDEF Var(PORTI)
-    PORTI = 0
-  #ENDIF
-  #IFDEF Var(PORTJ)
-    PORTJ = 0
-  #ENDIF
+'  #IFDEF Var(PORTE)
+'    PORTE = 0
+'  #ENDIF
+'  #IFDEF Var(PORTF)
+'    PORTF = 0
+'  #ENDIF
+'  #IFDEF Var(PORTG)
+'    PORTG = 0
+'  #ENDIF
+'  #IFDEF Var(PORTH)
+'    PORTH = 0
+'  #ENDIF
+'  #IFDEF Var(PORTI)
+'    PORTI = 0
+'  #ENDIF
+'  #IFDEF Var(PORTJ)
+'    PORTJ = 0
+'  #ENDIF
 
 End Sub
 
