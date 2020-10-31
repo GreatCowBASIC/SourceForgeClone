@@ -52,7 +52,7 @@ MaxAddress=31
 'ChipStacks constant can be used in user programs and provides the available stack depth
 Stacks=2
 
-'ChipSelfWrite constant is used within the compiler to permit testing the chip is seff write capable
+'ChipSelfWrite constant is used within the compiler to indicate the chip is self write capable
 SelfWrite=0
 
 [Interrupts]

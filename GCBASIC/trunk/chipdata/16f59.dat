@@ -58,7 +58,7 @@ UserIDAddress=2048
 'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=4
 
-'ChipSelfWrite constant is used within the compiler to permit testing the chip is seff write capable
+'ChipSelfWrite constant is used within the compiler to indicate the chip is self write capable
 SelfWrite=0
 
 [Interrupts]

@@ -70,7 +70,13 @@ UserIDLength=16
 'ChipLFINTOSCClockSourceRegisterValue constant is used in user programs to provide the value to set the clock source to LFINTOSC
 LFINTOSCClockSourceRegisterValue=80
 
-'ChipSelfWrite constant is used within the compiler to permit testing the chip is seff write capable
+'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
+WriteFlashBlockSize=64
+
+'EraseFlashBlockSize constant is used in user programs that write to flash memory in bytes
+EraseFlashBlockSize=64
+
+'ChipSelfWrite constant is used within the compiler to indicate the chip is self write capable
 SelfWrite=1
 
 [Interrupts]
