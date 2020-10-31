@@ -662,6 +662,8 @@ Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams, PrgName
 Dim Shared As ExternalTool Pointer AsmTool, PrgTool
 Dim Shared As String CompReportFormat
 
+#Define DISABLEOPTIMISATION "f122 jmp"
+
 #Define MAX_OUTPUT_MESSAGES 200
 Dim Shared As String OutMessage(MAX_OUTPUT_MESSAGES)
 Dim Shared As Integer OutMessages, ErrorsFound
@@ -688,7 +690,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-10-29"
+Version = "0.98.<<>> 2020-10-31"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -11789,7 +11791,11 @@ Function GenerateVectorCode As LinkedListElement Pointer
     If ChipFamily <> 122 then
       CurrLine = LinkedListInsert(CurrLine, " rjmp BASPROGRAMSTART ;Reset")
     Else
-      CurrLine = LinkedListInsert(CurrLine, " jmp BASPROGRAMSTART ;Reset DISABLEOPTIMISATION")
+      If VBS = 1 then
+        Print Message( "Family122OptimisationMessage" )
+      End If
+      CurrLine = LinkedListInsert(CurrLine, " jmp BASPROGRAMSTART ;Reset  " + DISABLEOPTIMISATION )
+
     End If
 
     'Add ON ... GOSUB code
@@ -11814,16 +11820,20 @@ Function GenerateVectorCode As LinkedListElement Pointer
                   If ChipFamily <> 122 then
                       CurrLine = LinkedListInsert(CurrLine, " rjmp INTERRUPT ;" + UCase(.Vector) )
                   Else
-                      CurrLine = LinkedListInsert(CurrLine, " jmp INTERRUPT ;" + UCase(.Vector)+" DISABLEOPTIMISATION")
+                      CurrLine = LinkedListInsert(CurrLine, " jmp INTERRUPT ;" + UCase(.Vector) + left("                    ", 20-len(UCase(.Vector))) + DISABLEOPTIMISATION)
                   End If
                 Else
-                  CurrLine = LinkedListInsert(CurrLine, " reti ;" + UCase(.Vector))
+                  If ChipFamily <> 122 then
+                    CurrLine = LinkedListInsert(CurrLine, " reti ;" + UCase(.Vector))
+                  Else
+                    CurrLine = LinkedListInsert(CurrLine, " jmp 0  ;" + UCase(.Vector)  + left("                    ", 20-len(UCase(.Vector))) + DISABLEOPTIMISATION)
+                  End If
                 End If
               Else
                 If ChipFamily <> 122 then
                   CurrLine = LinkedListInsert(CurrLine, " rjmp Int" + UCase(.Vector) + " ;" + UCase(.Vector))
                 Else
-                  CurrLine = LinkedListInsert(CurrLine, " jmp Int" + UCase(.Vector) + " ;" + UCase(.Vector)+" DISABLEOPTIMISATION")
+                  CurrLine = LinkedListInsert(CurrLine, " jmp Int" + UCase(.Vector) + " ;" + UCase(.Vector)+ left("                    ", 20-len(UCase(.Vector))) + DISABLEOPTIMISATION)
                 End if
               End If
         End With
@@ -13851,7 +13861,7 @@ Sub OptimiseCalls
             If LabelPos <> 0 Then
               JumpSize = Abs(*LabelPos - CurrLinePos)
               If (ModeAVR And JumpSize < 2048) Or (ChipFamily = 16 And JumpSize < 1024) Then
-                If Instr( Ucase( CurrLine->Value), "DISABLEOPTIMISATION") <> 0 then
+                If Instr( Ucase( CurrLine->Value), Ucase(DISABLEOPTIMISATION) ) <> 0 then
                   ' DO NOT OPTIMISE SPECIFIC CODE FOR LGT CHIPS
                   UseRelative = 0
                 Else

@@ -152,6 +152,7 @@ UsedProgram = "Program Memory: %used%/%total% words"
 UsedRAM = "RAM: %used%/%total% bytes"
 AssemblyWritten = "Assembly program lines written: "
 MakeASM = "Assembling program ..."
+Family122OptimisationMessage = "Family 122 - rjmp and rcall optimisation disabled"
 
 SendToPIC = "Downloading program ..."
 
