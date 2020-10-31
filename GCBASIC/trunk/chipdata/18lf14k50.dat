@@ -58,7 +58,13 @@ UserIDAddress=2097152
 'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=8
 
-'ChipSelfWrite constant is used within the compiler to permit testing the chip is seff write capable
+'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
+WriteFlashBlockSize=16
+
+'EraseFlashBlockSize constant is used in user programs that write to flash memory in bytes
+EraseFlashBlockSize=64
+
+'ChipSelfWrite constant is used within the compiler to indicate the chip is self write capable
 SelfWrite=1
 
 [Interrupts]

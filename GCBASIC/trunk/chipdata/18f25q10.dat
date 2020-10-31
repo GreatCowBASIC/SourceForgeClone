@@ -67,7 +67,13 @@ SectorRAMAddress=2048
 'ChipSectorRAMAddressSize constant is used in user programs to provide the size of the Sector RAM
 SectorRAMAddressSize=256
 
-'ChipSelfWrite constant is used within the compiler to permit testing the chip is seff write capable
+'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
+WriteFlashBlockSize=128
+
+'EraseFlashBlockSize constant is used in user programs that write to flash memory in bytes
+EraseFlashBlockSize=128
+
+'ChipSelfWrite constant is used within the compiler to indicate the chip is self write capable
 SelfWrite=1
 
 [Interrupts]
