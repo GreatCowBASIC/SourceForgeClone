@@ -193,6 +193,7 @@ NoEndRepeat = "Repeat without End Repeat"
 InvalidDelayLength = "Cannot use a variable with the microsecond delay on chips < 20 MHz"
 BadConfig = "Configuration setting not valid: %option%"
 NoSelectVariableParameter = "No Select Case variable specified"
+InCorrectNumberofParameters = "Incorrect number of parameters"
 
 'New errors in 0.9.4.0
 ASMParamMismatch = "Number of parameters does not match"

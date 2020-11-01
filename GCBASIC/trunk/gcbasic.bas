@@ -690,7 +690,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-10-31"
+Version = "0.98.07 RC29 2020-11-01"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -6705,6 +6705,12 @@ SUB CompileReadTable (CompSub As SubType Pointer)
           InLine = RTrim(Left(InLine, INSTR(InLine, ";?F") - 1))
         END IF
 
+         IF CountOccur ( Inline, ",") <> 2  THEN
+            Temp = Message("InCorrectNumberofParameters")
+            LogError Temp, Origin
+            exit sub
+         END IF
+
         'Get table name
         InLine = LTrim(Mid(InLine, 11))
         TableName = Trim(Left(InLine, INSTR(InLine, ",") - 1))
@@ -10734,7 +10740,10 @@ Sub FixPointerOps (CompSub As SubType Pointer)
           End If
 
           Case Else:
-          LogError "Internal error in FixPointerOps"
+          'If an error message has already happened then we dont want to issue this message
+          If ErrorsFound <> -1 then
+            LogError "Internal error in FixPointerOps"
+          End if
 
         End Select
       End If
