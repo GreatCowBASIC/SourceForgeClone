@@ -33,6 +33,7 @@
 ' 03/04/2019:      Revised to support DEFAULT_GLCDBACKGROUND constant
 '  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 ' 11/10/19  Corrected Dim GLCDPixelCount As Long in FilledBox method, was a Word.  A word can overflow.
+' 03/11/20  Added support for HWSPI_Fast_Write_Word_Macro where data needs to passed in the HWSPI_Send_word word variable
 '
 #script
 
@@ -640,6 +641,11 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBACKGROUND as word = GLCDBACKGROUND )
     SetAddressWindow_ILI9341 ( 0, 0, ILI9341_GLCD_WIDTH -1 , ILI9341_GLCD_HEIGHT-1 )
     ILI9341SendWord = GLCDBACKGROUND
 
+    #IFDEF AVR
+        'VARIABLE IS USES FOR FAST CLEAR SCREEN
+        HWSPI_Send_Word = GLCDBACKGROUND
+    #ENDIF
+
     ILI9341_CS = 0
 
     #ifdef ILI9341_SPI_MODE_SCRIPT 1
@@ -706,20 +712,8 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBACKGROUND as word = GLCDBACKGROUND )
 
 
           #ifdef AVR
-
-            Do
-              SPDR = ILI9341SendWord_h
-            Loop While SPSR.WCOL
-            'Read buffer
-            'Same for master and slave
-            Wait While SPSR.SPIF = Off
-
-            Do
-              SPDR = ILI9341SendWord
-            Loop While SPSR.WCOL
-            'Read buffer
-            'Same for master and slave
-            Wait While SPSR.SPIF = Off
+            'Fast clear screen - use a macro to keep code simple
+            HWSPI_Fast_Write_Word_Macro GLCDBACKGROUND
 
           #endif
 
