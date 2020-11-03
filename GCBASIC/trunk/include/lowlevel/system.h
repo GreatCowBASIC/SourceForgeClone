@@ -69,6 +69,7 @@
 '    15072020 - Added Q43 support in ProgramWrite and ProgramRead
 '    06102020 - Added Family122 support in InitSys
 '    28102020 - Added clear down RAM for Family122 in InitSys, added EEPROM support for Family122
+'    03112020 - Improved clear down RAM for Family122 in InitSys
 
 'Constants
 #define ON 1
@@ -1114,7 +1115,8 @@ Sub InitSys
     #IF ChipFamily = 122
 
           'Clear down the ram
-            ldi r18, 0x01 ; 1
+            eor r1, r1
+            ldi r18, HIGH(RAMEND) -1
             ldi r26, 0x00 ; 0
             ldi r27, 0x01 ; 1
             rjmp IniySysClearRAMStart
@@ -1123,9 +1125,10 @@ Sub InitSys
             st  X+, r1
 
             IniySysClearRAMStart:
-            cpi r26, 0x01 ; 1
+            cpi r26, LOW(RAMEND)
             cpc r27, r18
             brne  InitSysClearRAMLoop
+            st  X+, r1
 
           'MCUSR - IO Special Function Registers Control
           MCUSR = 0xFF
@@ -1222,24 +1225,24 @@ Sub InitSys
   #IFDEF Var(PORTD)
     PORTD = 0
   #ENDIF
-'  #IFDEF Var(PORTE)
-'    PORTE = 0
-'  #ENDIF
-'  #IFDEF Var(PORTF)
-'    PORTF = 0
-'  #ENDIF
-'  #IFDEF Var(PORTG)
-'    PORTG = 0
-'  #ENDIF
-'  #IFDEF Var(PORTH)
-'    PORTH = 0
-'  #ENDIF
-'  #IFDEF Var(PORTI)
-'    PORTI = 0
-'  #ENDIF
-'  #IFDEF Var(PORTJ)
-'    PORTJ = 0
-'  #ENDIF
+  #IFDEF Var(PORTE)
+    PORTE = 0
+  #ENDIF
+  #IFDEF Var(PORTF)
+    PORTF = 0
+  #ENDIF
+  #IFDEF Var(PORTG)
+    PORTG = 0
+  #ENDIF
+  #IFDEF Var(PORTH)
+    PORTH = 0
+  #ENDIF
+  #IFDEF Var(PORTI)
+    PORTI = 0
+  #ENDIF
+  #IFDEF Var(PORTJ)
+    PORTJ = 0
+  #ENDIF
 
 End Sub
 
