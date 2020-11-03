@@ -43,8 +43,9 @@
 '              #define HWSPIMode MasterSSPADDMode
 '              It will set the two bits that are needed and then set SSP1ADD =1.   This way all the SPI libraries can use the feature.
 '              And, if the user does not add the `HWSPIMode` constant it will work as before.
-'  12/10/2020  Add ChipFamily 122 support
-
+'  12/10/2020  Add basic ChipFamily 122 support
+'  02/11/2020  Add further ChipFamily 122 support by adding the constant SPIDELAY_SCRIPT_MASTER.  This is adds clock cycles to permit the data (a byte to exit the buffer before the CS line is changed.
+'              Added HWSPI_Fast_Write_Word_Macro where data needs to passed in the HWSPI_Send_word word variable
 
 'To make the PIC pause until it receives an SPI message while in slave mode, set the
 'constant "WaitForSPI" at the start of the program. The value does not matter.
@@ -151,6 +152,24 @@
 
     'Calculate SPI Baud Rate for SPImode modules on K42 per datasheet
     SPIBAUDRATE_SCRIPT_MASTERSLOW = INT(ChipMHz / INT( SPI_BAUD_RATE / 16  ) / 2 * 1000) + 1
+
+    If ChipFamily = 122 then
+
+      'There are hard coded clock cycles to permit the data (a byte to exit the buffer before the CS line is changed.
+      If HWSPIMode = MasterSlow then
+          SPIDELAY_SCRIPT_MASTER = 64
+      End if
+      If HWSPIMode = Master  then
+          SPIDELAY_SCRIPT_MASTER = 16
+      End if
+      If HWSPIMode = MasterFastthen
+          SPIDELAY_SCRIPT_MASTER = 1
+      End if
+      If HWSPIMode = MasterUltraFast then
+          SPIDELAY_SCRIPT_MASTER = 0
+      End if
+
+    End if
 
 #endscript
 
@@ -645,10 +664,18 @@ Sub HWSPITransfer(In SPITxData, Out SPIRxData)
     If SPICurrentMode > 10 Then
       'Put byte to send into buffer
       'Will start transfer
-      Do
+      #IF ChipFamily <> 122
+        Do
+          SPDR = SPITxData
+        Loop While SPSR.WCOL
+      #ENDIF
+      #IF ChipFamily = 122
+        SPFR = SPFR & 0x44 'setup  RDEMPT and WREMPT simutanously to clear buffer
         SPDR = SPITxData
-      Loop While SPSR.WCOL
-
+        Repeat SPIDELAY_SCRIPT_MASTER
+          nop
+        End Repeat
+      #ENDIF
     'Slave mode
     Else
       'Retry until send succeeds
@@ -711,10 +738,18 @@ Sub FastHWSPITransfer( In SPITxData )
 
   #ifdef AVR
     'Master mode only
-    Do
-      SPDR = SPITxData
-    Loop While SPSR.WCOL
-
+   #IF ChipFamily <> 122
+     Do
+       SPDR = SPITxData
+     Loop While SPSR.WCOL
+   #ENDIF
+   #IF ChipFamily = 122
+     SPFR = SPFR & 0x44 'setup  RDEMPT and WREMPT simutanously to clear buffer
+     SPDR = SPITxData
+     Repeat SPIDELAY_SCRIPT_MASTER
+       nop
+     End Repeat
+   #ENDIF
 
     'Same for master and slave
     #IF ChipFamily <> 122
@@ -731,3 +766,43 @@ Sub FastHWSPITransfer( In SPITxData )
 End Sub
 
 
+'requires word data to be in HWSPI_Send_Word as word
+Macro HWSPI_Fast_Write_Word_Macro
+
+  Dim HWSPI_Send_Word as word
+
+            #IF ChipFamily <> 122
+                Do
+                  SPDR = HWSPI_Send_word_h
+                Loop While SPSR.WCOL
+                'Read buffer
+                'Same for master and slave
+                Wait While SPSR.SPIF = Off
+
+                Do
+                  SPDR = HWSPI_Send_word
+                Loop While SPSR.WCOL
+                'Read buffer
+                'Same for master and slave
+                Wait While SPSR.SPIF = Off
+
+            #ENDIF
+
+              #IF ChipFamily = 122
+
+                SPFR = SPFR & 0x44 'setup  RDEMPT and WREMPT simutanously to clear buffer
+                SPDR = HWSPI_Send_word_h
+                Repeat SPIDELAY_SCRIPT_MASTER
+                nop
+                End Repeat
+                Wait While ( SPSR.SPIF = Off and RDEMPT = 0 )
+
+                SPDR = HWSPI_Send_word
+                Repeat SPIDELAY_SCRIPT_MASTER
+                nop
+                End Repeat
+                Wait While ( SPSR.SPIF = Off and RDEMPT = 0 )
+
+            #ENDIF
+
+End Macro
