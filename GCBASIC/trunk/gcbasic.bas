@@ -6808,9 +6808,15 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 
               ElseIf DataTable(TableID).StoreLoc = 1 Then
                 'Store in EEPROM
-                RequestSub(CompSub, "SysEPRead")
+'                RequestSub(CompSub, "SysEPRead")
+'                CurrLine = LinkedListInsert(CurrLine, "EEAddress=" + TableLoc + "+@Table" + TableName)
+'                CurrLine = LinkedListInsert(CurrLine, " call SysEPRead")
+'                CurrLine = LinkedListInsert(CurrLine, OutVar + "=EEDataValue")
+                'Change SysEPRead to read the CONSTANT as this may have been redefined to an alternative method() ie K42, Q43 to NVMADR_EPREAD
+
+                RequestSub(CompSub, ReplaceConstantsLine ( "SysEPRead", 0 ))
                 CurrLine = LinkedListInsert(CurrLine, "EEAddress=" + TableLoc + "+@Table" + TableName)
-                CurrLine = LinkedListInsert(CurrLine, " call SysEPRead")
+                CurrLine = LinkedListInsert(CurrLine, " call " + ReplaceConstantsLine ( "SysEPRead", 0 ))
                 CurrLine = LinkedListInsert(CurrLine, OutVar + "=EEDataValue")
               End If
 
