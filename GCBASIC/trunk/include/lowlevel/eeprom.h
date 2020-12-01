@@ -46,6 +46,7 @@
 ' 10/04/20: Revised to EEPGD within ProgramRead() and implement NVMREGS check
 ' 03/05/20: Moved ProgramErase, ProgramRead and ProgramWrite to system.h to ensure we isolate EEPRom code.
 ' 13/07/20: Revised to support Q43 chips
+' 01/12/20: Revised script to support redirection of sysread()
 
 
 #option REQUIRED PIC CHipEEPROM %NoEEProm%
@@ -70,6 +71,8 @@
   If var(NVMADRL) Then
     EPWrite = NVMADR_EPWrite
     EPRead  = NVMADR_EPRead
+    'Need to redefine SysEPRead to support READTABLE
+    SysEPRead = NVMADR_EPRead
   End If
 
 
