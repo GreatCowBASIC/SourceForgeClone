@@ -1102,6 +1102,13 @@ SUB PreProcessor
               DataSource = Trim(Mid(DataSource, 6))
               FoundMacro = -1
             End If
+			
+            'Is this the user source file? and need to ensure Subs are are not started with Fn.....
+            if Left(DataSource, 2) = "FN" and RF =1  Then
+                Temp = ";?F" + Str(RF) + "L" + Str(LC) + "S0" + "I" + Str(LCS) + "?"
+                LogError("Reserved prefix 'Fn' identifier not permitted, rename method", Temp)
+            End if
+
           Loop
 
           LCS = 0
