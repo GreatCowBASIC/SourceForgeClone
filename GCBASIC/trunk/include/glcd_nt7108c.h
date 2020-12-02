@@ -24,8 +24,8 @@
 '  11/02/19  Removed GLCDDirection constant from script as this was impacted KS0108 library
 '  11/06/19  This header file did not allow for individual port assignments.  Modified it to allow for GLCD_DB0 - GLCD_DB7 to be set to any pin.  If the GLCD_PORT is defined then that is used.  PIC18F14K22 tested display.
 '  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
-'  13/11/19  Revolved IFDEF error in WriteByte and ReadByte
-
+'  13/11/19  Resolved IFDEF error in WriteByte and ReadByte
+'  02/12/29  Resolved IFDEF error in WriteByte and ReadByte, again by removing the 'then' statement
 
 'Hardware settings
 'Type
@@ -266,7 +266,7 @@ Sub GLCDWriteByte_NT7108C (In LCDByte)
   'Set LCD data direction
   Set GLCD_RW Off
 
-  #ifdef GLCD_DB0 then
+  #ifdef GLCD_DB0
     'Set Data Direction
     dir GLCD_DB0 Out
     dir GLCD_DB1 Out
@@ -298,7 +298,7 @@ Sub GLCDWriteByte_NT7108C (In LCDByte)
     If LCDByte.7 On then Set GLCD_DB7 On
   #ENDIF
 
-  #IFDEF GLCD_DATA_PORT then
+  #IFDEF GLCD_DATA_PORT
     'Set data port direction
     dir GLCD_DATA_PORT out
     'Set output data
@@ -317,7 +317,7 @@ End Sub
 '''Read byte from LCD
 '''@hide
 Function GLCDReadByte_NT7108C
-  #ifdef GLCD_DB0 then
+  #ifdef GLCD_DB0
     dim GLCD_Byte as Byte
 
     'Set data port direction
@@ -353,7 +353,7 @@ Function GLCDReadByte_NT7108C
     GLCDReadByte = GLCD_Byte
   #ENDIF
 
-  #IFDEF GLCD_DATA_PORT then
+  #IFDEF GLCD_DATA_PORT
     'Set data port direction
     dir GLCD_DATA_PORT in
 
