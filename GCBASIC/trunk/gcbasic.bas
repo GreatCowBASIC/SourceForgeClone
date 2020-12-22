@@ -2524,7 +2524,11 @@ SUB CalcConfig
     configreport = FreeFile
     ConfigReportFileName = ReplaceToolVariables("%filename%", "config")
     Open ConfigReportFileName For Output As #configreport
-    Print #configreport, "[" + ChipName + "]"
+    IF HasSFR ( "PPSLOCK" ) then
+      Print #configreport, "[" + ChipName + "]"+str(ModePIC)+","+str(ModeAVR)+",PPS,"+str(chipfamily)
+    else
+      Print #configreport, "[" + ChipName + "]"+str(ModePIC)+","+str(ModeAVR)+",,"+str(chipfamily)
+    end if
   End If
 
   'Check oscillator type, add constant
