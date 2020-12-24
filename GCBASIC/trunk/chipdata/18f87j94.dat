@@ -38,7 +38,7 @@ Family=16
 PSP=1
 
 'This constant is exposed as ChipUSART
-USART=1
+USART=4
 
 'This constant is exposed as ChipMaxAddress
 MaxAddress=4095

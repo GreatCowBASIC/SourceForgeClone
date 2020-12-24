@@ -44,7 +44,7 @@ ConfigWords=5
 PSP=0
 
 'This constant is exposed as ChipUSART
-USART=0
+USART=2
 
 'This constant is exposed as ChipMaxAddress
 MaxAddress=8191
