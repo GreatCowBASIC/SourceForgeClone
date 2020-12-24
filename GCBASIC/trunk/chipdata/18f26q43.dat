@@ -56,7 +56,7 @@ PWMTimerVariant=2
 SAFMemWords=128
 
 'ChipsEraseRowSizeWords is used within hefsaf.h.  This constant provides information with respect to the register used for setting the HEFSAF operations
-EraseRowSizeWords=32
+EraseRowSizeWords=128
 
 'ChipStacks constant can be used in user programs and provides the available stack depth
 Stacks=128
@@ -71,10 +71,10 @@ UserIDLength=8
 LFINTOSCClockSourceRegisterValue=80
 
 'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
-WriteFlashBlockSize=128
+WriteFlashBlockSize=256
 
 'EraseFlashBlockSize constant is used in user programs that write to flash memory in bytes
-EraseFlashBlockSize=128
+EraseFlashBlockSize=256
 
 'ChipMinimumBankSelelect constant is used within the compiler to set the minimum BANKSELECT
 MinimumBankSelect=5

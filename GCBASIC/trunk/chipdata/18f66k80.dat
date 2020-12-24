@@ -59,7 +59,7 @@ UserIDAddress=2097152
 UserIDLength=8
 
 'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
-WriteFlashBlockSize=64
+WriteFlashBlockSize=8
 
 'EraseFlashBlockSize constant is used in user programs that write to flash memory in bytes
 EraseFlashBlockSize=64
