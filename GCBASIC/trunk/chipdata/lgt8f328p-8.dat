@@ -6,7 +6,7 @@
 
 [ChipData]
 Prog=12288
-EEPROM=8096
+EEPROM=8192
 RAM=2048
 I/O=23
 ADC=8
@@ -952,4 +952,3 @@ NoConfig-PRG
 
 [Config]
 NoConfig-PRG
-
