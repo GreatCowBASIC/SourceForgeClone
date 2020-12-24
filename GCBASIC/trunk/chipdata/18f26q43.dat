@@ -41,7 +41,7 @@ FamilyVariant=1
 PSP=0
 
 'This constant is exposed as ChipUSART
-USART=1
+USART=5
 
 'This constant is exposed as ChipMaxAddress
 MaxAddress=5375
