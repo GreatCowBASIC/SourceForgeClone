@@ -714,7 +714,6 @@ Sub GLCDCLS_ILI9341 ( Optional In  GLCDBACKGROUND as word = GLCDBACKGROUND )
           #ifdef AVR
             'Fast clear screen - use a macro to keep code simple
             HWSPI_Fast_Write_Word_Macro GLCDBACKGROUND
-
           #endif
 
         #endif

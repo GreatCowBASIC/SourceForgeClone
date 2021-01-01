@@ -49,6 +49,7 @@
 '    Updated Apr 2020 - Corrected Si2CReceive.  Was set to 255 bytes, not 1!
 '    Updated Apr 2020 - Updated to SI32CDisovery. Now using I2C1PIR.7 to detect part and renamed HIC2Init to HI2CInit
 '    Updated May 2020 - Removed Unused Constant
+'    Updated Dec 2020 - Added support for 18FxxQ10
 
 
 'SPI mode constants also SHARED by hardware I2C:
@@ -140,6 +141,12 @@
                 HI2CReStart = SI2CReStart
                 HI2CSend =    SI2CSend
                 HI2CReceive = SI2CReceive
+            end if
+
+            iF var( I2C1CNTL ) THEN
+                'for the 18FxxQ10's
+                I2C1CNT = I2C1CNTL
+
             end if
 
       end If
@@ -1057,13 +1064,20 @@ sub SI2CDiscovery ( address )
     I2C1TXB = 0 'reg
     I2C1CNT = 1
     I2C1TXB = 0 'data
-    SI2CStop
+
     HI2CAckpollState = 0
-    HI2CAckpollState.0 = !I2C1PIR.7
-    'Reset module
-    I2C1CON0.EN=0
-    wait 1 ms
-    I2C1CON0.EN=1
+    #IFNDEF bit( I2C1CON1.P )
+      SI2CStop
+      HI2CAckpollState.0 = !I2C1PIR.7
+      'Reset module
+      I2C1CON0.EN=0
+      wait 1 ms
+      I2C1CON0.EN=1
+
+    #ENDIF
+    #IFNDEF bit( I2C1CON1.P )
+      I2C1CON1.P = 1           'stop
+      HI2CAckpollState.0 = I2C1CON1.ACKSTAT
+    #ENDIF
 
 end sub
-

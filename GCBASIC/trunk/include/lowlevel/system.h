@@ -69,6 +69,7 @@
 '    15072020 - Added Q43 support in ProgramWrite and ProgramRead
 '    06102020 - Added Family122 support in InitSys
 '    28102020 - Added clear down RAM for Family122 in InitSys, added EEPROM support for Family122
+'    21122020-  Add PFMRead for Q43 chip family.
 '    03112020 - Improved clear down RAM for Family122 in InitSys
 
 'Constants
@@ -880,6 +881,7 @@ Sub InitSys
   #IFDEF ChipFamily 16
     'Clear BSR on ChipFamily16 MCUs
     BSR = 0
+
   #ENDIF
 
   #IFDEF Var(TBLPTRU)
@@ -1243,6 +1245,8 @@ Sub InitSys
   #IFDEF Var(PORTJ)
     PORTJ = 0
   #ENDIF
+
+
 
 End Sub
 
@@ -3508,7 +3512,9 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
 
 
   'Start write, wait for it to finish
-  SET WR ON
+  #ifdef bit(WR)
+    SET WR ON
+  #endif
   NOP
   NOP
   NOP
@@ -3523,6 +3529,8 @@ sub ProgramWrite(In EEAddress, In EEDataWord)
 end sub
 
 sub ProgramRead(In EEAddress, Out EEDataWord)
+
+    EEDataWord = 0x00
 
     #IF BIT(NVMCMD0)
         'Supports memory 18fxxQ43 family
@@ -3574,7 +3582,9 @@ sub ProgramRead(In EEAddress, Out EEDataWord)
         #ENDIF
 
         'Start read, wait for it to finish
-        SET RD ON
+        #ifdef bit(RD)
+          SET RD ON
+        #endif
         NOP
         NOP
         #IFDEF Bit(NVMREGS)
@@ -3632,3 +3642,57 @@ sub ProgramErase(In EEAddress)
   'Enable interrupt
   IntOn
 end sub
+
+
+Function PFMRead(in _PFM_ABS_ADDR as long ) as Byte
+
+      #IFDEF ChipFamily 16
+          Dim _dummy as byte
+          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          TBLRD*+
+          PFMRead = TABLAT
+      #Endif
+
+End Function
+
+Function PFMReadWord(in _PFM_ABS_ADDR as long ) as word
+
+      #IFDEF ChipFamily 16
+          Dim _dummy as byte
+          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          TBLRD*+
+          PFMReadWord = TABLAT
+          TBLRD*+
+          PFMReadWord_h = TABLAT
+      #Endif
+
+End Function
+
+
+Sub PFMRead(in _PFM_ABS_ADDR as long, out _PFM_DataByte as byte )
+
+      #IFDEF ChipFamily 16
+          Dim _dummy as byte
+          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          TBLRD*+
+          _PFM_DataByte = TABLAT
+
+      #Endif
+
+End Sub
+
+Sub PFMRead(in _PFM_ABS_ADDR as long, out _PFM_DataByte as word )
+
+      #IFDEF ChipFamily 16
+          Dim _dummy as byte
+          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          TBLRD*+
+          _PFM_DataByte = TABLAT
+          TBLRD*+
+          _PFM_DataByte_h = TABLAT
+
+      #Endif
+
+End Sub
+
+
