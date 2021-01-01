@@ -224,11 +224,10 @@ sub  TransferData_XPT2046( IN XPT2046SendByte as byte, XPT2046OutByte as byte )
         rotate XPT2046SendByte left
         set XPT2046_SCK Off;
 
-        wait 5 us
-
       end Repeat
 
   #endif
+'  wait 250 us
 
 end Sub
 

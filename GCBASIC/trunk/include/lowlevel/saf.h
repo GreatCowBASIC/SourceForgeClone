@@ -26,6 +26,7 @@
 '    29.01.2019.   Updated to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
 '    05.02.2019.   Further revised  to prevent _HEF_ABS_ADDR creating variables when no HEFM for ChipFamily 15
 '    14.07.2020    Updated to support Q43 chips
+'    20.12.2020    Revised to support Q41 chips by removing the #SameVar NVMLOCK, NVMCON2 as they are NOT the samevar
 
 #option REQUIRED PIC ChipSAFMemWords "SAF.  No SAF memory."
 #option REQUIRED AVR ChipSAFMemWords "SAF.  No SAF memory."
@@ -47,7 +48,7 @@
       #SameVar NVMCON1, PMCON1
       #SameVar NVMCON2, PMCON2
       #SameBit NVMREGS, CFGS
-      #SameVar NVMLOCK, NVMCON2
+
 
       #DEFINE SAF_ROWSIZE_BYTES    HEF_ROWSIZE_BYTES
       #DEFINE SAF_ROWSIZE_WORDS    HEF_ROWSIZE_WORDS
@@ -63,7 +64,8 @@
   #ENDIF
 
      '--- Variables ---
-      Dim _HEF_Index, _GIE_Save, _HEF_Offset
+      Dim _HEF_Index, _HEF_Offset as word
+      Dim _GIE_Save
       Dim _HEF_BlockNum, _HEF_REL_ADDR, _HEF_REL_ADDR2
       Dim _HEF_Buffer(HEF_ROWSIZE_BYTES)  '16, 32 or 128  Bytes depending upon chip
 
@@ -340,6 +342,8 @@ Sub SAFReadBlock(in _HEF_BlockNum, Out _HEF_Buffer(),Optional in _HEF_Count = HE
 
  #IFDEF HAS_HEFSAF TRUE
 
+    Dim _HEF_Count as Word
+
    ; This subroutine returns in _HEF_Buffer array the [_HEF_Count] byte values
    ; stored in SAF given its row/block #
 
@@ -381,8 +385,20 @@ Sub SAFReadBlock(in _HEF_BlockNum, Out _HEF_Buffer(),Optional in _HEF_Count = HE
 
           #ENDIF
 
+          #IF VAR(NVMLOCK)
+            NVMCON1 = 0 ; point to Program Flash Memory Q10 series
+            TBLPTRU = _HEF_ABS_ADDR_U
+            TBLPTRH = _HEF_ABS_ADDR_H
+            TBLPTRL = _HEF_ABS_ADDR
 
-
+            for  _HEF_Index = 1 to _HEF_Count -1
+               TBLRD*+ ; read into TABLAT and increment
+              _HEF_Buffer(_HEF_Index) = TABLAT
+            next
+            'Get last byte
+            TBLRD*
+            _HEF_Buffer(_HEF_Index+1) = TABLAT
+          #ENDIF
 
     #ENDIF
 
@@ -418,7 +434,6 @@ Sub SAFEraseBlock(In _HEF_BlockNum)
   #IFDEF HAS_HEFSAF TRUE
 
       #IFDEF ChipFamily 16
-
           _HEF_ABS_ADDR = HEF_START_ADDR + (HEF_ROWSIZE_BYTES * _HEF_BlockNum)
 
           _GIE_SAVE = INTCON0.GIE  'Save interrupt setting
@@ -451,9 +466,27 @@ Sub SAFEraseBlock(In _HEF_BlockNum)
             NVMCON1 = 6 ; Erase operations
           #ENDIF
 
-          'unlock Sequence
-          NVMCON2 = 0x55
-          NVMCON2 = 0xAA
+
+          #if var(NVMCON2)
+            NVMCON2 = 0x55
+            NVMCON2 = 0xAA
+          #endif
+
+          #if var(NVMLOCK)
+            'For Q41 series
+            NVMADRU = _HEF_ABS_ADDR_U
+            NVMADRH = _HEF_ABS_ADDR_H
+            NVMADRL = _HEF_ABS_ADDR
+            NVMCON1 = 6 ; Erase operations
+            NVMLOCK = 0x55
+            NVMLOCK = 0xAA
+            GO_NVMCON0 = 1
+            wait while GO_NVMCON0 = 1
+            NVMCON1 = NVMCON1 and 0XF8
+          #endif
+
+
+
           #IF BIT(REG0)
             NVMCON1.WR = 1            'Write takes place here for legacy chips with NVMCON1.WR
           #ENDIF
@@ -505,10 +538,12 @@ Sub SAFEraseBlock(In _HEF_BlockNum)
 End Sub
 
 Sub SAFWriteBlock(in _HEF_BlockNum, in _HEF_Buffer(), Optional in _HEF_Count = HEF_ROWSIZE_BYTES)
-    ; This subroutine writes _HEF_Count bytes from the _HEF_Buffer() array
+    ; This subroutine writes _HEF_Count from the _HEF_Buffer() array
     ; at a given row # of the HEM
 
   #IFDEF HAS_HEFSAF TRUE
+
+      Dim _HEF_Count as Word
 
       #IFDEF ChipFamily 16
 
@@ -557,9 +592,32 @@ Sub SAFWriteBlock(in _HEF_BlockNum, in _HEF_Buffer(), Optional in _HEF_Count = H
           #ENDIF
 
 
-          'unlock sequence
-          NVMCON2 = 0x55
-          NVMCON2 = 0xAA
+          #if var(NVMCON2)
+            NVMCON2 = 0x55
+            NVMCON2 = 0xAA
+          #endif
+
+          #if var(NVMLOCK)
+            TBLPTRU = _HEF_ABS_ADDR_U
+            TBLPTRH = _HEF_ABS_ADDR_H
+            TBLPTRL = _HEF_ABS_ADDR
+            NVMCON1 = 5                ' Page Write operations
+
+            ; Fill the latches with data
+            For _HEF_Index = 1 to _HEF_Count -1
+             TABLAT = _HEF_Buffer(_HEF_Index)
+             TBLWT*+
+            Next
+            'last byte
+            TABLAT =  _HEF_Buffer(_HEF_Index +1)
+            TBLWT*
+
+            NVMLOCK = 0x55
+            NVMLOCK = 0xAA
+            GO_NVMCON0 =1
+            wait while GO_NVMCON0 = 1
+            NVMCON1 = NVMCON1 and 0XF8
+          #endif
 
           #IF BIT(REG0)
             NVMCON1.WR = 1            'Write takes place here for legacy chips with NVMCON1.WR

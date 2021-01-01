@@ -126,6 +126,7 @@
 ''' 14/08/2019 Added labels only. No functional changes.
 ''' 07/05/2020 Revised to isolate Timer4 and Timer6 in HPWM()
 ''' 21/06/2020 Revised to support ChipFamily 121
+''' 30/12/2020 Revised sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )/SetupCCPPWMRegisters section to identify the Q41 chip that only has ONE CCP1PMW! That is new... one CCP1. Just like the old days
 
   'define the defaults
   #define AVRTC0
@@ -2908,20 +2909,48 @@ SetupCCPPWMRegisters:
       AddHPWMCCPSetup1
     #endif
 
-    #ifdef NoVar(CCP2CON)
-      'NoVar(CCP2CON) - We assumne there is is only 1 CCP module on Chip
-      PRx_Temp = PWMDuty * (PRx_Temp + 2)
-      CCPR1L = PRx_Temp_H
-      If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero
-      SET CCP1CON.CCP1M3 ON
-      SET CCP1CON.CCP1M2 ON
-      SET CCP1CON.CCP1M1 OFF
-      SET CCP1CON.CCP1M0 OFF
+    #ifndef BIT(CCP1FMT)
+
+        #ifdef NoVar(CCP2CON)
+          'NoVar(CCP2CON) - We assumne there is is only 1 CCP module on Chip and this assumes the legacy chip do not have CCP1FMT
+          PRx_Temp = PWMDuty * (PRx_Temp + 2)
+          CCPR1L = PRx_Temp_H
+          If PWMDuty = 0 Then CCPR1L = 0  ' Assure OFF at Zero
+          SET CCP1CON.CCP1M3 ON
+          SET CCP1CON.CCP1M2 ON
+          SET CCP1CON.CCP1M1 OFF
+          SET CCP1CON.CCP1M0 OFF
+        #endif
+
+        #ifdef BIT(C1TSEL0)
+        C1TSEL0 = TimerSelectionBits.0
+        C1TSEL1 = TimerSelectionBits.1
+        #endif
+
     #endif
 
-    #ifdef BIT(C1TSEL0)
-    C1TSEL0 = TimerSelectionBits.0
-    C1TSEL1 = TimerSelectionBits.1
+    #ifdef BIT(CCP1FMT)
+        'ifdef BIT(CCP1FMT) Testing this bit is to identify the Q41 chip that only has ONE CCP1PMW
+        calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+        CCPR1H = PRx_Temp_H
+        CCPR1L = PRx_Temp
+        SET CCP1M3 ON
+        SET CCP1M2 ON
+        SET CCP1M1 ON
+        SET CCP1M0 ON
+
+        #ifdef bit(CCP1EN)
+          SET CCP1EN ON
+        #endif
+
+        #ifdef bit(CCP1CON_EN)
+          SET CCP1CON_EN ON
+        #endif
+
+        #ifdef bit(CCP1FMT)
+          SET CCP1FMT ON
+        #endif
+
     #endif
 
     #ifdef AddHPWMCCPExit1
