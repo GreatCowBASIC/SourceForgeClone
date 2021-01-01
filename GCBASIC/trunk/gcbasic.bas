@@ -690,7 +690,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 RC34 2020-12-01"
+Version = "0.98.<<>> 2020-12-01"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2450,7 +2450,8 @@ SUB CalcConfig
           DesiredSetting = "OFF"
         ElseIf ConfigNameMatch(.Name, "FCMEN") Then   'this was generating a config error in non GCASM implementations
           DesiredSetting = "ON"
-
+        ElseIf ConfigNameMatch(.Name, "WRTSAF") Then   'this was generating a config error in non GCASM implementations
+          DesiredSetting = "OFF"
 
 
 
