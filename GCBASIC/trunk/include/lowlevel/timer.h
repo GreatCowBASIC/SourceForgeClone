@@ -95,6 +95,7 @@
 ' 05/04/2020: Improve InitTimer0 to better support new class of timers.
 ' 25/04/2020: Improve Settimer to better support new class of timers for timer 0
 ' 18/09/2020: Added TCNT1 handling SetTimer specific change for AVR
+' 02/01/2021: Corrected TCNT1 value for PS_1_8192
 '***********************************************************
 
 'Subroutines:
@@ -477,7 +478,7 @@
     PS_1_1024 = 11
     PS_1_2048 = 12
     PS_1_4096 = 13
-    PS_1_8192 = 11
+    PS_1_8192 = 14
     PS_1_16384 = 15
   end if
 
