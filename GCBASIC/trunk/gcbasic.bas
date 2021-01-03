@@ -1,5 +1,5 @@
 ' GCBASIC - A BASIC Compiler for microcontrollers
-' Copyright (C) 2006 - 2020 Hugh Considine and the Great Cow BASIC team
+' Copyright (C) 2006 - 2021 Hugh Considine and the Great Cow BASIC team
 '
 ' This program is free software; you can redistribute it and/or modify
 ' it under the terms of the GNU General Public License as published by
@@ -690,7 +690,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2020-12-01"
+Version = "0.98.<<>> 2021-01-03"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -16811,8 +16811,12 @@ Sub MergeSubroutines
             CurrLine = LinkedListInsert(CurrLine, " ORG 0xF000")
           ElseIf ChipFamily = 16 Then
             If ( Instr( UCase(ChipName) , "Q43") <> 0 )  then
-              CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamilyVariant EEPROM Address 0x380000)")
+              CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxQ43 EEPROM Address 0x380000)")
               CurrLine = LinkedListInsert(CurrLine, " ORG 0x380000")
+            ElseIf ( Instr( UCase(ChipName) , "Q41") <> 0 )  then
+              CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxQ41 EEPROM Address 0x380000)")
+              CurrLine = LinkedListInsert(CurrLine, " ORG 0x380000")
+
             ElseIf ChipFamilyVariant = 1 then
               CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamilyVariant EEPROM Address 0x310000)")
               CurrLine = LinkedListInsert(CurrLine, " ORG 0x310000")
