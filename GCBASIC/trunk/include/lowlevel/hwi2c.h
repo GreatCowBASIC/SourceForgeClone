@@ -1059,14 +1059,17 @@ sub SI2CDiscovery ( address )
 
     wait while I2C1STAT1.TXBE <> 1
 
-    'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
-    I2C1CNT = 1
-    I2C1TXB = 0 'reg
-    I2C1CNT = 1
-    I2C1TXB = 0 'data
 
-    HI2CAckpollState = 0
-    #IFNDEF bit( I2C1CON1.P )
+    #IFNDEF ChipFamily18FxxQ41
+      'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
+      I2C1CNTL = 1
+      I2C1TXB = 0 'reg
+
+      I2C1CNTL = 1
+      I2C1TXB = 0 'data
+
+      HI2CAckpollState = 0
+
       SI2CStop
       HI2CAckpollState.0 = !I2C1PIR.7
       'Reset module
@@ -1075,9 +1078,13 @@ sub SI2CDiscovery ( address )
       I2C1CON0.EN=1
 
     #ENDIF
-    #IFNDEF bit( I2C1CON1.P )
-      I2C1CON1.P = 1           'stop
+    #IFDEF ChipFamily18FxxQ41
+      HI2CSend 0
+      HI2CSend 0
+      wait 2 ms  'wait for I2C1CON1!
       HI2CAckpollState.0 = I2C1CON1.ACKSTAT
+      I2C1CON1.P = 1           'stop
+
     #ENDIF
 
 end sub
