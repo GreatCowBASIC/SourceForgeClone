@@ -1,6 +1,6 @@
 ' GCBASIC - A BASIC Compiler for microcontrollers
 '  Preprocessor
-' Copyright (C) 2006 - 2014 Hugh Considine
+' Copyright (C) 2006 - 2021 Hugh Considine
 '
 ' This program is free software; you can redistribute it and/or modify
 ' it under the terms of the GNU General Public License as published by
@@ -571,6 +571,14 @@ SUB PreProcessor
           DO WHILE NOT EOF(1)
             LINE INPUT #1, Temp
             LC += 1
+
+            do while right(trim(Temp),2) =" _"
+                dim newlinein as string
+                LINE INPUT #1, newlinein
+                LC += 1
+                temp = left(temp,len(temp)-2)+" "+trim(newlinein)
+            loop
+
             Temp = LTrim(Temp, Any Chr(9) + " ")
             IF UCase(Left(Temp, 8)) = "#INCLUDE" THEN
               IF INSTR(Temp, Chr(34)) <> 0 THEN
@@ -699,6 +707,16 @@ SUB PreProcessor
       LINE INPUT #1, DataSource
       LC = LC + 1
       LCS = LCS + 1
+
+            do while right(trim(DataSource),2) =" _"
+                dim newlinein as string
+                LINE INPUT #1, newlinein
+                LC = LC + 1
+                LCS = LCS + 1
+                DataSource = left(DataSource,len(DataSource)-2)+" "+trim(newlinein)
+
+            loop
+
 
       'Origin of this line
       LineOrigin = Callocate(SizeOf(OriginType))
@@ -1102,7 +1120,7 @@ SUB PreProcessor
               DataSource = Trim(Mid(DataSource, 6))
               FoundMacro = -1
             End If
-			
+
             'Is this the user source file? and need to ensure Subs are are not started with Fn.....
             if Left(DataSource, 2) = "FN" and RF =1  Then
                 Temp = ";?F" + Str(RF) + "L" + Str(LC) + "S0" + "I" + Str(LCS) + "?"
