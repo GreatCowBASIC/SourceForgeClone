@@ -383,7 +383,7 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
       NVMCON2 = 0xAA
     #endif
 
-    #if var(NVMLOCK)
+    #if var(ChipFamily18FxxQ41)
       NVMLOCK = 0x55
       NVMLOCK = 0xAA
       GO_NVMCON0 =1
