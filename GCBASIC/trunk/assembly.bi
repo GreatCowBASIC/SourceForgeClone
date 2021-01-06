@@ -705,6 +705,13 @@ SUB AssembleProgram
               If LCase(CurrCmd->Param(CD)) = "k" Then
                 'Calculate value
                 If IsCalc(ParamValues(CD)) Then Calculate ParamValues(CD)
+                
+                'Error if invalid location
+                If NOT IsConst(ParamValues(CD)) THEN
+		            Temp = Message("SymbolNotDefined")
+		            Replace Temp, "%symbol%", ParamValues(CD)
+		            LogError "GCASM: " + Temp + " "+ Message("At") + " " + DataSource
+		          END If
                 ParamValues(CD) = Trim(ParamValues(CD))
                 ParamValues(CD) = Str(MakeDec(ParamValues(CD)) - CurrentLine - 1)
               End If
