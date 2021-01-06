@@ -71,6 +71,7 @@
 '    28102020 - Added clear down RAM for Family122 in InitSys, added EEPROM support for Family122
 '    21122020-  Add PFMRead for Q43 chip family.
 '    03112020 - Improved clear down RAM for Family122 in InitSys
+'    05012021 - Add ChipSubFamily constants
 
 'Constants
 #define ON 1
@@ -90,6 +91,14 @@
 #define 31k 0.031
 'Options
 #define CheckDivZero TRUE
+
+#DEFINE  ChipFamily18FxxQ10 = 16100
+#DEFINE  ChipFamily18FxxQ43 = 16101
+#DEFINE  ChipFamily18FxxQ41 = 16102
+#DEFINE  ChipFamily18FxxK42 = 16103
+#DEFINE  ChipFamily18FxxK40 = 16104
+
+
 
 #startup InitSys, 80
 
@@ -3694,5 +3703,3 @@ Sub PFMRead(in _PFM_ABS_ADDR as long, out _PFM_DataByte as word )
       #Endif
 
 End Sub
-
-
