@@ -2929,8 +2929,8 @@ SetupCCPPWMRegisters:
 
     #endif
 
-    #ifdef BIT(CCP1FMT)
-        'ifdef BIT(CCP1FMT) Testing this bit is to identify the Q41 chip that only has ONE CCP1PMW
+    #ifdef ChipSubFamily = ChipFamily18FxxQ41
+        'Identify the Q41 chip that only has ONE CCP1PMW
         calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
         CCPR1H = PRx_Temp_H
         CCPR1L = PRx_Temp
