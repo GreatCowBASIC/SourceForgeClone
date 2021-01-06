@@ -47,7 +47,7 @@
 ' 03/05/20: Moved ProgramErase, ProgramRead and ProgramWrite to system.h to ensure we isolate EEPRom code.
 ' 13/07/20: Revised to support Q43 chips
 ' 01/12/20: Revised script to support redirection of sysread()
-' 31/12/20: Add ChipFamily18FxxQ41 support
+' 02/01/20: Rewrite of NVMADR_EPWrite/EPread to better support 18fxxQxx chips/NVMADRU register moving to ChipSubFamily
 
 
 #option REQUIRED PIC CHipEEPROM %NoEEProm%
@@ -300,7 +300,7 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     #ENDIF
 
    #IFDEF BIT(NVMREGS)
-  'ALL 16F NVMREGS Devices Except 18FxxK40/K42
+      'ALL 16F NVMREGS Devices Except 18FxxK40/K42
        SysEEPromAddress = SysEEAddress + 0x7000
        NVMADRH =SysEEPromAddress_h
        NVMADRL =SysEEPromAddress
@@ -309,7 +309,7 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     #ENDIF
 
    #IFDEF BIT(NVMREG0)
-   '' 18FXXk40/K42 and others with NVMREG0/NVMREG1
+        '' 18FXXk40/K42 and others with NVMREG0/NVMREG1
        NVMCON1 = 0
        SysEEPromAddress = SysEEAddress
        NVMADRH =SysEEPromAddress_h & 0X03  'ERV
@@ -321,43 +321,32 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
    #ENDIF
 
     #IFDEF VAR(NVMADRU)
-       #IFDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
-         'Select DATA EE section (0x380000 - 0x3803FF) for Q43
-          NVMADRU = 0x38
-          #Ifdef Var(NVMCON1)
-             Dim  NVMCON1_0_State, NVMCON1_1_State, NVMCON1_2_State as bit
-             NVMCON1_0_State = NVMCON1.0
-             NVMCON1_1_State = NVMCON1.1
-             NVMCON1_2_State = NVMCON1.2
-             NVMADRH =SysEEAddress_h
-             NVMADRL =SysEEAddress
-             NVMDATL = EEData
-          #endif
 
+       Dim  NVMCON1_0_State, NVMCON1_1_State, NVMCON1_2_State as bit
+       NVMCON1_0_State = NVMCON1.0
+       NVMCON1_1_State = NVMCON1.1
+       NVMCON1_2_State = NVMCON1.2
+
+       #if ChipSubFamily = ChipFamily18FxxQ43
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ43
+        NVMADRU = 0x38
        #ENDIF
 
-       #IFNDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
-          #IFNDEF ChipFamily18FxxQ41
-             'Select DATA EE section (0x310000 - 0x3100FF)
-             NVMADRU = 0x31
-             NVMADRH =SysEEAddress_h
-             NVMADRL =SysEEAddress
-             NVMDATL = EEData
-          #ENDIF
-          #IFDEF ChipFamily18FxxQ41
-              'Select DATA EE section (0x380000 - 0x3803FF) Q41
-              NVMADRU = 0x38
-              #Ifdef Var(NVMCON1)
-                  NVMADRH =SysEEAddress_h
-                  NVMADRL =SysEEAddress
-                  NVMDATL = EEData
-                  //Set the NVMCMD control bits for DFM Byte Read operation
-                  NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
-
-              #endif
-          #ENDIF
+       #if ChipSubFamily = ChipFamily18FxxQ41
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
+        NVMADRU = 0x38
+        //Set the NVMCMD control bits for DFM Byte Read operation
+        NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
        #ENDIF
 
+       #if ChipSubFamily = ChipFamily18FxxQ10
+       'Select DATA EE section (0x310000- 0x3103FF) for ChipFamily18FxxQ10
+        NVMADRU = 0x31
+       #ENDIF
+
+       NVMADRH =SysEEAddress_h
+       NVMADRL =SysEEAddress
+       NVMDATL = EEData
 
     #ENDIF
 
@@ -378,18 +367,22 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     #endif
 
     GIE = 0
-    #if var(NVMCON2)
+    #IFNDEF VAR(ChipMemorylock)    'ChipMemorylock defined in .DAT
       NVMCON2 = 0x55
       NVMCON2 = 0xAA
-    #endif
+    #ENDIF
 
-    #if var(ChipFamily18FxxQ41)
-      NVMLOCK = 0x55
-      NVMLOCK = 0xAA
-      GO_NVMCON0 =1
-      wait while GO_NVMCON0 = 1
-      NVMCON1 = NVMCON1 and 0XF8
-    #endif
+    #IFDEF VAR(ChipMemorylock)
+      ChipMemorylock = 0x55
+      ChipMemorylock = 0xAA
+
+      #If bit(GO_NVMCON0)
+          GO_NVMCON0 =1
+          wait while GO_NVMCON0 = 1
+          NVMCON1 = NVMCON1 and 0XF8
+      #Endif
+
+    #ENDIF
 
     #if bit(WR)
       WR = 1
@@ -403,6 +396,7 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
     #if bit(WR)
         wait while WR = 1
     #endif
+
     #if bit(WREN)
         WREN= 0b'0'
     #endif
@@ -420,13 +414,11 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
         #endif
     #ENDIF
 
-     #IFDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
-      #Ifdef Var(NVMCON1)
-         NVMCON1.0 = NVMCON1_0_State
-         NVMCON1.1 = NVMCON1_1_State
-         NVMCON1.2 = NVMCON1_2_State
-      #endif
-     #ENDIF
+    #IFDEF VAR(NVMADRU)  'assumes therefore 18fxxQxx series at 1/1/2021
+       NVMCON1.0 = NVMCON1_0_State
+       NVMCON1.1 = NVMCON1_1_State
+       NVMCON1.2 = NVMCON1_2_State
+    #endif
 
     'Restore interrupt to initial  State
     GIE = IntState
@@ -478,9 +470,21 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
 
 
   #IFDEF VAR(NVMADRU)
-     #IFDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
-     'Select DATA EE section (0x380000 - 0x3803FF)
-      NVMADRU = 0x38
+       #if ChipSubFamily = ChipFamily18FxxQ43
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ43
+        NVMADRU = 0x38
+       #ENDIF
+
+       #if ChipSubFamily =  ChipFamily18FxxQ41
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
+        NVMADRU = 0x38
+       #ENDIF
+
+       #if ChipSubFamily = ChipFamily18FxxQ10
+       'Select DATA EE section (0x310000- 0x3103FF) for ChipFamily18FxxQ10
+        NVMADRU = 0x31
+       #ENDIF
+
       NVMADRH =SysEEAddress_h
       NVMADRL =SysEEAddress
       RD = 1
@@ -489,35 +493,6 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
       NOP
       NOP
       EEDataValue = NVMDATL
-     #ENDIF
-
-     #IFNDEF Oneof(CHIP_18F25Q43,CHIP_18F26Q43,CHIP_18F27Q43,CHIP_18F45Q43,CHIP_18F46Q43,CHIP_18F47Q43,CHIP_18F55Q43,CHIP_18F56Q43,CHIP_18F57Q43)
-       #IFNDEF ChipFamily18FxxQ41
-         'Select DATA EE section (0x310000 - 0x3100FF)
-          NVMADRU = 0x31
-          NVMADRH =SysEEAddress_h
-          NVMADRL =SysEEAddress
-          RD = 1
-          NOP     ' NOPs may be required for latency at high frequencies
-          NOP
-          NOP
-          NOP
-          EEDataValue = NVMDATL
-       #ENDIF
-     #ENDIF
-
-     #IFDEF ChipFamily18FxxQ41
-        NVMADRU = 0x38
-        NVMADRH =SysEEAddress_h
-        NVMADRL =SysEEAddress
-
-        //Set the NVMCMD control bits for DFM Byte Read operation
-        NVMCON1 = NVMCON1 and 0XF8 ' clear bits 2,1 and0
-        GO_NVMCON0  = 1
-        EEDataValue = NVMDATL
-
-     #ENDIF
-
   #ENDIF
 
   #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
