@@ -34,6 +34,9 @@ Pins=40
 'This constant is exposed as ChipFamily
 Family=14
 
+'This constant is exposed as ChipSubFamily
+SubFamily=14000
+
 'This constant is exposed as ChipConfWords
 ConfigWords=2
 
