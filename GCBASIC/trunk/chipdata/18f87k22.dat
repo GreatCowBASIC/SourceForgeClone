@@ -34,6 +34,9 @@ Pins=80
 'This constant is exposed as ChipFamily
 Family=16
 
+'This constant is exposed as ChipSubFamily
+SubFamily=16000
+
 'This constant is exposed as ChipPSP
 PSP=1
 

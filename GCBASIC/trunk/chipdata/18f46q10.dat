@@ -34,6 +34,12 @@ Pins=40
 'This constant is exposed as ChipFamily
 Family=16
 
+'This constant is exposed as ChipSubFamily
+SubFamily=16100
+
+'This constant is exposed as ChipMemorylock
+MemoryLock=NVMCON2
+
 'This constant is exposed as ChipPSP
 PSP=0
 
