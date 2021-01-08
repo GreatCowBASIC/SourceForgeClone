@@ -1009,6 +1009,14 @@ SUB PreProcessor
       'Load line
       IF T = 0 Then
 
+        IF INSTR(DataSource, "DELAY_MS") <> 0 Then
+          LogError Message("SynErr"), ";?F" + Str(RF) + "L" + Str(LC) + "?"
+        END IF
+        IF INSTR(DataSource, "DELAY_US") <> 0 Then
+          LogError Message("SynErr"), ";?F" + Str(RF) + "L" + Str(LC) + "?"
+        END IF
+
+
         'Convert single-line IFs to multiple line
         IF INSTR(DataSource, "IF") <> 0 AND INSTR(DataSource, "THEN") <> 0 AND LEN(DataSource) > INSTR(DataSource, "THEN") + 3 THEN
           Do While InStr(DataSource, "THEN ") <> 0: Replace DataSource, "THEN ", "THEN: ": Loop
@@ -2303,6 +2311,23 @@ Sub TidyInputSource (CompSub As SubType Pointer)
         CurrLine->Value = Left(InLine, Len(InLine) - 12) + " L" + Origin
       End If
     End If
+
+'    'Replace delay_ms
+'    IF INSTR(UCASE(CurrLine->Value), "DELAY_MS" ) <> 0 AND INSTR(CurrLine->Value, ";?F") <> 0 then
+'        replace(CurrLine->Value," ","")
+'        replace(CurrLine->Value,"("," ")
+'        replace(CurrLine->Value,")"," ms")
+'        replace(CurrLine->Value,"DELAY_MS","WAIT")
+'    End If
+'
+'    'Replace delay_us
+'    IF INSTR(UCASE(CurrLine->Value), "DELAY_US" ) <> 0 AND INSTR(CurrLine->Value, ";?F") <> 0 then
+'        replace(CurrLine->Value," ","")
+'        replace(CurrLine->Value,"("," ")
+'        replace(CurrLine->Value,")"," us")
+'        replace(CurrLine->Value,"DELAY_US","WAIT")
+'    End If
+
 
     'Replace ++, --, +=, -=
     If INSTR(CurrLine->Value, "++") <> 0 THEN
