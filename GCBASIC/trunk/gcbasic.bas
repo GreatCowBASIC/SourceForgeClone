@@ -573,13 +573,14 @@ Declare Sub WaitForKeyOrTimeout
 DECLARE Function WholeINSTR (DataIn As String, FindIn As String, SearchAgain As Integer = -1) As Integer
 Declare Function WholeInstrLoc(DataSource As String, FindTemp As String) As Integer
 DECLARE SUB WholeReplace (DataVar As String, Find As String, Rep As String)
+DECLARE Sub StringSplit(Text As String, Delim As String = " ", Count As Long = -1, Ret() As String)
 
 'Initialise
 'Misc Vars
 DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue, ChipMinimumBankSelect
+DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, ChipSubFamily, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue, ChipMinimumBankSelect
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, UserCodeOnlyEnabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
@@ -662,6 +663,11 @@ Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams, PrgName
 Dim Shared As ExternalTool Pointer AsmTool, PrgTool
 Dim Shared As String CompReportFormat
 
+'Config correct code
+Dim Shared as string adaptedConfigLine
+Dim Shared as string configarray()
+Dim Shared as Integer configarraycounter
+
 #Define DISABLEOPTIMISATION "f122 jmp"
 
 #Define MAX_OUTPUT_MESSAGES 200
@@ -671,6 +677,13 @@ Dim Shared As Integer OutMessages, ErrorsFound
 Dim Shared As String UserDefineStartLabel
 
 Dim As Integer CD, T, PD
+
+
+const   ChipFamily18FxxQ10 as integer = 16100
+const   ChipFamily18FxxQ43 as integer = 16101
+const   ChipFamily18FxxQ41 as integer = 16102
+const   ChipFamily18FxxK42 as integer = 16103
+const   ChipFamily18FxxK40 as integer = 16104
 
 'Other GCBASIC source files
 #include "utils.bi"
@@ -690,7 +703,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-01-06"
+Version = "0.98.<<>> 2021-01-07"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -14829,7 +14842,7 @@ SUB ReadChipData
         Case "pins": ChipPins = Val(TempData)
         Case "family": ChipFamily = Val(TempData)
         Case "familyvariant": ChipFamilyVariant = Val(TempData)
-
+        Case "subfamily": ChipSubFamily = Val(TempData)
         Case "configwords": ConfWords = VAL(TempData)
         Case "psp": PSP = VAL(TempData)
         Case "maxaddress": MemSize = VAL(TempData)
@@ -15793,8 +15806,24 @@ Sub WriteAssembly
 
     CurrLine = ChipConfigCode->CodeList->Next
     Do While CurrLine <> 0
-      Print #1, CurrLine->Value
-      CurrLine = CurrLine->Next
+      If len(CurrLine->Value) < 196 then
+          Print #1, CurrLine->Value
+          CurrLine = CurrLine->Next
+      else
+          'export CONFIG  onto on line per entry to stop MPASMx from crashing!
+          adaptedConfigLine = CurrLine->Value
+          if left(trim(adaptedConfigLine), 6) = "CONFIG" then
+              'must be a long 18f config line
+              replace ( adaptedConfigLine, "CONFIG ","")
+              StringSplit ( adaptedConfigLine, ",",-1,configarray() )
+              for configarraycounter = 0 to ubound(configarray)
+                print #1, " CONFIG "+configarray(configarraycounter )
+              next
+          else
+              Print #1, CurrLine->Value
+          end if
+          CurrLine = CurrLine->Next
+      End if
     Loop
 
   ElseIf ModeAVR Then
@@ -16810,13 +16839,18 @@ Sub MergeSubroutines
             CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (data memory)")
             CurrLine = LinkedListInsert(CurrLine, " ORG 0xF000")
           ElseIf ChipFamily = 16 Then
-            If ( Instr( UCase(ChipName) , "Q43") <> 0 )  then
+            If ( ChipSubFamily = ChipFamily18FxxQ43  )  then
               CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxQ43 EEPROM Address 0x380000)")
               CurrLine = LinkedListInsert(CurrLine, " ORG 0x380000")
-            ElseIf ( Instr( UCase(ChipName) , "Q41") <> 0 )  then
+            ElseIf ( ChipSubFamily = ChipFamily18FxxQ41 )  then
               CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxQ41 EEPROM Address 0x380000)")
               CurrLine = LinkedListInsert(CurrLine, " ORG 0x380000")
-
+            ElseIf ( ChipSubFamily = ChipFamily18FxxK40  )  then
+              CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxK40 EEPROM Address 0x310000)")
+              CurrLine = LinkedListInsert(CurrLine, " ORG 0x310000")
+            ElseIf ( ChipSubFamily = ChipFamily18FxxQ10  )  then
+              CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxQ10 EEPROM Address 0x310000)")
+              CurrLine = LinkedListInsert(CurrLine, " ORG 0x310000")
             ElseIf ChipFamilyVariant = 1 then
               CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamilyVariant EEPROM Address 0x310000)")
               CurrLine = LinkedListInsert(CurrLine, " ORG 0x310000")
