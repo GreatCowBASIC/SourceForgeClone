@@ -658,10 +658,12 @@ Dim Shared As String Star80
 
 Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION, ChipProgrammerName
 Dim Shared As String ChipOscSource
-Dim Shared As String FI, OFI, HFI, ID, Version, ProgDir, CLD, LabelEnd
+Dim Shared As String AFI, FI, OFI, HFI, ID, Version, ProgDir, CLD, LabelEnd
 Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams, PrgName
 Dim Shared As ExternalTool Pointer AsmTool, PrgTool
 Dim Shared As String CompReportFormat
+
+Dim Shared As Integer AFISupport = 0
 
 'Config correct code
 Dim Shared as string adaptedConfigLine
@@ -12721,6 +12723,10 @@ SUB InitCompiler
       ShowBlock "License"
       END
 
+    'Suppoprt PIC-AS
+    ElseIf ParamUpper = "/AS" Or ParamUpper = "-AS" Then
+      AFISupport = 1
+
     'Pause on errors?
     ElseIf ParamUpper = "/NP" Or ParamUpper = "-NP" Then
       PauseOnErr = 0
@@ -13142,7 +13148,11 @@ SUB InitCompiler
     For CD = LEN(OFI) TO 1 STEP -1
       IF Mid(OFI, CD, 1) = "." THEN OFI = Left(OFI, CD - 1): EXIT FOR
     Next
+
+    AFI = OFI + ".S"
     OFI = OFI + ".asm"
+
+
   Else
     FlashOnly = 0
   END IF
@@ -15787,14 +15797,40 @@ Sub WriteAssembly
   End if
   On Error goto 0
 
-  PRINT #1, ";Program compiled by Great Cow BASIC (" + Version + ")"
+  if AFISupport = 1 then
+      On error goto ASLocked
+      OPEN AFI FOR OUTPUT AS #2
+      If err <> 0 then
+          ASLocked:
+          LogError "AS File locked/open error. Cannot create output AS", ""
+          ErrorsFound = -1
+          exit Sub
+      End if
+      On Error goto 0
+  Else
+      Kill AFI
+  End if
+
+  ' ASM file
+  PRINT #1, ";Program compiled by Great Cow BASIC (" + Version + ") for Microchip MPASM"
   Print #1, ";Need help? See the GCBASIC forums at http://sourceforge.net/projects/gcbasic/forums,"
   Print #1, ";check the documentation or email w_cholmondeley at users dot sourceforge dot net."
   Print #1, ""
   PRINT #1, Star80
   PRINT #1, ""
 
+  if AFISupport = 1 then
+      ' AS file
+      PRINT #2, ";Program compiled by Great Cow BASIC (" + Version + ") for Microchip PIC-AS"
+      Print #2, ";Need help? See the GCBASIC forums at http://sourceforge.net/projects/gcbasic/forums,"
+      Print #2, ";check the documentation or email evan+picas at anobium  dot co dot uk."
+      Print #2, ""
+      PRINT #2, Star80
+      PRINT #2, ""
+  End if
+
   If ModePIC Then
+    'asm
     PRINT #1, ";Set up the assembler options (Chip type, clock source, other bits and pieces)"
     PRINT #1, " LIST p=" + ChipName + ", r=DEC"
     'Workaround for 16C5x chips
@@ -15804,13 +15840,40 @@ Sub WriteAssembly
       PRINT #1, "#include <P" + ChipName + ".inc>"
     End If
 
+    if AFISupport = 1 then
+        'as
+        PRINT #2, ""
+        PRINT #2, ";Set up the assembler options (Chip type, clock source, other bits and pieces)"
+        PRINT #2, " PROCESSOR   " + ChipName
+        PRINT #2, " PAGEWIDTH   132"
+        PRINT #2, " RADIX       DEC"
+        PRINT #2, ""
+        PRINT #2, " #include <xc.inc>"
+        PRINT #2, ""
+
+            '    PRINT #2, "PSECT   Por_Vec,global,class=CODE,delta=2"
+            '    PRINT #2, "    global  resetVec"
+            '    PRINT #2, "resetVec:"
+            '    PRINT #2, "    PAGESEL Start"
+            '    PRINT #2, "    goto    Start"
+            '    PRINT #2, "Start:"
+            '    PRINT #2, "    goto Start"
+                'END OF AS ASSESSMENT
+    End if
+
     CurrLine = ChipConfigCode->CodeList->Next
+    'Publish CONFIG for PIC
     Do While CurrLine <> 0
+      'Publish ASM
       If len(CurrLine->Value) < 196 then
+          'Print line direct to ASM and S
           Print #1, CurrLine->Value
+          if AFISupport = 1 then Print #2, CurrLine->Value
+
           CurrLine = CurrLine->Next
       else
           'export CONFIG  onto on line per entry to stop MPASMx from crashing!
+          'Print multiple lines to ASM and S
           adaptedConfigLine = CurrLine->Value
           if left(trim(adaptedConfigLine), 6) = "CONFIG" then
               'must be a long 18f config line
@@ -15818,12 +15881,18 @@ Sub WriteAssembly
               StringSplit ( adaptedConfigLine, ",",-1,configarray() )
               for configarraycounter = 0 to ubound(configarray)
                 print #1, " CONFIG "+configarray(configarraycounter )
+                if AFISupport = 1 then print #2, " CONFIG "+configarray(configarraycounter )
               next
           else
+              
               Print #1, CurrLine->Value
+              if AFISupport = 1 then Print #2, CurrLine->Value
           end if
+
           CurrLine = CurrLine->Next
+
       End if
+
     Loop
 
   ElseIf ModeAVR Then
@@ -15937,6 +16006,21 @@ Sub WriteAssembly
   PRINT #1, ""
   If ModePIC Then PRINT #1, " END"
   CLOSE #1
+
+  If ModePIC Then
+      if AFISupport = 1 then
+        PRINT #2, "resetVec:"
+
+        PRINT #2, ";"
+        PRINT #2, "; Declare Power-On-Reset entry point"
+        PRINT #2, ";"
+        PRINT #2, "    END     resetVec"
+        CLOSE #2
+
+      End if
+  End if
+
+
 End Sub
 
 Sub WriteCompilationReport
