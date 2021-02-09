@@ -1134,6 +1134,43 @@ Function GetWholeSFR(BitName As String) As String
   Return UCASE(BitName)
 End Function
 
+
+Function GetSFRBitValue(BitName As String) As String
+  Dim As SysVarType Pointer FoundVar
+  Dim As VariableType Pointer FoundUserVar
+
+  'Find SFR var bit
+  FoundVar = HashMapGet(SysVarBits, UCase(BitName))
+  If FoundVar <> 0 Then
+    Return UCASE(str(FoundVar->Location))
+  End If
+
+  'Also deal with bit variables (which are all stored in main)
+  FoundUserVar = HashMapGet(@(Subroutine(0)->Variables), BitName)
+  If FoundUserVar <> 0 Then
+    Return UCASE(FoundUserVar->BitVarLocation)
+  End If
+
+  Return UCASE(BitName)
+End Function
+
+
+Function GetReversePICASIncFileLookupValue( address As integer ) As String
+  Dim as integer searchnow
+
+  'can be improved - slow as this searches all the array until it finds something
+  for searchnow = 0 to ubound(ReverseIncFileLookup)
+    if ReverseIncFileLookup( searchnow ).NumVal =  address then
+        Return ReverseIncFileLookup( searchnow ).Value
+    end if
+  next
+
+  'this function will NOT find aliases
+  Return ""
+
+End Function
+
+
 Function HasSFR(SFRName As String) As Integer
   Dim As String TidiedName
 
