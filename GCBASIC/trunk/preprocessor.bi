@@ -222,6 +222,7 @@ Sub PrepareBuiltIn
   SBC += 1
   Subroutine(SBC) = NewSubroutine("Delay_US")
   CurrPos = Subroutine(SBC)->CodeStart
+  GetMetaData(CurrPos)->IsLabel = -1
 
   If ModePIC Then
     'Each nop takes .2 us on 20 MHz chip
@@ -241,12 +242,16 @@ Sub PrepareBuiltIn
     CurrPos = LinkedListInsert(CurrPos, " btfsc STATUS,Z")
     CurrPos = LinkedListInsert(CurrPos, " goto DUS_END")
     CurrPos = LinkedListInsert(CurrPos, "DUS_START")
+    GetMetaData(CurrPos)->IsLabel = -1
+
     For CD = 1 TO L
       CurrPos = LinkedListInsert(CurrPos, " nop")
     Next
     CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempUS, F")
     CurrPos = LinkedListInsert(CurrPos, " goto DUS_START")
     CurrPos = LinkedListInsert(CurrPos, "DUS_END")
+    GetMetaData(CurrPos)->IsLabel = -1
+
     CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempUS_H, F")
     CurrPos = LinkedListInsert(CurrPos, " goto DUS_START")
   ElseIf ModeAVR Then
@@ -271,9 +276,13 @@ Sub PrepareBuiltIn
   SBC = SBC + 1
   Subroutine(SBC) = NewSubroutine("Delay_10US")
   CurrPos = Subroutine(SBC)->CodeStart
+  GetMetaData(CurrPos)->IsLabel = -1
+
   If ModePIC Then
 
     CurrPos = LinkedListInsert(CurrPos, "D10US_START")
+    GetMetaData(CurrPos)->IsLabel = -1
+
     'Need to delay for 10 us
     'L = number of cycles to waste
     '  = cycles in 10 us, minus cycles at start and end of loop
@@ -298,6 +307,7 @@ Sub PrepareBuiltIn
   SBC += 1
   Subroutine(SBC) = NewSubroutine("Delay_MS")
   CurrPos = Subroutine(SBC)->CodeStart
+  GetMetaData(CurrPos)->IsLabel = -1
 
   Dim As Integer D1, D2, BestD1, BestD2, ThisTime, ReqCycles, DiffFromReq, BestDiff
 
@@ -333,10 +343,13 @@ Sub PrepareBuiltIn
 
     CurrPos = LinkedListInsert(CurrPos, " incf SysWaitTempMS_H, F")
     CurrPos = LinkedListInsert(CurrPos, "DMS_START")
+    GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP2 = " + OuterLoop)
     CurrPos = LinkedListInsert(CurrPos, "DMS_OUTER")
+    GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP = " + InnerLoop)
     CurrPos = LinkedListInsert(CurrPos, "DMS_INNER")
+    GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP, F")
     CurrPos = LinkedListInsert(CurrPos, " goto DMS_INNER")
     CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP2, F")
@@ -394,6 +407,8 @@ Sub PrepareBuiltIn
   SBC += 1
   Subroutine(SBC) = NewSubroutine("Delay_10MS")
   CurrPos = Subroutine(SBC)->CodeStart
+  GetMetaData(CurrPos)->IsLabel = -1
+
   If ModePIC Then
     CurrPos = LinkedListInsert(CurrPos, "D10MS_START")
     CurrPos = LinkedListInsert(CurrPos, "SysWaitTempMS = 10")
@@ -412,10 +427,14 @@ Sub PrepareBuiltIn
   SBC += 1
   Subroutine(SBC) = NewSubroutine("Delay_S")
   CurrPos = Subroutine(SBC)->CodeStart
+  GetMetaData(CurrPos)->IsLabel = -1
+
   If ModePIC Then
     CurrPos = LinkedListInsert(CurrPos, "DS_START")
+    GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, "SysWaitTempMS = 1000")
     CurrPos = LinkedListInsert(CurrPos, "Delay_MS")
+    GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempS, F")
     CurrPos = LinkedListInsert(CurrPos, " goto DS_START")
   ElseIf ModeAVR Then
@@ -430,6 +449,8 @@ Sub PrepareBuiltIn
   SBC += 1
   Subroutine(SBC) = NewSubroutine("Delay_M")
   CurrPos = Subroutine(SBC)->CodeStart
+  GetMetaData(CurrPos)->IsLabel = -1
+
   If ModePIC Then
     CurrPos = LinkedListInsert(CurrPos, "DMIN_START")
     CurrPos = LinkedListInsert(CurrPos, "SysWaitTempMS = 60000")
@@ -448,6 +469,8 @@ Sub PrepareBuiltIn
   SBC += 1
   Subroutine(SBC) = NewSubroutine("Delay_H")
   CurrPos = Subroutine(SBC)->CodeStart
+  GetMetaData(CurrPos)->IsLabel = -1
+
   If ModePIC Then
     CurrPos = LinkedListInsert(CurrPos, "DHOUR_START")
     CurrPos = LinkedListInsert(CurrPos, "SysWaitTempM = 60")
@@ -669,6 +692,8 @@ SUB PreProcessor
   'Create Main subroutine
   Subroutine(0) = NewSubroutine("Main")
   MainCurrPos = Subroutine(0)->CodeStart
+  GetMetaData(MainCurrPos)->IsLabel = -1
+
   Subroutine(0)->Required = -1 'Mark as required so that it gets compiled
 
   'Add any unconverted files to file list
@@ -1573,6 +1598,12 @@ LoadNextFile:
 
   'Prepare programmer, need to know chip model and need to do this before checking config
   PrepareProgrammer
+
+  'Get chip PIC-AS data
+  IF AFISupport = 1  and ModePIC Then
+      IF VBS = 1 THEN PRINT SPC(5); Message("ReadPICASChipData")
+      ReadPICASChipData
+  END IF
 
   'Force exit at this point if compilation is going to be skipped
   If FlashOnly Then

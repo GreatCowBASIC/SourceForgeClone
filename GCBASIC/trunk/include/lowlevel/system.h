@@ -72,6 +72,8 @@
 '    21122020-  Add PFMRead for Q43 chip family.
 '    03112020 - Improved clear down RAM for Family122 in InitSys
 '    05012021 - Add ChipSubFamily constants
+'    02022021-  Revised PFMread and added PFMWrite
+
 
 'Constants
 #define ON 1
@@ -3657,7 +3659,11 @@ Function PFMRead(in _PFM_ABS_ADDR as long ) as Byte
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
+          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+
+          ' Setup TBL pointer
+          _TBL_ABS_ADDR = NVMADRL
           TBLRD*+
           PFMRead = TABLAT
       #Endif
@@ -3668,7 +3674,11 @@ Function PFMReadWord(in _PFM_ABS_ADDR as long ) as word
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
+          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+
+          ' Setup TBL pointer
+          _TBL_ABS_ADDR = _PFM_ABS_ADDR
           TBLRD*+
           PFMReadWord = TABLAT
           TBLRD*+
@@ -3682,7 +3692,11 @@ Sub PFMRead(in _PFM_ABS_ADDR as long, out _PFM_DataByte as byte )
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
+          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+
+          ' Setup TBL pointer
+          _TBL_ABS_ADDR = NVMADRL
           TBLRD*+
           _PFM_DataByte = TABLAT
 
@@ -3694,12 +3708,153 @@ Sub PFMRead(in _PFM_ABS_ADDR as long, out _PFM_DataByte as word )
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+          Dim _PFM_ABS_ADDR as Long Alias _dummy,  NVMADRU, NVMADRH, NVMADRL
+          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+
+          ' Setup TBL pointer
+          _TBL_ABS_ADDR = NVMADRL
           TBLRD*+
           _PFM_DataByte = TABLAT
           TBLRD*+
           _PFM_DataByte_h = TABLAT
 
       #Endif
+
+End Sub
+
+
+
+Sub PFMWrite (in _PFM_ADDR as long , in _PFM_DataByte as Byte)
+    ; Tested on 18F16Q41
+
+    Dim _PFM_BlockNum, _PFM_Offset as long
+
+    Dim _PFM_Buffer(SAF_ROWSIZE_BYTES)
+
+     ; Writes a single byte of data [_PFM_PFM_DataOut]
+     ; at relative location [_PFM_Address] between 0 and extent of page
+     ;
+     ; The existing data in the row of [_PFM_Address] is preserved
+
+      ; Calculate block number
+      _PFM_BlockNum = _PFM_ADDR / SAF_ROWSIZE_BYTES
+
+      ; Calculate offset in block/row
+      _PFM_Offset = _PFM_Addr % SAF_ROWSIZE_BYTES
+
+      ; Save data previously stored in row#
+      _PFMReadBlock(_PFM_BlockNum, _PFM_Buffer(), SAF_ROWSIZE_BYTES)
+
+      ; Update buffer with DataValue at offset
+      _PFM_Buffer(_PFM_Offset + 1) =  _PFM_DataByte
+
+      ; Write back the updated row buffer to  PFMM
+      _PFMwriteBlock(_PFM_BlockNum, _PFM_Buffer(), SAF_ROWSIZE_BYTES)
+
+
+End sub
+
+
+Sub PFMWrite (in _PFM_ADDR as long , in _PFM_DataWord as Word )
+    ; Tested on 18F16Q41
+
+    Dim _PFM_BlockNum, _PFM_Offset as long
+
+    Dim _PFM_Buffer(SAF_ROWSIZE_BYTES)
+
+     ; Writes a Word of data [_PFM_PFM_DataOut]
+     ; at relative location [_PFM_Address] between 0 and extent of page
+     ;
+     ; The existing data in the row of [_PFM_Address] is preserved
+
+      ; Calculate block number
+      _PFM_BlockNum = _PFM_ADDR / SAF_ROWSIZE_BYTES
+
+      ; Calculate offset in block/row
+      _PFM_Offset = _PFM_Addr % SAF_ROWSIZE_BYTES
+
+      ; Save data previously stored in row#
+      _PFMReadBlock(_PFM_BlockNum, _PFM_Buffer(), SAF_ROWSIZE_BYTES)
+
+      ; Update buffer with DataValue at offset
+      _PFM_Buffer(_PFM_Offset + 1) =  _PFM_DataWord
+      _PFM_Buffer(_PFM_Offset + 2) =  _PFM_DataWord_H
+
+      ; Write back the updated row buffer to  PFMM
+      _PFMwriteBlock(_PFM_BlockNum, _PFM_Buffer(), SAF_ROWSIZE_BYTES)
+
+
+End sub
+
+
+Sub _PFMReadBlock ( in _PFM_BlockNum as Word, Out _PFM_Buffer(), Optional in _PFM_Count = HEF_ROWSIZE_BYTES )
+    ; Tested on 18F16Q41
+
+      Dim _PFM_Count as word
+      Dim _PFM_LoopCounter as word
+
+      Dim _dummy as byte
+      Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
+      Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+
+      ; Set memory address
+      _PFM_ABS_ADDR = _PFM_BlockNum * SAF_ROWSIZE_BYTES
+      _TBL_ABS_ADDR = _PFM_ABS_ADDR
+
+      ; Read memory to buffer
+      For _PFM_LoopCounter = 1 to _PFM_Count
+          TBLRD*+
+          _PFM_Buffer( _PFM_LoopCounter  ) = TABLAT
+      next
+
+End Sub
+
+Sub _PFMwriteBlock ( in _PFM_BlockNum as Word, Out _PFM_Buffer(), Optional in _PFM_Count = HEF_ROWSIZE_BYTES )
+    ; Tested on 18F16Q41
+
+      Dim _PFM_Count as word
+      Dim _PFM_LoopCounter as word
+
+      Dim _GIE_SAVE, _dummy as byte
+      Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
+      Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
+
+      ; Set memory address for erase operation
+      _PFM_ABS_ADDR =  _PFM_BlockNum * SAF_ROWSIZE_BYTES
+
+      ' Set the NVMCMD control bits for Erase operation
+      NVMCON1 = NVMCON1 and 0XF8 or 0x06
+
+      _GIE_SAVE = GIE    'Save interrupt
+      GIE = 0           'disable interrupts
+
+      ChipMemorylock = 0x55
+      ChipMemorylock = 0xAA
+
+      GO_NVMCON0 = 1
+      wait while GO_NVMCON0 = 1
+
+      ; Set memory address
+      _TBL_ABS_ADDR = _PFM_ABS_ADDR
+      For _PFM_LoopCounter = 1 to _PFM_Count
+          TABLAT = _PFM_Buffer( _PFM_LoopCounter  )
+          TBLWT*+
+      next
+
+      ' Set the NVMCMD control bits for Write Page operation
+      NVMCON1 = NVMCON1 and 0XF8 or 0x05
+
+      _GIE_SAVE = GIE    'Save interrupt
+      GIE = 0           'disable interrupts
+
+      ChipMemorylock = 0x55
+      ChipMemorylock = 0xAA
+
+      GO_NVMCON0 = 1
+      wait while GO_NVMCON0 = 1
+
+      'Set the NVMCMD control bits for Word Read operation to avoid accidental writes
+      NVMCON1 = NVMCON1 and 0XF8
+      GIE = _GIE_SAVE     'restore saved interrupt
 
 End Sub

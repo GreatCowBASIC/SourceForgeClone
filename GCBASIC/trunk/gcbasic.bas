@@ -18,6 +18,14 @@
 'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
+Type PICASInc
+  Value as String
+  NumVal as Integer
+End Type
+
+Dim Shared ReverseIncFileLookup ( 1000) as PICASInc
+
+
 'Array sizes
 #Define MAX_PROG_PAGES 20
 'Number of buckets to use in hash maps - increasing makes operations faster but uses more RAM
@@ -51,6 +59,9 @@ Type ProgLineMeta
 
   AsmCommand As Integer 'Index of asm instruction on line. -1 if none.
   LineSize As Integer 'Size of line in words.
+
+  isLabel as Integer
+  RawConfig as string
 
 End Type
 
@@ -380,6 +391,7 @@ Declare Sub CreateReservedWordsList
 Declare Sub DisplayProgram
 Declare Sub DisplayCallTree
 Declare Sub ExtAssembler
+Declare Sub PICASAssembler
 Declare Sub ExtractParameters(ByRef NewSubCall As SubCallType, CalledSubName As String, CallParams As String, Origin As String)
 Declare Sub FinalOptimise
 Declare Sub FindAssembly (CompSub As SubType Pointer)
@@ -449,6 +461,7 @@ DECLARE SUB ProcessArrays (CompSub As SubType Pointer)
 DECLARE SUB ProcessWords ()
 Declare Function PutInRegister(ByRef OutList As LinkedListElement Pointer, SourceValue As String, RegType As String, Origin As String) As String
 DECLARE SUB ReadChipData
+DECLARE SUB ReadPICASChipData
 Declare Sub ReadOptions(OptionsIn As String)
 Declare Sub RecordSubCall(CompSub As SubType Pointer, CalledSub As SubType Pointer)
 Declare Function ReplaceFnNames(InName As String) As String
@@ -476,7 +489,7 @@ DECLARE SUB WriteErrorLog
 'Subs in assembly.bi
 Declare Sub AddAsmSymbol(SymName As String, SymValue As String)
 Declare Sub AsmOptimiser (CompSub As SubType Pointer)
-DECLARE FUNCTION AsmTidy (DataSource As String) As String
+DECLARE FUNCTION AsmTidy (DataSource As String, StoredGCASM as integer = -1 ) As String
 DECLARE SUB AssembleProgram
 Declare Sub BuildAsmSymbolTable
 Declare Function GetConfigBaseLoc As Integer
@@ -491,10 +504,12 @@ Declare Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Intege
 DECLARE SUB AllocateRAM
 Declare Function CalcAliasLoc(LocationIn As String) As Integer
 Declare Function GetWholeSFR(BitName As String) As String
+Declare Function GetSFRBitValue(BitName As String) As String
 Declare Function HasSFR(SFRName As String) As Integer
 Declare Function HasSFRBit(BitName As String) As Integer
 Declare Sub MakeSFR (UserVar As String, SFRAddress As Integer)
 Declare Sub RequestVariable(VarName As String, CurrSub As SubType Pointer)
+Declare Function GetReversePICASIncFileLookupValue( address As integer ) As String
 
 'Subs in preprocessor.bi
 Declare Sub AddConstant(ConstName As String, ConstValue As String, ConstStartup As String = "", ReplaceExisting As Integer = -1)
@@ -594,7 +609,7 @@ Dim Shared As Integer PauseTimeout, OldSBC, ReserveHighProg, HighTBLPTRBytes
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 Dim Shared As Double DebugTime
-
+Dim Shared As String ChipPICASDataFile
 'Assembler vars
 DIM SHARED As Integer ToAsmSymbols
 
@@ -655,6 +670,7 @@ Dim Shared GlitchFreeOutputs As HashMap Pointer
 Dim Shared ReservedWords( RESERVED_WORDS ) as String
 
 Dim Shared As String Star80
+Dim Shared As String Pad32
 
 Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION, ChipProgrammerName
 Dim Shared As String ChipOscSource
@@ -664,11 +680,15 @@ Dim Shared As ExternalTool Pointer AsmTool, PrgTool
 Dim Shared As String CompReportFormat
 
 Dim Shared As Integer AFISupport = 0
+Dim Shared As Integer StoredGCASM = 0
 
 'Config correct code
 Dim Shared as string adaptedConfigLine
 Dim Shared as string configarray()
 Dim Shared as Integer configarraycounter
+
+'PICAS Converter
+Dim Shared as string currentLineElements()
 
 #Define DISABLEOPTIMISATION "f122 jmp"
 
@@ -705,7 +725,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-01-07"
+Version = "0.98.<<>> 2021-02-09"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -737,6 +757,7 @@ CreateReservedWordsList()
 
 'Initialise assorted variables
 Star80 = ";********************************************************************************"
+Pad32 = "                                 "
 SysInt = 0
 IntLevel = 0
 AllowInterrupt = 0
@@ -851,21 +872,35 @@ IF Not ErrorsFound THEN
     PRINT SPC(10); Temp
   END IF
 
-  'Assemble program
-  If AsmExe <> "" Then
-    PRINT
-    PRINT Message("MakeASM")
+  If ModeAVR then
+        AFISupport = 0
+  End IF
 
-    'Internal assembler
+  If AsmExe <> "" Then
+
     IF UCase(AsmExe) = "GCASM" THEN
+      'Internal assembler
+      PRINT
+      PRINT Message("MakeASM")
       AssembleProgram
       IF Not ErrorsFound THEN PRINT Message("ASMSuccess")
 
-    'Assemble program with external assembler
-    Else
-      ExtAssembler
+    ELSEIF instr(UCase(AsmExe),"PIC-AS") > 0 THEN
 
+      PRINT
+      PRINT Message("MakeASM")
+      'AssembleProgram
+
+      PRINT Message("MakeS")
+      PICASAssembler
+      IF Not ErrorsFound THEN PRINT Message("PICASMSuccess")
+
+
+    Else
+      'Assemble program with external assembler
+      ExtAssembler
     END If
+
     AsmEndTime = Timer
     If VBS = 1 Then
       Dim Temp As String
@@ -874,49 +909,53 @@ IF Not ErrorsFound THEN
       PRINT Message("AsmTime") + Temp + Message("CompSecs")
     End If
   End If
+
+
+
+
 End If
 AsmEndTime = Timer
 
 'Download program
 DownloadProgram:
-IF ( PrgExe <> "" AND AsmExe <> "" ) AND ErrorsFound = 0 THEN
-  PRINT
-  Dim Temp As String
-  Temp = Message("SendToPIC")
-  Replace Temp, "%PrgName%", Trim(Str(PrgName))
-  PRINT Temp
-  PrgExe = ReplaceToolVariables(PrgExe, "hex",, PrgTool)
-  PrgParams = ReplaceToolVariables(PrgParams, "hex",, PrgTool)
-  IF VBS = 1 THEN PRINT SPC(5);  "Calling    : " + PrgExe
-  IF VBS = 1 THEN PRINT SPC(5);  "Parameters : " + PrgParams
-
-
-  Dim As String SaveCurrDir
-  SaveCurrDir = CurDir
-  If PrgDir <> "" Then ChDir ReplaceToolVariables(PrgDir, "hex")
-
-  ExitValue = Exec(PrgExe, PrgParams)
-
-  'Check for programmer success, should have 0 exit value
-  If ExitValue <> 0 And (LCase(PrgExe) <> "none" And LCase(Right(PrgExe, 5)) <> "\none") Then
+  IF ( PrgExe <> "" AND AsmExe <> "" ) AND ErrorsFound = 0 THEN
+    PRINT
     Dim Temp As String
-    Temp = Message("WarningProgrammerFail")
-    Replace Temp, "%status%", Trim(Str(ExitValue))
-    LogWarning Temp
-  Else
-    ExitValue = 0
-    ProgEndTime = Timer
+    Temp = Message("SendToPIC")
+    Replace Temp, "%PrgName%", Trim(Str(PrgName))
+    PRINT Temp
+    PrgExe = ReplaceToolVariables(PrgExe, "hex",, PrgTool)
+    PrgParams = ReplaceToolVariables(PrgParams, "hex",, PrgTool)
+    IF VBS = 1 THEN PRINT SPC(5);  "Calling    : " + PrgExe
+    IF VBS = 1 THEN PRINT SPC(5);  "Parameters : " + PrgParams
 
-    If VBS = 1 Then
+
+    Dim As String SaveCurrDir
+    SaveCurrDir = CurDir
+    If PrgDir <> "" Then ChDir ReplaceToolVariables(PrgDir, "hex")
+
+    ExitValue = Exec(PrgExe, PrgParams)
+
+    'Check for programmer success, should have 0 exit value
+    If ExitValue <> 0 And (LCase(PrgExe) <> "none" And LCase(Right(PrgExe, 5)) <> "\none") Then
       Dim Temp As String
-      Temp = Trim(Str(ProgEndTime - AsmEndTime))
-      IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
-      PRINT Message("ProgTime") + Temp + Message("CompSecs")
-    End If
-  End If
+      Temp = Message("WarningProgrammerFail")
+      Replace Temp, "%status%", Trim(Str(ExitValue))
+      LogWarning Temp
+    Else
+      ExitValue = 0
+      ProgEndTime = Timer
 
-  ChDir SaveCurrDir
-END If
+      If VBS = 1 Then
+        Dim Temp As String
+        Temp = Trim(Str(ProgEndTime - AsmEndTime))
+        IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
+        PRINT Message("ProgTime") + Temp + Message("CompSecs")
+      End If
+    End If
+
+    ChDir SaveCurrDir
+  END If
 ProgEndTime = Timer
 
 'Write compilation report
@@ -1558,6 +1597,7 @@ Sub AddMainEndCode
   If ModePIC Then
     If UserCodeOnlyEnabled = 0 then
         CurrPos = LinkedListInsert(CurrPos, "BASPROGRAMEND")
+        GetMetaData(CurrPos)->IsLabel = -1
         CurrPos = LinkedListInsert(CurrPos, " sleep")
         'CurrPos = LinkedListInsert(CurrPos, " goto $")
         CurrPos = LinkedListInsert(CurrPos, " goto BASPROGRAMEND")
@@ -1826,11 +1866,11 @@ Sub AddInterruptCode
     SaveVarPos = SaveVars
 
     'Search all handlers for registers
-    'When CurrVect = 0, check for Interrupt sub
+    'When CurrVect = 0, check for INTERRUPT sub
     For CurrVect = 0 To IntCount
       HandlerID = 0
       If CurrVect = 0 Then
-        HandlerID = LocationOfSub("Interrupt", "")
+        HandlerID = LocationOfSub("INTERRUPT", "")   'was capitalised
       Else
         With Interrupts(CurrVect)
           If .Handler <> "" Then
@@ -1926,10 +1966,10 @@ Sub AddInterruptCode
     'and add context restore at the end
 
     'Get interrupt sub
-    IntSubLoc = LocationOfSub("Interrupt", "")
+    IntSubLoc = LocationOfSub("INTERRUPT", "")   'was capitalised
     If IntSubLoc = 0 Then
       SBC += 1
-      Subroutine(SBC) = NewSubroutine("Interrupt")
+      Subroutine(SBC) = NewSubroutine("INTERRUPT")   'was capitalised
       IntSubLoc = SBC
       'Mark as required and compiled (then only insert asm, no BASIC allowed)
       With *Subroutine(SBC)
@@ -2019,6 +2059,8 @@ Sub AddInterruptCode
     'Add context restore code
     CurrLine = SubEnd
     CurrLine = LinkedListInsert(CurrLine, "INTERRUPTDONE")  'PIC
+    GetMetaData(Currline)->IsLabel = -1
+
     If AutoContextSave Then
       CurrLine = LinkedListInsert(CurrLine, ";Restore Context")
       If ChipFamily = 14 Or ChipFamily = 15 Then
@@ -2164,7 +2206,7 @@ Sub AddInterruptCode
     Next
 
     'Add appropriate return and context save and restore to user Interrupt routine
-    IntSubLoc = LocationOfSub("Interrupt", "")
+    IntSubLoc = LocationOfSub("INTERRUPT", "")   'was capitalised
     If IntSubLoc <> 0 Then
       'No return needed
       Subroutine(IntSubLoc)->NoReturn = -1
@@ -2624,7 +2666,8 @@ SUB CalcConfig
     'Write code
     'Single config word
     If ConfWords = 1 Then
-      LinkedListInsert(ChipConfigCode->CodeList, " __CONFIG " + OutConfig(1))
+      CodeLoc = LinkedListInsert(ChipConfigCode->CodeList, " __CONFIG " + OutConfig(1))
+      GetMetaData(CodeLoc)->RawConfig = OutConfig(1)
 
     'Multiple config words
     Else
@@ -2633,7 +2676,7 @@ SUB CalcConfig
         'Only write non-blank words
         If OutConfig(CurrWord) <> "" Then
           CodeLoc = LinkedListInsert(CodeLoc, " __CONFIG _CONFIG" + Str(CurrWord) + ", " + OutConfig(CurrWord))
-
+          GetMetaData(CodeLoc)->RawConfig = OutConfig(CurrWord)
         End If
       Next
     End If
@@ -3210,7 +3253,7 @@ Sub CompileProgram
   End With
 
   'Find Interrupt sub, if found mark as required and set UserInt flag
-  IntLoc = LocationOfSub("Interrupt", "")
+  IntLoc = LocationOfSub("INTERRUPT", "")   'was capitalised
   UserInt = 0
   If IntLoc <> 0 Then
     Subroutine(IntLoc)->Required = -1
@@ -3340,7 +3383,7 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
   CompileRepeat (CompSub)
   If EVBS Then Print Spc(15); "Compiling Select"
   CompileSelect (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Select"
+  If EVBS Then Print Spc(15); "Compiling Return"   'was Select
   CompileReturn (CompSub)
   'Compile If statements and variable assignments last
   'This allows other commands to generate IFs and assignments rather than having to produce assembly
@@ -3987,6 +4030,7 @@ FUNCTION CompileCalcCondition(OutList As CodeSection Pointer, V1 As String, Act 
   IF CalcType = "STRING" THEN SNT += "String"
 
   'Call calculation sub
+  SNT = UCase( SNT )     'added as SNT was case sensitive
   CurrLine = LinkedListInsert(CurrLine, " call " + SNT)
   RequestSub (Subroutine(SourceSub), SNT)
 
@@ -4371,6 +4415,7 @@ FUNCTION CompileCalcMult (OutList As CodeSection Pointer, V1 As String, Act As S
   IF CalcType = "DOUBLE" THEN SNT += "DOUBLE"
 
   'Call calculation sub
+  SNT = Ucase( SNT )  'added was case sensistive
   CurrLine = LinkedListInsert(CurrLine, " call " + SNT)
   RequestSub (Subroutine(SourceSub), SNT) 'Mark as used
 
@@ -5702,6 +5747,7 @@ SUB CompileDo (CompSub As SubType Pointer)
       ExitFound = 0 'Exit Do found?
       DLC = DLC + 1 'Increment do loop count
       CurrLine->Value = "SysDoLoop_S" + Str(DLC) + LabelEnd 'Add label to mark start
+      GetMetaData(Currline)->IsLabel = -1
 
       'Find exit do, loop
       LoopLoc = 0
@@ -5712,7 +5758,9 @@ SUB CompileDo (CompSub As SubType Pointer)
         IF Left(Temp, 3) = "DO " OR Temp = "DO" THEN DL = DL + 1
         IF Left(Temp, 7) = "EXIT DO" AND DL = 1 Then
           ExitFound = 1
-          If ModePIC Then FindLoop->Value = " goto SysDoLoop_E" + Str(DLC)
+          If ModePIC Then
+            FindLoop->Value = " goto SysDoLoop_E" + Str(DLC)
+          End if
           If ModeAVR Then FindLoop->Value = " rjmp SysDoLoop_E" + Str(DLC)
           If ModeZ8 Then FindLoop->Value = " jp SysDoLoop_E" + Str(DLC)
         End If
@@ -5820,6 +5868,7 @@ SUB CompileDo (CompSub As SubType Pointer)
 
         'Create label for end of loop
         LoopLoc = LinkedListInsert(LoopLoc, "SysDoLoop_E" + Str(DLC) + LabelEnd)
+        GetMetaData(LoopLoc)->IsLabel = -1
         'Delete Loop
         LinkedListDelete(OldLoopLoc)
       End IF
@@ -5983,6 +6032,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
       End If
       CurrLine = LinkedListInsert(CurrLine, "SysForLoop" + Str(FLC) + LabelEnd)
+      GetMetaData(Currline)->IsLabel = -1
       CurrLine = LinkedListInsert(CurrLine, LoopVar + "=" + LoopVar + "+" + StepValue + Origin)
 
       'End code
@@ -6052,9 +6102,11 @@ SUB CompileFor (CompSub As SubType Pointer)
             LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
           End If
           LoopLoc = LinkedListInsert(LoopLoc, "END IF" + Str(FLC) + LabelEnd)
+          GetMetaData(LoopLoc)->IsLabel = -1
         End If
 
         LoopLoc = LinkedListInsert(LoopLoc, "SysForLoopEnd" + Str(FLC) + LabelEnd)
+        GetMetaData(LoopLoc)->IsLabel = -1
       End IF
     END If
 
@@ -6080,6 +6132,7 @@ Sub CompileGoto (CompSub As SubType Pointer)
     Do While CurrLine <> 0
       IF Right(CurrLine->Value, 1) = ":" THEN
         Replace CurrLine->Value, ":", ""
+        GetMetaData(Currline)->IsLabel = -1
         FoundCount += 1
       End If
       CurrLine = CurrLine->Next
@@ -6347,6 +6400,7 @@ SUB CompileIF (CompSub As SubType Pointer)
           End If
           CurrLine->Value = L1
           CurrLine = LinkedListInsert(CurrLine, L2)
+          GetMetaData(Currline)->IsLabel = -1
         End If
 
       End If
@@ -6369,6 +6423,7 @@ SUB CompileIF (CompSub As SubType Pointer)
 
         If EndIfUsed Then
           CurrLine->Value = "ENDIF" + Str(CurrIfNo) + LabelEnd
+          GetMetaData(CurrLine)->IsLabel = -1
         Else
           CurrLine = LinkedListDelete(CurrLine)
         End If
@@ -6597,6 +6652,7 @@ SUB CompileOn (CompSub As SubType Pointer)
                     OutLine = LinkedListInsert(OutLine, " goto INTERRUPTDONE")
                     OutLine = LinkedListInsert(OutLine, "Not" + UCase(.FlagBit))
                     IntHandlerCode->CodeEnd = OutLine
+                    GetMetaData(IntHandlerCode->CodeEnd)->IsLabel = -1
                   End If
                   .Handler = OnJumpTo
                 End If
@@ -7001,6 +7057,7 @@ SUB CompileRepeat (CompSub As SubType Pointer)
         End If
 
         CurrLine = LinkedListInsert(CurrLine, "SysRepeatLoop" + Str(RPLC) + LabelEnd)
+        GetMetaData(Currline)->IsLabel = -1
       End If
 
       'Find End
@@ -7054,6 +7111,7 @@ SUB CompileRepeat (CompSub As SubType Pointer)
           FreeCalcVar RegName
         End If
         EndLoc = LinkedListInsert(EndLoc, "SysRepeatLoopEnd" + Str(RPLC) + LabelEnd)
+        GetMetaData(EndLoc)->IsLabel = -1
       End If
 
     End IF
@@ -7332,8 +7390,8 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
     Case "STRING":
       CurrLine = LinkedListInsertList(CurrLine, GenerateArrayPointerSet(Source, 0, CurrSub, Origin))
       RequestSub(CurrSub, "SysCopyString")
-      IF TC = 1 Then CurrLine = LinkedListInsert(CurrLine, " call SysCopyString")
-      IF TC > 1 Then CurrLine = LinkedListInsert(CurrLine, " call SysCopyStringPart")
+      IF TC = 1 Then CurrLine = LinkedListInsert(CurrLine, " call SYSCOPYSTRING")   'was Camelcase
+      IF TC > 1 Then CurrLine = LinkedListInsert(CurrLine, " call SYSCOPYSTRINGPART")   'was Camelcase
 
     'String const
     Case "SCONST":
@@ -7368,8 +7426,8 @@ Function CompileString (InLine As String, Origin As String) As LinkedListElement
         CurrLine = LinkedListInsert(CurrLine, " ldi SysReadA_H,high(" + SourceTable + "<<1)")
       End If
       RequestSub(CurrSub, "SysReadString")
-      If TC = 1 Then CurrLine = LinkedListInsert(CurrLine, " call SysReadString")
-      If TC > 1 Then CurrLine = LinkedListInsert(CurrLine, " call SysReadStringPart")
+      If TC = 1 Then CurrLine = LinkedListInsert(CurrLine, " call SYSREADSTRING")   'was camelcase
+      If TC > 1 Then CurrLine = LinkedListInsert(CurrLine, " call SYSREADSTRINGPART") 'was camelcase
 
     'Anything else, show error
     Case Else:
@@ -7445,6 +7503,7 @@ SUB CompileSelect (CompSub As SubType Pointer)
       SCL = 1
       CC = 0
       CurrLine = LinkedListDelete(CurrLine)
+
       SelectPos = CurrLine
       SCT = SCT + 1
 
@@ -7492,6 +7551,7 @@ SUB CompileSelect (CompSub As SubType Pointer)
 
           IF SCL = 1 THEN
             FindCase->Value = "SysSelectEnd" + Str(SCT) + LabelEnd
+            GetMetaData(FindCase)->IsLabel = -1
           END IF
           SCL = SCL - 1
 
@@ -7564,6 +7624,7 @@ SUB CompileSelect (CompSub As SubType Pointer)
           'Prepare
           If ElseCaseNo = -1 Then
             ElseCaseLabel = "SysSelectEnd" + Str(SCT)
+
           Else
             ElseCaseLabel = "SysSelect" + Str(SCT) + "Case" + Str(ElseCaseNo)
           End If
@@ -7694,17 +7755,21 @@ SUB CompileSelect (CompSub As SubType Pointer)
             FindCase = CurrCase->MetaData
             Condition = CurrCase->Value
             If CurrCase->Next = 0 Then
-              NextCaseLabel = "SysSelectEnd" + Str(SCT)
+              NextCaseLabel = "SysSelectEnd" + Str(SCT) 'seems to be for select greater than 1
             Else
               NextCaseLabel = "SysSelect" + Str(SCT) + "Case" + Str(CC + 1)
+              GetMetaData(FindCase)->IsLabel = -1
             End If
 
             If CC = 1 THEN
               FindCase->Value = "SysSelect" + Str(SCT) + "Case" + Str(CC) + LabelEnd
+              GetMetaData(FindCase)->IsLabel = -1
             Else
               If ModePIC Then
                 FindCase->Value = " goto SysSelectEnd" + Str(SCT)
+                GetMetaData(FindCase)->IsLabel = 0
                 FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC))
+                GetMetaData(FindCase)->IsLabel = -1
               ElseIf ModeAVR Then
                 FindCase->Value = " rjmp SysSelectEnd" + Str(SCT)
                 FindCase = LinkedListInsert(FindCase, "SysSelect" + Str(SCT) + "Case" + Str(CC) + ":")
@@ -8613,6 +8678,7 @@ Sub CompileTables
       If StringStore(PD).Used Then
         CurrLine = LinkedListInsert(CurrLine, "")
         CurrLine = LinkedListInsert(CurrLine, Table)
+        GetMetaData(Currline)->IsLabel = -1
         If ModePIC Then
           'Table on low/mid range chip, use retlw
           If ChipFamily <> 16 THEN
@@ -8657,11 +8723,19 @@ Sub CompileTables
           End If
           CurrLine = LinkedListInsert(CurrLine, ".DB " + Temp)
         End If
-        CurrLine = LinkedListInsert(CurrLine, "")
 
         TableSub->Required = -1
+        CurrLine = LinkedListInsert(CurrLine, "")
+
+        IF AFISupport = 1  and ModePIC Then
+          CurrLine = LinkedListInsert(CurrLine, " ALIGN 2;X3")
+        End if
+
       End If
+
     Next
+
+
   End If
 
   'Add data tables (program memory)
@@ -8688,11 +8762,15 @@ Sub CompileTables
         'Create sub for data tables
         'Need to create a table for each byte in data
         For CurrTableByte = 0 To GetTypeSize(DataTable(PD).Type) - 1
-          Table = GetByte("Table" + DataTable(PD).Name, CurrTableByte)
+          Table = GetByte("TABLE" + DataTable(PD).Name, CurrTableByte)   'was capitalised
           TableSub = NewSubroutine(GetByte(DataTable(PD).Name, CurrTableByte))
 
           SBC += 1: Subroutine(SBC) = TableSub
           CurrLine = TableSub->CodeStart
+
+
+
+
           TableSub->Compiled = -1
           TableSub->Required = -1
           TableSub->NoReturn = -1
@@ -8747,6 +8825,7 @@ Sub CompileTables
                 CurrLine = LinkedListInsert(CurrLine, " movf SysStringA, W")
                 CurrLine = LinkedListInsert(CurrLine, " movwf PCL")
                 CurrLine = LinkedListInsert(CurrLine, Table)
+                GetMetaData(CurrLine)->IsLabel = -1
               End If
 
             ElseIf ChipFamily = 16 Then
@@ -8780,6 +8859,7 @@ Sub CompileTables
                 CurrLine = LinkedListInsert(CurrLine, " movf TABLAT, W")
                 CurrLine = LinkedListInsert(CurrLine, " return")
                 CurrLine = LinkedListInsert(CurrLine, Table)
+                GetMetaData(CurrLine)->IsLabel = -1
                 Temp = ""
                 FOR SP = 0 TO LastNonZeroElement
                   ThisItem = GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte)
@@ -8805,6 +8885,10 @@ Sub CompileTables
                 CurrLine = LinkedListInsert(CurrLine, " retlw " + GetByte(Str(DataTable(PD).Item(SP)), CurrTableByte))
               NEXT
             End If
+
+            IF AFISupport = 1  and ModePIC Then
+              CurrLine = LinkedListInsert(CurrLine, " ALIGN 2;X4")
+            End if
 
           ElseIf ModeAVR Then
             'Check requested location
@@ -8868,6 +8952,7 @@ Sub CompileTables
 
         Next
       END If
+
     NEXT
   End IF
 
@@ -9245,6 +9330,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
           CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
         End If
         CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+        GetMetaData(CurrLine)->IsLabel = -1
 
         If UseIndirectBitSet Then
           CurrLine = LinkedListInsertList(CurrLine, GenerateBitSet(IndDestTemp, "", Origin, DestSub, 0))
@@ -9357,6 +9443,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
           CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
         End If
         CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+        GetMetaData(Currline)->IsLabel = -1
         If RequiresGlitchFree Then
           ILC += 1
           CurrLine = LinkedListInsert(CurrLine, " btfsc " + Source +",0")
@@ -9480,6 +9567,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
         CurrLine = LinkedListInsert(CurrLine, " goto ENDIF" + Str(ILC))
         CurrLine = LinkedListInsert(CurrLine, " incf " + Dest + ",F")
         CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+        GetMetaData(CurrLine)->IsLabel = -1
       ElseIf ModeAVR Then
         If IsRegister(Dest) Then
           CurrLine = LinkedListInsert(CurrLine, " clr " + Dest)
@@ -10038,6 +10126,7 @@ SUB CompileWait (CompSub As SubType Pointer)
         Condition = UCase(Unit)
         WSC = WSC + 1
         CurrLine->Value = "SysWaitLoop" + Str(WSC) + LabelEnd
+        GetMetaData(Currline)->IsLabel = -1
         'Get code
         Temp = "TRUE": IF Value = "UNTIL" THEN Temp = "FALSE"
         NewCode = CompileConditions(Condition, Temp, Origin)
@@ -10334,6 +10423,80 @@ Sub ExtAssembler
   Next
 
 End Sub
+
+
+'Call PIC-AS
+Sub PICASAssembler
+  Dim As String DataSource, ErrFile, Temp
+  Dim As Integer PD, Result, LBracePos, RBracePos
+  Dim as string ErrorArray()
+
+  AsmExe = ReplaceToolVariables(AsmExe,,, AsmTool)
+
+  AsmParams = ReplaceToolVariables(AsmParams, "asm",, AsmTool)
+  IF VBS = 1 THEN PRINT SPC(5); Message("Calling") + AsmExe
+
+  Result = Shell( chr(34)+AsmExe+" "+AsmParams+" 2>&1"+chr(34))
+
+  'Check that the assembly was successful
+  If Result = -1 then
+    Temp = Message("PICASFailtoLaunch")
+    Replace Temp, "%var%", "Failed to Launch"
+    LogError Temp
+
+  elseif OPEN(ReplaceToolVariables("%filename%", "err")  For Input As #1) = 0 THEN
+    DO WHILE NOT EOF(1)
+      LINE INPUT #1, DataSource
+      IF INSTR(UCase(DataSource), "ERROR") <> 0 THEN
+
+        'Source:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S:661:: error: (876) syntax error
+        'Target:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S (661):  Error: syntax error
+
+
+        'just format the output. Oh my... a real issue to sort this out!
+        StringSplit ( DataSource, "\\",-1,ErrorArray() )
+        Temp  = mid ( ErrorArray( ubound(ErrorArray)), 2 )
+
+        Replace( Temp, ":: e", ": E" )
+        LBracePos = Instr ( Temp, "(" )-1
+        RBracePos = Instr ( Temp, ")" )+2
+
+        Temp = Left( Temp, LBracePos) + mid( temp, RBracePos, 255   )
+
+        replace ( temp, ":", " (")
+        replace ( temp, ":", "): ")
+
+        ErrorsFound = -1
+        LogOutputMessage Temp+" "
+
+
+      END IF
+
+
+      IF INSTR(UCase(DataSource), ucase("cannot find the path")) <> 0 THEN
+
+        Temp = Message("PICASFailtoLaunch")
+        Replace Temp, "%var%", DataSource
+        LogError Temp
+
+      END IF
+
+    LOOP
+    CLOSE
+
+  END IF
+
+  'Get name of hex file to download
+  HFI = OFI
+  For PD = Len(HFI) To 1 Step -1
+    If Mid(HFI, PD, 1) = "." Then
+      HFI = Left(HFI, PD) + "hex"
+      Exit For
+    End If
+  Next
+
+End Sub
+
 
 Sub ExtractParameters(ByRef NewSubCall As SubCallType, CalledSubName As String, CallParams As String, Origin As String)
 
@@ -10676,6 +10839,10 @@ SUB FixFunctions(CompSub As SubType Pointer)
         Do While FindStart <> 0
 
           IF FindStart->Value = ";FNSTART," + SubName THEN
+
+            'Maintain the IsLabel as the LinkedListDelete is moving the code
+            GetMetaData(FindStart)->IsLabel = GetMetaData(CurrLine->Next)->IsLabel
+
             FindStart->Value = CurrLine->Next->Value
             LinkedListDelete(CurrLine->Next)
             CurrLine = FindStart->Prev
@@ -11632,8 +11799,10 @@ Function GenerateExactDelay(ByVal Cycles As Integer) As LinkedListElement Pointe
         Cycles -= 1 + DS * 771
         CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP2 = " + Str(DS))
         CurrPos = LinkedListInsert(CurrPos, "DelayUSO" + Str(USDC))
+        GetMetaData(CurrPos)->IsLabel = -1
         CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP = 0")
         CurrPos = LinkedListInsert(CurrPos, "DelayUS" + Str(USDC))
+        GetMetaData(CurrPos)->IsLabel = -1
         CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP,F")
         CurrPos = LinkedListInsert(CurrPos, " goto DelayUS" + Str(USDC))
         CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP2,F")
@@ -11645,6 +11814,7 @@ Function GenerateExactDelay(ByVal Cycles As Integer) As LinkedListElement Pointe
         Cycles -= (DS * 3 + 1) 'lose 1 cycle at loop end, but have 2 extra at start
         CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP = " + Str(DS)) '2 cycles, movlw/movwf
         CurrPos = LinkedListInsert(CurrPos, "DelayUS" + Str(USDC))
+        GetMetaData(CurrPos)->IsLabel = -1
         CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP,F")
         CurrPos = LinkedListInsert(CurrPos, " goto DelayUS" + Str(USDC))
         USDC += 1
@@ -11765,7 +11935,7 @@ Function GenerateVectorCode As LinkedListElement Pointer
             CurrLine = LinkedListInsert(CurrLine, " pagesel BASPROGRAMSTART")
             CurrLine = LinkedListInsert(CurrLine, " goto BASPROGRAMSTART")
             CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 4))
-            IntLoc = LocationOfSub("Interrupt", "")
+            IntLoc = LocationOfSub("INTERRUPT", "")   'was capitalised
         Else
             CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
             CurrLine = LinkedListInsert(CurrLine, " pagesel " + UserDefineStartLabel)
@@ -11779,7 +11949,8 @@ Function GenerateVectorCode As LinkedListElement Pointer
         Else
           'Can't do this, must compile INTERRUPT inline
           'CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
-          CurrLine = LinkedListInsert(CurrLine, "Interrupt")
+          CurrLine = LinkedListInsert(CurrLine, "INTERRUPT")   'was capitalised
+          GetMetaData(Currline)->IsLabel = -1
           'Inline later
         End If
         CurrLine = LinkedListInsert(CurrLine, "")
@@ -11795,7 +11966,7 @@ Function GenerateVectorCode As LinkedListElement Pointer
           CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader))
           CurrLine = LinkedListInsert(CurrLine, " goto BASPROGRAMSTART")
           CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 8))
-          If LocationOfSub("Interrupt", "") = 0 Then
+          If LocationOfSub("INTERRUPT", "") = 0 Then
             CurrLine = LinkedListInsert(CurrLine, " retfie")
           Else
             CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
@@ -11808,7 +11979,7 @@ Function GenerateVectorCode As LinkedListElement Pointer
           CurrLine = LinkedListInsert(CurrLine, " goto "+ UserDefineStartLabel)
           'No Interrupt handler is supported
 '          CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(Bootloader + 8))
-'          If LocationOfSub("Interrupt", "") = 0 Then
+'          If LocationOfSub("INTERRUPT", "") = 0 Then     'was capitalised
 '            CurrLine = LinkedListInsert(CurrLine, " retfie")
 '          Else
 '            CurrLine = LinkedListInsert(CurrLine, " goto INTERRUPT")
@@ -12659,7 +12830,7 @@ SUB InitCompiler
   Dim As Integer T, Block, CD, FCB, IniNotSet, SettingsFileMode, FindTool, FindMsg
   Dim As Integer SettingsFiles, CurrSettingsFile
 
-  Dim As Integer AsmNotSet, ProgNotSet, OutNotSet, PresNotSet, VbsNotSet, WarnErrorNotSet
+  Dim As Integer PICAsmNotSet, AsmNotSet, ProgNotSet, OutNotSet, PresNotSet, VbsNotSet, WarnErrorNotSet
   Dim As Integer PauseNotSet, ReportNotSet, FlashOnlyNotSet
 
   'Detect GCBASIC install directory
@@ -12694,6 +12865,7 @@ SUB InitCompiler
   SettingsFile(1) = "gcbasic.ini"
   SettingsFiles = 1
   AsmNotSet = -1
+  PICAsmNotSet = -1
   ProgNotSet = -1
   OutNotSet = -1
   PresNotSet = -1
@@ -12722,10 +12894,6 @@ SUB InitCompiler
     ElseIf ParamUpper = "/L" Or ParamUpper = "-L" Then
       ShowBlock "License"
       END
-
-    'Suppoprt PIC-AS
-    ElseIf ParamUpper = "/AS" Or ParamUpper = "-AS" Then
-      AFISupport = 1
 
     'Pause on errors?
     ElseIf ParamUpper = "/NP" Or ParamUpper = "-NP" Then
@@ -12772,22 +12940,50 @@ SUB InitCompiler
 
     'Assembler command
     ElseIf LeftThree = "/A:" Or LeftThree = "-A:" Then
-      AsmExe = Trim(Mid(DataSource, 4))
-      AsmParams = ""
-      If Left(AsmExe, 1) = Chr(34) Then
-        For FCB = 2 to Len(AsmExe)
-          If Mid(AsmExe, FCB, 1) = Chr(34) Then
-            AsmParams = Trim(Mid(AsmExe, FCB + 1, 1))
-            AsmExe = Trim(Left(AsmExe, FCB))
-          End If
-        Next
-      ElseIf Instr(AsmExe, " ") <> 0 Then
-        AsmParams = Mid(AsmExe, Instr(AsmExe, " ") + 1)
-        AsmExe = Left(AsmExe, Instr(AsmExe, " ") - 1)
-      End If
 
-      AsmNotSet = 0
-      'Do While INSTR(MakeASM, Chr(34)) <> 0: Replace MakeASM, Chr(34), "": Loop
+
+     AsmExe = Trim(Mid(DataSource, 4))
+     if instr ( AsmExe, "PIC-AS") = 0 then
+        'as was code
+        AsmParams = ""
+        If Left(AsmExe, 1) = Chr(34) Then
+          For FCB = 2 to Len(AsmExe)
+            If Mid(AsmExe, FCB, 1) = Chr(34) Then
+              AsmParams = Trim(Mid(AsmExe, FCB + 1, 1))
+              AsmExe = Trim(Left(AsmExe, FCB))
+            End If
+          Next
+        ElseIf Instr(AsmExe, " ") <> 0 Then
+          AsmParams = Mid(AsmExe, Instr(AsmExe, " ") + 1)
+          AsmExe = Left(AsmExe, Instr(AsmExe, " ") - 1)
+        End If
+
+        AsmNotSet = 0
+        'Do While INSTR(MakeASM, Chr(34)) <> 0: Replace MakeASM, Chr(34), "": Loop
+      else
+
+        'PIC-AS Assembler command
+        AsmExe = Trim(Mid(DataSource, 4))
+        AsmParams = ""
+        If Left(AsmExe, 1) = Chr(34) Then
+          For FCB = 2 to Len(AsmExe)
+            If Mid(AsmExe, FCB, 1) = Chr(34) Then
+              AsmParams = Trim(Mid(AsmExe, FCB + 1, 1))
+              AsmExe = Trim(Left(AsmExe, FCB))
+            End If
+          Next
+        ElseIf Instr(AsmExe, " ") <> 0 Then
+          AsmParams = Mid(AsmExe, Instr(AsmExe, " ") + 1) +  " > "+chr(34)+"%Fn_NoExt%.err"+chr(34)
+          AsmExe = Left(AsmExe, Instr(AsmExe, " ") - 1)
+        End If
+
+        AFISupport = 1
+        PICASMNotSet = 0
+
+      End if
+
+
+
 
     'Programmer command
     ElseIf LeftThree = "/P:" Or LeftThree = "-P:" Then
@@ -12926,7 +13122,12 @@ SUB InitCompiler
             If CurrentTag = "gcbasic" Then
               Select Case MsgName
                 Case "assembler"
-                If AsmNotSet Then AsmExe = MsgVal
+                If AsmNotSet Then
+                  AsmExe = MsgVal
+                  if instr( ucase(MsgVal), "PIC-AS") > 0 then
+                          AFISupport = 1
+                  End If
+                End if
 
                 Case "assemblerparams"
                 If AsmNotSet Then AsmParams = MsgVal
@@ -13011,8 +13212,17 @@ SUB InitCompiler
                   Tool(ToolCount).Type = LCase(MsgVal)
                 Case "command"
                   Tool(ToolCount).Cmd = MsgVal
+                  if instr( ucase(MsgVal), "PIC-AS") > 0 then
+                      if left( MsgVal, 1 )  =  chr(34) then MsgVal = mid( MsgVal, 1)
+                      if right( MsgVal, 1 ) =  chr(34) then MsgVal = right( MsgVal, 1)
+                      Tool(ToolCount).Cmd  = chr(34)+MsgVal+chr(34)  'PICASDriver
+                  End if
+
                 Case "params"
                   Tool(ToolCount).Params = MsgVal
+                  if instr( ucase(Tool(ToolCount).Cmd), "PIC-AS") > 0 then
+                        Tool(ToolCount).Params = MsgVal +  " > "+chr(34)+"%Fn_NoExt%.err"+chr(34)  'PICAsmParams
+                  End if
                 Case "workingdir"
                   Tool(ToolCount).WorkingDir = MsgVal
                 Case "progconfig"
@@ -13861,7 +14071,9 @@ Sub OptimiseCalls
       If IsJump <> 0 Then
         'Get jump target
         JumpTarget = Trim(CurrLine->Value)
+
         JumpTarget = Mid(JumpTarget, InStr(JumpTarget, " ") + 1)
+
         If InStr(JumpTarget, ";") <> 0 Then JumpTarget = Trim(Left(JumpTarget, InStr(JumpTarget, ";") - 1))
         'Check if relative
         IsRelative = 0
@@ -13902,7 +14114,9 @@ Sub OptimiseCalls
           Else
             LabelPos = HashMapGet(Labels, CheckTarget)
             If LabelPos <> 0 Then
+
               JumpSize = Abs(*LabelPos - CurrLinePos)
+
               If (ModeAVR And JumpSize < 2048) Or (ChipFamily = 16 And JumpSize < 1024) Then
                 If Instr( Ucase( CurrLine->Value), Ucase(DISABLEOPTIMISATION) ) <> 0 then
                   ' DO NOT OPTIMISE SPECIFIC CODE FOR LGT CHIPS
@@ -14302,9 +14516,12 @@ Sub PrepareProgrammer
   If AsmTool <> 0 Then
     With *AsmTool
       AsmExe = ReplaceToolVariables(.Cmd, , , AsmTool)
+
       AsmParams = .Params
     End With
   End If
+
+
   If PrgTool = 0 Then PrgTool = GetTool(PrgExe)
   If PrgTool <> 0 Then
     With *PrgTool
@@ -14325,10 +14542,14 @@ Sub PrepareProgrammer
     If AsmExe <> "" And Left(AsmExe, 1) = "." Then AsmExe = ID + Mid(AsmExe, 2)
     If PrgExe <> "" And Left(PrgExe, 1) = "." Then PrgExe = ID + Mid(PrgExe, 2)
   #ELSE
+
     If AsmExe <> "" And Mid(AsmExe, 2, 1) <> ":" And UCASE(AsmExe) <> "GCASM" Then
-      If Left(AsmExe, 1) = "\" Then AsmExe = Mid(AsmExe, 2)
-      AsmExe = ID + "\" + AsmExe
+      If instr(  UCASE(AsmExe), "PIC-AS" ) = 0 then
+        If Left(AsmExe, 1) = "\" Then AsmExe = Mid(AsmExe, 2)
+        AsmExe = ID + "\" + AsmExe
+      End if
     End If
+
     If PrgExe <> "" And Mid(PrgExe, 2, 1) <> ":" Then
       If Left(PrgExe, 1) = "\" Then PrgExe = Mid(PrgExe, 2)
       PrgExe = ID + "\" + PrgExe
@@ -14764,6 +14985,51 @@ Function PutInRegister(ByRef OutList As LinkedListElement Pointer, SourceValue A
 
 End Function
 
+Sub ReadPICASChipData
+
+  'Get filename
+#IFDEF __FB_UNIX__
+  //not supported
+#ELSE
+
+  'read the INC in and put into ARRAY   ReverseIncFileLookup(
+  dim as string InLine
+  dim as integer ffile, fresult,findex
+
+  ChipPICASDataFile = Left( AsmExe, InStrRev( ReplaceToolVariables(AsmExe,,, AsmTool), "\"))
+  ChipPICASDataFile = Left( ChipPICASDataFile , InStrRev( ChipPICASDataFile , "\")-1)
+  ChipPICASDataFile = Left( ChipPICASDataFile , InStrRev( ChipPICASDataFile , "\")-1)
+  ChipPICASDataFile = Left( ChipPICASDataFile , InStrRev( ChipPICASDataFile , "\"))+"pic\include\proc\pic"+LCase(ChipName) + ".inc"
+  ChipPICASDataFile = mid(ChipPICASDataFile, 2)
+
+  'Check that the chip data is present
+    findex = 0
+    ' Find the first free file number.
+    ffile = FreeFile
+    fresult = OPEN ( ChipPICASDataFile For Input As ffile )
+    DO WHILE NOT EOF(ffile)
+      LINE INPUT #ffile, InLine
+      if left( InLine,7) =  "#define" and instr( inline, "BANKMASK") = 0  <> 0 then
+         'read next line
+         LINE INPUT #ffile, InLine
+
+         If instr( ucase(inline), "EQU") > 0 then
+            ReverseIncFileLookup( findex ).Value = trim(mid(inline, 1, instr(inline," equ ")-5))
+            ReverseIncFileLookup( findex ).NumVal = val("&h"+trim( mid( inline,instr(inline," equ ")+5,  InStr( inline,chr(34) ) -1 )  ))
+            findex = findex +1
+        end if
+      end if
+
+    LOOP
+    Close
+
+    'AS inc file not found, show error and quit
+  '  LogError Message("PICASChipNotSupported")
+
+#ENDIF
+
+End Sub
+
 SUB ReadChipData
   Dim As String TempData, TempList(20)
   Dim As String ReadDataMode, ChipDataFile, InLine, SFRName
@@ -14783,26 +15049,26 @@ SUB ReadChipData
   ChipDataFile = ID + "\chipdata\" + ChipName + ".dat"
 #ENDIF
 
-  'Check that the chip data is present
-  If OPEN(ChipDataFile For Input As #1) <> 0 Then
-    'Chip file not found. If ChipName contains LF, try loading F file
-    If InStr(LCase(ChipName), "lf") <> 0 Then
-      TempData = ChipName
-      Replace TempData, "lf", "f"
+      'Check that the chip data is present
+      If OPEN(ChipDataFile For Input As #1) <> 0 Then
+        'Chip file not found. If ChipName contains LF, try loading F file
+        If InStr(LCase(ChipName), "lf") <> 0 Then
+          TempData = ChipName
+          Replace TempData, "lf", "f"
 
-      #IFDEF __FB_UNIX__
-        ChipDataFile = ID + "/chipdata/" + LCase(TempData) + ".dat"
-      #ELSE
-        ChipDataFile = ID + "\chipdata\" + TempData + ".dat"
-      #EndIf
-      If Open(ChipDataFile For Input As #1) = 0 Then GoTo ChipDataFileOpened
-    End If
+          #IFDEF __FB_UNIX__
+            ChipDataFile = ID + "/chipdata/" + LCase(TempData) + ".dat"
+          #ELSE
+            ChipDataFile = ID + "\chipdata\" + TempData + ".dat"
+          #EndIf
+          If Open(ChipDataFile For Input As #1) = 0 Then GoTo ChipDataFileOpened
+        End If
 
-    'Chip data still not found, show error and quit
-    LogError Message("ChipNotSupported")
-    WriteErrorLog
-    END
-  End If
+        'Chip data still not found, show error and quit
+        LogError Message("ChipNotSupported")
+        WriteErrorLog
+        END
+      End If
   ChipDataFileOpened:
   IF VBS = 1 THEN PRINT SPC(10); ChipDataFile
 
@@ -14868,10 +15134,13 @@ SUB ReadChipData
 
         Case "minimumbankselect": ChipMinimumBankSelect = Val(TempData)
 
+        Case "memorylock": AddConstant("CHIP" + UCase(ConstName), ucase(ConstValue) )
       End Select
 
       'Create constant for data item
-      AddConstant("CHIP" + UCase(ConstName), ConstValue)
+      if ConstName <> "memorylock" then
+              AddConstant("CHIP" + UCase(ConstName), ConstValue)
+      end if
 
     'Interrupts
     ElseIf ReadDataMode = "[interrupts]" AND INSTR(InLine, ":") <> 0 THEN
@@ -15041,6 +15310,9 @@ SUB ReadChipData
     ReadNextChipInfoLine:
   LOOP
   CLOSE
+
+
+
 
   'Misc initialisation
   If ModePIC Then
@@ -15780,11 +16052,15 @@ Sub ValueChanged(VarName As String, VarValue As String)
 End Sub
 
 Sub WriteAssembly
-  Dim As String Temp, VarDecLine, AddedBits, BitName
-  Dim As Integer PD, AddSFR, FindSREG
+  Dim As String Temp, VarDecLine, PICASVarDecLine, AddedBits, BitName
+  Dim As Integer PD, AddSFR, FindSREG, legacyConfigPublished
   Dim As LinkedListElement Pointer CurrLine
   Dim As LinkedListElement Pointer VarList
   Dim As SysVarType Pointer SysVar
+
+  If AFISupport = 1 and ModeAVR then
+        AFISupport = 0
+  End IF
 
   'Write .ASM program
   On error goto ASMLocked
@@ -15840,60 +16116,135 @@ Sub WriteAssembly
       PRINT #1, "#include <P" + ChipName + ".inc>"
     End If
 
-    if AFISupport = 1 then
-        'as
-        PRINT #2, ""
-        PRINT #2, ";Set up the assembler options (Chip type, clock source, other bits and pieces)"
-        PRINT #2, " PROCESSOR   " + ChipName
-        PRINT #2, " PAGEWIDTH   132"
-        PRINT #2, " RADIX       DEC"
-        PRINT #2, ""
-        PRINT #2, " #include <xc.inc>"
-        PRINT #2, ""
+      if AFISupport = 1 then
+          'as
+          PRINT #2, ""
+          PRINT #2, ";Set up the assembler options (Chip type, clock source, other bits and pieces)"
+          PRINT #2, ";PROCESSOR   " + ChipName
+          PRINT #2, " PAGEWIDTH   132"
+          PRINT #2, " RADIX       DEC"
+          PRINT #2, " TITLE       "+ CHR(34)+AFI+CHR(34)
+          PRINT #2, " SUBTITLE    "+ CHR(34)+date+CHR(34)
+          PRINT #2, ""
+          PRINT #2, "; Reverse lookup file"
+          PRINT #2, "; "+ChipPICASDataFile
+          PRINT #2, ""
+          PRINT #2, " #include <xc.inc>"
+          PRINT #2, ""
+          PRINT #2, Star80
+          PRINT #2, ";Explicit PIC-AS constants to resolve the crazyness of the PIC-AS syntax"
+          PRINT #2, ";These are therefore the same as MPASM"
+          PRINT #2, "#define BANKED b"
+          PRINT #2, "#define ACCESS a"
+          PRINT #2, "#define UPPER low highword"
 
-            '    PRINT #2, "PSECT   Por_Vec,global,class=CODE,delta=2"
-            '    PRINT #2, "    global  resetVec"
-            '    PRINT #2, "resetVec:"
-            '    PRINT #2, "    PAGESEL Start"
-            '    PRINT #2, "    goto    Start"
-            '    PRINT #2, "Start:"
-            '    PRINT #2, "    goto Start"
-                'END OF AS ASSESSMENT
-    End if
+          PRINT #2, ""
+      End if
+
+
+      'Publish CONFIG for PIC
+      if AFISupport = 1 then
+        Print #2, Star80
+        Print #2, ";Explicit CONFIG"
+      end if
 
     CurrLine = ChipConfigCode->CodeList->Next
-    'Publish CONFIG for PIC
-    Do While CurrLine <> 0
-      'Publish ASM
-      If len(CurrLine->Value) < 196 then
-          'Print line direct to ASM and S
-          Print #1, CurrLine->Value
-          if AFISupport = 1 then Print #2, CurrLine->Value
+    legacyConfigPublished = 0
 
+    Do While CurrLine <> 0
+
+      'Purge duplicate configs
+      dim as Integer CD
+      dim ConfName as string
+      FOR CD = 1 TO DCOC
+        ConfName = trim(Left(DefCONFIG(CD), INSTR(DefCONFIG(CD), "=") - 1))
+        if INSTR( ucase(CurrLine->value), ucase(ConfName)) > 0 then
+          'we have a match; so comment the DefCONFIG, we cannot delete as we need to restore the value later.
+          DefCONFIG(CD) = ";"+DefCONFIG(CD)
+        end if
+      Next
+
+      'Publish CONFIGs
+      If len(CurrLine->Value) < 196 and AFISupport = 0 then
+          'less than 196 and not PICAS, so, legacy config statement
+          Print #1, CurrLine->Value
           CurrLine = CurrLine->Next
+
       else
+          'so, PICAS mode but do not want to multiple line the config for legacy chips
+          if len(CurrLine->Value) < 196 and AFISupport = 1 then
+              legacyConfigPublished = -1
+              Print #1, CurrLine->Value
+          end if
+
           'export CONFIG  onto on line per entry to stop MPASMx from crashing!
-          'Print multiple lines to ASM and S
           adaptedConfigLine = CurrLine->Value
+          'transform config for non ChipFamily16, only non ChipFamily16 will have GetMetaData(Currline)->RawConfig
+          If GetMetaData(Currline)->RawConfig <> "" then
+
+            If instr( GetMetaData(Currline)->RawConfig, "&" ) > 0 then
+              StringSplit ( GetMetaData(Currline)->RawConfig, "&",-1,configarray() )
+            Else
+             redim configarray(1)
+             configarray(0) = GetMetaData(Currline)->RawConfig
+            End if
+
+            'transform old ASM CONFIG to NEW PIC-AS CONFIG
+            for configarraycounter = 0 to ubound(configarray)
+
+               configarray(configarraycounter ) = trim( configarray(configarraycounter )  )  'remove the spaces
+               if configarray(configarraycounter ) <> "" then
+                 configarray(configarraycounter ) = mid ( configarray(configarraycounter ) , 2 ) 'renove the leading underscore
+                 replace( configarray(configarraycounter ), "_", " = " ) 'replace the underscore with =
+
+                 if AFISupport = 1 then print #2, " CONFIG "+configarray(configarraycounter )
+               end if
+
+            next
+            erase configarray
+            'output the ASM, cus we have to maintain the ASM file for reference
+            if legacyConfigPublished = 0 then Print #1, CurrLine->Value
+            goto ConfigDone
+          End if
+
+          'Print multiple lines to ASM and S
           if left(trim(adaptedConfigLine), 6) = "CONFIG" then
               'must be a long 18f config line
               replace ( adaptedConfigLine, "CONFIG ","")
               StringSplit ( adaptedConfigLine, ",",-1,configarray() )
               for configarraycounter = 0 to ubound(configarray)
-                print #1, " CONFIG "+configarray(configarraycounter )
+                if legacyConfigPublished = 0 then print #1, " CONFIG "+configarray(configarraycounter )
                 if AFISupport = 1 then print #2, " CONFIG "+configarray(configarraycounter )
               next
           else
-              
-              Print #1, CurrLine->Value
+
+              if legacyConfigPublished = 0 then Print #1, CurrLine->Value
               if AFISupport = 1 then Print #2, CurrLine->Value
           end if
 
+
+          ConfigDone:
           CurrLine = CurrLine->Next
+          legacyConfigPublished = 0
 
       End if
 
     Loop
+
+    'Output the other default configs - these are used to the the HEX config, so, we need them for PIC-AS to create the same HEX
+    if AFISupport = 1 then
+      Print #2, ";Inferred CONFIG"
+      dim as Integer CD
+      FOR CD = 1 TO DCOC
+        if left(DefCONFIG(CD),1) <> ";" then
+          print #2, " CONFIG  " +DefCONFIG(CD)
+        else
+          'restore the initial value
+          DefCONFIG(CD)=mid( DefCONFIG(CD),2)
+        end if
+      Next
+      print #2, ""
+    end if
 
   ElseIf ModeAVR Then
     Temp = LCase(ChipName)
@@ -15937,28 +16288,47 @@ Sub WriteAssembly
     PRINT #1, Star80
     PRINT #1, ""
     PRINT #1, ";Set aside memory locations for variables"
+
+    If AFISupport = 1 then
+      PRINT #2, Star80
+      PRINT #2, ""
+      PRINT #2, ";Set aside RAM memory locations for variables. All variables are global."
+    End if
+
     CurrLine = VarList->Next
     Do While CurrLine <> 0
       With *CPtr(VariableListElement Pointer, CurrLine->MetaData)
-        If ModePIC Or ModeZ8 Then
-          VarDecLine = .Name + " EQU " + .Value
+        If ModePIC and AFISupport = 1 then
+          'PICAS
+          PICASVarDecLine = " "+left(.Name+Pad32, 32) + " EQU " + trim(.Value) +"                    ; 0x"+ Hex(val(.Value))
+          'ASM
+          VarDecLine = left(.Name+Pad32, 32) + " EQU " + .Value
+        ElseIf ModePIC Or ModeZ8 Then
+          VarDecLine = left(.Name+Pad32, 32) + " EQU " + .Value
         ElseIf ModeAVR Then
           VarDecLine = ".EQU " + .Name + "=" + .Value
         Else
           VarDecLine = ";Write variable declaring code!"
         End If
       End With
-      PRINT #1, AsmTidy(VarDecLine)
+      PRINT #1, AsmTidy(VarDecLine, -1 )
+      if AFISupport = 1 then PRINT #2, AsmTidy(PICASVarDecLine, 0 )
       CurrLine = CurrLine->Next
     Loop
     PRINT #1, ""
   END IF
   PRINT #1, Star80
   PRINT #1, ""
+  if AFISupport = 1 then
+      PRINT #2, ""
+      PRINT #2, Star80
+      PRINT #2, ""
+  End if
+
 
   'Registers
   If ModeAVR Then
-    Print #1, AsmTidy(";Register variables")
+    Print #1, AsmTidy(";Register variables", -1 )
     FOR PD = 1 TO FRLC
       With FinalRegList(PD)
         If ModePIC Or ModeZ8 Then
@@ -15969,7 +16339,7 @@ Sub WriteAssembly
           VarDecLine = ";Write variable declaring code!"
         End If
       End With
-      PRINT #1, AsmTidy(VarDecLine)
+      PRINT #1, AsmTidy(VarDecLine, -1 )
     NEXT
     PRINT #1, ""
     PRINT #1, Star80
@@ -15979,10 +16349,17 @@ Sub WriteAssembly
 
   'Aliases
   IF FALC > 0 THEN
-    PRINT #1, AsmTidy(";Alias variables")
+    PRINT #1, AsmTidy(";Alias variables", -1 )
+    PRINT #2, AsmTidy(";Alias variables", 0 )
     FOR PD = 1 TO FALC
       With FinalAliasList(PD)
-        If ModePIC Or ModeZ8 Then
+
+       If ModePIC and AFISupport = 1 then
+          'PICAS
+          PICASVarDecLine = " "+left(.Name+Pad32, 32) + " EQU " + trim(.Value)
+          'ASM
+          VarDecLine = left(.Name+Pad32, 32) + " EQU " + .Value
+        ElseIf ModePIC Or ModeZ8 Then
           VarDecLine = .Name + " EQU " + .Value
         ElseIf ModeAVR Then
           VarDecLine = "#define " + .Name + " " + .Value
@@ -15990,35 +16367,345 @@ Sub WriteAssembly
           VarDecLine = ";Write variable declaring code!"
         End If
       End With
-      PRINT #1, AsmTidy(VarDecLine)
+      PRINT #1, AsmTidy(VarDecLine, -1 )
+      if AFISupport = 1 then PRINT #2, AsmTidy(PICASVarDecLine, 0 )
     NEXT
     PRINT #1, ""
     PRINT #1, Star80
     PRINT #1, ""
+    PRINT #2, ""
+    PRINT #2, Star80
+    PRINT #2,
+  END IF
+
+
+  If ModePIC Then
+      'Initial vector for PICAS
+      if AFISupport = 1 then
+        ' PIC10/12/16 devices use a delta of 2 and PIC18 devices use a delta of 1.
+        Select Case ChipFamily
+          Case 16
+            PRINT #2, " PSECT   RESETVEC,delta=1, abs"
+          Case Else
+            PRINT #2, " PSECT   RESETVEC,delta=2, abs"
+        End Select
+        PRINT #2, " RESETVEC:"
+      end if
   END IF
 
   'Program code
   CurrLine = CompilerOutput->CodeList->Next
+  if AFISupport = 1 then
+    Print message ("PICASMStartDotS")
+  end if
   Do While CurrLine <> 0
-    PRINT #1, AsmTidy(CurrLine->Value)
+    PRINT #1, AsmTidy(CurrLine->Value, -1 )
+    'PRINTPICAS code
+    if AFISupport = 1 then
+          'implies just PIC
+
+          dim outline as string
+          dim ASMInstruction as string
+          dim Param1 as string
+          dim Param2 as string
+          dim Param3 as string
+          dim elements0() as string
+          dim outstring as string
+          outline = CurrLine->Value
+
+          if GetMetaData(Currline)->IsLabel = 0 then
+            'Not a label so adapt the register and the register.bit
+
+            Select Case ChipFamily
+
+              Case 16
+
+                  'Tested on 18f16q41
+
+                  'Using these examples
+                  'Clear NDIV3:0
+                  'NDIV3 = 0
+                  'BCF OSCCON1,NDIV3,BANKED  transformed to BCF OSCCON1,3,BANKED where the register is validated and the bit a constant
+
+                  ' where ;OSCFRQ = 0b00001000  '64mhz is validaed for registry only
+                  ' MOVLW 8
+                  ' MOVWF OSCFRQ,BANKED
+
+                  'This section reverse lookups into the PICAS INC file in there is comma....
+                  If instr( outline, "," ) > 0 then
+
+                      'Take the initial line of code and split into the array - so BCF OSCCON1,NDIV3,BANKED becomes 3 elements (BCF OSCCON1),(NDIV3),(BANKED)
+                      ' but MOVFF TMRVALUE,TMR2 is....
+                      ' but BCF OSCCON1,NDIV3,BANKED
+                      erase currentLineElements
+                      StringSplit ( trim(outline), ",",-1,currentLineElements() )
+                      Param2 = currentLineElements(1)
+
+                      Param3 = ""
+                      if ubound(currentLineElements) > 1  then
+                        Param3 = trim(currentLineElements(2))
+                      end if
+
+
+                      'So, (BCF OSCCON1) becomes ((BCF) (OSCCON1)
+                      erase elements0
+                      StringSplit( trim(currentLineElements(0)), " " ,3, elements0() )
+                      ASMInstruction = " "+elements0(0)
+                      Param1 = elements0(1)
+
+                      'print ASMInstruction+" "+Param1+","+Param2+","+Param3+"           ;A1"
+
+                      'First test: Does the SECOND element exist as SYSVAR? and therefore a register   like  BCF 'OSCCON1',NDIV3,BANKED
+                      if GetSysVar(Param1) <> 0 then
+                        outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param1)->location )
+                        if outstring <> "" then
+
+                              replace ( outline , trim(Param1) , outstring )
+                              outline = outline
+                              if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                Print #2, ";A2: ASM Source was: "+CurrLine->Value
+                              end if
+
+                        else
+                              replace ( outline , trim(Param1) , ucase( trim(Param1) ) )
+                              outline = outline
+                              if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                Print #2, ";A3: ASM Source was: "+CurrLine->Value
+                              end if
+                        end if
+
+                        'We know that we are dealing with a register, so, reverse lookup to correct
+                        outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param1)->location )
+                        if outstring <> "" then
+
+                          if Param3 = "" then
+                            outline = ASMInstruction+" "+outstring+","+Param2
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                              Print #2, ";A4: ASM Source was: "+CurrLine->Value
+                            end if
+                          else
+                            outline = ASMInstruction+" "+outstring+","+Param2+","+Param3
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                              Print #2, ";A5: ASM Source was: "+CurrLine->Value
+                            end if
+
+                          end if
+                        end if
+
+                      else
+
+                          if GetSysVar(Param2) <> 0 then
+                              outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
+                              if outstring <> "" then
+
+                                  outline = ASMInstruction+" "+Param1+","+OutString
+                                  if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                    Print #2, ";A6: ASM Source was: "+CurrLine->Value
+                                  end if
+
+                              end if
+                          end if
+
+                      end if
+
+                      'Second test for register.bit  transforms the BITs to a constant to resolve the reverse lookup
+                      'Section can be improved to replace the constant witht he targtet bit - tested on 16/18f
+                      if HasSFRBit ( Param2 )  then
+                          'replace this with an explict look up into the .h file at a later date
+                          'meanwhile use a constant
+                          Param2 = GetSFRBitValue(trim( Param2 ))
+                          if Param3 = "" then
+                            outline = ASMInstruction+" "+Param1+","+Param2
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                              Print #2, ";A7: ASM Source was: "+CurrLine->Value
+                            end if
+                          else
+                            outline = ASMInstruction+" "+Param1+","+Param2+","+Param3
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                Print #2, ";A8: ASM Source was: "+CurrLine->Value
+                            end if
+                          end if
+                      end if
+
+                  else
+                      'lots of code looks like this... "BANKSEL ADCON0"  where there is register.. check the register is valid and reverse
+                      erase currentLineElements
+                      if instr(trim(outline), " ") <> 0 then
+                          StringSplit ( trim(outline), " ",-1,currentLineElements() )
+                          Param1 = currentLineElements(0)
+                          Param2 = currentLineElements(1)
+
+                          if GetSysVar(Param2) <> 0 then
+                            outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
+
+                            if outstring <> "" then
+                                  outline = Param1+" "+outstring
+                                  if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                    Print #2, ";A9: ASM Source was: "+CurrLine->Value
+                                  end if
+                            end if
+                          end if
+
+                      end if
+                  end if
+
+
+              Case Else
+
+                  '16f18855
+
+                  If instr( outline, "," ) > 0 then
+
+                      'Take the initial line of code and split into the array
+                      erase currentLineElements
+                      StringSplit ( trim(outline), ",",-1,currentLineElements() )
+                      Param2 = currentLineElements(1)
+
+                      Param3 = ""
+                      if ubound(currentLineElements) > 1  then
+                        Param3 = trim(currentLineElements(2))
+                      end if
+
+
+                      'So, becomes
+                      erase elements0
+                      StringSplit( trim(currentLineElements(0)), " " ,3, elements0() )
+                      ASMInstruction = " "+elements0(0)
+                      Param1 = elements0(1)
+
+                      'print ASMInstruction+" "+Param1+","+Param2+","+Param3+"           ;B1"
+
+                      'First test: Does the SECOND element exist as SYSVAR? and therefore a register   like  BCF 'OSCCON1',NDIV3,BANKED
+                      if GetSysVar(Param1) <> 0 then
+                        outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param1)->location )
+                        if outstring <> "" then
+
+                              Param1 = outstring
+                              outline = ASMInstruction+" "+Param1+","+Param2
+                              if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                Print #2, ";B2: ASM Source was: "+CurrLine->Value
+                              end if
+
+                        else
+                              replace ( outline , trim(Param1) , ucase( trim(Param1) ) )
+                              outline = outline
+                              if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                Print #2, ";B3: ASM Source was: "+CurrLine->Value
+                              end if
+                        end if
+
+                        'We know that we are dealing with a register, so, reverse lookup to correct
+                        outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param1)->location )
+                        if outstring <> "" then
+                          Param1 = outstring
+                          if Param3 = "" then
+                            outline = ASMInstruction+" "+Param1+","+Param2
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                              Print #2, ";B4: ASM Source was: "+CurrLine->Value
+                            end if
+                          else
+                            outline = ASMInstruction+" "+Param1+","+Param2+","+Param3
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                              Print #2, ";B5: ASM Source was: "+CurrLine->Value
+                            end if
+
+                          end if
+                        end if
+
+                      else
+
+                          if GetSysVar(Param2) <> 0 then
+                              outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
+                              if outstring <> "" then
+                                  Param2 = outstring
+                                  outline = ASMInstruction+" "+Param1+","+Param2
+                                  if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                    Print #2, ";B6: ASM Source was: "+CurrLine->Value
+                                  end if
+
+                              end if
+                          end if
+
+                      end if
+
+                      'Second test for register.bit  transforms the BITs to a constant to resolve the reverse lookup
+                      'Section can be improved to replace the constant witht he targtet bit - tested on 16/18f
+                      if HasSFRBit ( Param2 )  then
+                          'replace this with an explict look up into the .h file at a later date
+                          'meanwhile use a constant
+                          Param2 = GetSFRBitValue(trim( Param2 ))
+                          if Param3 = "" then
+                            outline = ASMInstruction+" "+Param1+","+Param2
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                              Print #2, ";B7: ASM Source was: "+CurrLine->Value
+                            end if
+                          else
+                            outline = ASMInstruction+" "+Param1+","+Param2+","+Param3
+                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                Print #2, ";B8: ASM Source was: "+CurrLine->Value
+                            end if
+                          end if
+                      end if
+
+                  else
+                      'lots of code looks like this... "BANKSEL ADCON0"  where there is register.. check the register is valid and reverse
+                      erase currentLineElements
+                      if instr(trim(outline), " ") <> 0 then
+                          StringSplit ( trim(outline), " ",-1,currentLineElements() )
+                          Param1 = currentLineElements(0)
+                          Param2 = currentLineElements(1)
+
+                          if GetSysVar(Param2) <> 0 then
+                            outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
+
+                            if outstring <> "" then
+                                  outline = Param1+" "+outstring
+                                  if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                    Print #2, ";B9: ASM Source was: "+CurrLine->Value
+                                  end if
+                            end if
+                          end if
+
+                      end if
+                  end if
+
+
+
+              End Select
+
+          else
+
+            if trim(outline) <> "" then outline= outline+":"
+
+          end if
+
+          print #2, AsmTidy( outline, 0 )
+
+    end if
+
+
     CurrLine = CurrLine->Next
   Loop
   PRINT #1, ""
-  If ModePIC Then PRINT #1, " END"
-  CLOSE #1
-
   If ModePIC Then
       if AFISupport = 1 then
-        PRINT #2, "resetVec:"
-
         PRINT #2, ";"
         PRINT #2, "; Declare Power-On-Reset entry point"
         PRINT #2, ";"
-        PRINT #2, "    END     resetVec"
+        PRINT #2, " END     RESETVEC"
         CLOSE #2
 
-      End if
+        PRINT #1, " END"
+
+      else
+        PRINT #1, " END"
+      end if
   End if
+  CLOSE #1
+
+  if AFISupport = 1 then
+    Print message ("PICASMWriteDotS")
+  end if
 
 
 End Sub
@@ -16405,7 +17092,7 @@ Sub MergeSubroutines
 
   'Get location of interrupt sub (if it exists)
   IntSub = 0
-  IntSubLoc = LocationOfSub("Interrupt", "")
+  IntSubLoc = LocationOfSub("INTERRUPT", "")   'was capitalised
   If IntSubLoc <> 0 Then
     IntSub = Subroutine(IntSubLoc)
   End If
@@ -16676,7 +17363,7 @@ Sub MergeSubroutines
             CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc))
             CurrPagePos = ProgMemPage(CurrPage).StartLoc
           Else
-              'Output as comments
+              'Output as comment
               CurrLine = LinkedListInsert(CurrLine, ";ORG " + Str(ProgMemPage(CurrPage).StartLoc))
           End If
       Else
@@ -16833,7 +17520,7 @@ Sub MergeSubroutines
         End If
         'CurrLine = LinkedListInsert(CurrLine, ";Subroutine size:" + Str(CurrSubPtr->HexSize) + " words")
         CurrLine = LinkedListInsert(CurrLine, SubNameOut + LabelEnd)
-
+        GetMetaData(Currline)->IsLabel = -1
         'Alter calls in sub (Use long/short calls as needed)
         AddPageCommands(CurrSubPtr)
         'Add sub code
@@ -16882,6 +17569,7 @@ Sub MergeSubroutines
         SubNameOut = GetSubFullName(SubQueue(CurrSub))
       End If
       CurrLine = LinkedListInsert(CurrLine, SubNameOut + LabelEnd)
+      GetMetaData(Currline)->IsLabel = -1
       CurrLine = LinkedListInsert(CurrLine, ";This sub size:" + Str(CurrSubPtr->HexSize))
       StatsUsedProgram += CurrSubPtr->HexSize
       'Add sub code
@@ -16959,12 +17647,35 @@ Sub MergeSubroutines
           ToAsmSymbol(ToAsmSymbols, 1) = "Table" + Trim(.Name)
           ToAsmSymbol(ToAsmSymbols, 2) = Str(EPDataLoc)
 
-          CurrLine = LinkedListInsert(CurrLine, "Table" + Trim(.Name) + " equ " + Str(EPDataLoc))
-          CurrLine = LinkedListInsert(CurrLine, " de " + EPTempData)
+
+          if instr(UCase(AsmExe),"PIC-AS") = 0 then
+            CurrLine = LinkedListInsert(CurrLine, "Table" + Trim(.Name) + " equ " + Str(EPDataLoc))
+            GetMetaData(Currline)->IsLabel = -1
+            CurrLine = LinkedListInsert(CurrLine, " de " + EPTempData)
+          else
+            CurrLine = LinkedListInsert(CurrLine, "Table" + Trim(.Name))
+            GetMetaData(Currline)->IsLabel = -1
+            CurrLine = LinkedListInsert(CurrLine, " db " + EPTempData)
+          end if
+
           EPDataLoc += (.Items + 1)
         End With
+        'move down as we dont need to align on every table
+        IF AFISupport = 1  and ModePIC Then
+          'There should only one table of this type, and, align may not be needed... but, I do not know if this is the only once....
+          CurrLine = LinkedListInsert(CurrLine, " ALIGN 2 ;X1")
+        End if
+
+
       End If
+
     Next
+
+    IF AFISupport = 1  and ModePIC  Then
+      'There should only one table of this type, and, align may not be needed... but, I do not know if this is the only once....
+      CurrLine = LinkedListInsert(CurrLine, " ALIGN 2;X2")
+    End if
+
   End If
 
   CompilerOutput->CodeEnd = CurrLine
