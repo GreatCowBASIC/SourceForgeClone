@@ -72,7 +72,7 @@
 '    21122020-  Add PFMRead for Q43 chip family.
 '    03112020 - Improved clear down RAM for Family122 in InitSys
 '    05012021 - Add ChipSubFamily constants
-'    02022021-  Revised PFMread and added PFMWrite
+'    10022021-  Revised PFMread and added PFMWrite
 
 
 'Constants
@@ -3655,30 +3655,22 @@ sub ProgramErase(In EEAddress)
 end sub
 
 
-Function PFMRead(in _PFM_ABS_ADDR as long ) as Byte
+Function PFMRead(in _TFM_ABS_ADDR as long ) as Byte
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
-          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
-
-          ' Setup TBL pointer
-          _TBL_ABS_ADDR = NVMADRL
+          Dim _TFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
           TBLRD*+
           PFMRead = TABLAT
       #Endif
 
 End Function
 
-Function PFMReadWord(in _PFM_ABS_ADDR as long ) as word
+Function PFMReadWord(in _TFM_ABS_ADDR as long ) as word
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
-          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
-
-          ' Setup TBL pointer
-          _TBL_ABS_ADDR = _PFM_ABS_ADDR
+          Dim _TFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
           TBLRD*+
           PFMReadWord = TABLAT
           TBLRD*+
@@ -3688,40 +3680,29 @@ Function PFMReadWord(in _PFM_ABS_ADDR as long ) as word
 End Function
 
 
-Sub PFMRead(in _PFM_ABS_ADDR as long, out _PFM_DataByte as byte )
+Sub PFMRead(in _TFM_ABS_ADDR as long, out _PFM_DataByte as byte )
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy, NVMADRU, NVMADRH, NVMADRL
-          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
-
-          ' Setup TBL pointer
-          _TBL_ABS_ADDR = NVMADRL
+          Dim _TFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
           TBLRD*+
           _PFM_DataByte = TABLAT
-
       #Endif
 
 End Sub
 
-Sub PFMRead(in _PFM_ABS_ADDR as long, out _PFM_DataByte as word )
+Sub PFMRead(in _TFM_ABS_ADDR as long, out _PFM_DataByte as word )
 
       #IFDEF ChipFamily 16
           Dim _dummy as byte
-          Dim _PFM_ABS_ADDR as Long Alias _dummy,  NVMADRU, NVMADRH, NVMADRL
-          Dim _TBL_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
-
-          ' Setup TBL pointer
-          _TBL_ABS_ADDR = NVMADRL
+          Dim _TFM_ABS_ADDR as Long Alias _dummy, TBLPTRU, TBLPTRH, TBLPTRL
           TBLRD*+
           _PFM_DataByte = TABLAT
           TBLRD*+
           _PFM_DataByte_h = TABLAT
-
       #Endif
 
 End Sub
-
 
 
 Sub PFMWrite (in _PFM_ADDR as long , in _PFM_DataByte as Byte)
