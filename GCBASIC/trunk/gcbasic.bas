@@ -2509,6 +2509,9 @@ SUB CalcConfig
           DesiredSetting = "ON"
         ElseIf ConfigNameMatch(.Name, "WRTSAF") Then   'this was generating a config error in non GCASM implementations
           DesiredSetting = "OFF"
+        ElseIf ConfigNameMatch(.Name, "WRTB") Then     'this was generating a config error in non PICAS implementations
+          DesiredSetting = "OFF"
+
 
 
 
@@ -16058,8 +16061,12 @@ Sub WriteAssembly
   Dim As LinkedListElement Pointer VarList
   Dim As SysVarType Pointer SysVar
 
-  If AFISupport = 1 and ModeAVR then
-        AFISupport = 0
+  If AFISupport = 1 Then
+    If ChipFamily <> 16 and ChipFamily <> 15 then
+        LogError "Chip Family not support by PIC-AS. Please change USE.INI to GCASM", ""
+        ErrorsFound = -1
+        exit Sub
+    End if
   End IF
 
   'Write .ASM program
@@ -16402,6 +16409,9 @@ Sub WriteAssembly
     PRINT #1, AsmTidy(CurrLine->Value, -1 )
     'PRINTPICAS code
     if AFISupport = 1 then
+
+      if left(CurrLine->Value,1) <> ";" then
+
           'implies just PIC
 
           dim outline as string
@@ -16656,17 +16666,28 @@ Sub WriteAssembly
                           Param2 = currentLineElements(1)
 
                           if GetSysVar(Param2) <> 0 then
-                            outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
+                            Param2 = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
 
-                            if outstring <> "" then
-                                  outline = Param1+" "+outstring
+                            if Param2 <> "" then
+                                  outline = Param1+" "+Param2
                                   if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
                                     Print #2, ";B9: ASM Source was: "+CurrLine->Value
                                   end if
                             end if
                           end if
 
+'                          If instr(trim(ucase(Param1)), "CALL") <> 0 or instr(trim(ucase(Param1)), "GOTO") <> 0 then
+'                              outline = " "+Param1 + " "+"BANKMASK("+Param2+")"
+'                              if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+'                                Print #2, ";BA: ASM Source was: "+CurrLine->Value
+'                              end if
+'                          end if
+
+
+
                       end if
+
+
                   end if
 
 
@@ -16680,6 +16701,9 @@ Sub WriteAssembly
           end if
 
           print #2, AsmTidy( outline, 0 )
+      else
+        print #2, AsmTidy( CurrLine->Value, 0 )
+      end if
 
     end if
 
