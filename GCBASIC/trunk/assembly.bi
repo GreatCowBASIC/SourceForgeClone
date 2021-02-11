@@ -283,6 +283,44 @@ Sub AsmOptimiser (CompSub As SubType Pointer)
 
 End Sub
 
+Function ConfigTidy (DataSource As String ) As String
+  'checks and resolve case sensitivity in config
+
+  Dim searchIndex as Integer = 0
+  Dim localDataSource  as String
+  Dim localDataSourceValue  as String
+  Dim localDataSourceState  as String
+  Dim adaptedConfig as String
+
+  if AFISupport = 1 then
+
+     localDataSource = trim ( DataSource )
+     ReplaceAll ( localDataSource, " ", "")
+     localDataSourceValue = ucase(left( localDataSource, instr( localDataSource, "=")-1))
+     localDataSourceState = ucase(mid( localDataSource, instr( localDataSource, "=")+1))
+
+
+     for searchIndex = 0 to ubound( ReverseCfgFileLookup ) - 1
+        'print ucase(ReverseCfgFileLookup( searchIndex ).Value) , localDataSourceValue
+        if ucase(ReverseCfgFileLookup( searchIndex ).Value) = localDataSourceValue then
+
+          adaptedConfig  = " CONFIG "+ReverseCfgFileLookup( searchIndex ).Value + "="+localDataSourceState+ Pad32
+          adaptedConfig  = Left (  adaptedConfig + Pad32+ Pad32, 48 ) + " ;C1 Reverselookup " + DataSource
+          ConfigTidy = adaptedConfig
+          Exit Function
+
+        End if
+
+     next
+
+      adaptedConfig  = " CONFIG "+DataSource+ Pad32
+      adaptedConfig  = Left (  adaptedConfig + Pad32, 48 ) + " ;C2 No reverselookup "
+      ConfigTidy = adaptedConfig
+
+ end if
+
+End Function
+
 Function AsmTidy (DataSource As String ,  StoredGCASM as integer ) As String
 
   Dim As LinkedListElement Pointer CurrLine
@@ -1050,6 +1088,7 @@ SUB AssembleProgram
         'Add default, since it is not overridden
         T += 1
         CheckTemp(T) = DefConfig(CD)
+
         ApplyNextDefault:
       Next
 

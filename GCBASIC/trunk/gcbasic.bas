@@ -23,7 +23,15 @@ Type PICASInc
   NumVal as Integer
 End Type
 
+Type PICASCfg
+  Value as String
+  State as String
+  Config as String
+End Type
+
+
 Dim Shared ReverseIncFileLookup ( 1000) as PICASInc
+Dim Shared ReverseCfgFileLookup ( 1000) as PICASCfg
 
 
 'Array sizes
@@ -490,6 +498,7 @@ DECLARE SUB WriteErrorLog
 Declare Sub AddAsmSymbol(SymName As String, SymValue As String)
 Declare Sub AsmOptimiser (CompSub As SubType Pointer)
 DECLARE FUNCTION AsmTidy (DataSource As String, StoredGCASM as integer = -1 ) As String
+DECLARE Function ConfigTidy (DataSource As String ) As String
 DECLARE SUB AssembleProgram
 Declare Sub BuildAsmSymbolTable
 Declare Function GetConfigBaseLoc As Integer
@@ -609,7 +618,7 @@ Dim Shared As Integer PauseTimeout, OldSBC, ReserveHighProg, HighTBLPTRBytes
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 Dim Shared As Double DebugTime
-Dim Shared As String ChipPICASDataFile
+Dim Shared As String ChipPICASDataFile,ChipPICASConfigFile,ChipPICASRoot
 'Assembler vars
 DIM SHARED As Integer ToAsmSymbols
 
@@ -725,7 +734,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-02-10"
+Version = "0.98.<<>> 2021-02-11"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -14999,13 +15008,19 @@ Sub ReadPICASChipData
   dim as string InLine
   dim as integer ffile, fresult,findex
 
-  ChipPICASDataFile = Left( AsmExe, InStrRev( ReplaceToolVariables(AsmExe,,, AsmTool), "\"))
-  ChipPICASDataFile = Left( ChipPICASDataFile , InStrRev( ChipPICASDataFile , "\")-1)
-  ChipPICASDataFile = Left( ChipPICASDataFile , InStrRev( ChipPICASDataFile , "\")-1)
-  ChipPICASDataFile = Left( ChipPICASDataFile , InStrRev( ChipPICASDataFile , "\"))+"pic\include\proc\pic"+LCase(ChipName) + ".inc"
+'ChipPICASConfigFile,ChipPICASRoot
+
+  ChipPICASRoot = Left( AsmExe, InStrRev( ReplaceToolVariables(AsmExe,,, AsmTool), "\"))
+  ChipPICASRoot = Left( ChipPICASRoot , InStrRev( ChipPICASRoot , "\")-1)
+  ChipPICASRoot = Left( ChipPICASRoot , InStrRev( ChipPICASRoot , "\")-1)
+  ChipPICASDataFile = Left( ChipPICASRoot , InStrRev( ChipPICASRoot , "\"))+"pic\include\proc\pic"+LCase(ChipName) + ".inc"
   ChipPICASDataFile = mid(ChipPICASDataFile, 2)
 
-  'Check that the chip data is present
+  ChipPICASConfigFile = Left( ChipPICASRoot , InStrRev( ChipPICASRoot , "\"))+"pic\dat\cfgmap\"+LCase(ChipName) + ".cfgmap"
+  ChipPICASConfigFile = mid( ChipPICASConfigFile , 2)
+
+
+   'Check that the chip data is present
     findex = 0
     ' Find the first free file number.
     ffile = FreeFile
@@ -15024,9 +15039,33 @@ Sub ReadPICASChipData
       end if
 
     LOOP
-    Close
+    Close #ffile
 
-    'AS inc file not found, show error and quit
+
+   'Check that the cfg data is present
+    findex = 0
+    ' Find the first free file number.
+    ffile = FreeFile
+    fresult = OPEN ( ChipPICASConfigFile For Input As ffile )
+    DO WHILE NOT EOF(ffile)
+      LINE INPUT #ffile, InLine
+      if instr( inline, ":") <> 0 and instr( inline, "=") <> 0 then
+         'read next line
+         'PLLSEL_PLL3X:PLLSEL=PLL3X
+         ReverseCfgFileLookup( findex ).Value = trim(mid(inline, instr(inline,":")+1, instr(inline,"=")-instr(inline,":")-1 ))
+         ReverseCfgFileLookup( findex ).State = trim(mid(inline, instr(inline,"=")+1))
+         ReverseCfgFileLookup( findex ).Config = ReverseCfgFileLookup( findex ).Value+"="+ReverseCfgFileLookup( findex ).State
+         'print  ReverseCfgFileLookup( findex ).Config
+
+         findex = findex +1
+
+      end if
+
+    LOOP
+    Close #ffile
+
+
+   'AS inc file not found, show error and quit
   '  LogError Message("PICASChipNotSupported")
 
 #ENDIF
@@ -16133,8 +16172,9 @@ Sub WriteAssembly
           PRINT #2, " TITLE       "+ CHR(34)+AFI+CHR(34)
           PRINT #2, " SUBTITLE    "+ CHR(34)+date+CHR(34)
           PRINT #2, ""
-          PRINT #2, "; Reverse lookup file"
+          PRINT #2, "; Reverse lookup file(s)"
           PRINT #2, "; "+ChipPICASDataFile
+          PRINT #2, "; "+ChipPICASConfigFile
           PRINT #2, ""
           PRINT #2, " #include <xc.inc>"
           PRINT #2, ""
@@ -16204,7 +16244,7 @@ Sub WriteAssembly
                  configarray(configarraycounter ) = mid ( configarray(configarraycounter ) , 2 ) 'renove the leading underscore
                  replace( configarray(configarraycounter ), "_", " = " ) 'replace the underscore with =
 
-                 if AFISupport = 1 then print #2, " CONFIG "+configarray(configarraycounter )
+                 if AFISupport = 1 then print #2,  ConfigTidy( configarray(configarraycounter ) )
                end if
 
             next
@@ -16221,7 +16261,7 @@ Sub WriteAssembly
               StringSplit ( adaptedConfigLine, ",",-1,configarray() )
               for configarraycounter = 0 to ubound(configarray)
                 if legacyConfigPublished = 0 then print #1, " CONFIG "+configarray(configarraycounter )
-                if AFISupport = 1 then print #2, " CONFIG "+configarray(configarraycounter )
+                if AFISupport = 1 then print #2, ConfigTidy( configarray(configarraycounter ) )
               next
           else
 
@@ -16244,14 +16284,23 @@ Sub WriteAssembly
       dim as Integer CD
       FOR CD = 1 TO DCOC
         if left(DefCONFIG(CD),1) <> ";" then
-          print #2, " CONFIG  " +DefCONFIG(CD)
-        else
-          'restore the initial value
-          DefCONFIG(CD)=mid( DefCONFIG(CD),2)
+          ' print #2, " CONFIG  " +DefCONFIG(CD)
+          print #2, ConfigTidy(DefCONFIG(CD))
         end if
       Next
       print #2, ""
     end if
+
+    'We have to restore Duplicate configs.  They may have been commented out but we need them back for GCASM,
+    'So, this becomes a non-destructive operations.
+    dim as Integer CD
+    FOR CD = 1 TO DCOC
+      if left(DefCONFIG(CD),1) = ";" then
+        'restore the initial value
+        DefCONFIG(CD)=mid( DefCONFIG(CD),2)
+      end if
+    Next
+
 
   ElseIf ModeAVR Then
     Temp = LCase(ChipName)
