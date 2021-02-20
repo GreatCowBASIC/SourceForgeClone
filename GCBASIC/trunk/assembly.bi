@@ -1559,6 +1559,9 @@ Sub BuildAsmSymbolTable
       'EQU directive
       IF INSTR(AsmLine->Value, " EQU ") <> 0 THEN FoundDirective = -1: AsmLine->Value = ""
 
+'ERV'PSECT at PAGE boundary
+IF INSTR(AsmLine->Value, "__PROGMEMPAGE") <> 0 THEN FoundDirective = -1: AsmLine->Value = ""
+
       'If nothing else, then line is label
       If CurrCmd = 0 And FoundDirective = 0 THEN
         IF Right(AsmLine->Value, 1) = ":" Then AsmLine->Value = Left(AsmLine->Value, LEN(AsmLine->Value) - 1)
