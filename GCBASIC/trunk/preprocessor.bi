@@ -1603,6 +1603,7 @@ LoadNextFile:
   IF AFISupport = 1  and ModePIC Then
       IF VBS = 1 THEN PRINT SPC(5); Message("ReadPICASChipData")
       ReadPICASChipData
+      If ErrorsFound = -1 then Exit Sub
   END IF
 
   'Force exit at this point if compilation is going to be skipped

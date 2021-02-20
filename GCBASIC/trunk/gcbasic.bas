@@ -69,6 +69,8 @@ Type ProgLineMeta
   LineSize As Integer 'Size of line in words.
 
   isLabel as Integer
+  isPICAS as Integer
+
   RawConfig as string
 
 End Type
@@ -734,7 +736,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-02-11"
+Version = "0.98.<<>> 2021-02-20"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -10459,14 +10461,23 @@ Sub PICASAssembler
   elseif OPEN(ReplaceToolVariables("%filename%", "err")  For Input As #1) = 0 THEN
     DO WHILE NOT EOF(1)
       LINE INPUT #1, DataSource
+
       IF INSTR(UCase(DataSource), "ERROR") <> 0 THEN
 
         'Source:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S:661:: error: (876) syntax error
+        'or
+        'Source:   D:\Great-Cow-BASIC-Demonstration-Sources.git\trunk\GLCD_Solutions\GLCD_Simple_Demonstration_Solutions\GLCD_Simple_Demonstration_Hardware_I2C_16f18855_for_SSD1306@32.o:172:: error: (1357) fixup overflow storing 0x825 in 2 bytes at 0xF98/0x2 -> 0x7CC (D:\Great-Cow-BASIC-Demonstration-Sources.git\trunk\GLCD_Solutions\GLCD_Simple_Demonstration_Solutions\GLCD_Simple_Demonstration_Hardware_I2C_16f18855_for_SSD1306@32.o 172/0x8)
+
         'Target:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S (661):  Error: syntax error
 
 
         'just format the output. Oh my... a real issue to sort this out!
-        StringSplit ( DataSource, "\\",-1,ErrorArray() )
+        if instr( DataSource, "\\" ) > 0 then
+          StringSplit ( DataSource, "\\",-1,ErrorArray() )
+        else
+          StringSplit ( DataSource, "\",-1,ErrorArray() )
+        end if
+
         Temp  = mid ( ErrorArray( ubound(ErrorArray)), 2 )
 
         Replace( Temp, ":: e", ": E" )
@@ -10480,7 +10491,6 @@ Sub PICASAssembler
 
         ErrorsFound = -1
         LogOutputMessage Temp+" "
-
 
       END IF
 
@@ -15025,6 +15035,14 @@ Sub ReadPICASChipData
     ' Find the first free file number.
     ffile = FreeFile
     fresult = OPEN ( ChipPICASDataFile For Input As ffile )
+
+    If fresult <> 0 then
+        LogError Message("PICASNotFound")
+        WriteErrorLog
+        ErrorsFound = - 1
+        end
+    End if
+
     DO WHILE NOT EOF(ffile)
       LINE INPUT #ffile, InLine
       if left( InLine,7) =  "#define" and instr( inline, "BANKMASK") = 0  <> 0 then
@@ -16101,8 +16119,8 @@ Sub WriteAssembly
   Dim As SysVarType Pointer SysVar
 
   If AFISupport = 1 Then
-    If ChipFamily <> 16 and ChipFamily <> 15 then
-        LogError "Chip Family not support by PIC-AS. Please change USE.INI to GCASM", ""
+    If MODEAVR  then
+        LogError "Chip Family not supported by PIC-AS. Please change USE.INI to GCASM", ""
         ErrorsFound = -1
         exit Sub
     End if
@@ -16341,6 +16359,8 @@ Sub WriteAssembly
 
   VarList = HashMapToList(FinalVarList, -1)
   IF VarList <> 0 AndAlso VarList->Next <> 0 THEN
+    Dim localoutline as string
+
     PRINT #1, Star80
     PRINT #1, ""
     PRINT #1, ";Set aside memory locations for variables"
@@ -16357,6 +16377,7 @@ Sub WriteAssembly
         If ModePIC and AFISupport = 1 then
           'PICAS
           PICASVarDecLine = " "+left(.Name+Pad32, 32) + " EQU " + trim(.Value) +"                    ; 0x"+ Hex(val(.Value))
+          localoutline = "Global "+.Name
           'ASM
           VarDecLine = left(.Name+Pad32, 32) + " EQU " + .Value
         ElseIf ModePIC Or ModeZ8 Then
@@ -16368,7 +16389,10 @@ Sub WriteAssembly
         End If
       End With
       PRINT #1, AsmTidy(VarDecLine, -1 )
-      if AFISupport = 1 then PRINT #2, AsmTidy(PICASVarDecLine, 0 )
+      if AFISupport = 1 then
+        PRINT #2, AsmTidy( localoutline, 0 )
+        PRINT #2, AsmTidy(PICASVarDecLine, 0 )
+      End if
       CurrLine = CurrLine->Next
     Loop
     PRINT #1, ""
@@ -16407,12 +16431,16 @@ Sub WriteAssembly
   IF FALC > 0 THEN
     PRINT #1, AsmTidy(";Alias variables", -1 )
     PRINT #2, AsmTidy(";Alias variables", 0 )
+
+    Dim localoutline as string
+
     FOR PD = 1 TO FALC
       With FinalAliasList(PD)
 
        If ModePIC and AFISupport = 1 then
           'PICAS
           PICASVarDecLine = " "+left(.Name+Pad32, 32) + " EQU " + trim(.Value)
+          localoutline = "Global "+.Name
           'ASM
           VarDecLine = left(.Name+Pad32, 32) + " EQU " + .Value
         ElseIf ModePIC Or ModeZ8 Then
@@ -16424,7 +16452,10 @@ Sub WriteAssembly
         End If
       End With
       PRINT #1, AsmTidy(VarDecLine, -1 )
-      if AFISupport = 1 then PRINT #2, AsmTidy(PICASVarDecLine, 0 )
+      if AFISupport = 1 then
+        PRINT #2, AsmTidy( localoutline, 0 )
+        PRINT #2, AsmTidy(PICASVarDecLine, 0 )
+      End if
     NEXT
     PRINT #1, ""
     PRINT #1, Star80
@@ -16443,7 +16474,7 @@ Sub WriteAssembly
           Case 16
             PRINT #2, " PSECT   RESETVEC,delta=1, abs"
           Case Else
-            PRINT #2, " PSECT   RESETVEC,delta=2, abs"
+            PRINT #2, " PSECT   PROGMEM0,delta=2, abs"
         End Select
         PRINT #2, " RESETVEC:"
       end if
@@ -16454,8 +16485,76 @@ Sub WriteAssembly
   if AFISupport = 1 then
     Print message ("PICASMStartDotS")
   end if
+
   Do While CurrLine <> 0
-    PRINT #1, AsmTidy(CurrLine->Value, -1 )
+
+    IF GetMetaData(Currline)->IsPICAS = -1 then
+     'This is specific line for PICAS
+     'Implementation assumes only PSECT PAGE COMMANDS - not required for PIC18
+     If ChipFamily <> 16 then
+        If AFISupport = 1 then
+          PRINT #2, AsmTidy(CurrLine->Value, -1 )
+        Else
+          'Comment out line as GCASM will barf, if, still in list.
+          CurrLine->Value = ";"+CurrLine->Value
+        End if
+     End if
+     CurrLine = CurrLine->Next
+     Continue Do
+
+    end if
+
+
+    'optmise CALLS to FCALLS
+    If instr(ucase(CurrLine->Next->Value),"CALL ") > 0 and instr(ucase(CurrLine->Value),"PAGESEL") > 0 then
+
+        dim outline as string
+
+        'Pagesel to legacy
+        PRINT #1, AsmTidy(CurrLine->Value, -1 )
+
+
+        CurrLine = CurrLine->Next
+        outline = CurrLine->Value
+        PRINT #1, AsmTidy(outline, -1 )
+
+        replace( outline, "CALL ", "FCALL ")
+        if AFISupport = 1 then PRINT #2, AsmTidy(outline, -1 )
+        CurrLine = CurrLine->Next
+        If instr(CurrLine->Value, "$") > 0 then
+            PRINT #1, AsmTidy(CurrLine->Value, -1 )
+
+            'consume the PAGESEL $ for AFI
+            CurrLine = CurrLine->Next
+        end if
+        Continue Do
+    end if
+
+    'optmise GOTO to LJMP
+    If instr(ucase(CurrLine->Value),"PAGESEL ") > 0  and instr(ucase(CurrLine->Next->Value),"GOTO ") > 0  then
+
+        dim outline as string
+
+        'Pagesel to legacy
+        PRINT #1, AsmTidy(CurrLine->Value, -1 )
+
+        CurrLine = CurrLine->Next
+        outline = CurrLine->Value
+
+        PRINT #1, AsmTidy(outline , -1 )
+
+        replace( outline, "GOTO ", "LJMP ")
+        if AFISupport = 1 then PRINT #2, AsmTidy(outline, -1 )
+
+        'Get next line
+        CurrLine = CurrLine->Next
+        Continue Do
+    end if
+
+    IF instr( UCase(CurrLine->Value), "ALIGN 2") = 0 then
+      PRINT #1, AsmTidy(CurrLine->Value, -1 )
+    end if
+
     'PRINTPICAS code
     if AFISupport = 1 then
 
@@ -16745,7 +16844,12 @@ Sub WriteAssembly
 
           else
 
-            if trim(outline) <> "" then outline= outline+":"
+
+            if trim(outline) <> "" then
+                print #2,  AsmTidy( "Global " +ucase(outline) ,0 )
+                outline= outline+":"
+            End if
+
 
           end if
 
@@ -17433,8 +17537,24 @@ Sub MergeSubroutines
     If ModePIC Then
       If ChipFamily = 16 Or IntSub = 0 Or CurrPage > 1 Then
           If UserCodeOnlyEnabled = 0  Then
+
+If CurrPage > 1 then
+    CurrLine = LinkedListInsert(CurrLine, " PSECT Progmem" + Str(CurrPage - 1) + ",class=CODE,space=SPACE_CODE,delta=2, abs, ovrld " )
+    GetMetaData(CurrLine)->IsPICAS = -1
+
+'    CurrLine = LinkedListInsert(CurrLine, "__ProgmemPage" + Str(CurrPage - 1)+":" )
+'    GetMetaData(CurrLine)->IsPICAS = -1
+
+ELSE
+
+'    CurrLine = LinkedListInsert(CurrLine, " PSECT __ProgmemPage" + Str(CurrPage - 1) + ",class=CODE,space=SPACE_CODE,delta=2, abs,  size = "+ Str(ProgMemPage(CurrPage).StartLoc) )
+'    GetMetaData(CurrLine)->IsPICAS = -1
+
+End if
+
             CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc))
             CurrPagePos = ProgMemPage(CurrPage).StartLoc
+
           Else
               'Output as comment
               CurrLine = LinkedListInsert(CurrLine, ";ORG " + Str(ProgMemPage(CurrPage).StartLoc))
