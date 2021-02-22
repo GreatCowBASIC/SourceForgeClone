@@ -291,30 +291,44 @@ Function ConfigTidy (DataSource As String ) As String
   Dim localDataSourceValue  as String
   Dim localDataSourceState  as String
   Dim adaptedConfig as String
+  Dim localpatchCounter as Integer
 
   if AFISupport = 1 then
+     ' print trim(DataSource)
+     'Apply patches in INI file
+     for localpatchCounter = 0 to patchCounter
+          'print ucase(trim(Patches( localpatchCounter ).Source)) ,   ucase(trim(DataSource))
+          if ucase(trim(Patches( localpatchCounter ).Source)) =  ucase(trim(DataSource)) then
+              DataSource = Patches( localpatchCounter ).Destination
+              exit for
+          end if
+      next
 
      localDataSource = trim ( DataSource )
      ReplaceAll ( localDataSource, " ", "")
+
+
      localDataSourceValue = ucase(left( localDataSource, instr( localDataSource, "=")-1))
      localDataSourceState = ucase(mid( localDataSource, instr( localDataSource, "=")+1))
 
-
      for searchIndex = 0 to ubound( ReverseCfgFileLookup ) - 1
-        'print ucase(ReverseCfgFileLookup( searchIndex ).Value) , localDataSourceValue
-        if ucase(ReverseCfgFileLookup( searchIndex ).Value) = localDataSourceValue then
 
+'print ucase(ReverseCfgFileLookup( searchIndex ).value) , "<"+localDataSourceValue+">",
+
+        if ReverseCfgFileLookup( searchIndex ).Config = "" then exit for
+
+        if ucase(ReverseCfgFileLookup( searchIndex ).Value) = localDataSourceValue then
           adaptedConfig  = " CONFIG "+ReverseCfgFileLookup( searchIndex ).Value + "="+localDataSourceState+ Pad32
+
           adaptedConfig  = Left (  adaptedConfig + Pad32+ Pad32, 48 ) + " ;C1 Reverselookup " + DataSource
           ConfigTidy = adaptedConfig
           Exit Function
-
         End if
 
      next
 
       adaptedConfig  = " CONFIG "+DataSource+ Pad32
-      adaptedConfig  = Left (  adaptedConfig + Pad32, 48 ) + " ;C2 No reverselookup "
+      adaptedConfig  = Left (  adaptedConfig + Pad32, 48 ) + " ;C2 No reverselookup "+ " was '" + DataSource+"'"
       ConfigTidy = adaptedConfig
 
  end if
