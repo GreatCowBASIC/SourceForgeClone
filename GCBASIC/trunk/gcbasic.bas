@@ -29,10 +29,14 @@ Type PICASCfg
   Config as String
 End Type
 
+Type PICASPatch
+  Source as String
+  Destination as String
+End Type
 
 Dim Shared ReverseIncFileLookup ( 1000) as PICASInc
 Dim Shared ReverseCfgFileLookup ( 1000) as PICASCfg
-
+Dim Shared Patches(100) as PICASPatch
 
 'Array sizes
 #Define MAX_PROG_PAGES 20
@@ -700,6 +704,7 @@ Dim Shared as Integer configarraycounter
 
 'PICAS Converter
 Dim Shared as string currentLineElements()
+Dim Shared as Integer patchCounter = 0
 
 #Define DISABLEOPTIMISATION "f122 jmp"
 
@@ -13224,6 +13229,33 @@ SUB InitCompiler
               *TempStr = MsgVal
               LinkedListInsert(ToolVariables, MsgName)->MetaData = TempStr
 
+            ElseIf CurrentTag= "patch=asm2picas" Then
+              'create patches from
+
+              Dim localCharPosition as Integer
+              'strip off first quote
+              localCharPosition = instr( DataSource, chr(34) )
+              DataSource = Mid( DataSource, localCharPosition + 1 )
+
+              localCharPosition = instr( DataSource, chr(34) )
+              MsgName = left ( DataSource, localCharPosition - 1 )
+
+              Patches( patchCounter ).Source = ucase(MsgName)
+
+              DataSource = mid ( DataSource , localCharPosition )
+
+              localCharPosition = instr( DataSource, "=" )
+              DataSource = Mid ( DataSource,localCharPosition + 1 )
+
+
+              localCharPosition = instr( DataSource, chr(34) )  'find the next char
+              DataSource = mid ( DataSource , localCharPosition + 1 )
+
+              localCharPosition = instr( DataSource, chr(34) )  'find the next char
+              MsgVal = mid ( DataSource ,1, localCharPosition -1 )
+              Patches( patchCounter ).Destination = ucase(MsgVal)
+              patchCounter = patchCounter + 1
+
             ElseIf Left(CurrentTag, 4) = "tool" Then
               Select Case MsgName
                 Case "name"
@@ -16823,15 +16855,6 @@ Sub WriteAssembly
                                   end if
                             end if
                           end if
-
-'                          If instr(trim(ucase(Param1)), "CALL") <> 0 or instr(trim(ucase(Param1)), "GOTO") <> 0 then
-'                              outline = " "+Param1 + " "+"BANKMASK("+Param2+")"
-'                              if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-'                                Print #2, ";BA: ASM Source was: "+CurrLine->Value
-'                              end if
-'                          end if
-
-
 
                       end if
 
