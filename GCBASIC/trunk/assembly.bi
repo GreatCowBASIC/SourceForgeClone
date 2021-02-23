@@ -300,6 +300,7 @@ Function ConfigTidy (DataSource As String ) As String
           'print ucase(trim(Patches( localpatchCounter ).Source)) ,   ucase(trim(DataSource))
           if ucase(trim(Patches( localpatchCounter ).Source)) =  ucase(trim(DataSource)) then
               DataSource = Patches( localpatchCounter ).Destination
+
               exit for
           end if
       next
@@ -308,8 +309,8 @@ Function ConfigTidy (DataSource As String ) As String
      ReplaceAll ( localDataSource, " ", "")
 
 
-     localDataSourceValue = ucase(left( localDataSource, instr( localDataSource, "=")-1))
-     localDataSourceState = ucase(mid( localDataSource, instr( localDataSource, "=")+1))
+     localDataSourceValue = left( localDataSource, instr( localDataSource, "=")-1)
+     localDataSourceState = mid( localDataSource, instr( localDataSource, "=")+1)
 
      for searchIndex = 0 to ubound( ReverseCfgFileLookup ) - 1
 
