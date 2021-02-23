@@ -741,7 +741,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-02-20"
+Version = "0.98.<<>> 2021-02-23"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -13253,7 +13253,7 @@ SUB InitCompiler
 
               localCharPosition = instr( DataSource, chr(34) )  'find the next char
               MsgVal = mid ( DataSource ,1, localCharPosition -1 )
-              Patches( patchCounter ).Destination = ucase(MsgVal)
+              Patches( patchCounter ).Destination = MsgVal
               patchCounter = patchCounter + 1
 
             ElseIf Left(CurrentTag, 4) = "tool" Then
@@ -17619,6 +17619,7 @@ End if
               End If
 
               CurrLine = LinkedListInsert(CurrLine, SubNameOut)
+              GetMetaData(CurrLine)->IsLabel = -1
               CurrLine = LinkedListInsert(CurrLine, " goto SysInd_" + SubNameOut)
             End If
 
