@@ -741,7 +741,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-02-23"
+Version = "0.98.<<>> 2021-02-24"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -16226,8 +16226,6 @@ Sub WriteAssembly
           PRINT #2, "; "+ChipPICASDataFile
           PRINT #2, "; "+ChipPICASConfigFile
           PRINT #2, ""
-          PRINT #2, " #include <xc.inc>"
-          PRINT #2, ""
           PRINT #2, Star80
           PRINT #2, ";Explicit PIC-AS constants to resolve the crazyness of the PIC-AS syntax"
           PRINT #2, ";These are therefore the same as MPASM"
@@ -16351,6 +16349,17 @@ Sub WriteAssembly
       end if
     Next
 
+    if AFISupport = 1 then
+
+      PRINT #2, ""
+      PRINT #2, Star80
+      PRINT #2, "; The XC8 xc.inc include file.  This MUST be placed after the CONFIG statements."
+      PRINT #2, "; The position is a fix at PIC-AS.EXE 2.32 to resolve 'syntax errors'"
+      PRINT #2, ""
+      PRINT #2, " #include <xc.inc>"
+      PRINT #2, ""
+
+    End if
 
   ElseIf ModeAVR Then
     Temp = LCase(ChipName)
@@ -16422,7 +16431,7 @@ Sub WriteAssembly
       End With
       PRINT #1, AsmTidy(VarDecLine, -1 )
       if AFISupport = 1 then
-        PRINT #2, AsmTidy( localoutline, 0 )
+        if PreserveMode <> 0 then PRINT #2, AsmTidy( localoutline, 0 )
         PRINT #2, AsmTidy(PICASVarDecLine, 0 )
       End if
       CurrLine = CurrLine->Next
@@ -16485,7 +16494,7 @@ Sub WriteAssembly
       End With
       PRINT #1, AsmTidy(VarDecLine, -1 )
       if AFISupport = 1 then
-        PRINT #2, AsmTidy( localoutline, 0 )
+        if PreserveMode <> 0 then PRINT #2, AsmTidy( localoutline, 0 )
         PRINT #2, AsmTidy(PICASVarDecLine, 0 )
       End if
     NEXT
@@ -16869,7 +16878,7 @@ Sub WriteAssembly
 
 
             if trim(outline) <> "" then
-                print #2,  AsmTidy( "Global " +ucase(outline) ,0 )
+                if PreserveMode <> 0 then print #2,  AsmTidy( "Global " +ucase(outline) ,0 )
                 outline= outline+":"
             End if
 
