@@ -741,7 +741,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-02-24"
+Version = "0.98.<<>> 2021-02-27"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8746,7 +8746,7 @@ Sub CompileTables
         TableSub->Required = -1
         CurrLine = LinkedListInsert(CurrLine, "")
 
-        IF AFISupport = 1  and ModePIC Then
+        IF AFISupport = 1  and ModePIC and ChipFamily = 16 Then
           CurrLine = LinkedListInsert(CurrLine, " ALIGN 2;X3")
         End if
 
@@ -8905,7 +8905,7 @@ Sub CompileTables
               NEXT
             End If
 
-            IF AFISupport = 1  and ModePIC Then
+            IF AFISupport = 1  and ModePIC and ChipFamily = 16 Then
               CurrLine = LinkedListInsert(CurrLine, " ALIGN 2;X4")
             End if
 
@@ -16662,7 +16662,23 @@ Sub WriteAssembly
                               replace ( outline , trim(Param1) , outstring )
                               outline = outline
                               if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";A2: ASM Source was: "+CurrLine->Value
+                                Print #2, ";A2: ASM Source was: "+CurrLine->Value + "  Param1 = " + trim(Param1) + " - target = "+outstring + " now " + outline
+                              end if
+                              'assigj here so we can see the debug
+                              Param1 = outstring
+
+                              'We know that we are dealing with a register, so, reverse lookup to correct
+                              if Param3 = "" then
+                                outline = ASMInstruction+" "+outstring+","+Param2
+                                if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                  Print #2, ";A4: ASM Source was: "+CurrLine->Value
+                                end if
+                              else
+                                outline = ASMInstruction+" "+outstring+","+Param2+","+Param3
+                                if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
+                                  Print #2, ";A5: ASM Source was: "+CurrLine->Value + " target = " + outline
+                                end if
+
                               end if
 
                         else
@@ -16671,24 +16687,6 @@ Sub WriteAssembly
                               if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
                                 Print #2, ";A3: ASM Source was: "+CurrLine->Value
                               end if
-                        end if
-
-                        'We know that we are dealing with a register, so, reverse lookup to correct
-                        outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param1)->location )
-                        if outstring <> "" then
-
-                          if Param3 = "" then
-                            outline = ASMInstruction+" "+outstring+","+Param2
-                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                              Print #2, ";A4: ASM Source was: "+CurrLine->Value
-                            end if
-                          else
-                            outline = ASMInstruction+" "+outstring+","+Param2+","+Param3
-                            if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                              Print #2, ";A5: ASM Source was: "+CurrLine->Value
-                            end if
-
-                          end if
                         end if
 
                       else
@@ -16721,7 +16719,7 @@ Sub WriteAssembly
                           else
                             outline = ASMInstruction+" "+Param1+","+Param2+","+Param3
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";A8: ASM Source was: "+CurrLine->Value
+                                Print #2, ";A8: ASM Source was: "+CurrLine->Value   + " target = " + outline
                             end if
                           end if
                       end if
@@ -17570,19 +17568,19 @@ Sub MergeSubroutines
       If ChipFamily = 16 Or IntSub = 0 Or CurrPage > 1 Then
           If UserCodeOnlyEnabled = 0  Then
 
-If CurrPage > 1 then
-    CurrLine = LinkedListInsert(CurrLine, " PSECT Progmem" + Str(CurrPage - 1) + ",class=CODE,space=SPACE_CODE,delta=2, abs, ovrld " )
-    GetMetaData(CurrLine)->IsPICAS = -1
+            If CurrPage > 1 then
+                CurrLine = LinkedListInsert(CurrLine, " PSECT Progmem" + Str(CurrPage - 1) + ",class=CODE,space=SPACE_CODE,delta=2, abs, ovrld " )
+                GetMetaData(CurrLine)->IsPICAS = -1
 
-'    CurrLine = LinkedListInsert(CurrLine, "__ProgmemPage" + Str(CurrPage - 1)+":" )
-'    GetMetaData(CurrLine)->IsPICAS = -1
+            '    CurrLine = LinkedListInsert(CurrLine, "__ProgmemPage" + Str(CurrPage - 1)+":" )
+            '    GetMetaData(CurrLine)->IsPICAS = -1
 
-ELSE
+            ELSE
 
-'    CurrLine = LinkedListInsert(CurrLine, " PSECT __ProgmemPage" + Str(CurrPage - 1) + ",class=CODE,space=SPACE_CODE,delta=2, abs,  size = "+ Str(ProgMemPage(CurrPage).StartLoc) )
-'    GetMetaData(CurrLine)->IsPICAS = -1
+            '    CurrLine = LinkedListInsert(CurrLine, " PSECT __ProgmemPage" + Str(CurrPage - 1) + ",class=CODE,space=SPACE_CODE,delta=2, abs,  size = "+ Str(ProgMemPage(CurrPage).StartLoc) )
+            '    GetMetaData(CurrLine)->IsPICAS = -1
 
-End if
+            End if
 
             CurrLine = LinkedListInsert(CurrLine, " ORG " + Str(ProgMemPage(CurrPage).StartLoc))
             CurrPagePos = ProgMemPage(CurrPage).StartLoc
@@ -17887,7 +17885,7 @@ End if
           EPDataLoc += (.Items + 1)
         End With
         'move down as we dont need to align on every table
-        IF AFISupport = 1  and ModePIC Then
+        IF AFISupport = 1  and ModePIC and ChipFamily = 16 Then
           'There should only one table of this type, and, align may not be needed... but, I do not know if this is the only once....
           CurrLine = LinkedListInsert(CurrLine, " ALIGN 2 ;X1")
         End if
@@ -17897,7 +17895,7 @@ End if
 
     Next
 
-    IF AFISupport = 1  and ModePIC  Then
+    IF AFISupport = 1  and ModePIC and ChipFamily = 16 Then
       'There should only one table of this type, and, align may not be needed... but, I do not know if this is the only once....
       CurrLine = LinkedListInsert(CurrLine, " ALIGN 2;X2")
     End if
