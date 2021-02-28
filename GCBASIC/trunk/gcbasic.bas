@@ -696,6 +696,7 @@ Dim Shared As String CompReportFormat
 
 Dim Shared As Integer AFISupport = 0
 Dim Shared As Integer StoredGCASM = 0
+Dim Shared As Integer MakeHexMode = 1
 
 'Config correct code
 Dim Shared as string adaptedConfigLine
@@ -741,7 +742,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-02-27"
+Version = "0.98.<<>> 2021-02-28"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -792,6 +793,7 @@ ToolVariables = LinkedListCreate
 CompileSkipped = 0
 OldSBC = -1
 DebugTime = 0
+MakeHexMode = 1
 
 ChipProgrammerName=""
 
@@ -892,7 +894,7 @@ IF Not ErrorsFound THEN
         AFISupport = 0
   End IF
 
-  If AsmExe <> "" Then
+  If AsmExe <> "" and MakeHexMode = 1 Then
 
     IF UCase(AsmExe) = "GCASM" THEN
       'Internal assembler
@@ -13036,6 +13038,12 @@ SUB InitCompiler
       OFI = Mid(DataSource, 4)
       OutNotSet = 0
       'Do While INSTR(OFI, Chr(34)) <> 0: Replace OFI, Chr(34), "": Loop
+
+    'Make hex mode
+    ElseIf LeftThree = "/H:" Or LeftThree = "-H:" Then
+      Temp = Right(ParamUpper, 1)
+      IF Temp = "Y" OR Temp = "1" Then MakeHexMode = 1
+      IF Temp = "N" OR Temp = "0" Then MakeHexMode = 0
 
     'Preserve mode
     ElseIf LeftThree = "/K:" Or LeftThree = "-K:" Then
