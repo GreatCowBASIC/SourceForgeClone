@@ -10469,14 +10469,9 @@ Sub PICASAssembler
     DO WHILE NOT EOF(1)
       LINE INPUT #1, DataSource
 
-      IF INSTR(UCase(DataSource), "ERROR") <> 0 THEN
-
-        'Source:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S:661:: error: (876) syntax error
-        'or
-        'Source:   D:\Great-Cow-BASIC-Demonstration-Sources.git\trunk\GLCD_Solutions\GLCD_Simple_Demonstration_Solutions\GLCD_Simple_Demonstration_Hardware_I2C_16f18855_for_SSD1306@32.o:172:: error: (1357) fixup overflow storing 0x825 in 2 bytes at 0xF98/0x2 -> 0x7CC (D:\Great-Cow-BASIC-Demonstration-Sources.git\trunk\GLCD_Solutions\GLCD_Simple_Demonstration_Solutions\GLCD_Simple_Demonstration_Hardware_I2C_16f18855_for_SSD1306@32.o 172/0x8)
-
-        'Target:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S (661):  Error: syntax error
-
+      ' A warning that is really a serious error!!
+      IF INSTR(UCase(DataSource), "WARNING:") <> 0 and INSTR(UCase(DataSource), "(1343)") <> 0 THEN
+        'xcAshfc.4::: warning: (1343) hexfile data at address 0x1000 (0x08) overwritten with 0xF3
 
         'just format the output. Oh my... a real issue to sort this out!
         if instr( DataSource, "\\" ) > 0 then
@@ -10487,7 +10482,7 @@ Sub PICASAssembler
 
         Temp  = mid ( ErrorArray( ubound(ErrorArray)), 2 )
 
-        Replace( Temp, ":: e", ": E" )
+        Replace( Temp, ":: WARNING", ": Error" )
         LBracePos = Instr ( Temp, "(" )-1
         RBracePos = Instr ( Temp, ")" )+2
 
@@ -10498,6 +10493,42 @@ Sub PICASAssembler
 
         ErrorsFound = -1
         LogOutputMessage Temp+" "
+
+      END IF
+
+
+
+      IF INSTR(UCase(DataSource), "ERROR") <> 0 THEN
+
+        'Source:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S:661:: error: (876) syntax error
+        'or
+        'Source:   D:\Great-Cow-BASIC-Demonstration-Sources.git\trunk\GLCD_Solutions\GLCD_Simple_Demonstration_Solutions\GLCD_Simple_Demonstration_Hardware_I2C_16f18855_for_SSD1306@32.o:172:: error: (1357) fixup overflow storing 0x825 in 2 bytes at 0xF98/0x2 -> 0x7CC (D:\Great-Cow-BASIC-Demonstration-Sources.git\trunk\GLCD_Solutions\GLCD_Simple_Demonstration_Solutions\GLCD_Simple_Demonstration_Hardware_I2C_16f18855_for_SSD1306@32.o 172/0x8)
+        'or
+        'Source:    C:\Users\admin\AppData\Local\Temp\xcAsdns.4::: warning: (1343) hexfile data at address 0x1000 (0x20) overwritten with 0xF3
+
+        'Target:  10_use_pwm_via_ccp_and_adc_to_control_led_brightness.S (661):  Error: syntax error
+
+
+
+'        'just format the output. Oh my... a real issue to sort this out!
+'        if instr( DataSource, "\\" ) > 0 then
+'          StringSplit ( DataSource, "\\",-1,ErrorArray() )
+'        else
+'          StringSplit ( DataSource, "\",-1,ErrorArray() )
+'        end if
+'
+'        Temp  = mid ( ErrorArray( ubound(ErrorArray)), 2 )
+'
+'        Replace( Temp, ":: e", ": E" )
+'        LBracePos = Instr ( Temp, "(" )-1
+'        RBracePos = Instr ( Temp, ")" )+2
+'
+'        Temp = Left( Temp, LBracePos) + mid( temp, RBracePos, 255   )
+'        replace ( temp, ":", " (")
+'        replace ( temp, ":", "): ")
+
+        ErrorsFound = -1
+        LogOutputMessage DataSource+" "
 
       END IF
 
@@ -15051,7 +15082,7 @@ Sub ReadPICASChipData
 
   'Get filename
 #IFDEF __FB_UNIX__
-  //not supported
+  'not supported
 #ELSE
 
   'read the INC in and put into ARRAY   ReverseIncFileLookup(
