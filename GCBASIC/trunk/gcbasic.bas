@@ -742,7 +742,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-02-28"
+Version = "0.98.<<>> 2021-03-12"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -5935,7 +5935,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
   Dim As String InLine, Origin, Temp, ErrorOrigin
   Dim As String LoopVar, StartValue, EndValue, StepValue, LoopVarType
-  Dim As Integer FL, CD, StepIntVar
+  Dim As Integer FL, CD, StepIntVar, StepExists
   Dim As LinkedListElement Pointer CurrLine, FindLoop, LoopLoc
 
   CurrLine = CompSub->CodeStart->Next
@@ -5945,7 +5945,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
     IF Left(InLine, 4) = "FOR " THEN
       FL = 0
-
+      StepExists = 0
       Origin = ""
       IF INSTR(InLine, ";?F") <> 0 THEN
         Origin = Mid(InLine, INSTR(InLine, ";?F"))
@@ -5953,7 +5953,10 @@ SUB CompileFor (CompSub As SubType Pointer)
       END IF
 
       Replace InLine, " TO ", Chr(30)
-      IF INSTR(InLine, " STEP ") <> 0 THEN Replace InLine, " STEP ", Chr(31)
+      IF INSTR(InLine, " STEP ") <> 0 THEN
+        Replace InLine, " STEP ", Chr(31)
+        StepExists = -1
+      END IF
       DO WHILE INSTR(InLine, " ") <> 0: Replace InLine, " ", "": LOOP
       LoopVar = Mid(InLine, 4)
       LoopVar = Left(LoopVar, INSTR(LoopVar, "=") - 1)
@@ -5982,7 +5985,15 @@ SUB CompileFor (CompSub As SubType Pointer)
       End If
 
       'Negate step value if necessary
-      IF VAL(EndValue) < VAL(StartValue) AND IsConst(EndValue) AND IsConst(StartValue) AND (InStr(StepValue, "-") = 0 And Not StepIntVar) THEN StepValue = "-" + StepValue
+      IF VAL(EndValue) < VAL(StartValue) AND IsConst(EndValue) AND IsConst(StartValue) AND (InStr(StepValue, "-") = 0 And Not StepIntVar) THEN
+        CurrLine = LinkedListInsert(CurrLine, ";For-next step value was automaticaly negated by compiler")
+        CurrLine = CurrLine->Prev
+        StepValue = "-" + StepValue
+      End if
+
+      If ( Not IsConst(EndValue) Or Not IsConst(StartValue) ) AND IsConst(StepValue) then
+        if StepExists then LogError(Message("ForBadStep"), Origin)
+      End if
 
       FLC = FLC + 1
       FL = 1
