@@ -742,7 +742,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-03-12"
+Version = "0.98.<<>> 2021-03-17"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -5937,6 +5937,7 @@ SUB CompileFor (CompSub As SubType Pointer)
   Dim As String LoopVar, StartValue, EndValue, StepValue, LoopVarType
   Dim As Integer FL, CD, StepIntVar, StepExists
   Dim As LinkedListElement Pointer CurrLine, FindLoop, LoopLoc
+  Dim As Integer IgnoreWarning
 
   CurrLine = CompSub->CodeStart->Next
   Do While CurrLine <> 0
@@ -5944,8 +5945,10 @@ SUB CompileFor (CompSub As SubType Pointer)
     InLine = CurrLine->Value
 
     IF Left(InLine, 4) = "FOR " THEN
+
       FL = 0
       StepExists = 0
+      IgnoreWarning = 0
       Origin = ""
       IF INSTR(InLine, ";?F") <> 0 THEN
         Origin = Mid(InLine, INSTR(InLine, ";?F"))
@@ -5953,10 +5956,21 @@ SUB CompileFor (CompSub As SubType Pointer)
       END IF
 
       Replace InLine, " TO ", Chr(30)
+
       IF INSTR(InLine, " STEP ") <> 0 THEN
         Replace InLine, " STEP ", Chr(31)
-        StepExists = -1
       END IF
+
+      IF INSTR(InLine, "#IGNOREWARNING") <> 0 THEN
+        Replace InLine, "#IGNOREWARNING", ""
+        IgnoreWarning = -1
+      END IF
+
+      'enable new handler  NewNextForhandler force though new handler!
+      If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) then
+        StepExists = -1
+      End if
+
       DO WHILE INSTR(InLine, " ") <> 0: Replace InLine, " ", "": LOOP
       LoopVar = Mid(InLine, 4)
       LoopVar = Left(LoopVar, INSTR(LoopVar, "=") - 1)
@@ -5972,8 +5986,21 @@ SUB CompileFor (CompSub As SubType Pointer)
           StepIntVar = -1
           'Print "Found Integer step variable:" + StepValue
         EndIf
+
+        If HashMapGet(Constants, "NEWNEXTFORHANDLER" )  then
+          'create an integer from the constant
+          If IsConst(StepValue) and StepValue <> "1" then
+             AddVar "SysForLoopStep" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
+             CurrLine = LinkedListInsert(CurrLine,  "SysForLoopStep" + Str(FLC) + " = " + StepValue)
+             CurrLine = CurrLine->Prev
+             'replace the constant with the integer string name
+             StepValue = "SysForLoopStep" + Str(FLC)
+             StepIntVar = -1
+          End if
+        End if
+
       END IF
-      'Print "For variable:"; LoopVar; " start:"; StartValue; " end:"; EndValue; " step:"; StepValue
+'Print "For variable:"; LoopVar; " start:"; StartValue; " end:"; EndValue; " step:"; StepValue
 
       'Check that variable can hold start and end values
       LoopVarType = TypeOfValue(LoopVar, CompSub)
@@ -5984,88 +6011,130 @@ SUB CompileFor (CompSub As SubType Pointer)
         LogError(Message("ForBadEnd"), Origin)
       End If
 
-      'Negate step value if necessary
-      IF VAL(EndValue) < VAL(StartValue) AND IsConst(EndValue) AND IsConst(StartValue) AND (InStr(StepValue, "-") = 0 And Not StepIntVar) THEN
-        CurrLine = LinkedListInsert(CurrLine, ";For-next step value was automaticaly negated by compiler")
-        CurrLine = CurrLine->Prev
-        StepValue = "-" + StepValue
+      If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) = 0 then
+      'this is bonkers when you want to use the overflow!  255 to 10 for instant
+          'Negate step value if necessary -
+          IF VAL(EndValue) < VAL(StartValue) AND IsConst(EndValue) AND IsConst(StartValue) AND (InStr(StepValue, "-") = 0 And Not StepIntVar) THEN
+            CurrLine = LinkedListInsert(CurrLine, ";For-next step value was automaticaly negated by compiler")
+            CurrLine = CurrLine->Prev
+            StepValue = "-" + StepValue
+          End if
       End if
 
-      If ( Not IsConst(EndValue) Or Not IsConst(StartValue) ) AND IsConst(StepValue) then
-        if StepExists then LogError(Message("ForBadStep"), Origin)
+      'Use step value 1 as default when variables are used to force through new code - NOT NEEDED....
+      IF ( ( NOT IsConst(EndValue) OR  NOT IsConst(StartValue) )  And Not StepIntVar) THEN
+        If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) then
+           StepExists = -1
+        End if
+      End if
+
+      If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) THEN
+        If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
+            LogError(Message("ForBadStepVariable"), Origin)
+        End if
+
+        If TypeOfVar(LoopVar, CompSub) = "LONG" THEN
+          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
+            LogError( Message("ForLongConstraints") ,Origin)
+          End if
+        End if
+
+        If TypeOfVar(LoopVar, CompSub) = "INTEGER" AND (  TypeOfVar(StartValue, CompSub) = "INTEGER" OR TypeOfVar(EndValue, CompSub) = "INTEGER" ) THEN
+          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
+            LogError( Message("FORSETINTEGERCONSTRAINTS") ,Origin)
+          End if
+        End if
+
       End if
 
       FLC = FLC + 1
       FL = 1
 
-      'old Pseudo code:
-      'V = SV - ST
-      'SysForLoop(n):
-      'V += ST
-      '...
-      'if V < EV then goto SysForLoop(n)
 
-      'Changed to this: (27/6/2010)
-      'V = SV
-      'SysForLoop(n):
-      'if V > EV then goto SysForLoopEnd(n)
-      '...
-      'V += ST
-      'goto SysForLoop(n)
-      '(New version more in line with For in other dialects)
+      If StepExists Then
 
-      'Then to this: (27/8/2010)
-      'V = SV - ST
-      'If SV not const or EV not const, if V > EV then goto SysForLoopEnd(n)
-      'SysForLoop(n):
-      'V += ST
-      '...
-      'if V <= EV then goto SysForLoop(n)
-      'SysForLoopEnd(n):
 
-      'Starting code
-      CurrLine->Value = LoopVar + "=" + StartValue + "-" + StepValue + Origin + "[ao]"
 
-      'If StartValue or EndValue are variables, need to check values at runtime to see if loop should run
-      If Not IsConst(EndValue) Or Not IsConst(StartValue) Then
-        'If Step is an integer variable, need to check +/- first
-        If StepIntVar Then
-          CurrLine = LinkedListInsert(CurrLine, "IF " + StepValue + ".15 = 1 THEN" + Origin)
-          CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " < " + EndValue + " THEN" + Origin)
-          IF ModePIC Then
-            CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
-          ElseIf ModeAVR Then
-            CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
+          'New Starting code. This is common code to the negative or positive StepValue value
+          CurrLine->Value = LoopVar + " =" + StartValue
+          'Create a Loopx (see Pseudo code)
+          CurrLine = LinkedListInsert(CurrLine, "SysForLoop" + Str(FLC) + LabelEnd)
+          GetMetaData(Currline)->IsLabel = -1
+
+      Else
+          'Old code - still used for NO STEP
+          'old Pseudo code:
+
+          'V = SV - ST
+          'SysForLoop(n):
+          'V += ST
+          '...
+          'if V < EV then goto SysForLoop(n)
+
+          'Changed to this: (27/6/2010)
+          'V = SV
+          'SysForLoop(n):
+          'if V > EV then goto SysForLoopEnd(n)
+          '...
+          'V += ST
+          'goto SysForLoop(n)
+          '(New version more in line with For in other dialects)
+
+          'Then to this: (27/8/2010)
+          'V = SV - ST
+          'If SV not const or EV not const, if V > EV then goto SysForLoopEnd(n)
+          'SysForLoop(n):
+          'V += ST
+          '...
+          'if V <= EV then goto SysForLoop(n)
+          'SysForLoopEnd(n):
+
+
+          'Starting code
+          CurrLine->Value = LoopVar + "=" + StartValue + "-" + StepValue + Origin + "[ao]"
+
+          'If StartValue or EndValue are variables, need to check values at runtime to see if loop should run
+          If Not IsConst(EndValue) Or Not IsConst(StartValue) Then
+            'If Step is an integer variable, need to check +/- first
+            If StepIntVar Then
+              CurrLine = LinkedListInsert(CurrLine, "IF " + StepValue + ".15 = 1 THEN" + Origin)
+              CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " < " + EndValue + " THEN" + Origin)
+              IF ModePIC Then
+                CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
+              ElseIf ModeAVR Then
+                CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
+              End If
+              CurrLine = LinkedListInsert(CurrLine, "END IF")
+              CurrLine = LinkedListInsert(CurrLine, "ELSE" + Origin)
+              CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " > " + EndValue + " THEN" + Origin)
+              IF ModePIC Then
+                CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
+              ElseIf ModeAVR Then
+                CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
+              End If
+              CurrLine = LinkedListInsert(CurrLine, "END IF")
+              CurrLine = LinkedListInsert(CurrLine, "END IF")
+            'Step is a constant, check appropriately
+            Else
+              If INSTR(StepValue, "-") = 0 THEN
+                CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " > " + EndValue + " THEN" + Origin)
+              Else
+                CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " < " + EndValue + " THEN" + Origin)
+              End If
+              IF ModePIC Then
+                CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
+              ElseIf ModeAVR Then
+                CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
+              End If
+              CurrLine = LinkedListInsert(CurrLine, "END IF")
+            End If
+
           End If
-          CurrLine = LinkedListInsert(CurrLine, "END IF")
-          CurrLine = LinkedListInsert(CurrLine, "ELSE" + Origin)
-          CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " > " + EndValue + " THEN" + Origin)
-          IF ModePIC Then
-            CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
-          ElseIf ModeAVR Then
-            CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
-          End If
-          CurrLine = LinkedListInsert(CurrLine, "END IF")
-          CurrLine = LinkedListInsert(CurrLine, "END IF")
-        'Step is a constant, check appropriately
-        Else
-          If INSTR(StepValue, "-") = 0 THEN
-            CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " > " + EndValue + " THEN" + Origin)
-          Else
-            CurrLine = LinkedListInsert(CurrLine, "IF " + StartValue + " < " + EndValue + " THEN" + Origin)
-          End If
-          IF ModePIC Then
-            CurrLine = LinkedListInsert(CurrLine, " goto SysForLoopEnd" + Str(FLC))
-          ElseIf ModeAVR Then
-            CurrLine = LinkedListInsert(CurrLine, " rjmp SysForLoopEnd" + Str(FLC))
-          End If
-          CurrLine = LinkedListInsert(CurrLine, "END IF")
-        End If
+          CurrLine = LinkedListInsert(CurrLine, "SysForLoop" + Str(FLC) + LabelEnd)
+          GetMetaData(Currline)->IsLabel = -1
+          CurrLine = LinkedListInsert(CurrLine, LoopVar + "=" + LoopVar + "+" + StepValue + Origin)
 
-      End If
-      CurrLine = LinkedListInsert(CurrLine, "SysForLoop" + Str(FLC) + LabelEnd)
-      GetMetaData(Currline)->IsLabel = -1
-      CurrLine = LinkedListInsert(CurrLine, LoopVar + "=" + LoopVar + "+" + StepValue + Origin)
+      End if
 
       'End code
       'Find matching Next
@@ -6104,39 +6173,96 @@ SUB CompileFor (CompSub As SubType Pointer)
 
       Else
         LoopLoc = LinkedListDelete(LoopLoc)
-        If StepIntVar Then
-          LoopLoc = LinkedListInsert(LoopLoc, "IF " + StepValue + ".15 = 1 THEN" + Origin)
-          LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " > " + EndValue + " THEN" + Origin)
-          IF ModePIC Then
-            LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
-          ElseIf ModeAVR Then
-            LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
-          End If
-          LoopLoc = LinkedListInsert(LoopLoc, "END IF")
-          LoopLoc = LinkedListInsert(LoopLoc, "ELSE" + Origin)
-          LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " < " + EndValue + " THEN" + Origin)
-          IF ModePIC Then
-            LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
-          ElseIf ModeAVR Then
-            LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
-          End If
-          LoopLoc = LinkedListInsert(LoopLoc, "END IF")
-          LoopLoc = LinkedListInsert(LoopLoc, "END IF")
-        Else
-          If INSTR(StepValue, "-") = 0 THEN
-            LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " < " + EndValue + " THEN" + Origin)
-          Else
-            LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " > " + EndValue + " THEN" + Origin)
-          End If
-          IF ModePIC Then
-            LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
-          ElseIf ModeAVR Then
-            LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
-          End If
-          LoopLoc = LinkedListInsert(LoopLoc, "END IF" + Str(FLC) + LabelEnd)
-          GetMetaData(LoopLoc)->IsLabel = -1
-        End If
 
+        If StepExists Then
+
+'new code
+
+            LoopLoc = LinkedListInsert(LoopLoc, "IF " + StepValue + ".15 = 1 THEN" + Origin+" ;here")
+
+                'Pseudo code - negative
+                '                 if LoopVar - EndValue >= abs(StepValue) then
+                '                   LoopVar = LoopVar + StepValue
+                '                   goto loopx
+                '                 end if
+                If StepIntVar Then
+                  LoopLoc = LinkedListInsert(LoopLoc, "IF ( " + LoopVar + " - " + EndValue + " ) } ( " + StepValue + " * -1 ) THEN" + Origin)
+
+                else
+                  'handle a constant
+                  LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
+
+                end if
+
+                  LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin)
+                  IF ModePIC Then
+                    LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+                  ElseIf ModeAVR Then
+                    LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+                  End If
+                LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+
+            LoopLoc = LinkedListInsert(LoopLoc, "ELSE" + Origin)
+
+                'Pseudo code - positive or assumed constant 1
+                '                  if EndValue-LoopVar >= StepValue then
+                '                    LoopVar = LoopVar + StepValue
+                '                    goto loopx
+                '                  end if
+                If StepIntVar Then
+
+                  LoopLoc = LinkedListInsert(LoopLoc, "IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN" + Origin)
+                else
+
+                  'handle a constant
+                  LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
+                end if
+                  LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin)
+                  IF ModePIC Then
+                    LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+                  ElseIf ModeAVR Then
+                    LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+                  End If
+                LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+
+          LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+
+        Else
+
+            'old method - still used for NO STEP
+            If StepIntVar Then
+              LoopLoc = LinkedListInsert(LoopLoc, "IF " + StepValue + ".15 = 1 THEN" + Origin)
+              LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " > " + EndValue + " THEN" + Origin)
+              IF ModePIC Then
+                LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+              ElseIf ModeAVR Then
+                LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+              End If
+              LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+              LoopLoc = LinkedListInsert(LoopLoc, "ELSE" + Origin)
+              LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " < " + EndValue + " THEN" + Origin)
+              IF ModePIC Then
+                LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+              ElseIf ModeAVR Then
+                LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+              End If
+              LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+              LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+            Else
+              If INSTR(StepValue, "-") = 0 THEN
+                LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " < " + EndValue + " THEN" + Origin)
+              Else
+                LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " > " + EndValue + " THEN" + Origin)
+              End If
+              IF ModePIC Then
+                LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
+              ElseIf ModeAVR Then
+                LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
+              End If
+              LoopLoc = LinkedListInsert(LoopLoc, "END IF" + Str(FLC) + LabelEnd)
+              GetMetaData(LoopLoc)->IsLabel = -1
+            End If
+        End If
         LoopLoc = LinkedListInsert(LoopLoc, "SysForLoopEnd" + Str(FLC) + LabelEnd)
         GetMetaData(LoopLoc)->IsLabel = -1
       End IF
