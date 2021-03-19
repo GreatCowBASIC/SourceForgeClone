@@ -1,3 +1,4 @@
+' ============= Prototype TableString ============= 2021-03-02
 ' GCBASIC - A BASIC Compiler for microcontrollers
 '  Preprocessor
 ' Copyright (C) 2006 - 2021 Hugh Considine
@@ -520,7 +521,7 @@ END SUB
 
 SUB PreProcessor
 
-  Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName
+  Dim As String Origin, Temp, DataSource, PreserveIn, CurrentSub, StringTemp, SubName, TF
   Dim As String Value, RTemp, LTemp, Ty, SubInType, ParamType, RestOfLine, VarName, FName, ConstName
   Dim As String TempFile, LastTableOrigin, NewFNType, CodeTemp, OtherChar, BinHexTemp
   Dim As String DataSourceOld, TranslatedFile, HFI, DataSourceRaw
@@ -540,6 +541,7 @@ SUB PreProcessor
 
   CurrentSub = ""
   UnconvertedFiles = 0
+  TF = "0"
 
   'Find required files
   IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("FindSource")
@@ -733,6 +735,7 @@ SUB PreProcessor
       LC = LC + 1
       LCS = LCS + 1
 
+            'Make single line from multi-line
             do while right(trim(DataSource),2) =" _"
                 dim newlinein as string
                 LINE INPUT #1, newlinein
@@ -804,6 +807,11 @@ SUB PreProcessor
       If PreserveMode = 3 Then
         PreserveIn = "Source:F" + Str(RF) + "L" + Str(LC) + "S" + Str(SBC * S) + "I" + Str(LCS)
       End If
+
+
+     'Process Table "string" data
+     TableString (DataSource, TF)
+
 
       'Extract strings, and remove comments with ; and '
       'Also process H' and B', 0x and 0b
@@ -2385,4 +2393,138 @@ Sub TidyInputSource (CompSub As SubType Pointer)
 
     CurrLine = CurrLine->Next
   Loop
+End Sub
+
+
+'                  **** PRELIMINARY****
+      'Convert Table "string" data lines to Table byte data lines  2021-03-15
+Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
+    Dim As String TempDS, CSV, TmpStr
+    Dim As Integer Lp1, CSF, CSFcnt, ChrIn, ChrPos, QFpos, QFStrt, StrStrt
+    Dim As Integer ClosedQuoteCounter, ClosedQuote, EscapeChar
+
+
+
+    EscapeChar = -1      'Not an escape char
+
+    TempDS = DataSource
+
+    'Replace tabs, trim & exit if line a comment
+    DO WHILE INSTR(TempDS, Chr(9)) <> 0: ReplaceAll TempDS, Chr(9), " ": Loop
+    TempDS = LTrim(TempDS): TempDS = RTrim(TempDS)
+
+    If Left(TempDS, 1) = "'" Or Left(TempDS, 1) = ";" Or Left(TempDS, 1) = "//" Or Left(TempDS, 1) = "Rem " Then Exit Sub
+
+    'Delete after last string end (comments)
+    Lp1 = InStrRev(TempDS, (Chr(34)))
+    If Lp1 > 2 Then TempDS = Left(TempDS, Lp1)
+
+    'Only between "Table " --> "End Table"
+    If UCase(Left(TempDS, 6)) = "TABLE " Then TF = "1"
+    If UCase(Left(TempDS, 9)) = "END TABLE" THEN TF = "0"
+
+     If TF = "1" Then
+
+
+        'Validate closed Dquotes
+        ClosedQuote = 0
+        For ClosedQuoteCounter = 0 to len(TempDS)
+
+           Select Case mid( TempDS, ClosedQuoteCounter, 1 )
+              Case chr(34)
+                  ClosedQuote = ClosedQuote +1
+              Case "\"
+                ClosedQuoteCounter = ClosedQuoteCounter + 1  'skip the next char as this is being escaped
+           End Select
+
+        Next
+
+        if ( ClosedQuote and 1 ) = 1 then
+            LogError ( DataSource, Message("NoClosingQuote")+":"  )
+        End if
+        'End of validation of closed Dquotes
+
+
+       If Left(TempDS, 1) = Chr(34) and Right(TempDS, 1) = Chr(34) And Len(TempDS) > 2 Then
+
+             'Detect CSV string's line & convert to 1 "string"
+             ChrPos = 1: StrStrt = 1: TmpStr = ""
+             Do While QFPos < Len(TempDS)
+                 QFpos = InStr(QFstrt + 1, TempDS, Chr(34))
+
+                'Test for Comma Separator(CSF)
+               For Lp1 = QFstrt + 1 To QFpos - 1
+                   ChrIn = Asc(TempDS, Lp1)
+                 If (ChrIn = 32 Or ChrIn = 44) Then
+                   If ChrIn = 44 Then CSF = 1
+                 Else
+                   CSF=0
+                   Lp1 = QFpos '< (Exit For)
+                 End If
+               Next
+
+               'Build string
+               If CSF = 1 Then
+                CSFcnt += 1
+                TmpStr &=  Mid(TempDS, StrStrt+1, QFstrt - 1 - StrStrt)
+                StrStrt = QFpos
+               End If
+                 If QFpos = Len(TempDS) And  CSFcnt > 0 _
+                    Then  TmpStr &=  Mid(TempDS, StrStrt + 1, QFpos - 1 - StrStrt)
+                 QFstrt = QFpos
+             Loop
+
+             If CSFcnt > 0 Then TempDS = Chr(34) + TmpStr + Chr(34)
+             'End Detect CSV string's line
+
+             'handle escape chars
+             Dim TempDSEscaped as string
+             TempDSEscaped = ""
+             For Lp1 = 0 To Len(TempDS)
+                if Mid(TempDS, Lp1, 1) = "\" then
+                  Lp1 = Lp1 + 1
+                  Select Case Mid(TempDS, Lp1, 1)
+                    Case "0":
+                      TempDSEscaped = TempDSEscaped + chr(0)
+                    Case ",":
+                      TempDSEscaped = TempDSEscaped + ","
+                    Case "\":
+                      TempDSEscaped = TempDSEscaped + "\"
+                    Case "a":
+                      TempDSEscaped = TempDSEscaped + chr(7)
+                    Case "b":
+                      TempDSEscaped = TempDSEscaped + chr(8)
+                    Case "l", "n":
+                      TempDSEscaped = TempDSEscaped + chr(10)
+                    Case "f":
+                      TempDSEscaped = TempDSEscaped + chr(12)
+                    Case "r":
+                      TempDSEscaped = TempDSEscaped + chr(13)
+                    Case "t":
+                      TempDSEscaped = TempDSEscaped + chr(9)
+                    Case chr(34):
+                      TempDSEscaped = TempDSEscaped + chr(34)
+                    Case "'":
+                      TempDSEscaped = TempDSEscaped + "'"
+                    Case "&":
+                      TempDSEscaped = TempDSEscaped + chr(val(Mid(TempDS, Lp1+1, 3)))
+                      Lp1 = Lp1 + 3
+                  End Select
+                else
+                  TempDSEscaped = TempDSEscaped + Mid(TempDS, Lp1, 1)
+                End if
+             Next
+             TempDS = TempDSEscaped
+
+             'Build Table data line from string
+             TmpStr = "": CSV = ""
+             For Lp1 = 2 To Len(TempDS) - 1
+               TmpStr &= CSV + Str(Asc(Mid(TempDS, Lp1, 1)))
+               CSV = ", "
+             Next
+             DataSource = TmpStr
+       End If
+
+     End If
+
 End Sub
