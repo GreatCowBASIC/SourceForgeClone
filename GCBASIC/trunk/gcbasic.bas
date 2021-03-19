@@ -539,6 +539,7 @@ DECLARE SUB ReplaceConstants ()
 Declare Function ReplaceConstantsLine (DataSourceIn As String, IncludeStartup As Integer) As String
 DECLARE SUB RunScripts ()
 Declare Sub TidyInputSource (CompSub As SubType Pointer)
+Declare Sub TableString (DataSource As String, TF As String)
 
 'Subs in utils.bi
 Declare Function AddFullPath(CurrPath As String, FullPathIn As String = "") As String
