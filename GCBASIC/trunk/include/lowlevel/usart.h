@@ -73,7 +73,8 @@
 ' 29/09/2020  Added script to detect USART calc errors.  Use the following constants to control the checking and warning messages
 '             #define CHECK_USART_BAUD_RATE
 '             #define ISSUE_CHECK_USART_BAUD_RATE_WARNING
-
+' 16/02/2021  Add ChipSubFamily = 15001 TX1REG redirection in script section
+' 21/03/2021  Added Support for 90S Series AVR
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -138,6 +139,11 @@
 'Also sets constants to check if byte received
 #script
   If PIC Then
+
+      if ChipSubFamily = 15001 then
+            TXREG = TX1REG
+            RCREG = RC1REG
+      end if
 
       'Added to resolve 18FxxK40 register & Bit mappings
       '-----------------------------------
@@ -438,7 +444,7 @@
         HSerReceive = HSerReceiveRC
     End If
 
-'AVR Usart has data flags setup
+    'AVR Usart has data flags setup
     If Bit(RXC0) Then
       USARTHasData = "RXC0 = On"
     End If
@@ -454,27 +460,41 @@
     If Bit(RXC3) Then
       USART4HasData = "RXC3 = On"
     End If
-'AVR USART 1 baud calc
+
+    'AVR USART 1 baud calc
     If USART_BAUD_RATE Then
+
       UBRR_TEMP = ChipMHz * 1000000 / (16 * USART_BAUD_RATE) - 1
       U2X0_TEMP = 0
-      'If using a high speed, use double speed mode
-      If UBRR_TEMP < 16384 Then
-        UBRR_TEMP = ChipMHz * 1000000 / (8 * USART_BAUD_RATE) - 1
-        U2X0_TEMP = 1
-      End If
 
-      'Check that rate will work
-      If UBRR_TEMP > 65535 Then
-        Error Msg(UsartBaudTooLow)
-      End If
+      'For 90S Series With 8-bit BRG
+      IF VAR(UBRR) Then
+         UBRR_TEMP = Int(UBRR_TEMP) And 255
+      END IF
 
-      'Get high and low bytes
-      UBRRL_TEMP = Int(UBRR_TEMP) And 255
-      UBRRH_TEMP = Int(UBRR_TEMP / 256)
+     'AVR Chips with 16-Bit BRG
+     ''If using a high speed, use double speed mode
+      IF NOVAR(UBRR) Then ' must have UBRRH or UBRRxH
+
+          If UBRR_TEMP < 16384 Then
+            UBRR_TEMP = ChipMHz * 1000000 / (8 * USART_BAUD_RATE) - 1
+            U2X0_TEMP = 1
+          End If
+
+          'Check that rate will work
+          If UBRR_TEMP > 65535 Then
+            Error Msg(UsartBaudTooLow)
+          End If
+
+          'Get high and low bytes
+          UBRRL_TEMP = Int(UBRR_TEMP) And 255
+          UBRRH_TEMP = Int(UBRR_TEMP / 256)
+      END IF
+
 
     End If
-'AVR USART 2 baud calc
+
+    'AVR USART 2 baud calc
     If USART2_BAUD_RATE Then
       UBRR2_TEMP = ChipMHz * 1000000 / (16 * USART2_BAUD_RATE) - 1
       U2X02_TEMP = 0
@@ -493,7 +513,7 @@
       UBRRL2_TEMP = Int(UBRR2_TEMP) And 255
       UBRRH2_TEMP = Int(UBRR2_TEMP / 256)
     End If
-'AVR USART 2 baud clac
+    'AVR USART 2 baud clac
     If USART3_BAUD_RATE Then
       UBRR3_TEMP = ChipMHz * 1000000 / (16 * USART3_BAUD_RATE) - 1
       U2X03_TEMP = 0
@@ -512,7 +532,7 @@
       UBRRL3_TEMP = Int(UBRR3_TEMP) And 255
       UBRRH3_TEMP = Int(UBRR3_TEMP / 256)
     End If
-'AVR USART 4 baud clac
+    'AVR USART 4 baud clac
     If USART4_BAUD_RATE Then
       UBRR4_TEMP = ChipMHz * 1000000 / (16 * USART4_BAUD_RATE) - 1
       U2X04_TEMP = 0
@@ -685,15 +705,27 @@ Sub InitUSART
 
   #ifdef AVR
     #If USART_BAUD_RATE Then
+
       'Set baud rate
       #ifndef Bit(U2X0)
 
         #ifndef Bit(U2X1)       'Check for second usart? why
-          U2X = U2X0_TEMP       'Set/Clear bit to double USART transmission speed
-          UBRRL = UBRRL_TEMP
-          UBRRH = UBRRH_TEMP
+
+          #IFDEF Bit(U2X)
+             U2X = U2X0_TEMP       'Set/Clear bit to double USART transmission speed
+             UBRRL = UBRRL_TEMP
+             UBRRH = UBRRH_TEMP
+          #ENDIF
+
+          'added to support 90S Series AVR with no UBRRL/H or UBRRxL/xH
+          #IFDEF VAR(UBRR)
+             UBRR = UBRR_TEMP
+          #ENDIF
+
         #endif
       #endif
+
+
       #ifdef Bit(U2X0)
         U2X0 = U2X0_TEMP        'Set/Clear bit to double USART transmission speed
         UBRR0L = UBRRL_TEMP
@@ -768,7 +800,7 @@ sub HSerSend(In SerData)
               Wait While TXIF = Off
             #endif
             #ifdef Bit(TRMT)
-              'ensure any previous operation has completed
+              'ensure any previous operation has completed @1
               Wait until TRMT = 1
             #endif
           #endif
@@ -781,7 +813,7 @@ sub HSerSend(In SerData)
                   Wait While TXIF = Off
                 #endif
                 #ifdef Bit(TRMT)
-                  'ensure any previous operation has completed
+                  'ensure any previous operation has completed @2
                   Wait until TRMT = 1
                 #endif
             #endif
