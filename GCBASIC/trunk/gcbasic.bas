@@ -6034,10 +6034,9 @@ SUB CompileFor (CompSub As SubType Pointer)
 
       If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) THEN
 
-' Resolved in  RC44 changes
-'        If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
-'            LogError(Message("ForBadStepVariable"), Origin)
-'        End if
+        If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
+            LogError(Message("ForBadStepVariable"), Origin)
+        End if
 
         If TypeOfVar(LoopVar, CompSub) = "LONG" THEN
           If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
