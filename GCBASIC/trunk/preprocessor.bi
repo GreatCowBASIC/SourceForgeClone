@@ -2449,8 +2449,11 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
 
              'Detect CSV string's line & convert to 1 "string"
              ChrPos = 1: StrStrt = 1: TmpStr = ""
-             Do While QFPos < Len(TempDS)
-                 QFpos = InStr(QFstrt + 1, TempDS, Chr(34))
+             QFPos = -1
+
+             Do While QFPos <> 0
+
+               QFpos = InStr(QFstrt + 1, TempDS, Chr(34))
 
                 'Test for Comma Separator(CSF)
                For Lp1 = QFstrt + 1 To QFpos - 1
