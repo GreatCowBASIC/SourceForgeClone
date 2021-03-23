@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-03-17"
+Version = "0.98.<<>> 2021-03-23"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -5940,6 +5940,9 @@ SUB CompileFor (CompSub As SubType Pointer)
   Dim As LinkedListElement Pointer CurrLine, FindLoop, LoopLoc
   Dim As Integer IgnoreWarning
 
+  'force use at RC43 + RC44
+  ADDCONSTANT("NEWNEXTFORHANDLER","NEWNEXTFORHANDLER")
+
   CurrLine = CompSub->CodeStart->Next
   Do While CurrLine <> 0
 
@@ -6030,9 +6033,11 @@ SUB CompileFor (CompSub As SubType Pointer)
       End if
 
       If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) THEN
-        If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
-            LogError(Message("ForBadStepVariable"), Origin)
-        End if
+
+' Resolved in  RC44 changes
+'        If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
+'            LogError(Message("ForBadStepVariable"), Origin)
+'        End if
 
         If TypeOfVar(LoopVar, CompSub) = "LONG" THEN
           If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
@@ -6040,11 +6045,12 @@ SUB CompileFor (CompSub As SubType Pointer)
           End if
         End if
 
-        If TypeOfVar(LoopVar, CompSub) = "INTEGER" AND (  TypeOfVar(StartValue, CompSub) = "INTEGER" OR TypeOfVar(EndValue, CompSub) = "INTEGER" ) THEN
-          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
-            LogError( Message("FORSETINTEGERCONSTRAINTS") ,Origin)
-          End if
-        End if
+' Resolved in  RC44 changes
+'        If TypeOfVar(LoopVar, CompSub) = "INTEGER" AND (  TypeOfVar(StartValue, CompSub) = "INTEGER" OR TypeOfVar(EndValue, CompSub) = "INTEGER" ) THEN
+'          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
+'            LogError( Message("FORSETINTEGERCONSTRAINTS") ,Origin)
+'          End if
+'        End if
 
       End if
 
@@ -6179,6 +6185,9 @@ SUB CompileFor (CompSub As SubType Pointer)
 
 'new code
 
+          '#1 do not handle an integer... code only needed if an integer
+          If TypeOfVar(StepValue, CompSub) = "INTEGER" then
+            LoopLoc = LinkedListInsert(LoopLoc, ";Integer negative Step Handler in For-next statement")
             LoopLoc = LinkedListInsert(LoopLoc, "IF " + StepValue + ".15 = 1 THEN" + Origin+" ;here")
 
                 'Pseudo code - negative
@@ -6187,46 +6196,64 @@ SUB CompileFor (CompSub As SubType Pointer)
                 '                   goto loopx
                 '                 end if
                 If StepIntVar Then
-                  LoopLoc = LinkedListInsert(LoopLoc, "IF ( " + LoopVar + " - " + EndValue + " ) } ( " + StepValue + " * -1 ) THEN" + Origin)
+                  LoopLoc = LinkedListInsert(LoopLoc, ";IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN ")
+                  LoopLoc = LinkedListInsert(LoopLoc, "IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN" + Origin)
 
                 else
                   'handle a constant
+                  LoopLoc = LinkedListInsert(LoopLoc, ";IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
                   LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
 
                 end if
 
-                  LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin)
+                  LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a negative value")
+                  LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin + "[ao]")
                   IF ModePIC Then
                     LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
                   ElseIf ModeAVR Then
                     LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
                   End If
+
+                LoopLoc = LinkedListInsert(LoopLoc, ";END IF")
                 LoopLoc = LinkedListInsert(LoopLoc, "END IF")
 
             LoopLoc = LinkedListInsert(LoopLoc, "ELSE" + Origin)
+
+          End if  '#1  do not handle an integer... code above is needed only when an integer
 
                 'Pseudo code - positive or assumed constant 1
                 '                  if EndValue-LoopVar >= StepValue then
                 '                    LoopVar = LoopVar + StepValue
                 '                    goto loopx
                 '                  end if
-                If StepIntVar Then
 
+
+
+                If StepIntVar Then
+                  LoopLoc = LinkedListInsert(LoopLoc, ";Integer positive Step Handler in For-next statement")
+                  LoopLoc = LinkedListInsert(LoopLoc, ";IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN")
                   LoopLoc = LinkedListInsert(LoopLoc, "IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN" + Origin)
                 else
 
-                  'handle a constant
+                  LoopLoc = LinkedListInsert(LoopLoc, ";Positive value Step Handler in For-next statement")
                   LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
                 end if
-                  LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin)
+                  LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a postive value")
+                  LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin+ "[ao]")
                   IF ModePIC Then
                     LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
                   ElseIf ModeAVR Then
                     LoopLoc = LinkedListInsert(LoopLoc, " rjmp SysForLoop" + Str(FLC))
                   End If
+
+                LoopLoc = LinkedListInsert(LoopLoc, ";END IF")
                 LoopLoc = LinkedListInsert(LoopLoc, "END IF")
 
-          LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+          '#2 do not handle an integer... if not an integer - close out the if statement
+          If TypeOfVar(StepValue, CompSub) = "INTEGER" then
+            LoopLoc = LinkedListInsert(LoopLoc, ";END IF")
+            LoopLoc = LinkedListInsert(LoopLoc, "END IF")
+          End if
 
         Else
 
