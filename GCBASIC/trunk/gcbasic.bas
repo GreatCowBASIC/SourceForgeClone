@@ -6038,11 +6038,11 @@ SUB CompileFor (CompSub As SubType Pointer)
             LogError(Message("ForBadStepVariable"), Origin)
         End if
 
-        If TypeOfVar(LoopVar, CompSub) = "LONG" THEN
-          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
-            LogError( Message("ForLongConstraints") ,Origin)
-          End if
-        End if
+'        If TypeOfVar(LoopVar, CompSub) = "LONG" THEN
+'          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
+'            LogError( Message("ForLongConstraints") ,Origin)
+'          End if
+'        End if
 
 ' Resolved in  RC44 changes
 '        If TypeOfVar(LoopVar, CompSub) = "INTEGER" AND (  TypeOfVar(StartValue, CompSub) = "INTEGER" OR TypeOfVar(EndValue, CompSub) = "INTEGER" ) THEN
@@ -6182,10 +6182,11 @@ SUB CompileFor (CompSub As SubType Pointer)
 
         If StepExists Then
 
-'new code
+'new NEXT code
 
           '#1 do not handle an integer... code only needed if an integer
           If TypeOfVar(StepValue, CompSub) = "INTEGER" then
+
             LoopLoc = LinkedListInsert(LoopLoc, ";Integer negative Step Handler in For-next statement")
             LoopLoc = LinkedListInsert(LoopLoc, "IF " + StepValue + ".15 = 1 THEN" + Origin+" ;here")
 
@@ -6194,19 +6195,53 @@ SUB CompileFor (CompSub As SubType Pointer)
                 '                   LoopVar = LoopVar + StepValue
                 '                   goto loopx
                 '                 end if
+
                 If StepIntVar Then
-                  LoopLoc = LinkedListInsert(LoopLoc, ";IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN ")
-                  LoopLoc = LinkedListInsert(LoopLoc, "IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN" + Origin)
+
+
+                  'create an tmp integer long variable - stepvalue and handle LONGs.  This prevents the maths overrun
+                  'Long psuedo code
+                  'Dim tmpStepValue as Integer
+                  'tmpStepValue = -StepValue
+                  '
+                  'if LoopVar - EndValue >= tmpStepValue then
+                  ' LoopVar = LoopVar - tmpStepValue
+                  '
+                  ' goto negloop
+                  'end if
+
+
+                  If TypeOfVar(LoopVar, CompSub) = "LONG"  then
+                    AddVar "SysForLoopABsValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
+                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to -StepValue ")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -" + StepValue)
+
+
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#1 IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN" + Origin)
+
+                  Else
+                    'If statement for NOT longs
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#2 IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN ")
+                    LoopLoc = LinkedListInsert(LoopLoc, "IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN" + Origin)
+
+                  End if
+
 
                 else
                   'handle a constant
-                  LoopLoc = LinkedListInsert(LoopLoc, ";IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
+                  LoopLoc = LinkedListInsert(LoopLoc, ";#3IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
                   LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
 
                 end if
 
-                  LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a negative value")
-                  LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin + "[ao]")
+                  If TypeOfVar(LoopVar, CompSub) = "LONG" then
+                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to LoopVar - SysForLoopABsValue  ")
+                    LoopLoc = LinkedListInsert(LoopLoc, "[LONG]" + LoopVar + " = [LONG]" + LoopVar + " - " + "SysForLoopABsValue" + Str(FLC) + Origin)
+                  else
+                    LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a negative value")
+                    LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin + "[ao]")
+                  end if
                   IF ModePIC Then
                     LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
                   ElseIf ModeAVR Then
@@ -6230,8 +6265,15 @@ SUB CompileFor (CompSub As SubType Pointer)
 
                 If StepIntVar Then
                   LoopLoc = LinkedListInsert(LoopLoc, ";Integer positive Step Handler in For-next statement")
-                  LoopLoc = LinkedListInsert(LoopLoc, ";IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN")
-                  LoopLoc = LinkedListInsert(LoopLoc, "IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN" + Origin)
+
+                  If TypeOfVar(LoopVar, CompSub) = "INTEGER" or TypeOfVar(LoopVar, CompSub) = "WORD"  then
+                    'Need to set the type to ensure operation works for integer
+                    LoopLoc = LinkedListInsert(LoopLoc, ";IF ([WORD]" + EndValue + " - [WORD]" + LoopVar + ") } [WORD]" + StepValue + " THEN")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "IF ([WORD]" + EndValue + " - [WORD]" + LoopVar + ") } [WORD]" + StepValue + " THEN" + Origin)
+                  else
+                    LoopLoc = LinkedListInsert(LoopLoc, ";IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN")
+                    LoopLoc = LinkedListInsert(LoopLoc, "IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN" + Origin)
+                  end if
                 else
 
                   LoopLoc = LinkedListInsert(LoopLoc, ";Positive value Step Handler in For-next statement")
