@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-03-23"
+Version = "0.98.<<>> 2021-03-24"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -5941,7 +5941,9 @@ SUB CompileFor (CompSub As SubType Pointer)
   Dim As Integer IgnoreWarning
 
   'force use at RC43 + RC44
-  ADDCONSTANT("NEWNEXTFORHANDLER","NEWNEXTFORHANDLER")
+  If HashMapGet(Constants, "USELEGACYFORNEXT" ) = 0 then
+    ADDCONSTANT("NEWNEXTFORHANDLER","NEWNEXTFORHANDLER")
+  end if
 
   CurrLine = CompSub->CodeStart->Next
   Do While CurrLine <> 0
@@ -6211,7 +6213,7 @@ SUB CompileFor (CompSub As SubType Pointer)
                   'end if
 
 
-                  If TypeOfVar(LoopVar, CompSub) = "LONG"  then
+                  If TypeOfVar(LoopVar, CompSub) = "LONG" or TypeOfVar(LoopVar, CompSub) = "WORD"  then
                     AddVar "SysForLoopABsValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
                     LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to -StepValue ")
                     LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -" + StepValue)
@@ -6219,6 +6221,15 @@ SUB CompileFor (CompSub As SubType Pointer)
 
                     LoopLoc = LinkedListInsert(LoopLoc, ";#1 IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
                     LoopLoc = LinkedListInsert(LoopLoc,  "IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN" + Origin)
+
+                  ElseIf TypeOfVar(LoopVar, CompSub) = "INTEGER"   then
+                    AddVar "SysForLoopABsValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
+                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to -StepValue ")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -" + StepValue)
+
+
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#1 IF ( [WORD]" + LoopVar + " - [WORD]" + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
+                    LoopLoc = LinkedListInsert(LoopLoc,     "IF ( [WORD]" + LoopVar + " - [WORD]" + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN" + Origin)
 
                   Else
                     'If statement for NOT longs
@@ -6242,6 +6253,7 @@ SUB CompileFor (CompSub As SubType Pointer)
                     LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a negative value")
                     LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin + "[ao]")
                   end if
+
                   IF ModePIC Then
                     LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))
                   ElseIf ModeAVR Then
@@ -6290,7 +6302,7 @@ SUB CompileFor (CompSub As SubType Pointer)
                 LoopLoc = LinkedListInsert(LoopLoc, ";END IF")
                 LoopLoc = LinkedListInsert(LoopLoc, "END IF")
 
-          '#2 do not handle an integer... if not an integer - close out the if statement
+          '#2 do not handle an integer... if an integer - close out the if statement
           If TypeOfVar(StepValue, CompSub) = "INTEGER" then
             LoopLoc = LinkedListInsert(LoopLoc, ";END IF")
             LoopLoc = LinkedListInsert(LoopLoc, "END IF")
@@ -6298,7 +6310,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
         Else
 
-            'old method - still used for NO STEP
+            'old method - still AVAILABLE !!!
             If StepIntVar Then
               LoopLoc = LinkedListInsert(LoopLoc, "IF " + StepValue + ".15 = 1 THEN" + Origin)
               LoopLoc = LinkedListInsert(LoopLoc, "IF " + LoopVar + " > " + EndValue + " THEN" + Origin)
