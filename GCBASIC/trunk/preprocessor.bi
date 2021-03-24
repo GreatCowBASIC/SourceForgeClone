@@ -2399,11 +2399,9 @@ End Sub
 '                  **** PRELIMINARY****
       'Convert Table "string" data lines to Table byte data lines  2021-03-15
 Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
-    Dim As String TempDS, CSV, TmpStr
+    Dim As String TempDS, CSV, TmpStr, CommentString
     Dim As Integer Lp1, CSF, CSFcnt, ChrIn, ChrPos, QFpos, QFStrt, StrStrt
-    Dim As Integer ClosedQuoteCounter, ClosedQuote, EscapeChar
-
-
+    Dim As Integer ClosedQuoteCounter, ClosedQuote, EscapeChar, CommentPointer
 
     EscapeChar = -1      'Not an escape char
 
@@ -2428,32 +2426,53 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
 
         'Validate closed Dquotes
         ClosedQuote = 0
+
+        CommentPointer = 0
+
+        CommentString=""
+
         For ClosedQuoteCounter = 0 to len(TempDS)
 
            Select Case mid( TempDS, ClosedQuoteCounter, 1 )
+              Case "'", ";"
+                  if ( ClosedQuote and 1 ) = 0  and CommentPointer = 0 then
+                    'we are within a string but we have not encountered the end of the string with a DQuote, so we have a comment pointer
+                    CommentPointer = ClosedQuoteCounter
+                  End If
+
               Case chr(34)
                   ClosedQuote = ClosedQuote +1
+
               Case "\"
-                ClosedQuoteCounter = ClosedQuoteCounter + 1  'skip the next char as this is being escaped
+                  ClosedQuoteCounter = ClosedQuoteCounter + 1  'skip the next char as this is being escaped
+                  if mid( TempDS, ClosedQuoteCounter, 1 ) = "&" then
+                    ClosedQuoteCounter = ClosedQuoteCounter + 3
+                  end if
            End Select
 
         Next
 
-        if ( ClosedQuote and 1 ) = 1 then
-            LogError ( DataSource, Message("NoClosingQuote")+":"  )
+        if ( ClosedQuote and 1 ) = 1  then
+            'LogError ( DataSource, Message("NoClosingQuote")+":"  )
+            LogError ( DataSource, "NoClosingQuote"+":" )
         End if
-        'End of validation of closed Dquotes
+        'We have closed Dquotes and we have comment pointer, so, trim the string
+        if ( ClosedQuote and 1 ) = 0 and CommentPointer <> 0 then
+            CommentString = trim(Mid ( TempDS, CommentPointer ))
+            TempDS = left ( TempDS, CommentPointer - 1 )
 
+        End if
+
+        TempDS = trim(TempDS)
 
        If Left(TempDS, 1) = Chr(34) and Right(TempDS, 1) = Chr(34) And Len(TempDS) > 2 Then
 
              'Detect CSV string's line & convert to 1 "string"
-             ChrPos = 1: StrStrt = 1: TmpStr = ""
-             QFPos = -1
+             QFPos = -1: ChrPos = 1: StrStrt = 1: TmpStr = ""
+'''             Do While QFPos < Len(TempDS)
 
              Do While QFPos <> 0
-
-               QFpos = InStr(QFstrt + 1, TempDS, Chr(34))
+                 QFpos = InStr(QFstrt + 1, TempDS, Chr(34))
 
                 'Test for Comma Separator(CSF)
                For Lp1 = QFstrt + 1 To QFpos - 1
@@ -2525,7 +2544,7 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
                TmpStr &= CSV + Str(Asc(Mid(TempDS, Lp1, 1)))
                CSV = ", "
              Next
-             DataSource = TmpStr
+             DataSource = TmpStr + chr(9) + chr(9) + CommentString
        End If
 
      End If
