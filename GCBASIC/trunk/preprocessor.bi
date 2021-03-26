@@ -2395,8 +2395,6 @@ Sub TidyInputSource (CompSub As SubType Pointer)
   Loop
 End Sub
 
-
-'                  **** PRELIMINARY****
       'Convert Table "string" data lines to Table byte data lines  2021-03-15
 Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
     Dim As String TempDS, CSV, TmpStr, CommentString
@@ -2453,8 +2451,7 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
         Next
 
         if ( ClosedQuote and 1 ) = 1  then
-            'LogError ( DataSource, Message("NoClosingQuote")+":"  )
-            LogError ( DataSource, "NoClosingQuote"+":" )
+            LogError ( DataSource, Message("NoClosingQuote")+":"  )
         End if
         'We have closed Dquotes and we have comment pointer, so, trim the string
         if ( ClosedQuote and 1 ) = 0 and CommentPointer <> 0 then
@@ -2545,6 +2542,11 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
                CSV = ", "
              Next
              DataSource = TmpStr + chr(9) + chr(9) + CommentString
+       Else
+          if right( TempDS,1) = "," then
+            LogError ( DataSource, Message("NoClosingComma")  )
+
+          End if
        End If
 
      End If
