@@ -1,5 +1,5 @@
 '    Graphical LCD routines for the GCBASIC compiler
-'    Copyright (C) 2015- 2020 Kent Schafer, Evan Venn and Joseph Realmuto
+'    Copyright (C) 2015- 2021 Kent Schafer, Evan Venn and Joseph Realmuto
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -106,6 +106,7 @@
 '  1.26 Added IGNORE_GLCD_TYPE_SSD1306_LOW_MEMORY_WARNINGS to support low memory MCU warnings
 '  27/08/19  Add GLCDfntDefaultHeight = 7  used by GLCDPrintString and GLCDPrintStringLn
 '  21/04/20  Updated InitGLCD to correctly handle GLCD_TYPE
+'  26/03/21  Revised Write_Transaction_Data_SSD1306 to correct SPI command/data settings
 
 #define SSD1306_vccstate 0
 
@@ -1243,9 +1244,9 @@ Macro Write_Transaction_Data_SSD1306 ( in SSD1306SendByte as byte )
         #ifdef S4Wire_DATA
 
           CS_SSD1306 = 0
-          DC_SSD1306 = 0
-          S4Wire_SSD1306 SSD1306SendByte
           DC_SSD1306 = 1
+          S4Wire_SSD1306 SSD1306SendByte
+          DC_SSD1306 = 0
           CS_SSD1306 = 1
 
         #endif
