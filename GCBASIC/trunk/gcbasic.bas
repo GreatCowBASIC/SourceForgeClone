@@ -6055,13 +6055,17 @@ SUB CompileFor (CompSub As SubType Pointer)
 
       End if
 
+
       FLC = FLC + 1
       FL = 1
 
+      'And, finally determine if we can use the old method for specific use cases of constants and step=1
+      IF ( VAL(EndValue) > VAL(StartValue) ) AND IsConst(EndValue) AND IsConst(StartValue) AND (InStr(StepValue, "-") = 0 And Val(StepValue)=1 ) THEN
+          StepExists  = 0
+      End if
+
 
       If StepExists Then
-
-
 
           'New Starting code. This is common code to the negative or positive StepValue value
           CurrLine->Value = LoopVar + " =" + StartValue
@@ -6099,6 +6103,8 @@ SUB CompileFor (CompSub As SubType Pointer)
 
 
           'Starting code
+          CurrLine = LinkedListInsert(CurrLine->Prev, ";Legacy method")
+          CurrLine = CurrLine->Next
           CurrLine->Value = LoopVar + "=" + StartValue + "-" + StepValue + Origin + "[ao]"
 
           'If StartValue or EndValue are variables, need to check values at runtime to see if loop should run

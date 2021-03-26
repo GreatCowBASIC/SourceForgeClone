@@ -1,5 +1,5 @@
 '    String routines for the GCBASIC compiler
-'    Copyright (C) 2006-2020 Hugh Considine, Evan Venn & Immo Freudenberg
+'    Copyright (C) 2006-2020 Hugh Considine, Evan Venn, Immo Freudenberg & Domenic Cirone
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,7 @@
 ' 19/12/2015: Addes Str32 AND Val32 for string handling of 32 bit numbers.  Immo Freudenberg <immo-freudenberg@t-online.de>
 ' 24/1/2016: Added LeftPad and correct PAD
 ' 20/9/2017: Revised StrInteger to correct labels clash with other methods
+' 25/02/2021: Add VarToBin, VarWToBin, IntegerToBin, LongtoBin
 
 'Length/position
 Function Len (LenTemp())
@@ -546,7 +547,7 @@ Function Chr (SysChar ) As String
 
 End Function
 
-' Return a binary number
+' Return a binary strings
 
 Function ByteToBin (In ByteNum as Byte ) as String * 8
   ByteToBin = ""
@@ -569,6 +570,69 @@ Function WordToBin (In WordNum as Word ) as String * 16
          WordToBin = WordToBin +"0"
       End If
       Rotate WordNum Left
+  End Repeat
+End Function
+
+
+
+Function VarToBin (In __ByteNum as Byte ) as String * 8
+  VarToBin = ""
+  Repeat 8
+      If __ByteNum.7 = 1 Then
+         VarToBin = VarToBin +"1"
+      Else
+         VarToBin = VarToBin +"0"
+      End If
+      Rotate __ByteNum Left
+  End Repeat
+End Function
+
+Function VarWToBin (In __WordNum as Word ) as String * 16
+  VarWToBin = ""
+  Repeat 16
+      If __WordNum.15 = 1 Then
+         VarWToBin = VarWToBin +"1"
+      Else
+         VarWToBin = VarWToBin +"0"
+      End If
+      Rotate __WordNum Left
+  End Repeat
+End Function
+
+Function IntegerToBin (In __IntegerNum as Integer ) as String * 16
+  IntegerToBin = ""
+    If __IntegerNum.15 = 1 Then
+      IntegerToBin = "-"
+    Else
+       IntegerToBin = "+"
+    End If
+  Repeat 15
+    If __IntegerNum.15 = 1 Then
+      If __IntegerNum.14 = 1 Then
+         IntegerToBin = IntegerToBin +"0"
+      Else
+        IntegerToBin = IntegerToBin +"1"
+      End If
+    Else
+      If __IntegerNum.14 = 1 Then
+         IntegerToBin = IntegerToBin +"1"
+      Else
+        IntegerToBin = IntegerToBin +"0"
+      End If
+    End if
+      Rotate __IntegerNum Left
+  End Repeat
+End Function
+
+Function LongToBin (In __LongNum as Long ) as String * 32
+  LongToBin = ""
+  Repeat 32
+      If __LongNum.31 = 1 Then
+         LongToBin = LongToBin +"1"
+      Else
+         LongToBin = LongToBin +"0"
+      End If
+      Rotate __LongNum Left
   End Repeat
 End Function
 
