@@ -16,7 +16,7 @@
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
 '   13/06/2017 - Initial Release
-
+'   26/03/2021 - Prepended "Chip" to constant SMTClockSourceVariant as necessary
 
  #IFDEF PIC
 
@@ -85,19 +85,19 @@ Sub InitSMT1(In SMTSource,SMTPres)
   #Ifdef var(SMT1CON0)
 
      'Default to FOSC4 if source is unsupported
-     IF SMTClockSourceVariant = 1 then
+     IF ChipSMTClockSourceVariant = 1 then
         If SMTSource > 4 then 'Unsupported Source
            SMTSource = SMT_FOSC4
         End if
      End If
 
-     If SMTClockSourceVariant = 2 then
+     If ChipSMTClockSourceVariant = 2 then
         If SMTSource > 6 then   'Unsupported Source
           SMTSource = SMT_FOSC4
         End IF
      END IF
 
-     If SMTClockSourceVariant = 3 then
+     If ChipSMTClockSourceVariant = 3 then
         If SMTSource > 7 then   'Unsupported Source
           SMTSource = SMT_FOSC4
         End IF
@@ -114,19 +114,19 @@ Sub InitSMT2(In SMTSource,SMTPres)
   #Ifdef var(SMT1CON0)
 
      'Default to FOSC4 if source is unsupported
-     IF SMTClockSourceVariant = 1 then
+     IF ChipSMTClockSourceVariant = 1 then
         If SMTSource > 4 then 'Unsupported Source
            SMTSource = SMT_FOSC4
         End if
      End If
 
-     If SMTClockSourceVariant = 2 then
+     If ChipSMTClockSourceVariant = 2 then
         If SMTSource > 6 then   'Unsupported Source
           SMTSource = SMT_FOSC4
         End IF
      END IF
 
-     If SMTClockSourceVariant = 3 then
+     If ChipSMTClockSourceVariant = 3 then
         If SMTSource > 7 then   'Unsupported Source
            SMTSource = SMT_FOSC4
         End IF
@@ -205,7 +205,7 @@ MACRO SETSMT1PERIOD(IN SMTTEMP as LONG)
 END MACRO
 
 MACRO SETSMT2PERIOD(IN SMTTEMP as LONG)
- SMT2PERIOD_U = SMTTEMP_U
+  SMT2PERIOD_U = SMTTEMP_U
   SMT2PERIOD_H = SMTTEMP_H
   SMT2PERIOD = SMTTEMP
 END MACRO
