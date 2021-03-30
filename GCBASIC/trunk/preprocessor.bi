@@ -810,7 +810,7 @@ SUB PreProcessor
 
 
      'Process Table "string" data
-     TableString (DataSource, TF)
+      TableString(DataSource, TF )
 
 
       'Extract strings, and remove comments with ; and '
@@ -2395,11 +2395,17 @@ Sub TidyInputSource (CompSub As SubType Pointer)
   Loop
 End Sub
 
-      'Convert Table "string" data lines to Table byte data lines  2021-03-15
+      'Convert Table "string" data lines to Table byte data lines  2021-03-28
 Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
-    Dim As String TempDS, CSV, TmpStr, CommentString
+    Dim As String TempDS, CSV, TmpStr, CommentString, OutMessage
     Dim As Integer Lp1, CSF, CSFcnt, ChrIn, ChrPos, QFpos, QFStrt, StrStrt
-    Dim As Integer ClosedQuoteCounter, ClosedQuote, EscapeChar, CommentPointer
+    Dim As Integer ClosedQuoteCounter, ClosedQuote, EscapeChar, CommentPointer, DQuoteState
+
+    #Define INSTRING     1
+    #Define NOTINSTRING  3
+
+
+    Dim as String ArrayCheck()
 
     EscapeChar = -1      'Not an escape char
 
@@ -2420,6 +2426,65 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
     If UCase(Left(TempDS, 9)) = "END TABLE" THEN TF = "0"
 
      If TF = "1" Then
+
+
+        'if chr(255) then we need to issue a warning. 255 is reserved.
+        If instr(TempDS,chr(255)) <> 0 then
+            LogError ( DataSource, Message("ReservedTableTextCharacter"))
+        End if
+
+        'before string check convert all escape commas to escape code
+        replaceall ( TempDs, "\,", "\&044")
+
+        'check we need to check for comma errors by checking for a comma
+        If instr(TempDS,",") <> 0 then
+
+          'we are now left with the issue of a comma within a string, so, count them between the DQuotes.  Not nice but does the job
+          DQuoteState = NOTINSTRING
+          For Lp1 = 1 to len( TempDs)
+
+            Select Case mid( TempDs, Lp1, 1 )
+
+                Case "\"
+                  Lp1 = Lp1 + 1  'skip of any potential escaped DQuote
+                Case chr(34)
+                  If DQuoteState = NOTINSTRING Then
+                    DQuoteState = INSTRING
+                  else
+                    DQuoteState = NOTINSTRING
+                  End if
+                Case ","
+                  If DQuoteState = INSTRING  Then
+                    mid( TempDs, Lp1, 1 ) = chr(255) 'exchange in string command to chr(255)
+                  End if
+
+            End Select
+
+          Next
+
+          If instr(TempDS,",") <> 0 then  'need to recheck we still have a comma
+            'Now split the string at the commas - we know there is ONE comma
+            StringSplit(tempds,",",-1,arraycheck() )
+
+            'Now walk the string to check the array element starts with the DQUOTE - all should start with a Dquote as we have prepared for this!
+            For qfpos  = 0 To ubound(arraycheck)
+              'To see the array elements
+              'print trim(arraycheck(qfpos))
+               If left( trim(arraycheck(qfpos)),1)<>chr(34) Then
+                  OutMessage = Message("InCorrectTableFormatting")
+                  Replace OutMessage, "%var%", trim(arraycheck(qfpos))
+                  LogError (  DataSource, OutMessage )
+                End If
+            next
+
+          End If
+
+          'revert the commana in strings
+          If instr(TempDS,chr(255)) <> 0 then
+            replaceall ( TempDs, chr(255), ",")
+          End if
+
+        end if
 
 
         'Validate closed Dquotes
@@ -2452,7 +2517,8 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
 
         if ( ClosedQuote and 1 ) = 1  then
             LogError ( DataSource, Message("NoClosingQuote")+":"  )
-        End if
+        End If
+
         'We have closed Dquotes and we have comment pointer, so, trim the string
         if ( ClosedQuote and 1 ) = 0 and CommentPointer <> 0 then
             CommentString = trim(Mid ( TempDS, CommentPointer ))
@@ -2471,7 +2537,7 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
              Do While QFPos <> 0
                  QFpos = InStr(QFstrt + 1, TempDS, Chr(34))
 
-                'Test for Comma Separator(CSF)
+                'Test for Comma Separator(CSF) between Dquotes
                For Lp1 = QFstrt + 1 To QFpos - 1
                    ChrIn = Asc(TempDS, Lp1)
                  If (ChrIn = 32 Or ChrIn = 44) Then
@@ -2542,13 +2608,13 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
                CSV = ", "
              Next
              DataSource = TmpStr + chr(9) + chr(9) + CommentString
-       Else
-          if right( TempDS,1) = "," then
-            LogError ( DataSource, Message("NoClosingComma")  )
 
-          End if
+       Else
+             If right( TempDS,1) = "," Then
+               LogError ( DataSource, Message( "InCorrectTableTextTermination" ) )
+             End If
+
        End If
 
      End If
-
 End Sub

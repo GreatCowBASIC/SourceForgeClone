@@ -539,7 +539,7 @@ DECLARE SUB ReplaceConstants ()
 Declare Function ReplaceConstantsLine (DataSourceIn As String, IncludeStartup As Integer) As String
 DECLARE SUB RunScripts ()
 Declare Sub TidyInputSource (CompSub As SubType Pointer)
-Declare Sub TableString (DataSource As String, TF As String)
+Declare Sub TableString (DataSource As String, TF As String )
 
 'Subs in utils.bi
 Declare Function AddFullPath(CurrPath As String, FullPathIn As String = "") As String
@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-03-26"
+Version = "0.98.<<>> 2021-03-30"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -5938,7 +5938,7 @@ SUB CompileFor (CompSub As SubType Pointer)
   Dim As String LoopVar, StartValue, EndValue, StepValue, LoopVarType
   Dim As Integer FL, CD, StepIntVar, StepExists
   Dim As LinkedListElement Pointer CurrLine, FindLoop, LoopLoc
-  Dim As Integer IgnoreWarning
+  Dim As Integer IgnoreWarning, IntegerEndVariableCreated, EndValueConstantInitialValue
 
   'force use at RC43 + RC44
   If HashMapGet(Constants, "USELEGACYFORNEXT" ) = 0 then
@@ -5955,6 +5955,7 @@ SUB CompileFor (CompSub As SubType Pointer)
       FL = 0
       StepExists = 0
       IgnoreWarning = 0
+      IntegerEndVariableCreated = 0
       Origin = ""
       IF INSTR(InLine, ";?F") <> 0 THEN
         Origin = Mid(InLine, INSTR(InLine, ";?F"))
@@ -5997,7 +5998,10 @@ SUB CompileFor (CompSub As SubType Pointer)
           'create an integer from the constant
           If IsConst(StepValue) and StepValue <> "1" then
              AddVar "SysForLoopStep" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
+
              CurrLine = LinkedListInsert(CurrLine,  "SysForLoopStep" + Str(FLC) + " = " + StepValue)
+             CurrLine = CurrLine->Prev
+             CurrLine = LinkedListInsert(CurrLine,  ";#0 Init SysForLoopStep" + Str(FLC) )
              CurrLine = CurrLine->Prev
              'replace the constant with the integer string name
              StepValue = "SysForLoopStep" + Str(FLC)
@@ -6007,6 +6011,8 @@ SUB CompileFor (CompSub As SubType Pointer)
 
       END IF
 'Print "For variable:"; LoopVar; " start:"; StartValue; " end:"; EndValue; " step:"; StepValue
+
+      EndValueConstantInitialValue = val(EndValue)
 
       'Check that variable can hold start and end values
       LoopVarType = TypeOfValue(LoopVar, CompSub)
@@ -6225,7 +6231,7 @@ SUB CompileFor (CompSub As SubType Pointer)
                     LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -(" + StepValue+")")
 
 
-                    LoopLoc = LinkedListInsert(LoopLoc, ";#1 IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#1n IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
                     LoopLoc = LinkedListInsert(LoopLoc,  "IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN" + Origin)
 
                   ElseIf TypeOfVar(LoopVar, CompSub) = "INTEGER"   then
@@ -6239,17 +6245,18 @@ SUB CompileFor (CompSub As SubType Pointer)
                         'create a variable to enable casting - added to resolve negative constant issue
                         AddVar "SysForLoopEndValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
                         LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopEndValue to EndValue ")
-                        LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopEndValue" + Str(FLC) + " = " + EndValue)
+                        LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopEndValue" + Str(FLC) + " = " + str(EndValueConstantInitialValue) )
                         EndValue = "SysForLoopEndValue" + Str(FLC)
+                        IntegerEndVariableCreated = -1
                     End if
 
 
-                    LoopLoc = LinkedListInsert(LoopLoc, ";#1 IF ( [WORD]" + LoopVar + " - [WORD]" + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#2n IF ( [WORD]" + LoopVar + " - [WORD]" + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
                     LoopLoc = LinkedListInsert(LoopLoc,     "IF ( [WORD]" + LoopVar + " - [WORD]" + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN" + Origin)
 
                   Else
                     'If statement for NOT longs
-                    LoopLoc = LinkedListInsert(LoopLoc, ";#2 IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN ")
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#3n IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN ")
                     LoopLoc = LinkedListInsert(LoopLoc, "IF ( " + LoopVar + " - " + EndValue + ") } -" + StepValue + " THEN" + Origin)
 
                   End if
@@ -6257,7 +6264,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
                 else
                   'handle a constant
-                  LoopLoc = LinkedListInsert(LoopLoc, ";#3IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
+                  LoopLoc = LinkedListInsert(LoopLoc, ";#4n IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
                   LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
 
                 end if
@@ -6281,9 +6288,10 @@ SUB CompileFor (CompSub As SubType Pointer)
 
             LoopLoc = LinkedListInsert(LoopLoc, "ELSE" + Origin)
 
+'Positive handler starts here with the ELSE above
           End if  '#1  do not handle an integer... code above is needed only when an integer
 
-                'Pseudo code - positive or assumed constant 1
+          'Pseudo code - positive or assumed constant 1
                 '                  if EndValue-LoopVar >= StepValue then
                 '                    LoopVar = LoopVar + StepValue
                 '                    goto loopx
@@ -6294,19 +6302,43 @@ SUB CompileFor (CompSub As SubType Pointer)
                 If StepIntVar Then
                   LoopLoc = LinkedListInsert(LoopLoc, ";Integer positive Step Handler in For-next statement")
 
-                  If TypeOfVar(LoopVar, CompSub) = "INTEGER" or TypeOfVar(LoopVar, CompSub) = "WORD"  then
+                  If TypeOfVar(LoopVar, CompSub) = "WORD"  then
                     'Need to set the type to ensure operation works for integer
-                    LoopLoc = LinkedListInsert(LoopLoc, ";IF ([WORD]" + EndValue + " - [WORD]" + LoopVar + ") } [WORD]" + StepValue + " THEN")
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#1p IF ([WORD]" + EndValue + " - [WORD]" + LoopVar + ") } [WORD]" + StepValue + " THEN")
                     LoopLoc = LinkedListInsert(LoopLoc,  "IF ([WORD]" + EndValue + " - [WORD]" + LoopVar + ") } [WORD]" + StepValue + " THEN" + Origin)
+
+                 ElseIf TypeOfVar(LoopVar, CompSub) = "INTEGER" then
+
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#2pa INTEGER")
+                    'create a temp variable so that we can do the tests, keeping the original value as-is for maths
+                    AddVar "SysForLoopABsValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
+                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to StepValue ")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = " + StepValue )
+
+                    if IsConst(EndValue) or IntegerEndVariableCreated = -1 then
+                        'create a variable to enable casting - added to resolve negative constant issue
+                        AddVar "SysForLoopEndValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
+                        LoopLoc = LinkedListInsert(LoopLoc, ";#2pb Set SysForLoopEndValue to EndValue ")
+                        LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopEndValue" + Str(FLC) + " = " + str(EndValueConstantInitialValue))
+                        EndValue = "SysForLoopEndValue" + Str(FLC)
+                    End if
+
+
+                    'Need to set the type to ensure operation works for integer
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#2pc IF ([INTEGER]" + EndValue + " - [LONG]" + LoopVar + ") } [INTEGER]" + "SysForLoopABsValue" + Str(FLC) + " THEN")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "IF ([INTEGER]" + EndValue + " - [LONG]" + LoopVar + ") } [INTEGER]" + "SysForLoopABsValue" + Str(FLC) + " THEN" + Origin)
+
+
                   else
-                    LoopLoc = LinkedListInsert(LoopLoc, ";IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN")
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#3p IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN")
                     LoopLoc = LinkedListInsert(LoopLoc, "IF (" + EndValue + " - " + LoopVar + ") } " + StepValue + " THEN" + Origin)
                   end if
                 else
 
-                  LoopLoc = LinkedListInsert(LoopLoc, ";Positive value Step Handler in For-next statement")
+                  LoopLoc = LinkedListInsert(LoopLoc, ";#4p Positive value Step Handler in For-next statement")
                   LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
                 end if
+
                   LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a postive value")
                   LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin+ "[ao]")
                   IF ModePIC Then
