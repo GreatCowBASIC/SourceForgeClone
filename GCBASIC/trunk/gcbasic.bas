@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-03-30"
+Version = "0.98.<<>> 2021-03-31"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -6046,19 +6046,6 @@ SUB CompileFor (CompSub As SubType Pointer)
             LogError(Message("ForBadStepVariable"), Origin)
         End if
 
-'        If TypeOfVar(LoopVar, CompSub) = "LONG" THEN
-'          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
-'            LogError( Message("ForLongConstraints") ,Origin)
-'          End if
-'        End if
-
-' Resolved in  RC44 changes
-'        If TypeOfVar(LoopVar, CompSub) = "INTEGER" AND (  TypeOfVar(StartValue, CompSub) = "INTEGER" OR TypeOfVar(EndValue, CompSub) = "INTEGER" ) THEN
-'          If HashMapGet(Constants, "SUPPRESSFORNEXTHANDLERWARNING" ) = 0 and IgnoreWarning = 0 THEN
-'            LogError( Message("FORSETINTEGERCONSTRAINTS") ,Origin)
-'          End if
-'        End if
-
       End if
 
 
@@ -6198,7 +6185,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
 'new NEXT code
 
-          '#1 do not handle an integer... code only needed if an integer
+          '#1 only add the new logic handle an integer... code only needed if an integer
           If TypeOfVar(StepValue, CompSub) = "INTEGER" then
 
             LoopLoc = LinkedListInsert(LoopLoc, ";Integer negative Step Handler in For-next statement")
@@ -6288,7 +6275,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
             LoopLoc = LinkedListInsert(LoopLoc, "ELSE" + Origin)
 
-'Positive handler starts here with the ELSE above
+'Positive handler starts here with the encoded "ELSE" above
           End if  '#1  do not handle an integer... code above is needed only when an integer
 
           'Pseudo code - positive or assumed constant 1
@@ -6325,8 +6312,8 @@ SUB CompileFor (CompSub As SubType Pointer)
 
 
                     'Need to set the type to ensure operation works for integer
-                    LoopLoc = LinkedListInsert(LoopLoc, ";#2pc IF ([INTEGER]" + EndValue + " - [LONG]" + LoopVar + ") } [INTEGER]" + "SysForLoopABsValue" + Str(FLC) + " THEN")
-                    LoopLoc = LinkedListInsert(LoopLoc,  "IF ([INTEGER]" + EndValue + " - [LONG]" + LoopVar + ") } [INTEGER]" + "SysForLoopABsValue" + Str(FLC) + " THEN" + Origin)
+                    LoopLoc = LinkedListInsert(LoopLoc, ";#2pc IF [LONG]([INTEGER]" + EndValue + " - [INTEGER]" + LoopVar + ") } [LONG]" + "SysForLoopABsValue" + Str(FLC) + " THEN")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "IF [LONG]([INTEGER]" + EndValue + " - [INTEGER]" + LoopVar + ") } [LONG]" + "SysForLoopABsValue" + Str(FLC) + " THEN" + Origin)
 
 
                   else
@@ -6339,7 +6326,8 @@ SUB CompileFor (CompSub As SubType Pointer)
                   LoopLoc = LinkedListInsert(LoopLoc, "IF " + EndValue + " - " + LoopVar + " ~ 0 THEN" + Origin)
                 end if
 
-                  LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a postive value")
+                  'Finally - add the STEPVALUE!!
+                  LoopLoc = LinkedListInsert(LoopLoc, ";Set LoopVar to LoopVar + StepValue where StepValue is a positive value")
                   LoopLoc = LinkedListInsert(LoopLoc, LoopVar + " = " + LoopVar + " + " + StepValue + Origin+ "[ao]")
                   IF ModePIC Then
                     LoopLoc = LinkedListInsert(LoopLoc, " goto SysForLoop" + Str(FLC))

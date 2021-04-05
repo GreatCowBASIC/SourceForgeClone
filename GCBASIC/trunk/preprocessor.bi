@@ -2437,7 +2437,7 @@ Sub TableString (DataSource As String, TF As String )  '( TF must persist!)
         replaceall ( TempDs, "\,", "\&044")
 
         'check we need to check for comma errors by checking for a comma
-        If instr(TempDS,",") <> 0 then
+        If instr(TempDS,",") <> 0 and left(trim(TempDs),1)=chr(34) then
 
           'we are now left with the issue of a comma within a string, so, count them between the DQuotes.  Not nice but does the job
           DQuoteState = NOTINSTRING
