@@ -330,7 +330,7 @@ Function ConfigTidy (DataSource As String ) As String
 
       adaptedConfig  = " CONFIG "+DataSource+ Pad32
       adaptedConfig  = Left (  adaptedConfig + Pad32, 48 ) + " ;C2 No reverselookup "+ " was '" + DataSource+"'"
-      ConfigTidy = adaptedConfig
+      ConfigTidy = "; " + adaptedConfig
 
  end if
 

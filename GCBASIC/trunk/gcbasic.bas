@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-03-31"
+Version = "0.98.<<>> 2021-05-06"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -1547,18 +1547,32 @@ Sub AddPageCommands(CompSub As SubType Pointer)
         If ChipFamily = 12 Or ChipFamily = 14 Or ChipFamily = 15 Then
           'Remove call temporarily
           CurrLine = LinkedListDelete(CurrLine)
-          'Set page if needed
-          If CalledSubPage <> ThisSubPage Then
-            CurrLine = LinkedListInsert(CurrLine, " pagesel " + CallTarget)
-            GetMetaData(CurrLine)->IsAutoPageSel = -1
-          End If
-          'Add call back
-          CurrLine = LinkedListInsert(CurrLine, " call " + CallTarget)
-          'Restore PCLATH if needed
-          If RestorePage Then
-            CurrLine = LinkedListInsert(CurrLine, " pagesel $")
-            GetMetaData(CurrLine)->IsAutoPageSel = -1
-          End If
+          If AFISupport = 0 Then
+              'GCASM - this is the original method
+              'Set page if needed
+              If CalledSubPage <> ThisSubPage Then
+                CurrLine = LinkedListInsert(CurrLine, " pagesel " + CallTarget)
+                GetMetaData(CurrLine)->IsAutoPageSel = -1
+              End If
+              'Add call back
+              CurrLine = LinkedListInsert(CurrLine, " call " + CallTarget)
+              'Restore PCLATH if needed
+              If RestorePage Then
+                CurrLine = LinkedListInsert(CurrLine, " pagesel $")
+                GetMetaData(CurrLine)->IsAutoPageSel = -1
+              End If
+          Else
+            'PIC-AS mandates use of fcall... and, no matter how clever we are ... fcall is required
+            If CalledSubPage <> ThisSubPage Then
+              'Add call back as a fcall
+               CurrLine = LinkedListInsert(CurrLine, " fcall " + CallTarget)
+            Else
+              'Add call back
+              CurrLine = LinkedListInsert(CurrLine, " call " + CallTarget)
+            End if
+          End if
+
+
         End If
       ElseIf ModeZ8 Then
         CurrLine = LinkedListDelete(CurrLine)
@@ -1582,13 +1596,24 @@ Sub AddPageCommands(CompSub As SubType Pointer)
           If ModePIC Then
             If ChipFamily = 12 Or ChipFamily = 14 Or ChipFamily = 15 Then
               CurrLine = LinkedListDelete(CurrLine)
-              If CalledSubPage = ThisSubPage Then
-                CurrLine = LinkedListInsert(CurrLine, " goto " + CallTarget)
+              If AFISupport = 0 then
+              'GCASM - this is the original method
+                If CalledSubPage = ThisSubPage Then
+                  CurrLine = LinkedListInsert(CurrLine, " goto " + CallTarget)
+                Else
+                  CurrLine = LinkedListInsert(CurrLine, " pagesel " + CallTarget)
+                  GetMetaData(CurrLine)->IsAutoPageSel = -1
+                  CurrLine = LinkedListInsert(CurrLine, " goto " + CallTarget)
+                End If
               Else
-                CurrLine = LinkedListInsert(CurrLine, " pagesel " + CallTarget)
-                GetMetaData(CurrLine)->IsAutoPageSel = -1
-                CurrLine = LinkedListInsert(CurrLine, " goto " + CallTarget)
-              End If
+              'PIC-AS mandates use of ljmp... and, no matter how clever we are ... ljmp is required
+                If CalledSubPage = ThisSubPage Then
+                  CurrLine = LinkedListInsert(CurrLine, " goto " + CallTarget)
+                Else
+                  CurrLine = LinkedListInsert(CurrLine, " ljmp " + CallTarget)
+                End If
+              End if
+
             End If
           End If
         End If
@@ -2978,9 +3003,11 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Asm
 
   InstSize = 0
   InstIndex = IsASM(CurrLineVal)
+
   If InstIndex = 0 Then
     'If line not recognised as instruction, check for directive
     If ModePIC Then
+
       'Bank selection directives
       If Left(CurrLineVal, 9) = " banksel " Then
         If ChipFamily = 12 Then
@@ -2996,8 +3023,17 @@ Function CalcLineSize(CurrLine As String, ThisSubPage As Integer, CallPos As Asm
         ElseIf ChipFamily = 16 Then
           InstSize = 1
         End If
+
       ElseIf Left(CurrLineVal, 10) = " bankisel " Then
         InstSize = 1
+
+      ElseIf Left(CurrLineVal, 7) = " fcall " Then
+          'added for PIC-AS support
+          InstSize = 3
+
+      ElseIf Left(CurrLineVal, 6) = " ljmp " Then
+          'added for PIC-AS support
+           InstSize = 3
 
       ElseIf Left(CurrLineVal, 9) = " pagesel " Then
         If ChipFamily = 12 Or ChipFamily = 15 Then
@@ -16526,6 +16562,44 @@ Sub WriteAssembly
           PRINT #2, "#define ACCESS a"
           PRINT #2, "#define UPPER low highword"
 
+          'if development workarounds... meant to be resolved at PIC-AS 2.35
+          '          PRINT #2, ""
+          '          PRINT #2, ";#define BTFSS mybtfss"
+          '          PRINT #2, ";#define BTFSS mybtfsc"
+          '
+          '          PRINT #2, ""
+          '          PRINT #2, "mybtfss MACRO arg1, arg2"
+          '          PRINT #2, "local arg3, arg4"
+          '          PRINT #2, " arg3 set ( arg2 << 7 )"
+          '          PRINT #2, " arg4 set ( arg1 AND 127 )"
+          '          PRINT #2, " dw arg3 + arg4 + 0x1C00"
+          '          PRINT #2, "ENDM"
+          '          PRINT #2, ""
+          '          PRINT #2, "mybtfsc MACRO arg1, arg2"
+          '          PRINT #2, "local arg3, arg4"
+          '          PRINT #2, " arg3 set ( arg2 << 7 )"
+          '          PRINT #2, " arg4 set ( arg1 AND 127 )"
+          '          PRINT #2, " dw arg3 + arg4 + 0x1800"
+          '          PRINT #2, "ENDM"
+          '          PRINT #2, ""
+
+            If ChipFamily = 12 Or ChipFamily = 14 and HighFSR Then
+              PRINT #2, ""
+              PRINT #2, "BANKISEL MACRO reg"
+
+              PRINT #2, "  ;BANKISEL macro to restore missing Directive."
+              ' alternate see https://www.microchip.com/forums/FindPost/1173118 post #39
+              'print #2, "dw (0x1000 | ((high(reg) and 01h)<<10) |(7<<7)|STATUS) // BCF/BSF STATUS,IRP"
+              PRINT #2, "  if reg < 0x100 "
+              PRINT #2, "   ;MESSG "+CHR(34)+"Bankvalue < 256 - bcf"+CHR(34)
+              PRINT #2, "   bcf STATUS, 7"
+              PRINT #2, "  else"
+              PRINT #2, "   ;MESSG "+CHR(34)+"Bankvalue > 256 - bsf"+CHR(34)
+              PRINT #2, "   bsf STATUS, 7"
+              PRINT #2, "  endif"
+              PRINT #2, "ENDM"
+            End If
+
           PRINT #2, ""
       End if
 
@@ -16836,53 +16910,6 @@ Sub WriteAssembly
      CurrLine = CurrLine->Next
      Continue Do
 
-    end if
-
-
-    'optmise CALLS to FCALLS
-    If instr(ucase(CurrLine->Next->Value),"CALL ") > 0 and instr(ucase(CurrLine->Value),"PAGESEL") > 0 then
-
-        dim outline as string
-
-        'Pagesel to legacy
-        PRINT #1, AsmTidy(CurrLine->Value, -1 )
-
-
-        CurrLine = CurrLine->Next
-        outline = CurrLine->Value
-        PRINT #1, AsmTidy(outline, -1 )
-
-        replace( outline, "CALL ", "FCALL ")
-        if AFISupport = 1 then PRINT #2, AsmTidy(outline, -1 )
-        CurrLine = CurrLine->Next
-        If instr(CurrLine->Value, "$") > 0 then
-            PRINT #1, AsmTidy(CurrLine->Value, -1 )
-
-            'consume the PAGESEL $ for AFI
-            CurrLine = CurrLine->Next
-        end if
-        Continue Do
-    end if
-
-    'optmise GOTO to LJMP
-    If instr(ucase(CurrLine->Value),"PAGESEL ") > 0  and instr(ucase(CurrLine->Next->Value),"GOTO ") > 0  then
-
-        dim outline as string
-
-        'Pagesel to legacy
-        PRINT #1, AsmTidy(CurrLine->Value, -1 )
-
-        CurrLine = CurrLine->Next
-        outline = CurrLine->Value
-
-        PRINT #1, AsmTidy(outline , -1 )
-
-        replace( outline, "GOTO ", "LJMP ")
-        if AFISupport = 1 then PRINT #2, AsmTidy(outline, -1 )
-
-        'Get next line
-        CurrLine = CurrLine->Next
-        Continue Do
     end if
 
     IF instr( UCase(CurrLine->Value), "ALIGN 2") = 0 then
