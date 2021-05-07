@@ -1,4 +1,5 @@
 'List of files in lowlevel\ to include by default
+picas.h
 a-d.h
 pwm.h
 rs232.h
