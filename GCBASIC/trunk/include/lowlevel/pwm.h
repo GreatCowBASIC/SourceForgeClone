@@ -127,6 +127,7 @@
 ''' 07/05/2020 Revised to isolate Timer4 and Timer6 in HPWM()
 ''' 21/06/2020 Revised to support ChipFamily 121
 ''' 30/12/2020 Revised sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )/SetupCCPPWMRegisters section to identify the Q41 chip that only has ONE CCP1PMW! That is new... one CCP1. Just like the old days
+''' 25/01/2020 Correct typo in ChipSubFamily Q41 in HMPWM
 
   'define the defaults
   #define AVRTC0
@@ -2929,7 +2930,7 @@ SetupCCPPWMRegisters:
 
     #endif
 
-    #ifdef ChipSubFamily = ChipFamily18FxxQ41
+    #if ChipSubFamily = ChipFamily18FxxQ41
         'Identify the Q41 chip that only has ONE CCP1PMW
         calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
         CCPR1H = PRx_Temp_H
