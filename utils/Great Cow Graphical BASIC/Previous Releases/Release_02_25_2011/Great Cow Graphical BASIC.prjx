@@ -1,0 +1,130 @@
+<Project name="Great Cow Graphical BASIC" standardNamespace="Great_Cow_Graphical_BASIC" description="" newfilesearch="None" enableviewstate="False" version="1.1" projecttype="VBNET">
+  <Contents>
+    <File name=".\MainForm.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\AssemblyInfo.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.MainForm.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.AboutForm.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great Cow Graphical BASIC.build" subtype="Code" buildaction="Nothing" dependson="" data="" />
+    <File name=".\About.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\FileIO.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ProgramWindow.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ProgramWindow.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\ChipSettings.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ChipSettings.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\DefineWindow.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.DefineWindow.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\LowLevel.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\SubNameDialog.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.SubNameDialog.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\LibraryWindow.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\TableWindow.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.TableWindow.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Preferences.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.Preferences.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Variables.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.Variables.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\EditVar.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.EditVar.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\ProgSummary.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ProgSummary.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ParamWizard.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\TableDataEdit.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.TableDataEdit.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\TableNameInput.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.TableNameInput.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.LibraryWindow.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ParamEditor.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\ChipDiagram.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ChipDiagram.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\DataClasses.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\SubParamEditor.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.SubParamEditor.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\ProgrammerEditor.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ProgrammerEditor.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\GCBProgram.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ErrorListBox.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ErrorListBox.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\ParamEditBox.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ParamEditBox.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\InterruptWindow.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.InterruptWindow.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.LibraryImporterWindow.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\FileConverter.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\GCBCommand.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\IconDisplay.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.IconDisplay.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\GuiEditorPanel.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.GuiEditorPanel.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\EditorPanel.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ProgramContainer.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.NonScrollingPanel.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\TextEditorPanel.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.TextEditorPanel.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\PECondition.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\PEVariable.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\PELiteral.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\PEFunction.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\PEBit.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\PEArrayElement.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ParameterEditor.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ParameterEditor.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\PEChooseSource.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEChooseSource.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\CaptionedListBox.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.CaptionedListBox.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PECondition.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PELiteral.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\LiteralConverter.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.DecimalConverter.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.LiteralConverter.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\PEString.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEString.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEVariable.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Translator.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\PEChipPin.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEChipPin.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\PEStandardFunction.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEStandardFunction.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\ChipInfo.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\PECalculation.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PECalculation.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\GCBSubroutine.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEFunction.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\AdvancedSettings.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.ProgramSettings.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.AdvancedSettings.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEArrayElement.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\VariableList.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.PEBit.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.VariableConflict.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\VariableConflict.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\CustomHardwareSettings.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.CustomHardwareSettings.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\HardwareSettingEditor.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.HardwareSettingEditor.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+    <File name=".\WelcomePanel.vb" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Great_Cow_Graphical_BASIC.WelcomePanel.resources" subtype="Code" buildaction="EmbedAsResource" dependson="" data="" />
+  </Contents>
+  <References />
+  <DeploymentInformation target="" script="" strategy="File" />
+  <Configuration runwithwarnings="True" name="Debug">
+    <CodeGeneration compilerversion="Standard" includedebuginformation="True" optimize="True" generateoverflowchecks="True" rootnamespace="" mainclass="" target="WinExe" definesymbols="" optionexplicit="True" optionstrict="False" win32Icon=".\LargeCowIcon.ico" imports="" />
+    <VBDOC outputfile="" filestoparse="" commentprefix="'" />
+    <Execution consolepause="False" commandlineparameters="" />
+    <Output directory=".\bin\Debug" assembly="Great Cow Graphical BASIC" executeScript="" executeBeforeBuild="" executeAfterBuild="" executeBeforeBuildArguments="" executeAfterBuildArguments="" />
+  </Configuration>
+  <Configurations active="Debug">
+    <Configuration runwithwarnings="True" name="Debug">
+      <CodeGeneration compilerversion="Standard" includedebuginformation="True" optimize="True" generateoverflowchecks="True" rootnamespace="" mainclass="" target="WinExe" definesymbols="" optionexplicit="True" optionstrict="False" win32Icon=".\LargeCowIcon.ico" imports="" />
+      <VBDOC outputfile="" filestoparse="" commentprefix="'" />
+      <Execution consolepause="False" commandlineparameters="" />
+      <Output directory=".\bin\Debug" assembly="Great Cow Graphical BASIC" executeScript="" executeBeforeBuild="" executeAfterBuild="" executeBeforeBuildArguments="" executeAfterBuildArguments="" />
+    </Configuration>
+    <Configuration runwithwarnings="True" name="Release">
+      <CodeGeneration compilerversion="Standard" includedebuginformation="False" optimize="True" generateoverflowchecks="False" rootnamespace="" mainclass="" target="WinExe" definesymbols="" optionexplicit="True" optionstrict="False" win32Icon=".\LargeCowIcon.ico" imports="" />
+      <VBDOC outputfile="" filestoparse="" commentprefix="'" />
+      <Execution consolepause="False" commandlineparameters="" />
+      <Output directory=".\bin\Release" assembly="Great Cow Graphical BASIC" executeScript="" executeBeforeBuild="" executeAfterBuild="" executeBeforeBuildArguments="" executeAfterBuildArguments="" />
+    </Configuration>
+  </Configurations>
+</Project>

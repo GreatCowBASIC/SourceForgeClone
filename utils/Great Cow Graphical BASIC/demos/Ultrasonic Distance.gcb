@@ -1,0 +1,35 @@
+;Chip Settings
+#chip 16F88
+
+;Include files (Libraries)
+#include <srf04.h>
+
+;Defines (Constants)
+#define US1Ping PORTB.4
+#define US1Echo PORTB.7
+#define AlarmDistance 50
+
+;Variables
+Dim Distance As word
+
+'Distance measuring program
+'Turns on an LED if an object comes to close to the SRF04 ultrasonic sensor
+'Use Program > Hardware Settings to select the chip model and where the sensor is attached
+'Use Program > Constants to set the distance at which the alarm triggers
+'Main loop
+Do Forever
+
+	'Take a distance reading
+	Distance = USDistance(1)
+
+	'Check the reading, is the object too close?
+	if Distance < AlarmDistance then
+		Set PORTB.0 On
+	Else
+		Set PORTB.0 Off
+	end if
+	
+	'Delay for a few milliseconds before taking the next reading
+	Wait 10 ms
+Loop
+

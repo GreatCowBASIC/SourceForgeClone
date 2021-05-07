@@ -1,0 +1,27 @@
+;Chip Settings
+#chip 12F675
+
+'Sample line follower program
+'Will make a robot follow a line using a PIC 12F675.
+'Left and right motor are on GPIO.2 and GPIO.0 respectively
+'Light sensor is on GPIO.4, a light to help the sensor see is on GPIO.1
+'Turn the light on to help see the line
+Set GPIO.1 On
+
+'Main loop - repeat following code forever to keep following the line
+Do Forever
+
+	'Does the sensor see light?
+	If GPIO.4 = On Then
+
+		'If the sensor sees light, turn off left motor and turn on right motor
+		Set GPIO.2 Off
+		Set GPIO.0 On
+	Else
+
+		'If the sensor sees dark, turn off right motor and turn on left motor
+		Set GPIO.0 Off
+		Set GPIO.2 On
+	End If
+Loop
+
