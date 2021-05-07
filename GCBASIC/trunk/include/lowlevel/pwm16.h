@@ -37,6 +37,11 @@
 '            revised script hanlder, new init and code validation
 ' 11/11/17   Fixed problem with calculation of duty cycle
 ' 26/01/19   Overflow/calculation errors fixed when working out duty cycle registers
+' 14/02/21   Added CHIPPWM16TYPE validation
+' 15/20/21   Removed PWM16 script warning
+
+#option REQUIRED PIC CHIPPWM16TYPE "PWM16 commands. Either chip is not supported, or, not validated with this chip"
+
 
 'By default, compile code for all PWM modeules
 'Set to false in user code to save on program space if module is not required
@@ -209,14 +214,15 @@
       DIM HPWM16_12_Phase_RegWord alias PWM12PHH,PWM12PHL As Word
       #endif
 
-
 #startup HPWM16Init
 
 sub HPWM16Init
 
   #ifdef PIC
+
       'Calculate the constants
       #script
+
           if PIC then
             'Calculate the frequency the defaults
             HPWM16F_PRPS_Req = ChipMHz * 1000 / PWM_Freq
