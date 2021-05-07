@@ -1,0 +1,16 @@
+<Combine fileversion="1.0" name="Great Cow Graphical BASIC" description="">
+  <StartMode startupentry="Great Cow Graphical BASIC" single="True">
+    <Execute entry="Great Cow Graphical BASIC" type="None" />
+  </StartMode>
+  <Entries>
+    <Entry filename=".\Great Cow Graphical BASIC.prjx" />
+  </Entries>
+  <Configurations active="Debug">
+    <Configuration name="Release">
+      <Entry name="Great Cow Graphical BASIC" configurationname="Debug" build="False" />
+    </Configuration>
+    <Configuration name="Debug">
+      <Entry name="Great Cow Graphical BASIC" configurationname="Debug" build="False" />
+    </Configuration>
+  </Configurations>
+</Combine>

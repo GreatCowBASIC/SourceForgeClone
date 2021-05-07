@@ -1,0 +1,19 @@
+;Chip Settings
+#chip 12F675
+
+;Defines (Constants)
+#define SoundOut GPIO.5
+
+'LED flashing program
+'Uses a PIC 12F675 to flash an LED attached to pin GPIO.0
+'To change the chip model, go to Program > Hardware Settings
+'Main loop
+Do Forever
+
+	'Pulse pin GPIO.0 (Change this if you change the chip)
+	PulseOut GPIO.0, 500 ms
+
+	'Then wait after the pin goes off
+	Wait 500 ms
+Loop
+
