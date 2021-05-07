@@ -716,8 +716,9 @@ Sub FastHWSPITransfer( In SPITxData )
         Wait While SSPSTAT.BF = Off
         Set SSPSTAT.BF Off
 
-        'Handle 18F chips
-        #if ChipFamily 16
+
+        #if ChipFamily = 16
+           'Handle 18F chips
           SPIRxData = SSPBUF
         #endif
 
