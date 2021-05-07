@@ -50,6 +50,8 @@
 '    Updated Apr 2020 - Updated to SI32CDisovery. Now using I2C1PIR.7 to detect part and renamed HIC2Init to HI2CInit
 '    Updated May 2020 - Removed Unused Constant
 '    Updated Dec 2020 - Added support for 18FxxQ10
+'    Updated Jan 2021 - Added support for 18FxxQ43
+
 
 
 'SPI mode constants also SHARED by hardware I2C:
@@ -1059,8 +1061,20 @@ sub SI2CDiscovery ( address )
 
     wait while I2C1STAT1.TXBE <> 1
 
+    #IF ChipSubFamily =  ChipFamily18FxxQ41
 
-    #IFNDEF ChipFamily18FxxQ41
+      'this chip has a proper STOP bit, so, get statis and exit SUB
+      HI2CSend 0
+      HI2CSend 0
+      wait 2 ms  'wait for I2C1CON1!
+      HI2CAckpollState.0 = I2C1CON1.ACKSTAT
+      I2C1CON1.P = 1           'stop
+      exit sub
+    #ENDIF
+
+
+    #IFNDEF bit(I2C1CON1.P)
+
       'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
       I2C1CNTL = 1
       I2C1TXB = 0 'reg
@@ -1076,14 +1090,6 @@ sub SI2CDiscovery ( address )
       I2C1CON0.EN=0
       wait 1 ms
       I2C1CON0.EN=1
-
-    #ENDIF
-    #IFDEF ChipFamily18FxxQ41
-      HI2CSend 0
-      HI2CSend 0
-      wait 2 ms  'wait for I2C1CON1!
-      HI2CAckpollState.0 = I2C1CON1.ACKSTAT
-      I2C1CON1.P = 1           'stop
 
     #ENDIF
 
