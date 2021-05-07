@@ -73,6 +73,7 @@
 '    03112020 - Improved clear down RAM for Family122 in InitSys
 '    05012021 - Add ChipSubFamily constants
 '    10022021-  Revised PFMread and added PFMWrite
+'    12022021-  Add #IF ChipSubFamily = 15001 in initsys for new clock type
 
 
 'Constants
@@ -509,7 +510,35 @@ Sub InitSys
                 #ENDIF
             #ENDIF
 
+            #IF ChipSubFamily = 15001
 
+                    #IFDEF ChipMHz 32        'No Div
+                       OSCFRQ = 0b00000101   '32mhz
+                    #Endif
+
+
+                    #IFDEF ChipMHz 16        'No Div
+                       OSCFRQ = 0b00000100   '16mhz
+                    #Endif
+
+                    #IFDEF ChipMHz 8          'No Div
+                       OSCFRQ = 0b00000011    '8mhz
+                    #Endif
+
+
+                    #IFDEF ChipMHz 4          'No Div
+                       OSCFRQ = 0b00000010    '4mhz
+                    #Endif
+
+
+                    #IFDEF ChipMHz 2         'No DIV
+                       OSCFRQ = 0b00000001   '2mhz
+                    #Endif
+
+                   #IFDEF ChipMHz 1          'No Div
+                       OSCFRQ = 0b00000000   '1mhz
+                   #Endif
+            #ENDIF
             'End of type 103 init
 
           #endif
