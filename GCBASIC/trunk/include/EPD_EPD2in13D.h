@@ -437,8 +437,8 @@ sub   UpdatePageData_EPD2in13D
       SendCommand_EPD2in13D(Data_Transmission_1)
 
       SET EPD_DC ON
-      for EPD_Ind_raw=1 to GLCD_Height
-        for EPD_Ind_col=1 to GLCD_Width
+      for EPD_Ind_raw=1 to GLCD_Height #IGNOREWARNING
+        for EPD_Ind_col=1 to GLCD_Width #IGNOREWARNING
           'Replaced with macro for speed              SendData_EPD2in13D(GLCDBackGround)
           EPD2in13D_Data = GLCDBackGround
 
@@ -453,7 +453,7 @@ sub   UpdatePageData_EPD2in13D
 
     'We need to set the signals as we are optimising the code by using the macro
     SET EPD_DC ON
-    for EPD_Ind_raw=1 to BUFFWIDTH
+    for EPD_Ind_raw=1 to BUFFWIDTH #IGNOREWARNING
        'replaced with macro for speed
 
         #ifdef SPISRAM_TYPE
@@ -496,7 +496,7 @@ sub ClearPageData_EPD2in13D
     PrintLocX = 0
     PrintLocY = 0
 
-    for EPD_Ind_raw=1 to BUFFWIDTH                 'clear the buffer
+    for EPD_Ind_raw=1 to BUFFWIDTH  #IGNOREWARNING               'clear the buffer
         #ifdef SPISRAM_TYPE
           SRAMWrite (  [long]EPD_Ind_raw, [byte]GLCDBackground  )
         #endif

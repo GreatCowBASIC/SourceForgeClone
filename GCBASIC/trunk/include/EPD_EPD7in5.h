@@ -174,7 +174,7 @@ sub CLS_EPD7in5_init ( Optional In  GLCDBackground as word = GLCDBackground)
       PrintLocX = 0
       PrintLocY = 0
 
-      For EPD_Ind_raw=1 to BUFFWIDTH
+      For EPD_Ind_raw=1 to BUFFWIDTH #IGNOREWARNING
           #ifdef SPISRAM_TYPE
             SRAMWrite ( [long]EPD_Ind_raw, [byte]GLCDBackground  )
           #endif
@@ -188,8 +188,8 @@ sub CLS_EPD7in5_init ( Optional In  GLCDBackground as word = GLCDBackground)
 
       SET EPD_CS OFF
       SET EPD_DC ON
-      for EPD_Ind_raw=1 to GLCD_Height
-        for EPD_Ind_col=1 to GLCD_Width
+      for EPD_Ind_raw=1 to GLCD_Height #IGNOREWARNING
+        for EPD_Ind_col=1 to GLCD_Width #IGNOREWARNING
           'Was.. speed optimised with macro
           Repeat 4
               if GLCDBackground = TFT_BLACK then
@@ -238,7 +238,7 @@ sub   UpdatePageData_EPD7in5
 
     'We need to set the signals as we are optimising the code by using the macro
     SET EPD_DC ON
-    for EPD_Ind_raw=1 to BUFFWIDTH
+    for EPD_Ind_raw=1 to BUFFWIDTH #IGNOREWARNING
        'replaced with macro for speed
 
 
@@ -307,7 +307,7 @@ end sub
 sub ClearPageData_EPD7in5
     Dim EPD_Ind_raw as long
 
-    for EPD_Ind_raw=1 to BUFFWIDTH                 'clear the buffer
+    for EPD_Ind_raw=1 to BUFFWIDTH  #IGNOREWARNING               'clear the buffer
         #ifdef SPISRAM_TYPE
           SRAMWrite (  [long]EPD_Ind_raw, [byte]GLCDBackground  )
         #endif
@@ -823,8 +823,8 @@ Sub FilledBox_EPD7in5(In LineX1 as word, In LineY1 as word, In LineX2 as word, I
     LineY2 = GLCDTemp
   End If
 
-  for EPD_Ind_raw=LineY1  to LineY2
-    for EPD_Ind_col=LineX1 to lineX2
+  for EPD_Ind_raw=LineY1  to LineY2 #IGNOREWARNING
+    for EPD_Ind_col=LineX1 to lineX2 #IGNOREWARNING
       PSet_EPD7in5(EPD_Ind_Col, EPD_Ind_raw, LineColour)
     next
   next

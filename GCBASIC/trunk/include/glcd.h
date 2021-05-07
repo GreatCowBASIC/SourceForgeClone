@@ -58,6 +58,8 @@
     3/11/19  Added GLCD_TYPE_ST7735R_160_80 support.       GLCD_WIDTH = 160 GLCD_HEIGHT = 80
     29/11/19 Corrected GLCDLocateString and removed CONSTANTS from GLCD_TYPE_EPD_EPD2in13D
     1/12/19  Addded GLCD_TYPE_EPD_EPD7in5 support
+    31/01/21 revised Underscrore to permit contig lines
+    25/02/21 Added GLCD_TYPE_ST7789_240_240 support
 
 */
 'Constants that might need to be set
@@ -94,6 +96,7 @@
 #define GLCD_TYPE_ST7735R_160_80 28    'GLCD_WIDTH = 160 GLCD_HEIGHT = 80
 #define GLCD_TYPE_EPD_EPD7in5  29
 #define GLCD_TYPE_SSD1306_TWIN 30
+#define GLCD_TYPE_ST7789_240_240 31
 
 ' Circle edge overdraw protection
 ' #define GLCD_PROTECTOVERRUN
@@ -158,8 +161,28 @@ Dim GLCDDeviceWidth as Word
 
 #script
 
-  GLCDVERSION=7
+  GLCDVERSION=8
   ' add new type here!
+
+  If GLCD_TYPE = GLCD_TYPE_ST7789_240_240 Then
+     #include <GLCD_ST7789.h>
+     InitGLCD = InitGLCD_ST7789
+     GLCDCLS = GLCDCLS_ST7789
+     GLCDDrawChar = GLCDDrawChar_ST7789
+     GLCDDrawString = GLCDDrawString_ST7789
+     FilledBox = FilledBox_ST7789
+     Pset = Pset_ST7789
+     GLCDRotate = GLCDRotate_ST7789
+     glcd_type_string = "ST7789"
+     GLCD_WIDTH = 240
+     GLCD_HEIGHT = 240
+     ST7789_GLCD_HEIGHT = GLCDDeviceHeight
+     ST7789_GLCD_WIDTH = GLCDDeviceWidth
+  End If
+
+
+
+
   If GLCD_TYPE = GLCD_TYPE_KS0108 Then
 
      #include <glcd_ks0108.h>
@@ -6311,7 +6334,7 @@ End Table
 Table OLEDFont1Index AS WORD
 1  'space
 3  '!
-5  '"
+5  'DQUOTE
 9  '#
 15 '$
 21 '%
@@ -6372,7 +6395,7 @@ Table OLEDFont1Index AS WORD
 266'    3, 0x06, 0x18, 0x60    ' Backslash
 270'    2, 0x42, 0x7E              ' right brace
 273'    3, 0x20, 0x10, 0x20    ' ^
-277'    4, 0x80, 0x80, 0x80, 0x80  ' _
+277'    4, 0x80, 0x80, 0x80, 0x80  ' underscore
 282'    2, 0x04, 0x08              ' `
 285'    4, 0x20, 0x54, 0x54, 0x78  ' a
 290'    4, 0x7E, 0x44, 0x44, 0x38  ' b
@@ -6412,7 +6435,7 @@ Table OLEDFont1Data
 
     1, 0x00                   ' Space
     1, 0x5E                   ' !
-    3, 0x06, 0x00, 0x06     ' "
+    3, 0x06, 0x00, 0x06     ' DQUOTE
     5, 0x28, 0x7C, 0x28, 0x7C, 0x28 ' #
     5, 0x24, 0x2A, 0x7F, 0x2A, 0x10 ' $
     3, 0x62, 0x18, 0x46     ' %
@@ -6473,7 +6496,7 @@ Table OLEDFont1Data
     3, 0x06, 0x18, 0x60     ' Backslash
     2, 0x42, 0x7E              ' ]
     3, 0x20, 0x10, 0x20     ' ^
-    4, 0x80, 0x80, 0x80, 0x80   ' _
+    4, 0x80, 0x80, 0x80, 0x80   ' underscore
     2, 0x04, 0x08              ' `
     4, 0x20, 0x54, 0x54, 0x78   ' a
     4, 0x7E, 0x44, 0x44, 0x38   ' b
