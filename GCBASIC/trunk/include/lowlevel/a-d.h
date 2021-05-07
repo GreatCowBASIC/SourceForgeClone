@@ -140,6 +140,8 @@
 ' 07/05/20 Isolation of ANSELx to reduce variables creation
 ' 20/06/20 Support for ChipFamily 121 and tidy up in LLREADAD and changed to ADLAR = ADLeftAdjust support 121 and reduce code size
 ' 08/12/20 Support for ChipFamily 122 as these are 12bit ADCs
+' 02/02/21 Resolved typo in line 1613
+' 16/02/21 Improved Read A/D @3 to use ADCON0.GO rather than G0 as GO can also reference NVM1CON.GO
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -1472,9 +1474,10 @@ macro LLReadAD (ADLeftAdjust)
         NOP 'Read A/D. @DebugADC_H
     #ENDIF
 
-    'Read A/D
+
 
     #ifdef bit(GO_NOT_DONE)
+      'Read A/D @1
       SET GO_NOT_DONE ON
       nop
       Wait While GO_NOT_DONE ON
@@ -1482,13 +1485,15 @@ macro LLReadAD (ADLeftAdjust)
 
     #ifndef bit(GO_NOT_DONE)
       #IFDEF Bit(GO_DONE)
+        'Read A/D @2
         SET GO_DONE ON
         Wait While GO_DONE ON
       #ENDIF
       #IFNDEF Bit(GO_DONE)
         #IFDEF Bit(GO)
-          SET GO ON
-          Wait While GO ON
+          'Read A/D @3
+          SET ADCON0.GO ON
+          Wait While ADCON0.GO ON
         #ENDIF
       #ENDIF
     #endif
@@ -1610,7 +1615,7 @@ macro LLReadAD (ADLeftAdjust)
             #ifdef Bit(REFS1)
              #IFDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
                 ASM showdebug  'Assume REFS0 is set to 0 for AD_REF_AVCC
-                [canskip]REFS0=b'0
+                [canskip]REFS0=b'0'
              #ENDIF
 
              #IFNDEF Oneof(CHIP_tiny13, CHIP_tiny13a, CHIP_tiny13, CHIP_tiny1634, CHIP_tiny167, CHIP_tiny20, CHIP_tiny2313, CHIP_tiny24, CHIP_tiny24a, CHIP_tiny25, CHIP_tiny25, CHIP_tiny26, CHIP_tiny261a, CHIP_tiny40, CHIP_tiny43u, CHIP_tiny44, CHIP_tiny44l, CHIP_tiny44a, CHIP_tiny45, CHIP_tiny46l, CHIP_tiny461a, CHIP_tiny48, CHIP_tiny5, CHIP_tiny828, CHIP_tiny84, CHIP_tiny84l, CHIP_tiny84a, CHIP_tiny85, CHIP_tiny861, CHIP_tiny861a, CHIP_tiny87, CHIP_tiny88, CHIP_tiny9)
