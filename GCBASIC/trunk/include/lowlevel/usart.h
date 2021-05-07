@@ -75,6 +75,8 @@
 '             #define ISSUE_CHECK_USART_BAUD_RATE_WARNING
 ' 16/02/2021  Add ChipSubFamily = 15001 TX1REG redirection in script section
 ' 21/03/2021  Added Support for 90S Series AVR
+' 10/04/2021  Removed incorrect mapping as TRMT is this impacts USART1 removed
+
 
 'For compatibility with USART routines in Contributors forum, add this line:
 '#define USART_BLOCKING
@@ -131,7 +133,7 @@
 #sameVar TXREG2, TX2REG, U2TXB
 #samevar TXSTA2, TX2STA
 #samebit TX2IF, U2TXIF
-#samebit TXSTA2.TRMT, TX2STA.TRMT, U2ERRIR.TXMTIF
+' incorrect mapping as TRMT is also USART1 removed 10.4.21 #samebit TXSTA2.TRMT, TX2STA.TRMT, U2ERRIR.TXMTIF
 #samebit TXSTA2_TRMT, TX2STA_TRMT, U2ERRIR_TXMTIF '// PIC16F1946/47
 
 
