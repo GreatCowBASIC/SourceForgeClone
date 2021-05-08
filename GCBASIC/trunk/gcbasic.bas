@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-05-06"
+Version = "0.98.<<>> 2021-05-08"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -9624,6 +9624,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
             CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
           End If
           CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+          GetMetaData(CurrLine)->IsLabel = -1
         Else
           If InvertBitCopy Then
             CurrLine = LinkedListInsert(CurrLine, " bsf " + DestTemp)
@@ -9765,6 +9766,7 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
             CurrLine = LinkedListInsert(CurrLine, " bcf " + DestTemp)
           End If
           CurrLine = LinkedListInsert(CurrLine, "ENDIF" + Str(ILC))
+          GetMetaData(Currline)->IsLabel = -1
         End If
       ElseIf ModeAVR Then
         SourceTemp = Source
@@ -17069,7 +17071,6 @@ Sub WriteAssembly
 
               Case Else
 
-                  '16f18855
 
                   If instr( outline, "," ) > 0 then
 
@@ -17135,7 +17136,7 @@ Sub WriteAssembly
                               outstring = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
                               if outstring <> "" then
                                   Param2 = outstring
-                                  outline = ASMInstruction+" "+Param1+","+Param2
+                                  outline = chr(9)+ASMInstruction+" "+Param1+","+Param2
                                   if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
                                     Print #2, ";B6: ASM Source was: "+CurrLine->Value
                                   end if
@@ -17157,7 +17158,7 @@ Sub WriteAssembly
                               Print #2, ";B7: ASM Source was: "+CurrLine->Value
                             end if
                           else
-                            outline = ASMInstruction+" "+Param1+","+Param2+","+Param3
+                            outline = chr(9)+ASMInstruction+" "+Param1+","+Param2+","+Param3
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
                                 Print #2, ";B8: ASM Source was: "+CurrLine->Value
                             end if
@@ -17176,7 +17177,7 @@ Sub WriteAssembly
                             Param2 = GetReversePICASIncFileLookupValue ( GetSysVar(Param2)->location )
 
                             if Param2 <> "" then
-                                  outline = Param1+" "+Param2
+                                  outline = chr(9)+Param1+" "+Param2
                                   if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
                                     Print #2, ";B9: ASM Source was: "+CurrLine->Value
                                   end if
@@ -17202,6 +17203,11 @@ Sub WriteAssembly
 
 
           end if
+
+          'pad the tab
+          if ucase(left(trim(outline),7)) =  "BANKSEL" then
+              outline = chr(9)+trim(outline)
+          End if
 
           print #2, AsmTidy( outline, 0 )
       else
