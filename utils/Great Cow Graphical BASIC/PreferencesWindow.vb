@@ -96,7 +96,7 @@ Imports System.Collections.Generic
 				If pPreferences.GetPref("GCBASIC", "assembler") <> "" Then
 					DefaultCompilercomboBox.Text = pPreferences.GetPref("GCBASIC", "assembler")				
 				End If
-				
+	
 				'Programmer list
 				'Restricted mode means that GCGB is in a school or other environment where the users may be up to no good
 				'If restricted, don't allow them to define programmers.
@@ -171,7 +171,7 @@ Imports System.Collections.Generic
 					Dim section As SettingSection = pPreferences.GetSection("toolvariables")
 					If Not section is Nothing Then
 						For Each currSetting As Setting In section.Settings
-							Me.ToolVarDataGrid.Rows.Add(New Object(){currSetting.Name, currSetting.Value})
+							Me.ToolVarDataGrid.Rows.Add(New Object(){currSetting.Name, currSetting.Value})		
 						Next
 					End If
 				End If
@@ -212,6 +212,8 @@ Imports System.Collections.Generic
 			Me.EditorIndentLabel = New System.Windows.Forms.Label
 			Me.EditorWarnRecursion = New System.Windows.Forms.CheckBox
 			Me.ToolVarsPrefs = New System.Windows.Forms.TabPage
+			Me.label3 = New System.Windows.Forms.Label
+			Me.label2 = New System.Windows.Forms.Label
 			Me.ToolVarDataGrid = New System.Windows.Forms.DataGridView
 			Me.Variable = New System.Windows.Forms.DataGridViewTextBoxColumn
 			Me.Value = New System.Windows.Forms.DataGridViewTextBoxColumn
@@ -247,7 +249,7 @@ Imports System.Collections.Generic
 			Me.ExtToolsPrefs.Controls.Add(Me.toolList)
 			Me.ExtToolsPrefs.Location = New System.Drawing.Point(4, 22)
 			Me.ExtToolsPrefs.Name = "ExtToolsPrefs"
-			Me.ExtToolsPrefs.Size = New System.Drawing.Size(341, 262)
+			Me.ExtToolsPrefs.Size = New System.Drawing.Size(559, 262)
 			Me.ExtToolsPrefs.TabIndex = 3
 			Me.ExtToolsPrefs.Text = "External Tools"
 			Me.ExtToolsPrefs.UseVisualStyleBackColor = true
@@ -258,7 +260,7 @@ Imports System.Collections.Generic
 			Me.buttonDeleteTool.Enabled = false
 			Me.buttonDeleteTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonDeleteTool, "Delete an external tool")
-			Me.buttonDeleteTool.Location = New System.Drawing.Point(214, 232)
+			Me.buttonDeleteTool.Location = New System.Drawing.Point(323, 232)
 			Me.buttonDeleteTool.Name = "buttonDeleteTool"
 			Me.PrefsHelp.SetShowHelp(Me.buttonDeleteTool, true)
 			Me.buttonDeleteTool.Size = New System.Drawing.Size(88, 24)
@@ -273,7 +275,7 @@ Imports System.Collections.Generic
 			Me.buttonEditTool.Enabled = false
 			Me.buttonEditTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonEditTool, "Edit the settings of an existing external tool")
-			Me.buttonEditTool.Location = New System.Drawing.Point(126, 232)
+			Me.buttonEditTool.Location = New System.Drawing.Point(235, 232)
 			Me.buttonEditTool.Name = "buttonEditTool"
 			Me.PrefsHelp.SetShowHelp(Me.buttonEditTool, true)
 			Me.buttonEditTool.Size = New System.Drawing.Size(88, 24)
@@ -287,7 +289,7 @@ Imports System.Collections.Generic
 			Me.buttonAddTool.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.buttonAddTool.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.buttonAddTool, "Add a new external tool")
-			Me.buttonAddTool.Location = New System.Drawing.Point(38, 232)
+			Me.buttonAddTool.Location = New System.Drawing.Point(147, 232)
 			Me.buttonAddTool.Name = "buttonAddTool"
 			Me.PrefsHelp.SetShowHelp(Me.buttonAddTool, true)
 			Me.buttonAddTool.Size = New System.Drawing.Size(88, 24)
@@ -307,7 +309,7 @@ Imports System.Collections.Generic
 			Me.toolList.Location = New System.Drawing.Point(8, 8)
 			Me.toolList.Name = "toolList"
 			Me.PrefsHelp.SetShowHelp(Me.toolList, true)
-			Me.toolList.Size = New System.Drawing.Size(325, 212)
+			Me.toolList.Size = New System.Drawing.Size(543, 212)
 			Me.toolList.TabIndex = 0
 			Me.prefsToolTip.SetToolTip(Me.toolList, "List of all currently defined external tools")
 			AddHandler Me.toolList.SelectedIndexChanged, AddressOf Me.ToolListSelectedIndexChanged
@@ -322,7 +324,7 @@ Imports System.Collections.Generic
 			Me.CompilerPrefs.Controls.Add(Me.CompilerVerbose)
 			Me.CompilerPrefs.Location = New System.Drawing.Point(4, 22)
 			Me.CompilerPrefs.Name = "CompilerPrefs"
-			Me.CompilerPrefs.Size = New System.Drawing.Size(341, 262)
+			Me.CompilerPrefs.Size = New System.Drawing.Size(559, 262)
 			Me.CompilerPrefs.TabIndex = 1
 			Me.CompilerPrefs.Text = "Compiler"
 			Me.CompilerPrefs.UseVisualStyleBackColor = true
@@ -336,7 +338,7 @@ Imports System.Collections.Generic
 			Me.CompilerSelectionBox.Size = New System.Drawing.Size(316, 75)
 			Me.CompilerSelectionBox.TabIndex = 5
 			Me.CompilerSelectionBox.TabStop = false
-			Me.CompilerSelectionBox.Text = "Compiler Selection"
+			Me.CompilerSelectionBox.Text = "Assembler"
 			'
 			'label1
 			'
@@ -344,7 +346,7 @@ Imports System.Collections.Generic
 			Me.label1.Name = "label1"
 			Me.label1.Size = New System.Drawing.Size(100, 23)
 			Me.label1.TabIndex = 9
-			Me.label1.Text = "Default Assembler"
+			Me.label1.Text = "Selected"
 			'
 			'DefaultCompilercomboBox
 			'
@@ -436,7 +438,7 @@ Imports System.Collections.Generic
 			Me.PrefsTabs.Location = New System.Drawing.Point(8, 8)
 			Me.PrefsTabs.Name = "PrefsTabs"
 			Me.PrefsTabs.SelectedIndex = 0
-			Me.PrefsTabs.Size = New System.Drawing.Size(349, 288)
+			Me.PrefsTabs.Size = New System.Drawing.Size(567, 288)
 			Me.PrefsTabs.TabIndex = 0
 			'
 			'ProgrammerPrefs
@@ -447,7 +449,7 @@ Imports System.Collections.Generic
 			Me.ProgrammerPrefs.Controls.Add(Me.ProgrammerList)
 			Me.ProgrammerPrefs.Location = New System.Drawing.Point(4, 22)
 			Me.ProgrammerPrefs.Name = "ProgrammerPrefs"
-			Me.ProgrammerPrefs.Size = New System.Drawing.Size(341, 262)
+			Me.ProgrammerPrefs.Size = New System.Drawing.Size(559, 262)
 			Me.ProgrammerPrefs.TabIndex = 2
 			Me.ProgrammerPrefs.Text = "Programmers"
 			Me.ProgrammerPrefs.UseVisualStyleBackColor = true
@@ -458,7 +460,7 @@ Imports System.Collections.Generic
 			Me.Button_DeleteProgrammer.Enabled = false
 			Me.Button_DeleteProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_DeleteProgrammer, "Delete a programmer")
-			Me.Button_DeleteProgrammer.Location = New System.Drawing.Point(214, 232)
+			Me.Button_DeleteProgrammer.Location = New System.Drawing.Point(323, 232)
 			Me.Button_DeleteProgrammer.Name = "Button_DeleteProgrammer"
 			Me.PrefsHelp.SetShowHelp(Me.Button_DeleteProgrammer, true)
 			Me.Button_DeleteProgrammer.Size = New System.Drawing.Size(88, 24)
@@ -473,7 +475,7 @@ Imports System.Collections.Generic
 			Me.Button_EditProgrammer.Enabled = false
 			Me.Button_EditProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_EditProgrammer, "Edit the settings of an existing programmer")
-			Me.Button_EditProgrammer.Location = New System.Drawing.Point(126, 232)
+			Me.Button_EditProgrammer.Location = New System.Drawing.Point(235, 232)
 			Me.Button_EditProgrammer.Name = "Button_EditProgrammer"
 			Me.PrefsHelp.SetShowHelp(Me.Button_EditProgrammer, true)
 			Me.Button_EditProgrammer.Size = New System.Drawing.Size(88, 24)
@@ -487,7 +489,7 @@ Imports System.Collections.Generic
 			Me.Button_AddProgrammer.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_AddProgrammer.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.Button_AddProgrammer, "Add a new programmer")
-			Me.Button_AddProgrammer.Location = New System.Drawing.Point(38, 232)
+			Me.Button_AddProgrammer.Location = New System.Drawing.Point(147, 232)
 			Me.Button_AddProgrammer.Name = "Button_AddProgrammer"
 			Me.PrefsHelp.SetShowHelp(Me.Button_AddProgrammer, true)
 			Me.Button_AddProgrammer.Size = New System.Drawing.Size(88, 24)
@@ -509,12 +511,13 @@ Imports System.Collections.Generic
 			Me.ProgrammerList.Location = New System.Drawing.Point(8, 8)
 			Me.ProgrammerList.Name = "ProgrammerList"
 			Me.PrefsHelp.SetShowHelp(Me.ProgrammerList, true)
-			Me.ProgrammerList.Size = New System.Drawing.Size(325, 212)
+			Me.ProgrammerList.Size = New System.Drawing.Size(543, 212)
 			Me.ProgrammerList.TabIndex = 0
 			Me.prefsToolTip.SetToolTip(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _ 
 						"C. Drag and drop to reorder.")
 			AddHandler Me.ProgrammerList.DrawItem, AddressOf Me.ProgrammerListDrawItem
 			AddHandler Me.ProgrammerList.DragOver, AddressOf Me.ProgrammerListDragOver
+			AddHandler Me.ProgrammerList.SelectedIndexChanged, AddressOf Me.ProgrammerListSelectedIndexChanged
 			AddHandler Me.ProgrammerList.DragDrop, AddressOf Me.ProgrammerListDragDrop
 			AddHandler Me.ProgrammerList.MouseDown, AddressOf Me.ProgrammerListMouseDown
 			'
@@ -526,7 +529,7 @@ Imports System.Collections.Generic
 			Me.EditorPrefs.Controls.Add(Me.EditorWarnRecursion)
 			Me.EditorPrefs.Location = New System.Drawing.Point(4, 22)
 			Me.EditorPrefs.Name = "EditorPrefs"
-			Me.EditorPrefs.Size = New System.Drawing.Size(341, 262)
+			Me.EditorPrefs.Size = New System.Drawing.Size(559, 262)
 			Me.EditorPrefs.TabIndex = 0
 			Me.EditorPrefs.Text = "Editor"
 			Me.EditorPrefs.UseVisualStyleBackColor = true
@@ -612,13 +615,34 @@ Imports System.Collections.Generic
 			'ToolVarsPrefs
 			'
 			Me.ToolVarsPrefs.Controls.Add(Me.ToolVarDataGrid)
+			Me.ToolVarsPrefs.Controls.Add(Me.label3)
+			Me.ToolVarsPrefs.Controls.Add(Me.label2)
 			Me.ToolVarsPrefs.Location = New System.Drawing.Point(4, 22)
 			Me.ToolVarsPrefs.Name = "ToolVarsPrefs"
 			Me.ToolVarsPrefs.Padding = New System.Windows.Forms.Padding(3)
-			Me.ToolVarsPrefs.Size = New System.Drawing.Size(341, 262)
+			Me.ToolVarsPrefs.Size = New System.Drawing.Size(559, 262)
 			Me.ToolVarsPrefs.TabIndex = 4
 			Me.ToolVarsPrefs.Text = "Tool Variables"
 			Me.ToolVarsPrefs.UseVisualStyleBackColor = true
+			'
+			'label3
+			'
+			Me.label3.Location = New System.Drawing.Point(45, 4)
+			Me.label3.Name = "label3"
+			Me.label3.Size = New System.Drawing.Size(511, 30)
+			Me.label3.TabIndex = 3
+			Me.label3.Text = "Variables are replaced during compiling or programming."&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"Strict rule - Do not use"& _ 
+			" single or double quote in Variable name or Variable Value"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)
+			'
+			'label2
+			'
+			Me.label2.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+			Me.label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0,Byte))
+			Me.label2.Location = New System.Drawing.Point(6, 2)
+			Me.label2.Name = "label2"
+			Me.label2.Size = New System.Drawing.Size(33, 15)
+			Me.label2.TabIndex = 2
+			Me.label2.Text = "Use"
 			'
 			'ToolVarDataGrid
 			'
@@ -628,12 +652,11 @@ Imports System.Collections.Generic
 			Me.ToolVarDataGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
 			Me.ToolVarDataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
 			Me.ToolVarDataGrid.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.Variable, Me.Value, Me.BrowseColumn})
-			Me.ToolVarDataGrid.Location = New System.Drawing.Point(8, 16)
+			Me.ToolVarDataGrid.Location = New System.Drawing.Point(3, 32)
 			Me.ToolVarDataGrid.Name = "ToolVarDataGrid"
-			Me.ToolVarDataGrid.Size = New System.Drawing.Size(325, 240)
+			Me.ToolVarDataGrid.Size = New System.Drawing.Size(556, 227)
 			Me.ToolVarDataGrid.TabIndex = 1
 			Me.prefsToolTip.SetToolTip(Me.ToolVarDataGrid, "Set up extra variables that can be used to configure all programmers")
-			AddHandler Me.ToolVarDataGrid.CellClick, AddressOf Me.ToolVarDataGridCellClick
 			'
 			'Variable
 			'
@@ -679,7 +702,7 @@ Imports System.Collections.Generic
 			Me.Button_Cancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel
 			Me.Button_Cancel.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_Cancel.Location = New System.Drawing.Point(190, 304)
+			Me.Button_Cancel.Location = New System.Drawing.Point(299, 304)
 			Me.Button_Cancel.Name = "Button_Cancel"
 			Me.Button_Cancel.Size = New System.Drawing.Size(80, 24)
 			Me.Button_Cancel.TabIndex = 2
@@ -689,7 +712,7 @@ Imports System.Collections.Generic
 			'
 			Me.Button_OK.Anchor = System.Windows.Forms.AnchorStyles.Bottom
 			Me.Button_OK.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.Button_OK.Location = New System.Drawing.Point(102, 304)
+			Me.Button_OK.Location = New System.Drawing.Point(211, 304)
 			Me.Button_OK.Name = "Button_OK"
 			Me.Button_OK.Size = New System.Drawing.Size(80, 24)
 			Me.Button_OK.TabIndex = 1
@@ -713,7 +736,7 @@ Imports System.Collections.Generic
 			Me.AcceptButton = Me.Button_OK
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.Button_Cancel
-			Me.ClientSize = New System.Drawing.Size(367, 335)
+			Me.ClientSize = New System.Drawing.Size(585, 335)
 			Me.Controls.Add(Me.Button_Cancel)
 			Me.Controls.Add(Me.Button_OK)
 			Me.Controls.Add(Me.PrefsTabs)
@@ -724,7 +747,7 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me, false)
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
-			Me.Text = "Preferences 1.02"
+			Me.Text = "Preferences 1.03"
 			Me.ExtToolsPrefs.ResumeLayout(false)
 			Me.CompilerPrefs.ResumeLayout(false)
 			Me.CompilerSelectionBox.ResumeLayout(false)
@@ -738,6 +761,8 @@ Imports System.Collections.Generic
 			Me.toolVariableEditMenu.ResumeLayout(false)
 			Me.ResumeLayout(false)
 		End Sub
+		Private label2 As System.Windows.Forms.Label
+		Private label3 As System.Windows.Forms.Label
 		Private CompilerSelectionBox As System.Windows.Forms.GroupBox
 		Private DefaultCompilercomboBox As System.Windows.Forms.ComboBox
 		Private label1 As System.Windows.Forms.Label
@@ -1104,9 +1129,10 @@ Imports System.Collections.Generic
 			End If
 		End Sub
 		
+		
+		
 		Sub ToolVarDataGridCellClick(sender As Object, e As DataGridViewCellEventArgs)
 			Dim table As DataGridView = sender
-			
 			'Button cell?
 			If e.ColumnIndex = 2 Then
 				If e.RowIndex >= 0 And e.RowIndex < table.Rows.Count - 1 Then
@@ -1164,5 +1190,10 @@ Imports System.Collections.Generic
 				
 			End If
 		End Sub
+		
+		Sub ProgrammerListSelectedIndexChanged(sender As Object, e As EventArgs)
+			
+		End Sub
+		
 	End Class
 'End Namespace

@@ -40,7 +40,7 @@ Partial Class MainForm
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6!, 13!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-		Me.ClientSize = New System.Drawing.Size(284, 262)
+		Me.ClientSize = New System.Drawing.Size(627, 287)
 		Me.Icon = CType(resources.GetObject("$this.Icon"),System.Drawing.Icon)
 		Me.Name = "MainForm"
 		Me.Text = "Programmer Editor"
