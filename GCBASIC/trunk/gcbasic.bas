@@ -611,7 +611,7 @@ DECLARE Sub StringSplit(Text As String, Delim As String = " ", Count As Long = -
 DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, ChipSubFamily, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue, ChipMinimumBankSelect
+DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, ChipSubFamily, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue, ChipLFINTOSCClockSourceRegisterValueTrue, ChipMinimumBankSelect
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, UserCodeOnlyEnabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-05-08"
+Version = "0.98.<<>> 2021-05-16"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -797,6 +797,7 @@ DebugTime = 0
 MakeHexMode = 1
 
 ChipProgrammerName=""
+ChipLFINTOSCClockSourceRegisterValueTrue = 0
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -2508,7 +2509,7 @@ SUB CalcConfig
   Dim As String DesiredSetting
   'Check here as I could not find better place for it!
   IntOscSpeedValid = 0
-  If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValue <> 0 Then
+  If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValueTrue = -1 Then
       'This is not required but for clarity, it helpe
       DesiredSetting = LFINTOSCString
       IntOscSpeedValid = 1
@@ -2580,7 +2581,7 @@ SUB CalcConfig
               Next
             End If
 
-            If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValue <> 0 Then
+            If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValueTrue = -1 Then
                 DesiredSetting = LFINTOSCString   'LFINTOSC or LFINT
                 IntOscSpeedValid = 1
             End If
@@ -15553,7 +15554,7 @@ SUB ReadChipData
         Case "programmername":
           ChipProgrammerName = TempData
 
-        Case "lfintoscclocksourceregistervalue": ChipLFINTOSCClockSourceRegisterValue = Val(TempData)
+        Case "lfintoscclocksourceregistervalue": ChipLFINTOSCClockSourceRegisterValue = Val(TempData): ChipLFINTOSCClockSourceRegisterValueTrue = -1
 
         Case "minimumbankselect": ChipMinimumBankSelect = Val(TempData)
 
@@ -16558,12 +16559,13 @@ Sub WriteAssembly
           PRINT #2, "; "+ChipPICASConfigFile
           PRINT #2, ""
           PRINT #2, Star80
-          PRINT #2, ";Explicit PIC-AS constants to resolve the crazyness of the PIC-AS syntax"
-          PRINT #2, ";These are therefore the same as MPASM"
-          PRINT #2, "#define BANKED b"
-          PRINT #2, "#define ACCESS a"
-          PRINT #2, "#define UPPER low highword"
-
+          If ChipFamily = 16 Then
+            PRINT #2, ";Explicit PIC-AS constants to resolve the crazyness of the PIC-AS syntax"
+            PRINT #2, ";These are therefore the same as MPASM"
+            PRINT #2, "#define BANKED b"
+            PRINT #2, "#define ACCESS a"
+            PRINT #2, "#define UPPER low highword"
+          End if
           'if development workarounds... meant to be resolved at PIC-AS 2.35
           '          PRINT #2, ""
           '          PRINT #2, ";#define BTFSS mybtfss"
