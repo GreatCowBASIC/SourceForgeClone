@@ -743,7 +743,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-05-16"
+Version = "0.98.<<>> 2021-05-21"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -5928,7 +5928,7 @@ SUB CompileDo (CompSub As SubType Pointer)
         'Create label for end of loop
         LoopLoc = LinkedListInsert(LoopLoc, "SysDoLoop_E" + Str(DLC) + LabelEnd)
         GetMetaData(LoopLoc)->IsLabel = -1
-        'Delete Loop
+        'Delete Loop statement
         LinkedListDelete(OldLoopLoc)
       End IF
     End If
@@ -11225,6 +11225,10 @@ SUB FixFunctions(CompSub As SubType Pointer)
 
           IF FindStart->Value = ";BLOCKSTART," + SubName THEN
             FindStart->Value = CurrLine->Next->Value
+
+             'Maintain the IsLabel as this routine is moving the label about
+            GetMetaData(FindStart)->IsLabel = GetMetaData(CurrLine->Next)->IsLabel
+
             LinkedListDelete(CurrLine->Next)
             CurrLine = LinkedListDelete(CurrLine)
             Exit Do
