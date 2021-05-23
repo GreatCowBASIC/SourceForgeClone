@@ -18,6 +18,15 @@
 'If you have any questions about the source code, please email me: hconsidine at internode.on.net
 'Any other questions, please email me or see the GCBASIC forums.
 
+
+'Array sizes
+#Define MAX_PROG_PAGES 20
+'Number of buckets to use in hash maps - increasing makes operations faster but uses more RAM
+#Define HASH_MAP_BUCKETS 512
+
+#Define RESERVED_WORDS 1024
+
+'PIC-Types and arrays
 Type PICASInc
   Value as String
   NumVal as Integer
@@ -38,12 +47,16 @@ Dim Shared ReverseIncFileLookup ( 1000) as PICASInc
 Dim Shared ReverseCfgFileLookup ( 1000) as PICASCfg
 Dim Shared Patches(100) as PICASPatch
 
-'Array sizes
-#Define MAX_PROG_PAGES 20
-'Number of buckets to use in hash maps - increasing makes operations faster but uses more RAM
-#Define HASH_MAP_BUCKETS 512
+'31k types
+Type _31kCfg
+  'Chip32Support_OSC,Chip32Support_Register, Chip32Support_ANDMask,Chip32Support_ORValue
+  State as Integer
+  OSCType as String
+  OSCRegister as String
+  Value as Integer
+End Type
+Dim Shared _31kSupported as _31kCfg
 
-#Define RESERVED_WORDS 1024
 'Type for sections of code returned from subs
 Type LinkedListElement
   Value As String
@@ -611,7 +624,7 @@ DECLARE Sub StringSplit(Text As String, Delim As String = " ", Count As Long = -
 DIM SHARED As Integer FRLC, FALC, SBC, WSC, FLC, DLC, SSC, SASC, POC
 DIM SHARED As Integer COC, BVC, PCC, CVCC, TCVC, CAAC, ISRC, IISRC, RPLC, ILC, SCT
 DIM SHARED As Integer CSC, CV, COSC, MemSize, FreeRAM, FoundCount, PotFound, IntLevel
-DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, ChipSubFamily, PSP, ChipProg, IntOscSpeedValid, ChipLFINTOSCClockSourceRegisterValue, ChipLFINTOSCClockSourceRegisterValueTrue, ChipMinimumBankSelect
+DIM SHARED As Integer ChipGPR, ChipRam, ConfWords, DataPass, ChipFamily, ChipFamilyVariant, ChipSubFamily, PSP, ChipProg, IntOscSpeedValid, ChipMinimumBankSelect
 Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabled, UserCodeOnlyEnabled, ChipIO, ChipADC
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
@@ -743,7 +756,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-05-21"
+Version = "0.98.<<>> 2021-05-23"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -797,7 +810,7 @@ DebugTime = 0
 MakeHexMode = 1
 
 ChipProgrammerName=""
-ChipLFINTOSCClockSourceRegisterValueTrue = 0
+_31kSupported.State = 0
 
 'Various size counters
 USDC = 0 'US delay loops
@@ -2509,10 +2522,13 @@ SUB CalcConfig
   Dim As String DesiredSetting
   'Check here as I could not find better place for it!
   IntOscSpeedValid = 0
-  If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValueTrue = -1 Then
-      'This is not required but for clarity, it helpe
-      DesiredSetting = LFINTOSCString
+  If CSng(ChipMHz) = CSng(0.031) Then
+    If _31kSupported.State = -1 Then
+      DesiredSetting = _31kSupported.OSCType
       IntOscSpeedValid = 1
+    Else
+      LogWarning(Message("Bad31kFreq"))
+    End if
   End If
 
   CurrSettingLoc = ConfigSettings->Next
@@ -2581,9 +2597,13 @@ SUB CalcConfig
               Next
             End If
 
-            If CSng(ChipMHz) = CSng(0.031) and ChipLFINTOSCClockSourceRegisterValueTrue = -1 Then
-                DesiredSetting = LFINTOSCString   'LFINTOSC or LFINT
+            If CSng(ChipMHz) = CSng(0.031) Then
+              If _31kSupported.State = -1 Then
+                DesiredSetting = _31kSupported.OSCType
                 IntOscSpeedValid = 1
+              Else
+                LogWarning(Message("Bad31kFreq"))
+              End if
             End If
 
             'Can't use int osc, come up with suitable ext osc
@@ -15558,7 +15578,33 @@ SUB ReadChipData
         Case "programmername":
           ChipProgrammerName = TempData
 
-        Case "lfintoscclocksourceregistervalue": ChipLFINTOSCClockSourceRegisterValue = Val(TempData): ChipLFINTOSCClockSourceRegisterValueTrue = -1
+        Case "31ksupport"
+        '31kSupport is exposed as Chip31kConfig, Chip31kRegister & Chip31kValue
+        'Read four parameters
+
+          _31kSupported.State = 0
+          Do While _31kSupported.State <= 3
+
+            _31kSupported.State += 1
+
+            Select Case _31kSupported.State
+
+              Case 1:
+                _31kSupported.OSCType = Trim(Mid(TempData, 1, InStr(TempData, ",") - 1))
+                AddConstant("CHIP" + UCase("31kConfig"), UCASE(_31kSupported.OSCType))
+
+              Case 2:
+                _31kSupported.OSCRegister = Trim(Mid(TempData,1, InStr(TempData, ",") - 1))
+                AddConstant("CHIP" + UCase("31kRegister"), UCASE(_31kSupported.OSCRegister))
+
+              Case 3:
+                _31kSupported.Value = Val(TempData)
+                AddConstant("CHIP" + UCase("31kValue"), str(_31kSupported.Value))
+
+            End Select
+            TempData = Trim(Mid(TempData, InStr(TempData, ",") + 1))
+          Loop
+          _31kSupported.State = -1
 
         Case "minimumbankselect": ChipMinimumBankSelect = Val(TempData)
 
