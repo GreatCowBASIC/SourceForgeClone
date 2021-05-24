@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F46J11
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1508,13 +1508,12 @@ F60:FFF
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
 CP0=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 DSBOREN=ON
 DSWDTEN=ON
 DSWDTOSC=INTOSCREF
 DSWDTPS=G2
-FCMEN=ON
+FCMEN=OFF
 IESO=ON
 IOL1WAY=ON
 LPT1OSC=OFF

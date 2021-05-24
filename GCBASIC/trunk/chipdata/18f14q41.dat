@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F14Q41
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -28,8 +28,11 @@ MaxMHz=64
 'This constant is exposed with only the first parameter (if more than one)
 IntOsc=64, 48, 32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
 
+'31kSupport is exposed as Chip31Kconfig, Chip31Kregister, Chip31KValue
+31kSupport=LFINTOSC,OSCCON1,80
+
 'This constant is exposed as ChipPins
-Pins=14
+Pins=20
 
 'This constant is exposed as ChipFamily
 Family=16
@@ -52,6 +55,9 @@ MaxAddress=2303
 ';Microcontroller specific configuration Constants used in specific libraries, compiler or user programs
 ';This section of constants is specific to a microcontroller, so the constants may not be present for all microcontrollers
 
+'ChipSMTClockSourceVariant constant is used in smth and provides information for the register used for SMT
+SMTClockSourceVariant=4
+
 'ChipSAFMemWords is used within hefsaf.h.  This constant provides information with respect to the register used for setting the SAF operations
 SAFMemWords=128
 
@@ -66,9 +72,6 @@ UserIDAddress=2097152
 
 'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=8
-
-'ChipLFINTOSCClockSourceRegisterValue constant is used in user programs to provide the value to set the clock source to LFINTOSC
-LFINTOSCClockSourceRegisterValue=80
 
 'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
 WriteFlashBlockSize=256
@@ -4608,59 +4611,63 @@ CHS4,ADCON0,6
 460:4FF
 
 [Pins-DIP]
-13,RA0(IO)
-12,RA1(IO)
-11,RA2(IO)
+19,RA0(IO)
+18,RA1(IO)
+17,RA2(IO)
 4,RA3(IO)
 3,RA4(IO)
 2,RA5(IO)
-10,RC0(IO)
-9,RC1(IO)
-8,RC2(IO)
+13,RB4(IO)
+12,RB5(IO)
+11,RB6(IO)
+10,RB7(IO)
+16,RC0(IO)
+15,RC1(IO)
+14,RC2(IO)
 7,RC3(IO)
 6,RC4(IO)
 5,RC5(IO)
-14,Vss
+8,RC6(IO)
+9,RC7(IO)
+20,Vss
 1,Vdd
 
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
-BBEN=ON
-BBSIZE=BBSIZE_4096
+BBEN=OFF
+BBSIZE=BBSIZE_512
 BOREN=OFF
 BORV=VBOR_2P85
-CLKOUTEN=ON
-CP=ON
-'18FDefaultASMConfig Setting
+CLKOUTEN=OFF
+CP=OFF
 CSWEN=ON
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 FCMEN=OFF
 FCMENP=OFF
 FCMENS=OFF
-FEXTOSC=LP
+FEXTOSC=ECH
 IVT1WAY=OFF
-LPBOREN=ON
-LVP=OFF
+LPBOREN=OFF
+LVP=ON
 MCLRE=INTMCLR
 MVECEN=OFF
 PPS1WAY=OFF
 PR1WAY=OFF
-PWRTS=PWRT_1
-RSTOSC=HFINTOSC_64MHZ
-SAFEN=ON
+PWRTS=PWRT_OFF
+RSTOSC=HFINTOSC_1MHZ
+SAFEN=OFF
 STVREN=OFF
 WDTCCS=LFINTOSC
 WDTCPS=WDTCPS_0
 WDTCWS=WDTCWS_0
 WDTE=OFF
-WRTAPP=ON
-WRTB=ON
-WRTC=ON
-WRTD=ON
-WRTSAF=ON
+WRTAPP=OFF
+WRTB=OFF
+WRTC=OFF
+WRTD=OFF
+WRTSAF=OFF
 XINST=OFF
-ZCD=ON
+ZCD=OFF
 
 [ConfigMask]
 255

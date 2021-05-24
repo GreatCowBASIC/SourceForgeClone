@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F96J65
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1885,19 +1885,18 @@ F60:FFF
 BW=16
 CCP2MX=ON
 CP0=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EASHFT=ON
 ECCPMX=ON
 ETHLED=ON
-FCMEN=ON
+FCMEN=OFF
 FOSC=ECPLL
 FOSC2=ON
 IESO=ON
 MODE=MM
 STVR=ON
 WAIT=OFF
-WDT=ON
+WDT=OFF
 WDTPS=32768
 XINST=OFF
 

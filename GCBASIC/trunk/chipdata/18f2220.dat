@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F2220
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -761,7 +761,6 @@ CP0=OFF
 CP1=OFF
 CPB=OFF
 CPD=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBTR0=OFF
 EBTR1=OFF
@@ -769,12 +768,12 @@ EBTRB=OFF
 FSCM=ON
 IESO=ON
 LVP=ON
-MCLRE=ON
+MCLRE=INTMCLR
 PBAD=ANA
-PWRT=OFF
+PWRT=PWRT_OFF
 STVR=ON
 WDTPS=32K
-WDT=ON
+WDT=OFF
 WRT0=OFF
 WRT1=OFF
 WRTB=OFF

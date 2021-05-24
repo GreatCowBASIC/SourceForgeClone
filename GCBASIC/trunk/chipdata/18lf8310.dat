@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF8310
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1320,19 +1320,18 @@ BORV=3
 BW=16
 CCP2MX=PORTC
 CP=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBTR=OFF
 FCMEN=OFF
 IESO=OFF
 LPT1OSC=OFF
-MCLRE=ON
+MCLRE=INTMCLR
 OSC=RCIO
 PM=MC
-PWRT=OFF
+PWRT=PWRT_OFF
 STVREN=ON
 WAIT=OFF
-WDT=ON
+WDT=OFF
 WDTPS=32768
 XINST=OFF
 

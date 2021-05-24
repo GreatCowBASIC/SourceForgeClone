@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F14K50
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -921,7 +921,6 @@ CP0=OFF
 CP1=OFF
 CPB=OFF
 CPD=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBTR0=OFF
 EBTR1=OFF
@@ -930,7 +929,7 @@ FCMEN=OFF
 FOSC=ERC
 IESO=OFF
 LVP=ON
-MCLRE=ON
+MCLRE=INTMCLR
 PWRTEN=OFF
 STVREN=ON
 WDTEN=ON

@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F86J50
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -2030,11 +2030,10 @@ BW=16
 CCP2MX=DEFAULT
 CP0=OFF
 CPUDIV=OSC1
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EASHFT=ON
 ECCPMX=DEFAULT
-FCMEN=ON
+FCMEN=OFF
 FOSC=ECPLL
 IESO=ON
 MODE=MM

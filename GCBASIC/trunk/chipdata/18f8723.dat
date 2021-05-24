@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F8723
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1743,7 +1743,7 @@ F60:FFF
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
 ADDRBW=ADDR20BIT
-BBSIZ=BB2K
+BBSIZ=BBSIZE_512
 BOREN=SBORDIS
 BORV=3
 CCP2MX=PORTC
@@ -1758,7 +1758,6 @@ CP7=OFF
 CPB=OFF
 CPD=OFF
 DATABW=DATA16BIT
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBTR0=OFF
 EBTR1=OFF
@@ -1774,14 +1773,14 @@ FCMEN=OFF
 IESO=OFF
 LPT1OSC=OFF
 LVP=ON
-MCLRE=ON
+MCLRE=INTMCLR
 MODE=MC
 OSC=RCIO6
-PWRT=OFF
+PWRT=PWRT_OFF
 STVREN=ON
 WAIT=OFF
 WDTPS=32768
-WDT=ON
+WDT=OFF
 WRT0=OFF
 WRT1=OFF
 WRT2=OFF

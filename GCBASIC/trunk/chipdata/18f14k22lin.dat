@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F14K22LIN
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -837,14 +837,13 @@ STKFUL,STKPTR,7
 
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
-BBSIZ=OFF
+BBSIZ=BBSIZE_512
 BOREN=SBORDIS
 BORV=19
 CP0=OFF
 CP1=OFF
 CPB=OFF
 CPD=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBTR0=OFF
 EBTR1=OFF
@@ -854,7 +853,7 @@ FOSC=ERC
 HFOFST=ON
 IESO=OFF
 LVP=ON
-MCLRE=ON
+MCLRE=INTMCLR
 PCLKEN=ON
 PLLEN=OFF
 PWRTEN=OFF

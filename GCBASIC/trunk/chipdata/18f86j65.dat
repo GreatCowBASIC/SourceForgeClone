@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F86J65
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1634,16 +1634,15 @@ F60:FFF
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
 CCP2MX=ON
 CP0=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 ECCPMX=ON
 ETHLED=ON
-FCMEN=ON
+FCMEN=OFF
 FOSC=ECPLL
 FOSC2=ON
 IESO=ON
 STVR=ON
-WDT=ON
+WDT=OFF
 WDTPS=32768
 XINST=OFF
 

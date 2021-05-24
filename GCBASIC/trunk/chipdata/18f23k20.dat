@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F23K20
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -894,7 +894,6 @@ CP0=OFF
 CP1=OFF
 CPB=OFF
 CPD=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBTR0=OFF
 EBTR1=OFF
@@ -905,9 +904,9 @@ HFOFST=ON
 IESO=OFF
 LPT1OSC=OFF
 LVP=ON
-MCLRE=ON
+MCLRE=INTMCLR
 PBADEN=ON
-PWRT=OFF
+PWRT=PWRT_OFF
 STVREN=ON
 WDTEN=ON
 WDTPS=32768

@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF26J53
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1890,7 +1890,7 @@ DSBOREN=ON
 DSWDTEN=ON
 DSWDTOSC=INTOSCREF
 DSWDTPS=G2
-FCMEN=ON
+FCMEN=OFF
 IESO=ON
 IOL1WAY=ON
 LS48MHZ=SYS48X8
@@ -1907,7 +1907,6 @@ WPDIS=OFF
 WPEND=PAGE_WPFP
 WPFP=PAGE_63
 XINST=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 
 [ConfigMask]
