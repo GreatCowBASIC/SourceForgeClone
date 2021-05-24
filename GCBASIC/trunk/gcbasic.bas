@@ -756,7 +756,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-05-23"
+Version = "0.98.<<>> 2021-05-24"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2526,8 +2526,6 @@ SUB CalcConfig
     If _31kSupported.State = -1 Then
       DesiredSetting = _31kSupported.OSCType
       IntOscSpeedValid = 1
-    Else
-      LogWarning(Message("Bad31kFreq"))
     End if
   End If
 
@@ -2601,8 +2599,6 @@ SUB CalcConfig
               If _31kSupported.State = -1 Then
                 DesiredSetting = _31kSupported.OSCType
                 IntOscSpeedValid = 1
-              Else
-                LogWarning(Message("Bad31kFreq"))
               End if
             End If
 
