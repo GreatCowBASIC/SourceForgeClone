@@ -74,6 +74,8 @@
 '    05012021 - Add ChipSubFamily constants
 '    10022021-  Revised PFMread and added PFMWrite
 '    12022021-  Add #IF ChipSubFamily = 15001 in initsys for new clock type
+'    16052021-  Revised ChipMHz 31k initsys for chips with OSCCON 31k register to set LFINTOSC clock
+'    22052021-  Rewrite ChipMHz 31k initsys using Macro31k and revised DAT files.
 
 
 'Constants
@@ -102,7 +104,6 @@
 #DEFINE  ChipFamily18FxxK40 = 16104
 
 
-
 #startup InitSys, 80
 
 #samebit SPLLEN, PLLEN
@@ -123,8 +124,26 @@
 '********************************************************************************
 
 
+Macro Macro31k
 
+    'Use data from .dat file
+    '31kSupport is exposed as Chip31kConfig, Chip31kRegister, Chip31kValue
+    Chip31kRegister = Chip31kValue
 
+    #IFDEF Var(OSCCON3)
+      'Default value CSWHOLD may proceed; SOSCPWR Low power
+      OSCCON3 = 0x00
+    #ENDIF
+    #IFDEF bit(OSCEN)
+      'Default value LFOEN disabled; ADOEN disabled; SOSCEN enabled; EXTOEN disabled; HFOEN disabled;
+      OSCEN = 0x00
+    #ENDIF
+    #IFDEF Var(OSCTUNE)
+      'Default value
+      OSCTUNE = 0x00
+    #ENDIF
+
+End Macro
 
 'System initialisation routine
 Sub InitSys
@@ -132,32 +151,7 @@ Sub InitSys
    #Ifdef PIC
 
       #IFNDEF ChipUsingIntOsc
-
         asm showdebug _For_selected_frequency_-_the_external_oscillator_has_been_selected_by_compiler ChipMHz
-
-          #IFDEF Var(OSCCON1)
-
-              #IFDEF ChipOsc LFINTOSC
-                asm showdebug Default settings for microcontrollers with _OSCCON1_ with _LFINTOSC_
-              #ENDIF
-
-              #IFDEF ChipMHz 31k
-                  asm showdebug _ChipMHz_ is ChipMHz
-                  'Data from .dat file
-                  OSCCON1 = ChipLFINTOSCClockSourceRegisterValue
-
-                  'Default value CSWHOLD may proceed; SOSCPWR Low power
-                  OSCCON3 = 0x00
-
-                  'Default value LFOEN disabled; ADOEN disabled; SOSCEN enabled; EXTOEN disabled; HFOEN disabled;
-                  OSCEN = 0x00
-
-                  'Default value
-                  OSCTUNE = 0x00
-              #ENDIF
-
-          #ENDIF
-
       #ENDIF
 
        #IFDEF Oneof(CHIP_18F24K40,CHIP_18F25K40,CHIP_18F26K40,CHIP_18F27K40,CHIP_18F45K40,CHIP_18F46K40,CHIP_18F47K40,CHIP_18F65K40,CHIP_18F66K40,CHIP_18LF24K40, CHIP_18LF25K40, CHIP_18LF26K40, CHIP_18LF27K40, CHIP_18LF45K40, CHIP_18LF46K40, CHIP_18LF47K40, CHIP_18LF65K40, CHIP_18LF66K40)
@@ -169,7 +163,7 @@ Sub InitSys
             #endif
        #ENDIF
 
-    #ENDIF
+   #ENDIF
 
     #ifdef PIC
         #ifdef Var(OSCCAL)
@@ -181,937 +175,921 @@ Sub InitSys
         #endif
     #endif
 
-  #IFDEF ChipUsingIntOsc
-    asm showdebug This code block sets the internal oscillator to ChipMHz
+  #IFDEF PIC
 
-    #IFDEF ChipMHz 31k
-        asm showdebug _ChipMHz_ is ChipMHz
-        'Data from .dat file
-        OSCCON1 = ChipLFINTOSCClockSourceRegisterValue
+     #IFDEF ChipUsingIntOsc
+        asm showdebug This code block sets the internal oscillator to ChipMHz
 
-        'Default value CSWHOLD may proceed; SOSCPWR Low power
-        OSCCON3 = 0x00
+        #IFDEF ChipMHz 31k
 
-        'Default value LFOEN disabled; ADOEN disabled; SOSCEN enabled; EXTOEN disabled; HFOEN disabled;
-        OSCEN = 0x00
+          Macro31k
 
-        'Default value
-        OSCTUNE = 0x00
-    #ENDIF
+        #ENDIF
 
-    #IFNDEF ChipMHz 31k
+        #IFNDEF ChipMHz 31k
 
-      #IFNDEF Var(OSCCON)
-          #IFDEF Var(OSCCON1)
-            asm showdebug Default settings for microcontrollers with _OSCCON1_
+           #IFNDEF Var(OSCCON)
+              #IFDEF Var(OSCCON1)
+                asm showdebug Default settings for microcontrollers with _OSCCON1_
 
-            #IF CHIPMHZ <> 24
-                'Default OSCCON1 typically, NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
-                OSCCON1 = 0x60
-            #ENDIF
-
-            #IF CHIPMHZ = 24
-                'NOSC HFINTOSC with 2x PLL; NDIV 1;
-                OSCCON1 = 0x10;
-            #ENDIF
-
-            'Default value typically, CSWHOLD may proceed; SOSCPWR Low power
-            OSCCON3 = 0x00
-
-            'Default value typically, MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
-            OSCEN = 0x00
-
-            'Default value
-            OSCTUNE = 0x00
-
-
-
-             #IFDEF ChipFamily 16
-                asm showdebug The MCU is a chip family ChipFamily
-
-                #IFDEF Bit(NDIV3)
-                    'Section supports many MCUs, 18FxxK40, 18FxxK42 etc that have NDIV3 bit
-
-                    asm showdebug OSCCON type is 101
-
-                    'Clear NDIV3:0
-                    NDIV3 = 0
-                    NDIV2 = 0
-                    NDIV1 = 0
-                    NDIV0 = 0
-
-                    #IFDEF ChipMHz 64       'No Div
-                       OSCFRQ = 0b00001000  '64mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 48        'No Div
-                       OSCFRQ = 0b00000111   '48mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 32        'No Div
-                       OSCFRQ = 0b00000110   '32mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 24        '48Mhz / 2
-                       OSCFRQ = 0b00000111   '24mhz
-                       NDIV0 = 1
-                    #Endif
-
-                    #IFDEF ChipMHz 16        'No Div
-                       OSCFRQ = 0b00000101   '16mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 12        'No Div
-                       OSCFRQ = 0b00000100   '12mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 8          'No Div
-                       OSCFRQ = 0b00000011    '8mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 6          '12 Mhz / 2
-                       OSCFRQ = 0b00000100    '6mhz
-                       NDIV0 = 1
-                    #Endif
-
-                    #IFDEF ChipMHz 4          'No Div
-                       OSCFRQ = 0b00000010    '4mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 3          '12mhz / 4
-                         OSCFRQ = 0b00000100  '3mhz
-                         NDIV1 = 1
-                    #Endif
-
-                    #IFDEF ChipMHz 2         'No DIV
-                       OSCFRQ = 0b00000001   '2mhz
-                    #Endif
-
-                   #IFDEF ChipMHz 1          'No Div
-                       OSCFRQ = 0b00000000   '1mhz
-                   #Endif
-
-                    #IFDEF ChipMHz 0.5       '1MHz / 2
-                        OSCFRQ = 0b00000000  '0.5mhz
-                        NDIV0 = 1
-                    #ENDIF
-
-                    #IFDEF ChipMHz 0.25     '1MHZ / 4
-                        OSCFRQ = 0b00000000 '0.25mhz
-                        NDIV1 = 1
-                    #ENDIF
-
-                    #IFDEF ChipMHz 0.125   '1 MHz / 8
-                      OSCFRQ = 0b00000000  '0.125mhz
-                      NDIV0 = 1
-                      NDIV1 = 1
-                    #ENDIF
-
-
+                #IF CHIPMHZ <> 24
+                    'Default OSCCON1 typically, NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
+                    OSCCON1 = 0x60
                 #ENDIF
 
-             #Endif
+                #IF CHIPMHZ = 24
+                    'NOSC HFINTOSC with 2x PLL; NDIV 1;
+                    OSCCON1 = 0x10;
+                #ENDIF
 
-             #IFNDEF CHIPFamily 16
+                'Default value typically, CSWHOLD may proceed; SOSCPWR Low power
+                OSCCON3 = 0x00
+
+                'Default value typically, MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
+                OSCEN = 0x00
+
+                'Default value
+                OSCTUNE = 0x00
+
+
+                 #IFDEF ChipFamily 16
                     asm showdebug The MCU is a chip family ChipFamily
 
-                    asm showdebug OSCCON type is 102
+                    #IFDEF Bit(NDIV3)
+                        'Section supports many MCUs, 18FxxK40, 18FxxK42 etc that have NDIV3 bit
 
-                    #IFDEF ChipMHz 32
-                      #IFDEF Var(OSCSTAT)
-                         'Set OSCFRQ values for MCUs with OSCSTAT... the 16F18855 MCU family
-                         OSCFRQ = 0b00000110
-                      #ENDIF
+                        asm showdebug OSCCON type is 101
 
-                      #IFDEF Var(OSCSTAT1)
-                        'Set OSCFRQ values for MCUs with OSCSTAT1 chip... the 16F18326/18346 MCU family
-                        OSCFRQ = 0b00000111
-                      #ENDIF
+                        'Clear NDIV3:0
+                        NDIV3 = 0
+                        NDIV2 = 0
+                        NDIV1 = 0
+                        NDIV0 = 0
+
+                        #IFDEF ChipMHz 64       'No Div
+                           OSCFRQ = 0b00001000  '64mhz
+                        #Endif
+
+                        #IFDEF ChipMHz 48        'No Div
+                           OSCFRQ = 0b00000111   '48mhz
+                        #Endif
+
+                        #IFDEF ChipMHz 32        'No Div
+                           OSCFRQ = 0b00000110   '32mhz
+                        #Endif
+
+                        #IFDEF ChipMHz 24        '48Mhz / 2
+                           OSCFRQ = 0b00000111   '24mhz
+                           NDIV0 = 1
+                        #Endif
+
+                        #IFDEF ChipMHz 16        'No Div
+                           OSCFRQ = 0b00000101   '16mhz
+                        #Endif
+
+                        #IFDEF ChipMHz 12        'No Div
+                           OSCFRQ = 0b00000100   '12mhz
+                        #Endif
+
+                        #IFDEF ChipMHz 8          'No Div
+                           OSCFRQ = 0b00000011    '8mhz
+                        #Endif
+
+                        #IFDEF ChipMHz 6          '12 Mhz / 2
+                           OSCFRQ = 0b00000100    '6mhz
+                           NDIV0 = 1
+                        #Endif
+
+                        #IFDEF ChipMHz 4          'No Div
+                           OSCFRQ = 0b00000010    '4mhz
+                        #Endif
+
+                        #IFDEF ChipMHz 3          '12mhz / 4
+                             OSCFRQ = 0b00000100  '3mhz
+                             NDIV1 = 1
+                        #Endif
+
+                        #IFDEF ChipMHz 2         'No DIV
+                           OSCFRQ = 0b00000001   '2mhz
+                        #Endif
+
+                       #IFDEF ChipMHz 1          'No Div
+                           OSCFRQ = 0b00000000   '1mhz
+                       #Endif
+
+                        #IFDEF ChipMHz 0.5       '1MHz / 2
+                            OSCFRQ = 0b00000000  '0.5mhz
+                            NDIV0 = 1
+                        #ENDIF
+
+                        #IFDEF ChipMHz 0.25     '1MHZ / 4
+                            OSCFRQ = 0b00000000 '0.25mhz
+                            NDIV1 = 1
+                        #ENDIF
+
+                        #IFDEF ChipMHz 0.125   '1 MHz / 8
+                          OSCFRQ = 0b00000000  '0.125mhz
+                          NDIV0 = 1
+                          NDIV1 = 1
+                        #ENDIF
 
                     #ENDIF
 
-                    #IFDEF ChipMHz 24
-                      asm showdebug 24hz
-                      #IFDEF Var(OSCSTAT1)
-                        OSCFRQ = 0b00000101
-                        NOSC0 = 0
-                        NOSC1 = 0
-                        NOSC2 = 0
-                      #ENDIF
-                      #IFDEF Var(OSCSTAT)
-                        OSCFRQ = 0b00000100
-                        NOSC0 = 1
-                        NOSC1 = 0
-                        NOSC2 = 0
-                      #ENDIF
-                    #ENDIF
+                 #Endif
 
-                    #IFDEF ChipMHz 16
-                      #IFDEF Var(OSCSTAT)
-                        OSCFRQ = 0b00000101
-                      #ENDIF
-                      #IFDEF Var(OSCSTAT1)
-                        OSCFRQ = 0b00000110
-                      #ENDIF
-                    #ENDIF
+                 #IFNDEF CHIPFamily 16
+                        asm showdebug The MCU is a chip family ChipFamily
 
-                    #IFDEF ChipMHz 12
-                      #IFDEF Var(OSCSTAT1)
-                        OSCFRQ = 0b00000101
-                      #ENDIF
-                    #ENDIF
+                        asm showdebug OSCCON type is 102
 
+                        #IFDEF ChipMHz 32
+                          #IFDEF Var(OSCSTAT)
+                             'Set OSCFRQ values for MCUs with OSCSTAT... the 16F18855 MCU family
+                             OSCFRQ = 0b00000110
+                          #ENDIF
+
+                          #IFDEF Var(OSCSTAT1)
+                            'Set OSCFRQ values for MCUs with OSCSTAT1 chip... the 16F18326/18346 MCU family
+                            OSCFRQ = 0b00000111
+                          #ENDIF
+
+                        #ENDIF
+
+                        #IFDEF ChipMHz 24
+                          asm showdebug 24hz
+                          #IFDEF Var(OSCSTAT1)
+                            OSCFRQ = 0b00000101
+                            NOSC0 = 0
+                            NOSC1 = 0
+                            NOSC2 = 0
+                          #ENDIF
+                          #IFDEF Var(OSCSTAT)
+                            OSCFRQ = 0b00000100
+                            NOSC0 = 1
+                            NOSC1 = 0
+                            NOSC2 = 0
+                          #ENDIF
+                        #ENDIF
+
+                        #IFDEF ChipMHz 16
+                          #IFDEF Var(OSCSTAT)
+                            OSCFRQ = 0b00000101
+                          #ENDIF
+                          #IFDEF Var(OSCSTAT1)
+                            OSCFRQ = 0b00000110
+                          #ENDIF
+                        #ENDIF
+
+                        #IFDEF ChipMHz 12
+                          #IFDEF Var(OSCSTAT1)
+                            OSCFRQ = 0b00000101
+                          #ENDIF
+                        #ENDIF
+
+                        #IFDEF ChipMHz 8
+                          #IFDEF Var(OSCSTAT)
+                            OSCFRQ = 0b00000011
+                          #ENDIF
+                          #IFDEF Var(OSCSTAT1)
+                            OSCFRQ = 0b00000100
+                          #ENDIF
+                        #ENDIF
+
+                        #IFDEF ChipMHz 4
+                          #IFDEF Var(OSCSTAT)
+                            OSCFRQ = 0b00000010
+                          #ENDIF
+                          #IFDEF Var(OSCSTAT1)
+                            OSCFRQ = 0b00000011
+                          #ENDIF
+                        #ENDIF
+
+                        #IFDEF ChipMHz 2
+                          #IFDEF Var(OSCSTAT)
+                            OSCFRQ = 0b00000001
+                          #ENDIF
+                          #IFDEF Var(OSCSTAT1)
+                            OSCFRQ = 0b00000001
+                          #ENDIF
+                        #ENDIF
+
+                        #IFDEF ChipMHz 1
+                            OSCFRQ = 0b00000000
+                        #ENDIF
+
+                        #IFDEF ChipMHz 0.5
+                            OSCFRQ = 0b00000000
+                            OSCCON1 = OSCCON1 OR 0b00000001
+                        #ENDIF
+
+                        #IFDEF ChipMHz 0.25
+                            OSCFRQ = 0b00000000
+                            OSCCON1 = OSCCON1 OR 0b00000010
+                        #ENDIF
+
+                        #IFDEF ChipMHz 0.125
+                          OSCFRQ = 0b00000000
+                          OSCCON1 = OSCCON1 OR 0b00000011
+                        #ENDIF
+
+                        #IFDEF ChipMHz 0.0625
+                          OSCFRQ = 0b00000000
+                          OSCCON1 = OSCCON1 OR 0b00000100
+                        #ENDIF
+
+                  #Endif
+              #ENDIF
+           #ENDIF
+
+
+          #IFDEF Var(OSCCON)
+
+            #IFDEF Bit(FOSC4)
+            ' This is the routine for the OSCCON config
+              Set FOSC4 Off
+            #ENDIF
+
+            #if NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
+
+              #ifndef Bit(HFIOFS)
+
+                asm showdebug 'OSCCON type is 103 - This part does not have Bit HFIOFS @ ifndef Bit(HFIOFS)
+
+                #IFDEF SYS_CLOCK_DIV_NEEDED 1
+                  OSCCON = OSCCON OR b'01110000'
+                #ENDIF
+
+                #IFDEF SYS_CLOCK_DIV_NEEDED 2
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR  b'01100000'
+                #ENDIF
+
+                #IFDEF SYS_CLOCK_DIV_NEEDED 4
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR  b'01010000'
+                #ENDIF
+
+                #IFDEF SYS_CLOCK_DIV_NEEDED 8
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR  b'01000000'
+                #ENDIF
+
+                #IFDEF SYS_CLOCK_DIV_NEEDED 16
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR  b'00110000'
+                #ENDIF
+
+                #IFDEF SYS_CLOCK_DIV_NEEDED 32
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR  b'00100000'
+                #ENDIF
+
+                #IFDEF SYS_CLOCK_DIV_NEEDED 64
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR  b'00010000'
+                #ENDIF
+
+                #if SYS_CLOCK_INT_PLL_USED
+                  'PLL for higher speeds
+                  [canskip] PLLMULT, SPLLEN = b'11'
+                #endif
+
+                #IF SYS_CLOCK_DIV_NEEDED FALSE
                     #IFDEF ChipMHz 8
-                      #IFDEF Var(OSCSTAT)
-                        OSCFRQ = 0b00000011
-                      #ENDIF
-                      #IFDEF Var(OSCSTAT1)
-                        OSCFRQ = 0b00000100
-                      #ENDIF
+                      OSCCON = OSCCON AND b'10001111'
+                      'Address the two true tables for IRCF
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 8 MHz (INTOSC drives clock directly)
                     #ENDIF
 
                     #IFDEF ChipMHz 4
-                      #IFDEF Var(OSCSTAT)
-                        OSCFRQ = 0b00000010
-                      #ENDIF
-                      #IFDEF Var(OSCSTAT1)
-                        OSCFRQ = 0b00000011
-                      #ENDIF
+                      OSCCON = OSCCON AND b'10001111'
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 4 MHz
                     #ENDIF
 
                     #IFDEF ChipMHz 2
-                      #IFDEF Var(OSCSTAT)
-                        OSCFRQ = 0b00000001
-                      #ENDIF
-                      #IFDEF Var(OSCSTAT1)
-                        OSCFRQ = 0b00000001
-                      #ENDIF
+                      OSCCON = OSCCON AND b'10001111'
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 2 MHz
                     #ENDIF
 
                     #IFDEF ChipMHz 1
-                        OSCFRQ = 0b00000000
+                      OSCCON = OSCCON AND b'10001111'
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'100'         ;100 = 1 MHz(3)
                     #ENDIF
 
                     #IFDEF ChipMHz 0.5
-                        OSCFRQ = 0b00000000
-                        OSCCON1 = OSCCON1 OR 0b00000001
+                      OSCCON = OSCCON AND b'10001111'
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'011'         ;011 = 500 kHz
                     #ENDIF
 
                     #IFDEF ChipMHz 0.25
-                        OSCFRQ = 0b00000000
-                        OSCCON1 = OSCCON1 OR 0b00000010
+                      OSCCON = OSCCON AND b'10001111'
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'010'         ;010 = 250 kHz
                     #ENDIF
 
                     #IFDEF ChipMHz 0.125
-                      OSCFRQ = 0b00000000
-                      OSCCON1 = OSCCON1 OR 0b00000011
+                      OSCCON = OSCCON AND b'10001111'
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'001'         ;001 = 125 kHz
                     #ENDIF
+                #ENDIF
 
-                    #IFDEF ChipMHz 0.0625
-                      OSCFRQ = 0b00000000
-                      OSCCON1 = OSCCON1 OR 0b00000100
-                    #ENDIF
+                #IF ChipSubFamily = 15001
 
-              #Endif
-          #ENDIF
-      #ENDIF
+                        #IFDEF ChipMHz 32        'No Div
+                           OSCFRQ = 0b00000101   '32mhz
+                        #Endif
 
 
-      #IFDEF Var(OSCCON)
+                        #IFDEF ChipMHz 16        'No Div
+                           OSCFRQ = 0b00000100   '16mhz
+                        #Endif
 
-        #IFDEF Bit(FOSC4)
-        ' This is the routine for the OSCCON config
-          Set FOSC4 Off
-        #ENDIF
-
-        #if NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)
-
-          #ifndef Bit(HFIOFS)
-
-            asm showdebug 'OSCCON type is 103 - This part does not have Bit HFIOFS @ ifndef Bit(HFIOFS)
-
-            #IFDEF SYS_CLOCK_DIV_NEEDED 1
-              OSCCON = OSCCON OR b'01110000'
-            #ENDIF
-
-            #IFDEF SYS_CLOCK_DIV_NEEDED 2
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR  b'01100000'
-            #ENDIF
-
-            #IFDEF SYS_CLOCK_DIV_NEEDED 4
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR  b'01010000'
-            #ENDIF
-
-            #IFDEF SYS_CLOCK_DIV_NEEDED 8
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR  b'01000000'
-            #ENDIF
-
-            #IFDEF SYS_CLOCK_DIV_NEEDED 16
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR  b'00110000'
-            #ENDIF
-
-            #IFDEF SYS_CLOCK_DIV_NEEDED 32
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR  b'00100000'
-            #ENDIF
-
-            #IFDEF SYS_CLOCK_DIV_NEEDED 64
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR  b'00010000'
-            #ENDIF
+                        #IFDEF ChipMHz 8          'No Div
+                           OSCFRQ = 0b00000011    '8mhz
+                        #Endif
 
 
-            #if SYS_CLOCK_INT_PLL_USED
-              'PLL for higher speeds
-              [canskip] PLLMULT, SPLLEN = b'11'
-            #endif
+                        #IFDEF ChipMHz 4          'No Div
+                           OSCFRQ = 0b00000010    '4mhz
+                        #Endif
 
 
+                        #IFDEF ChipMHz 2         'No DIV
+                           OSCFRQ = 0b00000001   '2mhz
+                        #Endif
 
-            #IF SYS_CLOCK_DIV_NEEDED FALSE
+                       #IFDEF ChipMHz 1          'No Div
+                           OSCFRQ = 0b00000000   '1mhz
+                       #Endif
+                #ENDIF
+                'End of type 103 init
+
+              #endif
+
+
+              #ifdef Bit(HFIOFS)
+                'The section now handles two true tables for frequency
+                'Supports 16f and 18f (type1 max frq of 8mhz) classes and 18f (type2 max frq of 16mhz) classes
+                'Assumes that testing the ChipMaxMHz >= 48 is a valid test for type2 microcontrollers
+                'Supports IntOsc MaxMhz of 64 and not 64 ... there may be others true tables that GCB needs to support in the future
+
+                asm showdebug OSCCON type is 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
+
+                #IFDEF ChipMHz 64 'the SPLLEN needs to set after the IRCF
+                    '= 64Mhz
+                    [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
+                    #ifdef Bit(SPLLMULT)
+                      Set SPLLMULT On
+                    #endif
+                #ENDIF
+
+
+                #IFDEF ChipMHz 48 'the PLLEN needs to set after the IRCF
+                  asm showdebug The chip mhz is 48, therefore probably an 18f USB part
+                  '= 48Mhz
+                  [canskip] IRCF2, IRCF1, IRCF0 = b'111'   ;'111' for ChipMHz 48
+
+                  #ifdef Bit(SPLLMULT)
+                    Set SPLLMULT On
+                  #endif
+
+                  #ifdef Bit(PLLEN)
+                    Set PLLEN On
+                  #endif
+
+                  'Wait for PLL to stabilize
+                  #ifdef Bit(PLLRDY)
+                      wait while (PLLRDY = 0)
+                  #endif
+
+                #ENDIF
+
+                #IFDEF ChipMHz 32 'the SPLLEN needs to set after the IRCF
+                 '= 32Mhz
+                  #if ChipIntOSCCONFormat = 1
+                      [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'   ;'1101' with PLL for ChipMHz 32
+                      #ifdef Bit(SPLLMULT)
+                        Set SPLLMULT Off
+                      #endif
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                      [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'   ;'1111' with PLL for ChipMHz 32
+                  #endif
+
+                #ENDIF
+
+                #IFDEF ChipMHz 16
+                  '= 16Mhz
+                  OSCCON = OSCCON OR b'01110000'
+                  'Address the two true tables for IRCF
+                  #if ChipIntOSCCONFormat = 1
+                    [canskip] IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 16 MHz (HFINTOSC drives clock directly)
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip]IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'    ;110 = 4 MHz with PLL
+                  #endif
+
+                #ENDIF
+
                 #IFDEF ChipMHz 8
+                  '= 8Mhz
                   OSCCON = OSCCON AND b'10001111'
                   'Address the two true tables for IRCF
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 8 MHz (INTOSC drives clock directly)
+                  #if ChipIntOSCCONFormat = 1
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 8 MHz
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 8 MHz (INTOSC drives clock directly)
+                  #endif
                 #ENDIF
 
                 #IFDEF ChipMHz 4
+                  '= 4Mhz
                   OSCCON = OSCCON AND b'10001111'
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 4 MHz
+                  'Address the two true tables for IRCF
+                  #if ChipIntOSCCONFormat = 1
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 4 MHz
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 4 MHz
+                  #endif
                 #ENDIF
 
                 #IFDEF ChipMHz 2
+                  '= 2Mhz
                   OSCCON = OSCCON AND b'10001111'
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 2 MHz
+                  'Address the two true tables for IRCF
+                  #if ChipIntOSCCONFormat = 1
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'100'    ;100 = 2 MHz
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 2 MHz
+                  #endif
                 #ENDIF
 
                 #IFDEF ChipMHz 1
+                  '= 1Mhz
                   OSCCON = OSCCON AND b'10001111'
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'100'         ;100 = 1 MHz(3)
+                  'Address the two true tables for IRCF
+                  #if ChipIntOSCCONFormat = 1
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'011'          ;011 = 1 MHz(3)
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'100'         ;100 = 1 MHz(3)
+                  #endif
                 #ENDIF
 
                 #IFDEF ChipMHz 0.5
+                  '= 0.5Mhz
                   OSCCON = OSCCON AND b'10001111'
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'011'         ;011 = 500 kHz
+                  'Address the two true tables for IRCF
+                  #if ChipIntOSCCONFormat = 1
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'010'          ;010 = 500 kHz
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'011'         ;011 = 500 kHz
+                  #endif
                 #ENDIF
 
                 #IFDEF ChipMHz 0.25
+                  '= 0.25Mhz
                   OSCCON = OSCCON AND b'10001111'
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'010'         ;010 = 250 kHz
+                  'Address the two true tables for IRCF
+                  #if ChipIntOSCCONFormat = 1
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'001'          ;001 = 250 kHz
+                  #endif
+
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'010'         ;010 = 250 kHz
+                  #endif
                 #ENDIF
 
                 #IFDEF ChipMHz 0.125
+                  '= 0.125Mhz
                   OSCCON = OSCCON AND b'10001111'
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'001'         ;001 = 125 kHz
+                  #ifndef ChipIntOSCCONFormat
+                     [canskip] IRCF2, IRCF1, IRCF0 = b'001'         ;001 = 125 kHz
+                  #endif
                 #ENDIF
-            #ENDIF
-
-            #IF ChipSubFamily = 15001
-
-                    #IFDEF ChipMHz 32        'No Div
-                       OSCFRQ = 0b00000101   '32mhz
-                    #Endif
 
 
-                    #IFDEF ChipMHz 16        'No Div
-                       OSCFRQ = 0b00000100   '16mhz
-                    #Endif
-
-                    #IFDEF ChipMHz 8          'No Div
-                       OSCFRQ = 0b00000011    '8mhz
-                    #Endif
-
-
-                    #IFDEF ChipMHz 4          'No Div
-                       OSCFRQ = 0b00000010    '4mhz
-                    #Endif
-
-
-                    #IFDEF ChipMHz 2         'No DIV
-                       OSCFRQ = 0b00000001   '2mhz
-                    #Endif
-
-                   #IFDEF ChipMHz 1          'No Div
-                       OSCFRQ = 0b00000000   '1mhz
-                   #Endif
-            #ENDIF
-            'End of type 103 init
-
-          #endif
-
-
-          #ifdef Bit(HFIOFS)
-            'The section now handles two true tables for frequency
-            'Supports 16f and 18f (type1 max frq of 8mhz) classes and 18f (type2 max frq of 16mhz) classes
-            'Assumes that testing the ChipMaxMHz >= 48 is a valid test for type2 microcontrollers
-            'Supports IntOsc MaxMhz of 64 and not 64 ... there may be others true tables that GCB needs to support in the future
-
-            asm showdebug OSCCON type is 104' NoBit(SPLLEN) And NoBit(IRCF3) Or Bit(INTSRC)) and ifdef Bit(HFIOFS)
-
-            #IFDEF ChipMHz 64 'the SPLLEN needs to set after the IRCF
-                '= 64Mhz
-                [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'
-                #ifdef Bit(SPLLMULT)
-                  Set SPLLMULT On
-                #endif
-            #ENDIF
-
-
-            #IFDEF ChipMHz 48 'the PLLEN needs to set after the IRCF
-              asm showdebug The chip mhz is 48, therefore probably an 18f USB part
-              '= 48Mhz
-              [canskip] IRCF2, IRCF1, IRCF0 = b'111'   ;'111' for ChipMHz 48
-
-              #ifdef Bit(SPLLMULT)
-                Set SPLLMULT On
               #endif
+            #endif
 
-              #ifdef Bit(PLLEN)
-                Set PLLEN On
-              #endif
+            #if Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
 
-              'Wait for PLL to stabilize
-              #ifdef Bit(PLLRDY)
-                  wait while (PLLRDY = 0)
-              #endif
+              #ifdef Bit(IRCF3)
 
-            #ENDIF
+                asm showdebug OSCCON type is 105 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifdef Bit(IRCF3)
 
-
-
-            #IFDEF ChipMHz 32 'the SPLLEN needs to set after the IRCF
-             '= 32Mhz
-              #if ChipIntOSCCONFormat = 1
-                  [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'   ;'1101' with PLL for ChipMHz 32
+                #IFDEF ChipMHz 64
+                  'Same as for 16hhz, assuming 64 MHz clock is 16 MHz x 4
+                  'equates to OSCCON = OSCCON OR b'01111000'
+                  ' = 64Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 On
+                #ENDIF
+                #IFDEF ChipMHz 48
+                  'Same as for 16hhz, assuming 48 MHz clock is 16 MHz x 3
+                  'equates to OSCCON = OSCCON OR b'01111000'
+                  ' = 48Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 On
+                  #ifdef Bit(SPLLMULT)
+                    Set SPLLMULT On
+                  #endif
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN On
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 32
+                  'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'11110000'
+                  ' = 32Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 Off
                   #ifdef Bit(SPLLMULT)
                     Set SPLLMULT Off
                   #endif
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN On
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 24
+                  'equates to OSCCON = OSCCON AND b'10000111' &  OSCCON = OSCCON OR b'01110000'
+                  'same as for 8khz, assuming 24 MHz clock is 8 MHz x 3
+                  ' = 24Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 Off
+                  #ifdef Bit(SPLLMULT)
+                    Set SPLLMULT On
+                  #endif
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN On
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 16
+                  'eqates to OSCCON = OSCCON OR b'01111000'
+                  ' = 16Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 On
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 8
+                  'equates to OSCCON = OSCCON AND b'10000111' &  OSCCON = OSCCON OR b'01110000'
+                  ' = 8Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 Off
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 4
+                  'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01101000'
+                  ' = 4Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 Off
+                  Set IRCF0 On
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 2
+                  'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01100000'
+                  ' = 2Mhz
+                  Set IRCF3 On
+                  Set IRCF2 On
+                  Set IRCF1 Off
+                  Set IRCF0 Off
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 1
+                  'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01011000'
+                  ' = 1Mhz
+                  Set IRCF3 On
+                  Set IRCF2 Off
+                  Set IRCF1 On
+                  Set IRCF0 On
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 0.5
+                  'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00111000'
+                  ' = 0.5Mhz
+                  Set IRCF3 Off
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 On
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 0.25
+                  'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00110000'
+                  ' = 0.25Mhz
+                  Set IRCF3 Off
+                  Set IRCF2 On
+                  Set IRCF1 On
+                  Set IRCF0 Off
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 0.125
+                  'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00101000'
+                  ' = 0.125Mhz
+                  Set IRCF3 Off
+                  Set IRCF2 On
+                  Set IRCF1 Off
+                  Set IRCF0 On
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
               #endif
 
-              #ifndef ChipIntOSCCONFormat
-                  [canskip] IRCF2, IRCF1, IRCF0, SPLLEN = b'1111'   ;'1111' with PLL for ChipMHz 32
-              #endif
+              #ifndef Bit(IRCF3)
 
-            #ENDIF
+                asm showdebug OSCCON type is  106 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifNdef Bit(IRCF3)
 
-            #IFDEF ChipMHz 16
-              '= 16Mhz
-              OSCCON = OSCCON OR b'01110000'
-              'Address the two true tables for IRCF
-              #if ChipIntOSCCONFormat = 1
-                [canskip] IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 16 MHz (HFINTOSC drives clock directly)
-              #endif
+                #IFDEF ChipMHz 64
+                  'OSCCON = OSCCON AND b'10001111'
+                  'OSCCON = OSCCON OR  b'01100000'
+                  Set IRCF2 On    '- WMR
+                  Set IRCF1 On    '- WMR
+                  Set IRCF0 On    ' -WMR
+                  #ifdef Bit(SPLLEN)
+                      Set SPLLEN On
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 32
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR  b'01100000'
+                  #ifdef Bit(SPLLEN)
+                      Set SPLLEN On
+                  #endif
+                #ENDIF
 
-              #ifndef ChipIntOSCCONFormat
-                 [canskip]IRCF2, IRCF1, IRCF0, SPLLEN = b'1101'    ;110 = 4 MHz with PLL
+                #IFDEF ChipMHz 16
+                  OSCCON = OSCCON OR b'01110000'
+                #ENDIF
+                #IFDEF ChipMHz 8
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR b'01100000'
+                  #ifdef Bit(SPLLEN)
+                    Set SPLLEN Off
+                  #endif
+                #ENDIF
+                #IFDEF ChipMHz 4
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR b'01010000'
+                #ENDIF
+                #IFDEF ChipMHz 2
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR b'01000000'
+                #ENDIF
+                #IFDEF ChipMHz 1
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR b'00110000'
+                #ENDIF
+                #IFDEF ChipMHz 0.5
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR b'00100000'
+                #ENDIF
+                #IFDEF ChipMHz 0.25
+                  OSCCON = OSCCON AND b'10001111'
+                  OSCCON = OSCCON OR b'00010000'
+                #ENDIF
+                #IFDEF ChipMHz 0.031
+                  OSCCON = OSCCON AND b'10001111'
+                #ENDIF
               #endif
+            #endif
 
-            #ENDIF
+          #ENDIF
 
-            #IFDEF ChipMHz 8
-              '= 8Mhz
-              OSCCON = OSCCON AND b'10001111'
-              'Address the two true tables for IRCF
-              #if ChipIntOSCCONFormat = 1
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 8 MHz
-              #endif
-
-              #ifndef ChipIntOSCCONFormat
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'111'    ;111 = 8 MHz (INTOSC drives clock directly)
-              #endif
-            #ENDIF
-
-            #IFDEF ChipMHz 4
-              '= 4Mhz
-              OSCCON = OSCCON AND b'10001111'
-              'Address the two true tables for IRCF
-              #if ChipIntOSCCONFormat = 1
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 4 MHz
-              #endif
-
-              #ifndef ChipIntOSCCONFormat
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'110'    ;110 = 4 MHz
-              #endif
-            #ENDIF
-
-            #IFDEF ChipMHz 2
-              '= 2Mhz
-              OSCCON = OSCCON AND b'10001111'
-              'Address the two true tables for IRCF
-              #if ChipIntOSCCONFormat = 1
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'100'    ;100 = 2 MHz
-              #endif
-
-              #ifndef ChipIntOSCCONFormat
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'101'    ;101 = 2 MHz
-              #endif
-            #ENDIF
-
-            #IFDEF ChipMHz 1
-              '= 1Mhz
-              OSCCON = OSCCON AND b'10001111'
-              'Address the two true tables for IRCF
-              #if ChipIntOSCCONFormat = 1
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'011'          ;011 = 1 MHz(3)
-              #endif
-
-              #ifndef ChipIntOSCCONFormat
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'100'         ;100 = 1 MHz(3)
-              #endif
-            #ENDIF
-
-            #IFDEF ChipMHz 0.5
-              '= 0.5Mhz
-              OSCCON = OSCCON AND b'10001111'
-              'Address the two true tables for IRCF
-              #if ChipIntOSCCONFormat = 1
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'010'          ;010 = 500 kHz
-              #endif
-
-              #ifndef ChipIntOSCCONFormat
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'011'         ;011 = 500 kHz
-              #endif
-            #ENDIF
-
-            #IFDEF ChipMHz 0.25
-              '= 0.25Mhz
-              OSCCON = OSCCON AND b'10001111'
-              'Address the two true tables for IRCF
-              #if ChipIntOSCCONFormat = 1
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'001'          ;001 = 250 kHz
-              #endif
-
-              #ifndef ChipIntOSCCONFormat
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'010'         ;010 = 250 kHz
-              #endif
-            #ENDIF
-
-            #IFDEF ChipMHz 0.125
-              '= 0.125Mhz
-              OSCCON = OSCCON AND b'10001111'
-              #ifndef ChipIntOSCCONFormat
-                 [canskip] IRCF2, IRCF1, IRCF0 = b'001'         ;001 = 125 kHz
-              #endif
-            #ENDIF
-
-
-          #endif
-        #endif
-
-        #if Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC)
-
-          #ifdef Bit(IRCF3)
-
-            asm showdebug OSCCON type is 105 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifdef Bit(IRCF3)
-
-            #IFDEF ChipMHz 64
-              'Same as for 16hhz, assuming 64 MHz clock is 16 MHz x 4
-              'equates to OSCCON = OSCCON OR b'01111000'
-              ' = 64Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 On
-            #ENDIF
-            #IFDEF ChipMHz 48
-              'Same as for 16hhz, assuming 48 MHz clock is 16 MHz x 3
-              'equates to OSCCON = OSCCON OR b'01111000'
-              ' = 48Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 On
-              #ifdef Bit(SPLLMULT)
-                Set SPLLMULT On
-              #endif
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN On
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 32
-              'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'11110000'
-              ' = 32Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 Off
-              #ifdef Bit(SPLLMULT)
-                Set SPLLMULT Off
-              #endif
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN On
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 24
-              'equates to OSCCON = OSCCON AND b'10000111' &  OSCCON = OSCCON OR b'01110000'
-              'same as for 8khz, assuming 24 MHz clock is 8 MHz x 3
-              ' = 24Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 Off
-              #ifdef Bit(SPLLMULT)
-                Set SPLLMULT On
-              #endif
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN On
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 16
-              'eqates to OSCCON = OSCCON OR b'01111000'
-              ' = 16Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 On
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 8
-              'equates to OSCCON = OSCCON AND b'10000111' &  OSCCON = OSCCON OR b'01110000'
-              ' = 8Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 Off
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 4
-              'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01101000'
-              ' = 4Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 Off
-              Set IRCF0 On
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 2
-              'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01100000'
-              ' = 2Mhz
-              Set IRCF3 On
-              Set IRCF2 On
-              Set IRCF1 Off
-              Set IRCF0 Off
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 1
-              'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'01011000'
-              ' = 1Mhz
-              Set IRCF3 On
-              Set IRCF2 Off
-              Set IRCF1 On
-              Set IRCF0 On
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 0.5
-              'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00111000'
-              ' = 0.5Mhz
-              Set IRCF3 Off
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 On
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 0.25
-              'equates to  OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00110000'
-              ' = 0.25Mhz
-              Set IRCF3 Off
-              Set IRCF2 On
-              Set IRCF1 On
-              Set IRCF0 Off
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 0.125
-              'equates to OSCCON = OSCCON AND b'10000111' & OSCCON = OSCCON OR b'00101000'
-              ' = 0.125Mhz
-              Set IRCF3 Off
-              Set IRCF2 On
-              Set IRCF1 Off
-              Set IRCF0 On
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-          #endif
-
-          #ifndef Bit(IRCF3)
-
-            asm showdebug OSCCON type is  106 'Bit(SPLLEN) Or Bit(IRCF3) And NoBit(INTSRC) and ifNdef Bit(IRCF3)
-
-            #IFDEF ChipMHz 64
-              'OSCCON = OSCCON AND b'10001111'
-              'OSCCON = OSCCON OR  b'01100000'
-              Set IRCF2 On    '- WMR
-              Set IRCF1 On    '- WMR
-              Set IRCF0 On    ' -WMR
-              #ifdef Bit(SPLLEN)
-                  Set SPLLEN On
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 32
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR  b'01100000'
-              #ifdef Bit(SPLLEN)
-                  Set SPLLEN On
-              #endif
-            #ENDIF
-
-            #IFDEF ChipMHz 16
-              OSCCON = OSCCON OR b'01110000'
-            #ENDIF
-            #IFDEF ChipMHz 8
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR b'01100000'
-              #ifdef Bit(SPLLEN)
-                Set SPLLEN Off
-              #endif
-            #ENDIF
-            #IFDEF ChipMHz 4
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR b'01010000'
-            #ENDIF
-            #IFDEF ChipMHz 2
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR b'01000000'
-            #ENDIF
-            #IFDEF ChipMHz 1
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR b'00110000'
-            #ENDIF
-            #IFDEF ChipMHz 0.5
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR b'00100000'
-            #ENDIF
-            #IFDEF ChipMHz 0.25
-              OSCCON = OSCCON AND b'10001111'
-              OSCCON = OSCCON OR b'00010000'
-            #ENDIF
-            #IFDEF ChipMHz 0.031
-              OSCCON = OSCCON AND b'10001111'
-            #ENDIF
-          #endif
-        #endif
+        #ENDIF
 
       #ENDIF
 
-    #ENDIF
+      #IFDEF PIC
+          asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
+      #ENDIF
+      #IFDEF ChipFamily 16
+        'Clear BSR on ChipFamily16 MCUs
+        BSR = 0
 
-  #ENDIF
+      #ENDIF
 
-  #IFDEF PIC
-      asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
-  #ENDIF
-  #IFDEF ChipFamily 16
-    'Clear BSR on ChipFamily16 MCUs
-    BSR = 0
-
-  #ENDIF
-
-  #IFDEF Var(TBLPTRU)
-    'Clear TBLPTRU on MCUs with this bit as this must be zero
-    TBLPTRU = 0
-  #ENDIF
+      #IFDEF Var(TBLPTRU)
+        'Clear TBLPTRU on MCUs with this bit as this must be zero
+        TBLPTRU = 0
+      #ENDIF
 
 
-  #IF Var(ADCON0) OR Var(ADCON)
-    'Ensure all ports are set for digital I/O and, turn off A/D
-    #IFDEF Bit(ADFM)
-      SET ADFM OFF
-    #ENDIF
+      #IF Var(ADCON0) OR Var(ADCON)
+        'Ensure all ports are set for digital I/O and, turn off A/D
+        #IFDEF Bit(ADFM)
+          SET ADFM OFF
+        #ENDIF
 
-    #ifdef NoVar(ADCON0)
-      'Switch off A/D with NoVar(ADCON0)
-      Set ADCON.ADON Off
-    #endif
-    #IFDEF Var(ADCON0)
-      'Switch off A/D Var(ADCON0)
-      SET ADCON0.ADON OFF
-      #IF NoVar(ANSEL) AND NoVar(ANSELA) AND NoVar(ANSEL0)
-        #IFDEF NoBit(PCFG4)
-          #IFDEF NoVar(ADCON2)
-            #IFDEF NoBit(ANS0)
-              [canskip] PCFG3, PCFG2, PCFG1, PCFG0 = b'0110'
+        #ifdef NoVar(ADCON0)
+          'Switch off A/D with NoVar(ADCON0)
+          Set ADCON.ADON Off
+        #endif
+        #IFDEF Var(ADCON0)
+          'Switch off A/D Var(ADCON0)
+          SET ADCON0.ADON OFF
+          #IF NoVar(ANSEL) AND NoVar(ANSELA) AND NoVar(ANSEL0)
+            #IFDEF NoBit(PCFG4)
+              #IFDEF NoVar(ADCON2)
+                #IFDEF NoBit(ANS0)
+                  [canskip] PCFG3, PCFG2, PCFG1, PCFG0 = b'0110'
+                #ENDIF
+                #IFDEF Bit(ANS0)
+                  SET ANS0 OFF
+                  SET ANS1 OFF
+                #ENDIF
+              #ENDIF
+
+              #IFDEF Var(ADCON2)
+                #IFDEF BIT(PCFG3)
+                  SET PCFG3 ON
+                  SET PCFG2 ON
+                  SET PCFG1 ON
+                  SET PCFG0 ON
+                #ENDIF
+              #ENDIF
             #ENDIF
-            #IFDEF Bit(ANS0)
-              SET ANS0 OFF
-              SET ANS1 OFF
-            #ENDIF
-          #ENDIF
 
-          #IFDEF Var(ADCON2)
-            #IFDEF BIT(PCFG3)
-              SET PCFG3 ON
-              SET PCFG2 ON
-              SET PCFG1 ON
-              SET PCFG0 ON
+
+            #IFDEF Bit(PCFG4)
+              'For 18F1320, which uses ADCON1 as an ANSEL register
+              ADCON1 = 0
             #ENDIF
           #ENDIF
         #ENDIF
 
+      #ENDIF
 
-        #IFDEF Bit(PCFG4)
-          'For 18F1320, which uses ADCON1 as an ANSEL register
-          ADCON1 = 0
+      #IFDEF Var(ANSEL)
+        ANSEL = 0
+      #ENDIF
+      #IFDEF Var(ANSELH)
+        ANSELH = 0
+      #ENDIF
+      #IFDEF Var(ANSEL0)
+        ANSEL0 = 0
+      #ENDIF
+      #IFDEF Var(ANSEL1)
+        ANSEL1 = 0
+      #ENDIF
+      #IFDEF Var(ANSELA)
+        ANSELA = 0
+      #ENDIF
+      #IFDEF Var(ANSELB)
+        ANSELB = 0
+      #ENDIF
+      #IFDEF Var(ANSELC)
+        ANSELC = 0
+      #ENDIF
+      #IFDEF Var(ANSELD)
+        ANSELD = 0
+      #ENDIF
+      #IFDEF Var(ANSELE)
+        ANSELE = 0
+      #ENDIF
+
+
+      #IFDEF VAR(ANCON0)
+        #IFDEF BIT(ANSEL0)
+          Set ANSEL0 off
+        #ENDIF
+        #IFDEF BIT(ANSEL1)
+          Set ANSEL1 off
+        #ENDIF
+        #IFDEF BIT(ANSEL2)
+          Set ANSEL2 off
+        #ENDIF
+        #IFDEF BIT(ANSEL3)
+          Set ANSEL3 off
+        #ENDIF
+        #IFDEF BIT(ANSEL4)
+          Set ANSEL4 off
+        #ENDIF
+        #IFDEF BIT(ANSEL5)
+          Set ANSEL5 off
+        #ENDIF
+        #IFDEF BIT(ANSEL6)
+          Set ANSEL6 off
+        #ENDIF
+        #IFDEF BIT(ANSEL7)
+          Set ANSEL7 off
+        #ENDIF
+
+      #ENDIF
+
+      #IFDEF VAR(ANCON1)
+        #IFDEF BIT(ANSEL8)
+          Set ANSEL8 off
+        #ENDIF
+        #IFDEF BIT(ANSEL9)
+          Set ANSEL9 off
+        #ENDIF
+        #IFDEF BIT(ANSEL10)
+          Set ANSEL10 off
+        #ENDIF
+        #IFDEF BIT(ANSEL11)
+          Set ANSEL11 off
+        #ENDIF
+        #IFDEF BIT(ANSEL12)
+          Set ANSEL12 off
+        #ENDIF
+        #IFDEF BIT(ANSEL13)
+          Set ANSEL13 off
+        #ENDIF
+        #IFDEF BIT(ANSEL14)
+          Set ANSEL14 off
+        #ENDIF
+        #IFDEF BIT(ANSEL15)
+          Set ANSEL15 off
+        #ENDIF
+
+      #ENDIF
+
+
+      #IFDEF Var(CMCON)
+
+        #IFNDEF BIT(CMEN0)
+          'Turn off comparator - this is the default setting
+          CMCON = 7
+        #ENDIF
+
+        #IFDEF BIT(CMEN0)
+          'Applied for following MCU types 18f1xxx
+          CMEN0 = 0
+          CMEN1 = 0
+          CMEN2 = 0
+        #ENDIF
+
+      #ENDIF
+      #IFDEF Var(CMCON0)
+        CMCON0 = 7
+      #ENDIF
+
+      #IFDEF Var(CM1CON0)
+        'Set comparator register bits for many MCUs with register CM2CON0
+        #IFDEF Var(CM2CON0)
+          #IFDEF bit(C2ON)
+            C2ON = 0
+          #ENDIF
+          #IFDEF bit(C2EN)
+            C2EN = 0
+          #ENDIF
+        #ENDIF
+
+        #IFDEF bit(C1ON)
+          C1ON = 0
+        #ENDIF
+        #IFDEF bit(C1EN)
+          C1EN = 0
+        #ENDIF
+
+      #ENDIF
+
+      #IFDEF ChipFamily 12
+        'The MCU is a chip family ChipNameStr, so, set GPIO.2 to digital by clear T0CS bit
+        #IFDEF Bit(T0CS)
+          movlw b'11000111'
+          option
+          option_reg = b'11000111'
         #ENDIF
       #ENDIF
-    #ENDIF
 
   #ENDIF
-
-  #IFDEF Var(ANSEL)
-    ANSEL = 0
-  #ENDIF
-  #IFDEF Var(ANSELH)
-    ANSELH = 0
-  #ENDIF
-  #IFDEF Var(ANSEL0)
-    ANSEL0 = 0
-  #ENDIF
-  #IFDEF Var(ANSEL1)
-    ANSEL1 = 0
-  #ENDIF
-  #IFDEF Var(ANSELA)
-    ANSELA = 0
-  #ENDIF
-  #IFDEF Var(ANSELB)
-    ANSELB = 0
-  #ENDIF
-  #IFDEF Var(ANSELC)
-    ANSELC = 0
-  #ENDIF
-  #IFDEF Var(ANSELD)
-    ANSELD = 0
-  #ENDIF
-  #IFDEF Var(ANSELE)
-    ANSELE = 0
-  #ENDIF
-
-
-  #IFDEF VAR(ANCON0)
-    #IFDEF BIT(ANSEL0)
-      Set ANSEL0 off
-    #ENDIF
-    #IFDEF BIT(ANSEL1)
-      Set ANSEL1 off
-    #ENDIF
-    #IFDEF BIT(ANSEL2)
-      Set ANSEL2 off
-    #ENDIF
-    #IFDEF BIT(ANSEL3)
-      Set ANSEL3 off
-    #ENDIF
-    #IFDEF BIT(ANSEL4)
-      Set ANSEL4 off
-    #ENDIF
-    #IFDEF BIT(ANSEL5)
-      Set ANSEL5 off
-    #ENDIF
-    #IFDEF BIT(ANSEL6)
-      Set ANSEL6 off
-    #ENDIF
-    #IFDEF BIT(ANSEL7)
-      Set ANSEL7 off
-    #ENDIF
-
-  #ENDIF
-
-  #IFDEF VAR(ANCON1)
-    #IFDEF BIT(ANSEL8)
-      Set ANSEL8 off
-    #ENDIF
-    #IFDEF BIT(ANSEL9)
-      Set ANSEL9 off
-    #ENDIF
-    #IFDEF BIT(ANSEL10)
-      Set ANSEL10 off
-    #ENDIF
-    #IFDEF BIT(ANSEL11)
-      Set ANSEL11 off
-    #ENDIF
-    #IFDEF BIT(ANSEL12)
-      Set ANSEL12 off
-    #ENDIF
-    #IFDEF BIT(ANSEL13)
-      Set ANSEL13 off
-    #ENDIF
-    #IFDEF BIT(ANSEL14)
-      Set ANSEL14 off
-    #ENDIF
-    #IFDEF BIT(ANSEL15)
-      Set ANSEL15 off
-    #ENDIF
-
-  #ENDIF
-
-
-  #IFDEF Var(CMCON)
-
-    #IFNDEF BIT(CMEN0)
-      'Turn off comparator - this is the default setting
-      CMCON = 7
-    #ENDIF
-
-    #IFDEF BIT(CMEN0)
-      'Applied for following MCU types 18f1xxx
-      CMEN0 = 0
-      CMEN1 = 0
-      CMEN2 = 0
-    #ENDIF
-
-  #ENDIF
-  #IFDEF Var(CMCON0)
-    CMCON0 = 7
-  #ENDIF
-
-  #IFDEF Var(CM1CON0)
-    'Set comparator register bits for many MCUs with register CM2CON0
-    #IFDEF Var(CM2CON0)
-      #IFDEF bit(C2ON)
-        C2ON = 0
-      #ENDIF
-      #IFDEF bit(C2EN)
-        C2EN = 0
-      #ENDIF
-    #ENDIF
-
-    #IFDEF bit(C1ON)
-      C1ON = 0
-    #ENDIF
-    #IFDEF bit(C1EN)
-      C1EN = 0
-    #ENDIF
-
-  #ENDIF
-
-
-  #IFDEF ChipFamily 12
-    'The MCU is a chip family ChipNameStr, so, set GPIO.2 to digital by clear T0CS bit
-    #IFDEF Bit(T0CS)
-      movlw b'11000111'
-      option
-      option_reg = b'11000111'
-    #ENDIF
-  #ENDIF
-
-
-
 
   #IFDEF AVR
 
@@ -1151,8 +1129,6 @@ Sub InitSys
         CLKPSR = 8            '0.03125mhz
         #ENDIF
     #ENDIF
-
-
 
     #IF ChipFamily = 122
 
