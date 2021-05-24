@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F67K90
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -2158,7 +2158,7 @@ F60:FFF
 
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
-BBSIZ=BB2K
+BBSIZ=BBSIZE_512
 BOREN=SBORDIS
 BORPWR=ZPBORMV
 BORV=3
@@ -2173,7 +2173,6 @@ CP6=OFF
 CP7=OFF
 CPB=OFF
 CPD=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBRT0=OFF
 EBRT1=OFF
@@ -2188,7 +2187,7 @@ FCMEN=OFF
 FOSC=INTIO2
 IESO=OFF
 INTOSCSEL=HIGH
-MCLRE=ON
+MCLRE=INTMCLR
 MSSPMSK=MSK7
 PLLCFG=OFF
 PWRTEN=OFF

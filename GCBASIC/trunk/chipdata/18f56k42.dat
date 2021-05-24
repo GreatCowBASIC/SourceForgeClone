@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F56K42
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -27,6 +27,9 @@ MaxMHz=64
 
 'This constant is exposed with only the first parameter (if more than one)
 IntOsc=64, 48, 32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125
+
+'31kSupport is exposed as Chip31Kconfig, Chip31Kregister, Chip31KValue
+31kSupport=LFINTOSC,OSCCON1,80
 
 'This constant is exposed as ChipPins
 Pins=48
@@ -75,9 +78,6 @@ UserIDAddress=2097152
 
 'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=8
-
-'ChipLFINTOSCClockSourceRegisterValue constant is used in user programs to provide the value to set the clock source to LFINTOSC
-LFINTOSCClockSourceRegisterValue=80
 
 'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
 WriteFlashBlockSize=128
@@ -6305,27 +6305,25 @@ BOREN=SBORDIS
 BORV=VBOR_2P45
 CLKOUTEN=OFF
 CP=OFF
-'18FDefaultASMConfig Setting
 CSWEN=ON
-'18FDefaultASMConfig Setting
 DEBUG=OFF
-FCMEN=ON
+FCMEN=OFF
 FEXTOSC=ECH
-IVT1WAY=ON
+IVT1WAY=OFF
 LPBOREN=OFF
 LVP=ON
-MCLRE=EXTMCLR
-MVECEN=ON
-PPS1WAY=ON
+MCLRE=INTMCLR
+MVECEN=OFF
+PPS1WAY=OFF
 PR1WAY=ON
 PWRTS=PWRT_OFF
-RSTOSC=EXTOSC
+RSTOSC=HFINTOSC_1MHZ
 SAFEN=OFF
 STVREN=ON
 WDTCCS=SC
 WDTCPS=WDTCPS_31
 WDTCWS=WDTCWS_7
-WDTE=ON
+WDTE=OFF
 WRTAPP=OFF
 WRTB=OFF
 WRTC=OFF

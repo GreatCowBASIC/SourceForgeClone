@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16C76
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants

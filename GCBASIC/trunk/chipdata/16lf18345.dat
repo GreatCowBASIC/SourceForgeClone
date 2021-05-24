@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 16LF18345
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -27,6 +27,9 @@ MaxMHz=32
 
 'This constant is exposed with only the first parameter (if more than one)
 IntOsc=32, 24, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0.0625
+
+'31kSupport is exposed as Chip31Kconfig, Chip31Kregister, Chip31KValue
+31kSupport=LFINT,OSCCON1,80
 
 'This constant is exposed as ChipPins
 Pins=20
@@ -60,9 +63,6 @@ UserIDAddress=32768
 
 'ChipUserIDLength constant is used in user programs to provide the length of the UserID (in words)
 UserIDLength=4
-
-'ChipLFINTOSCClockSourceRegisterValue constant is used in user programs to provide the value to set the clock source to LFINTOSC
-LFINTOSCClockSourceRegisterValue=64
 
 'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
 WriteFlashBlockSize=32

@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18LF6490
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1687,16 +1687,15 @@ BOREN=SBORDIS
 BORV=3
 CCP2MX=PORTC
 CP=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 FCMEN=OFF
 IESO=OFF
 LPT1OSC=OFF
-MCLRE=ON
+MCLRE=INTMCLR
 OSC=RCIO
-PWRT=OFF
+PWRT=PWRT_OFF
 STVREN=ON
-WDT=ON
+WDT=OFF
 WDTPS=32768
 XINST=OFF
 

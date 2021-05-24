@@ -1,7 +1,7 @@
 'GCBASIC/GCGB Chip Data File
 'Chip: 18F4431
 'Main Format last revised:   14/07/2017
-'Header Format last revised: 29/09/2020
+'Header Format last revised: 22/05/2021
 
 [ChipData]
 ';All items in the ChipData section are available to user programs as constants
@@ -1013,7 +1013,6 @@ CP2=OFF
 CP3=OFF
 CPB=OFF
 CPD=OFF
-'18FDefaultASMConfig Setting
 DEBUG=OFF
 EBTR0=OFF
 EBTR1=OFF
@@ -1021,13 +1020,13 @@ EBTR2=OFF
 EBTR3=OFF
 EBTRB=OFF
 EXCLKMX=RC3
-FCMEN=ON
+FCMEN=OFF
 FLTAMX=RC1
 HPOL=HIGH
 IESO=ON
 LPOL=HIGH
 LVP=ON
-MCLRE=ON
+MCLRE=INTMCLR
 PWM4MX=RB5
 PWMPIN=OFF
 PWRTEN=OFF
