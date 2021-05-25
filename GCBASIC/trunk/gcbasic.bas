@@ -756,7 +756,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-05-24"
+Version = "0.98.<<>> 2021-05-25"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -7462,7 +7462,7 @@ Sub CompileReturn (CompSub As SubType Pointer)
     InLine = UCASE(CurrLine->Value)
 
     'Added Instr(InLine," ") = 7  to permitted variables that start with RETURN
-    'This bug was introduced at 98.03, fixes in 98.07
+    'This bug was introduced at 98.03, fixes in 98.<<>>
     'A dormat bug for a while
     If Left(InLine, 6) = "RETURN" AND Instr(Trim(InLine)," ") = 7  THEN
 
