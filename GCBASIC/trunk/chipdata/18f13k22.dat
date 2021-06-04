@@ -848,7 +848,7 @@ F60:FFF
 
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
-BBSIZ=BBSIZE_512
+BBSIZ=OFF
 BOREN=SBORDIS
 BORV=19
 CP0=OFF
@@ -864,7 +864,7 @@ FOSC=ERC
 HFOFST=ON
 IESO=OFF
 LVP=ON
-MCLRE=INTMCLR
+MCLRE=ON
 PCLKEN=ON
 PLLEN=OFF
 PWRTEN=OFF

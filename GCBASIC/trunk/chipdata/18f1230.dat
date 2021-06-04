@@ -656,7 +656,7 @@ F80:FFF
 
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
-BBSIZ=BBSIZE_512
+BBSIZ=BB256
 BORV=3
 BOR=BOHW
 CP0=OFF
@@ -672,7 +672,7 @@ FLTAMX=RA5
 HPOL=HIGH
 IESO=OFF
 LPOL=HIGH
-MCLRE=INTMCLR
+MCLRE=ON
 OSC=RCIO
 PWMPIN=OFF
 PWRT=PWRT_OFF
