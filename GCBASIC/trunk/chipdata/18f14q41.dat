@@ -4635,7 +4635,7 @@ CHS4,ADCON0,6
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
 BBEN=OFF
-BBSIZE=BBSIZE_512
+BBSIZE=BBSIZE_4096
 BOREN=OFF
 BORV=VBOR_2P85
 CLKOUTEN=OFF
