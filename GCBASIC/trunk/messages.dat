@@ -25,6 +25,7 @@ GCBASIC [/O:output.asm] [/A:assembler] [/P:programmer] [/K:{C|A}] [/V] [/L]
         [/R:format] [/S:settings.ini] [/NP] [/WX] [/F] filename
 
         /O:output.asm   Set an output filename other than the default
+        /CP             Send the default config selected by the compiler to a .CONFIG file.
         /A:assembler    Batch file used to call assembler. If /A:GCASM is
                           given, GCBASIC will use its internal assembler.
         /P:programmer   Batch file used to call programmer, or programmer
