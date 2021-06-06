@@ -756,7 +756,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-05-27"
+Version = "0.98.<<>> 2021-06-06"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -9554,7 +9554,8 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
   End If
 
   'Copies to or from non-integer types
-  'Print "Old: "; Dest; " = "; Source
+  'Print "Old: "; Dest; " = "; Source,
+  'Print "Source type =";  SType
   Select Case DType
   'Copy to bit
   Case "BIT":
@@ -9580,8 +9581,15 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
       If SysVarBit <> 0 Then
         DestVarBitNo = SysVarBit->Location
       Else
-        'Need to use indirect bit setting
-        UseIndirectBitSet = -1
+        'Check the source is a bit or const - 060621
+        If SType = "BIT" OR SType = "CONST"  Then
+          'Need to use indirect bit setting
+          UseIndirectBitSet = -1
+        Else
+          Temp = Message("NotABitORAConst")
+          Replace Temp, "%value%", Source
+          LogError Temp, Origin
+        End If
       End If
     End If
     RequiresGlitchFree = 0
