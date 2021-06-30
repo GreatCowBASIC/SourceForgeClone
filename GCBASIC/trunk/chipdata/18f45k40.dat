@@ -65,10 +65,10 @@ UserIDAddress=2097152
 UserIDLength=16
 
 'WriteFlashBlocksize constant is used in user programs that write to flash memory in bytes
-WriteFlashBlockSize=32
+WriteFlashBlockSize=64
 
 'EraseFlashBlockSize constant is used in user programs that write to flash memory in bytes
-EraseFlashBlockSize=32
+EraseFlashBlockSize=64
 
 'ChipSelfWrite constant is used within the compiler to indicate the chip is self write capable
 SelfWrite=1
