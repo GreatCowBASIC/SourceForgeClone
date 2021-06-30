@@ -1094,7 +1094,7 @@ SP4,STKPTR,4
 [ASMConfig]
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
 BW=16_BIT
-PWRT=PWRT_OFF
+PWRT=OFF
 STVR=ON
 WDTPS=128
 WDT=OFF
