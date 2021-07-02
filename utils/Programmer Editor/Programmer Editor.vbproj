@@ -11,9 +11,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <OptionInfer>On</OptionInfer>
     <SourceAnalysisOverrideSettingsFile>C:\Users\Hugh\AppData\Roaming\ICSharpCode/SharpDevelop3.0\Settings.SourceAnalysis</SourceAnalysisOverrideSettingsFile>
-    <StartArguments>D:\code\utils\Programmer Editor\bin\Release\use.ini</StartArguments>
+    <StartArguments>C:\GCB@Syn\GreatCowBasic\use.ini</StartArguments>
     <ApplicationIcon>Cow48x48.ico</ApplicationIcon>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartWorkingDirectory>C:\GCB@Syn\GreatCowBasic</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>
