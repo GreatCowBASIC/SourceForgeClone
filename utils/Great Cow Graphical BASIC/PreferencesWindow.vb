@@ -97,6 +97,10 @@ Imports System.Collections.Generic
 					DefaultCompilercomboBox.Text = pPreferences.GetPref("GCBASIC", "assembler")				
 				End If
 	
+				If pPreferences.GetPref("GCBASIC", "hexappendGCBmessage") = "1" or pPreferences.GetPref("GCBASIC", "hexappendGCBmessage") = "Y" or pPreferences.GetPref("GCBASIC", "hexappendGCBmessage") = "y" Then
+					appendhexGCASM.Checked = True
+				End If
+	
 				'Programmer list
 				'Restricted mode means that GCGB is in a school or other environment where the users may be up to no good
 				'If restricted, don't allow them to define programmers.
@@ -212,12 +216,12 @@ Imports System.Collections.Generic
 			Me.EditorIndentLabel = New System.Windows.Forms.Label
 			Me.EditorWarnRecursion = New System.Windows.Forms.CheckBox
 			Me.ToolVarsPrefs = New System.Windows.Forms.TabPage
-			Me.label3 = New System.Windows.Forms.Label
-			Me.label2 = New System.Windows.Forms.Label
 			Me.ToolVarDataGrid = New System.Windows.Forms.DataGridView
 			Me.Variable = New System.Windows.Forms.DataGridViewTextBoxColumn
 			Me.Value = New System.Windows.Forms.DataGridViewTextBoxColumn
 			Me.BrowseColumn = New System.Windows.Forms.DataGridViewButtonColumn
+			Me.label3 = New System.Windows.Forms.Label
+			Me.label2 = New System.Windows.Forms.Label
 			Me.toolVariableEditMenu = New System.Windows.Forms.ContextMenuStrip(Me.components)
 			Me.browseForFileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
 			Me.browseForFolderToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
@@ -228,6 +232,7 @@ Imports System.Collections.Generic
 			Me.toolVarFolderBrowserDialog = New System.Windows.Forms.FolderBrowserDialog
 			Me.toolVarOpenFileDialog = New System.Windows.Forms.OpenFileDialog
 			Me.ScrollTimer = New System.Windows.Forms.Timer(Me.components)
+			Me.appendhexGCASM = New System.Windows.Forms.CheckBox
 			Me.ExtToolsPrefs.SuspendLayout
 			Me.CompilerPrefs.SuspendLayout
 			Me.CompilerSelectionBox.SuspendLayout
@@ -331,11 +336,12 @@ Imports System.Collections.Generic
 			'
 			'CompilerSelectionBox
 			'
+			Me.CompilerSelectionBox.Controls.Add(Me.appendhexGCASM)
 			Me.CompilerSelectionBox.Controls.Add(Me.label1)
 			Me.CompilerSelectionBox.Controls.Add(Me.DefaultCompilercomboBox)
 			Me.CompilerSelectionBox.Location = New System.Drawing.Point(7, 134)
 			Me.CompilerSelectionBox.Name = "CompilerSelectionBox"
-			Me.CompilerSelectionBox.Size = New System.Drawing.Size(316, 75)
+			Me.CompilerSelectionBox.Size = New System.Drawing.Size(370, 111)
 			Me.CompilerSelectionBox.TabIndex = 5
 			Me.CompilerSelectionBox.TabStop = false
 			Me.CompilerSelectionBox.Text = "Assembler"
@@ -625,25 +631,6 @@ Imports System.Collections.Generic
 			Me.ToolVarsPrefs.Text = "Tool Variables"
 			Me.ToolVarsPrefs.UseVisualStyleBackColor = true
 			'
-			'label3
-			'
-			Me.label3.Location = New System.Drawing.Point(45, 4)
-			Me.label3.Name = "label3"
-			Me.label3.Size = New System.Drawing.Size(511, 30)
-			Me.label3.TabIndex = 3
-			Me.label3.Text = "Variables are replaced during compiling or programming."&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"Strict rule - Do not use"& _ 
-			" single or double quote in Variable name or Variable Value"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)
-			'
-			'label2
-			'
-			Me.label2.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-			Me.label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0,Byte))
-			Me.label2.Location = New System.Drawing.Point(6, 2)
-			Me.label2.Name = "label2"
-			Me.label2.Size = New System.Drawing.Size(33, 15)
-			Me.label2.TabIndex = 2
-			Me.label2.Text = "Use"
-			'
 			'ToolVarDataGrid
 			'
 			Me.ToolVarDataGrid.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
@@ -676,6 +663,25 @@ Imports System.Collections.Generic
 			Me.BrowseColumn.Name = "BrowseColumn"
 			Me.BrowseColumn.Text = "..."
 			Me.BrowseColumn.UseColumnTextForButtonValue = true
+			'
+			'label3
+			'
+			Me.label3.Location = New System.Drawing.Point(45, 4)
+			Me.label3.Name = "label3"
+			Me.label3.Size = New System.Drawing.Size(511, 30)
+			Me.label3.TabIndex = 3
+			Me.label3.Text = "Variables are replaced during compiling or programming."&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"Strict rule - Do not use"& _ 
+			" single or double quote in Variable name or Variable Value"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)
+			'
+			'label2
+			'
+			Me.label2.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+			Me.label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0,Byte))
+			Me.label2.Location = New System.Drawing.Point(6, 2)
+			Me.label2.Name = "label2"
+			Me.label2.Size = New System.Drawing.Size(33, 15)
+			Me.label2.TabIndex = 2
+			Me.label2.Text = "Use"
 			'
 			'toolVariableEditMenu
 			'
@@ -731,6 +737,18 @@ Imports System.Collections.Generic
 			'
 			AddHandler Me.ScrollTimer.Tick, AddressOf Me.ScrollTimerTick
 			'
+			'appendhexGCASM
+			'
+			Me.appendhexGCASM.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.PrefsHelp.SetHelpString(Me.appendhexGCASM, "Keeps the compiler window open until a key is pressed")
+			Me.appendhexGCASM.Location = New System.Drawing.Point(9, 71)
+			Me.appendhexGCASM.Name = "appendhexGCASM"
+			Me.PrefsHelp.SetShowHelp(Me.appendhexGCASM, true)
+			Me.appendhexGCASM.Size = New System.Drawing.Size(310, 21)
+			Me.appendhexGCASM.TabIndex = 6
+			Me.appendhexGCASM.Text = "Append Great Cow BASIC message to hex file (GCASM only)"
+			Me.prefsToolTip.SetToolTip(Me.appendhexGCASM, "Keeps the compiler window open until a key is pressed")
+			'
 			'PreferencesWindow
 			'
 			Me.AcceptButton = Me.Button_OK
@@ -747,7 +765,7 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me, false)
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
-			Me.Text = "Preferences 1.03"
+			Me.Text = "Preferences 1.04"
 			Me.ExtToolsPrefs.ResumeLayout(false)
 			Me.CompilerPrefs.ResumeLayout(false)
 			Me.CompilerSelectionBox.ResumeLayout(false)
@@ -761,6 +779,7 @@ Imports System.Collections.Generic
 			Me.toolVariableEditMenu.ResumeLayout(false)
 			Me.ResumeLayout(false)
 		End Sub
+		Private appendhexGCASM As System.Windows.Forms.CheckBox
 		Private label2 As System.Windows.Forms.Label
 		Private label3 As System.Windows.Forms.Label
 		Private CompilerSelectionBox As System.Windows.Forms.GroupBox
@@ -834,7 +853,7 @@ Imports System.Collections.Generic
 			End If
 			
 			pPreferences.SetPref("GCBASIC", "assembler", DefaultCompilercomboBox.Text )
-			
+			pPreferences.SetPref("GCBASIC", "hexappendGCBmessage", appendhexGCASM.Checked )
 			
 			'Programmer
 			If Not Preferences.PrefIsYes(pPreferences.GetPref("GCGB", "Restricted"))
