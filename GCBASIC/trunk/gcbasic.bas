@@ -756,7 +756,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-07-02"
+Version = "0.98.<<>> 2021-07-05"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -9581,7 +9581,14 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
       If SysVarBit <> 0 Then
         DestVarBitNo = SysVarBit->Location
       Else
-        'Check the source is a bit or const - 060621
+       'Test for indirect mode needed
+
+       'add a test to set if the source is is an array element
+        If instr( Source, "INDF" ) > 0 then
+          Temp = Message("CannotUseArayBit")
+          LogError Temp, Dest
+        End If
+        'Check the source is a bit or const - 060621#
         If SType = "BIT" Then
           'Need to use indirect bit setting
           UseIndirectBitSet = -1
@@ -16620,6 +16627,8 @@ Sub WriteAssembly
           PRINT #2, "; Reverse lookup file(s)"
           PRINT #2, "; "+ChipPICASDataFile
           PRINT #2, "; "+ChipPICASConfigFile
+          PRINT #2, "; Alternative CONFIG file is to be found at C:\Program Files\Microchip\xc8\vX.YY\pic\dat\cfgdata as per Microchip support ticket #00730936 "
+
           PRINT #2, ""
           PRINT #2, Star80
           If ChipFamily = 16 Then
