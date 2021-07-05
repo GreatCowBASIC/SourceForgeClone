@@ -292,6 +292,7 @@ Function ConfigTidy (DataSource As String ) As String
   Dim localDataSourceState  as String
   Dim adaptedConfig as String
   Dim localpatchCounter as Integer
+  Dim configtidycode as String = "C1"
 
   if AFISupport = 1 then
      ' print trim(DataSource)
@@ -312,6 +313,16 @@ Function ConfigTidy (DataSource As String ) As String
      localDataSourceValue = left( localDataSource, instr( localDataSource, "=")-1)
      localDataSourceState = mid( localDataSource, instr( localDataSource, "=")+1)
 
+     'transform string K to numbers
+     Select Case UCase(localDataSourceState)
+        Case "32K": localDataSourceState = "32768": configtidycode = "C2"
+        Case "16K": localDataSourceState = "16384": configtidycode = "C2"
+        Case "8K": localDataSourceState = "8192"  : configtidycode = "C2"
+        Case "4K": localDataSourceState = "4096"  : configtidycode = "C2"
+        Case "2K": localDataSourceState = "2048"  : configtidycode = "C2"
+        Case "1K": localDataSourceState = "1024"  : configtidycode = "C2"
+     End Select
+
      for searchIndex = 0 to ubound( ReverseCfgFileLookup ) - 1
 
 'print ucase(ReverseCfgFileLookup( searchIndex ).value) , "<"+localDataSourceValue+">",
@@ -321,7 +332,7 @@ Function ConfigTidy (DataSource As String ) As String
         if ucase(ReverseCfgFileLookup( searchIndex ).Value) = localDataSourceValue then
           adaptedConfig  = " CONFIG "+ReverseCfgFileLookup( searchIndex ).Value + "="+localDataSourceState+ Pad32
 
-          adaptedConfig  = Left (  adaptedConfig + Pad32+ Pad32, 48 ) + " ;C1 Reverselookup " + DataSource
+          adaptedConfig  = Left (  adaptedConfig + Pad32+ Pad32, 48 ) + " ;"+ configtidycode +" Reverselookup " + DataSource
           ConfigTidy = adaptedConfig
           Exit Function
         End if
