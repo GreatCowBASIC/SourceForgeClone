@@ -1366,7 +1366,6 @@ F60:FFF
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
 BORV=25
 BOR=ON
-CCP2MUX=ON
 CCP2MUX=RC1
 CP0=OFF
 CP1=OFF

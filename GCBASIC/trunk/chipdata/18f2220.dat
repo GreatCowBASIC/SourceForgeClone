@@ -755,7 +755,6 @@ F80:FFF
 'The Great Cow BASIC compiler default configuration for a specific microcontroller
 BORV=20
 BOR=ON
-CCP2MX=C1
 CCP2MX=ON
 CP0=OFF
 CP1=OFF
