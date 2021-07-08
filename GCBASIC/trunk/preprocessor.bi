@@ -532,7 +532,7 @@ SUB PreProcessor
   Dim As OriginType Pointer LineOrigin
 
   Dim As Integer T, T2, ICCO, CE, PD, RF, S, LC, LCS, SID, CD, SL, NR
-  Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro, CurrChar
+  Dim As Integer ForceMain, LineTokens, FoundFunction, FoundMacro, CurrChar, ReadScript
   Dim As Integer CurrCharPos, ReadType, ConvertAgain, UnconvertedFiles
   Dim As Single CurrPerc, PercAdd, PercOld
   Dim As Double LastCompTime, StartTime
@@ -725,6 +725,7 @@ SUB PreProcessor
     S = 0
     LC = 0
     LCS = 0
+    ReadScript = 0
 
     StartOfCommentBlock = 0
     EndOfCommentBlock   = 0
@@ -1041,6 +1042,65 @@ SUB PreProcessor
 
       'Load line
       IF T = 0 Then
+
+        goto jumpExpandBITcode
+
+        IF INSTR(DataSource, "#SCRIPT") <> 0 Then
+          ReadScript = -1
+        End if
+        IF INSTR(DataSource, "#ENDSCRIPT") <> 0 Then
+          ReadScript = -0
+        End if
+
+        'Array(element).bit handler - expands array elements into a multiline lines of code
+        If Instr( DataSource,  "." ) <> 0 and Instr( DataSource, "IF " ) = 0 and Instr( DataSource, "WHILE " ) = 0 then   '.. must have .
+
+            Dim equalsPos as integer  = Instr( DataSource, "=" )
+            Dim lbracePos as integer = Instr( equalsPos , DataSource, "(" )
+            Dim rbracePos as integer = Instr( lbracePos ,DataSource, ")" )
+            Dim dotPos as integer = Instr( rbracePos, DataSource,  "." )
+
+            If ( equalsPos < lbracePos ) and ( lbracePos   < rbracePos ) and ( rbracePos  < dotPos ) and ReadScript = 0 then
+              'datavar1.Index = Valu(A1).Index
+              'expands to
+              '          SYSARRAYELEMENTCOPY = Valu(A1)
+              '          datavar1.Index = SYSARRAYELEMENTCOPY.Index
+
+              IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("WarningProcesorTranformingArrayBitSource"); "  "+ DataSource
+
+              CodeTemp = "SYSARRAYELEMENTCOPY " + mid( DataSource, equalsPos, dotPos - equalsPos )+":"
+              CodeTemp = CodeTemp + mid( DataSource, 1, equalsPos ) + " SYSARRAYELEMENTCOPY"+  mid( DataSource, dotPos  )
+              DataSource = ucase( CodeTemp )
+
+            end if
+
+
+            'Valu(A1).Index = 1
+            'expands to
+            '          SYSARRAYELEMENTCOPY = Valu(A1)
+            '          SYSARRAYELEMENTCOPY.Index  = source
+            '          Valu(A1) =  SYSARRAYELEMENTCOPY
+
+            equalsPos = Instr( DataSource, "=" )
+            lbracePos = Instr( 1 , DataSource, "(" )
+            rbracePos = Instr( lbracePos ,DataSource, ")" )
+            dotPos = Instr( rbracePos, DataSource,  "." )
+
+            If dotPos <> 0 then
+                If ( lbracePos < rbracePos ) and ( rbracePos   < dotPos ) and ( dotPos  < equalsPos )and ReadScript = 0 then
+                  IF VBS = 1 THEN PRINT : PRINT SPC(5); Message("WarningProcesorTranformingArrayBitDest"); " "+DataSource
+
+                  CodeTemp = "SYSARRAYELEMENTCOPY=" + mid( DataSource, 1, dotPos - 1 )+":"
+                  CodeTemp = CodeTemp + "SYSARRAYELEMENTCOPY" + mid( DataSource, dotPos )+":"
+                  CodeTemp = CodeTemp + mid( DataSource, 1, dotPos - 1 ) + "=SYSARRAYELEMENTCOPY"
+
+                  DataSource = ucase( CodeTemp )
+
+                end if
+            end if
+        End if
+
+        jumpExpandBITcode:
 
         IF INSTR(DataSource, "DELAY_MS") <> 0 Then
           LogError Message("SynErr"), ";?F" + Str(RF) + "L" + Str(LC) + "?"
