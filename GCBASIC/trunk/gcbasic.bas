@@ -703,7 +703,7 @@ Dim Shared As String Pad32
 
 Dim Shared As String ChipName, OSCType, CONFIG, Intrpt, gcOPTION, ChipProgrammerName
 Dim Shared As String ChipOscSource
-Dim Shared As String AFI, FI, OFI, HFI, ID, Version, ProgDir, CLD, LabelEnd
+Dim Shared As String AFI, FI, OFI, HFI, ID, Version, buildVersion, ProgDir, CLD, LabelEnd
 Dim Shared As String PrgExe, PrgParams, PrgDir, AsmExe, AsmParams, PrgName, HexAppend
 Dim Shared As ExternalTool Pointer AsmTool, PrgTool
 Dim Shared As String CompReportFormat
@@ -756,7 +756,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-07-05"
+Version = "0.98.<<>> 2021-07-07"
+buildVersion = "995"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -783,6 +784,8 @@ Version = "0.98.<<>> 2021-07-05"
        Version = Version + " (Windows 32 bit)"
    #endif
 #endif
+
+Version = Version + " : Build " + buildVersion
 
 CreateReservedWordsList()
 
@@ -7462,7 +7465,7 @@ Sub CompileReturn (CompSub As SubType Pointer)
     InLine = UCASE(CurrLine->Value)
 
     'Added Instr(InLine," ") = 7  to permitted variables that start with RETURN
-    'This bug was introduced at 98.03, fixes in 98.<<>>
+    'This bug was introduced at 98.03, fixes in 98.07
     'A dormat bug for a while
     If Left(InLine, 6) = "RETURN" AND Instr(Trim(InLine)," ") = 7  THEN
 
@@ -9585,9 +9588,18 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
        'add a test to set if the source is is an array element
         If instr( Source, "INDF" ) > 0 then
-          Temp = Message("CannotUseArayBit")
-          LogError Temp, Dest
+          Temp = Message("CannotUseArayBitasSource")
+
+          LogError Temp, Origin
         End If
+
+        If instr( Dest, "INDF" ) > 0 then
+          Temp = Message("CannotUseArayBitasDestination")
+
+          LogError Temp, Origin
+        End If
+
+
         'Check the source is a bit or const - 060621#
         If SType = "BIT" Then
           'Need to use indirect bit setting
