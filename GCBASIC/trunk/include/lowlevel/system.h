@@ -76,7 +76,7 @@
 '    12022021-  Add #IF ChipSubFamily = 15001 in initsys for new clock type
 '    16052021-  Revised ChipMHz 31k initsys for chips with OSCCON 31k register to set LFINTOSC clock
 '    22052021-  Rewrite ChipMHz 31k initsys using Macro31k and revised DAT files.
-
+'    11072020 - Revised 24 MHz OSCCON1 Setting to 0x10 to exclude 18F (Family 16) chips, and add ChipFamily18FxxQ40
 
 'Constants
 #define ON 1
@@ -102,7 +102,7 @@
 #DEFINE  ChipFamily18FxxQ41 = 16102
 #DEFINE  ChipFamily18FxxK42 = 16103
 #DEFINE  ChipFamily18FxxK40 = 16104
-
+#DEFINE  ChipFamily18FxxQ40 = 16105
 
 #startup InitSys, 80
 
@@ -192,15 +192,17 @@ Sub InitSys
               #IFDEF Var(OSCCON1)
                 asm showdebug Default settings for microcontrollers with _OSCCON1_
 
-                #IF CHIPMHZ <> 24
+                 #IF CHIPMHZ <> 24
                     'Default OSCCON1 typically, NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
                     OSCCON1 = 0x60
-                #ENDIF
+                 #ENDIF
 
-                #IF CHIPMHZ = 24
-                    'NOSC HFINTOSC with 2x PLL; NDIV 1;
-                    OSCCON1 = 0x10;
-                #ENDIF
+                 #IF CHIPMHZ = 24
+                    #IFNDEF ChipFamily 16
+                     'NOSC HFINTOSC with 2x PLL; NDIV 1;
+                      OSCCON1 = 0x10;
+                    #ENDIF
+                 #ENDIF
 
                 'Default value typically, CSWHOLD may proceed; SOSCPWR Low power
                 OSCCON3 = 0x00
@@ -219,6 +221,8 @@ Sub InitSys
                         'Section supports many MCUs, 18FxxK40, 18FxxK42 etc that have NDIV3 bit
 
                         asm showdebug OSCCON type is 101
+
+                        OSCCON1 = 0x60
 
                         'Clear NDIV3:0
                         NDIV3 = 0
@@ -241,6 +245,7 @@ Sub InitSys
                         #IFDEF ChipMHz 24        '48Mhz / 2
                            OSCFRQ = 0b00000111   '24mhz
                            NDIV0 = 1
+
                         #Endif
 
                         #IFDEF ChipMHz 16        'No Div
