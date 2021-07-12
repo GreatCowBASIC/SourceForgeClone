@@ -76,7 +76,7 @@
 '    12022021-  Add #IF ChipSubFamily = 15001 in initsys for new clock type
 '    16052021-  Revised ChipMHz 31k initsys for chips with OSCCON 31k register to set LFINTOSC clock
 '    22052021-  Rewrite ChipMHz 31k initsys using Macro31k and revised DAT files.
-'    11072020 - Revised 24 MHz OSCCON1 Setting to 0x10 to exclude 18F (Family 16) chips, and add ChipFamily18FxxQ40
+'    11072021 - Revised 24 MHz OSCCON1 Setting to 0x10 to exclude 18F (Family 16) chips, and add ChipFamily18FxxQ40
 
 'Constants
 #define ON 1
@@ -103,6 +103,11 @@
 #DEFINE  ChipFamily18FxxK42 = 16103
 #DEFINE  ChipFamily18FxxK40 = 16104
 #DEFINE  ChipFamily18FxxQ40 = 16105
+#DEFINE  ChipFamily18FxxQ84 = 16106
+#DEFINE  ChipFamily18FxxK83 = 16107
+#DEFINE  ChipFamily18FxxQ83 = 16108
+
+
 
 #startup InitSys, 80
 
