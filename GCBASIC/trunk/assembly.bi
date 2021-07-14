@@ -376,7 +376,7 @@ Function AsmTidy (DataSource As String ,  StoredGCASM as integer ) As String
 
         '      END IF
     'just make upper case
-    If Instr( DataSource, "CLCn") = 0 then
+    If Instr( DataSource, "CLCn") = 0 AND Instr( DataSource, "DMAn") = 0  then
 
         DataSource = ucase(DataSource)
 
