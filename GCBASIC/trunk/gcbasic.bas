@@ -756,8 +756,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.<<>> 2021-07-07"
-buildVersion = "995"
+Version = "0.98.07 2021-07-14"
+buildVersion = "1001"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -17071,11 +17071,12 @@ Sub WriteAssembly
                               outline = outline
                               if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
                                 Print #2, ";A2: ASM Source was: "+CurrLine->Value + "  Param1 = " + trim(Param1) + " - target = "+outstring + " now " + outline
+                                CurrLine->Value = outline
                               end if
-                              'assigj here so we can see the debug
+                              'assign here so we can see the debug
                               Param1 = outstring
 
-                              'We know that we are dealing with a register, so, reverse lookup to correct
+                              'We know that we are dealing with a register, so, reverse lookup was correct
                               if Param3 = "" then
                                 outline = ASMInstruction+" "+outstring+","+Param2
                                 if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
