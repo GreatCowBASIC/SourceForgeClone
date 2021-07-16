@@ -26,7 +26,10 @@
 
 #Define RESERVED_WORDS 1024
 
+
 'PIC-Types and arrays
+
+#Define PICASDEBUG FALSE
 Type PICASInc
   Value as String
   NumVal as Integer
@@ -137,6 +140,8 @@ Type VariableType
 
   NeedsSequentialLoc As Integer ' Set if individual bits accessed, and must have bytes in sequential order
   UndeclaredError As Integer ' Set if option explicit used and this variable wasn't declared
+
+  AllocOnly as Integer  'Set to -1 if this variable is an ALLOC (allocation memory only)
 
 End Type
 
@@ -756,8 +761,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-07-14"
-buildVersion = "1001"
+Version = "0.98.07 2021-07-15"
+buildVersion = "1002"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -17070,7 +17075,7 @@ Sub WriteAssembly
                               replace ( outline , trim(Param1) , outstring )
                               outline = outline
                               if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";A2: ASM Source was: "+CurrLine->Value + "  Param1 = " + trim(Param1) + " - target = "+outstring + " now " + outline
+                                if PICASDEBUG then Print #2, ";A2: ASM Source was: "+CurrLine->Value + "  Param1 = " + trim(Param1) + " - target = "+outstring + " now " + outline
                                 CurrLine->Value = outline
                               end if
                               'assign here so we can see the debug
@@ -17080,12 +17085,12 @@ Sub WriteAssembly
                               if Param3 = "" then
                                 outline = ASMInstruction+" "+outstring+","+Param2
                                 if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                  Print #2, ";A4: ASM Source was: "+CurrLine->Value
+                                  if PICASDEBUG then Print #2, ";A4: ASM Source was: "+CurrLine->Value
                                 end if
                               else
                                 outline = ASMInstruction+" "+outstring+","+Param2+","+Param3
                                 if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                  Print #2, ";A5: ASM Source was: "+CurrLine->Value + " target = " + outline
+                                  if PICASDEBUG then Print #2, ";A5: ASM Source was: "+CurrLine->Value + " target = " + outline
                                 end if
 
                               end if
@@ -17094,7 +17099,7 @@ Sub WriteAssembly
                               replace ( outline , trim(Param1) , ucase( trim(Param1) ) )
                               outline = outline
                               if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";A3: ASM Source was: "+CurrLine->Value
+                                if PICASDEBUG then Print #2, ";A3: ASM Source was: "+CurrLine->Value
                               end if
                         end if
 
@@ -17106,7 +17111,7 @@ Sub WriteAssembly
 
                                   outline = ASMInstruction+" "+Param1+","+OutString
                                   if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                    Print #2, ";A6: ASM Source was: "+CurrLine->Value
+                                    if PICASDEBUG then Print #2, ";A6: ASM Source was: "+CurrLine->Value
                                   end if
 
                               end if
@@ -17123,12 +17128,12 @@ Sub WriteAssembly
                           if Param3 = "" then
                             outline = ASMInstruction+" "+Param1+","+Param2
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                              Print #2, ";A7: ASM Source was: "+CurrLine->Value
+                              if PICASDEBUG then Print #2, ";A7: ASM Source was: "+CurrLine->Value
                             end if
                           else
                             outline = ASMInstruction+" "+Param1+","+Param2+","+Param3
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";A8: ASM Source was: "+CurrLine->Value   + " target = " + outline
+                                if PICASDEBUG then Print #2, ";A8: ASM Source was: "+CurrLine->Value   + " target = " + outline
                             end if
                           end if
                       end if
@@ -17147,7 +17152,7 @@ Sub WriteAssembly
                             if outstring <> "" then
                                   outline = Param1+" "+outstring
                                   if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                    Print #2, ";A9: ASM Source was: "+CurrLine->Value
+                                    if PICASDEBUG then Print #2, ";A9: ASM Source was: "+CurrLine->Value
                                   end if
                             end if
                           end if
@@ -17188,14 +17193,14 @@ Sub WriteAssembly
                               Param1 = outstring
                               outline = ASMInstruction+" "+Param1+","+Param2
                               if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";B2: ASM Source was: "+CurrLine->Value
+                                if PICASDEBUG then Print #2, ";B2: ASM Source was: "+CurrLine->Value
                               end if
 
                         else
                               replace ( outline , trim(Param1) , ucase( trim(Param1) ) )
                               outline = outline
                               if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";B3: ASM Source was: "+CurrLine->Value
+                                if PICASDEBUG then Print #2, ";B3: ASM Source was: "+CurrLine->Value
                               end if
                         end if
 
@@ -17206,12 +17211,12 @@ Sub WriteAssembly
                           if Param3 = "" then
                             outline = ASMInstruction+" "+Param1+","+Param2
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                              Print #2, ";B4: ASM Source was: "+CurrLine->Value
+                              if PICASDEBUG then Print #2, ";B4: ASM Source was: "+CurrLine->Value
                             end if
                           else
                             outline = ASMInstruction+" "+Param1+","+Param2+","+Param3
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                              Print #2, ";B5: ASM Source was: "+CurrLine->Value
+                              if PICASDEBUG then Print #2, ";B5: ASM Source was: "+CurrLine->Value
                             end if
 
                           end if
@@ -17225,7 +17230,7 @@ Sub WriteAssembly
                                   Param2 = outstring
                                   outline = chr(9)+ASMInstruction+" "+Param1+","+Param2
                                   if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                    Print #2, ";B6: ASM Source was: "+CurrLine->Value
+                                    if PICASDEBUG then Print #2, ";B6: ASM Source was: "+CurrLine->Value
                                   end if
 
                               end if
@@ -17242,12 +17247,12 @@ Sub WriteAssembly
                           if Param3 = "" then
                             outline = ASMInstruction+" "+Param1+","+Param2
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                              Print #2, ";B7: ASM Source was: "+CurrLine->Value
+                              if PICASDEBUG then Print #2, ";B7: ASM Source was: "+CurrLine->Value
                             end if
                           else
                             outline = chr(9)+ASMInstruction+" "+Param1+","+Param2+","+Param3
                             if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                Print #2, ";B8: ASM Source was: "+CurrLine->Value
+                                if PICASDEBUG then Print #2, ";B8: ASM Source was: "+CurrLine->Value
                             end if
                           end if
                       end if
@@ -17266,7 +17271,7 @@ Sub WriteAssembly
                             if Param2 <> "" then
                                   outline = chr(9)+Param1+" "+Param2
                                   if trim(CurrLine->Value) <> trim(outline)  and PreserveMode = 2 then
-                                    Print #2, ";B9: ASM Source was: "+CurrLine->Value
+                                    if PICASDEBUG then Print #2, ";B9: ASM Source was: "+CurrLine->Value
                                   end if
                             end if
                           end if

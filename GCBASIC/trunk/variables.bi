@@ -46,6 +46,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
   Dim As SubType Pointer VarSub, MainSub
   Dim As LinkedListElement Pointer SearchConstPos
   Dim As Single StartTime
+  dim AS Integer AllocMem = 0
 
   VarName = UCase(VarNameIn)
   VarType = VarTypeIn
@@ -100,10 +101,15 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
     VarType = Mid(Temp, 2, Len(Temp) - 2)
   End If
 
-  'Special treatment for strings
+  'Special treatment for strings  and alloc
   VarFixedSize = 0
-  If Left(VarType, 6) = "STRING" Then
+  If Left(VarType, 6) = "STRING" or Left(VarType, 5) = "ALLOC"  Then
 
+    'Change an ALLOC to a string and set to AllocMem to -1 - used later to upadate variable
+    If Left(VarType, 5) = "ALLOC" Then
+      AllocMem = -1
+      Replace Vartype, "ALLOC", "STRING"
+    End if
     VarSize = -1
 
     'Check for StringSize constant
@@ -126,6 +132,9 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
       VarFixedSize = -1
     End If
   End If
+
+  'Reduce the size of the VarSize -1 if this is an ALLOC
+  If AllocMem = -1 Then VarSize = VarSize - 1
 
   'Defaults
   If VarSize = 0 Then VarSize = 1
@@ -335,6 +344,7 @@ Sub AddVar(VarNameIn As String, VarTypeIn As String, VarSizeIn As Integer, VarSu
       VarFound->Used = 0
       VarFound->UndeclaredError = UndeclaredError
       VarFound->NeedsSequentialLoc = 0
+      VarFound->AllocOnly = AllocMem        'set to 0 to -1 if ALLOC
 
       HashMapSet(@(VarSub->Variables), UCase(VarName), VarFound)
     End With
@@ -566,7 +576,8 @@ SUB AllocateRAM
   CurrVarItem = AllVarsUnsorted->Next
   Do While CurrVarItem <> 0
     FinalVar = CurrVarItem->MetaData
-    If Not FinalVar->Used Then
+	'Only delete is NOT used and NOT an ALLOC variable
+    If Not FinalVar->Used  and FinalVar->AllocOnly = 0 Then
       CurrVarItem = LinkedListDelete(CurrVarItem, 0)
     ElseIf Left(Right(CurrVarItem->Value, 2), 1) = "_" Then
       'Is this a byte of a larger variable? Prevent add if it is
