@@ -762,7 +762,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-07-15"
-buildVersion = "1002"
+buildVersion = "1003"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -10515,10 +10515,10 @@ END SUB
 
 Function CompileWholeArray (InLine As String, Origin As String) As LinkedListElement Pointer
 
-  Dim As String DestVar, Source, Temp
+  Dim As String DestVar, Source, Temp, TempData
   Dim As String ArrayHandler, DestArrayHandler, ArrayName, DestArrayName
-  Dim StringTemp(250) As String
-  Dim As Integer AF, ArrayType, TDC, PD
+  Dim StringTemp(256) As String
+  Dim As Integer AF, ArrayType, TDC, PD, MaxArrayElements
   Dim As LinkedListElement Pointer OutList, CurrLine
   Dim As SubType Pointer CurrSub
 
@@ -10550,12 +10550,22 @@ Function CompileWholeArray (InLine As String, Origin As String) As LinkedListEle
     CurrLine = LinkedListInsertList(CurrLine, GenerateArrayPointerSet(DestVar, 0, CurrSub, Origin))
   End If
 
+  If CHIPRAM < 2048 Then MaxArrayElements = 250 Else MaxArrayElements = 255
+
   'Get source data
   TDC = 0
   Do While INSTR(Source, ",") <> 0
     TDC += 1
+    if TDC > MaxArrayElements - 1 then
+        'Error for oversized array
+        TempData = Message("TooManyArrayElements")
+        Replace TempData, "%Array%", DestVar
+        Replace TempData, "%Max%", str(MaxArrayElements)
+        LogError TempData, Origin
+    end if
     StringTemp(TDC) = Trim(Left(Source, INSTR(Source, ",") - 1))
     Source = Mid(Source, INSTR(Source, ",") + 1)
+
   Loop
   TDC += 1
   StringTemp(TDC) = Trim(Source)
