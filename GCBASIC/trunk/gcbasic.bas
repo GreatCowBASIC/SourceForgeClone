@@ -761,8 +761,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-07-15"
-buildVersion = "1003"
+Version = "0.98.07 2021-07-19"
+buildVersion = "1004"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -9424,6 +9424,17 @@ Function CompileVarSet (SourceIn As String, Dest As String, Origin As String, In
 
     'Need to check if big constant is getting put into a small variable
     If SType = "CONST" And Not AllowOverflow Then
+
+      ' Check that a decimal point is only assigned to double or single
+      If InStr(Source, ".") <> 0 and ( UCase(DType) <> "DOUBLE" or UCase(DType) <> "SINGLE" )Then
+          Temp = Message("BadValueType")
+          Replace Temp, "%value%", Source
+          Replace Temp, "%type%", LCase(DType)
+          Replace Temp, "%var%", Dest
+          LogError Temp, Origin
+          Source = "0"
+      End if
+
       If InStr(Source, "@") = 0 Then
         S = MakeDec(Source)
         If Not IsValidValue(S, DType) Then
