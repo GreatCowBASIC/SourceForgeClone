@@ -762,7 +762,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-07-19"
-buildVersion = "1004"
+buildVersion = "1005"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -6122,7 +6122,7 @@ SUB CompileFor (CompSub As SubType Pointer)
       If StepExists Then
 
           'New Starting code. This is common code to the negative or positive StepValue value
-          CurrLine->Value = LoopVar + " =" + StartValue
+          CurrLine->Value = LoopVar + " =" + StartValue +  Origin + "[ao]"  'need to add [ao] to ensure the loop value type is correct
           'Create a Loopx (see Pseudo code)
           CurrLine = LinkedListInsert(CurrLine, "SysForLoop" + Str(FLC) + LabelEnd)
           GetMetaData(Currline)->IsLabel = -1
@@ -10561,12 +10561,14 @@ Function CompileWholeArray (InLine As String, Origin As String) As LinkedListEle
     CurrLine = LinkedListInsertList(CurrLine, GenerateArrayPointerSet(DestVar, 0, CurrSub, Origin))
   End If
 
+  'Prevent silent failure of the overrun of the StringTemp array
   If CHIPRAM < 2048 Then MaxArrayElements = 250 Else MaxArrayElements = 255
 
   'Get source data
   TDC = 0
   Do While INSTR(Source, ",") <> 0
     TDC += 1
+    'Prevents silent failure of the overrun of the StringTemp array
     if TDC > MaxArrayElements - 1 then
         'Error for oversized array
         TempData = Message("TooManyArrayElements")
