@@ -10,7 +10,7 @@ RAM=128
 I/O=12
 ADC=8
 MaxMHz=20
-Pins=14
+Pins=20
 USART=0
 Family=120
 ConfigWords=0
@@ -495,6 +495,28 @@ PRTIM1,PRR,3
 12,PA1(IO),ADC1(I)
 13,PA0(IO),ADC0(I)
 14,GND
+
+[Pins-VQFN]
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
 
 [ConfigOps]
 NoConfig-PRG
