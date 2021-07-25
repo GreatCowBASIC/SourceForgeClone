@@ -10,7 +10,7 @@ RAM=256
 I/O=12
 ADC=12
 MaxMHz=16
-Pins=14
+Pins=20
 USART=0
 Family=120
 ConfigWords=0
@@ -691,6 +691,28 @@ PINA7,PINA,7
 12,PA1(IO),TXD(O),ADC1(I)
 13,PA0(IO),ADC0(I)
 14,GND
+
+[Pins-VQFN]
+1,RESET(I)
+2,RXD(I)
+3,TXD(O)
+4
+5
+6
+7
+8
+9
+10,GND
+11
+12
+13
+14
+15
+16
+17,MOSI(IO)
+18,MISO(IO)
+19,SCK(IO)
+20,VCC
 
 [ConfigOps]
 NoConfig-PRG
