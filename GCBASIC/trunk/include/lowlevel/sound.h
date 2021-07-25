@@ -16,6 +16,7 @@
 '    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '
 '    30/09/2020 Fixed a VERY LONG STANDING BUG!! variable not initialised!
+'    24/07/2021 Added DIM for Variable "TonePerid" / Removed commented out lines
 
 '********************************************************************************
 'IMPORTANT:
@@ -34,12 +35,12 @@ sub Tone (In ToneFrequency as word, In ToneDuration as word)
 
   dim ToneLoop as word
   dim ToneLoop2 as word
+  dim TonePeriod as Word
 
   If ToneFrequency = 0 Then Exit Sub
 
-  'TonePeriod = 20000 / ToneFrequency
+
   TonePeriod = 50000 / ToneFrequency
-  'ToneFrequency = ToneFrequency / 200
   ToneFrequency = ToneFrequency / 100
 
   For ToneLoop = 1 to ToneDuration
@@ -84,6 +85,4 @@ sub ShortTone (ToneFrequency, ToneDuration) #NR
   next
  next
 end sub
-
-
 
