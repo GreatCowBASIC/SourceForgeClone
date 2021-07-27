@@ -762,7 +762,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-07-19"
-buildVersion = "1005"
+buildVersion = "1008"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -6102,11 +6102,14 @@ SUB CompileFor (CompSub As SubType Pointer)
       End if
 
       If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) THEN
-
         If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
-            LogError(Message("ForBadStepVariable"), Origin)
+			'Prevent using a negate with a variable... we cannot handle	
+            If Left(StepValue,1) <> "-" then
+              LogError(Message("ForBadStepVariable"), Origin)
+            Else
+              LogError("You cannot negate a step value. Negate integer variable as prior operation or pass a negative integer variable.", Origin)
+            End if
         End if
-
       End if
 
 
@@ -6275,8 +6278,8 @@ SUB CompileFor (CompSub As SubType Pointer)
 
                   If TypeOfVar(LoopVar, CompSub) = "LONG" or TypeOfVar(LoopVar, CompSub) = "WORD"  then
                     AddVar "SysForLoopABsValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
-                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to -StepValue ")
-                    LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -(" + StepValue+")")
+                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to -StepValue#1 ")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -([integer]" + StepValue+")")
 
 
                     LoopLoc = LinkedListInsert(LoopLoc, ";#1n IF ( " + LoopVar + " - " + EndValue + ") } [WORD]" + "SysForLoopABsValue" + Str(FLC)  + " THEN ")
@@ -6286,8 +6289,8 @@ SUB CompileFor (CompSub As SubType Pointer)
 
                     'create a temp variable so that we can do the tests, keeping the original value as-is for maths
                     AddVar "SysForLoopABsValue" + Str(FLC), "INTEGER", 1, 0, "REAL", "", , -1
-                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to -StepValue ")
-                    LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -" + StepValue)
+                    LoopLoc = LinkedListInsert(LoopLoc, ";Set SysForLoopABsValue to -StepValue#2 ")
+                    LoopLoc = LinkedListInsert(LoopLoc,  "SysForLoopABsValue" + Str(FLC) + " = -([integer]" + StepValue+")")
 
                     if IsConst(EndValue) then
                         'create a variable to enable casting - added to resolve negative constant issue
