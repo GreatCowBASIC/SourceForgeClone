@@ -23,6 +23,7 @@ ABS
 ADOff
 Alias
 AllOf
+ALLOC
 AND
 Array
 As
@@ -299,6 +300,7 @@ Macro
 MEDIUM
 MFINTOSC
 Mid
+MOD
 ms
 Next
 NoBit
