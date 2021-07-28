@@ -761,7 +761,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-07-19"
+Version = "0.98.07 2021-07-28"
 buildVersion = "1008"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
@@ -6103,11 +6103,11 @@ SUB CompileFor (CompSub As SubType Pointer)
 
       If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) THEN
         If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
-			'Prevent using a negate with a variable... we cannot handle	
+			'Prevent using a negate with a variable... we cannot handle
             If Left(StepValue,1) <> "-" then
               LogError(Message("ForBadStepVariable"), Origin)
             Else
-              LogError("You cannot negate a step value. Negate integer variable as prior operation or pass a negative integer variable.", Origin)
+              LogError(Message("ForBadStepNegate"), Origin)
             End if
         End if
       End if
