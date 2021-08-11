@@ -761,8 +761,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-07-28"
-buildVersion = "1008"
+Version = "0.98.07 2021-08-09"
+buildVersion = "1013"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -6103,7 +6103,7 @@ SUB CompileFor (CompSub As SubType Pointer)
 
       If HashMapGet(Constants, "NEWNEXTFORHANDLER" ) THEN
         If Not IsConst(StepValue) And TypeOfVar(StepValue, CompSub) <> "INTEGER" THEN
-			'Prevent using a negate with a variable... we cannot handle
+      'Prevent using a negate with a variable... we cannot handle
             If Left(StepValue,1) <> "-" then
               LogError(Message("ForBadStepVariable"), Origin)
             Else
