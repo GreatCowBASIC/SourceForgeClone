@@ -96,6 +96,7 @@
 ' 25/04/2020: Improve Settimer to better support new class of timers for timer 0
 ' 18/09/2020: Added TCNT1 handling SetTimer specific change for AVR
 ' 02/01/2021: Corrected TCNT1 value for PS_1_8192
+' 10/08/2021: Added fix for K40 Chips that require T0CON1 ASYNC bit to be set On
 '***********************************************************
 
 'Subroutines:
@@ -1380,6 +1381,11 @@ Sub InitTimer0(In TMRSource, In TMRPres, in TMRPost )
 
           'Write the TOCON register
            T0CON1 = TMRPres
+
+           #IF ChipSUBFamily = 16104
+             T0ASYNC = 1
+           #ENDIF
+
      #endif
 
      'Assumed for code below Timer0 is 16-bit capable

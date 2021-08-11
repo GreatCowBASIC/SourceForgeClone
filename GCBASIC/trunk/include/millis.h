@@ -25,6 +25,7 @@
 ' 06/01/2019: Add  support for 16Bit Timer0 no postscaler - EvanV
 ' 04/04/2019: Add AVR support - 16mhz only
 ' 09/10/2020: Add AVR support - 32..1 mhz
+' 10/08/2021: Add Fix for errata bug in DS40001816F in 18fX6K40 chips
 
 '***********************************************************
 
@@ -339,7 +340,13 @@ Sub Init_MsCtr_Int
           asm ShowDebug 16bit capable, but running in 8bit mode
           InitTimer0 Osc, PRE0_1 + TMR0_FOSC4 ,  POST0_1
         #endif
+
       #endif
+
+      #IF CHIPSUBFAMILY = 16104
+          T0ASYNC = 1
+      #ENDIF
+
     #endif
   #ENDIF
 
