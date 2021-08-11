@@ -412,8 +412,10 @@ Sub PrepareBuiltIn
 
   If ModePIC Then
     CurrPos = LinkedListInsert(CurrPos, "D10MS_START")
+    GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, "SysWaitTempMS = 10")
     CurrPos = LinkedListInsert(CurrPos, "Delay_MS")
+    GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTemp10MS, F")
     CurrPos = LinkedListInsert(CurrPos, " goto D10MS_START")
   ElseIf ModeAVR Then
