@@ -1,3 +1,4 @@
+#OPTION Explicit
 '    EEPROM routines for Great Cow BASIC
 '    Copyright (C) 2006-2020 Hugh Considine, William Roth and Evan R. Venn
 
@@ -48,6 +49,8 @@
 ' 13/07/20: Revised to support Q43 chips
 ' 01/12/20: Revised script to support redirection of sysread()
 ' 02/01/20: Rewrite of NVMADR_EPWrite/EPread to better support 18fxxQxx chips/NVMADRU register moving to ChipSubFamily
+' 15/08/21: Rewrite of NVMADR_EPWrite/EPread to better support 18fxxQxx chips/NVMADRU register moving to ChipSubFamily resolve RD issue and adding Q40 support
+
 
 
 #option REQUIRED PIC CHipEEPROM %NoEEProm%
@@ -339,6 +342,13 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
         NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
        #ENDIF
 
+       #if ChipSubFamily = ChipFamily18FxxQ40
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
+        NVMADRU = 0x38
+        //Set the NVMCMD control bits for DFM Byte Read operation
+        NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
+       #ENDIF
+
        #if ChipSubFamily = ChipFamily18FxxQ10
        'Select DATA EE section (0x310000- 0x3103FF) for ChipFamily18FxxQ10
         NVMADRU = 0x31
@@ -473,25 +483,45 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
        #if ChipSubFamily = ChipFamily18FxxQ43
        'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ43
         NVMADRU = 0x38
+        NVMADRH =SysEEAddress_h
+        NVMADRL =SysEEAddress
+       'Set the NVMCMD control bits for DFM Byte Read operation by clearing NVMCMD[2:0] NVM Command bits
+        NVMCON1 = 0
+        NVMCON0.GO = 1
+       #ENDIF
+
+       #if ChipSubFamily =  ChipFamily18FxxQ40
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
+        NVMADRU = 0x38
+        NVMADRH =SysEEAddress_h
+        NVMADRL =SysEEAddress
+       'Set the NVMCMD control bits for DFM Byte Read operation by clearing NVMCMD[2:0] NVM Command bits
+        NVMCON1 = 0
+        NVMCON0.GO = 1
        #ENDIF
 
        #if ChipSubFamily =  ChipFamily18FxxQ41
        'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
         NVMADRU = 0x38
+        NVMADRH =SysEEAddress_h
+        NVMADRL =SysEEAddress
+       'Set the NVMCMD control bits for DFM Byte Read operation by clearing NVMCMD[2:0] NVM Command bits
+        NVMCON1 = 0
+        NVMCON0.GO = 1
        #ENDIF
 
        #if ChipSubFamily = ChipFamily18FxxQ10
        'Select DATA EE section (0x310000- 0x3103FF) for ChipFamily18FxxQ10
         NVMADRU = 0x31
+        NVMADRH =SysEEAddress_h
+        NVMADRL =SysEEAddress
+        RD = 1
+        NOP     ' NOPs added for latency at high frequencies
+        NOP
+        NOP
+        NOP
        #ENDIF
 
-      NVMADRH =SysEEAddress_h
-      NVMADRL =SysEEAddress
-      RD = 1
-      NOP     ' NOPs may be required for latency at high frequencies
-      NOP
-      NOP
-      NOP
       EEDataValue = NVMDATL
   #ENDIF
 
