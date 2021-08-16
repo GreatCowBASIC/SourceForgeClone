@@ -1,4 +1,3 @@
-#OPTION Explicit
 '    EEPROM routines for Great Cow BASIC
 '    Copyright (C) 2006-2020 Hugh Considine, William Roth and Evan R. Venn
 
