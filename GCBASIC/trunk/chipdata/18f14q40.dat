@@ -76,6 +76,9 @@ WriteFlashBlockSize=256
 'EraseFlashBlockSize constant is used in user programs that write to flash memory in bytes
 EraseFlashBlockSize=256
 
+'ChipMinimumBankSelelect constant is used within the compiler to set the minimum BANKSELECT
+MinimumBankSelect=5
+
 'ChipSelfWrite constant is used within the compiler to indicate the chip is self write capable
 SelfWrite=1
 
@@ -4491,7 +4494,7 @@ CHS3,ADCON0,5
 CHS4,ADCON0,6
 
 [FreeRAM]
-0:3FF
+500:8FF
 
 [NoBankRAM]
 'NoBankRAM is somewhat misnamed - it is used for the defintion of (any) access bank locations
