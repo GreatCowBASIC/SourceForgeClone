@@ -762,7 +762,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-08-09"
-buildVersion = "1013"
+buildVersion = "1019"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -1807,6 +1807,10 @@ End Sub
 Sub AddInterruptCode
   Dim As Integer IntSubLoc, CurrVect
   Dim As LinkedListElement Pointer CurrLine, SubStart, SubEnd
+  Dim HasSystemVariables as Integer
+
+  'Set variable
+  HasSystemVariables = 0
 
   'If no interrupts are used, no need for any of this
   If Not (UserInt Or SysInt) Then Return
@@ -1906,6 +1910,14 @@ Sub AddInterruptCode
         RegItems += 1: RegItem(RegItems) = "FSR"
         RegItems += 1: RegItem(RegItems) = "PCLATH"
 
+'      ElseIf ChipFamily = 15 And HasSFR("STATUS_SHAD") Then
+'        'Chip automatically saves these
+'        RegItems += 1: RegItem(RegItems) = "PCLATH"
+'        RegItems += 1: RegItem(RegItems) = "FSR0"
+'        RegItems += 1: RegItem(RegItems) = "FSR0H"
+'        RegItems += 1: RegItem(RegItems) = "FSR1"
+'        RegItems += 1: RegItem(RegItems) = "FSR1H"
+
       ElseIf ChipFamily = 16 And ChipFamilyVariant <> 1 Then
         '18FxxK42 chips are family variant 1 and automatically save these
         RegItems += 1: RegItem(RegItems) = "PCLATH"
@@ -2001,7 +2013,7 @@ Sub AddInterruptCode
     'Always save PCLATH
     PCHUsed = 0
     If ChipFamily = 14 Or ChipFamily = 15 Then
-      If HasSFR("PCLATH") Then
+      If HasSFR("PCLATH") and NOT HasSFR("PCLATH_SHAD") Then
         SaveVarPos = LinkedListInsert(SaveVarPos, "PCLATH")
         PCHUsed = -1
       End If
@@ -2058,8 +2070,10 @@ Sub AddInterruptCode
 
     'Add context save code
     If AutoContextSave Then
-      AddVar "SysW", "BYTE", 1, 0, "REAL", "", , -1
-      AddVar "SysSTATUS", "BYTE", 1, 0, "REAL", "", , -1
+      If NOT HasSFR("STATUS_SHAD") Then
+        AddVar "SysW", "BYTE", 1, 0, "REAL", "", , -1
+        AddVar "SysSTATUS", "BYTE", 1, 0, "REAL", "", , -1
+      End if
 
       'Variables to store registers
       SaveVarPos = SaveVars->Next
@@ -2068,24 +2082,36 @@ Sub AddInterruptCode
         SaveVarPos = SaveVarPos->Next
       Loop
       If ChipFamily = 14 Or ChipFamily = 15 Then
-        'Will need to put SysW, SysSTATUS into shared bank
-        CurrLine = LinkedListInsert(CurrLine, ";Save Context")
-        CurrLine = LinkedListInsert(CurrLine, " movwf SysW")
-        CurrLine = LinkedListInsert(CurrLine, " swapf STATUS,W")
-        CurrLine = LinkedListInsert(CurrLine, " movwf SysSTATUS")
-        If ChipFamily = 15 Then
-          AddVar "SysBSR", "BYTE", 1, 0, "REAL", "", , -1
-          CurrLine = LinkedListInsert(CurrLine, " movf BSR,W")
-          CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
-          CurrLine = LinkedListInsert(CurrLine, " movwf SysBSR")
+
+        If HasSFR("STATUS_SHAD") then
+            CurrLine = LinkedListInsert(CurrLine, ";Use Automatic Context Save.  Interrupt priority not supported")
         Else
-          CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
+            'Will need to put SysW, SysSTATUS into shared bank
+            CurrLine = LinkedListInsert(CurrLine, ";Save Context")
+            CurrLine = LinkedListInsert(CurrLine, " movwf SysW")
+            CurrLine = LinkedListInsert(CurrLine, " swapf STATUS,W")
+            CurrLine = LinkedListInsert(CurrLine, " movwf SysSTATUS")
+            If ChipFamily = 15 Then
+              AddVar "SysBSR", "BYTE", 1, 0, "REAL", "", , -1
+              CurrLine = LinkedListInsert(CurrLine, " movf BSR,W")
+              CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
+              CurrLine = LinkedListInsert(CurrLine, " movwf SysBSR")
+            Else
+              CurrLine = LinkedListInsert(CurrLine, " banksel STATUS")
+            End If
+
         End If
-        CurrLine = LinkedListInsert(CurrLine, ";Store system variables")
+
         SaveVarPos = SaveVars->Next
         Do While SaveVarPos <> 0
-          CurrLine = LinkedListInsert(CurrLine, " movf " + SaveVarPos->Value + ",W")
-          CurrLine = LinkedListInsert(CurrLine, " movwf Save" + SaveVarPos->Value)
+          If NOT(HasSFR(SaveVarPos->Value+"_SHAD")) then
+            If HasSystemVariables = 0 then
+              CurrLine = LinkedListInsert(CurrLine, ";Store system variables, if any")
+              HasSystemVariables = -1
+            End If
+            CurrLine = LinkedListInsert(CurrLine, " movf " + SaveVarPos->Value + ",W")
+            CurrLine = LinkedListInsert(CurrLine, " movwf Save" + SaveVarPos->Value)
+          End if
           SaveVarPos = SaveVarPos->Next
         Loop
         If PCHUsed Then
@@ -2128,25 +2154,35 @@ Sub AddInterruptCode
     GetMetaData(Currline)->IsLabel = -1
 
     If AutoContextSave Then
-      CurrLine = LinkedListInsert(CurrLine, ";Restore Context")
+
       If ChipFamily = 14 Or ChipFamily = 15 Then
-        CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
+        If HasSystemVariables = -1 Then
+          CurrLine = LinkedListInsert(CurrLine, ";Restore system variables, if any")
+        End If
+
         SaveVarPos = SaveVars->Next
         Do While SaveVarPos <> 0
-          CurrLine = LinkedListInsert(CurrLine, " movf Save" + SaveVarPos->Value + ",W")
-          CurrLine = LinkedListInsert(CurrLine, " movwf " + SaveVarPos->Value)
+          If NOT(HasSFR(SaveVarPos->Value+"_SHAD")) then
+            CurrLine = LinkedListInsert(CurrLine, " movf Save" + SaveVarPos->Value + ",W")
+            CurrLine = LinkedListInsert(CurrLine, " movwf " + SaveVarPos->Value)
+          End If
           SaveVarPos = SaveVarPos->Next
         Loop
-        If ChipFamily = 15 Then
-          AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
-          CurrLine = LinkedListInsert(CurrLine, " movf SysBSR,W")
-          CurrLine = LinkedListInsert(CurrLine, " movwf BSR")
+        If HasSFR("STATUS_SHAD") then
+            CurrLine = LinkedListInsert(CurrLine, " retfie")
+        Else
+            CurrLine = LinkedListInsert(CurrLine, ";Restore Context")
+            If ChipFamily = 15 Then
+              AddVar "SysBSR", "BYTE", 1, 0, "REAL", ""
+              CurrLine = LinkedListInsert(CurrLine, " movf SysBSR,W")
+              CurrLine = LinkedListInsert(CurrLine, " movwf BSR")
+            End If
+            CurrLine = LinkedListInsert(CurrLine, " swapf SysSTATUS,W")
+            CurrLine = LinkedListInsert(CurrLine, " movwf STATUS")
+            CurrLine = LinkedListInsert(CurrLine, " swapf SysW,F")
+            CurrLine = LinkedListInsert(CurrLine, " swapf SysW,W")
+            CurrLine = LinkedListInsert(CurrLine, " retfie")
         End If
-        CurrLine = LinkedListInsert(CurrLine, " swapf SysSTATUS,W")
-        CurrLine = LinkedListInsert(CurrLine, " movwf STATUS")
-        CurrLine = LinkedListInsert(CurrLine, " swapf SysW,F")
-        CurrLine = LinkedListInsert(CurrLine, " swapf SysW,W")
-        CurrLine = LinkedListInsert(CurrLine, " retfie")
       ElseIf ChipFamily = 16 Then
         CurrLine = LinkedListInsert(CurrLine, ";Restore system variables")
         SaveVarPos = SaveVars->Next
