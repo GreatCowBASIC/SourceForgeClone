@@ -30,7 +30,9 @@
 ;  26 Aug 2016. Added Serprint Long support.
 ;  29 Aug 2016. Added 5 ms delay to init to ensure lines are settled.
 ;  08 May 2020. Reduced RAM consumption using Serprint with string constants.
-;
+;  23 Aug 2021. Repleaced all #defines with Script to prevent Constants
+;     from being globally defined when library is not being called/used.
+;     with these script matching the development guidelines
 ;********************************************************************************
 
 ;    Usage of Sys232Temp
@@ -55,19 +57,35 @@
 
 'Assign values to key words
 
-'Parity
-#define none 0
-#define odd 1
-#define even 2
+    #SCRIPT
+       __DEFINE_RS232H_CONSTANTS = FALSE 'default
+       IF SENDALOW Then __DEFINE_RS232H_CONSTANTS = TRUE
+       IF SENDBLOW Then __DEFINE_RS232H_CONSTANTS = TRUE
+       IF SENDCLOW Then __DEFINE_RS232H_CONSTANTS = TRUE
+    #ENDSCRIPT
 
-'Signal Inversion
-#define normal 0
-#define invert 1
+    #SCRIPT
+         IF __DEFINE_RS232H_CONSTANTS = TRUE then
+                none = 0 : odd = 1 : even = 2 : normal = 0 : invert = 1
+                WaitForStart = 128 : SerialInitDelay = 5
+                SerRxData = Sys232Temp.1
+         END IF
+    #ENDSCRIPT
 
-'Start Bit settings
-#define WaitForStart 128
-
-#define SerialInitDelay 5
+' legacy #defines  replaced by script above
+''Parity
+'#define none 0
+'#define odd 1
+'#define even 2
+'
+''Signal Inversion
+'#define normal 0
+'#define invert 1
+'
+''Start Bit settings
+'#define WaitForStart 128
+'
+'#define SerialInitDelay 5
 
 'Calculate delay lengths
 #script
@@ -76,47 +94,53 @@
        'These Delays are for Serial RX  with PIC
        'Modified Accuracy by William Roth 18-04-2105
 
-       SerThirdDelay19200 = int(18 - 4 / ChipMHz * 22)
-       SerThirdDelay9600 = int(35 - 4 / ChipMHz * 27)
-       SerThirdDelay4800 = int(70 - 4 / ChipMHz * 31)
-       SerThirdDelay2400 = int(142 - 5 / ChipMHz * 30)
-       SerThirdDelay1200 = int(283 - 5 / ChipMHz * 33)
-       SerThirdDelay600 = int(565  - 5 / ChipMhz) * 33
-       SerThirdDelay300 = int(1120 - 4 / ChipMHz * 35)
+      IF __DEFINE_RS232H_CONSTANTS = True then
 
-       '20 MHz PIC, 10 us taken off - 50 instructions
-       SerFullDelay19200 = int(52 - 4 / ChipMHz * 36)
-       SerFullDelay9600 = int(104 - 4 / ChipMHz * 41)
-       SerFullDelay4800 = int(208 - 4 / ChipMHz * 47)
-       SerFullDelay2400 = int(417 - 4 / ChipMHz * 54)
-       SerFullDelay1200 = int(833 - 4 / ChipMHz * 58)
-       SerFullDelay600 = int(1666 - 4 / ChipMHz * 61)
-       SerFullDelay300 = int(3333 - 4 / ChipMHz * 62)
-    End If
+        SerThirdDelay19200 = int(18 - 4 / ChipMHz * 22)
+        SerThirdDelay9600 = int(35 - 4 / ChipMHz * 27)
+        SerThirdDelay4800 = int(70 - 4 / ChipMHz * 31)
+        SerThirdDelay2400 = int(142 - 5 / ChipMHz * 30)
+        SerThirdDelay1200 = int(283 - 5 / ChipMHz * 33)
+        SerThirdDelay600 = int(565  - 5 / ChipMhz) * 33
+        SerThirdDelay300 = int(1120 - 4 / ChipMHz * 35)
+
+        '20 MHz PIC, 10 us taken off - 50 instructions
+        SerFullDelay19200 = int(52 - 4 / ChipMHz * 36)
+        SerFullDelay9600 = int(104 - 4 / ChipMHz * 41)
+        SerFullDelay4800 = int(208 - 4 / ChipMHz * 47)
+        SerFullDelay2400 = int(417 - 4 / ChipMHz * 54)
+        SerFullDelay1200 = int(833 - 4 / ChipMHz * 58)
+        SerFullDelay600 = int(1666 - 4 / ChipMHz * 61)
+        SerFullDelay300 = int(3333 - 4 / ChipMHz * 62)
+      End IF
+    END IF
 
     If AVR Then
-       '1 MHz AVR, 60 us taken off - 60 instructions
-       SerThirdDelay19200 = int(19 - 1 / ChipMHz * 60)
-       SerThirdDelay9600 = int(36 - 1 / ChipMHz * 60)
-       SerThirdDelay4800 = int(70 - 1 / ChipMHz * 60)
-       SerThirdDelay2400 = int(139 - 1 / ChipMHz * 60)
-       SerThirdDelay1200 = int(278 - 1 / ChipMHz * 60)
-       SerThirdDelay600 = int(555 - 1 / ChipMHz * 60)
-       SerThirdDelay300 = int(1111 - 1 / ChipMHz * 60)
+        IF __DEFINE_RS232H_CONSTANTS = True Then
 
-       '1 MHz AVR, 67 us taken off - 67 instructions
-       SerFullDelay19200 = int(52 - 1 / ChipMHz * 49)
-       SerFullDelay9600 = int(104 - 1 / ChipMHz * 50)
-       SerFullDelay4800 = int(208 - 1 / ChipMHz * 50)
-       SerFullDelay2400 = int(417 - 1 / ChipMHz * 50)
-       SerFullDelay1200 = int(833 - 1 / ChipMHz * 50)
-       SerFullDelay600 = int(1666 - 1 / ChipMHz * 50)
-       SerFullDelay300 = int(3333 - 1 / ChipMHz * 50)
+         '1 MHz AVR, 60 us taken off - 60 instructions
+         SerThirdDelay19200 = int(19 - 1 / ChipMHz * 60)
+         SerThirdDelay9600 = int(36 - 1 / ChipMHz * 60)
+         SerThirdDelay4800 = int(70 - 1 / ChipMHz * 60)
+         SerThirdDelay2400 = int(139 - 1 / ChipMHz * 60)
+         SerThirdDelay1200 = int(278 - 1 / ChipMHz * 60)
+         SerThirdDelay600 = int(555 - 1 / ChipMHz * 60)
+         SerThirdDelay300 = int(1111 - 1 / ChipMHz * 60)
+
+         '1 MHz AVR, 67 us taken off - 67 instructions
+         SerFullDelay19200 = int(52 - 1 / ChipMHz * 49)
+         SerFullDelay9600 = int(104 - 1 / ChipMHz * 50)
+         SerFullDelay4800 = int(208 - 1 / ChipMHz * 50)
+         SerFullDelay2400 = int(417 - 1 / ChipMHz * 50)
+         SerFullDelay1200 = int(833 - 1 / ChipMHz * 50)
+         SerFullDelay600 = int(1666 - 1 / ChipMHz * 50)
+         SerFullDelay300 = int(3333 - 1 / ChipMHz * 50)
+       End IF
+
     End If
-#endscript
+#Endscript
 
-'Serial receive buffer
-#define SerRxData Sys232Temp.1
+
 
 sub InitSer(In Ser_Select, In Ser_Rate, In Ser_Start, In Ser_Data, In Ser_Stop, In Ser_Parity, In Ser_Invert)
   'This sub sets configuration of the serial routines
@@ -222,7 +246,7 @@ Sub SerReceive(In Ser_Select, Out Ser_Byte, Optional  Ser_DoNotChangeInterruptSt
     If SerQuickSample = False Then Exit Sub
   End If
 
-          if Ser_DoNotChangeInterruptState = false then
+  if Ser_DoNotChangeInterruptState = false then
             'Disable interrupts
             IntOff
   end if
@@ -265,7 +289,7 @@ Sub SerReceive(In Ser_Select, Out Ser_Byte, Optional  Ser_DoNotChangeInterruptSt
   'end if
   Wait Until SerQuickSample = FALSE
 
-          if Ser_DoNotChangeInterruptState = false then
+  if Ser_DoNotChangeInterruptState = false then
             'Re-enable interrupt
             IntOn
   end if
