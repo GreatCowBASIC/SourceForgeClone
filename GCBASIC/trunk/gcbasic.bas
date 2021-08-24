@@ -762,7 +762,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-08-24"
-buildVersion = "1020"
+buildVersion = "1022"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -2824,6 +2824,12 @@ SUB CalcConfig
           If FOSC Then
             If .Name = "OSC" Then .Name = "FOSC"
           End If
+          ' as MVECEN is not supported (see Interrupt handler section).
+          If ucase(trim(.Name)) = "MVECEN" and ucase(trim(.Setting->Value)) = "ON" Then
+              Temp = Message("BadConfig")
+              Replace Temp, "%option%", .Name + "=" + .Setting->Value + " not supported by compiler.  Use MVECEN = OFF or remove from config statement"
+              LogWarning(Temp, "")
+          End If
 
           If OutConfig(1) = "" Then
             OutConfig(1) = .Name + " = " + .Setting->Value
@@ -2840,7 +2846,6 @@ SUB CalcConfig
       End With
       CurrSettingLoc = CurrSettingLoc->Next
     Loop
-
     LinkedListInsert(ChipConfigCode->CodeList, " CONFIG " + OutConfig(1))
 
   End If
