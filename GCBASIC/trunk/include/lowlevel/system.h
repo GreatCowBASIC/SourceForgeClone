@@ -78,6 +78,7 @@
 '    22052021-  Rewrite ChipMHz 31k initsys using Macro31k and revised DAT files.
 '    11072021 - Revised 24 MHz OSCCON1 Setting to 0x10 to exclude 18F (Family 16) chips, and add ChipFamily18FxxQ40
 '    28082021 - Add SysMultSub64, SysDivSub64, SysCompEqual64 and SysCompLessThan64
+' Warning .. warning .. warning... 64 bit methods above all require replacement of IF THEN conditional statement when compiler supports Advanced variables.
 
 'Constants
 #define ON 1
