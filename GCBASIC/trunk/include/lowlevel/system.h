@@ -1,5 +1,5 @@
 '    System routines for Great Cow BASIC
-'    Copyright (C) 2006-2020 Hugh Considine,  William Roth and Evan Venn
+'    Copyright (C) 2006-2021 Hugh Considine,  William Roth,  Evan Venn and Clint Koehn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -77,6 +77,7 @@
 '    16052021-  Revised ChipMHz 31k initsys for chips with OSCCON 31k register to set LFINTOSC clock
 '    22052021-  Rewrite ChipMHz 31k initsys using Macro31k and revised DAT files.
 '    11072021 - Revised 24 MHz OSCCON1 Setting to 0x10 to exclude 18F (Family 16) chips, and add ChipFamily18FxxQ40
+'    28082021 - Add SysMultSub64, SysDivSub64, SysCompEqual64 and SysCompLessThan64
 
 'Constants
 #define ON 1
@@ -2652,6 +2653,57 @@ sub SysMultSubSingle
 
 end sub
 
+'64 bit
+sub SysMultSub64
+  dim SysWordTempX as Word
+  dim SysULongIntTempA as ulongint
+  dim SysULongIntTempB as ulongint
+  dim SysULongIntTempX as ulongint
+
+  dim SysULongIntDivMultA as ulongint
+  dim SysULongIntDivMultB as ulongint
+  dim SysULongIntDivMultX as ulongint
+
+  SysULongIntDivMultA = SysULongIntTempA
+  SysULongIntDivMultB = SysULongIntTempB
+  SysULongIntDivMultX = 0
+
+  #IFDEF PIC
+    MUL64LOOP:
+      IF SysULongIntDivMultB.0 ON then SysULongIntDivMultX += SysULongIntDivMultA
+      set STATUS.C OFF
+      rotate SysULongIntDivMultB right
+      set STATUS.C off
+      rotate SysULongIntDivMultA left
+
+      SysWordTempX = SysULongIntDivMultB + SysULongIntDivMultB_H + SysULongIntDivMultB_U + SysULongIntDivMultB_E + SysULongIntDivMultB_A + SysULongIntDivMultB_B + SysULongIntDivMultB_C + SysULongIntDivMultB_D
+      if SysWordTempX > 0 then goto MUL64LOOP
+
+    'if SysULongIntDivMultB > 0 then goto MUL64LOOP
+  #ENDIF
+
+  #IFDEF AVR
+    MUL64LOOP:
+      IF SysULongIntDivMultB.0 ON then SysULongIntDivMultX += SysULongIntDivMultA
+      Set C Off
+      rotate SysULongIntDivMultB right
+      Set C Off
+      rotate SysULongIntDivMultA left
+
+      SysWordTempX = SysULongIntDivMultB + SysULongIntDivMultB_H + SysULongIntDivMultB_U + SysULongIntDivMultB_E + SysULongIntDivMultB_A + SysULongIntDivMultB_B + SysULongIntDivMultB_C + SysULongIntDivMultB_D
+      if SysWordTempX > 0 then goto MUL64LOOP
+
+    'if SysULongIntDivMultB > 0 then goto MUL64LOOP
+  #ENDIF
+
+  SysULongIntTempX = SysULongIntDivMultX
+
+end sub
+
+sub SysMultSubSingle
+
+end sub
+
 '********************************************************************************
 'Divide subroutines
 
@@ -2858,6 +2910,67 @@ sub SysDivSub32
 
 end sub
 
+'64 bit
+sub SysDivSub64
+  dim TempTotal as Word
+  dim SysULongIntTempA as ulongint
+  dim SysULongIntTempB as ulongint
+  dim SysULongIntTempX as ulongint
+
+  '#ifdef PIC
+    dim SysULongIntDivMultA as ulongint
+    dim SysULongIntDivMultB as ulongint
+    dim SysULongIntDivMultX as ulongint
+  '#endif
+
+  SysULongIntDivMultA = SysULongIntTempA
+  SysULongIntDivMultB = SysULongIntTempB
+  SysULongIntDivMultX = 0
+
+  'Avoid division by zero
+  'Have to do it this way because there are no comparison routines for ULongInt
+  TempTotal = SysULongIntDivMultB + SysULongIntDivMultB_U + SysULongIntDivMultB_E + SysULongIntDivMultB_A + SysULongIntDivMultB_B + SysULongIntDivMultB_C + SysULongIntDivMultB_D
+  if TempTotal = 0 then
+    SysULongIntTempA = 0
+    exit sub
+  end if
+
+  'Main calc routine
+  SysDivLoop = 64
+  SysDiv64Start:
+
+    set C off
+    Rotate SysULongIntDivMultA Left
+    Rotate SysULongIntDivMultX Left
+    SysULongIntDivMultX = SysULongIntDivMultX - SysULongIntDivMultB
+    Set SysULongIntDivMultA.0 On
+
+    #IFDEF PIC
+      If C Off Then
+        Set SysULongIntDivMultA.0 Off
+        SysULongIntDivMultX = SysULongIntDivMultX + SysULongIntDivMultB
+      End If
+
+      decfsz SysDivLoop, F
+      goto SysDiv64Start
+    #ENDIF
+    #IFDEF AVR
+      If C On Then
+        Set SysULongIntDivMultA.0 Off
+        SysULongIntDivMultX = SysULongIntDivMultX + SysULongIntDivMultB
+      End If
+
+      dec SysDivLoop
+      breq SysDiv64End
+      goto SysDiv64Start
+      SysDiv64End:
+    #ENDIF
+
+  SysULongIntTempA = SysULongIntDivMultA
+  SysULongIntTempX = SysULongIntDivMultX
+
+end sub
+
 sub SysDivSubSingle
 
 end sub
@@ -3039,6 +3152,144 @@ sub SysCompEqual32
 
     com SysByteTempX
     SCE32False:
+  #ENDIF
+end sub
+
+sub SysCompEqual64
+
+  dim SysULongIntTempA as long
+  dim SysULongIntTempB as long
+  dim SysByteTempX as byte
+
+  #IFDEF ChipFamily 12,14,15
+    clrf SysByteTempX
+
+    'Test low, exit if false
+    movf SysULongIntTempA, W
+    subwf SysULongIntTempB, W
+    btfss STATUS, Z
+    return
+
+    'Test high, exit if false
+    movf SysULongIntTempA_H, W
+    subwf SysULongIntTempB_H, W
+    btfss STATUS, Z
+    return
+
+    'Test upper, exit if false
+    movf SysULongIntTempA_U, W
+    subwf SysULongIntTempB_U, W
+    btfss STATUS, Z
+    return
+
+    'Test exp, exit if false
+    movf SysULongIntTempA_E, W
+    subwf SysULongIntTempB_E, W
+    btfss STATUS, Z
+    return
+
+    'Test A, exit if false
+    movf SysULongIntTempA_A, W
+    subwf SysULongIntTempB_A, W
+    btfss STATUS, Z
+    return
+
+    'Test B, exit if false
+    movf SysULongIntTempA_B, W
+    subwf SysULongIntTempB_B, W
+    btfss STATUS, Z
+    return
+
+    'Test C, exit if false
+    movf SysULongIntTempA_C, W
+    subwf SysULongIntTempB_C, W
+    btfss STATUS, Z
+    return
+
+    'Test D, exit if false
+    movf SysULongIntTempA_D, W
+    subwf SysULongIntTempB_D, W
+    btfss STATUS, Z
+    return
+
+    comf SysByteTempX,F
+  #ENDIF
+
+  #IFDEF ChipFamily 16
+    clrf SysByteTempX
+
+    'Test low, exit if false
+    movf SysULongIntTempB, W
+    cpfseq SysULongIntTempA
+    return
+
+    'Test high, exit if false
+    movf SysULongIntTempB_H, W
+    cpfseq SysULongIntTempA_H
+    return
+
+    'Test upper, exit if false
+    movf SysULongIntTempB_U, W
+    cpfseq SysULongIntTempA_U
+    return
+
+    'Test exp, exit if false
+    movf SysULongIntTempB_E, W
+    cpfseq SysULongIntTempA_E
+    return
+
+    'Test A, exit if false
+    movf SysULongIntTempB_A, W
+    cpfseq SysULongIntTempA_A
+    return
+
+    'Test B, exit if false
+    movf SysULongIntTempB_B, W
+    cpfseq SysULongIntTempA_B
+    return
+
+    'Test C, exit if false
+    movf SysULongIntTempB_C, W
+    cpfseq SysULongIntTempA_C
+    return
+
+    'Test D, exit if false
+    movf SysULongIntTempB_D, W
+    cpfseq SysULongIntTempA_D
+    return
+
+    setf SysByteTempX
+
+  #ENDIF
+  #IFDEF AVR
+    clr SysByteTempX
+
+    cp SysULongIntTempA, SysULongIntTempB
+    brne SCE64False
+
+    cp SysULongIntTempA_H, SysULongIntTempB_H
+    brne SCE64False
+
+    cp SysULongIntTempA_U, SysULongIntTempB_U
+    brne SCE64False
+
+    cp SysULongIntTempA_E, SysULongIntTempB_E
+    brne SCE64False
+
+    cp SysULongIntTempA_A, SysULongIntTempB_A
+    brne SCE64False
+
+    cp SysULongIntTempA_B, SysULongIntTempB_B
+    brne SCE64False
+
+    cp SysULongIntTempA_C, SysULongIntTempB_C
+    brne SCE64False
+
+    cp SysULongIntTempA_D, SysULongIntTempB_D
+    brne SCE64False
+
+    com SysByteTempX
+    SCE64False:
   #ENDIF
 end sub
 
@@ -3224,6 +3475,155 @@ Sub SysCompLessThan32
     SCLT32True:
     com SysByteTempX
     SCLT32False:
+  #ENDIF
+
+End Sub
+
+Sub SysCompLessThan64
+  #IFDEF PIC
+    dim SysULongIntTempA as long
+    dim SysULongIntTempB as long
+    dim SysByteTempX as byte
+
+    clrf SysByteTempX
+
+    'Test D, exit if more
+    movf SysULongIntTempA_D,W
+    subwf SysULongIntTempB_D,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT64True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT64True
+    #ENDIF
+
+    'Test C, exit if more
+    movf SysULongIntTempA_C,W
+    subwf SysULongIntTempB_C,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT64True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT64True
+    #ENDIF
+
+    'Test B, exit if more
+    movf SysULongIntTempA_B,W
+    subwf SysULongIntTempB_B,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT64True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT64True
+    #ENDIF
+
+    'Test A, exit if more
+    movf SysULongIntTempA_A,W
+    subwf SysULongIntTempB_A,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT64True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT64True
+    #ENDIF
+
+    'Test Exp, exit if more
+    movf SysULongIntTempA_E,W
+    subwf SysULongIntTempB_E,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT64True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT64True
+    #ENDIF
+
+    'Test Upper, exit if more
+    movf SysULongIntTempA_U,W
+    subwf SysULongIntTempB_U,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT64True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT64True
+    #ENDIF
+
+    'Test High, exit if more
+    movf SysULongIntTempA_H,W
+    subwf SysULongIntTempB_H,W
+    btfss STATUS,C
+    return
+    'If not more and not zero, is less
+    #IFDEF ChipFamily 12,14,15
+      btfss STATUS,Z
+      goto SCLT644True
+    #ENDIF
+    #IFDEF ChipFamily 16
+      bnz SCLT64True
+    #ENDIF
+
+    'Test Low, exit if more or equal
+    movf SysULongIntTempB,W
+    subwf SysULongIntTempA,W
+    btfsc STATUS,C
+    return
+
+    SCLT64True:
+    comf SysByteTempX,F
+  #ENDIF
+
+  #IFDEF AVR
+    clr SysByteTempX
+
+    'Test Exp, exit false if more
+    cp SysULongIntTempB_E,SysULongIntTempA_E
+    brlo SCLT64False
+    'Test Exp, exit true not equal
+    brne SCLT64True
+
+    'Test Upper, exit false if more
+    cp SysULongIntTempB_U,SysULongIntTempA_U
+    brlo SCLT64False
+    'Test Upper, exit true not equal
+    brne SCLT64True
+
+    'Test High, exit false if more
+    cp SysULongIntTempB_H,SysULongIntTempA_H
+    brlo SCLT64False
+    'Test high, exit true not equal
+    brne SCLT64True
+
+    'Test Low, exit if more or equal
+    cp SysULongIntTempA,SysULongIntTempB
+    brlo SCLT64True
+    ret
+
+    SCLT64True:
+    com SysByteTempX
+    SCLT64False:
   #ENDIF
 
 End Sub
