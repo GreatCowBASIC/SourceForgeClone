@@ -142,7 +142,7 @@
 ' 08/12/20 Support for ChipFamily 122 as these are 12bit ADCs
 ' 02/02/21 Resolved typo in line 1613
 ' 16/02/21 Improved Read A/D @3 to use ADCON0.GO rather than G0 as GO can also reference NVM1CON.GO
-' 23/08/21 Added ADREADPREREADCOMMAND to AVR read
+' 28/08/21 Added ADREADPREREADCOMMAND to AVR read
 
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
@@ -1717,11 +1717,6 @@ macro LLReadAD (ADLeftAdjust)
       #ENDIF
     #ENDIF
 
-    #ifdef ADREADPREREADCOMMAND
-        ADREADPREREADCOMMAND  'add user code here
-    #endif
-
-
     Wait AD_Delay   'Execute the acquisition Delay
 
     Set ADEN On     'Take reading
@@ -1734,6 +1729,10 @@ macro LLReadAD (ADLeftAdjust)
       End If
 
     #ENDIF
+
+    #ifdef ADREADPREREADCOMMAND
+        ADREADPREREADCOMMAND  'add user code here
+    #endif
 
     Set ADSC On
     Wait While ADSC On
