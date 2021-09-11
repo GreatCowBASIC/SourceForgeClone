@@ -1449,7 +1449,7 @@ macro LLReadAD (ADLeftAdjust)
     #ENDIF
 
     #ifdef ADReadPreReadCommand
-        ADReadPreReadCommand  'add user code here
+        ADReadPreReadCommand  'user commands are added here
     #endif
 
     #IFDEF DebugADC_H
@@ -1731,7 +1731,7 @@ macro LLReadAD (ADLeftAdjust)
     #ENDIF
 
     #ifdef ADREADPREREADCOMMAND
-        ADREADPREREADCOMMAND  'add user code here
+        ADREADPREREADCOMMAND  'user commands are added here
     #endif
 
     Set ADSC On
