@@ -19,6 +19,7 @@
 '    v0.9f - revised calibration method
 '    v0.9g - changed the IRQ
 '    v.100 - first formal release
+'    v1.01 Revised to support software SPI for LGT chips @ 11/09/2021
 
  '''    '******************************************************************************************************
 '''    'Setup the XPT2046
@@ -43,14 +44,16 @@
 '''
 '''    #define XPT2046_CS       DIGITAL_2           ' Touch chip select line. MUST BE DEFINED.
 '''    #define XPT2046_IRQ      ANALOG_5            ' Event line... something touched the GLCD touch sensor.  MUST BE DEFINED.
-'''    #define XPT2046_HardwareSPI                  ' remove/comment out if you want to use software SPI - must use same method as GLCD
+'''    #define XPT2046_HARDWARESPI                  ' remove/comment out if you want to use software SPI - must use same method as GLCD
+'''
+'''    #define LGT_XPT_HWSPIMODE  MASTER            'optionally can be MASTERSLOW
 '''
 '''    '******************************************************************************************************
 
 
 
 'No change below here
-#define XPT2046_ReadSamples 200
+#define XPT2046_READSAMPLES 200
 
 #define XPT2046_CFG_START   128       'bit 7
 
@@ -136,6 +139,21 @@
       Warning "Missing Port Assignment XPT2046_IRQ"
   end if
 
+  if CHIPFAMILY = 122 then
+      If XPT2046_HARDWARESPI then
+        Error "XPT2046_HardwareSPI not supported on LGT chips. Remove XPT2046_HardwareSPI constant"
+      End if
+      If GLCD_DI <> XPT2046_DI then
+        Error "XPT2046_HardwareSPI GLCD_DI <> XPT2046_DI.  Must be the same"
+      End if
+      If GLCD_DO <> XPT2046_DO then
+        Error "XPT2046_HardwareSPI GLCD_DO <> XPT2046_DO.  Must be the same"
+      End if
+      If GLCD_SCK <> XPT2046_SCK then
+        Error "XPT2046_HardwareSPI GLCD_SCK <> XPT2046_SCK.  Must be the same"
+      End if
+  end if
+
 #endscript
 
 #startup Init_XPT2046, 99
@@ -187,10 +205,14 @@ End Sub
 
 Sub EnableIRQ_XPT2046
 
+    Set_HWSPI_XPT2046
+
     set XPT2046_CS OFF
     SendData_XPT2046( XPT2046_CFG_START | XPT2046_CFG_8BIT | XPT2046_CFG_DFR | XPT2046_MUX_Y )
     wait 1 ms
     set XPT2046_CS ON
+
+    Restore_HWSPI_XPT2046
 
 End Sub
 
@@ -203,8 +225,12 @@ sub  TransferData_XPT2046( IN XPT2046SendByte as byte, XPT2046OutByte as byte )
   XPT2046OutByte = 0
 
   #ifdef XPT2046_HardwareSPI
-     SPITransfer  XPT2046SendByte,  XPT2046OutByte
+
+    SPITransfer  XPT2046SendByte,  XPT2046OutByte
+
   #endif
+
+
 
   #ifndef XPT2046_HardwareSPI
       repeat 8
@@ -227,7 +253,7 @@ sub  TransferData_XPT2046( IN XPT2046SendByte as byte, XPT2046OutByte as byte )
       end Repeat
 
   #endif
-'  wait 250 us
+
 
 end Sub
 
@@ -238,7 +264,9 @@ sub  SendData_XPT2046( IN XPT2046SendByte as byte )
 
 
   #ifdef XPT2046_HardwareSPI
-     SPITransfer  XPT2046SendByte,  XPT2046TempOut
+
+    SPITransfer  XPT2046SendByte,  XPT2046OutByte
+
   #endif
 
   #ifndef XPT2046_HardwareSPI
@@ -288,6 +316,9 @@ Sub GetXY_XPT2046 (out XTouchPoint_XPT2046 as word, out YTouchPoint_XPT2046 as w
     dim NewXTouchPoint_XPT2046, NewYTouchPoint_XPT2046 as Word
     dim XTouchPoint_XPT2046raw, YTouchPoint_XPT2046Raw as word
     dim Current_GLCD_WIDTH, Current_GLCD_HEIGHT as word
+    Dim XTouchPoint_XPT2046_total, YTouchPoint_XPT2046_total as long
+
+    Set_HWSPI_XPT2046
 
     set XPT2046_CS OFF
 
@@ -299,10 +330,10 @@ Sub GetXY_XPT2046 (out XTouchPoint_XPT2046 as word, out YTouchPoint_XPT2046 as w
           TransferData_XPT2046  0, XPT2046TempOut
       end Repeat
 
-      XTouchPoint_XPT2046 = 0
-      YTouchPoint_XPT2046 = 0
+      XTouchPoint_XPT2046_total = 0
+      YTouchPoint_XPT2046_total = 0
 
-      Repeat XPT2046_ReadSamples
+      Repeat XPT2046_READSAMPLES
 
           TransferData_XPT2046  XPT2046_CFG_START | XPT2046_CFG_8BIT | XPT2046_CFG_DFR | XPT2046_MUX_X  | XPT2046_CFG_PWR, XPT2046TempOut
           wait 20 us
@@ -312,18 +343,24 @@ Sub GetXY_XPT2046 (out XTouchPoint_XPT2046 as word, out YTouchPoint_XPT2046 as w
           TransferData_XPT2046  0, NewXTouchPoint_XPT2046
           TransferData_XPT2046  0, XPT2046TempOut
 
-          yTouchPoint_XPT2046 = ( yTouchPoint_XPT2046 + NewyTouchPoint_XPT2046 )
-          XTouchPoint_XPT2046 = ( XTouchPoint_XPT2046 + NewXTouchPoint_XPT2046 )
+          YTouchPoint_XPT2046_total = ( YTouchPoint_XPT2046_total + NewyTouchPoint_XPT2046 )
+          XTouchPoint_XPT2046_total = ( XTouchPoint_XPT2046_total + NewXTouchPoint_XPT2046 )
 
       End Repeat
 
-      yTouchPoint_XPT2046 = yTouchPoint_XPT2046 /(XPT2046_ReadSamples )
-      xTouchPoint_XPT2046 = xTouchPoint_XPT2046 /(XPT2046_ReadSamples )
+      yTouchPoint_XPT2046 = YTouchPoint_XPT2046_total /(XPT2046_READSAMPLES )
+      xTouchPoint_XPT2046 = XTouchPoint_XPT2046_total /(XPT2046_READSAMPLES )
 
       SendData_XPT2046( XPT2046_CFG_START | XPT2046_CFG_8BIT | XPT2046_CFG_DFR | XPT2046_CFG_PWR | XPT2046_MUX_Y )
 
     set XPT2046_CS ON
-
+    'USART settings for USART1
+    #define USART_BAUD_RATE 115200
+    #define USART_TX_BLOCKING
+    #define USART_DELAY OFF
+HSerSend XTouchPoint_XPT2046
+HSerSend yTouchPoint_XPT2046
+HSerSend 0
     'Set the raw values, folks may want to know this
     XTouchPoint_XPT2046raw = XTouchPoint_XPT2046
     YTouchPoint_XPT2046Raw = yTouchPoint_XPT2046
@@ -332,4 +369,25 @@ Sub GetXY_XPT2046 (out XTouchPoint_XPT2046 as word, out YTouchPoint_XPT2046 as w
     XTouchPoint_XPT2046 = scale ( XTouchPoint_XPT2046, XPT2046_Xmin, XPT2046_Xmax, 0, Current_GLCD_WIDTH )
     YTouchPoint_XPT2046 = scale ( YTouchPoint_XPT2046, XPT2046_Ymin, XPT2046_Ymax, 0, Current_GLCD_HEIGHT )
 
+    Restore_HWSPI_XPT2046
+
 End Sub
+
+
+macro Set_HWSPI_XPT2046
+
+    #if ChipFamily = 122
+      'An LGT chip turn off hardware SPI
+      SSPOFF
+    #endif
+
+end macro
+
+macro Restore_HWSPI_XPT2046
+
+      #if ChipFamily = 122
+        'An LGT chip restore the SPI setting
+        SPIMode HWSPIMODESCRIPT, 0
+      #endif
+
+end macro
