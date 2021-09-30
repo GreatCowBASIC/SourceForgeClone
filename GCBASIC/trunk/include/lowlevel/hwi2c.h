@@ -51,6 +51,8 @@
 '    Updated May 2020 - Removed Unused Constant
 '    Updated Dec 2020 - Added support for 18FxxQ10
 '    Updated Jan 2021 - Added support for 18FxxQ43
+'    Updated Sep 2021 - Revised SI2CDiscovery adding #IFDEF var(I2C1CNTL) and #IFDEF var(I2C1CNT) to isolate Q43 that only supports I2C1CNT
+
 
 
 
@@ -1076,15 +1078,20 @@ sub SI2CDiscovery ( address )
     #IFNDEF bit(I2C1CON1.P)
 
       'Set the byte count to 1, place outbyte in register, and wait for hardware state machine
-      I2C1CNTL = 1
-      I2C1TXB = 0 'reg
+      #IFDEF var(I2C1CNTL)
+        I2C1CNTL = 1
+      #ENDIF
+      #IFDEF var(I2C1CNT)
+        I2C1CNT = 1
+      #ENDIF
 
-      I2C1CNTL = 1
-      I2C1TXB = 0 'data
+      I2C1TXB = 0 'reg
 
       HI2CAckpollState = 0
 
       SI2CStop
+      'wait for I2C to fail or not..
+      wait 1 ms
       HI2CAckpollState.0 = !I2C1PIR.7
       'Reset module
       I2C1CON0.EN=0
