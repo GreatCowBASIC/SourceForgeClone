@@ -49,6 +49,7 @@
 ' 01/12/20: Revised script to support redirection of sysread()
 ' 02/01/20: Rewrite of NVMADR_EPWrite/EPread to better support 18fxxQxx chips/NVMADRU register moving to ChipSubFamily
 ' 15/08/21: Rewrite of NVMADR_EPWrite/EPread to better support 18fxxQxx chips/NVMADRU register moving to ChipSubFamily resolve RD issue and adding Q40 support
+' 02/10/21: Fixed Q41 GO_NVMCON0 issue where GO is no longer valid.
 
 
 
@@ -506,7 +507,7 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
         NVMADRL =SysEEAddress
        'Set the NVMCMD control bits for DFM Byte Read operation by clearing NVMCMD[2:0] NVM Command bits
         NVMCON1 = 0
-        NVMCON0.GO = 1
+        GO_NVMCON0 = 1
        #ENDIF
 
        #if ChipSubFamily = ChipFamily18FxxQ10
