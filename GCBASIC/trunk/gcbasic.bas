@@ -727,6 +727,7 @@ Dim Shared as string currentLineElements()
 Dim Shared as Integer patchCounter = 0
 
 #Define DISABLEOPTIMISATION "f122 jmp"
+#Define INVALIDARRAYVALUE -9999
 
 #Define MAX_OUTPUT_MESSAGES 200
 Dim Shared As String OutMessage(MAX_OUTPUT_MESSAGES)
@@ -761,8 +762,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-08-24"
-buildVersion = "1022"
+Version = "0.98.07 2021-10-02"
+buildVersion = "1032"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8551,6 +8552,10 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
             SourceFunction = SourceArray
             IF INSTR(SourceArray, "(") <> 0 THEN SourceArray = RTrim(Left(SourceArray, INSTR(SourceArray, "(") - 1))
             SourceArrayPtr = VarAddress(ReplaceFnNames(SourceArray), .Caller)
+            If SourceArrayPtr = INVALIDARRAYVALUE Then
+              'this traps the error in VarAddress()
+              GoTo CompileNextParam
+            End If
             If SourceArrayPtr = 0 Then
               'This should never run
               Color 12
@@ -18907,11 +18912,13 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
   'Print ArrayNameIn, LO
   If LO <> 0 Then
     With *Subroutine(LO)
-      If .IsFunction Then
+      If Subroutine(LO) = 0 Then
+'        Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
+        Return INVALIDARRAYVALUE  'DuplicateFunction name - permitting higher level methods to handle the error
+      ElseIf .IsFunction Then
         'Have found function, add a var and then return it
         AddVar ArrayNameIn, .ReturnType, 1, 0, "REAL", "", , -1
         FoundVar = HashMapGet(@(MainSub->Variables), ArrayName)
-
         Return FoundVar
       End If
     End With
