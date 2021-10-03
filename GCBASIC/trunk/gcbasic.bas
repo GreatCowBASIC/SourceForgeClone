@@ -665,7 +665,7 @@ DIM SHARED SysVarBits As HashMap Pointer
 DIM SHARED FILE(300) As String
 Redim SHARED FreeMem(1) As Integer
 Redim SHARED VarLoc(1) As Integer
-DIM SHARED MemRanges(50) As String: MRC = 0
+DIM SHARED MemRanges(100) As String: MRC = 0
 Dim Shared NoBankLoc(10) As DataMemBankType: NoBankLocs = 0
 Dim SHARED StringStore(0 To 1000) As ProgString: SSC = 0: SASC = 0
 Dim Shared ConfigOps(700) As ConfigOp: COC = 0
@@ -763,7 +763,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-02"
-buildVersion = "1032"
+buildVersion = "1033"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
