@@ -763,7 +763,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-02"
-buildVersion = "1033"
+buildVersion = "1036"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8552,7 +8552,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
             SourceFunction = SourceArray
             IF INSTR(SourceArray, "(") <> 0 THEN SourceArray = RTrim(Left(SourceArray, INSTR(SourceArray, "(") - 1))
             SourceArrayPtr = VarAddress(ReplaceFnNames(SourceArray), .Caller)
-            If SourceArrayPtr = INVALIDARRAYVALUE Then
+            If SourceArrayPtr = Cast( VariableType Pointer, INVALIDARRAYVALUE )Then
               'this traps the error in VarAddress()
               GoTo CompileNextParam
             End If
@@ -18909,12 +18909,12 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
 
   'Check if variable is a function result
   LO = LocationOfSub(ArrayNameIn, "", "")
-  'Print ArrayNameIn, LO
-  If LO <> 0 Then
+'  Print ArrayNameIn, LO
+  If LO > 0 Then
     With *Subroutine(LO)
       If Subroutine(LO) = 0 Then
 '        Print "Var " + ArrayName + " not found in sub " + CurrSub->Name
-        Return INVALIDARRAYVALUE  'DuplicateFunction name - permitting higher level methods to handle the error
+        Return Cast( VariableType Pointer, INVALIDARRAYVALUE )  'DuplicateFunction name - permitting higher level methods to handle the error
       ElseIf .IsFunction Then
         'Have found function, add a var and then return it
         AddVar ArrayNameIn, .ReturnType, 1, 0, "REAL", "", , -1
@@ -18922,6 +18922,8 @@ FUNCTION VarAddress (ArrayNameIn As String, CurrSub As SubType Pointer) As Varia
         Return FoundVar
       End If
     End With
+  Else
+    Return Cast( VariableType Pointer, INVALIDARRAYVALUE ) 'DuplicateFunction name - permitting higher level methods to handle the error
   End If
 
   'Nothing found, return null pointer
