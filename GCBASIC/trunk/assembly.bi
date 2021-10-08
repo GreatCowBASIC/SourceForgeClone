@@ -226,6 +226,7 @@ Sub AsmOptimiser (CompSub As SubType Pointer)
         End If
       End If
       CurrLine = CurrLine->Next
+
     Loop
 
   End If
@@ -236,10 +237,23 @@ Sub AsmOptimiser (CompSub As SubType Pointer)
   'Get last line of sub
   CompSub->HasFinalGoto = 0
   CompSub->FinalGotoDest = ""
+  'Restart the code list
   CurrLine = CompSub->CodeStart
+  'Do while has data in code list
   Do While CurrLine->Next <> 0
+    'While has code in code list, set to next code line
     CurrLine = CurrLine->Next
   Loop
+
+  'Handle last line... it could be a comment therefore PRESERVEd
+  'Do while the current code line is PRESERVEd
+  Do while Left(CurrLine->Value, 8) = "PRESERVE"
+   'if PREVious code is NOT a PRESERVEd line then get the PREVious line as the current line
+    If Left(CurrLine->Prev->Value, 8) <> "PRESERVE" then
+      CurrLine = CurrLine->Prev
+    End if
+  Loop
+
   LastLine = CurrLine
   'Get line before last
   CheckLine = LastLine->Prev
