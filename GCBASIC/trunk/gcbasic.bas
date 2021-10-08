@@ -638,7 +638,7 @@ Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCou
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
-Dim Shared As Integer USDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
+Dim Shared As Integer gUSDelaysInaccurate, IntOscSpeeds, PinDirShadows, CompileSkipped
 Dim Shared As Integer PauseTimeout, OldSBC, ReserveHighProg, HighTBLPTRBytes
 Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
@@ -763,7 +763,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-02"
-buildVersion = "1036"
+buildVersion = "1037"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -827,7 +827,7 @@ RPLC = 0 'Repeat loops
 WSC = 0 'Wait Until/While loops
 DLC = 0 'Do loops
 SCT = 0 'Select Case
-USDelaysInaccurate = 0 'Set if variable len US delays will be wrong
+gUSDelaysInaccurate = 0 'Set if variable len US delays will be wrong
 IntOnOffCount = 0 'Count IntOn/IntOff
 
 'Show startup messages, and read COMMAND
@@ -10533,7 +10533,7 @@ SUB CompileWait (CompSub As SubType Pointer)
           RequestSub(CompSub, Unit)
 
           'Generate error when using US delay on slow chips
-          IF Unit = "Delay_US" AND USDelaysInaccurate THEN
+          IF Unit = "Delay_US" AND gUSDelaysInaccurate THEN
             LogWarning Message("WarningUSDelay"), Origin
           END If
 

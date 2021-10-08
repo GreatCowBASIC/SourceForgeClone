@@ -233,10 +233,10 @@ Sub PrepareBuiltIn
     'If not, us delays will be inaccurate
     If L < 0 Then
       L = 0
-      USDelaysInaccurate = -1
+      gUSDelaysInaccurate = -1
     End If
     If L <> Int(L) Then
-      USDelaysInaccurate = -1
+      gUSDelaysInaccurate = -1
     End If
     CurrPos = LinkedListInsert(CurrPos, " incf SysWaitTempUS_H, F")
     CurrPos = LinkedListInsert(CurrPos, " movf SysWaitTempUS, F")
@@ -246,6 +246,7 @@ Sub PrepareBuiltIn
     GetMetaData(CurrPos)->IsLabel = -1
 
     For CD = 1 TO L
+      'Add a series of NOPs based on the calculation of L
       CurrPos = LinkedListInsert(CurrPos, " nop")
     Next
     CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempUS, F")
@@ -259,7 +260,7 @@ Sub PrepareBuiltIn
     L = ChipMhz - 3
     If L < 0 Then
       L = 0
-      USDelaysInaccurate = -1
+      gUSDelaysInaccurate = -1
     End If
     CurrPos = LinkedListInsert(CurrPos, " inc SysWaitTempUS_H")
     CurrPos = LinkedListInsert(CurrPos, " tst SysWaitTempUS")
