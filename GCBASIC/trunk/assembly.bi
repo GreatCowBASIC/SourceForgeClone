@@ -248,9 +248,11 @@ Sub AsmOptimiser (CompSub As SubType Pointer)
   'Handle last line... it could be a comment therefore PRESERVEd
   'Do while the current code line is PRESERVEd
   Do while Left(CurrLine->Value, 8) = "PRESERVE"
-   'if PREVious code is NOT a PRESERVEd line then get the PREVious line as the current line
-    If Left(CurrLine->Prev->Value, 8) <> "PRESERVE" then
+   'if PREVious code is NOT a PRESERVEd line then get the PREVious line as the current line, and, check that we are not at the top of the list
+    If Left(CurrLine->Prev->Value, 8) <> "PRESERVE" and CurrLine->Prev <> 0 then
       CurrLine = CurrLine->Prev
+    Else
+      Exit Do
     End if
   Loop
 
