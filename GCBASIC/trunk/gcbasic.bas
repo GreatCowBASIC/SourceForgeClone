@@ -644,6 +644,8 @@ Dim Shared As Single ChipMhz, ChipMaxSpeed, FileConverters
 Dim Shared As Single StartTime, CompEndTime, AsmEndTime, ProgEndTime
 Dim Shared As Double DebugTime
 Dim Shared As String ChipPICASDataFile,ChipPICASConfigFile,ChipPICASRoot
+Dim Shared As Integer StringConCatLengthAdapted = 0
+
 'Assembler vars
 DIM SHARED As Integer ToAsmSymbols
 
@@ -763,7 +765,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-02"
-buildVersion = "1037"
+buildVersion = "1039"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8526,6 +8528,46 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
           Else
             StringConstLen = Len(GetString(.Param(CD, 1), 0))
             StringConstCount += 1
+
+            'Need to ensure a concat is resolved
+			StringConCatLengthAdapted = 0	
+            'Declare a local variables
+            'Search for the second string constant parameter
+             Dim As Integer SecondParam = Instr(UCASE(.Param(CD, 1)), ";+;STRING")
+             Dim As String  StringConCatString = ""
+
+            If HashMapGet(Constants, "SYSDEFAULTCONCATSTRING" ) > 0 then
+			  'Always use this if defined constant		
+              StringConstLen = val(HashMapGetStr(Constants, "SYSDEFAULTCONCATSTRING" ))
+              StringConCatString = ";1. Used SYSDEFAULTCONCATSTRING constant to create SYSSTRINGPARAM"+ str(StringConstCount)+" string of length " + str(StringConstLen) + " to cater for constant_string + constant_string Concatenation"
+              StringConCatLengthAdapted = -1
+
+            Else
+
+               If SecondParam > 0 and CountOccur ( .Param(CD, 1),"+") = 1  Then
+                  'Found only second constant string, so, extract the lenth.  Does not handle string variables
+                  StringConstLen = StringConstLen + Len(GetString(mid(.Param(CD, 1),SecondParam+2), 0))
+                  StringConCatString = ";2. DIMensioned SYSSTRINGPARAM"+ str(StringConstCount)+" with string of length " + str(StringConstLen)
+                  StringConCatLengthAdapted = -1
+
+               Else
+					'Must involve a string variable or this is a tad too complex, so, set to maximum of chip
+                    StringConstLen = GetTypeSize("String")
+                    StringConCatString = ";3. DIMensioned string SYSSTRINGPARAM"+ str(StringConstCount)+" * " + str(StringConstLen)
+                    StringConCatLengthAdapted = -1
+                    Temp = Message("UseSYSDEFAULTCONCATSTRING")
+
+                    Replace temp, "%param1%", str(StringConstCount)
+                    Replace temp, "%param2%", str(StringConstLen)
+     					      LogWarning temp,.Origin
+               End If
+
+            End if
+
+
+            If StringConCatLengthAdapted = -1 then
+                LinkedListInsert(BeforePos,StringConCatString)
+            End if
             BeforePos = LinkedListInsert(BeforePos, "SYSSTRINGPARAM" + Str(StringConstCount) + "=" + .Param(CD, 1) + .Origin)
             .Param(CD, 1) = "SYSSTRINGPARAM" + Str(StringConstCount)
             .Param(CD, 2) = "STRING"
@@ -10326,9 +10368,9 @@ SUB CompileVars (CompSub As SubType Pointer)
 
       'Check if command involves setting a string
       IF IsString(DestVar, DestSub) Or INSTR(DestVar, "()") <> 0 Then
-        CurrLine = LinkedListDelete(CurrLine)
-        CurrLine = LinkedListInsertList(CurrLine, CompileString(InLine, Origin))
-        GOTO CompNextVar
+            CurrLine = LinkedListDelete(CurrLine)
+            CurrLine = LinkedListInsertList(CurrLine, CompileString(InLine, Origin))
+            GOTO CompNextVar
       END IF
 
       'Call another sub to generate code
@@ -11826,6 +11868,12 @@ Function GenerateArrayPointerSet(DestVar As String, DestPtr As Integer, CurrSub 
   IF ArrayPtr = 0 THEN
     Temp = Message("UndeclaredArray")
     Replace Temp, "%array%", ArrayName
+    LogError Temp, Origin
+    Return OutList
+  END IF
+
+  IF ArrayPtr = Cast( VariableType Pointer, INVALIDARRAYVALUE ) THEN
+    Temp = Message("CannotHandleConstruction")
     LogError Temp, Origin
     Return OutList
   END IF
