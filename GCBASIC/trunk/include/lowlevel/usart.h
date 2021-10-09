@@ -76,6 +76,7 @@
 ' 16/02/2021  Add ChipSubFamily = 15001 TX1REG redirection in script section
 ' 21/03/2021  Added Support for 90S Series AVR
 ' 10/04/2021  Removed incorrect mapping as TRMT is this impacts USART1 removed
+' 08/10/2021  Added USART1_BAUD_RATE support in script
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -140,6 +141,16 @@
 'Script to calculate baud rate generator values
 'Also sets constants to check if byte received
 #script
+
+  'Users may define USART1_BAUD_RATE as this makes logical sense, but, all the methods() use USART_BAUD_RATE for COM1.
+  'So, if they use USART1_BAUD_RATE then this will automatically create the correct CONSTANTs
+  If USART1_BAUD_RATE Then
+    USART_BAUD_RATE   = USART1_BAUD_RATE
+    USART_BLOCKING    = USART1_BLOCKING
+    USART_TX_BLOCKING = USART1_TX_BLOCKING
+    USART_RX_BLOCKING = USART1_RX_BLOCKING
+  End if
+
   If PIC Then
 
       if ChipSubFamily = 15001 then
