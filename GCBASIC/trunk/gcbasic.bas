@@ -765,7 +765,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-02"
-buildVersion = "1039"
+buildVersion = "1041"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8529,45 +8529,25 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
             StringConstLen = Len(GetString(.Param(CD, 1), 0))
             StringConstCount += 1
 
-            'Need to ensure a concat is resolved
-			StringConCatLengthAdapted = 0	
-            'Declare a local variables
-            'Search for the second string constant parameter
-             Dim As Integer SecondParam = Instr(UCASE(.Param(CD, 1)), ";+;STRING")
-             Dim As String  StringConCatString = ""
+           'Start of #1039 - Concat changes
+           'print StringConstLen, *.Called.Params(CD).Name, .Param(CD, 1)
+           'Need to ensure a concat is resolved
+            StringConCatLengthAdapted = 0
+           'Declare a local variables
+            Dim As String  StringConCatString = ""
 
-            If HashMapGet(Constants, "SYSDEFAULTCONCATSTRING" ) > 0 then
-			  'Always use this if defined constant		
+            If HashMapGet(Constants, "SYSDEFAULTCONCATSTRING" ) > 0  then
+              'Always use this if defined constant
               StringConstLen = val(HashMapGetStr(Constants, "SYSDEFAULTCONCATSTRING" ))
               StringConCatString = ";1. Used SYSDEFAULTCONCATSTRING constant to create SYSSTRINGPARAM"+ str(StringConstCount)+" string of length " + str(StringConstLen) + " to cater for constant_string + constant_string Concatenation"
               StringConCatLengthAdapted = -1
 
-            Else
-
-               If SecondParam > 0 and CountOccur ( .Param(CD, 1),"+") = 1  Then
-                  'Found only second constant string, so, extract the lenth.  Does not handle string variables
-                  StringConstLen = StringConstLen + Len(GetString(mid(.Param(CD, 1),SecondParam+2), 0))
-                  StringConCatString = ";2. DIMensioned SYSSTRINGPARAM"+ str(StringConstCount)+" with string of length " + str(StringConstLen)
-                  StringConCatLengthAdapted = -1
-
-               Else
-					'Must involve a string variable or this is a tad too complex, so, set to maximum of chip
-                    StringConstLen = GetTypeSize("String")
-                    StringConCatString = ";3. DIMensioned string SYSSTRINGPARAM"+ str(StringConstCount)+" * " + str(StringConstLen)
-                    StringConCatLengthAdapted = -1
-                    Temp = Message("UseSYSDEFAULTCONCATSTRING")
-
-                    Replace temp, "%param1%", str(StringConstCount)
-                    Replace temp, "%param2%", str(StringConstLen)
-     					      LogWarning temp,.Origin
-               End If
-
-            End if
-
+            End If
 
             If StringConCatLengthAdapted = -1 then
                 LinkedListInsert(BeforePos,StringConCatString)
             End if
+            'End of #1039 - Concat changes
             BeforePos = LinkedListInsert(BeforePos, "SYSSTRINGPARAM" + Str(StringConstCount) + "=" + .Param(CD, 1) + .Origin)
             .Param(CD, 1) = "SYSSTRINGPARAM" + Str(StringConstCount)
             .Param(CD, 2) = "STRING"
@@ -10486,7 +10466,9 @@ SUB CompileWait (CompSub As SubType Pointer)
   'Time Intervals: us, 10us, ms, 10ms, s, m, h
   Dim As String InLine, Origin, Temp, Value, Unit, Condition
   Dim As Integer UP, T, Cycles, DS
+  Dim as Integer lValueASC
   Dim As LinkedListElement Pointer CurrLine, NewCode
+  Dim ExpandedValue as String
 
   FoundCount = 0
 
@@ -10567,6 +10549,26 @@ SUB CompileWait (CompSub As SubType Pointer)
             GoTo EndWaitCompile
           End If
         End If
+        'Patch 1041 10/10/2021
+        'Check the syntax of the Value... does it have a space or other error?
+        ExpandedValue = ReplaceConstantsLine(trim(Value),0)
+        If InStr(ExpandedValue, " ") <> 0 Then  'The Value has spaces but this cound be a calc like 'show_timer / 4 ms'
+          For UP = 1 to LEN(ExpandedValue)
+            lValueASC = ASC(MID(ExpandedValue,UP,1))
+            'walk the Value looking for NON numeric values.. if non numeric then we can assume that we have numbers only and numbers can be tested
+            If ( lValueASC < 47 OR  lValueASC > 57 ) and lValueASC <> 32 Then 'this is NOT a numeric constant
+                Goto NoTNumericConstant
+            End if
+          Next
+          'Test a numeric value of Value .. if Value <> Str(Val(Value)) then we have something like '10 10'... error!
+          If trim(ExpandedValue) <> trim(Str(Val(ExpandedValue))) Then
+              LogError Message("IncorrectWaitParameter"), Origin
+              CurrLine = LinkedListDelete(CurrLine)
+              GoTo EndWaitCompile
+          End If
+        End if
+        NoTNumericConstant:
+        'End of Patch 1041
 
         'Compile longer delays as subs
         IF Unit <> "Delay_US" OR Not IsConst(Value) Then
