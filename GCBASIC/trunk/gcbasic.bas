@@ -765,7 +765,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-02"
-buildVersion = "1041"
+buildVersion = "1042"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8546,6 +8546,8 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
 
             If StringConCatLengthAdapted = -1 then
                 LinkedListInsert(BeforePos,StringConCatString)
+            Else
+                LinkedListInsert(BeforePos,";SYSSTRINGPARAM*"+ str(StringConstCount))
             End if
             'End of #1039 - Concat changes
             BeforePos = LinkedListInsert(BeforePos, "SYSSTRINGPARAM" + Str(StringConstCount) + "=" + .Param(CD, 1) + .Origin)
@@ -10549,7 +10551,7 @@ SUB CompileWait (CompSub As SubType Pointer)
             GoTo EndWaitCompile
           End If
         End If
-        'Patch 1041 10/10/2021
+        'Patch #1041 10/10/2021
         'Check the syntax of the Value... does it have a space or other error?
         ExpandedValue = ReplaceConstantsLine(trim(Value),0)
         If InStr(ExpandedValue, " ") <> 0 Then  'The Value has spaces but this cound be a calc like 'show_timer / 4 ms'
@@ -10568,7 +10570,7 @@ SUB CompileWait (CompSub As SubType Pointer)
           End If
         End if
         NoTNumericConstant:
-        'End of Patch 1041
+        'End of Patch #1041
 
         'Compile longer delays as subs
         IF Unit <> "Delay_US" OR Not IsConst(Value) Then

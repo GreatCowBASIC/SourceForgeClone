@@ -114,7 +114,21 @@ Function CheckSysVarDef(ConditionIn As String) As String
       Original = "NODEF(" + Temp + ")"
     End If
 
-    ConstFound = HashMapGet(Constants, Temp) <> 0
+    'If a zero length string - means the Constant exists but it has no value.
+    '#1042
+    If HashMapGet(Constants, "DISABLECHANGE1042" ) = 0 Then
+
+      If Trim(Temp) = "" Then
+          ConstFound = 1
+      Else
+      'end of #1042
+          ConstFound = HashMapGet(Constants, Temp) <> 0
+      '#1042
+      End if
+      'end of #1042
+    Else
+      ConstFound = HashMapGet(Constants, Temp) <> 0
+    End if
 
     'Replace result
     If FV = 1 Then
