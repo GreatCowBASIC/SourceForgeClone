@@ -2244,6 +2244,9 @@ SUB RunScripts
     Do While CurrLine <> 0
 
       IF CurrLine->Value = "#SCRIPT" THEN
+        If ReadScript = -1 Then 'there is already a script open
+            LogError Subroutine(CurrSub)->Name, "Missing #ENDSCRIPT in "
+        End if
         ReadScript = -1
         CurrLine = LinkedListDelete(CurrLine)
       ElseIf CurrLine->Value = "#ENDSCRIPT" Then

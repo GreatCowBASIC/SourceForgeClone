@@ -764,8 +764,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-10-02"
-buildVersion = "1042"
+Version = "0.98.07 2021-10-14"
+buildVersion = "1043"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -15216,6 +15216,9 @@ CheckArrayAgain:
       With *CurrVar
         If .Size > 1 Then
           IF WholeINSTR(InLine, .Name) = 2 AND INSTR(InLine, "(") <> 0 THEN
+' 1044           IF Instr( Inline, "SYSSTRINGPARAM" ) > 0 Then
+'                ArrayFound = 0
+'            End If
             IF WholeINSTR(InLine, .Name + "()") = 2 THEN
               ArrayFound = 0
             Else
