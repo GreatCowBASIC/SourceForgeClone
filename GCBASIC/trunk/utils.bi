@@ -75,12 +75,12 @@ End Function
 SUB Calculate (SUM As String)
 
   Dim As String Act, ACT2, CTemp, Temp
-  Dim As String OSS, CLDO, TS, N1S, N2S, OS, Ans, M
+  Dim As String OSS, CLDO, TS, N1S, N2S, OS, Ans, M, SUMoriginal
   Dim As Single Res, N1, N2
   Dim As Integer CA, PD, T, FD, AP, FS, SOL, CO, SC
 
+  SUMoriginal = SUM
   SUM = UCase(SUM)
-
   REM Replace AND, OR, NOT, XOR with symbols
   REPLOGIC:
   'IF INSTR(SUM, "AND") <> 0 THEN Replace SUM, "AND", "&": GOTO REPLOGIC
@@ -100,6 +100,7 @@ SUB Calculate (SUM As String)
   Replace SUM, " ", ""
   IF INSTR(SUM, " ") <> 0 THEN GOTO BEGINCALC
   SUM = " " + LCase(SUM)
+
   IF INSTR(SUM, "%") <> 0 THEN GOTO PERCDIFF
 
   REM Calculate Sine, Cosine, Tangent, Arctangent and Pi
@@ -539,6 +540,10 @@ PERCDIFF:
 FD = 0
 FINDSIGN:
 FD = FD + 1
+IF FD > Len(SUM) Then
+    LogError "Fatal in Calculation(). Error at " + SUMoriginal
+    Exit Sub
+End If
 Temp = Mid(SUM, FD, 1)
 IF Temp <> "+" AND Temp <> "." AND Temp <> "-" AND Temp <> "x" AND Temp <> "*" AND Temp <> "/" THEN GOTO FINDSIGN
 Act = Temp: AP = FD
