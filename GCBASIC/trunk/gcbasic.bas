@@ -765,7 +765,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-15"
-buildVersion = "1044"
+buildVersion = "1045"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
