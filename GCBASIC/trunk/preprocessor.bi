@@ -2250,6 +2250,9 @@ SUB RunScripts
         ReadScript = -1
         CurrLine = LinkedListDelete(CurrLine)
       ElseIf CurrLine->Value = "#ENDSCRIPT" Then
+        If ReadScript <> -1 Then 'there is no script open
+            LogError Subroutine(CurrSub)->Name, "Missing #SCRIPT in "
+        End if
         ReadScript = 0
         CurrLine = LinkedListDelete(CurrLine)
       ElseIf ReadScript Then
@@ -2277,8 +2280,10 @@ SUB RunScripts
     COCR = CO
     Do
       OCO = COCR
-      COCR = ReplaceConstantsLine(COCR, 0)
-    Loop While OCO <> COCR
+      IF INSTR(CO, "DEF(") = 0 Then  'ONLY change input line when NOT DEF or NODEF as we need to retain these constants
+        COCR = ReplaceConstantsLine(COCR, 0)
+      End IF
+    Loop While OCO <> COCR  'Som loop until we have a stability so therefore no more constant replacements happened
     IF INSTR(COCR, ";?F") <> 0 THEN COCR = Left(COCR, INSTR(COCR, ";?F") - 1)
 
     'IF
