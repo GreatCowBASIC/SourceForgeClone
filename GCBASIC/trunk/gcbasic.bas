@@ -764,8 +764,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-10-14"
-buildVersion = "1043"
+Version = "0.98.07 2021-10-15"
+buildVersion = "1044"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -10467,7 +10467,7 @@ SUB CompileWait (CompSub As SubType Pointer)
 
   'Time Intervals: us, 10us, ms, 10ms, s, m, h
   Dim As String InLine, Origin, Temp, Value, Unit, Condition
-  Dim As Integer UP, T, Cycles, DS
+  Dim As Integer UP, T, Cycles, DS, ExpandedValueLen
   Dim as Integer lValueASC
   Dim As LinkedListElement Pointer CurrLine, NewCode
   Dim ExpandedValue as String
@@ -10554,10 +10554,11 @@ SUB CompileWait (CompSub As SubType Pointer)
         'Patch #1041 10/10/2021
         'Check the syntax of the Value... does it have a space or other error?
         ExpandedValue = ReplaceConstantsLine(trim(Value),0)
+        ExpandedValueLen = LEN(ExpandedValue)
         If InStr(ExpandedValue, " ") <> 0 Then  'The Value has spaces but this cound be a calc like 'show_timer / 4 ms'
-          For UP = 1 to LEN(ExpandedValue)
+          For UP = 1 to ExpandedValueLen
             lValueASC = ASC(MID(ExpandedValue,UP,1))
-            'walk the Value looking for NON numeric values.. if non numeric then we can assume that we have numbers only and numbers can be tested
+'            'walk the Value looking for NON numeric values.. if non numeric then we can assume that we have numbers only and numbers can be tested
             If ( lValueASC < 47 OR  lValueASC > 57 ) and lValueASC <> 32 Then 'this is NOT a numeric constant
                 Goto NoTNumericConstant
             End if
@@ -10569,7 +10570,7 @@ SUB CompileWait (CompSub As SubType Pointer)
               GoTo EndWaitCompile
           End If
         End if
-        NoTNumericConstant:
+         NoTNumericConstant:
         'End of Patch #1041
 
         'Compile longer delays as subs
