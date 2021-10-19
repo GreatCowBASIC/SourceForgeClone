@@ -765,7 +765,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2021-10-15"
-buildVersion = "1045"
+buildVersion = "1047"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -6729,6 +6729,7 @@ SUB CompileIF (CompSub As SubType Pointer)
           End If
           CurrLine->Value = L1
           CurrLine = LinkedListInsert(CurrLine, L2)
+          GetMetaData(Currline)->IsLabel = -1
         End If
 
         'Generate code to test and jump
@@ -10468,17 +10469,25 @@ SUB CompileWait (CompSub As SubType Pointer)
   'Time Intervals: us, 10us, ms, 10ms, s, m, h
   Dim As String InLine, Origin, Temp, Value, Unit, Condition
   Dim As Integer UP, T, Cycles, DS, ExpandedValueLen
-  Dim as Integer lValueASC
+  Dim as Integer lValueASC, LessOneCycle
   Dim As LinkedListElement Pointer CurrLine, NewCode
   Dim ExpandedValue as String
 
   FoundCount = 0
 
+
   CurrLine = CompSub->CodeStart->Next
   Do While CurrLine <> 0
     InLine = UCase(CurrLine->Value)
 
-    IF Left(InLine, 5) = "WAIT " THEN
+    IF Left(InLine, 5) = "WAIT " or Left(InLine, 7) = "WAITL1 " THEN
+
+      IF Left(InLine, 7) = "WAITL1 " Then
+        Replace Inline, "WAITL1", "WAIT"
+        LessOneCycle = 1
+      Else
+        LessOneCycle = 0
+      End if
 
       Origin = ""
       IF INSTR(InLine, ";?F") <> 0 THEN
@@ -10591,7 +10600,8 @@ SUB CompileWait (CompSub As SubType Pointer)
           ElseIf ModeAVR Then
             Cycles = MakeDec(Value) * ChipMHz
           End If
-          NewCode = GenerateExactDelay(Cycles)
+
+          NewCode = GenerateExactDelay(Cycles - LessOneCycle)
 
           CurrLine = LinkedListDelete(CurrLine)
           CurrLine = LinkedListInsertList(CurrLine, NewCode)
