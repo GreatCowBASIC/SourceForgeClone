@@ -900,7 +900,11 @@ SUB AssembleProgram
             Temp = Message("SymbolNotDefined")
             Replace Temp, "%symbol%", ParamValues(CD)
             'Print DebugInput
-            LogError "GCASM: " + Temp + " "+Message("At")+" " +DataSource
+            DebugLoc = Hex(Val(AsmLine->Value))
+            Do While Len(DebugLoc) < 6
+              DebugLoc = "0" + DebugLoc
+            Loop
+            LogError "GCASM: " + Temp + " "+Message("At")+" `" +DataSource+"` Hexfile address(see lst file): "+DebugLoc
           END If
 
           'Get data
