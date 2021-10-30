@@ -36,6 +36,7 @@
 ' 19/05/2017: Revised and corrected DecToBcd_GCB.. overwriting system vars
 ' 04/03/2018: Added Scale() and a mapping to Map
 ' 30/01/2019: Added word Scale()
+' 19/10/2021: Change PULSEx delays to one cycle less using WAITL1
 
 'Misc settings
 
@@ -184,14 +185,14 @@ end sub
 'PulseOut
 macro Pulseout (Pin, Time)
   Set Pin On
-  Wait Time
+  WaitL1 Time
   Set Pin Off
 end macro
 
 'PulseOutInv (inverted PulseOut)
 macro PulseOutInv (Pin, Time)
   Set Pin Off
-  Wait Time
+  WaitL1 Time
   Set Pin On
 end macro
 
@@ -200,7 +201,7 @@ end macro
 macro PulseInInv (PulseInPin, PulseTime as WORD, TimeUnit)
   PulseTime = 0
   Do While PulseInPin = Off
-    Wait 1 TimeUnit
+    WaitL1 1 TimeUnit
     PulseTime += 1
     If PulseTime = 0 Then Exit Do
   Loop
@@ -209,7 +210,7 @@ end macro
 macro PulseIn (PulseInPin, PulseTime as Word, TimeUnit)
   PulseTime = 0
   Do While PulseInPin = On
-    Wait 1 TimeUnit
+    WaitL1 1 TimeUnit
     PulseTime += 1
     If PulseTime  = 0 Then Exit Do
   Loop
