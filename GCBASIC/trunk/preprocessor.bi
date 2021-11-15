@@ -337,22 +337,39 @@ Sub PrepareBuiltIn
 
     'Find best values for delay
     For D1 = 1 To 255
-      For D2 = 1 To 255
-        'Calc how long current D1, D2 values will give
-        ThisTime = 5 + D2 * (3 * D1 + 4)
-        'Check to see how close it is to the required delay
-        If ThisTime < ReqCycles Then
-          DiffFromReq = ReqCycles - ThisTime
-        ElseIf ThisTime > ReqCycles Then
-          DiffFromReq = ThisTime - ReqCycles
-        End If
-        'If it's the best, record
-        If DiffFromReq < BestDiff Then
-          BestD1 = D1
-          BestD2 = D2
-          BestDiff = DiffFromReq
-        End If
-      Next
+      If ChipMhz > 0.096 then
+        For D2 = 1 To 255
+          'Calc how long current D1, D2 values will give
+            ThisTime = 5 + D2 * (3 * D1 + 4)
+          'Check to see how close it is to the required delay
+          If ThisTime < ReqCycles Then
+            DiffFromReq = ReqCycles - ThisTime
+          ElseIf ThisTime > ReqCycles Then
+            DiffFromReq = ThisTime - ReqCycles
+          End If
+          'If it's the best, record
+          If DiffFromReq < BestDiff Then
+            BestD1 = D1
+            BestD2 = D2
+            BestDiff = DiffFromReq
+          End If
+        Next
+      else
+          'Calc how long current D1, values will give
+            ThisTime = 5 + (3 * D1 )
+          'Check to see how close it is to the required delay
+          If ThisTime < ReqCycles Then
+            DiffFromReq = ReqCycles - ThisTime
+          ElseIf ThisTime > ReqCycles Then
+            DiffFromReq = ThisTime - ReqCycles
+          End If
+          'If it's the best, record
+          If DiffFromReq < BestDiff Then
+            BestD1 = D1
+            BestD2 = 0
+            BestDiff = DiffFromReq
+          End If
+      end if
     Next
     OuterLoop = Str(BestD2)
     InnerLoop = Str(BestD1)
@@ -360,16 +377,22 @@ Sub PrepareBuiltIn
     CurrPos = LinkedListInsert(CurrPos, " incf SysWaitTempMS_H, F")
     CurrPos = LinkedListInsert(CurrPos, "DMS_START")
     GetMetaData(CurrPos)->IsLabel = -1
-    CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP2 = " + OuterLoop)
-    CurrPos = LinkedListInsert(CurrPos, "DMS_OUTER")
+    If ChipMhz > 0.096 then
+      CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP2 = " + OuterLoop)
+      CurrPos = LinkedListInsert(CurrPos, "DMS_OUTER")
+    end if
     GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, "DELAYTEMP = " + InnerLoop)
     CurrPos = LinkedListInsert(CurrPos, "DMS_INNER")
     GetMetaData(CurrPos)->IsLabel = -1
     CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP, F")
     CurrPos = LinkedListInsert(CurrPos, " goto DMS_INNER")
-    CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP2, F")
-    CurrPos = LinkedListInsert(CurrPos, " goto DMS_OUTER")
+    If ChipMhz > 0.096 then
+      CurrPos = LinkedListInsert(CurrPos, " decfsz DELAYTEMP2, F")
+      CurrPos = LinkedListInsert(CurrPos, " goto DMS_OUTER")
+    else
+      CurrPos = LinkedListInsert(CurrPos, " nop")
+    end if
     CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempMS, F")
     CurrPos = LinkedListInsert(CurrPos, " goto DMS_START")
     CurrPos = LinkedListInsert(CurrPos, " decfsz SysWaitTempMS_H, F")
