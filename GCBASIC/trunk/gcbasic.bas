@@ -764,8 +764,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-10-15"
-buildVersion = "1047"
+Version = "0.98.07 2021-11-15"
+buildVersion = "1050"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -10472,6 +10472,7 @@ SUB CompileWait (CompSub As SubType Pointer)
   Dim as Integer lValueASC, LessOneCycle
   Dim As LinkedListElement Pointer CurrLine, NewCode
   Dim ExpandedValue as String
+  Dim minDelay as String
 
   FoundCount = 0
 
@@ -10602,8 +10603,17 @@ SUB CompileWait (CompSub As SubType Pointer)
           End If
 
           NewCode = GenerateExactDelay(Cycles - LessOneCycle)
-
           CurrLine = LinkedListDelete(CurrLine)
+
+          'add message regarding minimum delay
+          If Len( Trim(NewCode->Next->Value) ) = 0 Then
+            If  ChipFamily <> 16 Then
+                minDelay = str(INT((1/( ChipMhz /4)+2)/2))
+            Else
+                minDelay = str(INT((1/( ChipMhz /4)+2)/2))
+            End if
+            CurrLine = LinkedListInsert(CurrLine, ";GCASM note: wait unit and value too slow for chip frequency, no ASM added. Minimum delay is " + minDelay + "us")
+          End if
           CurrLine = LinkedListInsertList(CurrLine, NewCode)
 
         END IF
