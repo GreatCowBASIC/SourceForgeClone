@@ -1,5 +1,5 @@
 ' GCBASIC - A BASIC Compiler for microcontrollers
-' Copyright (C) 2006 - 2021 Hugh Considine and the Great Cow BASIC team
+' Copyright (C) 2006 - 2022 Hugh Considine and the Great Cow BASIC team
 '
 ' This program is free software; you can redistribute it and/or modify
 ' it under the terms of the GNU General Public License as published by
@@ -46,8 +46,8 @@ Type PICASPatch
   Destination as String
 End Type
 
-Dim Shared ReverseIncFileLookup ( 1000) as PICASInc
-Dim Shared ReverseCfgFileLookup ( 1000) as PICASCfg
+Dim Shared ReverseIncFileLookup ( 5000) as PICASInc
+Dim Shared ReverseCfgFileLookup ( 10000) as PICASCfg
 Dim Shared Patches(100) as PICASPatch
 
 '31k types
@@ -764,8 +764,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2021-11-15"
-buildVersion = "1050"
+Version = "0.98.07 2022-01-02"
+buildVersion = "1054"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
