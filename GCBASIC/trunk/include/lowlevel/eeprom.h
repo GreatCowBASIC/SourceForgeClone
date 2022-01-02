@@ -50,6 +50,7 @@
 ' 02/01/20: Rewrite of NVMADR_EPWrite/EPread to better support 18fxxQxx chips/NVMADRU register moving to ChipSubFamily
 ' 15/08/21: Rewrite of NVMADR_EPWrite/EPread to better support 18fxxQxx chips/NVMADRU register moving to ChipSubFamily resolve RD issue and adding Q40 support
 ' 02/10/21: Fixed Q41 GO_NVMCON0 issue where GO is no longer valid.
+' 02/01/22: Added suppoort for ChipFamily18FxxQ84
 
 
 
@@ -330,6 +331,20 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
        NVMCON1_1_State = NVMCON1.1
        NVMCON1_2_State = NVMCON1.2
 
+       #if ChipSubFamily = ChipFamily18FxxQ83
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ83
+        NVMADRU = 0x38
+        //Set the NVMCMD control bits for DFM Byte Read operation
+        NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
+       #ENDIF
+
+       #if ChipSubFamily = ChipFamily18FxxQ84
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ84
+        NVMADRU = 0x38
+        //Set the NVMCMD control bits for DFM Byte Read operation
+        NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
+       #ENDIF
+
        #if ChipSubFamily = ChipFamily18FxxQ43
        'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ43
         NVMADRU = 0x38
@@ -480,6 +495,27 @@ Sub NVMADR_EPRead(IN SysEEAddress AS word  , out EEDataValue )
 
 
   #IFDEF VAR(NVMADRU)
+
+       #if ChipSubFamily = ChipFamily18FxxQ83
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ83
+        NVMADRU = 0x38
+        NVMADRH =SysEEAddress_h
+        NVMADRL =SysEEAddress
+       'Set the NVMCMD control bits for DFM Byte Read operation by clearing NVMCMD[2:0] NVM Command bits
+        NVMCON1 = 0
+        GO_NVMCON0 = 1
+       #ENDIF
+
+       #if ChipSubFamily = ChipFamily18FxxQ84
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ84
+        NVMADRU = 0x38
+        NVMADRH =SysEEAddress_h
+        NVMADRL =SysEEAddress
+       'Set the NVMCMD control bits for DFM Byte Read operation by clearing NVMCMD[2:0] NVM Command bits
+        NVMCON1 = 0
+        GO_NVMCON0 = 1
+       #ENDIF
+
        #if ChipSubFamily = ChipFamily18FxxQ43
        'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ43
         NVMADRU = 0x38

@@ -76,7 +76,7 @@
 ' 16/02/2021  Add ChipSubFamily = 15001 TX1REG redirection in script section
 ' 21/03/2021  Added Support for 90S Series AVR
 ' 10/04/2021  Removed incorrect mapping as TRMT is this impacts USART1 removed
-' 08/10/2021  Added USART1_BAUD_RATE support in script
+' 01/01/2022  Added ChipSubFamily = 16106 support.  Script added to flag to correct TX interrupt bits in HSerSend
 
 
 'For compatibility with USART routines in Contributors forum, add this line:
@@ -157,6 +157,17 @@
             TXREG = TX1REG
             RCREG = RC1REG
       end if
+
+      'CANBUS chip use the 'old' USART Interrupt bit for CANBUS interrupt, so, need to flag this to the HSERSEND
+      CANBUSCHIP_SCRIPT = FALSE
+      if ChipSubFamily = 16106 then
+            CANBUSCHIP_SCRIPT = TRUE
+      end if
+      if ChipSubFamily = 16108 then
+            CANBUSCHIP_SCRIPT = TRUE
+      end if
+
+
 
       'Added to resolve 18FxxK40 register & Bit mappings
       '-----------------------------------
@@ -809,28 +820,42 @@ sub HSerSend(In SerData)
 
           #ifdef USART_TX_BLOCKING
             'USART_TX_BLOCKING
-            #ifdef Bit(TXIF)
-              Wait While TXIF = Off
-            #endif
-            #ifdef Bit(TRMT)
-              'ensure any previous operation has completed @1
-              Wait until TRMT = 1
+
+              #IF CANBUSCHIP_SCRIPT = TRUE
+                'family 18fxx84 chips have TXIF as CANBUS Interrupt and we need to isolate TX1F from USART and use U1TXIF. Cannot use samebit as this would break any CANBUS usage
+                Wait While U1TXIF = Off
+              #endif
+
+              #IF CANBUSCHIP_SCRIPT = FALSE
+                #ifdef Bit(TXIF)
+                  Wait While TXIF = Off
+                #endif
+                #ifdef Bit(TRMT)
+                  'ensure any previous operation has completed @1
+                  Wait until TRMT = 1
+                #endif
             #endif
           #endif
 
           #ifdef USART_BLOCKING
             '#ifdef USART_BLOCKING
             #ifndef USART_TX_BLOCKING 'The ifndef tests ensure the only one of USART_BLOCKING or USART_TX_BLOCKING is implemented
-                'USART_BLOCKING and NOT USART_TX_BLOCKING
-                #ifdef Bit(TXIF)
-                  Wait While TXIF = Off
-                #endif
-                #ifdef Bit(TRMT)
-                  'ensure any previous operation has completed @2
-                  Wait until TRMT = 1
-                #endif
-            #endif
+              #IF CANBUSCHIP_SCRIPT = TRUE
+                'family 18fxx84 chips have TXIF as CANBUS Interrupt and we need to isolate TX1F from USART and use U1TXIF. Cannot use samebit as this would break any CANBUS usage
+                Wait While U1TXIF = Off
+              #endif
 
+              #IF CANBUSCHIP_SCRIPT = FALSE
+                'USART_BLOCKING and NOT USART_TX_BLOCKING
+                  #ifdef Bit(TXIF)
+                    Wait While TXIF = Off
+                  #endif
+                  #ifdef Bit(TRMT)
+                    'ensure any previous operation has completed @2
+                    Wait until TRMT = 1
+                  #endif
+              #endif
+            #endif
           #endif
 
 
@@ -901,7 +926,15 @@ sub HSerSend(In SerData, optional In comport = 1)
           #ifdef USART_TX_BLOCKING
             'USART_TX_BLOCKING
             #ifdef Bit(TXIF)
-              Wait While TXIF = Off
+              #IF CANBUSCHIP_SCRIPT = TRUE
+                'family 18fxx84 chips have TXIF as CANBUS Interrupt and we need to isolate TX1F from USART and use U1TXIF. Cannot use samebit as this would break any CANBUS usage
+                Wait While U1TXIF = Off
+              #endif
+
+              #IF CANBUSCHIP_SCRIPT = FALSE
+                Wait While TXIF = Off
+              #endif
+
             #endif
             #ifdef Bit(TRMT)
               'ensure any previous operation has completed
@@ -914,6 +947,12 @@ sub HSerSend(In SerData, optional In comport = 1)
             #ifndef USART_TX_BLOCKING 'The ifndef tests ensure the only one of USART_BLOCKING or USART_TX_BLOCKING is implemented
                 'USART_BLOCKING and NOT USART_TX_BLOCKING
 
+              #IF CANBUSCHIP_SCRIPT = TRUE
+                'family 18fxx84 chips have TXIF as CANBUS Interrupt and we need to isolate TX1F from USART and use U1TXIF. Cannot use samebit as this would break any CANBUS usage
+                Wait While U1TXIF = Off
+              #endif
+
+              #IF CANBUSCHIP_SCRIPT = FALSE
                 #ifdef Bit(TXIF)
                   Wait While TXIF = Off
                 #endif
@@ -921,6 +960,7 @@ sub HSerSend(In SerData, optional In comport = 1)
                   'ensure any previous operation has completed
                   Wait until TRMT = 1
                 #endif
+              #endif
 
             #endif
 
@@ -1089,34 +1129,34 @@ sub HSerSend(In SerData, optional In comport = 1)
   #endif
 end sub
 
-Function HSerReceive
+Function HSerReceive as Byte
   Comport = 1
   HSerReceive( SerData )
   HSerReceive = SerData
 End Function
 
-Function HSerReceive1
+Function HSerReceive1  as Byte
   Comport = 1
   HSerReceive( SerData )
   HSerReceive1 = SerData
 End Function
 
 
-Function HSerReceive2
+Function HSerReceive2 as Byte
   Comport = 2
   HSerReceive( SerData )
   HSerReceive2 = SerData
 End Function
 
 
-Function HSerReceiveFrom ( Optional in comport = 1 )
+Function HSerReceiveFrom ( Optional in comport = 1 )  as Byte
   Comport = comport
   HSerReceive( SerData )
   HSerReceiveFrom = SerData
 End Function
 
 
-Sub HSerReceive(Out SerData)
+Sub HSerReceive(Out SerData as byte)
 
   'Needs comport to be set first by calling routines
   #ifdef PIC
