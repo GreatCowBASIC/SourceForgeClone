@@ -764,8 +764,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2022-01-02"
-buildVersion = "1054"
+Version = "0.98.07 2022-01-03"
+buildVersion = "1055"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -17539,7 +17539,21 @@ Sub WriteCompilationReport
 
   'Write compiler information
   If RF = "html" Then
+    Randomize timer
+    Select Case  int(Rnd * (10 - 1) + 1)
+      Case 1:
+    Print #F, "<p>" + Message("CRVersion") + ": " + Version + chr(13)+ chr(13)+"Enjoying Great Cow BASIC ? Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience." +chr(13)+ chr(13) +"</p>"
+
+      Case 2:
+    Print #F, "<p>" + Message("CRVersion") + ": " + Version + chr(13)+ chr(13)+"Finding Great Cow BASIC useful ? Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience." +chr(13)+ chr(13) +"</p>"
+
+      Case 3:
+    Print #F, "<p>" + Message("CRVersion") + ": " + Version + chr(13)+ chr(13)+"Spreading the word about using Great Cow BASIC ? Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience." +chr(13)+ chr(13) +"</p>"
+
+      Case Else
     Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"
+
+    End Select
   ElseIf RF = "text" Then
     Print #F, Message("CRVersion") + ": " + Version
     Print #F, ""
