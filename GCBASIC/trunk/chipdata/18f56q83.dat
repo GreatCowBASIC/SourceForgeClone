@@ -14,7 +14,7 @@ Prog=32768
 EEPROM=1024
 
 'This constant is exposed as ChipRAM
-RAM=7936
+RAM=8192
 
 'This constant is exposed as ChipIO
 I/O=25
@@ -8673,7 +8673,7 @@ CHS3,ADCON0,5
 CHS4,ADCON0,6
 
 [FreeRAM]
-500:23FF
+500:24FF
 
 [NoBankRAM]
 'NoBankRAM is somewhat misnamed - it is used for the defintion of (any) access bank locations
@@ -8929,3 +8929,4 @@ CP_OFF,10,255
 CP_ON,10,254
 DEBUG_ON,7,127
 DEBUG_OFF,7,255
+
