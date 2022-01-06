@@ -745,6 +745,10 @@ const   ChipFamily18FxxQ43 as integer = 16101
 const   ChipFamily18FxxQ41 as integer = 16102
 const   ChipFamily18FxxK42 as integer = 16103
 const   ChipFamily18FxxK40 as integer = 16104
+const   ChipFamily18FxxQ40 as integer = 16105
+const   ChipFamily18FxxQ84 as integer = 16106
+const   ChipFamily18FxxK83 as integer = 16107
+const   ChipFamily18FxxQ83 as integer = 16108
 
 'Other GCBASIC source files
 #include "utils.bi"
@@ -764,8 +768,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2022-01-03"
-buildVersion = "1055"
+Version = "0.98.07 2022-01-06"
+buildVersion = "1059"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -1002,6 +1006,34 @@ DownloadProgram:
   END If
 ProgEndTime = Timer
 
+'Issue message
+IF Not ErrorsFound THEN
+    Randomize timer
+    Select Case  int(Rnd * (10 - 1) + 1)
+      Case 1:
+    Print
+    Print "Enjoying Great Cow BASIC ?"
+    Print
+    Print "Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience."
+
+      Case 2:
+    Print
+    Print "Finding Great Cow BASIC useful ?"
+    Print
+    Print "Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience."
+
+      Case 3:
+    Print
+    Print "Spreading the word about using Great Cow BASIC ?"
+    Print
+    Print "Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience."
+
+      Case Else
+
+    'Nothing
+
+    End Select
+Next
 'Write compilation report
 WriteCompilationReport
 
@@ -18435,6 +18467,9 @@ Sub MergeSubroutines
             ElseIf ( ChipSubFamily = ChipFamily18FxxQ10  )  then
               CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxQ10 EEPROM Address 0x310000)")
               CurrLine = LinkedListInsert(CurrLine, " ORG 0x310000")
+            ElseIf ( ChipSubFamily = ChipFamily18FxxQ40  )  then
+              CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamily18FxxQ40 EEPROM Address 0x380000)")
+              CurrLine = LinkedListInsert(CurrLine, " ORG 0x380000")
             ElseIf ChipFamilyVariant = 1 then
               CurrLine = LinkedListInsert(CurrLine, "; Data Lookup Tables (ChipFamilyVariant EEPROM Address 0x310000)")
               CurrLine = LinkedListInsert(CurrLine, " ORG 0x310000")
