@@ -84,7 +84,9 @@ Imports System.Collections.Generic
 					Else
 						ChipName = ChipFileName.Name.ToLower
 					End If
-					ChipListTemp.Add(ChipName.Substring(0, ChipName.IndexOf(".")))
+					If ChipFileName.FullName.ToUpper.IndexOf(".") <> -1 Then
+						ChipListTemp.Add(ChipName.Substring(0, ChipName.IndexOf(".")))
+					End if
 				End If
 			Next
 			
@@ -191,34 +193,34 @@ Imports System.Collections.Generic
 			Me.label2 = New System.Windows.Forms.Label
 			Me.HardwareHelp = New System.Windows.Forms.HelpProvider
 			Me.ChipSettingsPanel = New System.Windows.Forms.Panel
-			Me.DeviceSettingsGroup = New System.Windows.Forms.GroupBox
-			Me.SelectChipModel = New System.Windows.Forms.GroupBox
 			Me.DeviceSelect = New System.Windows.Forms.ComboBox
 			Me.EditChipModel = New System.Windows.Forms.ComboBox
-			Me.AlterChipConfig = New System.Windows.Forms.GroupBox
-			Me.label1 = New System.Windows.Forms.Label
 			Me.EditChipSpeed = New System.Windows.Forms.NumericUpDown
+			Me.DeviceSettingsGroup = New System.Windows.Forms.GroupBox
+			Me.SelectChipModel = New System.Windows.Forms.GroupBox
+			Me.label1 = New System.Windows.Forms.Label
+			Me.AlterChipConfig = New System.Windows.Forms.GroupBox
 			Me.ChipConfOK = New System.Windows.Forms.Button
+			CType(Me.EditChipSpeed,System.ComponentModel.ISupportInitialize).BeginInit
 			Me.DeviceSettingsGroup.SuspendLayout
 			Me.SelectChipModel.SuspendLayout
 			Me.AlterChipConfig.SuspendLayout
-			CType(Me.EditChipSpeed,System.ComponentModel.ISupportInitialize).BeginInit
 			Me.SuspendLayout
 			'
 			'HardwarePanel
 			'
 			Me.HardwarePanel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
-						Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.HardwarePanel.AutoScroll = true
 			Me.HardwarePanel.BackColor = System.Drawing.SystemColors.Window
 			Me.HardwarePanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-			Me.HardwareHelp.SetHelpString(Me.HardwarePanel, "Edit these settings so that they correspond to the actual circuit. If a device is"& _
-" not used, it does not have to be set up.")
+			Me.HardwareHelp.SetHelpString(Me.HardwarePanel, "Edit these settings so that they correspond to the actual circuit. If a device is"& _ 
+						" not used, it does not have to be set up.")
 			Me.HardwarePanel.Location = New System.Drawing.Point(8, 55)
 			Me.HardwarePanel.Name = "HardwarePanel"
 			Me.HardwareHelp.SetShowHelp(Me.HardwarePanel, true)
-			Me.HardwarePanel.Size = New System.Drawing.Size(184, 257)
+			Me.HardwarePanel.Size = New System.Drawing.Size(273, 257)
 			Me.HardwarePanel.TabIndex = 1
 			AddHandler Me.HardwarePanel.Click, AddressOf Me.HardwarePanelClick
 			'
@@ -244,7 +246,7 @@ Imports System.Collections.Generic
 			'ChipSettingsPanel
 			'
 			Me.ChipSettingsPanel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
-						Or System.Windows.Forms.AnchorStyles.Left),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Left),System.Windows.Forms.AnchorStyles)
 			Me.ChipSettingsPanel.AutoScroll = true
 			Me.ChipSettingsPanel.BackColor = System.Drawing.SystemColors.Window
 			Me.ChipSettingsPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
@@ -252,21 +254,60 @@ Imports System.Collections.Generic
 			Me.ChipSettingsPanel.Location = New System.Drawing.Point(8, 17)
 			Me.ChipSettingsPanel.Name = "ChipSettingsPanel"
 			Me.HardwareHelp.SetShowHelp(Me.ChipSettingsPanel, true)
-			Me.ChipSettingsPanel.Size = New System.Drawing.Size(184, 192)
+			Me.ChipSettingsPanel.Size = New System.Drawing.Size(300, 192)
 			Me.ChipSettingsPanel.TabIndex = 0
 			AddHandler Me.ChipSettingsPanel.MouseDown, AddressOf Me.ChipSettingsPanelMouseDown
+			'
+			'DeviceSelect
+			'
+			Me.DeviceSelect.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+			Me.DeviceSelect.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+			Me.HardwareHelp.SetHelpString(Me.DeviceSelect, "The hardware item to set up")
+			Me.DeviceSelect.Location = New System.Drawing.Point(8, 23)
+			Me.DeviceSelect.MaxDropDownItems = 15
+			Me.DeviceSelect.Name = "DeviceSelect"
+			Me.HardwareHelp.SetShowHelp(Me.DeviceSelect, true)
+			Me.DeviceSelect.Size = New System.Drawing.Size(273, 21)
+			Me.DeviceSelect.TabIndex = 0
+			AddHandler Me.DeviceSelect.SelectedIndexChanged, AddressOf Me.DeviceSelectSelectedIndexChanged
+			'
+			'EditChipModel
+			'
+			Me.HardwareHelp.SetHelpString(Me.EditChipModel, "The model of microcontroller that is to be programmed. This must be set before a "& _ 
+						"program is compiled.")
+			Me.EditChipModel.Location = New System.Drawing.Point(96, 16)
+			Me.EditChipModel.MaxDropDownItems = 18
+			Me.EditChipModel.Name = "EditChipModel"
+			Me.HardwareHelp.SetShowHelp(Me.EditChipModel, true)
+			Me.EditChipModel.Size = New System.Drawing.Size(96, 21)
+			Me.EditChipModel.TabIndex = 16
+			Me.EditChipModel.Text = "comboBox1"
+			AddHandler Me.EditChipModel.SelectedIndexChanged, AddressOf Me.EditChipModelSelectedIndexChanged
+			AddHandler Me.EditChipModel.TextChanged, AddressOf Me.EditChipModelTextChanged
+			'
+			'EditChipSpeed
+			'
+			Me.EditChipSpeed.DecimalPlaces = 3
+			Me.HardwareHelp.SetHelpString(Me.EditChipSpeed, "Speed of the microcontroller.")
+			Me.EditChipSpeed.Location = New System.Drawing.Point(96, 44)
+			Me.EditChipSpeed.Maximum = New Decimal(New Integer() {64, 0, 0, 0})
+			Me.EditChipSpeed.Name = "EditChipSpeed"
+			Me.HardwareHelp.SetShowHelp(Me.EditChipSpeed, true)
+			Me.EditChipSpeed.Size = New System.Drawing.Size(96, 20)
+			Me.EditChipSpeed.TabIndex = 1
 			'
 			'DeviceSettingsGroup
 			'
 			Me.DeviceSettingsGroup.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
-						Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
+									Or System.Windows.Forms.AnchorStyles.Left)  _
+									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.DeviceSettingsGroup.Controls.Add(Me.HardwarePanel)
 			Me.DeviceSettingsGroup.Controls.Add(Me.DeviceSelect)
 			Me.DeviceSettingsGroup.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.DeviceSettingsGroup.Location = New System.Drawing.Point(224, 8)
+			Me.DeviceSettingsGroup.Location = New System.Drawing.Point(320, 8)
 			Me.DeviceSettingsGroup.Name = "DeviceSettingsGroup"
-			Me.DeviceSettingsGroup.Size = New System.Drawing.Size(200, 321)
+			Me.DeviceSettingsGroup.Size = New System.Drawing.Size(289, 321)
 			Me.DeviceSettingsGroup.TabIndex = 13
 			Me.DeviceSettingsGroup.TabStop = false
 			Me.DeviceSettingsGroup.Text = "Device Settings"
@@ -285,47 +326,6 @@ Imports System.Collections.Generic
 			Me.SelectChipModel.TabStop = false
 			Me.SelectChipModel.Text = "Chip Selection"
 			'
-			'DeviceSelect
-			'
-			Me.DeviceSelect.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left)  _
-						Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.DeviceSelect.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-			Me.HardwareHelp.SetHelpString(Me.DeviceSelect, "The hardware item to set up")
-			Me.DeviceSelect.Location = New System.Drawing.Point(8, 23)
-			Me.DeviceSelect.MaxDropDownItems = 15
-			Me.DeviceSelect.Name = "DeviceSelect"
-			Me.HardwareHelp.SetShowHelp(Me.DeviceSelect, true)
-			Me.DeviceSelect.Size = New System.Drawing.Size(184, 21)
-			Me.DeviceSelect.TabIndex = 0
-			AddHandler Me.DeviceSelect.SelectedIndexChanged, AddressOf Me.DeviceSelectSelectedIndexChanged
-			'
-			'EditChipModel
-			'
-			Me.HardwareHelp.SetHelpString(Me.EditChipModel, "The model of microcontroller that is to be programmed. This must be set before a "& _
-"program is compiled.")
-			Me.EditChipModel.Location = New System.Drawing.Point(96, 16)
-			Me.EditChipModel.MaxDropDownItems = 18
-			Me.EditChipModel.Name = "EditChipModel"
-			Me.HardwareHelp.SetShowHelp(Me.EditChipModel, true)
-			Me.EditChipModel.Size = New System.Drawing.Size(96, 21)
-			Me.EditChipModel.TabIndex = 16
-			Me.EditChipModel.Text = "comboBox1"
-			AddHandler Me.EditChipModel.TextChanged, AddressOf Me.EditChipModelTextChanged
-			AddHandler Me.EditChipModel.SelectedIndexChanged, AddressOf Me.EditChipModelSelectedIndexChanged
-			'
-			'AlterChipConfig
-			'
-			Me.AlterChipConfig.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
-						Or System.Windows.Forms.AnchorStyles.Left),System.Windows.Forms.AnchorStyles)
-			Me.AlterChipConfig.Controls.Add(Me.ChipSettingsPanel)
-			Me.AlterChipConfig.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.AlterChipConfig.Location = New System.Drawing.Point(8, 88)
-			Me.AlterChipConfig.Name = "AlterChipConfig"
-			Me.AlterChipConfig.Size = New System.Drawing.Size(200, 217)
-			Me.AlterChipConfig.TabIndex = 12
-			Me.AlterChipConfig.TabStop = false
-			Me.AlterChipConfig.Text = "Advanced Chip Settings"
-			'
 			'label1
 			'
 			Me.label1.Location = New System.Drawing.Point(20, 20)
@@ -334,16 +334,18 @@ Imports System.Collections.Generic
 			Me.label1.TabIndex = 15
 			Me.label1.Text = "Chip Model:"
 			'
-			'EditChipSpeed
+			'AlterChipConfig
 			'
-			Me.EditChipSpeed.DecimalPlaces = 3
-			Me.HardwareHelp.SetHelpString(Me.EditChipSpeed, "Speed of the microcontroller.")
-			Me.EditChipSpeed.Location = New System.Drawing.Point(96, 44)
-			Me.EditChipSpeed.Maximum = New Decimal(New Integer() {64, 0, 0, 0})
-			Me.EditChipSpeed.Name = "EditChipSpeed"
-			Me.HardwareHelp.SetShowHelp(Me.EditChipSpeed, true)
-			Me.EditChipSpeed.Size = New System.Drawing.Size(96, 20)
-			Me.EditChipSpeed.TabIndex = 1
+			Me.AlterChipConfig.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
+									Or System.Windows.Forms.AnchorStyles.Left),System.Windows.Forms.AnchorStyles)
+			Me.AlterChipConfig.Controls.Add(Me.ChipSettingsPanel)
+			Me.AlterChipConfig.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.AlterChipConfig.Location = New System.Drawing.Point(8, 88)
+			Me.AlterChipConfig.Name = "AlterChipConfig"
+			Me.AlterChipConfig.Size = New System.Drawing.Size(314, 217)
+			Me.AlterChipConfig.TabIndex = 12
+			Me.AlterChipConfig.TabStop = false
+			Me.AlterChipConfig.Text = "Advanced Chip Settings"
 			'
 			'ChipConfOK
 			'
@@ -361,7 +363,7 @@ Imports System.Collections.Generic
 			Me.AcceptButton = Me.ChipConfOK
 			Me.AutoScaleBaseSize = New System.Drawing.Size(5, 13)
 			Me.CancelButton = Me.ChipConfCancel
-			Me.ClientSize = New System.Drawing.Size(432, 342)
+			Me.ClientSize = New System.Drawing.Size(617, 342)
 			Me.Controls.Add(Me.DeviceSettingsGroup)
 			Me.Controls.Add(Me.ChipConfCancel)
 			Me.Controls.Add(Me.ChipConfOK)
@@ -375,10 +377,10 @@ Imports System.Collections.Generic
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
 			Me.Text = "Hardware Settings"
 			AddHandler Closed, AddressOf Me.ChipSettingsClosed
+			CType(Me.EditChipSpeed,System.ComponentModel.ISupportInitialize).EndInit
 			Me.DeviceSettingsGroup.ResumeLayout(false)
 			Me.SelectChipModel.ResumeLayout(false)
 			Me.AlterChipConfig.ResumeLayout(false)
-			CType(Me.EditChipSpeed,System.ComponentModel.ISupportInitialize).EndInit
 			Me.ResumeLayout(false)
 		End Sub
 		#End Region
@@ -448,7 +450,7 @@ Imports System.Collections.Generic
 					.ForeColor = System.Drawing.Color.Black
 					.Location = New System.Drawing.Point(4, 4+(Temp-1)*30)
 					'.Name = IconHandler
-					.Size = New System.Drawing.Size(55, 20)
+					.Size = New System.Drawing.Size(75, 20)
 					.TabIndex = 0
 					.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
 					.Text = ConfigSetting.Name
@@ -459,10 +461,10 @@ Imports System.Collections.Generic
 				Me.ChipSettingsPanel.Controls.Add(Me.ConfParamValue(Temp))
 				With Me.ConfParamValue(Temp)
 					.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-					.Location = New System.Drawing.Point(60, 4 + (Temp - 1) * 30)
+					.Location = New System.Drawing.Point(80, 4 + (Temp - 1) * 30)
 					.MaxDropDownItems = 10
 					.Items.Clear
-					.Size = New System.Drawing.Size(100, 20)
+					.Size = New System.Drawing.Size(180, 20)
 					.TabIndex = 0
 					.Name = Temp.ToString + "," + ConfigSetting.Name
 					.Items.Add("Default")

@@ -21,7 +21,7 @@
     <OptionStrict>Off</OptionStrict>
     <OptionCompare>Binary</OptionCompare>
     <OptionInfer>Off</OptionInfer>
-    <StartWorkingDirectory>C:\Final\Great Cow Graphical BASIC\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\temp\GCB@Syn\GreatCowBASIC</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,6 +48,9 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <StartAction>Project</StartAction>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <ItemGroup>

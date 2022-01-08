@@ -56,7 +56,7 @@ Imports System.Threading
 		Public Const MaxTableElements As Integer = 10000
 		
 		'Version constants
-		Public Const ProgVersion As String = "1.0 2017-12-22"
+		Public Const ProgVersion As String = "1.0 2021-12-29"
 		Public Const FileVersion As String = "20100130"
 		Public Const ShortVersion As String = "Version 1.0"
 		

@@ -769,7 +769,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2022-01-06"
-buildVersion = "1059"
+buildVersion = "1061"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -1033,7 +1033,7 @@ IF Not ErrorsFound THEN
     'Nothing
 
     End Select
-Next
+End if
 'Write compilation report
 WriteCompilationReport
 
@@ -7327,16 +7327,37 @@ SUB CompileReadTable (CompSub As SubType Pointer)
                   If CurrTableByte > TableBytes Then
                     CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("0", "[BYTE]" + GetByte(OutVar, CurrTableByte - 1), Origin))
                   Else
-                    AddVar("SysByteTempX", "BYTE", 1, CompSub, "REAL", Origin, , -1)
-                    If LargeTable Then
-                    AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
-                    CurrLine = LinkedListInsert(CurrLine, "[WORD]SYSSTRINGA=" + TableLoc + Origin)
-                  Else
-                    AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
-                    CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=" + TableLoc + Origin)
+
+                    If Instr( OutVar, "SysPointerX" ) > 0 Then
+                      AddVar("CacheXL", "BYTE", 1, CompSub, "REAL", Origin, , -1)
+                      AddVar("CacheXH", "BYTE", 1, CompSub, "REAL", Origin, , -1)
+                      CurrLine = LinkedListInsert(CurrLine, ";Cache X")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]CacheXL=SYSSTRINGA")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]CacheXH=SYSSTRINGA_H")
+                      CurrLine = LinkedListInsert(CurrLine, ";End of Cache X")
                     End If
+
+                    AddVar("SysByteTempX", "BYTE", 1, CompSub, "REAL", Origin, , -1)
+
+                    If LargeTable Then
+                      AddVar "SysStringA", "WORD", 1, CompSub, "REAL", Origin, , -1
+                      CurrLine = LinkedListInsert(CurrLine, "[WORD]SYSSTRINGA=" + TableLoc + Origin)
+                    Else
+                      AddVar "SysStringA", "BYTE", 1, CompSub, "REAL", Origin, , -1
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=" + TableLoc + Origin)
+                    End If
+
                     CurrLine = LinkedListInsert(CurrLine, " call " + GetByte(TableName, CurrTableByte - 1))
+
+                    If Instr( OutVar, "SysPointerX" ) > 0 Then
+                      CurrLine = LinkedListInsert(CurrLine, ";Restore X")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=CacheXL")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA_H=CacheXH")
+                      CurrLine = LinkedListInsert(CurrLine, ";End of Restore X")
+                    End if
+
                     CurrLine = LinkedListInsertList(CurrLine, CompileVarSet("SysByteTempX", "[BYTE]" + GetByte(OutVar, CurrTableByte - 1), Origin))
+
                   End If
                 Next
 
@@ -16865,20 +16886,23 @@ Sub WriteAssembly
           '          PRINT #2, ""
 
             If ChipFamily = 12 Or ChipFamily = 14 and HighFSR Then
-              PRINT #2, ""
-              PRINT #2, "BANKISEL MACRO reg"
+              ' Only create macro for old version of PIC-AS
+              If Instr(Ucase(ChipPICASRoot),"2.32") > 0 then
+                PRINT #2, ""
+                PRINT #2, "BANKISEL MACRO reg"
 
-              PRINT #2, "  ;BANKISEL macro to restore missing Directive."
-              ' alternate see https://www.microchip.com/forums/FindPost/1173118 post #39
-              'print #2, "dw (0x1000 | ((high(reg) and 01h)<<10) |(7<<7)|STATUS) // BCF/BSF STATUS,IRP"
-              PRINT #2, "  if reg < 0x100 "
-              PRINT #2, "   ;MESSG "+CHR(34)+"Bankvalue < 256 - bcf"+CHR(34)
-              PRINT #2, "   bcf STATUS, 7"
-              PRINT #2, "  else"
-              PRINT #2, "   ;MESSG "+CHR(34)+"Bankvalue > 256 - bsf"+CHR(34)
-              PRINT #2, "   bsf STATUS, 7"
-              PRINT #2, "  endif"
-              PRINT #2, "ENDM"
+                PRINT #2, "  ;BANKISEL macro to restore missing Directive."
+                ' alternate see https://www.microchip.com/forums/FindPost/1173118 post #39
+                'print #2, "dw (0x1000 | ((high(reg) and 01h)<<10) |(7<<7)|STATUS) // BCF/BSF STATUS,IRP"
+                PRINT #2, "  if reg < 0x100 "
+                PRINT #2, "   ;MESSG "+CHR(34)+"Bankvalue < 256 - bcf"+CHR(34)
+                PRINT #2, "   bcf STATUS, 7"
+                PRINT #2, "  else"
+                PRINT #2, "   ;MESSG "+CHR(34)+"Bankvalue > 256 - bsf"+CHR(34)
+                PRINT #2, "   bsf STATUS, 7"
+                PRINT #2, "  endif"
+                PRINT #2, "ENDM"
+              End if
             End If
 
           PRINT #2, ""
@@ -17002,7 +17026,6 @@ Sub WriteAssembly
       PRINT #2, ""
       PRINT #2, Star80
       PRINT #2, "; The XC8 xc.inc include file.  This MUST be placed after the CONFIG statements."
-      PRINT #2, "; The position is a fix at PIC-AS.EXE 2.32 to resolve 'syntax errors'"
       PRINT #2, ""
       PRINT #2, " #include <xc.inc>"
       PRINT #2, ""
