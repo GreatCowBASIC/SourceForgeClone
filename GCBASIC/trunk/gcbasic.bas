@@ -768,8 +768,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2022-01-06"
-buildVersion = "1061"
+Version = "0.98.07 2022-01-08"
+buildVersion = "1062"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -7329,11 +7329,11 @@ SUB CompileReadTable (CompSub As SubType Pointer)
                   Else
 
                     If Instr( OutVar, "SysPointerX" ) > 0 Then
-                      AddVar("CacheXL", "BYTE", 1, CompSub, "REAL", Origin, , -1)
-                      AddVar("CacheXH", "BYTE", 1, CompSub, "REAL", Origin, , -1)
+                      AddVar("sysbytetempa", "BYTE", 1, CompSub, "REAL", Origin, , -1)
+                      AddVar("sysbytetempb", "BYTE", 1, CompSub, "REAL", Origin, , -1)
                       CurrLine = LinkedListInsert(CurrLine, ";Cache X")
-                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]CacheXL=SYSSTRINGA")
-                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]CacheXH=SYSSTRINGA_H")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]sysbytetempa=SYSSTRINGA")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]sysbytetempb=SYSSTRINGA_H")
                       CurrLine = LinkedListInsert(CurrLine, ";End of Cache X")
                     End If
 
@@ -7351,8 +7351,8 @@ SUB CompileReadTable (CompSub As SubType Pointer)
 
                     If Instr( OutVar, "SysPointerX" ) > 0 Then
                       CurrLine = LinkedListInsert(CurrLine, ";Restore X")
-                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=CacheXL")
-                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA_H=CacheXH")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA=sysbytetempa")
+                      CurrLine = LinkedListInsert(CurrLine, "[BYTE]SYSSTRINGA_H=sysbytetempb")
                       CurrLine = LinkedListInsert(CurrLine, ";End of Restore X")
                     End if
 
