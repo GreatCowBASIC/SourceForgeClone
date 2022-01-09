@@ -934,6 +934,7 @@ sub  SendCommand_ST7735( IN ST7735SendByte as byte )
      exit sub
   #endif
 
+  #ifndef ST7735_HardwareSPI
   repeat 8
 
     if ST7735SendByte.7 = ON  then
@@ -950,7 +951,7 @@ sub  SendCommand_ST7735( IN ST7735SendByte as byte )
 
   end repeat
   set ST7735_CS ON;
-
+  #endif
 end Sub
 
 '''Send a data byte to the ST7735 GLCD
@@ -968,7 +969,7 @@ sub  SendData_ST7735( IN ST7735SendByte as byte )
      exit sub
   #endif
 
-
+  #ifndef ST7735_HardwareSPI
   repeat 8
 
     if ST7735SendByte.7 = ON then
@@ -984,7 +985,7 @@ sub  SendData_ST7735( IN ST7735SendByte as byte )
 
   end Repeat
   set ST7735_CS ON;
-
+  #endif
 end Sub
 
 '''Send a data word (16 bits) to the ST7735 GLCD
@@ -1002,6 +1003,7 @@ Sub SendWord_ST7735(In ST7735SendWord As Word)
      exit sub
   #endif
 
+  #ifndef ST7735_HardwareSPI
   repeat 16
 
     if ST7735SendWord.15 = ON then
@@ -1018,6 +1020,7 @@ Sub SendWord_ST7735(In ST7735SendWord As Word)
 
   end repeat
   set ST7735_CS ON;
+  #endif
 End Sub
 
 

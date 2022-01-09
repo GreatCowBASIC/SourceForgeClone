@@ -183,8 +183,15 @@
        If ChipRAM < 512  Then
            GLCD_TYPE_SSD1306_CHARACTER_MODE_ONLY = TRUE
            GLCD_TYPE_SSD1306_LOWMEMORY_GLCD_MODE = TRUE
+           If ChipRAM < 256  Then
+              Error "Chip has insufficient RAM to support this specific GLCD"
+           End if
        End If
      end if
+
+
+
+
 
    #endscript
 
