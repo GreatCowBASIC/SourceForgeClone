@@ -43,6 +43,9 @@ FamilyVariant=1
 'This constant is exposed as ChipSubFamily
 SubFamily=16105
 
+'This constant is exposed as ChipMemorylock
+MemoryLock=NVMLOCK
+
 'This constant is exposed as ChipPSP
 PSP=0
 
