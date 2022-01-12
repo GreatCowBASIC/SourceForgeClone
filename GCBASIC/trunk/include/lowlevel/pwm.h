@@ -128,6 +128,7 @@
 ''' 21/06/2020 Revised to support ChipFamily 121
 ''' 30/12/2020 Revised sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )/SetupCCPPWMRegisters section to identify the Q41 chip that only has ONE CCP1PMW! That is new... one CCP1. Just like the old days
 ''' 25/01/2020 Correct typo in ChipSubFamily Q41 in HMPWM
+''' 10/01/2022 Revised sub HPWM (In PWMChannel, In PWMFreq, PWMDuty )/SetupCCPPWMRegisters section to identify the Q40 chip that only has ONE CCP1PMW! That is new... one CCP1. Just like the old days
 
   'define the defaults
   #define AVRTC0
@@ -2903,6 +2904,7 @@ SetupTheCorrectTimerBits:
   #endif
 
 SetupCCPPWMRegisters:
+  'If there is no ASM here then the CHIP is not recognised, look at section SETUPCCPPWMREGISTERS in PMW.H
 
   #ifdef USE_HPWMCCP1 TRUE
 
@@ -2930,8 +2932,8 @@ SetupCCPPWMRegisters:
 
     #endif
 
-    #if ChipSubFamily = ChipFamily18FxxQ41
-        'Identify the Q41 chip that only has ONE CCP1PMW
+    #if ChipSubFamily = ChipFamily18FxxQ41 OR ChipSubFamily = ChipFamily18FxxQ40
+        'Identify the Q40 or Q41 chips that only have ONE CCP1PMW
         calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
         CCPR1H = PRx_Temp_H
         CCPR1L = PRx_Temp

@@ -358,7 +358,7 @@ Sub NVMADR_EPWrite(IN SysEEAddress as WORD , in EEData)
        #ENDIF
 
        #if ChipSubFamily = ChipFamily18FxxQ40
-       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
+       'Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ40
         NVMADRU = 0x38
         //Set the NVMCMD control bits for DFM Byte Read operation
         NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
