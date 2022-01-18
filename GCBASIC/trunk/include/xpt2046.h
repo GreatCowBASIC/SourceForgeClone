@@ -20,6 +20,7 @@
 '    v0.9g - changed the IRQ
 '    v.100 - first formal release
 '    v1.01 Revised to support software SPI for LGT chips @ 11/09/2021
+'    18/01/2022 - Removed Serial Debug
 
  '''    '******************************************************************************************************
 '''    'Setup the XPT2046
@@ -354,13 +355,7 @@ Sub GetXY_XPT2046 (out XTouchPoint_XPT2046 as word, out YTouchPoint_XPT2046 as w
       SendData_XPT2046( XPT2046_CFG_START | XPT2046_CFG_8BIT | XPT2046_CFG_DFR | XPT2046_CFG_PWR | XPT2046_MUX_Y )
 
     set XPT2046_CS ON
-    'USART settings for USART1
-    #define USART_BAUD_RATE 115200
-    #define USART_TX_BLOCKING
-    #define USART_DELAY OFF
-HSerSend XTouchPoint_XPT2046
-HSerSend yTouchPoint_XPT2046
-HSerSend 0
+
     'Set the raw values, folks may want to know this
     XTouchPoint_XPT2046raw = XTouchPoint_XPT2046
     YTouchPoint_XPT2046Raw = yTouchPoint_XPT2046
