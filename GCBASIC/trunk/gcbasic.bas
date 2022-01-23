@@ -769,7 +769,7 @@ Randomize Timer
 
 'Set version
 Version = "0.98.07 2022-01-23"
-buildVersion = "1067"
+buildVersion = "1068"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -17532,6 +17532,35 @@ Sub WriteAssembly
         PRINT #2, ";"
         PRINT #2, " END     RESETVEC"
         CLOSE #2
+
+        'reopen for 2.35 fix - as the comments are corrupted
+        If Instr(Ucase(ChipPICASRoot),"2.32") > 0 or Instr(Ucase(ChipPICASRoot),"2.35") > 0 then
+            OPEN AFI FOR INPUT AS #2
+            OPEN AFI+".tmp" FOR OUTPUT AS #3
+            Dim DataSource as String
+            Do While NOT EOF(2)
+                Line Input #2,  DataSource
+                If left( DataSource, 1 )=";" Then
+                  If left( DataSource, 2 )=";"+Chr(34)  Then
+                    Print #3, DataSource
+                  ElseIf left( DataSource, 2 )=";'"  Then
+                    Print #3, DataSource
+                  Else
+                    'muset be just the ;
+                    DataSource = ";'"+mid( DataSource,2 )
+                    Print #3, DataSource
+                  End If
+                Else
+                    Print #3, DataSource
+                End if
+            Loop
+            Close #2
+            Close #3
+            FileCopy ( AFI+".tmp", AFI )
+            Kill ( AFI+".tmp")
+        End If
+
+
 
         PRINT #1, " END"
 
