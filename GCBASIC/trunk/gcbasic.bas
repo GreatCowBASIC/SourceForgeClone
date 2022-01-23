@@ -768,8 +768,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.98.07 2022-01-08"
-buildVersion = "1062"
+Version = "0.98.07 2022-01-23"
+buildVersion = "1067"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -903,7 +903,9 @@ IF Not ErrorsFound THEN
     PRINT Message("CompTime") + Temp + Message("CompSecs")
     PRINT
     PRINT Message("Summary")
+
     PRINT SPC(5); Message("DataRead")
+
     PRINT SPC(10); Message("InLines") + Str(MainProgramSize)
     PRINT SPC(10); Message("Subs") + Str(SBC)
     PRINT SPC(5); Message("ChipUsage")
@@ -16779,11 +16781,11 @@ Sub WriteAssembly
   Dim As SysVarType Pointer SysVar
 
   If AFISupport = 1 Then
-    If MODEAVR  then
-        LogError "Chip Family not supported by PIC-AS. Please change USE.INI to GCASM", ""
-        ErrorsFound = -1
-        exit Sub
-    End if
+      If ModeAVR and AsmExe <> "GCASM" Then
+          AsmExe = "GCASM"
+          AFISupport = 0
+          Message("SwappingAssembertoGCASMs")
+      End if
   End IF
 
   'Write .ASM program
@@ -16845,7 +16847,7 @@ Sub WriteAssembly
           PRINT #2, ""
           PRINT #2, ";Set up the assembler options (Chip type, clock source, other bits and pieces)"
           PRINT #2, ";PROCESSOR   " + ChipName
-          PRINT #2, " PAGEWIDTH   132"
+          PRINT #2, " PAGEWIDTH   180"
           PRINT #2, " RADIX       DEC"
           PRINT #2, " TITLE       "+ CHR(34)+AFI+CHR(34)
           PRINT #2, " SUBTITLE    "+ CHR(34)+date+CHR(34)

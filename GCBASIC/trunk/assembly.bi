@@ -481,6 +481,11 @@ SUB AssembleProgram
   Dim As LinkedListElement Pointer OutProgram, CurrProgramLoc
   Dim As LinkedListElement Pointer HexRecords, CurrHexRecord
 
+  If VBS = 1 then
+    Temp = Message("Assembler")
+    Replace Temp, "%ASMEXE%", ASMEXE
+    PRINT Temp
+  End if
   'Clear compiled program
   OutProgram = LinkedListCreate
   CurrProgramLoc = OutProgram
