@@ -793,8 +793,8 @@ SUB PreProcessor
       LineOrigin->LineNo = LC
 
       'Support inclusion of C++ code direct from MPLAB-IDE
-      If Instr(  DataSource, "#pragma config" ) <> 0 then
-        Replace DataSource, "#pragma config", "#config"
+      If Instr(  Ucase(DataSource), "#PRAGMA CONFIG" ) <> 0 then
+        Replace Ucase(DataSource), "#PRAGMA CONFIG", "#CONFIG"
       End if
 
       'Save copy for Preserve mode
