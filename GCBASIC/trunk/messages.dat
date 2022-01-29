@@ -164,6 +164,10 @@ MakeS = "Assembling program for PIC-AS"
 Family122OptimisationMessage = "Family 122 - rjmp and rcall optimisation disabled"
 
 SendToPIC = "Downloading program ..."
+PromoMessage1 = "<p>Enjoying Great Cow BASIC ? Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience.</p>"
+PromoMessage2 = "<p>Finding Great Cow BASIC useful ? Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience.</p>"
+PromoMessage3 = "<p>Spreading the word about using Great Cow BASIC ? Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and provide feedback to share your experience.</p>"
+
 
 'Errors
 Error = "An error has been found:"
