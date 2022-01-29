@@ -20,7 +20,6 @@
 '    v0.9g - changed the IRQ
 '    v.100 - first formal release
 '    v1.01 Revised to support software SPI for LGT chips @ 11/09/2021
-'    18/01/2022 - Removed Serial Debug
 
  '''    '******************************************************************************************************
 '''    'Setup the XPT2046
