@@ -769,7 +769,7 @@ Randomize Timer
 
 'Set version
 Version = "0.99.02 2022-01-20"
-buildVersion = "1074"
+buildVersion = "1075"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -15120,6 +15120,11 @@ Sub PrepareProgrammer
           Else
             'Found programmer with conditions, check
             Cmd = Ucase(.UseIf)
+
+'            If VBS = 1 Then
+'                Print Spc(10);
+'                Print "USEIF " + Cmd;
+'            End If
             OldCmd = ""
             RecDetect = 0
             Do While OldCmd <> Cmd
@@ -15129,11 +15134,18 @@ Sub PrepareProgrammer
               'If have looped too many times, there is probably a recursive define
               If RecDetect > 100 Then Exit Do
             Loop
+			      'Change <> to ~
+            If Instr( Cmd, "<>" ) > 0 then Replace Cmd, "<>","~"
+'            If VBS = 1 Then
+'                Print Spc(4);
+'                Print "equates '" + Cmd+"'";
+'            End If
             Calculate Cmd
             If Val(Cmd) <> 0 Then
               'Condition is true, use programmer
               'Found programmer with no conditions, use
               If VBS = 1 Then
+'                Print " = -" + Trim(Cmd)
                 Print Spc(10);
                 Temp = Message("ProgrammerSelected")
                 Replace Temp, "%prog%", .DispName
@@ -15143,6 +15155,7 @@ Sub PrepareProgrammer
               PrgTool = CurrTool
               Exit Do
             Else
+
               'Found programmer with no conditions, use
               If VBS = 1 Then
                 Print Spc(10);
