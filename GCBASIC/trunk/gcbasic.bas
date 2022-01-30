@@ -768,8 +768,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.99.01 2022-01-27"
-buildVersion = "1073"
+Version = "0.99.02 2022-01-20"
+buildVersion = "1074"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -976,35 +976,36 @@ DownloadProgram:
     PRINT Temp
     PrgExe = ReplaceToolVariables(PrgExe, "hex",, PrgTool)
     PrgParams = ReplaceToolVariables(PrgParams, "hex",, PrgTool)
-    IF VBS = 1 THEN PRINT SPC(5);  "Calling    : " + PrgExe
-    IF VBS = 1 THEN PRINT SPC(5);  "Parameters : " + PrgParams
+    If ErrorsFound = 0 Then
+      IF VBS = 1 THEN PRINT SPC(5);"Calling    : " + PrgExe
+      IF VBS = 1 THEN PRINT SPC(5);  "Parameters : " + PrgParams
 
 
-    Dim As String SaveCurrDir
-    SaveCurrDir = CurDir
-    If PrgDir <> "" Then ChDir ReplaceToolVariables(PrgDir, "hex")
+      Dim As String SaveCurrDir
+      SaveCurrDir = CurDir
+      If PrgDir <> "" Then ChDir ReplaceToolVariables(PrgDir, "hex")
 
-    ExitValue = Exec(PrgExe, PrgParams)
+      ExitValue = Exec(PrgExe, PrgParams)
 
-    'Check for programmer success, should have 0 exit value
-    If ExitValue <> 0 And (LCase(PrgExe) <> "none" And LCase(Right(PrgExe, 5)) <> "\none") Then
-      Dim Temp As String
-      Temp = Message("WarningProgrammerFail")
-      Replace Temp, "%status%", Trim(Str(ExitValue))
-      LogWarning Temp
-    Else
-      ExitValue = 0
-      ProgEndTime = Timer
-
-      If VBS = 1 Then
+      'Check for programmer success, should have 0 exit value
+      If ExitValue <> 0 And (LCase(PrgExe) <> "none" And LCase(Right(PrgExe, 5)) <> "\none") Then
         Dim Temp As String
-        Temp = Trim(Str(ProgEndTime - AsmEndTime))
-        IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
-        PRINT Message("ProgTime") + Temp + Message("CompSecs")
-      End If
-    End If
+        Temp = Message("WarningProgrammerFail")
+        Replace Temp, "%status%", Trim(Str(ExitValue))
+        LogWarning Temp
+      Else
+        ExitValue = 0
+        ProgEndTime = Timer
 
-    ChDir SaveCurrDir
+        If VBS = 1 Then
+          Dim Temp As String
+          Temp = Trim(Str(ProgEndTime - AsmEndTime))
+          IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
+          PRINT Message("ProgTime") + Temp + Message("CompSecs")
+        End If
+      End If
+      ChDir SaveCurrDir
+    End If
   END If
 ProgEndTime = Timer
 
