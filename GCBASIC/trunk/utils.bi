@@ -1334,6 +1334,7 @@ Function ReplaceToolVariables(InData As String, FNExtension As String = "", File
   Dim As String FileName, FileNameNoExt, OutData
   Dim As String FileNoPath, PathNoFile
   Dim As Integer PD
+  Dim As String portstring, temp
   Dim As LinkedListElement Pointer CurrToolVar
   OutData = InData
 
@@ -1421,6 +1422,27 @@ Function ReplaceToolVariables(InData As String, FNExtension As String = "", File
     With *Tool
       For PD = 1 To .ExtraParams
         Do While INSTR(LCase(OutData), "%" + .ExtraParam(PD, 1) + "%") <> 0
+
+          'Check specified Serial Port is avaiable
+          If Lcase(.ExtraParam(PD, 1)) = "port" And Left(Trim(Lcase(.ExtraParam(PD, 2))),3) = "com"  Then
+              portstring = Trim(.ExtraParam(PD, 2))+":115200,N,8,1"
+              On Error Goto PortOpenHandler
+              Open Com portstring as 99
+              PortOpenHandler:
+              On Error Goto 0
+              If ERR <> 1 Then
+                  temp = Message("SerialPortLockedorNotAvailable")
+                  Replace temp, "%port%", Trim(.ExtraParam(PD, 2))
+                  LogError temp
+                  Exit Function
+              End If
+               '1 if no device attached
+              On Error Goto PortCloseHandler
+              Close 99
+              PortCloseHandler:
+              On Error Goto 0
+          End If
+
           Replace OutData, "%" + .ExtraParam(PD, 1) + "%", .ExtraParam(PD, 2)
         Loop
       Next
