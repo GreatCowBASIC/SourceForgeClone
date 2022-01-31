@@ -768,8 +768,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.99.02 2022-01-20"
-buildVersion = "1075"
+Version = "0.99.02 2022-01-31"
+buildVersion = "1076"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -15134,11 +15134,11 @@ Sub PrepareProgrammer
               'If have looped too many times, there is probably a recursive define
               If RecDetect > 100 Then Exit Do
             Loop
-			      'Change <> to ~
+            'Change <> to ~
             If Instr( Cmd, "<>" ) > 0 then Replace Cmd, "<>","~"
 '            If VBS = 1 Then
 '                Print Spc(4);
-'                Print "equates '" + Cmd+"'";
+'                Print " equates to '" + Cmd+"' = ";
 '            End If
             Calculate Cmd
             If Val(Cmd) <> 0 Then

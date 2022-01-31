@@ -197,7 +197,11 @@ SUB Calculate (SUM As String)
 
   REM Find high/low
   HIGHLOW:
-  IF INSTR(LCase(SUM), "l") = 0 AND INSTR(LCase(SUM), "h") = 0 AND INSTR(LCase(SUM), "u") = 0 THEN GOTO ENDHIGHLOW
+  'Added "lf" to resolve bug in handling compares than two string where the SUM could contain a chip like an LF chip
+  'My thoughts on what this means.
+  ' When  ( l,h,u are all NOT present in SUM ) or ( lf IS present ) jump to label
+  IF ( INSTR(LCase(SUM), "l") = 0 AND INSTR(LCase(SUM), "h") = 0 AND INSTR(LCase(SUM), "u") = 0 ) OR INSTR(LCase(SUM), "lf") <> 0 THEN GOTO ENDHIGHLOW
+
   FD = 0
   Do
     FD = FD + 1
