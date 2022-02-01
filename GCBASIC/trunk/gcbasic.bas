@@ -768,8 +768,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.99.02 2022-01-31"
-buildVersion = "1076"
+Version = "0.99.02 2022-02-01"
+buildVersion = "1077"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8660,6 +8660,13 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
               LogError Temp, .Origin
               GoTo CompileNextParam
             Else
+              if left( ucase( trim(ReplaceFnNames(SourceArray) )),1)  = "(" AND right( ucase( trim(ReplaceFnNames(SourceArray) )),1)  = ")" then
+                  'This should never run
+                   Temp = Message("DoubleBracesError")
+                   Replace Temp, "%source%", ReplaceFnNames(SourceArray)
+                   LogError Temp, .Origin
+                   Exit Function
+              End if
               'Mark source variable as used
               RequestVariable(ReplaceFnNames(SourceArray), .Caller)
             End If

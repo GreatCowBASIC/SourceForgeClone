@@ -121,6 +121,8 @@ TidyCode = "Tidying Code ..."
 CalcConfig = "Calculating CONFIG ..."
 LocatingSubs = "Locating subroutines in program memory ..."
 AddBankCommands = "Adding bank setting commands ..."
+DoubleBracesError = "Unhandled braces error, remove outer braces %source%"
+
 
 Add18FBanks = "Adding RAM access bits ..."
 
