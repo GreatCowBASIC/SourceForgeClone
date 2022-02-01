@@ -1434,7 +1434,7 @@ Function ReplaceToolVariables(InData As String, FNExtension As String = "", File
               Open Com portstring as 99
               PortOpenHandler:
               On Error Goto 0
-              If ERR <> 1 Then
+              If ERR > 1 Then
                   temp = Message("SerialPortLockedorNotAvailable")
                   Replace temp, "%port%", Trim(.ExtraParam(PD, 2))
                   LogError temp
