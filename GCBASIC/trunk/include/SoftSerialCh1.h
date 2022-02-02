@@ -1,4 +1,4 @@
-'    MicroChip specific to support Sotfware Serial for Great Cow BASIC
+'    MicroChip specific to support Software Serial for Great Cow BASIC
 '    Copyright (C) 2017-2020 Frank Steinberg
 
 '    This library is free software; you can redistribute it and/or
@@ -40,6 +40,7 @@
 '  20.02.2018     Updated license only
 '  05.02.2019     Bugfix for AVR-receive
 '  08.05.2020     Reduced RAM consumption using Ser1Print with string constants
+'  02.02.2022     Initialization of some script variables with zero (for compiler build >= 1077)
 
 
   '*** Set default value of SER1_INVERT if no user value:
@@ -93,6 +94,7 @@
        If SER1_TXPIN < 0 Or SER1_TXPIN > 7 Then ERROR "Valid value for SER1_TXPIN: 0 - 7"
      End If
     '*** Calculate number of delayloops for sending:
+     STX1_DELAYH = 0  'required since build 1077
      If SER1_TXPORT <> SER1_TXPORT_not_set Then  '... for channel if a port ist selected
        If PIC Then STX1_DELAY = INT(((ChipMHz*1000000/4/SER1_BAUD)-12.5)/3)  '12.5 = -14 cycles +1.5 account for integer truncation
        If AVR Then STX1_DELAY = INT(((ChipMHz*1000000/SER1_BAUD)-8.5)/3)     ' 8.5 = -10 cycles +1.5 account for integer truncation
@@ -104,6 +106,8 @@
        End If
          If STX1_DELAYH > 255 Then ERROR "'SER1_BAUD" SER1_BAUD"' too low - Slow down chip or increase baudrate!"
      End If
+     'warning  send-Delay1   STX1_DELAY
+     'warning  send-DelayH1  STX1_DELAYH
      'If Var(SER1_TXPORT) And Var(SER1_TXPIN) Then
      '*** Process pin-direction and -polarity for sending:
      '  STx1PinSetup
@@ -122,6 +126,8 @@
        If (SER1_RXNOWAIT <> 0) And (SER1_RXNOWAIT <> 1) Then ERROR "Valid value for SER1_RXNOWAIT: On or Off"
      End If
      '*** Calculate number of delayloops for receiving:
+     SRX1_DELAYH     = 0  'required since build 1077
+     SRX1_HALFDELAYH = 0  '
      If SER1_RXPORT <> SER1_RXPORT_not_set Then  '... for channel if a port ist selected
        If PIC Then SRX1_DELAY = INT(((ChipMHz*1000000/4/SER1_BAUD)-6.5)/3)  '6.5 = -8 cycles +1.5 account for integer truncation
        If AVR Then SRX1_DELAY = INT(((ChipMHz*1000000/SER1_BAUD)-4.5)/3)    '4.5 = -6 cycles +1.5 account for integer truncation
@@ -145,7 +151,9 @@
        End If
        If SRX1_HALFDELAYH > 255 Then ERROR "'SER1_BAUD" SER1_BAUD"' too low - Slow down chip or increase baudrate!"
      End If
+      'warning  receive-DelayH2     SRX1_DELAYH
       'warning  receive-Delay2      SRX1_DELAY
+      'warning  receive-HalfDelayH2 SRX1_HALFDELAYH
       'warning  receive-HalfDelay2  SRX1_HALFDELAY
    End If
 
