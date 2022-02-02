@@ -769,7 +769,7 @@ Randomize Timer
 
 'Set version
 Version = "0.99.02 2022-02-01"
-buildVersion = "1077"
+buildVersion = "1078"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -8653,6 +8653,14 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
           Else
             SourceFunction = SourceArray
             SourceArrayPtr = VarAddress(ReplaceFnNames(SourceArray), .Caller)
+
+            If Cast( Integer, SourceArrayPtr ) = INVALIDARRAYVALUE Then
+                Dim Temp as String
+                Temp = Message("CannotHandleConstruction")
+                LogError Temp, .Origin
+                Return OutList
+            End If
+
             'If source array not found, show error
             If SourceArrayPtr = 0 Then
               Temp = Message("ArrayNoDec")
