@@ -1,5 +1,5 @@
-'    MicroChip specific to support Sotfware Serial for Great Cow BASIC
-'    Copyright (C) 2017-2020 Frank Steinberg
+'    MicroChip specific to support Software Serial for Great Cow BASIC
+'    Copyright (C) 2017-2022 Frank Steinberg
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -53,6 +53,7 @@
 '  20.02.2018     Updated license only
 '  05.02.2019     Bugfix for AVR-receive
 '  08.05.2020     Reduced RAM consumption using SerNPrint with string constants
+'  02.02.2022     Initialization of some script variables with zero (for compiler build >= 1077)
 
 
 '*** 3 independent channels in 3 different files:
