@@ -634,7 +634,7 @@ Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabl
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
-Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCounters
+Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCounters, muteBanners
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
@@ -769,7 +769,7 @@ Randomize Timer
 
 'Set version
 Version = "0.99.02 2022-02-01"
-buildVersion = "1078"
+buildVersion = "1079"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -1010,7 +1010,8 @@ DownloadProgram:
 ProgEndTime = Timer
 
 'Issue message
-IF Not ErrorsFound THEN
+
+IF Not ErrorsFound and MuteBanners = -1 THEN
     Randomize timer
     Select Case  int(Rnd * (10 - 1) + 1)
       Case 1:
@@ -8653,14 +8654,12 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
           Else
             SourceFunction = SourceArray
             SourceArrayPtr = VarAddress(ReplaceFnNames(SourceArray), .Caller)
-
             If Cast( Integer, SourceArrayPtr ) = INVALIDARRAYVALUE Then
                 Dim Temp as String
                 Temp = Message("CannotHandleConstruction")
                 LogError Temp, .Origin
-                Return OutList
+                GoTo CompileNextParam
             End If
-
             'If source array not found, show error
             If SourceArrayPtr = 0 Then
               Temp = Message("ArrayNoDec")
@@ -8673,7 +8672,7 @@ Function CompileSubCall (InCall As SubCallType Pointer) As LinkedListElement Poi
                    Temp = Message("DoubleBracesError")
                    Replace Temp, "%source%", ReplaceFnNames(SourceArray)
                    LogError Temp, .Origin
-                   Exit Function
+                   GoTo CompileNextParam
               End if
               'Mark source variable as used
               RequestVariable(ReplaceFnNames(SourceArray), .Caller)
@@ -13485,6 +13484,7 @@ SUB InitCompiler
   VBS = 0
   PauseOnErr = 1
   WarningsAsErrors = 0
+  MuteBanners = -1
   PreserveMode = 0
   PauseAfterCompile = 0
   ShowProgressCounters = -1
@@ -13535,6 +13535,9 @@ SUB InitCompiler
     ElseIf ParamUpper = "/WX" Or ParamUpper = "-WX" Then
       WarningsAsErrors = -1
       WarnErrorNotSet = 0
+
+    ElseIf ParamUpper = "/M" Or ParamUpper = "-M" Then
+      MuteBanners = 0
 
     ElseIf ParamUpper = "/F" Or ParamUpper = "-F" Then
       FlashOnly = -1
@@ -13812,6 +13815,9 @@ SUB InitCompiler
                 If WarnErrorNotSet Then
                   WarningsAsErrors = PrefIsYes(MsgVal)
                 End If
+
+                Case "mutebanners"
+                  MuteBanners = NOT PrefIsYes(MsgVal)
 
                 Case "flashonly"
                 If FlashOnlyNotSet Then
@@ -17654,21 +17660,28 @@ Sub WriteCompilationReport
 
   'Write compiler information
   If RF = "html" Then
-    Randomize timer
-    Select Case  int(Rnd * (10 - 1) + 1)
-      Case 1:
-    Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"+Message("PromoMessage1")
 
-      Case 2:
-    Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"+Message("PromoMessage2")
+    If MuteBanners = -1 Then
 
-      Case 3:
-    Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"+Message("PromoMessage3")
+        Randomize timer
+        Select Case  int(Rnd * (10 - 1) + 1)
+          Case 1:
+        Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"+Message("PromoMessage1")
 
-      Case Else
-    Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"
+          Case 2:
+        Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"+Message("PromoMessage2")
 
-    End Select
+          Case 3:
+        Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"+Message("PromoMessage3")
+
+          Case Else
+        Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"
+
+        End Select
+    Else
+      Print #F, "<p>" + Message("CRVersion") + ": " + Version + "</p>"
+    End If
+
   ElseIf RF = "text" Then
     Print #F, Message("CRVersion") + ": " + Version
     Print #F, ""

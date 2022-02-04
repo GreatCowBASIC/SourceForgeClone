@@ -90,6 +90,7 @@ Imports System.Collections.Generic
 				CompilerShowBASIC.Checked = False
 				If pPreferences.GetPref("GCBASIC", "Preserve") = "a" Then CompilerShowBASIC.Checked = True
 				CompilerWarningsAsErrors.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "WarningsAsErrors"))
+				MuteBannerMessages.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "MuteBanners"))
 				CompilerNoRecompile.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "FlashOnly"))
 				CompilerPause.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "PauseAfterCompile"))
 				
@@ -194,7 +195,9 @@ Imports System.Collections.Generic
 			Me.buttonAddTool = New System.Windows.Forms.Button
 			Me.toolList = New System.Windows.Forms.ListBox
 			Me.CompilerPrefs = New System.Windows.Forms.TabPage
+			Me.MuteBannerMessages = New System.Windows.Forms.CheckBox
 			Me.CompilerSelectionBox = New System.Windows.Forms.GroupBox
+			Me.appendhexGCASM = New System.Windows.Forms.CheckBox
 			Me.label1 = New System.Windows.Forms.Label
 			Me.DefaultCompilercomboBox = New System.Windows.Forms.ComboBox
 			Me.CompilerNoRecompile = New System.Windows.Forms.CheckBox
@@ -232,7 +235,6 @@ Imports System.Collections.Generic
 			Me.toolVarFolderBrowserDialog = New System.Windows.Forms.FolderBrowserDialog
 			Me.toolVarOpenFileDialog = New System.Windows.Forms.OpenFileDialog
 			Me.ScrollTimer = New System.Windows.Forms.Timer(Me.components)
-			Me.appendhexGCASM = New System.Windows.Forms.CheckBox
 			Me.ExtToolsPrefs.SuspendLayout
 			Me.CompilerPrefs.SuspendLayout
 			Me.CompilerSelectionBox.SuspendLayout
@@ -321,6 +323,7 @@ Imports System.Collections.Generic
 			'
 			'CompilerPrefs
 			'
+			Me.CompilerPrefs.Controls.Add(Me.MuteBannerMessages)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerSelectionBox)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerNoRecompile)
 			Me.CompilerPrefs.Controls.Add(Me.CompilerWarningsAsErrors)
@@ -334,21 +337,46 @@ Imports System.Collections.Generic
 			Me.CompilerPrefs.Text = "Compiler"
 			Me.CompilerPrefs.UseVisualStyleBackColor = true
 			'
+			'MuteBannerMessages
+			'
+			Me.MuteBannerMessages.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.PrefsHelp.SetHelpString(Me.MuteBannerMessages, "Prevents compiler from showing banner messages")
+			Me.MuteBannerMessages.Location = New System.Drawing.Point(16, 62)
+			Me.MuteBannerMessages.Name = "MuteBannerMessages"
+			Me.PrefsHelp.SetShowHelp(Me.MuteBannerMessages, true)
+			Me.MuteBannerMessages.Size = New System.Drawing.Size(168, 16)
+			Me.MuteBannerMessages.TabIndex = 6
+			Me.MuteBannerMessages.Text = "Mute Banner Messages"
+			Me.prefsToolTip.SetToolTip(Me.MuteBannerMessages, "Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and p"& _ 
+						"rovide feedback to share your experience")
+			'
 			'CompilerSelectionBox
 			'
 			Me.CompilerSelectionBox.Controls.Add(Me.appendhexGCASM)
 			Me.CompilerSelectionBox.Controls.Add(Me.label1)
 			Me.CompilerSelectionBox.Controls.Add(Me.DefaultCompilercomboBox)
-			Me.CompilerSelectionBox.Location = New System.Drawing.Point(7, 134)
+			Me.CompilerSelectionBox.Location = New System.Drawing.Point(7, 156)
 			Me.CompilerSelectionBox.Name = "CompilerSelectionBox"
-			Me.CompilerSelectionBox.Size = New System.Drawing.Size(370, 111)
+			Me.CompilerSelectionBox.Size = New System.Drawing.Size(370, 89)
 			Me.CompilerSelectionBox.TabIndex = 5
 			Me.CompilerSelectionBox.TabStop = false
 			Me.CompilerSelectionBox.Text = "Assembler"
 			'
+			'appendhexGCASM
+			'
+			Me.appendhexGCASM.FlatStyle = System.Windows.Forms.FlatStyle.System
+			Me.PrefsHelp.SetHelpString(Me.appendhexGCASM, "Keeps the compiler window open until a key is pressed")
+			Me.appendhexGCASM.Location = New System.Drawing.Point(9, 55)
+			Me.appendhexGCASM.Name = "appendhexGCASM"
+			Me.PrefsHelp.SetShowHelp(Me.appendhexGCASM, true)
+			Me.appendhexGCASM.Size = New System.Drawing.Size(310, 21)
+			Me.appendhexGCASM.TabIndex = 6
+			Me.appendhexGCASM.Text = "Append Great Cow BASIC message to hex file (GCASM only)"
+			Me.prefsToolTip.SetToolTip(Me.appendhexGCASM, "Keeps the compiler window open until a key is pressed")
+			'
 			'label1
 			'
-			Me.label1.Location = New System.Drawing.Point(9, 27)
+			Me.label1.Location = New System.Drawing.Point(9, 26)
 			Me.label1.Name = "label1"
 			Me.label1.Size = New System.Drawing.Size(100, 23)
 			Me.label1.TabIndex = 9
@@ -358,7 +386,7 @@ Imports System.Collections.Generic
 			'
 			Me.DefaultCompilercomboBox.FormattingEnabled = true
 			Me.DefaultCompilercomboBox.Items.AddRange(New Object() {"GCASM", "PIC-AS", "MPASM"})
-			Me.DefaultCompilercomboBox.Location = New System.Drawing.Point(143, 24)
+			Me.DefaultCompilercomboBox.Location = New System.Drawing.Point(143, 23)
 			Me.DefaultCompilercomboBox.Name = "DefaultCompilercomboBox"
 			Me.DefaultCompilercomboBox.Size = New System.Drawing.Size(121, 21)
 			Me.DefaultCompilercomboBox.TabIndex = 8
@@ -369,7 +397,7 @@ Imports System.Collections.Generic
 			Me.CompilerNoRecompile.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.CompilerNoRecompile, "Prevent the compiler from taking time to recompile a program if the program has n"& _ 
 						"ot changed since it was last compiled.")
-			Me.CompilerNoRecompile.Location = New System.Drawing.Point(16, 88)
+			Me.CompilerNoRecompile.Location = New System.Drawing.Point(16, 108)
 			Me.CompilerNoRecompile.Name = "CompilerNoRecompile"
 			Me.PrefsHelp.SetShowHelp(Me.CompilerNoRecompile, true)
 			Me.CompilerNoRecompile.Size = New System.Drawing.Size(224, 16)
@@ -384,7 +412,7 @@ Imports System.Collections.Generic
 			Me.CompilerWarningsAsErrors.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Stops the program from being downloaded to the chip if any warnings are generated"& _ 
 						" while compiling it")
-			Me.CompilerWarningsAsErrors.Location = New System.Drawing.Point(16, 64)
+			Me.CompilerWarningsAsErrors.Location = New System.Drawing.Point(16, 84)
 			Me.CompilerWarningsAsErrors.Name = "CompilerWarningsAsErrors"
 			Me.PrefsHelp.SetShowHelp(Me.CompilerWarningsAsErrors, true)
 			Me.CompilerWarningsAsErrors.Size = New System.Drawing.Size(224, 16)
@@ -397,7 +425,7 @@ Imports System.Collections.Generic
 			'
 			Me.CompilerPause.FlatStyle = System.Windows.Forms.FlatStyle.System
 			Me.PrefsHelp.SetHelpString(Me.CompilerPause, "Keeps the compiler window open until a key is pressed")
-			Me.CompilerPause.Location = New System.Drawing.Point(16, 112)
+			Me.CompilerPause.Location = New System.Drawing.Point(16, 132)
 			Me.CompilerPause.Name = "CompilerPause"
 			Me.PrefsHelp.SetShowHelp(Me.CompilerPause, true)
 			Me.CompilerPause.Size = New System.Drawing.Size(168, 16)
@@ -737,18 +765,6 @@ Imports System.Collections.Generic
 			'
 			AddHandler Me.ScrollTimer.Tick, AddressOf Me.ScrollTimerTick
 			'
-			'appendhexGCASM
-			'
-			Me.appendhexGCASM.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.appendhexGCASM, "Keeps the compiler window open until a key is pressed")
-			Me.appendhexGCASM.Location = New System.Drawing.Point(9, 71)
-			Me.appendhexGCASM.Name = "appendhexGCASM"
-			Me.PrefsHelp.SetShowHelp(Me.appendhexGCASM, true)
-			Me.appendhexGCASM.Size = New System.Drawing.Size(310, 21)
-			Me.appendhexGCASM.TabIndex = 6
-			Me.appendhexGCASM.Text = "Append Great Cow BASIC message to hex file (GCASM only)"
-			Me.prefsToolTip.SetToolTip(Me.appendhexGCASM, "Keeps the compiler window open until a key is pressed")
-			'
 			'PreferencesWindow
 			'
 			Me.AcceptButton = Me.Button_OK
@@ -765,7 +781,7 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me, false)
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
-			Me.Text = "Preferences 1.04"
+			Me.Text = "Preferences 1.05"
 			Me.ExtToolsPrefs.ResumeLayout(false)
 			Me.CompilerPrefs.ResumeLayout(false)
 			Me.CompilerSelectionBox.ResumeLayout(false)
@@ -779,6 +795,7 @@ Imports System.Collections.Generic
 			Me.toolVariableEditMenu.ResumeLayout(false)
 			Me.ResumeLayout(false)
 		End Sub
+		Private MuteBannerMessages As System.Windows.Forms.CheckBox
 		Private appendhexGCASM As System.Windows.Forms.CheckBox
 		Private label2 As System.Windows.Forms.Label
 		Private label3 As System.Windows.Forms.Label
@@ -844,6 +861,7 @@ Imports System.Collections.Generic
 			Else
 				pPreferences.SetPref("GCBASIC", "Preserve", "a")
 			End If
+			pPreferences.SetPref("GCBASIC", "MuteBanners", MuteBannerMessages.Checked)
 			pPreferences.SetPref("GCBASIC", "WarningsAsErrors", CompilerWarningsAsErrors.Checked)
 			pPreferences.SetPref("GCBASIC", "FlashOnly", CompilerNoRecompile.Checked)
 			If CompilerPause.Checked = False Or GCGBOptionsHidden Then
