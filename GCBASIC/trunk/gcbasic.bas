@@ -634,7 +634,7 @@ Dim Shared As Integer ChipPins, UseChipOutLatches, AutoContextSave, ConfigDisabl
 Dim Shared As Integer MainProgramSize, StatsUsedRam, StatsUsedProgram
 DIM SHARED As Integer VBS, MSGC, PreserveMode, SubCalls, IntOnOffCount, ExitValue, OutPutConfigOptions
 DIM SHARED As Integer UserInt, PauseOnErr, USDC, MRC, GCGB, ALC, DCOC, SourceFiles
-Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCounters, muteBanners
+Dim Shared As Integer WarningsAsErrors, FlashOnly, SkipHexCheck, ShowProgressCounters, muteBanners, ExtendedVerboseMessages
 DIM SHARED As Integer SubSizeCount, PCUpper, Bootloader, HighFSR, NoBankLocs
 DIM SHARED As Integer RegCount, IntCount, AllowOverflow, SysInt, HMult, AllowInterrupt
 Dim Shared As Integer ToolCount, ChipEEPROM, DataTables, ProgMemPages, PauseAfterCompile
@@ -769,7 +769,7 @@ Randomize Timer
 
 'Set version
 Version = "0.99.02 2022-02-01"
-buildVersion = "1079"
+buildVersion = "1082"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -3327,6 +3327,14 @@ FUNCTION CastOrder (InType As String) As Integer
   End Select
 END FUNCTION
 
+/'* \brief return a tag value
+\param ConstName As String, Origin As String
+\returns Nothing
+
+This sub validates the constname against a set of rules.
+Issues Warning if the constname is not valid.
+
+'/
 Sub CheckConstName (ConstName As String, Origin As String)
 
   Dim As String TempData
@@ -3358,11 +3366,18 @@ Sub CheckConstName (ConstName As String, Origin As String)
   END If
 End Sub
 
-Sub CheckClockSpeed
+/'* \brief return a tag value
+\param None
+\returns Nothing
 
-  'Check speed that has been selected for the system clock.
-  'If it is 0 Mhz, need to set to highest possible
-  'If it is too high, show a warning
+Check speed that has been selected for the system clock, using information from DAT.
+The available clock speed are in the array IntOscSpeeds()
+If it is 0 Mhz, need to set to highest possible
+If it is too high, show a warning
+
+
+'/
+Sub CheckClockSpeed
 
   Dim As Integer CurrSpeed
   Dim As Double MaxSpeed
@@ -3398,13 +3413,22 @@ Sub CheckClockSpeed
 
 End Sub
 
+/'* \brief return a tag value
+\param None
+
+This sub compiles the source program.
+The preprocessor has aleady transformed the source files.
+
+Checks every sub in program, compile those that need to be compiled.
+The approach includes the need to check again once a sub has been compiled, because that sub may require other subs.
+
+
+'/
+
 Sub CompileProgram
 
   Dim As Integer CurrSub, CompileMore, IntLoc, CurrInc, SubLoc, TablesCompiled
 
-  'Check every sub in program, compile those that need to be compiled
-  'Need to check again once a sub has been compiled, because that sub may
-  'require other subs
   TablesCompiled = 0
 
   'Request initialisation routine
@@ -3505,79 +3529,96 @@ Sub CompileProgram
 
 End Sub
 
-Sub CompileSubroutine(CompSub As SubType Pointer)
-  Dim EVBS As Integer = 0
 
-  If VBS = 1 Then
-    Print Spc(10); CompSub->Name
+/'* \brief return a tag value
+\param CompSub as pointer
+
+This sub compiles the subroutines.
+
+Supports use of ExtendedVerboseMessages= n | y in INI file to enable extended complilation messages
+
+'/
+Sub CompileSubroutine(CompSub As SubType Pointer)
+
+
+  If VBS = 1 or ExtendedVerboseMessages Then
+    Print ""
+    Print "Commpiling method"; "  "; CompSub->Name
   End If
 
   'Split any lines at : (these may be inserted through constants)
-  If EVBS Then Print Spc(15); "Splitting lines"
+  If ExtendedVerboseMessages Then Print Spc(15); "Splitting lines"
   SplitLines (CompSub)
 
   'Apply any tweaks
   TidyInputSource (CompSub)
 
   'Compile calls to other subroutines, insert macros
-  If EVBS Then Print Spc(15); "Compiling sub calls"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling sub calls"
   CompileSubCalls (CompSub)
 
   'Compile DIMs again, in case any come through from macros
-  If EVBS Then Print Spc(15); "Compiling DIM"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling DIM"
   CompileDim (CompSub)
 
   'Compile various commands
-  If EVBS Then Print Spc(15); "Compiling For"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling For"
   CompileFor (CompSub)
-  If EVBS Then Print Spc(15); "Processing arrays"
+  If ExtendedVerboseMessages Then Print Spc(15); "Processing arrays"
   ProcessArrays (CompSub)
-  If EVBS Then Print Spc(15); "Adding sys var bits"
+  If ExtendedVerboseMessages Then Print Spc(15); "Adding sys var bits"
   AddSysVarBits (CompSub)
-  If EVBS Then Print Spc(15); "Compiling ReadTable"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling ReadTable"
   CompileReadTable (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Pot"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Pot"
   CompilePot (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Do"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Do"
   CompileDo (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Dir"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Dir"
   CompileDir (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Wait"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Wait"
   CompileWait (CompSub)
-  If EVBS Then Print Spc(15); "Compiling On Interrupt"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling On Interrupt"
   CompileOn (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Set"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Set"
   CompileSet (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Rotate"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Rotate"
   CompileRotate (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Repeat"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Repeat"
   CompileRepeat (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Select"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Select"
   CompileSelect (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Return"   'was Select
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Return"   'was Select
   CompileReturn (CompSub)
   'Compile If statements and variable assignments last
   'This allows other commands to generate IFs and assignments rather than having to produce assembly
-  If EVBS Then Print Spc(15); "Compiling If"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling If"
   CompileIF (CompSub)
-  If EVBS Then Print Spc(15); "Compiling var assignments"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling var assignments"
   CompileVars (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Exit Sub"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Exit Sub"
   CompileExitSub (CompSub)
-  If EVBS Then Print Spc(15); "Compiling Goto"
+  If ExtendedVerboseMessages Then Print Spc(15); "Compiling Goto"
   CompileGoto (CompSub)
 
   'Recognise ASM
-  If EVBS Then Print Spc(15); "Finding assembly"
+  If ExtendedVerboseMessages Then Print Spc(15); "Finding assembly"
   FindAssembly(CompSub)
 
   'Replace SysPointerX pseudo variable
   If ModeAVR Then FixPointerOps (CompSub)
 
   'CompileIntOnOff (CompSub) Need to do this after all subs compiled
-  If EVBS Then Print Spc(15); "Done"
+  If ExtendedVerboseMessages Then Print Spc(15); "Done"
   CompSub->Compiled = -1
 End Sub
+
+/'* \brief return a tag value
+\param SUM As String, AV As String, Origin As String, ByRef OutList As CodeSection Pointer = 0, NeverLast As Integer = 0
+
+This sub compiles the CALC maths
+
+'/
 
 Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As CodeSection Pointer = 0, NeverLast As Integer = 0)
 
@@ -3641,6 +3682,12 @@ Sub CompileCalc (SUM As String, AV As String, Origin As String, ByRef OutList As
 
 End Sub
 
+/'* \brief return a tag value
+\param OutList As CodeSection Pointer, V1 As String, Act As String, V2 As String, Origin As String, Answer As String
+
+This sub compiles the ADD maths
+
+'/
 FUNCTION CompileCalcAdd(OutList As CodeSection Pointer, V1 As String, Act As String, V2 As String, Origin As String, Answer As String) As String
 
   Dim OutVal As LongInt
@@ -13485,6 +13532,7 @@ SUB InitCompiler
   PauseOnErr = 1
   WarningsAsErrors = 0
   MuteBanners = -1
+  ExtendedVerboseMessages= 0
   PreserveMode = 0
   PauseAfterCompile = 0
   ShowProgressCounters = -1
@@ -13818,6 +13866,12 @@ SUB InitCompiler
 
                 Case "mutebanners"
                   MuteBanners = NOT PrefIsYes(MsgVal)
+
+                Case "evbs"
+                  if PrefIsYes(MsgVal, 1 ) = 1   Then
+                    ExtendedVerboseMessages= -1
+                  End if
+
 
                 Case "flashonly"
                 If FlashOnlyNotSet Then
