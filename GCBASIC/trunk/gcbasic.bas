@@ -768,8 +768,8 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.99.02 2022-02-01"
-buildVersion = "1082"
+Version = "0.99.02 2022-02-06"
+buildVersion = "1083"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -16903,7 +16903,11 @@ Sub WriteAssembly
   End if
 
   ' ASM file
-  PRINT #1, ";Program compiled by Great Cow BASIC (" + Version + ") for Microchip MPASM"
+  If ModePIC Then
+      PRINT #1, ";Program compiled by Great Cow BASIC (" + Version + ") for Microchip MPASM/MPLAB-X Assembler"
+  Else
+      PRINT #1, ";Program compiled by Great Cow BASIC (" + Version + ") for Microchip AVR Assembler"
+  End If
   Print #1, ";Need help? See the GCBASIC forums at http://sourceforge.net/projects/gcbasic/forums,"
   Print #1, ";check the documentation or email w_cholmondeley at users dot sourceforge dot net."
   Print #1, ""
