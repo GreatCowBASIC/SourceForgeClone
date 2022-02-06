@@ -2,7 +2,7 @@
 'Chip: LGT8F328P-0
 'Main Format last revised:   14/07/2017
 'Header Format last revised: 04/02/2020
-'12/10/2020
+'06/02/2022
 
 [ChipData]
 Prog=16384
@@ -76,7 +76,10 @@ HDR,224
 PMX0,238
 PMX1,237
 PMX2,240
-
+VCAL,200
+VCAL1,205
+VCAL2,206
+VCAL3,204
 'End of chip specific changes
 
 UDR0,198
@@ -952,4 +955,3 @@ NoConfig-PRG
 
 [Config]
 NoConfig-PRG
-

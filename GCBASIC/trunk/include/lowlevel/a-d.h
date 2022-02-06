@@ -1,5 +1,5 @@
 '    Analog to Digital conversion routines for Great Cow BASIC
-'    Copyright (C) 2006-2020 Hugh Considine, Kent Schafer, William Roth, Evan Venn
+'    Copyright (C) 2006-2022 Hugh Considine, Kent Schafer, William Roth, Evan Venn
 
 '    This library is free software; you can redistribute it and/or
 '    modify it under the terms of the GNU Lesser General Public
@@ -143,7 +143,7 @@
 ' 02/02/21 Resolved typo in line 1613
 ' 16/02/21 Improved Read A/D @3 to use ADCON0.GO rather than G0 as GO can also reference NVM1CON.GO
 ' 28/08/21 Added ADREADPREREADCOMMAND to AVR read
-
+' 06/02/22 Corrected ADREF register settings for chipfamily LGT
 'Commands:
 'var = ReadAD(port, optional port)  Reads port(s), and returns value.
 'ADFormat(type)   Choose Left or Right justified
@@ -1660,6 +1660,7 @@ macro LLReadAD (ADLeftAdjust)
                 REFS0=b'0'
                 REFS1=b'0'
                 REFS2=0
+                VCAL = VCAL1; // calibration for 1.024V
           #ENDIF
 
           #IF AD_REF_SOURCE = AD_REF_AVCC
@@ -1667,6 +1668,7 @@ macro LLReadAD (ADLeftAdjust)
                 REFS0=b'1'
                 REFS1=b'0'
                 REFS2=0
+                VCAL = VCAL1; // calibration for 1.024V
           #ENDIF
 
           #IF AD_REF_SOURCE = AD_REF_4096
@@ -1674,6 +1676,7 @@ macro LLReadAD (ADLeftAdjust)
                 REFS0=b'0'
                 REFS1=b'0'
                 REFS2=1
+                VCAL = VCAL3  // calibration for 4.096V
           #ENDIF
 
           #IF AD_REF_SOURCE = AD_REF_2048
@@ -1681,6 +1684,7 @@ macro LLReadAD (ADLeftAdjust)
                 REFS0=b'0'
                 REFS1=b'1'
                 REFS2=0
+                VCAL = VCAL2  // calibration for 2.048V
           #ENDIF
 
           #IF AD_REF_SOURCE = AD_REF_1024
@@ -1688,6 +1692,7 @@ macro LLReadAD (ADLeftAdjust)
                 REFS0=b'1'
                 REFS1=b'1'
                 REFS2=0
+                VCAL = VCAL1; // calibration for 1.024V
           #ENDIF
 
       #endif
