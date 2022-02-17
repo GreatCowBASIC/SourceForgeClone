@@ -769,7 +769,7 @@ Randomize Timer
 
 'Set version
 Version = "0.99.02 2022-02-06"
-buildVersion = "1083"
+buildVersion = "1085"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
   #ifndef __FB_64BIT__
@@ -894,9 +894,9 @@ CompEndTime = Timer
 IF Not ErrorsFound THEN
   'Success message
   PRINT Message("Success");
-  IF VBS = 0 THEN
-    PRINT
-  Else
+'  IF VBS = 0 THEN
+'    PRINT
+'  Else
     Dim Temp As String
     Temp = Trim(Str(CompEndTime - StartTime))
     IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
@@ -920,7 +920,7 @@ IF Not ErrorsFound THEN
     If ChipRAM <> 0 Then Temp += Format(StatsUsedRAM / ChipRAM, " (###.##%)")
 
     PRINT SPC(10); Temp
-  END IF
+'  END IF
 
   If ModeAVR then
         AFISupport = 0
@@ -1049,6 +1049,7 @@ If VBS = 1 Then
   Dim Temp As String
   Temp = Trim(Str(ProgEndTime - StartTime))
   IF LEN(Temp) > 4 Then Temp = Left(Temp, 5)
+  PRINT ""
   PRINT Message("TotalTime") + Temp + Message("CompSecs")
 End If
 
@@ -3543,7 +3544,7 @@ Sub CompileSubroutine(CompSub As SubType Pointer)
 
   If VBS = 1 or ExtendedVerboseMessages Then
     Print ""
-    Print "Commpiling method"; "  "; CompSub->Name
+    Print Spc(5); "Commpiling method"; "  "; CompSub->Name
   End If
 
   'Split any lines at : (these may be inserted through constants)
