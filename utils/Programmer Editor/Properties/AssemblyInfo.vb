@@ -13,7 +13,7 @@ Imports System.Runtime.InteropServices
 <assembly: AssemblyConfiguration("")>
 <assembly: AssemblyCompany("")>
 <assembly: AssemblyProduct("Programmer Editor")>
-<assembly: AssemblyCopyright("Copyright 2021 Evan R.Venn & Hugh Considine")>
+<assembly: AssemblyCopyright("Copyright 2022 Evan R.Venn & Hugh Considine")>
 <assembly: AssemblyTrademark("")>
 <assembly: AssemblyCulture("")>
 
