@@ -768,7 +768,7 @@ IF Dir("ERRORS.TXT") <> "" THEN KILL "ERRORS.TXT"
 Randomize Timer
 
 'Set version
-Version = "0.99.02 2022-02-17"
+Version = "0.99.02 2022-02-20"
 buildVersion = "1087"
 
 #ifdef __FB_DARWIN__  'OS X/macOS
@@ -919,7 +919,25 @@ IF Not ErrorsFound THEN
     Replace Temp, "%total%", Str(ChipRAM)
     If ChipRAM <> 0 Then Temp += Format(StatsUsedRAM / ChipRAM, " (###.##%)")
 
+
     PRINT SPC(10); Temp
+
+
+    OscType = ""
+    If ModePIC Then
+      If HashMapGet(Constants, "CHIPUSINGINTOSC") <> 0 Then
+        OscType = " (" + Message("CRIntOsc") + ")"
+      Else
+        OscType = " (" + Message("CRExtOsc") + ")"
+      End If
+    End If
+    PRINT SPC(10);
+    If ModePIC Then
+        Print "OSC: " + ChipOscSource + ", " + Str(ChipMhz) + "Mhz" + OscType
+    Else
+        Print "OSC: " + Str(ChipMhz) + "Mhz"
+    End If
+
 '  END IF
 
   If ModeAVR then
@@ -1065,6 +1083,11 @@ If PauseAfterCompile Then
   Print
   WaitForKeyOrTimeout
 End If
+
+Dim Temp As String
+Temp = Message("Success")
+Print
+Print Temp
 
 End ExitValue
 
