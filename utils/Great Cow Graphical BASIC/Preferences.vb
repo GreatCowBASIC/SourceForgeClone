@@ -214,7 +214,11 @@ Public Class Preferences
 				
 			Dim s As Setting
 			For Each s In section.Settings
-				UserIni.WriteLine(s.Name + " = " + s.Value)
+				If lcase(trim(s.Name)) = lcase("GCBASIC_INSTALL_PATH") Then
+					 System.Environment.SetEnvironmentVariable("GCBASIC_INSTALL_PATH",s.Value, System.EnvironmentVariableTarget.User )
+				else
+					UserIni.WriteLine(s.Name + " = " + s.Value)
+				end if
 			Next
 				
 			UserIni.WriteLine()

@@ -95,7 +95,7 @@ Imports System.Collections.Generic
 				CompilerPause.Checked = Preferences.PrefIsYes(pPreferences.GetPref("GCBASIC", "PauseAfterCompile"))
 				
 				If pPreferences.GetPref("GCBASIC", "assembler") <> "" Then
-					DefaultCompilercomboBox.Text = pPreferences.GetPref("GCBASIC", "assembler")				
+					DefaultCompilercomboBox.Text = pPreferences.GetPref("GCBASIC", "assembler")
 				End If
 	
 				If pPreferences.GetPref("GCBASIC", "hexappendGCBmessage") = "1" or pPreferences.GetPref("GCBASIC", "hexappendGCBmessage") = "Y" or pPreferences.GetPref("GCBASIC", "hexappendGCBmessage") = "y" Then
@@ -168,15 +168,28 @@ Imports System.Collections.Generic
 				'Tool variables list
 				'Restricted mode means that GCGB is in a school or other environment where the users may be up to no good
 				'If restricted, don't allow them to define programmers.
+				
 				If Preferences.PrefIsYes(pPreferences.GetPref("GCGB", "Restricted")) Then
 					Me.PrefsTabs.Controls.Remove(ToolVarsPrefs)
 				Else
+					Dim foundEnvironVar as Boolean
+					foundEnvironVar = false
 					'Find all tools
 					Me.ToolVarDataGrid.Rows.Clear
 					Dim section As SettingSection = pPreferences.GetSection("toolvariables")
+			
+					foundEnvironVar = System.Environment.GetEnvironmentVariable("GCBASIC_INSTALL_PATH") is Nothing
+					If foundEnvironVar = False Then
+						Me.ToolVarDataGrid.Rows.Add(New Object(){lcase("GCBASIC_INSTALL_PATH"), System.Environment.GetEnvironmentVariable("GCBASIC_INSTALL_PATH")})
+					Else
+						Me.ToolVarDataGrid.Rows.Add(New Object(){lcase("GCBASIC_INSTALL_PATH"), lcase(System.Environment.GetCommandLineArgs(0)).Replace("\greatcowbasic\programmer editor.exe", "") })
+					End If
+					
 					If Not section is Nothing Then
 						For Each currSetting As Setting In section.Settings
-							Me.ToolVarDataGrid.Rows.Add(New Object(){currSetting.Name, currSetting.Value})		
+							if lcase(trim(currSetting.Name)) <> lcase("GCBASIC_INSTALL_PATH") then
+								Me.ToolVarDataGrid.Rows.Add(New Object(){currSetting.Name, currSetting.Value})
+							End If
 						Next
 					End If
 				End If
@@ -310,7 +323,7 @@ Imports System.Collections.Generic
 			Me.toolList.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom)  _
 									Or System.Windows.Forms.AnchorStyles.Left)  _
 									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
-			Me.PrefsHelp.SetHelpString(Me.toolList, "Shows the external tools that have been set up to work with Great Cow Graphical B"& _ 
+			Me.PrefsHelp.SetHelpString(Me.toolList, "Shows the external tools that have been set up to work with Great Cow Graphical B"& _
 						"ASIC")
 			Me.toolList.IntegralHeight = false
 			Me.toolList.Location = New System.Drawing.Point(8, 8)
@@ -347,7 +360,7 @@ Imports System.Collections.Generic
 			Me.MuteBannerMessages.Size = New System.Drawing.Size(168, 16)
 			Me.MuteBannerMessages.TabIndex = 6
 			Me.MuteBannerMessages.Text = "Mute Banner Messages"
-			Me.prefsToolTip.SetToolTip(Me.MuteBannerMessages, "Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and p"& _ 
+			Me.prefsToolTip.SetToolTip(Me.MuteBannerMessages, "Please goto to https://sourceforge.net/projects/gcbasic/reviews/new?stars=5 and p"& _
 						"rovide feedback to share your experience")
 			'
 			'CompilerSelectionBox
@@ -395,7 +408,7 @@ Imports System.Collections.Generic
 			'CompilerNoRecompile
 			'
 			Me.CompilerNoRecompile.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.CompilerNoRecompile, "Prevent the compiler from taking time to recompile a program if the program has n"& _ 
+			Me.PrefsHelp.SetHelpString(Me.CompilerNoRecompile, "Prevent the compiler from taking time to recompile a program if the program has n"& _
 						"ot changed since it was last compiled.")
 			Me.CompilerNoRecompile.Location = New System.Drawing.Point(16, 108)
 			Me.CompilerNoRecompile.Name = "CompilerNoRecompile"
@@ -403,14 +416,14 @@ Imports System.Collections.Generic
 			Me.CompilerNoRecompile.Size = New System.Drawing.Size(224, 16)
 			Me.CompilerNoRecompile.TabIndex = 4
 			Me.CompilerNoRecompile.Text = "Prevent recompile if code is unchanged"
-			Me.prefsToolTip.SetToolTip(Me.CompilerNoRecompile, "Prevent the compiler from taking time to recompile a program if the program has n"& _ 
+			Me.prefsToolTip.SetToolTip(Me.CompilerNoRecompile, "Prevent the compiler from taking time to recompile a program if the program has n"& _
 						"ot changed since it was last compiled.")
 			Me.CompilerNoRecompile.Visible = false
 			'
 			'CompilerWarningsAsErrors
 			'
 			Me.CompilerWarningsAsErrors.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Stops the program from being downloaded to the chip if any warnings are generated"& _ 
+			Me.PrefsHelp.SetHelpString(Me.CompilerWarningsAsErrors, "Stops the program from being downloaded to the chip if any warnings are generated"& _
 						" while compiling it")
 			Me.CompilerWarningsAsErrors.Location = New System.Drawing.Point(16, 84)
 			Me.CompilerWarningsAsErrors.Name = "CompilerWarningsAsErrors"
@@ -418,7 +431,7 @@ Imports System.Collections.Generic
 			Me.CompilerWarningsAsErrors.Size = New System.Drawing.Size(224, 16)
 			Me.CompilerWarningsAsErrors.TabIndex = 3
 			Me.CompilerWarningsAsErrors.Text = "Treat warnings as errors"
-			Me.prefsToolTip.SetToolTip(Me.CompilerWarningsAsErrors, "Stops the program from being downloaded to the chip if any warnings are generated"& _ 
+			Me.prefsToolTip.SetToolTip(Me.CompilerWarningsAsErrors, "Stops the program from being downloaded to the chip if any warnings are generated"& _
 						" while compiling it")
 			'
 			'CompilerPause
@@ -436,7 +449,7 @@ Imports System.Collections.Generic
 			'CompilerShowBASIC
 			'
 			Me.CompilerShowBASIC.FlatStyle = System.Windows.Forms.FlatStyle.System
-			Me.PrefsHelp.SetHelpString(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _ 
+			Me.PrefsHelp.SetHelpString(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _
 						"")
 			Me.CompilerShowBASIC.Location = New System.Drawing.Point(16, 40)
 			Me.CompilerShowBASIC.Name = "CompilerShowBASIC"
@@ -444,7 +457,7 @@ Imports System.Collections.Generic
 			Me.CompilerShowBASIC.Size = New System.Drawing.Size(256, 16)
 			Me.CompilerShowBASIC.TabIndex = 1
 			Me.CompilerShowBASIC.Text = "Show BASIC code as comments in assembly"
-			Me.prefsToolTip.SetToolTip(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _ 
+			Me.prefsToolTip.SetToolTip(Me.CompilerShowBASIC, "Copies the original BASIC program into the assembly file produced by the compiler"& _
 						"")
 			'
 			'CompilerVerbose
@@ -539,7 +552,7 @@ Imports System.Collections.Generic
 									Or System.Windows.Forms.AnchorStyles.Left)  _
 									Or System.Windows.Forms.AnchorStyles.Right),System.Windows.Forms.AnchorStyles)
 			Me.ProgrammerList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
-			Me.PrefsHelp.SetHelpString(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _ 
+			Me.PrefsHelp.SetHelpString(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _
 						"C. Drag and drop to reorder.")
 			Me.ProgrammerList.IntegralHeight = false
 			Me.ProgrammerList.Location = New System.Drawing.Point(8, 8)
@@ -547,7 +560,7 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me.ProgrammerList, true)
 			Me.ProgrammerList.Size = New System.Drawing.Size(543, 212)
 			Me.ProgrammerList.TabIndex = 0
-			Me.prefsToolTip.SetToolTip(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _ 
+			Me.prefsToolTip.SetToolTip(Me.ProgrammerList, "Shows the programmers that have been set up to work with Great Cow Graphical BASI"& _
 						"C. Drag and drop to reorder.")
 			AddHandler Me.ProgrammerList.DrawItem, AddressOf Me.ProgrammerListDrawItem
 			AddHandler Me.ProgrammerList.DragOver, AddressOf Me.ProgrammerListDragOver
@@ -581,7 +594,7 @@ Imports System.Collections.Generic
 			'
 			'MDITabs
 			'
-			Me.PrefsHelp.SetHelpString(Me.MDITabs, "Show multiple programs in tabs. Easier to change between programs, but offers les"& _ 
+			Me.PrefsHelp.SetHelpString(Me.MDITabs, "Show multiple programs in tabs. Easier to change between programs, but offers les"& _
 						"s freedom in moving things around.")
 			Me.MDITabs.Location = New System.Drawing.Point(128, 16)
 			Me.MDITabs.Name = "MDITabs"
@@ -590,14 +603,14 @@ Imports System.Collections.Generic
 			Me.MDITabs.TabIndex = 1
 			Me.MDITabs.TabStop = true
 			Me.MDITabs.Text = "Tabs"
-			Me.prefsToolTip.SetToolTip(Me.MDITabs, "Show multiple programs in tabs. Easier to change between programs, but offers les"& _ 
+			Me.prefsToolTip.SetToolTip(Me.MDITabs, "Show multiple programs in tabs. Easier to change between programs, but offers les"& _
 						"s freedom in moving things around.")
 			Me.MDITabs.UseVisualStyleBackColor = true
 			'
 			'MDIWindows
 			'
-			Me.PrefsHelp.SetHelpString(Me.MDIWindows, "Show multiple programs in windows inside the main GCGB window. Allows programs to"& _ 
-						" be placed side by side easily, but can also make it harder to find a particular"& _ 
+			Me.PrefsHelp.SetHelpString(Me.MDIWindows, "Show multiple programs in windows inside the main GCGB window. Allows programs to"& _
+						" be placed side by side easily, but can also make it harder to find a particular"& _
 						" program.")
 			Me.MDIWindows.Location = New System.Drawing.Point(8, 16)
 			Me.MDIWindows.Name = "MDIWindows"
@@ -606,8 +619,8 @@ Imports System.Collections.Generic
 			Me.MDIWindows.TabIndex = 0
 			Me.MDIWindows.TabStop = true
 			Me.MDIWindows.Text = "Windows"
-			Me.prefsToolTip.SetToolTip(Me.MDIWindows, "Show multiple programs in windows inside the main GCGB window. Allows programs to"& _ 
-						" be placed side by side easily, but can also make it harder to find a particular"& _ 
+			Me.prefsToolTip.SetToolTip(Me.MDIWindows, "Show multiple programs in windows inside the main GCGB window. Allows programs to"& _
+						" be placed side by side easily, but can also make it harder to find a particular"& _
 						" program.")
 			Me.MDIWindows.UseVisualStyleBackColor = true
 			'
@@ -698,7 +711,7 @@ Imports System.Collections.Generic
 			Me.label3.Name = "label3"
 			Me.label3.Size = New System.Drawing.Size(511, 30)
 			Me.label3.TabIndex = 3
-			Me.label3.Text = "Variables are replaced during compiling or programming."&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"Strict rule - Do not use"& _ 
+			Me.label3.Text = "Variables are replaced during compiling or programming."&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)&"Strict rule - Do not use"& _
 			" single or double quote in Variable name or Variable Value"&Global.Microsoft.VisualBasic.ChrW(13)&Global.Microsoft.VisualBasic.ChrW(10)
 			'
 			'label2
@@ -781,7 +794,7 @@ Imports System.Collections.Generic
 			Me.PrefsHelp.SetShowHelp(Me, false)
 			Me.ShowInTaskbar = false
 			Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
-			Me.Text = "Preferences 1.05"
+			Me.Text = "Preferences 2.00"
 			Me.ExtToolsPrefs.ResumeLayout(false)
 			Me.CompilerPrefs.ResumeLayout(false)
 			Me.CompilerSelectionBox.ResumeLayout(false)
