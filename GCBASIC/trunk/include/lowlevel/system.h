@@ -78,6 +78,8 @@
 '    22052021-  Rewrite ChipMHz 31k initsys using Macro31k and revised DAT files.
 '    11072021 - Revised 24 MHz OSCCON1 Setting to 0x10 to exclude 18F (Family 16) chips, and add ChipFamily18FxxQ40
 '    28082021 - Add SysMultSub64, SysDivSub64, SysCompEqual64 and SysCompLessThan64
+'    28022022 - Revised PFMread and added PFMWrite to support Q43 chips
+
 ' Warning .. warning .. warning... 64 bit methods above all require replacement of IF THEN conditional statement when compiler supports Advanced variables.
 
 'Constants
@@ -4122,7 +4124,7 @@ End Sub
 
 
 Sub PFMWrite (in _PFM_ADDR as long , in _PFM_DataByte as Byte)
-    ; Tested on 18F16Q41
+    ; Tested on 18F16Q41;q43
 
     Dim _PFM_BlockNum, _PFM_Offset as long
 
@@ -4153,7 +4155,7 @@ End sub
 
 
 Sub PFMWrite (in _PFM_ADDR as long , in _PFM_DataWord as Word )
-    ; Tested on 18F16Q41
+    ; Tested on 18F16Q41;q43
 
     Dim _PFM_BlockNum, _PFM_Offset as long
 
@@ -4185,7 +4187,7 @@ End sub
 
 
 Sub _PFMReadBlock ( in _PFM_BlockNum as Word, Out _PFM_Buffer(), Optional in _PFM_Count = HEF_ROWSIZE_BYTES )
-    ; Tested on 18F16Q41
+    ; Tested on 18F16Q41;q43
 
       Dim _PFM_Count as word
       Dim _PFM_LoopCounter as word
@@ -4207,7 +4209,7 @@ Sub _PFMReadBlock ( in _PFM_BlockNum as Word, Out _PFM_Buffer(), Optional in _PF
 End Sub
 
 Sub _PFMwriteBlock ( in _PFM_BlockNum as Word, Out _PFM_Buffer(), Optional in _PFM_Count = HEF_ROWSIZE_BYTES )
-    ; Tested on 18F16Q41
+    ; Tested on 18F16Q41, Q43
 
       Dim _PFM_Count as word
       Dim _PFM_LoopCounter as word
@@ -4223,13 +4225,23 @@ Sub _PFMwriteBlock ( in _PFM_BlockNum as Word, Out _PFM_Buffer(), Optional in _P
       NVMCON1 = NVMCON1 and 0XF8 or 0x06
 
       _GIE_SAVE = GIE    'Save interrupt
-      GIE = 0           'disable interrupts
+      GIE = 0           'disable INTERRUPTS
 
       ChipMemorylock = 0x55
       ChipMemorylock = 0xAA
 
-      GO_NVMCON0 = 1
-      wait while GO_NVMCON0 = 1
+      #IF BIT(GO_NVMCON0)
+        ;BIT(GO_NVMCON0)
+        GO_NVMCON0 = 1
+        wait while GO_NVMCON0 = 1
+      #ENDIF
+
+      #IF BIT(NVMGO)
+        ;BIT(NVMGO)
+        NVMGO = 1
+        wait while NVMGO = 1
+      #ENDIF
+
 
       ; Set memory address
       _TBL_ABS_ADDR = _PFM_ABS_ADDR
@@ -4247,8 +4259,15 @@ Sub _PFMwriteBlock ( in _PFM_BlockNum as Word, Out _PFM_Buffer(), Optional in _P
       ChipMemorylock = 0x55
       ChipMemorylock = 0xAA
 
-      GO_NVMCON0 = 1
-      wait while GO_NVMCON0 = 1
+      #IF BIT(GO_NVMCON0)
+        GO_NVMCON0 = 1
+        wait while GO_NVMCON0 = 1
+      #ENDIF
+
+      #IF BIT(NVMGO)
+        NVMGO = 1
+        wait while NVMGO = 1
+      #ENDIF
 
       'Set the NVMCMD control bits for Word Read operation to avoid accidental writes
       NVMCON1 = NVMCON1 and 0XF8
